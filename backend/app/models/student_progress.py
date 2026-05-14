@@ -1,0 +1,43 @@
+import uuid
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
+from app.db.base import Base
+
+
+class LearningPath(Base):
+    __tablename__ = "learning_paths"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    student_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    course_id = Column(String(36), ForeignKey("courses.id"), nullable=False)
+    generated_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    total_modules = Column(Integer, default=0)
+    completed_modules = Column(Integer, default=0)
+    status = Column(String(20), default="active")
+
+    student = relationship("User")
+    course = relationship("Course")
+    modules = relationship("PathModule", back_populates="path", cascade="all, delete-orphan")
+
+
+class PathModule(Base):
+    __tablename__ = "path_modules"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    path_id = Column(String(36), ForeignKey("learning_paths.id"), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(String(500), nullable=True)
+    order = Column(Integer, nullable=False, default=0)
+    status = Column(String(20), default="locked")
+    bloom_level = Column(Integer, nullable=True)
+    resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
+    score = Column(Float, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    path = relationship("LearningPath", back_populates="modules")
+    resource = relationship("Resource")

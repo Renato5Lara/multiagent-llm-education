@@ -85,11 +85,22 @@ class TestPublishCourse:
 class TestEnrollment:
     """Tests de inscripción de estudiantes."""
 
-    def test_inscribir_estudiantes(self, client, docente_token, estudiante_user):
+    def _create_published_course(self, client, docente_token, db, code):
         cr = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": "ENR-01", "name": "Curso Enroll", "cycle": "2026-I", "year": 2026,
+            "code": code, "name": "Curso Enroll", "cycle": "2026-I", "year": 2026,
         })
         cid = cr.json()["id"]
+        for i in range(3):
+            obj = LearningObjective(
+                course_id=cid, title=f"Obj {i+1}", bloom_level=i+1, order=i,
+            )
+            db.add(obj)
+        db.commit()
+        client.post(f"/api/courses/{cid}/publish", headers=auth_header(docente_token))
+        return cid
+
+    def test_inscribir_estudiantes(self, client, docente_token, estudiante_user, db):
+        cid = self._create_published_course(client, docente_token, db, "ENR-01")
 
         resp = client.post(
             f"/api/courses/{cid}/enroll",
@@ -99,11 +110,8 @@ class TestEnrollment:
         assert resp.status_code == 200
         assert resp.json()["success"] == 1
 
-    def test_inscribir_estudiante_duplicado(self, client, docente_token, estudiante_user):
-        cr = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": "ENR-02", "name": "Curso Dup", "cycle": "2026-I", "year": 2026,
-        })
-        cid = cr.json()["id"]
+    def test_inscribir_estudiante_duplicado(self, client, docente_token, estudiante_user, db):
+        cid = self._create_published_course(client, docente_token, db, "ENR-02")
 
         # Primera inscripción
         client.post(f"/api/courses/{cid}/enroll", headers=auth_header(docente_token),

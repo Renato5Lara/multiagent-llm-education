@@ -5,12 +5,15 @@ Lógica de negocio para CRUD de usuarios, carga CSV masiva y cambio de rol.
 
 import csv
 import io
+import logging
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
+
+logger = logging.getLogger(__name__)
 
 
 def get_users(
@@ -156,6 +159,8 @@ def bulk_create_users_from_csv(
             continue
 
         try:
+            # Usar savepoint para aislar cada fila
+            savepoint = db.begin_nested()
             # Contraseña por defecto: primeras 3 letras del nombre + código institucional o "2026"
             default_password = (
                 row["first_name"].strip()[:3]
@@ -171,10 +176,10 @@ def bulk_create_users_from_csv(
                 institutional_code=row.get("institutional_code", "").strip() or None,
             )
             db.add(user)
-            db.flush()  # Para detectar errores de unicidad antes del commit
+            db.flush()
             result["success"] += 1
         except Exception as e:
-            db.rollback()
+            logger.exception(f"Error en fila CSV {i}: {e}")
             result["errors"].append({"row": i, "message": str(e)})
 
     if result["success"] > 0:

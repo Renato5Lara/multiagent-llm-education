@@ -2,7 +2,7 @@
 Schemas Pydantic para autenticación.
 """
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):

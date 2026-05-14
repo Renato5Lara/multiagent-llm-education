@@ -121,10 +121,14 @@ def enroll_students(
 ) -> dict:
     """
     Inscribe estudiantes en un curso en lote.
+    Solo se permite inscribir en cursos publicados.
 
     Returns:
         {"success": n, "errors": [{"student_id": str, "message": str}]}
     """
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if course and course.status != CourseStatus.PUBLICADO:
+        return {"success": 0, "errors": [{"student_id": "", "message": "Solo se puede inscribir estudiantes en cursos publicados"}]}
     result = {"success": 0, "errors": []}
 
     for student_id in student_ids:

@@ -4,6 +4,7 @@ Incluye un score de relevancia.
 """
 
 from sqlalchemy import Column, Float, ForeignKey, String
+from sqlalchemy.orm import relationship
 
 from app.db.base import Base
 
@@ -20,8 +21,6 @@ class ResourceObjective(Base):
     relevance_score = Column(Float, default=1.0, nullable=False)
 
     # Relaciones
-    from sqlalchemy.orm import relationship
-
     resource = relationship("Resource", back_populates="objective_associations")
     objective = relationship(
         "LearningObjective", back_populates="resource_associations"
