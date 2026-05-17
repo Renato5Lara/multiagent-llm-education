@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api, { getErrorMessage } from '@/lib/api'
-import type { DiagnosticResult, LearningPath, PathModule, EvaluationAttempt, AgentPlan } from '@/types/student'
+import type { DiagnosticResult, LearningPath, PathModule, AgentPlan } from '@/types/student'
 import { useToast } from '@/hooks/use-toast'
 
 export function useSubmitDiagnostic() {
@@ -87,6 +87,24 @@ export function useAgentGeneratePlan() {
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Error del agente', description: getErrorMessage(error) })
+    },
+  })
+}
+
+export function useStartEvaluation() {
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      const resp = await api.post(`/api/estudiante/evaluation/${courseId}/start`)
+      return resp.data
+    },
+  })
+}
+
+export function useSubmitEvaluation() {
+  return useMutation({
+    mutationFn: async ({ attemptId, answers }: { attemptId: string; answers: Record<number, number> }) => {
+      const resp = await api.post(`/api/estudiante/evaluation/${attemptId}/submit`, { answers })
+      return resp.data
     },
   })
 }

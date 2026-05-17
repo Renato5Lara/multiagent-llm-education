@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, BookOpen } from 'lucide-react'
+import { LayoutDashboard, BarChart3 } from 'lucide-react'
 import Sidebar, { SidebarItem } from './Sidebar'
 import Header from './Header'
 
 const estudianteItems: SidebarItem[] = [
     { label: 'Dashboard', href: '/estudiante', icon: LayoutDashboard },
-    { label: 'Mis Cursos', href: '/estudiante', icon: BookOpen },
+    { label: 'Progreso', href: '/estudiante/progress', icon: BarChart3 },
 ]
 
 export default function EstudianteLayout() {

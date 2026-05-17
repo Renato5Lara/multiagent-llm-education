@@ -8,12 +8,16 @@ class DiagnosticAnswers(BaseModel):
 
 
 class LearningProfile(BaseModel):
-    learning_style: str = Field(..., description="visual/reading/kinesthetic/auditory")
+    learning_style: str = Field(..., description="visual/auditory/reading/kinesthetic")
     pace: str = Field(..., description="slow/moderate/fast")
     collaboration: str = Field(..., description="solo/group/mixed")
     motivation: str = Field(..., description="challenge/practical/theory")
     preferred_bloom_levels: list[int] = Field(
         ..., description="Preferred Bloom levels based on profile"
+    )
+    preferred_modalities: list[str] = Field(
+        default=["visual", "reading"],
+        description="Preferred content modalities: video, audio, visual, reading, game, kinesthetic, interactive",
     )
 
 

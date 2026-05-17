@@ -74,7 +74,7 @@ export const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownM
         aria-expanded={open}
         onClick={(e) => {
           onClick?.(e)
-          setOpen((prev) => !prev)
+          setOpen((prev: boolean) => !prev)
         }}
         className={cn('inline-flex items-center', className)}
         {...props}
@@ -90,7 +90,7 @@ type DropdownMenuContentProps = React.HTMLAttributes<HTMLDivElement> & {
 
 export const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenuContentProps>(
   ({ className, align = 'end', children, ...props }, ref) => {
-    const { open, setOpen } = useDropdown()
+    const { open } = useDropdown()
     const contentRef = React.useRef<HTMLDivElement>(null)
 
     React.useEffect(() => {

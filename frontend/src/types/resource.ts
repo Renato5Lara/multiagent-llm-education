@@ -1,4 +1,4 @@
-export type ResourceType = 'pdf' | 'video' | 'image' | 'text' | 'document'
+export type ResourceType = 'pdf' | 'video' | 'image' | 'text' | 'document' | 'audio' | 'game' | 'interactive'
 
 export interface Resource {
     id: string

@@ -92,3 +92,56 @@ def update_module(
             detail="Módulo no encontrado",
         )
     return module
+
+
+@router.post("/evaluation/{course_id}/start")
+def start_evaluation(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Inicia una evaluación generando preguntas vía agente y creando un intento."""
+    attempt = evaluation_service.start_evaluation(
+        db, student_id=current_user.id, course_id=course_id,
+    )
+    if not attempt:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se pudo iniciar la evaluación. Completa el diagnóstico y genera tu ruta primero.",
+        )
+
+    questions_clean = evaluation_service._strip_correct_answers(attempt.questions)
+    log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
+    return {
+        "attempt_id": attempt.id,
+        "module_id": attempt.module_id,
+        "questions": questions_clean,
+        "max_score": attempt.max_score,
+    }
+
+
+@router.post("/evaluation/{attempt_id}/submit")
+def submit_evaluation(
+    attempt_id: str,
+    data: EvaluationSubmit,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Envía respuestas de evaluación y obtiene resultado."""
+    attempt = evaluation_service.submit_evaluation(
+        db, attempt_id=attempt_id, answers=data.answers,
+    )
+    if not attempt:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Intento de evaluación no encontrado",
+        )
+
+    log_action(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+    return {
+        "attempt_id": attempt.id,
+        "score": attempt.score,
+        "max_score": attempt.max_score,
+        "passed": bool(attempt.passed),
+        "completed_at": attempt.completed_at,
+    }

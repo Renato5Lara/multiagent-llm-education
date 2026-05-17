@@ -20,6 +20,9 @@ class ResourceType(str, enum.Enum):
     IMAGE = "image"
     TEXT = "text"
     DOCUMENT = "document"
+    AUDIO = "audio"
+    GAME = "game"
+    INTERACTIVE = "interactive"
 
 
 class Resource(Base):

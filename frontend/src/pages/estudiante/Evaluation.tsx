@@ -1,69 +1,134 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ClipboardCheck, CheckCircle2, XCircle, ArrowLeft, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import PageHeader from '@/components/common/PageHeader'
-import { useLearningPath, useUpdateModule } from '@/hooks/useStudent'
-import { useQuery } from '@tanstack/react-query'
-import api from '@/lib/api'
-import type { AgentPlan } from '@/types/student'
 import { useToast } from '@/hooks/use-toast'
+import api from '@/lib/api'
+import { useMutation } from '@tanstack/react-query'
+
+interface Question {
+    question: string
+    options: string[]
+}
+
+interface StartEvalResponse {
+    attempt_id: string
+    module_id: string | null
+    questions: Question[]
+    max_score: number
+}
+
+interface SubmitEvalResponse {
+    attempt_id: string
+    score: number
+    max_score: number
+    passed: boolean
+    completed_at: string
+}
 
 export default function Evaluation() {
     const { courseId } = useParams<{ courseId: string }>()
     const navigate = useNavigate()
     const { toast } = useToast()
-    const { data: path } = useLearningPath(courseId)
-    const updateModule = useUpdateModule()
 
     const [currentQuestion, setCurrentQuestion] = useState(0)
     const [answers, setAnswers] = useState<Record<number, number>>({})
     const [submitted, setSubmitted] = useState(false)
-    const [score, setScore] = useState(0)
+    const [attemptId, setAttemptId] = useState<string | null>(null)
+    const [questions, setQuestions] = useState<Question[]>([])
+    const [result, setResult] = useState<SubmitEvalResponse | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [started, setStarted] = useState(false)
 
-    const { data: evaluation, isLoading } = useQuery({
-        queryKey: ['evaluation', courseId],
-        queryFn: async () => {
-            const resp = await api.get<AgentPlan>(`/api/estudiante/path/${courseId}`)
-            const pathData = resp.data
-            return { questions: [], moduleTitle: 'Evaluación' }
+    const startMutation = useMutation({
+        mutationFn: async () => {
+            const resp = await api.post<StartEvalResponse>(`/api/estudiante/evaluation/${courseId}/start`)
+            return resp.data
         },
-        enabled: false,
+        onSuccess: (data) => {
+            setAttemptId(data.attempt_id)
+            setQuestions(data.questions)
+            setStarted(true)
+        },
+        onError: () => {
+            setError('No se pudo iniciar la evaluación. Completa el diagnóstico y genera tu ruta primero.')
+        },
     })
 
-    const mockQuestions = [
-        { question: '¿Cuál es el concepto principal revisado en este módulo?', options: ['Recordar información', 'Analizar conceptos', 'Aplicar conocimientos', 'Evaluar resultados'], correct: 0 },
-        { question: '¿Qué nivel de Bloom corresponde a "analizar"?', options: ['Nivel 1', 'Nivel 2', 'Nivel 4', 'Nivel 6'], correct: 2 },
-        { question: '¿Cómo se aplica este conocimiento en un caso real?', options: ['Solo teoría', 'Identificando problemas y soluciones', 'Memorizando', 'Ignorando el contexto'], correct: 1 },
-    ]
+    const submitMutation = useMutation({
+        mutationFn: async () => {
+            const resp = await api.post<SubmitEvalResponse>(`/api/estudiante/evaluation/${attemptId}/submit`, { answers })
+            return resp.data
+        },
+        onSuccess: (data) => {
+            setResult(data)
+            setSubmitted(true)
+            toast({ title: 'Evaluación completada', description: `${data.score}/${data.max_score} correctas` })
+        },
+        onError: () => {
+            toast({ variant: 'destructive', title: 'Error al enviar evaluación' })
+        },
+    })
 
     const handleAnswer = (questionIdx: number, optionIdx: number) => {
         setAnswers(prev => ({ ...prev, [questionIdx]: optionIdx }))
     }
 
     const handleSubmit = () => {
-        let correct = 0
-        mockQuestions.forEach((q, i) => {
-            if (answers[i] === q.correct) correct++
-        })
-        setScore(correct)
-        setSubmitted(true)
-        toast({ title: 'Evaluación completada', description: `${correct}/${mockQuestions.length} correctas` })
+        submitMutation.mutate()
     }
 
-    if (isLoading) {
+    if (error) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-                <p className="mt-4 text-muted-foreground">Cargando evaluación...</p>
+            <div className="max-w-2xl mx-auto">
+                <PageHeader title="Evaluación" description="Evaluación del módulo" />
+                <Card className="p-12 text-center">
+                    <AlertCircle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Evaluación no disponible</h3>
+                    <p className="text-muted-foreground mb-6">{error}</p>
+                    <Button onClick={() => navigate(`/estudiante/path/${courseId}`)}>Volver a la ruta</Button>
+                </Card>
             </div>
         )
     }
 
-    if (submitted) {
-        const passed = score >= mockQuestions.length * 0.6
+    if (!started) {
+        return (
+            <div className="max-w-2xl mx-auto">
+                <div className="flex items-center gap-2 mb-4">
+                    <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+                        <ArrowLeft className="h-4 w-4 mr-1" />Volver
+                    </Button>
+                </div>
+                <PageHeader title="Evaluación del Módulo" description="Pon a prueba tus conocimientos" />
+                <Card className="p-12 text-center">
+                    {startMutation.isPending ? (
+                        <>
+                            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+                            <p className="text-muted-foreground">Generando preguntas personalizadas...</p>
+                        </>
+                    ) : (
+                        <>
+                            <CheckCircle2 className="h-16 w-16 text-primary mx-auto mb-4 opacity-50" />
+                            <h3 className="text-lg font-semibold mb-2">¿Listo para la evaluación?</h3>
+                            <p className="text-muted-foreground mb-6">
+                                El sistema generará preguntas adaptadas a tu nivel y contenido del curso.
+                            </p>
+                            <Button onClick={() => startMutation.mutate()} size="lg">
+                                Comenzar evaluación
+                            </Button>
+                        </>
+                    )}
+                </Card>
+            </div>
+        )
+    }
+
+    if (submitted && result) {
+        const passed = result.passed
         return (
             <div className="max-w-2xl mx-auto">
                 <PageHeader title="Resultado de Evaluación" description="Evaluación del módulo completada" />
@@ -75,13 +140,13 @@ export default function Evaluation() {
                             <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
                         )}
                         <h2 className="text-2xl font-bold mb-2">{passed ? '¡Aprobado!' : 'No aprobado'}</h2>
-                        <p className="text-4xl font-bold text-primary mb-4">{score}/{mockQuestions.length}</p>
+                        <p className="text-4xl font-bold text-primary mb-4">{result.score}/{result.max_score}</p>
                         <p className="text-muted-foreground mb-6">
                             {passed ? '¡Buen trabajo! Continúa con el siguiente módulo.' : 'Revisa el material e intenta de nuevo.'}
                         </p>
                         <div className="flex gap-3 justify-center">
                             {!passed && (
-                                <Button variant="outline" onClick={() => { setSubmitted(false); setAnswers({}); setCurrentQuestion(0) }}>
+                                <Button variant="outline" onClick={() => { setSubmitted(false); setStarted(false); setAnswers({}); setCurrentQuestion(0); setResult(null); setAttemptId(null) }}>
                                     Reintentar
                                 </Button>
                             )}
@@ -91,6 +156,15 @@ export default function Evaluation() {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+        )
+    }
+
+    if (questions.length === 0) {
+        return (
+            <div className="max-w-2xl mx-auto text-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+                <p className="mt-4 text-muted-foreground">Preparando preguntas...</p>
             </div>
         )
     }
@@ -106,16 +180,16 @@ export default function Evaluation() {
 
             <div className="mb-6">
                 <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                    <span>Pregunta {currentQuestion + 1} de {mockQuestions.length}</span>
+                    <span>Pregunta {currentQuestion + 1} de {questions.length}</span>
                 </div>
-                <Progress value={(Object.keys(answers).length / mockQuestions.length) * 100} className="h-2" />
+                <Progress value={(Object.keys(answers).length / questions.length) * 100} className="h-2" />
             </div>
 
             <Card className="mb-6">
                 <CardContent className="p-6">
-                    <p className="text-lg font-medium mb-6">{mockQuestions[currentQuestion].question}</p>
+                    <p className="text-lg font-medium mb-6">{questions[currentQuestion].question}</p>
                     <div className="space-y-3">
-                        {mockQuestions[currentQuestion].options.map((opt, oi) => (
+                        {questions[currentQuestion].options.map((opt, oi) => (
                             <label
                                 key={oi}
                                 className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
@@ -147,13 +221,13 @@ export default function Evaluation() {
                 <Button variant="outline" onClick={() => setCurrentQuestion(c => Math.max(0, c - 1))} disabled={currentQuestion === 0}>
                     Anterior
                 </Button>
-                {currentQuestion < mockQuestions.length - 1 ? (
+                {currentQuestion < questions.length - 1 ? (
                     <Button onClick={() => setCurrentQuestion(c => c + 1)} disabled={answers[currentQuestion] === undefined}>
                         Siguiente
                     </Button>
                 ) : (
-                    <Button onClick={handleSubmit} disabled={Object.keys(answers).length < mockQuestions.length}>
-                        Enviar evaluación
+                    <Button onClick={handleSubmit} disabled={Object.keys(answers).length < questions.length || submitMutation.isPending}>
+                        {submitMutation.isPending ? 'Enviando...' : 'Enviar evaluación'}
                     </Button>
                 )}
             </div>

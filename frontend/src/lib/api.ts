@@ -47,7 +47,7 @@ export function getErrorMessage(error: unknown): string {
         if (error.response?.status === 404) return 'Recurso no encontrado'
         if (error.response?.status === 403) return 'No tiene permisos para realizar esta acción'
         if (error.response?.status === 409) return 'Ya existe un registro con esos datos'
-        if (error.response?.status >= 500) return 'Error interno del servidor. Intente de nuevo más tarde'
+        if ((error.response?.status ?? 0) >= 500) return 'Error interno del servidor. Intente de nuevo más tarde'
     }
     return 'Ocurrió un error inesperado'
 }

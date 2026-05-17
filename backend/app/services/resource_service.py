@@ -23,6 +23,12 @@ EXTENSION_TO_TYPE: dict[str, ResourceType] = {
     ".png": ResourceType.IMAGE,
     ".txt": ResourceType.TEXT,
     ".docx": ResourceType.DOCUMENT,
+    ".mp3": ResourceType.AUDIO,
+    ".wav": ResourceType.AUDIO,
+    ".ogg": ResourceType.AUDIO,
+    ".webm": ResourceType.AUDIO,
+    ".html": ResourceType.INTERACTIVE,
+    ".zip": ResourceType.INTERACTIVE,
 }
 
 # MIME types permitidos
@@ -33,6 +39,12 @@ ALLOWED_MIME_TYPES = {
     "image/png",
     "text/plain",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/ogg",
+    "audio/webm",
+    "text/html",
+    "application/zip",
 }
 
 

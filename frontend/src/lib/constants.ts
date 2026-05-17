@@ -29,7 +29,7 @@ export const COURSE_STATUS_COLORS: Record<string, string> = {
     archivado: 'bg-gray-100 text-gray-700',
 }
 
-export const ACCEPTED_FILE_TYPES = '.pdf,.mp4,.jpg,.jpeg,.png,.txt,.docx'
+export const ACCEPTED_FILE_TYPES = '.pdf,.mp4,.jpg,.jpeg,.png,.txt,.docx,.mp3,.wav,.ogg,.html,.zip'
 export const MAX_FILE_SIZE_MB = 50
 
 export const DIAGNOSTIC_QUESTIONS = [

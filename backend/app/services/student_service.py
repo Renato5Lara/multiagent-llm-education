@@ -62,6 +62,14 @@ def generate_learning_path(
     if existing:
         return existing
 
+    profile = diagnostic.profile or {}
+    preferred_bloom = profile.get("preferred_bloom_levels", [])
+    if preferred_bloom:
+        def sort_key(o):
+            match = abs(o.bloom_level - preferred_bloom[0])
+            return match
+        objectives.sort(key=sort_key)
+
     path = LearningPath(
         student_id=student_id,
         course_id=course_id,

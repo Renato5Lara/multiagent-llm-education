@@ -19,8 +19,17 @@ from app.db.base import Base
 
 # Importar todos los modelos para que Alembic los descubra
 from app.models import (  # noqa: F401
-    User, Course, LearningObjective, Resource,
-    ResourceObjective, Enrollment, AuditLog, LoginAttempt,
+    User, UserRole,
+    Course, CourseStatus,
+    LearningObjective,
+    Resource, ResourceType,
+    ResourceObjective,
+    Enrollment, EnrollmentStatus,
+    AuditLog,
+    LoginAttempt,
+    DiagnosticResult,
+    LearningPath, PathModule,
+    EvaluationAttempt,
 )
 
 # this is the Alembic Config object

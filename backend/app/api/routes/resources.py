@@ -58,6 +58,19 @@ def list_resources(course_id: str, db: Session = Depends(get_db), current_user: 
     return resource_service.get_resources_by_course(db, course_id)
 
 
+@router.get("/api/resources/{resource_id}", response_model=ResourceResponse)
+def get_resource_meta(
+    resource_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Obtiene metadatos de un recurso por su ID."""
+    resource = resource_service.get_resource_by_id(db, resource_id)
+    if not resource:
+        raise HTTPException(status_code=404, detail="Recurso no encontrado")
+    return resource
+
+
 @router.get("/api/resources/{resource_id}/download")
 def download_resource(resource_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Descarga un recurso por su ID."""
