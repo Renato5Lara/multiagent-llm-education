@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -40,4 +40,29 @@ class PathModule(Base):
     completed_at = Column(DateTime, nullable=True)
 
     path = relationship("LearningPath", back_populates="modules")
+    resource = relationship("Resource")
+
+
+class StudentProgress(Base):
+    __tablename__ = "student_progress"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    student_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    course_id = Column(String(36), ForeignKey("courses.id"), nullable=False)
+    resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
+    completed = Column(Boolean, default=False, nullable=False)
+    completed_at = Column(DateTime, nullable=True)
+    progress_percentage = Column(Integer, default=0, nullable=False)
+    created_at = Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    student = relationship("User")
+    course = relationship("Course")
     resource = relationship("Resource")

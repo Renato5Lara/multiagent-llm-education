@@ -27,7 +27,7 @@ class Course(Base):
     code = Column(String(50), nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    cycle = Column(String(20), nullable=False)
+    cycle = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
     status = Column(
         Enum(CourseStatus, name="coursestatus"),
@@ -55,6 +55,9 @@ class Course(Base):
     )
     enrollments = relationship(
         "Enrollment", back_populates="course", cascade="all, delete-orphan"
+    )
+    competency_associations = relationship(
+        "CourseCompetency", back_populates="course", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

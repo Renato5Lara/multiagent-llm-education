@@ -3,13 +3,14 @@ import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCreateCourse } from '@/hooks/useCourses'
 
 interface Props { onSuccess: () => void }
 
 export default function CourseForm({ onSuccess }: Props) {
     const create = useCreateCourse()
-    const [form, setForm] = useState({ code: '', name: '', description: '', cycle: '', year: new Date().getFullYear() })
+    const [form, setForm] = useState({ code: '', name: '', description: '', cycle: 3, year: new Date().getFullYear() })
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -22,10 +23,17 @@ export default function CourseForm({ onSuccess }: Props) {
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Código *</Label><Input value={form.code} onChange={e => set('code', e.target.value)} placeholder="INF-301" /></div>
-                <div className="space-y-2"><Label>Ciclo *</Label><Input value={form.cycle} onChange={e => set('cycle', e.target.value)} placeholder="2026-I" /></div>
+                <div className="space-y-2"><Label>Código *</Label><Input value={form.code} onChange={e => set('code', e.target.value)} placeholder="IS-301" /></div>
+                <div className="space-y-2"><Label>Ciclo *</Label>
+                    <Select value={String(form.cycle)} onValueChange={v => set('cycle', parseInt(v))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            {[1,2,3,4,5,6,7,8,9,10].map(c => <SelectItem key={c} value={String(c)}>Ciclo {c}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="space-y-2"><Label>Nombre *</Label><Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Ingeniería de Software I" /></div>
+            <div className="space-y-2"><Label>Nombre *</Label><Input value={form.name} onChange={e => set('name', e.target.value)} placeholder="Fundamentos de Programación" /></div>
             <div className="space-y-2"><Label>Descripción</Label><Input value={form.description} onChange={e => set('description', e.target.value)} /></div>
             <div className="space-y-2"><Label>Año</Label><Input type="number" value={form.year} onChange={e => set('year', parseInt(e.target.value))} /></div>
             <div className="flex justify-end pt-2">

@@ -19,25 +19,15 @@ def get_courses(
     page: int = 1,
     size: int = 20,
 ) -> tuple[list[Course], int]:
-    """
-    Obtiene cursos filtrados por rol del usuario.
-    - Admin: todos los cursos.
-    - Docente: solo sus cursos.
-    - Estudiante: cursos en los que está inscrito.
-    - Investigador: todos los cursos.
-    """
     query = db.query(Course)
 
     if user.role == UserRole.DOCENTE:
         query = query.filter(Course.teacher_id == user.id)
     elif user.role == UserRole.ESTUDIANTE:
-        enrolled_ids = (
-            db.query(Enrollment.course_id)
-            .filter(Enrollment.student_id == user.id)
-            .subquery()
-        )
-        query = query.filter(Course.id.in_(enrolled_ids))
+        if user.current_cycle:
+            query = query.filter(Course.cycle == user.current_cycle)
 
+    query = query.filter(Course.status != CourseStatus.ARCHIVADO)
     total = query.count()
     courses = query.offset((page - 1) * size).limit(size).all()
     return courses, total

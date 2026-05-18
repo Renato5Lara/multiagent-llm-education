@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import auth, courses, objectives, resources, users, estudiantes
+from app.api.routes import auth, courses, objectives, resources, users, estudiantes, competencies, students
 from app.agents.router import router as agents_router
 
 # Configurar logging estructurado
@@ -28,7 +28,9 @@ tags_metadata = [
     {"name": "Cursos", "description": "Gestión de cursos (docentes)"},
     {"name": "Recursos", "description": "Subida y gestión de material educativo"},
     {"name": "Objetivos de Aprendizaje", "description": "Objetivos por curso"},
-    {"name": "Estudiante", "description": "Diagnóstico, ruta de aprendizaje y progreso"},
+    {"name": "Competencias", "description": "Gestión de competencias UPAO"},
+    {"name": "Estudiante", "description": "Diagnóstico, ruta de aprendizaje y progreso (legacy)"},
+    {"name": "Estudiantes", "description": "Flujo estudiantil completo (profile, diagnostic, path, progress)"},
     {"name": "Agentes Inteligentes", "description": "Sistema multiagente con LangGraph"},
     {"name": "Sistema", "description": "Health check y estado"},
 ]
@@ -97,6 +99,8 @@ app.include_router(courses.router)
 app.include_router(resources.router)
 app.include_router(objectives.router)
 app.include_router(estudiantes.router)
+app.include_router(students.router)
+app.include_router(competencies.router)
 app.include_router(agents_router)
 
 

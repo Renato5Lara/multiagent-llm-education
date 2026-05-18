@@ -45,7 +45,7 @@ export default function Evaluation() {
 
     const startMutation = useMutation({
         mutationFn: async () => {
-            const resp = await api.post<StartEvalResponse>(`/api/estudiante/evaluation/${courseId}/start`)
+            const resp = await api.post<StartEvalResponse>(`/api/students/evaluation/${courseId}/start`)
             return resp.data
         },
         onSuccess: (data) => {
@@ -60,7 +60,7 @@ export default function Evaluation() {
 
     const submitMutation = useMutation({
         mutationFn: async () => {
-            const resp = await api.post<SubmitEvalResponse>(`/api/estudiante/evaluation/${attemptId}/submit`, { answers })
+            const resp = await api.post<SubmitEvalResponse>(`/api/students/evaluation/${attemptId}/submit`, { answers })
             return resp.data
         },
         onSuccess: (data) => {

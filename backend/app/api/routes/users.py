@@ -47,13 +47,20 @@ def create_user(
     current_user: User = Depends(get_current_admin),
 ):
     """Crea un nuevo usuario."""
-    # Verificar email duplicado
     existing = user_service.get_user_by_email(db, user_data.email)
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"El email {user_data.email} ya está registrado",
         )
+
+    if user_data.institutional_code:
+        existing_code = user_service.get_user_by_code(db, user_data.institutional_code)
+        if existing_code:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"El código institucional {user_data.institutional_code} ya está registrado",
+            )
 
     user = user_service.create_user(
         db,
@@ -64,6 +71,7 @@ def create_user(
         role=user_data.role,
         institutional_code=user_data.institutional_code,
         area=user_data.area,
+        current_cycle=user_data.current_cycle,
     )
 
     log_action(db, current_user.id, "crear_usuario", "user", user.id)
@@ -132,13 +140,20 @@ def update_user(
             detail="Usuario no encontrado",
         )
 
-    # Si se cambia el email, verificar que no esté en uso
     if user_data.email and user_data.email != user.email:
         existing = user_service.get_user_by_email(db, user_data.email)
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"El email {user_data.email} ya está registrado",
+            )
+
+    if user_data.institutional_code and user_data.institutional_code != user.institutional_code:
+        existing_code = user_service.get_user_by_code(db, user_data.institutional_code)
+        if existing_code:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"El código institucional {user_data.institutional_code} ya está registrado",
             )
 
     update_data = user_data.model_dump(exclude_unset=True)

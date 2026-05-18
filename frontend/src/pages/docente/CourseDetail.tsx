@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Send, Plus, Trash2, CheckSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,6 +16,7 @@ import { useCourse, usePublishCourse, useEnrollStudents } from '@/hooks/useCours
 import { useObjectives, useCreateObjective, useDeleteObjective } from '@/hooks/useObjectives'
 import { useResources, useUploadResource, useDeleteResource } from '@/hooks/useResources'
 import { useUsers } from '@/hooks/useUsers'
+import { useInstitutionalCompetencies, useCareerCompetencies, useCourseCompetencies, useAssignCompetencies } from '@/hooks/useCompetencies'
 import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS, BLOOM_LEVELS } from '@/lib/constants'
 import { formatFileSize } from '@/lib/utils'
 import { useState } from 'react'
@@ -26,6 +27,10 @@ export default function CourseDetail() {
     const { data: course, isLoading } = useCourse(id)
     const { data: objectives } = useObjectives(id)
     const { data: resources } = useResources(id)
+    const { data: courseCompetencies } = useCourseCompetencies(id)
+    const { data: instCompetencies } = useInstitutionalCompetencies()
+    const { data: careerCompetencies } = useCareerCompetencies()
+    const assignComp = useAssignCompetencies()
     const publish = usePublishCourse()
     const upload = useUploadResource()
     const deleteRes = useDeleteResource()
@@ -36,16 +41,25 @@ export default function CourseDetail() {
     const [selectedStudents, setSelectedStudents] = useState<string[]>([])
     const [objForm, setObjForm] = useState({ title: '', description: '', bloom_level: 1, order: 0 })
     const [objOpen, setObjOpen] = useState(false)
+    const [compSelected, setCompSelected] = useState<string[]>([])
 
     if (isLoading) return <div className="space-y-4">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}</div>
     if (!course) return <p className="text-center py-12 text-muted-foreground">Curso no encontrado</p>
+
+    const existingCompIds = new Set(courseCompetencies?.map(c => c.id) || [])
+
+    const handleAssignCompetencies = () => {
+        if (!id || compSelected.length === 0) return
+        assignComp.mutate({ courseId: id, competencyIds: compSelected })
+        setCompSelected([])
+    }
 
     return (
         <div>
             <div className="flex items-center gap-2 mb-4">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/docente/courses')}><ArrowLeft className="h-4 w-4 mr-1" />Volver</Button>
             </div>
-            <PageHeader title={course.name} description={`${course.code} · ${course.cycle} · ${course.year}`}>
+            <PageHeader title={course.name} description={`${course.code} · Ciclo ${course.cycle} · ${course.year}`}>
                 <Badge variant="secondary" className={COURSE_STATUS_COLORS[course.status] ?? ''}>{COURSE_STATUS_LABELS[course.status]}</Badge>
                 {course.status === 'borrador' && (
                     <Button size="sm" onClick={() => publish.mutate(course.id)} disabled={publish.isPending}>
@@ -55,7 +69,7 @@ export default function CourseDetail() {
             </PageHeader>
 
             <Tabs defaultValue="info" className="space-y-6">
-                <TabsList><TabsTrigger value="info">Información</TabsTrigger><TabsTrigger value="objectives">Objetivos</TabsTrigger><TabsTrigger value="resources">Recursos</TabsTrigger><TabsTrigger value="students">Estudiantes</TabsTrigger></TabsList>
+                <TabsList><TabsTrigger value="info">Información</TabsTrigger><TabsTrigger value="competencies">Competencias</TabsTrigger><TabsTrigger value="objectives">Objetivos</TabsTrigger><TabsTrigger value="resources">Recursos</TabsTrigger><TabsTrigger value="students">Estudiantes</TabsTrigger></TabsList>
 
                 <TabsContent value="info">
                     <Card><CardContent className="p-6 space-y-3">
@@ -63,9 +77,108 @@ export default function CourseDetail() {
                         <div className="grid grid-cols-3 gap-4">
                             <div><span className="text-sm text-muted-foreground">Objetivos</span><p className="font-semibold text-lg">{objectives?.length ?? 0}</p></div>
                             <div><span className="text-sm text-muted-foreground">Recursos</span><p className="font-semibold text-lg">{resources?.length ?? 0}</p></div>
-                            <div><span className="text-sm text-muted-foreground">Estado</span><p className="font-semibold text-lg">{COURSE_STATUS_LABELS[course.status]}</p></div>
+                            <div><span className="text-sm text-muted-foreground">Competencias</span><p className="font-semibold text-lg">{courseCompetencies?.length ?? 0}</p></div>
                         </div>
                     </CardContent></Card>
+                </TabsContent>
+
+                <TabsContent value="competencies">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle className="text-lg">Competencias del Curso</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {courseCompetencies && courseCompetencies.length > 0 && (
+                                <div>
+                                    <h4 className="text-sm font-medium mb-2">Competencias asignadas</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {courseCompetencies.map(c => (
+                                            <Badge key={c.id} variant="secondary" className="flex items-center gap-1">
+                                                <CheckSquare className="h-3 w-3 text-green-500" />
+                                                {c.name}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-medium">Asignar competencias</h4>
+
+                                <div>
+                                    <p className="text-xs text-muted-foreground mb-2">Competencias Institucionales UPAO</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {instCompetencies?.map(c => {
+                                            const isSelected = compSelected.includes(c.id)
+                                            const isAssigned = existingCompIds.has(c.id)
+                                            return (
+                                                <label
+                                                    key={c.id}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
+                                                        isAssigned ? 'bg-green-50 border-green-200 opacity-60' :
+                                                        isSelected ? 'bg-primary/10 border-primary' : 'hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected || isAssigned}
+                                                        disabled={isAssigned}
+                                                        onChange={e => {
+                                                            if (e.target.checked) {
+                                                                setCompSelected(p => [...p, c.id])
+                                                            } else {
+                                                                setCompSelected(p => p.filter(x => x !== c.id))
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span className="text-xs">{c.name}</span>
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs text-muted-foreground mb-2">Competencias de Carrera</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {careerCompetencies?.map(c => {
+                                            const isSelected = compSelected.includes(c.id)
+                                            const isAssigned = existingCompIds.has(c.id)
+                                            return (
+                                                <label
+                                                    key={c.id}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${
+                                                        isAssigned ? 'bg-green-50 border-green-200 opacity-60' :
+                                                        isSelected ? 'bg-primary/10 border-primary' : 'hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected || isAssigned}
+                                                        disabled={isAssigned}
+                                                        onChange={e => {
+                                                            if (e.target.checked) {
+                                                                setCompSelected(p => [...p, c.id])
+                                                            } else {
+                                                                setCompSelected(p => p.filter(x => x !== c.id))
+                                                            }
+                                                        }}
+                                                    />
+                                                    <span className="text-xs">{c.name}</span>
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                {compSelected.length > 0 && (
+                                    <Button onClick={handleAssignCompetencies} disabled={assignComp.isPending}>
+                                        Asignar {compSelected.length} competencia(s)
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 <TabsContent value="objectives">

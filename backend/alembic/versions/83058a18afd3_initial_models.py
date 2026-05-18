@@ -43,6 +43,12 @@ def upgrade() -> None:
         EXCEPTION WHEN duplicate_object THEN NULL;
         END $$;
     """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE competencytype AS ENUM ('institutional', 'career', 'course');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """)
 
     op.create_table(
         "users",
@@ -58,6 +64,7 @@ def upgrade() -> None:
         ),
         sa.Column("institutional_code", sa.String(50), nullable=True),
         sa.Column("area", sa.String(100), nullable=True),
+        sa.Column("current_cycle", sa.Integer(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column(
             "created_at",
@@ -79,7 +86,7 @@ def upgrade() -> None:
         sa.Column("code", sa.String(50), nullable=False),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
-        sa.Column("cycle", sa.String(20), nullable=False),
+        sa.Column("cycle", sa.Integer(), nullable=False),
         sa.Column("year", sa.Integer(), nullable=False),
         sa.Column(
             "status",
@@ -165,6 +172,8 @@ def upgrade() -> None:
         sa.Column("course_id", sa.String(36), sa.ForeignKey("courses.id"), nullable=False),
         sa.Column("answers", sa.JSON(), nullable=False),
         sa.Column("profile", sa.JSON(), nullable=True),
+        sa.Column("modality_scores", sa.JSON(), nullable=True),
+        sa.Column("dominant_modality", sa.String(50), nullable=True),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
 
@@ -208,8 +217,55 @@ def upgrade() -> None:
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
     )
 
+    op.create_table(
+        "competencies",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column("name", sa.String(255), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column(
+            "competency_type",
+            postgresql.ENUM("institutional", "career", "course", name="competencytype", create_type=False),
+            nullable=False,
+        ),
+        sa.Column("cycle", sa.Integer(), nullable=True),
+        sa.Column("active", sa.Boolean(), nullable=False, server_default=sa.text("true")),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+    )
+
+    op.create_table(
+        "course_competencies",
+        sa.Column("course_id", sa.String(36), sa.ForeignKey("courses.id"), primary_key=True),
+        sa.Column("competency_id", sa.String(36), sa.ForeignKey("competencies.id"), primary_key=True),
+    )
+
+    op.create_table(
+        "student_profiles",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column("student_id", sa.String(36), sa.ForeignKey("users.id"), nullable=False, unique=True),
+        sa.Column("preferred_modalities", sa.JSON(), nullable=False),
+        sa.Column("dominant_style", sa.String(50), nullable=True),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+    )
+
+    op.create_table(
+        "student_progress",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column("student_id", sa.String(36), sa.ForeignKey("users.id"), nullable=False),
+        sa.Column("course_id", sa.String(36), sa.ForeignKey("courses.id"), nullable=False),
+        sa.Column("resource_id", sa.String(36), sa.ForeignKey("resources.id"), nullable=True),
+        sa.Column("completed", sa.Boolean(), nullable=False, server_default=sa.text("false")),
+        sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("progress_percentage", sa.Integer(), nullable=False, server_default=sa.text("0")),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+    )
+
 
 def downgrade() -> None:
+    op.drop_table("student_progress")
+    op.drop_table("student_profiles")
+    op.drop_table("course_competencies")
+    op.drop_table("competencies")
     op.drop_table("evaluation_attempts")
     op.drop_table("path_modules")
     op.drop_table("learning_paths")
@@ -226,3 +282,4 @@ def downgrade() -> None:
     op.execute("DROP TYPE IF EXISTS coursestatus CASCADE")
     op.execute("DROP TYPE IF EXISTS resourcetype CASCADE")
     op.execute("DROP TYPE IF EXISTS enrollmentstatus CASCADE")
+    op.execute("DROP TYPE IF EXISTS competencytype CASCADE")

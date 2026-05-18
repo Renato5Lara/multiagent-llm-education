@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
-    """Solicitud de inicio de sesión."""
-    email: str = Field(..., description="Correo electrónico del usuario")
+    """Solicitud de inicio de sesión. Acepta email o código institucional."""
+    identifier: str = Field(..., description="Correo electrónico o código institucional")
     password: str = Field(..., min_length=6, description="Contraseña")
 
 

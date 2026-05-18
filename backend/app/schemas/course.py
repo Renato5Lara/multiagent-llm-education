@@ -15,7 +15,7 @@ class CourseBase(BaseModel):
     code: str = Field(..., max_length=50, description="Código del curso")
     name: str = Field(..., min_length=1, max_length=255, description="Nombre")
     description: Optional[str] = Field(None, description="Descripción")
-    cycle: str = Field(..., max_length=20, description="Ciclo académico, ej: 2026-I")
+    cycle: int = Field(..., ge=1, le=10, description="Ciclo académico (1-10)")
     year: int = Field(..., ge=2020, le=2100, description="Año académico")
 
 
@@ -25,11 +25,11 @@ class CourseCreate(CourseBase):
 
 
 class CourseUpdate(BaseModel):
-    """Schema para actualizar curso. Todos opcionales."""
+    """Schema para actualizar curso. Todos los campos opcionales."""
     code: Optional[str] = Field(None, max_length=50)
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = None
-    cycle: Optional[str] = Field(None, max_length=20)
+    cycle: Optional[int] = Field(None, ge=1, le=10)
     year: Optional[int] = Field(None, ge=2020, le=2100)
 
 
@@ -39,7 +39,7 @@ class CourseResponse(BaseModel):
     code: str
     name: str
     description: Optional[str] = None
-    cycle: str
+    cycle: int
     year: int
     status: CourseStatus
     teacher_id: str

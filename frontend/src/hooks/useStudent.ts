@@ -1,6 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api, { getErrorMessage } from '@/lib/api'
-import type { DiagnosticResult, LearningPath, PathModule, AgentPlan } from '@/types/student'
+import type {
+  DiagnosticResult,
+  LearningPath,
+  PathModule,
+  AgentPlan,
+  StudentProfile,
+  LearningPathDetail,
+  CourseProgress,
+  StudentProgressEntry,
+} from '@/types/student'
 import { useToast } from '@/hooks/use-toast'
 
 export function useSubmitDiagnostic() {
@@ -9,11 +18,12 @@ export function useSubmitDiagnostic() {
 
   return useMutation({
     mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<DiagnosticResult>(`/api/estudiante/diagnostic/${courseId}`, { answers })
+      const resp = await api.post<DiagnosticResult>(`/api/students/diagnostic/${courseId}`, { answers })
       return resp.data
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['diagnostic', variables.courseId] })
+      queryClient.invalidateQueries({ queryKey: ['student-profile'] })
       toast({ title: 'Diagnóstico guardado exitosamente' })
     },
     onError: (error) => {
@@ -26,10 +36,49 @@ export function useDiagnostic(courseId: string | undefined) {
   return useQuery({
     queryKey: ['diagnostic', courseId],
     queryFn: async () => {
-      const resp = await api.get<DiagnosticResult>(`/api/estudiante/diagnostic/${courseId}`)
+      const resp = await api.get<DiagnosticResult>(`/api/students/diagnostic/${courseId}`)
       return resp.data
     },
     enabled: !!courseId,
+  })
+}
+
+export function useStudentProfile() {
+  return useQuery({
+    queryKey: ['student-profile'],
+    queryFn: async () => {
+      const resp = await api.get<StudentProfile>('/api/students/profile')
+      return resp.data
+    },
+  })
+}
+
+export function useSaveStudentProfile() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (data: { preferred_modalities: string[]; dominant_style: string | null }) => {
+      const resp = await api.post<StudentProfile>('/api/students/profile', data)
+      return resp.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-profile'] })
+      toast({ title: 'Perfil de aprendizaje guardado' })
+    },
+    onError: (error) => {
+      toast({ variant: 'destructive', title: 'Error al guardar perfil', description: getErrorMessage(error) })
+    },
+  })
+}
+
+export function useMyCourses() {
+  return useQuery({
+    queryKey: ['my-courses'],
+    queryFn: async () => {
+      const resp = await api.get<CourseProgress[]>('/api/students/my-courses')
+      return resp.data
+    },
   })
 }
 
@@ -39,11 +88,12 @@ export function useGeneratePath() {
 
   return useMutation({
     mutationFn: async (courseId: string) => {
-      const resp = await api.post<LearningPath>(`/api/estudiante/path/${courseId}`)
+      const resp = await api.post<LearningPath>(`/api/students/learning-path/${courseId}`)
       return resp.data
     },
     onSuccess: (_data, courseId) => {
       queryClient.invalidateQueries({ queryKey: ['learning-path', courseId] })
+      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
       toast({ title: 'Ruta de aprendizaje generada' })
     },
     onError: (error) => {
@@ -56,7 +106,7 @@ export function useLearningPath(courseId: string | undefined) {
   return useQuery({
     queryKey: ['learning-path', courseId],
     queryFn: async () => {
-      const resp = await api.get<LearningPath>(`/api/estudiante/path/${courseId}`)
+      const resp = await api.get<LearningPathDetail>(`/api/students/learning-path/${courseId}`)
       return resp.data
     },
     enabled: !!courseId,
@@ -73,7 +123,38 @@ export function useUpdateModule() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learning-path'] })
+      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
     },
+  })
+}
+
+export function useUpdateProgress() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async ({ courseId, resourceId, progressPercentage }: { courseId: string; resourceId?: string; progressPercentage?: number }) => {
+      const resp = await api.post<StudentProgressEntry>(`/api/students/progress/${courseId}`, {
+        resource_id: resourceId,
+        progress_percentage: progressPercentage,
+      })
+      return resp.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
+      toast({ title: 'Progreso actualizado' })
+    },
+  })
+}
+
+export function useCourseProgress(courseId: string | undefined) {
+  return useQuery({
+    queryKey: ['course-progress', courseId],
+    queryFn: async () => {
+      const resp = await api.get(`/api/students/progress/${courseId}`)
+      return resp.data
+    },
+    enabled: !!courseId,
   })
 }
 
@@ -94,7 +175,7 @@ export function useAgentGeneratePlan() {
 export function useStartEvaluation() {
   return useMutation({
     mutationFn: async (courseId: string) => {
-      const resp = await api.post(`/api/estudiante/evaluation/${courseId}/start`)
+      const resp = await api.post(`/api/students/evaluation/${courseId}/start`)
       return resp.data
     },
   })
@@ -103,7 +184,7 @@ export function useStartEvaluation() {
 export function useSubmitEvaluation() {
   return useMutation({
     mutationFn: async ({ attemptId, answers }: { attemptId: string; answers: Record<number, number> }) => {
-      const resp = await api.post(`/api/estudiante/evaluation/${attemptId}/submit`, { answers })
+      const resp = await api.post(`/api/students/evaluation/${attemptId}/submit`, { answers })
       return resp.data
     },
   })

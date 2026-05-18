@@ -9,6 +9,7 @@ export interface User {
     is_active: boolean
     institutional_code?: string
     area?: string
+    current_cycle?: number
     created_at: string
     updated_at: string
 }
@@ -21,6 +22,7 @@ export interface UserCreate {
     role: UserRole
     institutional_code?: string
     area?: string
+    current_cycle?: number
 }
 
 export interface UserUpdate {
@@ -29,6 +31,7 @@ export interface UserUpdate {
     last_name?: string
     institutional_code?: string
     area?: string
+    current_cycle?: number
     is_active?: boolean
 }
 

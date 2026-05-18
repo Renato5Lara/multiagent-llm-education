@@ -5,7 +5,7 @@ export interface Course {
     code: string
     name: string
     description?: string
-    cycle: string
+    cycle: number
     year: number
     status: CourseStatus
     teacher_id: string
@@ -17,7 +17,7 @@ export interface CourseCreate {
     code: string
     name: string
     description?: string
-    cycle: string
+    cycle: number
     year: number
 }
 
@@ -25,7 +25,7 @@ export interface CourseUpdate {
     code?: string
     name?: string
     description?: string
-    cycle?: string
+    cycle?: number
     year?: number
 }
 

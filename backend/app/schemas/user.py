@@ -20,6 +20,7 @@ class UserBase(BaseModel):
         None, max_length=50, description="Código institucional"
     )
     area: Optional[str] = Field(None, max_length=100, description="Área (docentes)")
+    current_cycle: Optional[int] = Field(None, ge=1, le=10, description="Ciclo académico (estudiantes)")
 
 
 class UserCreate(UserBase):
@@ -35,6 +36,7 @@ class UserUpdate(BaseModel):
     institutional_code: Optional[str] = Field(None, max_length=50)
     area: Optional[str] = Field(None, max_length=100)
     password: Optional[str] = Field(None, min_length=6, max_length=128)
+    current_cycle: Optional[int] = Field(None, ge=1, le=10)
 
 
 class UserRoleUpdate(BaseModel):
@@ -51,6 +53,7 @@ class UserResponse(BaseModel):
     role: UserRole
     institutional_code: Optional[str] = None
     area: Optional[str] = None
+    current_cycle: Optional[int] = None
     is_active: bool
     created_at: datetime
     updated_at: datetime

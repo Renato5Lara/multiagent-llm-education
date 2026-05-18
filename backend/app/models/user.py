@@ -7,7 +7,7 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, String
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -32,6 +32,7 @@ class User(Base):
     role = Column(Enum(UserRole, name="userrole"), nullable=False)
     institutional_code = Column(String(50), nullable=True)
     area = Column(String(100), nullable=True)
+    current_cycle = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
@@ -47,6 +48,7 @@ class User(Base):
     courses_taught = relationship("Course", back_populates="teacher", lazy="selectin")
     enrollments = relationship("Enrollment", back_populates="student", lazy="selectin")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")
+    student_profile = relationship("StudentProfile", back_populates="student", uselist=False, lazy="selectin")
 
     def __repr__(self) -> str:
         return f"<User {self.email} ({self.role.value})>"

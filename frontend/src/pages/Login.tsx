@@ -11,10 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function Login() {
     const { isAuthenticated, user } = useAuthStore()
     const { login, isLoggingIn } = useAuth()
-    const [email, setEmail] = useState('')
+    const [identifier, setIdentifier] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+    const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({})
 
     // If already authenticated, redirect to role-based home
     if (isAuthenticated && user) {
@@ -24,8 +24,7 @@ export default function Login() {
 
     const validate = () => {
         const newErrors: typeof errors = {}
-        if (!email) newErrors.email = 'El correo es obligatorio'
-        else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Ingrese un correo válido'
+        if (!identifier) newErrors.identifier = 'El correo o código es obligatorio'
         if (!password) newErrors.password = 'La contraseña es obligatoria'
         else if (password.length < 6) newErrors.password = 'Mínimo 6 caracteres'
         setErrors(newErrors)
@@ -35,7 +34,7 @@ export default function Login() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         if (validate()) {
-            login({ email, password })
+            login({ identifier, password })
         }
     }
 
@@ -61,18 +60,18 @@ export default function Login() {
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Correo electrónico</Label>
+                            <Label htmlFor="identifier">Correo o código institucional</Label>
                             <Input
-                                id="email"
-                                type="email"
-                                placeholder="usuario@upao.edu.pe"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className={errors.email ? 'border-red-500' : ''}
-                                autoComplete="email"
+                                id="identifier"
+                                type="text"
+                                placeholder="usuario@upao.edu.pe o 20231234"
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
+                                className={errors.identifier ? 'border-red-500' : ''}
+                                autoComplete="username"
                                 autoFocus
                             />
-                            {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                            {errors.identifier && <p className="text-xs text-red-500">{errors.identifier}</p>}
                         </div>
 
                         <div className="space-y-2">

@@ -22,30 +22,35 @@ LOCKOUT_DURATION_MINUTES = 5
 
 
 def authenticate_user(
-    db: Session, email: str, password: str, ip_address: Optional[str] = None
+    db: Session, identifier: str, password: str, ip_address: Optional[str] = None
 ) -> Optional[User]:
     """
-    Autentica un usuario verificando email y contraseña.
+    Autentica un usuario verificando email o código institucional y contraseña.
 
     Returns:
         User si las credenciales son válidas, None en caso contrario.
     """
-    user = db.query(User).filter(User.email == email).first()
+    user = (
+        db.query(User)
+        .filter(
+            (User.email == identifier) | (User.institutional_code == identifier)
+        )
+        .first()
+    )
 
     if not user or not verify_password(password, user.hashed_password):
-        # Registrar intento fallido
-        _record_attempt(db, email, success=False, ip_address=ip_address)
+        email_for_log = identifier if "@" in identifier else f"code:{identifier}"
+        _record_attempt(db, email_for_log, success=False, ip_address=ip_address)
         return None
 
     if not user.is_active:
         return None
 
-    # Registrar intento exitoso
-    _record_attempt(db, email, success=True, ip_address=ip_address)
+    _record_attempt(db, user.email, success=True, ip_address=ip_address)
     return user
 
 
-def is_account_locked(db: Session, email: str) -> bool:
+def is_account_locked(db: Session, identifier: str) -> bool:
     """
     Verifica si una cuenta está bloqueada por exceso de intentos fallidos.
     Política: 3 intentos fallidos en 5 minutos → bloqueo por 5 minutos.
@@ -55,7 +60,7 @@ def is_account_locked(db: Session, email: str) -> bool:
     failed_attempts = (
         db.query(LoginAttempt)
         .filter(
-            LoginAttempt.email == email,
+            LoginAttempt.email == identifier,
             LoginAttempt.success == False,  # noqa: E712
             LoginAttempt.attempted_at >= cutoff,
         )
@@ -81,6 +86,7 @@ def get_user_response_dict(user: User) -> dict:
         "last_name": user.last_name,
         "role": user.role.value,
         "is_active": user.is_active,
+        "current_cycle": user.current_cycle,
     }
 
 

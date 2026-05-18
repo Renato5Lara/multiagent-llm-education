@@ -1,6 +1,6 @@
 // Tipos de autenticación
 export interface LoginRequest {
-    email: string
+    identifier: string
     password: string
 }
 
@@ -19,6 +19,7 @@ export interface UserAuth {
     is_active: boolean
     institutional_code?: string
     area?: string
+    current_cycle?: number
 }
 
 export type UserRole = 'admin' | 'docente' | 'estudiante' | 'investigador'

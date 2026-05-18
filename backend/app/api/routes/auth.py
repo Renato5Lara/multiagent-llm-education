@@ -28,11 +28,10 @@ def login(
     db: Session = Depends(get_db),
 ):
     """
-    Inicio de sesión con email y contraseña.
+    Inicio de sesión con email/código institucional y contraseña.
     Bloquea la cuenta tras 3 intentos fallidos en 5 minutos.
     """
-    # Verificar si la cuenta está bloqueada
-    if auth_service.is_account_locked(db, login_data.email):
+    if auth_service.is_account_locked(db, login_data.identifier):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Cuenta bloqueada temporalmente por múltiples intentos fallidos. "
@@ -41,7 +40,7 @@ def login(
 
     ip_address = request.client.host if request.client else None
     user = auth_service.authenticate_user(
-        db, login_data.email, login_data.password, ip_address
+        db, login_data.identifier, login_data.password, ip_address
     )
 
     if not user:

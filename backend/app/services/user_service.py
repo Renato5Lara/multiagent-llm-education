@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
+from app.models.course import Course, CourseStatus
+from app.models.enrollment import Enrollment, EnrollmentStatus
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,11 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email).first()
 
 
+def get_user_by_code(db: Session, code: str) -> Optional[User]:
+    """Obtiene un usuario por su código institucional."""
+    return db.query(User).filter(User.institutional_code == code).first()
+
+
 def create_user(
     db: Session,
     email: str,
@@ -57,8 +64,9 @@ def create_user(
     role: UserRole,
     institutional_code: Optional[str] = None,
     area: Optional[str] = None,
+    current_cycle: Optional[int] = None,
 ) -> User:
-    """Crea un nuevo usuario."""
+    """Crea un nuevo usuario. Auto-inscribe estudiantes en cursos de su ciclo."""
     user = User(
         email=email,
         hashed_password=get_password_hash(password),
@@ -67,8 +75,14 @@ def create_user(
         role=role,
         institutional_code=institutional_code,
         area=area,
+        current_cycle=current_cycle,
     )
     db.add(user)
+    db.flush()
+
+    if role == UserRole.ESTUDIANTE and current_cycle:
+        _auto_enroll_student(db, user.id, current_cycle)
+
     db.commit()
     db.refresh(user)
     return user
@@ -79,7 +93,9 @@ def update_user(
     user: User,
     update_data: dict,
 ) -> User:
-    """Actualiza los campos de un usuario."""
+    """Actualiza los campos de un usuario. Auto-reinscribe si cambia el ciclo."""
+    old_cycle = user.current_cycle
+
     for field, value in update_data.items():
         if value is not None:
             if field == "password":
@@ -87,9 +103,47 @@ def update_user(
             else:
                 setattr(user, field, value)
 
+    new_cycle = user.current_cycle
+    if (
+        user.role == UserRole.ESTUDIANTE
+        and new_cycle is not None
+        and new_cycle != old_cycle
+    ):
+        _auto_enroll_student(db, user.id, new_cycle)
+
     db.commit()
     db.refresh(user)
     return user
+
+
+def _auto_enroll_student(db: Session, student_id: str, cycle: int) -> None:
+    """Inscribe automáticamente al estudiante en todos los cursos publicados de su ciclo."""
+    courses = (
+        db.query(Course)
+        .filter(Course.cycle == cycle, Course.status == CourseStatus.PUBLICADO)
+        .all()
+    )
+
+    existing_ids = set(
+        db.query(Enrollment.course_id)
+        .filter(Enrollment.student_id == student_id)
+        .all()
+    )
+    existing_ids = {cid[0] for cid in existing_ids}
+
+    enrolled_count = 0
+    for course in courses:
+        if course.id not in existing_ids:
+            enrollment = Enrollment(
+                course_id=course.id,
+                student_id=student_id,
+                status=EnrollmentStatus.ACTIVO,
+            )
+            db.add(enrollment)
+            enrolled_count += 1
+
+    if enrolled_count > 0:
+        db.flush()
 
 
 def soft_delete_user(db: Session, user: User) -> User:
