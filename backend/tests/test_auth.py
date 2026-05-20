@@ -12,7 +12,7 @@ class TestLogin:
     def test_login_exitoso(self, client, admin_user):
         """Login con credenciales correctas retorna token."""
         resp = client.post("/api/auth/login", json={
-            "email": "admin@test.com", "password": "Admin123!",
+            "identifier": "admin@test.com", "password": "Admin123!",
         })
         assert resp.status_code == 200
         data = resp.json()
@@ -23,7 +23,7 @@ class TestLogin:
     def test_login_password_incorrecto(self, client, admin_user):
         """Login con contraseña incorrecta retorna 401."""
         resp = client.post("/api/auth/login", json={
-            "email": "admin@test.com", "password": "WrongPass!",
+            "identifier": "admin@test.com", "password": "WrongPass!",
         })
         assert resp.status_code == 401
         assert "Credenciales incorrectas" in resp.json()["detail"]
@@ -31,7 +31,7 @@ class TestLogin:
     def test_login_email_inexistente(self, client):
         """Login con email no registrado retorna 401."""
         resp = client.post("/api/auth/login", json={
-            "email": "noexiste@test.com", "password": "Pass123!",
+            "identifier": "noexiste@test.com", "password": "Pass123!",
         })
         assert resp.status_code == 401
 
@@ -39,12 +39,12 @@ class TestLogin:
         """Cuenta se bloquea tras 3 intentos fallidos."""
         for _ in range(3):
             client.post("/api/auth/login", json={
-                "email": "admin@test.com", "password": "WrongPass!",
+                "identifier": "admin@test.com", "password": "WrongPass!",
             })
 
         # El cuarto intento debe ser bloqueado
         resp = client.post("/api/auth/login", json={
-            "email": "admin@test.com", "password": "Admin123!",
+            "identifier": "admin@test.com", "password": "Admin123!",
         })
         assert resp.status_code == 429
         assert "bloqueada" in resp.json()["detail"].lower()

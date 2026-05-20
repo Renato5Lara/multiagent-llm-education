@@ -1,27 +1,50 @@
 """
 UPAO-MAS-EDU — Aplicación principal FastAPI.
+Production-ready con CORS configurable, logging estructurado y manejo robusto de errores.
 """
 
 import logging
+import os
 import time
 import uuid
 from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import auth, courses, objectives, resources, users, estudiantes, competencies, students
 from app.agents.router import router as agents_router
+from app.core.config import settings
 
-# Configurar logging estructurado
+# ── Logging estructurado ──────────────────────────────────────────────
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 logger = logging.getLogger("upao-mas-edu")
 
-# Tags para OpenAPI
+
+# ── Startup / Shutdown ────────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info(
+        "Iniciando UPAO-MAS-EDU API",
+        extra={"env": settings.ENV, "version": settings.APP_VERSION},
+    )
+    # Crear directorios necesarios
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    for sub in ("courses", "resources", "images", "temp"):
+        os.makedirs(os.path.join(settings.UPLOAD_DIR, sub), exist_ok=True)
+
+    yield
+
+    logger.info("Apagando UPAO-MAS-EDU API")
+
+
+# ── Tags OpenAPI ──────────────────────────────────────────────────────
 tags_metadata = [
     {"name": "Autenticación", "description": "Login, logout, refresh y recuperación"},
     {"name": "Usuarios", "description": "CRUD de usuarios (admin)"},
@@ -35,26 +58,28 @@ tags_metadata = [
     {"name": "Sistema", "description": "Health check y estado"},
 ]
 
+# ── FastAPI app ───────────────────────────────────────────────────────
 app = FastAPI(
     title="UPAO-MAS-EDU API",
     description="API del Sistema Multi-Agente Educativo de la UPAO",
-    version="1.0.0",
+    version=settings.APP_VERSION,
     openapi_tags=tags_metadata,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if not settings.is_production else None,
+    redoc_url="/redoc" if not settings.is_production else None,
+    lifespan=lifespan,
 )
 
-# CORS
+# ── CORS configurable ─────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Middleware: Request-ID
+# ── Middleware: Request-ID ─────────────────────────────────────────────
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())
@@ -64,17 +89,17 @@ async def add_request_id(request: Request, call_next):
     return response
 
 
-# Middleware: Logging de requests
+# ── Middleware: Logging ────────────────────────────────────────────────
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start = time.time()
     response = await call_next(request)
     duration = round((time.time() - start) * 1000, 2)
-    logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration}ms)")
+    logger.info("%s %s -> %s (%sms)", request.method, request.url.path, response.status_code, duration)
     return response
 
 
-# Manejadores globales de errores
+# ── Manejadores globales de errores ────────────────────────────────────
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
@@ -85,14 +110,22 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    logger.error(f"Error no manejado: {exc}", exc_info=True)
+    logger.error("Error no manejado: %s", exc, exc_info=True)
+    detail = "Error interno del servidor"
+    if settings.DEBUG:
+        detail = str(exc)
     return JSONResponse(
         status_code=500,
-        content={"detail": "Error interno del servidor", "status_code": 500},
+        content={"detail": detail, "status_code": 500},
     )
 
 
-# Routers
+# ── Servir archivos estáticos (uploads) ────────────────────────────────
+if os.path.exists(settings.UPLOAD_DIR):
+    app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+
+
+# ── Routers ───────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(courses.router)
@@ -104,12 +137,13 @@ app.include_router(competencies.router)
 app.include_router(agents_router)
 
 
-# Health check
+# ── Health check ──────────────────────────────────────────────────────
 @app.get("/health", tags=["Sistema"])
 def health_check():
     """Endpoint de verificación de estado del servidor."""
     return {
         "status": "ok",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "1.0.0",
+        "version": settings.APP_VERSION,
+        "env": settings.ENV,
     }

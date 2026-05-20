@@ -12,7 +12,7 @@ class TestResourceUpload:
 
     def _create_course(self, client, token):
         resp = client.post("/api/courses", headers=auth_header(token), json={
-            "code": "RES-01", "name": "Curso Recursos", "cycle": "2026-I", "year": 2026,
+            "code": "RES-01", "name": "Curso Recursos", "cycle": 1, "year": 2026,
         })
         return resp.json()["id"]
 
@@ -63,7 +63,7 @@ class TestResourceDownload:
     def test_download_recurso_existente(self, client, docente_token):
         # Crear curso y subir recurso
         resp = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": "DL-01", "name": "Curso Download", "cycle": "2026-I", "year": 2026,
+            "code": "DL-01", "name": "Curso Download", "cycle": 1, "year": 2026,
         })
         cid = resp.json()["id"]
 
@@ -90,7 +90,7 @@ class TestResourceDelete:
 
     def test_eliminar_recurso(self, client, docente_token):
         resp = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": "DEL-01", "name": "Curso Delete", "cycle": "2026-I", "year": 2026,
+            "code": "DEL-01", "name": "Curso Delete", "cycle": 1, "year": 2026,
         })
         cid = resp.json()["id"]
 

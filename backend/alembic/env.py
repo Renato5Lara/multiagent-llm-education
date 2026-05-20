@@ -62,8 +62,18 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    cfg = config.get_section(config.config_ini_section, {})
+    cfg["sqlalchemy.url"] = settings.DATABASE_URL
+
+    if settings.is_production:
+        cfg.setdefault("sqlalchemy.connect_args", "{}")
+        import json
+        connect_args = json.loads(cfg.get("sqlalchemy.connect_args", "{}"))
+        connect_args["sslmode"] = "require"
+        cfg["sqlalchemy.connect_args"] = json.dumps(connect_args)
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        cfg,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

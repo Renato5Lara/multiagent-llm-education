@@ -1,17 +1,29 @@
 """
 Configuración central de la aplicación.
 Lee variables de entorno desde .env usando pydantic-settings.
+Soporta entornos development, production y testing.
 """
 
 from pydantic_settings import BaseSettings
-from pydantic import Field
 
 
 class Settings(BaseSettings):
     """Configuración de la aplicación UPAO-MAS-EDU."""
 
+    # Entorno
+    ENV: str = "development"
+    DEBUG: bool = True
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENV == "production"
+
     # Base de datos
     DATABASE_URL: str = "postgresql+psycopg://upao_user:upao_pass@localhost:5432/upao_mas_edu"
+
+    # URLs
+    FRONTEND_URL: str = "http://localhost:5173"
+    BACKEND_URL: str = "http://localhost:8000"
 
     # JWT
     SECRET_KEY: str = "cambia-esto-en-produccion-genera-uno-aleatorio-de-32-bytes"
@@ -22,8 +34,8 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE_MB: int = 50
 
-    # Entorno
-    ENV: str = "development"
+    # Logging
+    LOG_LEVEL: str = "INFO"
 
     # Nombre de la app
     APP_NAME: str = "UPAO-MAS-EDU"
@@ -31,8 +43,14 @@ class Settings(BaseSettings):
 
     @property
     def max_upload_size_bytes(self) -> int:
-        """Tamaño máximo de subida en bytes."""
         return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+    @property
+    def cors_origins(self) -> list[str]:
+        origins = [self.FRONTEND_URL]
+        if not self.is_production:
+            origins.extend(["http://localhost:5173", "http://localhost:3000"])
+        return list(set(origins))
 
     model_config = {
         "env_file": ".env",
@@ -41,5 +59,4 @@ class Settings(BaseSettings):
     }
 
 
-# Instancia global de configuración
 settings = Settings()

@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: upao-mas-edu-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENV
+        value: production
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          variable: DATABASE_URL
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://upao-mas-edu.vercel.app
+      - key: BACKEND_URL
+        value: https://upao-mas-edu-api.onrender.com
+      - key: LOG_LEVEL
+        value: INFO
+
+databases:
+  - name: upao-mas-edu-db
+    databaseName: upao_mas_edu
+    plan: free

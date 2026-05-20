@@ -8,6 +8,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 30000,
 })
 
 // Request interceptor: attach JWT token
@@ -26,6 +27,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        if (axios.isCancel(error)) {
+            return Promise.reject(error)
+        }
         if (error.response?.status === 401) {
             useAuthStore.getState().logout()
             window.location.href = '/login'
@@ -36,11 +40,11 @@ api.interceptors.response.use(
 
 export default api
 
-/**
- * Extrae el mensaje de error de una respuesta Axios en español.
- */
 export function getErrorMessage(error: unknown): string {
     if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') return 'La solicitud tardó demasiado. Intente de nuevo'
+        if (!error.response) return 'No se pudo conectar con el servidor. Verifique su conexión'
+
         const detail = error.response?.data?.detail
         if (typeof detail === 'string') return detail
         if (Array.isArray(detail)) return detail.map((d: { msg?: string }) => d.msg).join(', ')

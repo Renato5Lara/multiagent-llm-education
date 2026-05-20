@@ -1,10 +1,11 @@
 """
 Servicio de recursos educativos.
-Maneja subida, validación y almacenamiento de archivos.
+Maneja subida, validación y almacenamiento de archivos con estructura robusta.
 """
 
 import os
 import uuid
+import logging
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -13,6 +14,8 @@ from app.core.config import settings
 from app.models.resource import Resource, ResourceType
 from app.models.resource_objective import ResourceObjective
 from app.models.learning_objective import LearningObjective
+
+logger = logging.getLogger(__name__)
 
 # Mapeo de extensiones a tipos de recurso
 EXTENSION_TO_TYPE: dict[str, ResourceType] = {
@@ -47,26 +50,41 @@ ALLOWED_MIME_TYPES = {
     "application/zip",
 }
 
+# Extensiones peligrosas bloqueadas
+BLOCKED_EXTENSIONS = {".exe", ".bat", ".sh", ".cmd", ".ps1", ".vbs", ".msi", ".jar", ".dll"}
+
 
 def validate_file(filename: str, content_type: str, size: int) -> tuple[bool, str]:
     """
     Valida un archivo antes de subirlo.
+    Verifica: extensión, MIME type, tamaño y nombres peligrosos.
 
     Returns:
         Tupla (válido, mensaje_error).
     """
-    # Validar extensión
+    filename = os.path.basename(filename)
+
+    # Validar nombre seguro (sin path traversal)
+    if ".." in filename or "/" in filename or "\\" in filename:
+        return False, "Nombre de archivo inválido"
+
     ext = os.path.splitext(filename)[1].lower()
+    if not ext:
+        return False, "Archivo sin extensión"
+
+    # Bloquear extensiones peligrosas
+    if ext in BLOCKED_EXTENSIONS:
+        return False, f"Tipo de archivo no permitido: {ext}"
+
     if ext not in EXTENSION_TO_TYPE:
         return False, f"Tipo de archivo no permitido: {ext}. Permitidos: {', '.join(EXTENSION_TO_TYPE.keys())}"
 
-    # Validar MIME type
     if content_type not in ALLOWED_MIME_TYPES:
         return False, f"Tipo MIME no permitido: {content_type}"
 
-    # Validar tamaño
     if size > settings.max_upload_size_bytes:
-        return False, f"El archivo excede el tamaño máximo de {settings.MAX_UPLOAD_SIZE_MB}MB"
+        max_mb = settings.MAX_UPLOAD_SIZE_MB
+        return False, f"El archivo excede el tamaño máximo de {max_mb}MB"
 
     return True, ""
 
@@ -81,22 +99,19 @@ def save_file(
     """
     Guarda un archivo en disco y registra en BD.
 
-    El archivo se guarda en: /uploads/{course_id}/{uuid}.{ext}
+    El archivo se guarda en: uploads/courses/{course_id}/{uuid}.{ext}
     """
     ext = os.path.splitext(filename)[1].lower()
-    resource_type = EXTENSION_TO_TYPE[ext]
+    resource_type = EXTENSION_TO_TYPE.get(ext, ResourceType.TEXT)
     unique_filename = f"{uuid.uuid4()}{ext}"
 
-    # Crear directorio si no existe
-    upload_dir = os.path.join(settings.UPLOAD_DIR, course_id)
+    upload_dir = os.path.join(settings.UPLOAD_DIR, "courses", course_id)
     os.makedirs(upload_dir, exist_ok=True)
 
-    # Guardar archivo
     file_path = os.path.join(upload_dir, unique_filename)
     with open(file_path, "wb") as f:
         f.write(file_content)
 
-    # Registrar en BD
     resource = Resource(
         course_id=course_id,
         filename=unique_filename,
@@ -109,6 +124,7 @@ def save_file(
     db.add(resource)
     db.commit()
     db.refresh(resource)
+    logger.info("Archivo guardado: %s -> %s", filename, file_path)
     return resource
 
 
@@ -124,9 +140,13 @@ def get_resource_by_id(db: Session, resource_id: str) -> Optional[Resource]:
 
 def delete_resource(db: Session, resource: Resource) -> None:
     """Elimina un recurso del disco y la BD."""
-    # Eliminar archivo del disco
-    if os.path.exists(resource.file_path):
-        os.remove(resource.file_path)
+    file_path = resource.file_path
+    if file_path and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+            logger.info("Archivo eliminado: %s", file_path)
+        except OSError as e:
+            logger.warning("No se pudo eliminar archivo %s: %s", file_path, e)
 
     db.delete(resource)
     db.commit()

@@ -115,21 +115,21 @@ def estudiante_user(db) -> User:
 @pytest.fixture
 def admin_token(client, admin_user) -> str:
     """Token JWT para el admin de prueba."""
-    resp = client.post("/api/auth/login", json={"email": "admin@test.com", "password": "Admin123!"})
+    resp = client.post("/api/auth/login", json={"identifier": "admin@test.com", "password": "Admin123!"})
     return resp.json()["access_token"]
 
 
 @pytest.fixture
 def docente_token(client, docente_user) -> str:
     """Token JWT para el docente de prueba."""
-    resp = client.post("/api/auth/login", json={"email": "docente@test.com", "password": "Docente123!"})
+    resp = client.post("/api/auth/login", json={"identifier": "docente@test.com", "password": "Docente123!"})
     return resp.json()["access_token"]
 
 
 @pytest.fixture
 def estudiante_token(client, estudiante_user) -> str:
     """Token JWT para el estudiante de prueba."""
-    resp = client.post("/api/auth/login", json={"email": "estudiante@test.com", "password": "Estudiante123!"})
+    resp = client.post("/api/auth/login", json={"identifier": "estudiante@test.com", "password": "Estudiante123!"})
     return resp.json()["access_token"]
 
 

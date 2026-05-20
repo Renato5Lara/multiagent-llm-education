@@ -12,7 +12,7 @@ class TestCourseCRUD:
 
     def _create_course(self, client, token):
         return client.post("/api/courses", headers=auth_header(token), json={
-            "code": "IS-101", "name": "Intro a IS", "cycle": "2026-I", "year": 2026,
+            "code": "IS-101", "name": "Intro a IS", "cycle": 1, "year": 2026,
             "description": "Curso de introducción",
         })
 
@@ -56,7 +56,7 @@ class TestPublishCourse:
 
     def test_publicar_sin_objetivos_falla(self, client, docente_token):
         cr = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": "PUB-01", "name": "Test Pub", "cycle": "2026-I", "year": 2026,
+            "code": "PUB-01", "name": "Test Pub", "cycle": 1, "year": 2026,
         })
         cid = cr.json()["id"]
         resp = client.post(f"/api/courses/{cid}/publish", headers=auth_header(docente_token))
@@ -65,7 +65,7 @@ class TestPublishCourse:
 
     def test_publicar_con_3_objetivos(self, client, docente_token, db):
         cr = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": "PUB-02", "name": "Test Pub OK", "cycle": "2026-I", "year": 2026,
+            "code": "PUB-02", "name": "Test Pub OK", "cycle": 1, "year": 2026,
         })
         cid = cr.json()["id"]
 
@@ -87,7 +87,7 @@ class TestEnrollment:
 
     def _create_published_course(self, client, docente_token, db, code):
         cr = client.post("/api/courses", headers=auth_header(docente_token), json={
-            "code": code, "name": "Curso Enroll", "cycle": "2026-I", "year": 2026,
+            "code": code, "name": "Curso Enroll", "cycle": 1, "year": 2026,
         })
         cid = cr.json()["id"]
         for i in range(3):
