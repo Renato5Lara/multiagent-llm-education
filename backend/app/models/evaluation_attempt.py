@@ -1,3 +1,8 @@
+"""
+Modelo de Intento de Evaluación.
+Almacena preguntas, respuestas y resultados de una evaluación.
+"""
+
 import uuid
 from datetime import datetime, timezone
 
@@ -20,9 +25,12 @@ class EvaluationAttempt(Base):
     max_score = Column(Integer, nullable=False)
     passed = Column(Integer, default=0)
     attempted_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
-    completed_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
 
     student = relationship("User")
     course = relationship("Course")
+
+    def __repr__(self) -> str:
+        return f"<EvaluationAttempt student={self.student_id} score={self.score}/{self.max_score}>"

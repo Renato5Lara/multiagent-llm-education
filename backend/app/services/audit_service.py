@@ -18,17 +18,6 @@ def log_action(
     entity_id: Optional[str] = None,
     details: Optional[dict] = None,
 ) -> AuditLog:
-    """
-    Registra una acción en el log de auditoría.
-
-    Args:
-        db: Sesión de BD.
-        user_id: ID del usuario que realizó la acción.
-        action: Descripción de la acción (ej: 'crear', 'actualizar', 'eliminar').
-        entity_type: Tipo de entidad afectada (ej: 'user', 'course').
-        entity_id: ID de la entidad afectada.
-        details: Detalles adicionales en formato dict.
-    """
     audit = AuditLog(
         user_id=user_id,
         action=action,

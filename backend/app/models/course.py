@@ -36,16 +36,15 @@ class Course(Base):
     )
     teacher_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
-    # Relaciones
     teacher = relationship("User", back_populates="courses_taught")
     objectives = relationship(
         "LearningObjective", back_populates="course", cascade="all, delete-orphan"

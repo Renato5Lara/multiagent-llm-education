@@ -20,7 +20,7 @@ class StudentProfile(Base):
     preferred_modalities = Column(JSON, nullable=False)
     dominant_style = Column(String(50), nullable=True)
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,

@@ -192,15 +192,13 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
 
     enrolled_course_ids = {e.course_id for e in enrollments}
 
-    auto_courses = (
-        db.query(Course)
-        .filter(
-            Course.cycle == cycle,
-            Course.status == CourseStatus.PUBLICADO,
-            ~Course.id.in_(enrolled_course_ids) if enrolled_course_ids else True,
-        )
-        .all()
+    query = db.query(Course).filter(
+        Course.cycle == cycle,
+        Course.status == CourseStatus.PUBLICADO,
     )
+    if enrolled_course_ids:
+        query = query.filter(~Course.id.in_(enrolled_course_ids))
+    auto_courses = query.all()
 
     for course in auto_courses:
         enrollment = Enrollment(
@@ -604,3 +602,9 @@ def get_course_progress(
             for p in progress_entries
         ],
     }
+
+
+def generate_learning_path(
+    db: Session, student_id: str, course_id: str, diagnostic: DiagnosticResult
+) -> LearningPath:
+    return generate_learning_path_adaptive(db, student_id, course_id, diagnostic)

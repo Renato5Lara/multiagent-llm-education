@@ -34,7 +34,6 @@ def get_courses(
 
 
 def get_course_by_id(db: Session, course_id: str) -> Optional[Course]:
-    """Obtiene un curso por su ID."""
     return db.query(Course).filter(Course.id == course_id).first()
 
 
@@ -43,11 +42,10 @@ def create_course(
     teacher_id: str,
     code: str,
     name: str,
-    cycle: str,
+    cycle: int,
     year: int,
     description: Optional[str] = None,
 ) -> Course:
-    """Crea un nuevo curso asignado al docente."""
     course = Course(
         code=code,
         name=name,
@@ -63,7 +61,6 @@ def create_course(
 
 
 def update_course(db: Session, course: Course, update_data: dict) -> Course:
-    """Actualiza los campos de un curso."""
     for field, value in update_data.items():
         if value is not None:
             setattr(course, field, value)
@@ -74,7 +71,6 @@ def update_course(db: Session, course: Course, update_data: dict) -> Course:
 
 
 def soft_delete_course(db: Session, course: Course) -> Course:
-    """Archiva un curso (soft delete)."""
     course.status = CourseStatus.ARCHIVADO
     db.commit()
     db.refresh(course)
@@ -82,12 +78,6 @@ def soft_delete_course(db: Session, course: Course) -> Course:
 
 
 def publish_course(db: Session, course: Course) -> tuple[bool, str]:
-    """
-    Publica un curso. Requiere mínimo 3 objetivos de aprendizaje.
-
-    Returns:
-        Tupla (éxito, mensaje).
-    """
     objectives_count = (
         db.query(LearningObjective)
         .filter(LearningObjective.course_id == course.id)
@@ -109,20 +99,12 @@ def publish_course(db: Session, course: Course) -> tuple[bool, str]:
 def enroll_students(
     db: Session, course_id: str, student_ids: list[str]
 ) -> dict:
-    """
-    Inscribe estudiantes en un curso en lote.
-    Solo se permite inscribir en cursos publicados.
-
-    Returns:
-        {"success": n, "errors": [{"student_id": str, "message": str}]}
-    """
     course = db.query(Course).filter(Course.id == course_id).first()
     if course and course.status != CourseStatus.PUBLICADO:
         return {"success": 0, "errors": [{"student_id": "", "message": "Solo se puede inscribir estudiantes en cursos publicados"}]}
     result = {"success": 0, "errors": []}
 
     for student_id in student_ids:
-        # Verificar que el estudiante existe y tiene rol correcto
         student = (
             db.query(User)
             .filter(User.id == student_id, User.role == UserRole.ESTUDIANTE)
@@ -134,7 +116,6 @@ def enroll_students(
             )
             continue
 
-        # Verificar si ya está inscrito
         existing = (
             db.query(Enrollment)
             .filter(

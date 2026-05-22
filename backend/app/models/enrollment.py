@@ -27,7 +27,7 @@ class Enrollment(Base):
     course_id = Column(String(36), ForeignKey("courses.id"), nullable=False)
     student_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     enrolled_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     status = Column(
         Enum(EnrollmentStatus, name="enrollmentstatus"),
@@ -35,7 +35,6 @@ class Enrollment(Base):
         nullable=False,
     )
 
-    # Relaciones
     course = relationship("Course", back_populates="enrollments")
     student = relationship("User", back_populates="enrollments")
 

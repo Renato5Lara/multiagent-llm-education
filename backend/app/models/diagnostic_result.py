@@ -1,3 +1,8 @@
+"""
+Modelo de Resultado Diagnóstico.
+Almacena las respuestas del test diagnóstico de un estudiante por curso.
+"""
+
 import uuid
 from datetime import datetime, timezone
 
@@ -18,8 +23,11 @@ class DiagnosticResult(Base):
     modality_scores = Column(JSON, nullable=True)
     dominant_modality = Column(String(50), nullable=True)
     completed_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     student = relationship("User")
     course = relationship("Course")
+
+    def __repr__(self) -> str:
+        return f"<DiagnosticResult student={self.student_id} course={self.course_id}>"

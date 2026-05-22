@@ -5,12 +5,9 @@ Soporta PostgreSQL online con SSL, pool de conexiones y reconexión automática.
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
-# En producción: pool_size más pequeño, SSL mode requerido
-# En desarrollo: pool normal para mejor performance local
 connect_args = {}
 
 if settings.is_production:
@@ -31,4 +28,9 @@ else:
         max_overflow=20,
     )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    expire_on_commit=False,
+)

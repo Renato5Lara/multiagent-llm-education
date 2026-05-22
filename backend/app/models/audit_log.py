@@ -22,10 +22,9 @@ class AuditLog(Base):
     entity_id = Column(String(36), nullable=True)
     details = Column(JSON, nullable=True)
     timestamp = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
 
-    # Relaciones
     user = relationship("User", back_populates="audit_logs")
 
     def __repr__(self) -> str:

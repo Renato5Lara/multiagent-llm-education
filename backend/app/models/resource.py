@@ -39,10 +39,9 @@ class Resource(Base):
         Enum(ResourceType, name="resourcetype"), nullable=False
     )
     uploaded_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
 
-    # Relaciones
     course = relationship("Course", back_populates="resources")
     objective_associations = relationship(
         "ResourceObjective", back_populates="resource", cascade="all, delete-orphan"

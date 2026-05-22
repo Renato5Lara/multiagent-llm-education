@@ -197,7 +197,7 @@ def start_evaluation(
             detail="No se pudo iniciar la evaluación. Completa el diagnóstico y genera tu ruta primero.",
         )
 
-    questions_clean = evaluation_service._strip_correct_answers(attempt.questions)
+    questions_clean = evaluation_service.strip_correct_answers(attempt.questions)
     log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
     return {
         "attempt_id": attempt.id,

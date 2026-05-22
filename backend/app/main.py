@@ -14,6 +14,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from app.api.routes import (
     auth,
@@ -28,11 +29,10 @@ from app.api.routes import (
 
 from app.agents.router import router as agents_router
 from app.core.config import settings
+from app.db.base import Base
+from app.db.session import engine
 
 
-# ─────────────────────────────────────────────────────────────
-# Logging estructurado
-# ─────────────────────────────────────────────────────────────
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -41,12 +41,8 @@ logging.basicConfig(
 logger = logging.getLogger("upao-mas-edu")
 
 
-# ─────────────────────────────────────────────────────────────
-# Startup / Shutdown
-# ─────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     logger.info(
         "Iniciando UPAO-MAS-EDU API",
         extra={
@@ -55,23 +51,21 @@ async def lifespan(app: FastAPI):
         },
     )
 
-    # Crear directorios necesarios
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-
     for sub in ("courses", "resources", "images", "temp"):
         os.makedirs(
             os.path.join(settings.UPLOAD_DIR, sub),
-            exist_ok=True
+            exist_ok=True,
         )
+
+    Base.metadata.create_all(bind=engine)
+    logger.info("Tablas verificadas/creadas exitosamente")
 
     yield
 
     logger.info("Apagando UPAO-MAS-EDU API")
 
 
-# ─────────────────────────────────────────────────────────────
-# Tags OpenAPI
-# ─────────────────────────────────────────────────────────────
 tags_metadata = [
     {
         "name": "Autenticación",
@@ -116,27 +110,18 @@ tags_metadata = [
 ]
 
 
-# ─────────────────────────────────────────────────────────────
-# FastAPI app
-# ─────────────────────────────────────────────────────────────
 app = FastAPI(
     title="UPAO-MAS-EDU API",
     description="API del Sistema Multi-Agente Educativo de la UPAO",
     version=settings.APP_VERSION,
-
-    # Swagger habilitado también en producción
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
-
     openapi_tags=tags_metadata,
     lifespan=lifespan,
 )
 
 
-# ─────────────────────────────────────────────────────────────
-# CORS configurable
-# ─────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -146,34 +131,20 @@ app.add_middleware(
 )
 
 
-# ─────────────────────────────────────────────────────────────
-# Middleware: Request-ID
-# ─────────────────────────────────────────────────────────────
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
-
     request_id = str(uuid.uuid4())
     request.state.request_id = request_id
-
     response = await call_next(request)
-
     response.headers["X-Request-ID"] = request_id
-
     return response
 
 
-# ─────────────────────────────────────────────────────────────
-# Middleware: Logging
-# ─────────────────────────────────────────────────────────────
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-
     start = time.time()
-
     response = await call_next(request)
-
     duration = round((time.time() - start) * 1000, 2)
-
     logger.info(
         "%s %s -> %s (%sms)",
         request.method,
@@ -181,16 +152,11 @@ async def log_requests(request: Request, call_next):
         response.status_code,
         duration,
     )
-
     return response
 
 
-# ─────────────────────────────────────────────────────────────
-# Manejadores globales de errores
-# ─────────────────────────────────────────────────────────────
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -202,11 +168,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-
     logger.error(
         "Error no manejado: %s",
         exc,
-        exc_info=True
+        exc_info=True,
     )
 
     detail = "Error interno del servidor"
@@ -223,11 +188,7 @@ async def general_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ─────────────────────────────────────────────────────────────
-# Servir archivos estáticos (uploads)
-# ─────────────────────────────────────────────────────────────
 if os.path.exists(settings.UPLOAD_DIR):
-
     app.mount(
         "/uploads",
         StaticFiles(directory=settings.UPLOAD_DIR),
@@ -235,9 +196,6 @@ if os.path.exists(settings.UPLOAD_DIR):
     )
 
 
-# ─────────────────────────────────────────────────────────────
-# Routers
-# ─────────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(courses.router)
@@ -249,12 +207,8 @@ app.include_router(competencies.router)
 app.include_router(agents_router)
 
 
-# ─────────────────────────────────────────────────────────────
-# Root endpoint
-# ─────────────────────────────────────────────────────────────
 @app.get("/", tags=["Sistema"])
 def root():
-
     return {
         "message": "UPAO MAS EDU API funcionando correctamente",
         "docs": "/docs",
@@ -263,14 +217,20 @@ def root():
     }
 
 
-# ─────────────────────────────────────────────────────────────
-# Health check
-# ─────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Sistema"])
 def health_check():
+    db_status = "unknown"
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            db_status = "ok"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        logger.error("Health check — DB connection failed: %s", e)
 
     return {
-        "status": "ok",
+        "status": "ok" if db_status == "ok" else "degraded",
+        "database": db_status,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": settings.APP_VERSION,
         "env": settings.ENV,

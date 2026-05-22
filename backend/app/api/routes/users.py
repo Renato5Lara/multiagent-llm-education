@@ -30,7 +30,6 @@ def list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """Lista paginada de usuarios con filtro opcional por rol."""
     users, total = user_service.get_users(db, page=page, size=size, role=role)
     return UserListResponse(
         users=[UserResponse.model_validate(u) for u in users],
@@ -46,7 +45,6 @@ def create_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """Crea un nuevo usuario."""
     existing = user_service.get_user_by_email(db, user_data.email)
     if existing:
         raise HTTPException(
@@ -84,18 +82,22 @@ def bulk_create_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """
-    Carga masiva de usuarios desde CSV.
-    Columnas: email, first_name, last_name, role, institutional_code
-    Máximo 100 registros.
-    """
     if not file.filename or not file.filename.endswith(".csv"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Se requiere un archivo CSV",
         )
 
-    content = file.file.read().decode("utf-8")
+    try:
+        content = file.file.read().decode("utf-8")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al leer el archivo: {str(e)}",
+        )
+    finally:
+        file.file.close()
+
     result = user_service.bulk_create_users_from_csv(db, content)
 
     log_action(
@@ -115,7 +117,6 @@ def get_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """Obtiene un usuario por su ID."""
     user = user_service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
@@ -132,7 +133,6 @@ def update_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """Actualiza los datos de un usuario."""
     user = user_service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
@@ -169,7 +169,6 @@ def delete_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """Desactiva un usuario (soft delete)."""
     user = user_service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(
@@ -195,7 +194,6 @@ def change_user_role(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    """Cambia el rol de un usuario."""
     user = user_service.get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(

@@ -1,3 +1,8 @@
+"""
+Servicio de evaluaciones.
+Maneja inicio, envío y resultados de evaluaciones estudiantiles.
+"""
+
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -13,8 +18,7 @@ from app.models.student_progress import LearningPath, PathModule
 logger = logging.getLogger(__name__)
 
 
-def _strip_correct_answers(questions: list[dict]) -> list[dict]:
-    """Remove correct answer field before returning to client."""
+def strip_correct_answers(questions: list[dict]) -> list[dict]:
     return [
         {k: v for k, v in q.items() if k != "correct"}
         for q in questions
@@ -26,7 +30,6 @@ def start_evaluation(
     student_id: str,
     course_id: str,
 ) -> Optional[EvaluationAttempt]:
-    """Starts an evaluation by generating questions via agents and creating an attempt."""
     path = (
         db.query(LearningPath)
         .filter(

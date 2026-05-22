@@ -17,7 +17,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def get_db() -> Generator:
-    """Provee una sesión de base de datos por request."""
     db = SessionLocal()
     try:
         yield db
@@ -29,10 +28,6 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    """
-    Obtiene el usuario actual a partir del token JWT.
-    Lanza 401 si el token es inválido o el usuario no existe.
-    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="No se pudieron validar las credenciales",
@@ -63,7 +58,6 @@ def get_current_user(
 def get_current_admin(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Verifica que el usuario actual sea administrador."""
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -75,7 +69,6 @@ def get_current_admin(
 def get_current_docente(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Verifica que el usuario actual sea docente."""
     if current_user.role != UserRole.DOCENTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -87,7 +80,6 @@ def get_current_docente(
 def get_current_estudiante(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Verifica que el usuario actual sea estudiante."""
     if current_user.role != UserRole.ESTUDIANTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -99,7 +91,6 @@ def get_current_estudiante(
 def get_current_investigador(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Verifica que el usuario actual sea investigador."""
     if current_user.role != UserRole.INVESTIGADOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

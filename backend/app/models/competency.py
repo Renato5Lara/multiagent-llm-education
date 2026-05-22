@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from app.db.base import Base
 
 
-class CompetencyType(enum.Enum):
+class CompetencyType(str, enum.Enum):
     """Tipos de competencia."""
     INSTITUTIONAL = "institutional"
     CAREER = "career"
@@ -33,7 +33,7 @@ class Competency(Base):
     cycle = Column(Integer, nullable=True)
     active = Column(Boolean, default=True, nullable=False)
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
 
     course_associations = relationship(

@@ -35,16 +35,15 @@ class User(Base):
     current_cycle = Column(Integer, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
 
-    # Relaciones
     courses_taught = relationship("Course", back_populates="teacher", lazy="selectin")
     enrollments = relationship("Enrollment", back_populates="student", lazy="selectin")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")

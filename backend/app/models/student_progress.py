@@ -1,3 +1,8 @@
+"""
+Modelos de Progreso Estudiantil.
+LearningPath, PathModule y StudentProgress para el seguimiento adaptativo.
+"""
+
 import uuid
 from datetime import datetime, timezone
 
@@ -14,7 +19,7 @@ class LearningPath(Base):
     student_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     course_id = Column(String(36), ForeignKey("courses.id"), nullable=False)
     generated_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     total_modules = Column(Integer, default=0)
     completed_modules = Column(Integer, default=0)
@@ -23,6 +28,9 @@ class LearningPath(Base):
     student = relationship("User")
     course = relationship("Course")
     modules = relationship("PathModule", back_populates="path", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"<LearningPath student={self.student_id} course={self.course_id}>"
 
 
 class PathModule(Base):
@@ -37,10 +45,13 @@ class PathModule(Base):
     bloom_level = Column(Integer, nullable=True)
     resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
     score = Column(Float, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
 
     path = relationship("LearningPath", back_populates="modules")
     resource = relationship("Resource")
+
+    def __repr__(self) -> str:
+        return f"<PathModule {self.title} ({self.status})>"
 
 
 class StudentProgress(Base):
@@ -51,13 +62,13 @@ class StudentProgress(Base):
     course_id = Column(String(36), ForeignKey("courses.id"), nullable=False)
     resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
-    completed_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
     progress_percentage = Column(Integer, default=0, nullable=False)
     created_at = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
@@ -66,3 +77,6 @@ class StudentProgress(Base):
     student = relationship("User")
     course = relationship("Course")
     resource = relationship("Resource")
+
+    def __repr__(self) -> str:
+        return f"<StudentProgress student={self.student_id} course={self.course_id} {self.progress_percentage}%>"

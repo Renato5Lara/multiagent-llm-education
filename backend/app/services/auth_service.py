@@ -15,7 +15,6 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-# Constantes de política de bloqueo
 MAX_FAILED_ATTEMPTS = 3
 LOCKOUT_WINDOW_MINUTES = 5
 LOCKOUT_DURATION_MINUTES = 5
@@ -24,12 +23,6 @@ LOCKOUT_DURATION_MINUTES = 5
 def authenticate_user(
     db: Session, identifier: str, password: str, ip_address: Optional[str] = None
 ) -> Optional[User]:
-    """
-    Autentica un usuario verificando email o código institucional y contraseña.
-
-    Returns:
-        User si las credenciales son válidas, None en caso contrario.
-    """
     user = (
         db.query(User)
         .filter(
@@ -51,17 +44,13 @@ def authenticate_user(
 
 
 def is_account_locked(db: Session, identifier: str) -> bool:
-    """
-    Verifica si una cuenta está bloqueada por exceso de intentos fallidos.
-    Política: 3 intentos fallidos en 5 minutos → bloqueo por 5 minutos.
-    """
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOCKOUT_WINDOW_MINUTES)
 
     failed_attempts = (
         db.query(LoginAttempt)
         .filter(
             LoginAttempt.email == identifier,
-            LoginAttempt.success == False,  # noqa: E712
+            LoginAttempt.success == False,
             LoginAttempt.attempted_at >= cutoff,
         )
         .count()
@@ -71,14 +60,12 @@ def is_account_locked(db: Session, identifier: str) -> bool:
 
 
 def create_user_token(user: User) -> str:
-    """Crea un token JWT para el usuario."""
     return create_access_token(
         data={"sub": user.id, "email": user.email, "role": user.role.value}
     )
 
 
 def get_user_response_dict(user: User) -> dict:
-    """Convierte un usuario a diccionario para la respuesta del token."""
     return {
         "id": user.id,
         "email": user.email,
@@ -91,10 +78,6 @@ def get_user_response_dict(user: User) -> dict:
 
 
 def recover_password(db: Session, email: str) -> bool:
-    """
-    Recuperación de contraseña (mock).
-    En producción enviaría un email real.
-    """
     user = db.query(User).filter(User.email == email).first()
     if user:
         logger.info(
@@ -108,7 +91,6 @@ def recover_password(db: Session, email: str) -> bool:
 def _record_attempt(
     db: Session, email: str, success: bool, ip_address: Optional[str] = None
 ) -> None:
-    """Registra un intento de login en la base de datos."""
     attempt = LoginAttempt(
         email=email,
         success=success,

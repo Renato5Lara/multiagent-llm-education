@@ -100,7 +100,6 @@ def start_evaluation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """Inicia una evaluación generando preguntas vía agente y creando un intento."""
     attempt = evaluation_service.start_evaluation(
         db, student_id=current_user.id, course_id=course_id,
     )
@@ -110,7 +109,7 @@ def start_evaluation(
             detail="No se pudo iniciar la evaluación. Completa el diagnóstico y genera tu ruta primero.",
         )
 
-    questions_clean = evaluation_service._strip_correct_answers(attempt.questions)
+    questions_clean = evaluation_service.strip_correct_answers(attempt.questions)
     log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
     return {
         "attempt_id": attempt.id,
@@ -127,7 +126,6 @@ def submit_evaluation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """Envía respuestas de evaluación y obtiene resultado."""
     attempt = evaluation_service.submit_evaluation(
         db, attempt_id=attempt_id, answers=data.answers,
     )
