@@ -2,26 +2,40 @@ services:
   - type: web
     name: upao-mas-edu-api
     runtime: python
+
     buildCommand: |
+      cd backend
       pip install -r requirements.txt
+
     startCommand: |
-      alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+      cd backend
+      alembic upgrade head
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+
     envVars:
       - key: ENV
         value: production
+
       - key: DEBUG
         value: "False"
+
       - key: DATABASE_URL
         fromDatabase:
-          variable: DATABASE_URL
+          name: upao-mas-edu-db
+          property: connectionString
+
       - key: SECRET_KEY
         generateValue: true
+
       - key: FRONTEND_URL
         value: https://upao-mas-edu.vercel.app
+
       - key: BACKEND_URL
         value: https://upao-mas-edu-api.onrender.com
+
       - key: LOG_LEVEL
         value: INFO
+
       - key: UPLOAD_DIR
         value: /var/data/uploads
 
