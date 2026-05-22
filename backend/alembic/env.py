@@ -59,17 +59,13 @@ def run_migrations_online() -> None:
     cfg = config.get_section(config.config_ini_section, {})
     cfg["sqlalchemy.url"] = settings.DATABASE_URL
 
-    if settings.is_production:
-        cfg.setdefault("sqlalchemy.connect_args", "{}")
-        import json
-        connect_args = json.loads(cfg.get("sqlalchemy.connect_args", "{}"))
-        connect_args["sslmode"] = "require"
-        cfg["sqlalchemy.connect_args"] = json.dumps(connect_args)
+    connect_args = {"sslmode": "require"} if settings.is_production else {}
 
     connectable = engine_from_config(
         cfg,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
