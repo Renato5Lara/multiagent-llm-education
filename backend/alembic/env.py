@@ -1,76 +1,71 @@
-"""
-Alembic env.py — Configuración de migraciones.
-Lee DATABASE_URL desde .env y descubre modelos automáticamente.
-"""
-
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+
 from alembic import context
-
-import sys
-import os
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import settings
 from app.db.base import Base
 
-from app.models import (
-    User, UserRole,
-    Course, CourseStatus,
-    LearningObjective,
-    Resource, ResourceType,
-    ResourceObjective,
-    Enrollment, EnrollmentStatus,
-    AuditLog,
-    LoginAttempt,
-    DiagnosticResult,
-    LearningPath, PathModule, StudentProgress,
-    EvaluationAttempt,
-    Competency, CompetencyType, CourseCompetency,
-    StudentProfile,
-)
+# IMPORTAR TODOS LOS MODELOS
+from app.models.user import User
+from app.models.course import Course
+from app.models.competency import Competency
+from app.models.login_attempt import LoginAttempt
+from app.models.audit_log import AuditLog
+from app.models.enrollment import Enrollment
+from app.models.resource import Resource
+from app.models.diagnostic_result import DiagnosticResult
+from app.models.evaluation_attempt import EvaluationAttempt
+from app.models.student_profile import StudentProfile
+from app.models.student_progress import StudentProgress
 
 config = context.config
-
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# URL BD
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
 target_metadata = Base.metadata
 
 
-def run_migrations_offline() -> None:
+def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        compare_type=True,
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
-    cfg = config.get_section(config.config_ini_section, {})
-    cfg["sqlalchemy.url"] = settings.DATABASE_URL
+def run_migrations_online():
 
-    connect_args = {"sslmode": "require"} if settings.is_production else {}
+    connect_args = {}
+
+    if settings.is_production:
+        connect_args["sslmode"] = "require"
 
     connectable = engine_from_config(
-        cfg,
+        config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
         connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
+
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
         )
 
         with context.begin_transaction():
