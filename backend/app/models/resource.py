@@ -36,7 +36,7 @@ class Resource(Base):
     mime_type = Column(String(100), nullable=False)
     size_bytes = Column(Integer, nullable=False)
     resource_type = Column(
-        Enum(ResourceType, name="resourcetype"), nullable=False
+        Enum(ResourceType, name="resourcetype", use_enum_values=True, values_callable=lambda x: [e.value for e in x]), nullable=False
     )
     uploaded_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False

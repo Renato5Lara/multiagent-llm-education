@@ -27,7 +27,7 @@ class Competency(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     competency_type = Column(
-        Enum(CompetencyType, name="competencytype", values_callable=lambda x: [e.value for e in x]),
+        Enum(CompetencyType, name="competencytype", use_enum_values=True, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     cycle = Column(Integer, nullable=True)

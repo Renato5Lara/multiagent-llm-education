@@ -30,7 +30,7 @@ class Course(Base):
     cycle = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
     status = Column(
-        Enum(CourseStatus, name="coursestatus"),
+        Enum(CourseStatus, name="coursestatus", use_enum_values=True, values_callable=lambda x: [e.value for e in x]),
         default=CourseStatus.BORRADOR,
         nullable=False,
     )

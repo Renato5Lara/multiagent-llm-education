@@ -29,7 +29,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
-    role = Column(Enum(UserRole, name="userrole"), nullable=False)
+    role = Column(Enum(UserRole, name="userrole", use_enum_values=True, values_callable=lambda x: [e.value for e in x]), nullable=False)
     institutional_code = Column(String(50), nullable=True)
     area = Column(String(100), nullable=True)
     current_cycle = Column(Integer, nullable=True)

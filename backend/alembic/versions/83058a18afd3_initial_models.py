@@ -21,25 +21,25 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.execute("""
         DO $$ BEGIN
-            CREATE TYPE userrole AS ENUM ('ADMIN', 'DOCENTE', 'ESTUDIANTE', 'INVESTIGADOR');
+            CREATE TYPE userrole AS ENUM ('admin', 'docente', 'estudiante', 'investigador');
         EXCEPTION WHEN duplicate_object THEN NULL;
         END $$;
     """)
     op.execute("""
         DO $$ BEGIN
-            CREATE TYPE coursestatus AS ENUM ('BORRADOR', 'PUBLICADO', 'ARCHIVADO');
+            CREATE TYPE coursestatus AS ENUM ('borrador', 'publicado', 'archivado');
         EXCEPTION WHEN duplicate_object THEN NULL;
         END $$;
     """)
     op.execute("""
         DO $$ BEGIN
-            CREATE TYPE resourcetype AS ENUM ('PDF', 'VIDEO', 'IMAGE', 'TEXT', 'DOCUMENT', 'AUDIO', 'GAME', 'INTERACTIVE');
+            CREATE TYPE resourcetype AS ENUM ('pdf', 'video', 'image', 'text', 'document', 'audio', 'game', 'interactive');
         EXCEPTION WHEN duplicate_object THEN NULL;
         END $$;
     """)
     op.execute("""
         DO $$ BEGIN
-            CREATE TYPE enrollmentstatus AS ENUM ('ACTIVO', 'COMPLETADO', 'ABANDONADO');
+            CREATE TYPE enrollmentstatus AS ENUM ('activo', 'completado', 'abandonado');
         EXCEPTION WHEN duplicate_object THEN NULL;
         END $$;
     """)
@@ -59,7 +59,7 @@ def upgrade() -> None:
         sa.Column("last_name", sa.String(100), nullable=False),
         sa.Column(
             "role",
-            postgresql.ENUM("ADMIN", "DOCENTE", "ESTUDIANTE", "INVESTIGADOR", name="userrole", create_type=False),
+            postgresql.ENUM("admin", "docente", "estudiante", "investigador", name="userrole", create_type=False),
             nullable=False,
         ),
         sa.Column("institutional_code", sa.String(50), nullable=True),
@@ -90,7 +90,7 @@ def upgrade() -> None:
         sa.Column("year", sa.Integer(), nullable=False),
         sa.Column(
             "status",
-            postgresql.ENUM("BORRADOR", "PUBLICADO", "ARCHIVADO", name="coursestatus", create_type=False),
+            postgresql.ENUM("borrador", "publicado", "archivado", name="coursestatus", create_type=False),
             nullable=False,
         ),
         sa.Column("teacher_id", sa.String(36), sa.ForeignKey("users.id"), nullable=False),
@@ -119,7 +119,7 @@ def upgrade() -> None:
         sa.Column("size_bytes", sa.Integer(), nullable=False),
         sa.Column(
             "resource_type",
-            postgresql.ENUM("PDF", "VIDEO", "IMAGE", "TEXT", "DOCUMENT", "AUDIO", "GAME", "INTERACTIVE", name="resourcetype", create_type=False),
+            postgresql.ENUM("pdf", "video", "image", "text", "document", "audio", "game", "interactive", name="resourcetype", create_type=False),
             nullable=False,
         ),
         sa.Column("uploaded_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
@@ -140,7 +140,7 @@ def upgrade() -> None:
         sa.Column("enrolled_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.Column(
             "status",
-            postgresql.ENUM("ACTIVO", "COMPLETADO", "ABANDONADO", name="enrollmentstatus", create_type=False),
+            postgresql.ENUM("activo", "completado", "abandonado", name="enrollmentstatus", create_type=False),
             nullable=False,
         ),
     )

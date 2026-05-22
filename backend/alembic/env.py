@@ -8,18 +8,20 @@ from alembic import context
 from app.core.config import settings
 from app.db.base import Base
 
-# IMPORTAR TODOS LOS MODELOS
+# IMPORTAR TODOS LOS MODELOS (cada subclase de Base debe estar aquí)
 from app.models.user import User
 from app.models.course import Course
-from app.models.competency import Competency
+from app.models.competency import Competency, CourseCompetency
 from app.models.login_attempt import LoginAttempt
 from app.models.audit_log import AuditLog
 from app.models.enrollment import Enrollment
 from app.models.resource import Resource
+from app.models.resource_objective import ResourceObjective
+from app.models.learning_objective import LearningObjective
 from app.models.diagnostic_result import DiagnosticResult
 from app.models.evaluation_attempt import EvaluationAttempt
 from app.models.student_profile import StudentProfile
-from app.models.student_progress import StudentProgress
+from app.models.student_progress import LearningPath, PathModule, StudentProgress
 
 config = context.config
 

@@ -30,7 +30,7 @@ class Enrollment(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     status = Column(
-        Enum(EnrollmentStatus, name="enrollmentstatus"),
+        Enum(EnrollmentStatus, name="enrollmentstatus", use_enum_values=True, values_callable=lambda x: [e.value for e in x]),
         default=EnrollmentStatus.ACTIVO,
         nullable=False,
     )
