@@ -129,7 +129,7 @@ export default function LearningPath() {
                                     item.status === 'available' ? 'cursor-pointer hover:shadow-md' : ''
                                 } ${item.status === 'locked' ? 'opacity-60' : ''}`}
                                 onClick={() => {
-                                    if (item.status === 'available' && item.resource_id) {
+                                    if (item.status === 'available' && item.resource_id && courseId) {
                                         navigate(`/estudiante/content/${item.resource_id}?courseId=${courseId}`)
                                     }
                                 }}>

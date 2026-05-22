@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle2, Loader2, Brain } from 'lucide-react'
+import { CheckCircle2, Loader2, Brain, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { DIAGNOSTIC_QUESTIONS, LIKERT_OPTIONS, MODALITY_LABELS } from '@/lib/constants'
 import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
+import { useToast } from '@/hooks/use-toast'
 
 export default function DiagnosticTest() {
     const { courseId } = useParams<{ courseId: string }>()
@@ -17,6 +18,8 @@ export default function DiagnosticTest() {
 
     const submitDiagnostic = useSubmitDiagnostic()
     const generatePath = useGeneratePath()
+    const { toast } = useToast()
+    const [error, setError] = useState<string | null>(null)
 
     const question = DIAGNOSTIC_QUESTIONS[current]
     const progress = Object.keys(answers).length > 0
@@ -27,23 +30,58 @@ export default function DiagnosticTest() {
         setAnswers(prev => ({ ...prev, [question.id]: value }))
     }
 
+    const submitResults = async () => {
+        if (!courseId) return
+        setError(null)
+        try {
+            const answersFormatted: Record<string, number> = {}
+            Object.entries(answers).forEach(([key, value]) => {
+                answersFormatted[key] = value
+            })
+            await submitDiagnostic.mutateAsync({ courseId, answers: answersFormatted })
+            await generatePath.mutateAsync(courseId)
+            setCompleted(true)
+        } catch (err) {
+            const message = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
+            setError(message)
+            toast({
+                variant: 'destructive',
+                title: 'Error al guardar diagnóstico',
+                description: message,
+            })
+        }
+    }
+
     const handleNext = async () => {
         if (current < DIAGNOSTIC_QUESTIONS.length - 1) {
             setCurrent(c => c + 1)
+        } else if (!courseId) {
+            setError('ID del curso no encontrado')
         } else {
-            setCompleted(true)
-            if (courseId) {
-                try {
-                    const answersFormatted: Record<string, number> = {}
-                    Object.entries(answers).forEach(([key, value]) => {
-                        answersFormatted[key] = value
-                    })
-                    await submitDiagnostic.mutateAsync({ courseId, answers: answersFormatted })
-                    await generatePath.mutateAsync(courseId)
-                } catch {
-                }
-            }
+            await submitResults()
         }
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <Card className="max-w-md w-full text-center">
+                    <CardContent className="p-8">
+                        <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
+                        <h2 className="text-xl font-bold mb-2">Error al procesar</h2>
+                        <p className="text-muted-foreground mb-6">{error}</p>
+                        <div className="flex gap-3 justify-center">
+                            <Button variant="outline" onClick={() => navigate('/estudiante')}>
+                                Volver al dashboard
+                            </Button>
+                            <Button onClick={() => { submitResults() }}>
+                                Reintentar
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
 
     if (completed) {

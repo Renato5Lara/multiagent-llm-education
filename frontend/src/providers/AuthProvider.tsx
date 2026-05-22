@@ -80,17 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [storeLogout, queryClient, navigate])
 
-  const logoutAndRedirect = useCallback(() => {
-    api.post('/api/auth/logout').catch(() => {})
-    storeLogout()
-    queryClient.clear()
-    navigate('/login', { replace: true })
-  }, [storeLogout, queryClient, navigate])
-
-  useEffect(() => {
-    useAuthStore.setState({ logout: logoutAndRedirect })
-  }, [logoutAndRedirect])
-
   return (
     <AuthContext.Provider
       value={{
