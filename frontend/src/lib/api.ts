@@ -1,57 +1,85 @@
-import axios from 'axios'
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/authStore'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''
 
 const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    timeout: 30000,
+  baseURL: API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
 })
 
-// Request interceptor: attach JWT token
+let isRefreshing = false
+let pendingRequests: Array<{
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}> = []
+
+function clearPendingRequests(error: unknown) {
+  pendingRequests.forEach((p) => p.reject(error))
+  pendingRequests = []
+}
+
+function processPendingRequests(token: string) {
+  pendingRequests.forEach((p) => p.resolve(token))
+  pendingRequests = []
+}
+
 api.interceptors.request.use(
-    (config) => {
-        const token = useAuthStore.getState().token
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-    },
-    (error) => Promise.reject(error)
+  (config: InternalAxiosRequestConfig) => {
+    const token = useAuthStore.getState().token
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error),
 )
 
-// Response interceptor: handle 401 globally
 api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (axios.isCancel(error)) {
-            return Promise.reject(error)
-        }
-        if (error.response?.status === 401) {
-            useAuthStore.getState().logout()
-            window.location.href = '/login'
-        }
-        return Promise.reject(error)
+  (response) => response,
+  async (error: AxiosError) => {
+    if (axios.isCancel(error)) return Promise.reject(error)
+
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+
+    if (!error.response) {
+      return Promise.reject(error)
     }
+
+    if (error.response.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise<string>((resolve, reject) => {
+          pendingRequests.push({ resolve, reject })
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`
+          return api(originalRequest)
+        })
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      try {
+        const resp = await api.post('/api/auth/refresh')
+        const { access_token } = resp.data
+        const { login } = useAuthStore.getState()
+        login(access_token, resp.data.user || useAuthStore.getState().user!)
+        processPendingRequests(access_token)
+        originalRequest.headers.Authorization = `Bearer ${access_token}`
+        return api(originalRequest)
+      } catch (refreshError) {
+        clearPendingRequests(refreshError)
+        useAuthStore.getState().logout()
+        window.location.href = '/login'
+        return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
+      }
+    }
+
+    return Promise.reject(error)
+  },
 )
 
 export default api
-
-export function getErrorMessage(error: unknown): string {
-    if (axios.isAxiosError(error)) {
-        if (error.code === 'ECONNABORTED') return 'La solicitud tardó demasiado. Intente de nuevo'
-        if (!error.response) return 'No se pudo conectar con el servidor. Verifique su conexión'
-
-        const detail = error.response?.data?.detail
-        if (typeof detail === 'string') return detail
-        if (Array.isArray(detail)) return detail.map((d: { msg?: string }) => d.msg).join(', ')
-        if (error.response?.status === 404) return 'Recurso no encontrado'
-        if (error.response?.status === 403) return 'No tiene permisos para realizar esta acción'
-        if (error.response?.status === 409) return 'Ya existe un registro con esos datos'
-        if ((error.response?.status ?? 0) >= 500) return 'Error interno del servidor. Intente de nuevo más tarde'
-    }
-    return 'Ocurrió un error inesperado'
-}

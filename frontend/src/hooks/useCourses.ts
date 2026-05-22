@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import api, { getErrorMessage } from '@/lib/api'
+import api from '@/lib/api'
+import { getErrorMessage } from '@/lib/errors'
 import type { Course, CourseCreate, CourseUpdate, CourseListResponse, EnrollRequest } from '@/types/course'
 import { useToast } from '@/hooks/use-toast'
 

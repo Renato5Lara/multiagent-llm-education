@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import api, { getErrorMessage } from '@/lib/api'
+import api from '@/lib/api'
+import { getErrorMessage } from '@/lib/errors'
 import type { User, UserCreate, UserUpdate, UserListResponse } from '@/types/user'
 import type { UserRole } from '@/types/auth'
 import { useToast } from '@/hooks/use-toast'
