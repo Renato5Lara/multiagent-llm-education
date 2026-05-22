@@ -4,6 +4,7 @@ Lee variables de entorno desde .env usando pydantic-settings.
 Soporta entornos development, production y testing.
 """
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -20,6 +21,13 @@ class Settings(BaseSettings):
 
     # Base de datos
     DATABASE_URL: str = "postgresql+psycopg://upao_user:upao_pass@localhost:5432/upao_mas_edu"
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def fix_postgres_scheme(cls, v: str) -> str:
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     # URLs
     FRONTEND_URL: str = "http://localhost:5173"
