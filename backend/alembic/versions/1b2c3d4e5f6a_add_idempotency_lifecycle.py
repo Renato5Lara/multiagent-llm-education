@@ -23,40 +23,70 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+TABLE_NAME = "idempotency_keys"
+
+
+def _has_column(inspector: sa.Inspector, column_name: str) -> bool:
+    return column_name in {column["name"] for column in inspector.get_columns(TABLE_NAME)}
+
+
+def _add_column_if_missing(inspector: sa.Inspector, column: sa.Column) -> None:
+    if not _has_column(inspector, column.name):
+        op.add_column(TABLE_NAME, column)
+
+
+def _has_index(inspector: sa.Inspector, *column_names: str) -> bool:
+    wanted = set(column_names)
+    return any(
+        set(index.get("column_names") or []) == wanted
+        for index in inspector.get_indexes(TABLE_NAME)
+    )
+
+
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    if not inspector.has_table(TABLE_NAME):
+        raise RuntimeError(
+            f"{TABLE_NAME} must exist before applying revision {revision}."
+        )
+
     # -- Add lifecycle status column (with index) --
-    op.add_column(
-        "idempotency_keys",
+    _add_column_if_missing(
+        inspector,
         sa.Column(
             "status",
             sa.String(20),
             nullable=False,
             server_default=sa.text("'pending'"),
-            index=True,
         ),
     )
+    inspector = sa.inspect(bind)
+    if not _has_index(inspector, "status"):
+        op.create_index("ix_idempotency_keys_status", TABLE_NAME, ["status"])
 
     # -- Add event metadata columns --
-    op.add_column(
-        "idempotency_keys",
+    _add_column_if_missing(
+        inspector,
         sa.Column("event_type", sa.String(100), nullable=True),
     )
-    op.add_column(
-        "idempotency_keys",
+    _add_column_if_missing(
+        inspector,
         sa.Column("aggregate_id", sa.String(36), nullable=True),
     )
-    op.add_column(
-        "idempotency_keys",
+    _add_column_if_missing(
+        inspector,
         sa.Column("trace_id", sa.String(36), nullable=True),
     )
-    op.add_column(
-        "idempotency_keys",
+    _add_column_if_missing(
+        inspector,
         sa.Column("causation_id", sa.String(36), nullable=True),
     )
 
     # -- Add completed_at timestamp --
-    op.add_column(
-        "idempotency_keys",
+    _add_column_if_missing(
+        inspector,
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
     )
 
@@ -72,9 +102,23 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column("idempotency_keys", "completed_at")
-    op.drop_column("idempotency_keys", "causation_id")
-    op.drop_column("idempotency_keys", "trace_id")
-    op.drop_column("idempotency_keys", "aggregate_id")
-    op.drop_column("idempotency_keys", "event_type")
-    op.drop_column("idempotency_keys", "status")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    if not inspector.has_table(TABLE_NAME):
+        return
+
+    if _has_index(inspector, "status"):
+        op.drop_index("ix_idempotency_keys_status", table_name=TABLE_NAME)
+
+    for column_name in (
+        "completed_at",
+        "causation_id",
+        "trace_id",
+        "aggregate_id",
+        "event_type",
+        "status",
+    ):
+        inspector = sa.inspect(bind)
+        if _has_column(inspector, column_name):
+            op.drop_column(TABLE_NAME, column_name)

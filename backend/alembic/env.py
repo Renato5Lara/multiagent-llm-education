@@ -25,6 +25,11 @@ from app.models.student_progress import LearningPath, PathModule, StudentProgres
 from app.models.event_outbox import EventOutbox
 from app.models.idempotency_key import IdempotencyKey
 from app.models.student_memory import StudentMemory, ConversationMessage, WeaknessRecord, StrengthRecord
+from app.models.course_prerequisite import CoursePrerequisite
+from app.models.institutional_course import InstitutionalCourse, InstitutionalCoursePrerequisite
+from app.models.knowledge_graph import KnowledgeNode, KnowledgeEdge
+from app.models.shared_memory_record import SharedMemoryRecord
+from app.models.teacher_assignment import TeacherAssignment
 
 config = context.config
 

@@ -9,8 +9,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.db.session import SessionLocal
-from app.db.base import Base
-from app.db.session import engine
 from app.models import (
     User, UserRole,
     Course, CourseStatus,
@@ -336,7 +334,6 @@ COURSE_COMPETENCY_MAP = {
 
 
 def seed():
-    Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         # ===== CURRÍCULUM INSTITUCIONAL (MALLA ISIA 2025) =====

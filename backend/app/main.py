@@ -34,10 +34,27 @@ from app.api.routes import (
 
 from app.agents.router import router as agents_router
 from app.core.config import settings
-from app.db.base import Base
 from app.db.session import engine
 
 
+_old_log_record_factory = logging.getLogRecordFactory()
+
+
+def _trace_safe_log_record_factory(*args, **kwargs):
+    record = _old_log_record_factory(*args, **kwargs)
+    for field in (
+        "trace_id",
+        "span_id",
+        "correlation_id",
+        "causation_id",
+        "operation_name",
+    ):
+        if not hasattr(record, field):
+            setattr(record, field, "")
+    return record
+
+
+logging.setLogRecordFactory(_trace_safe_log_record_factory)
 
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
@@ -70,8 +87,9 @@ async def lifespan(app: FastAPI):
             exist_ok=True,
         )
 
-    Base.metadata.create_all(bind=engine)
-    logger.info("Tablas verificadas/creadas exitosamente")
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+    logger.info("Conexion a base de datos verificada")
 
     yield
 
