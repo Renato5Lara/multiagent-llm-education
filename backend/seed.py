@@ -19,6 +19,7 @@ from app.models import (
     Enrollment, EnrollmentStatus,
     Competency, CompetencyType,
     CourseCompetency,
+    InstitutionalCourse, InstitutionalCoursePrerequisite,
 )
 from app.core.security import get_password_hash
 
@@ -338,6 +339,9 @@ def seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        # ===== CURRÍCULUM INSTITUCIONAL (MALLA ISIA 2025) =====
+        seed_institutional_courses(db)
+
         # ===== USUARIOS =====
         admin = db.query(User).filter(User.email == "admin@upao.edu.pe").first()
         if not admin:
@@ -551,6 +555,158 @@ def seed():
         raise
     finally:
         db.close()
+
+
+def seed_institutional_courses(db):
+    """Siembra los cursos institucionales desde la malla curricular oficial ISIA 2025."""
+    existing = db.query(InstitutionalCourse).first()
+    if existing:
+        return
+
+    ISIA_2025_CYCLES = {
+        1: [
+            ("MAT101", "Matemática Básica", 4, 2, 2, 0),
+            ("SIS101", "Introducción a la Ingeniería de Sistemas e IA", 3, 2, 2, 0),
+            ("COM101", "Comunicación I", 3, 2, 2, 0),
+            ("MET101", "Metodología del Aprendizaje Universitario", 2, 1, 2, 0),
+            ("FIS101", "Física General", 4, 2, 2, 2),
+        ],
+        2: [
+            ("MAT102", "Cálculo Diferencial", 4, 2, 2, 0),
+            ("SIS102", "Programación I", 4, 2, 2, 2),
+            ("COM102", "Comunicación II", 3, 2, 2, 0),
+            ("MAT103", "Álgebra Lineal", 3, 2, 2, 0),
+            ("SIS103", "Fundamentos de Computación", 3, 2, 2, 0),
+        ],
+        3: [
+            ("MAT201", "Cálculo Integral", 4, 2, 2, 0),
+            ("SIS201", "Programación II", 4, 2, 2, 2),
+            ("EST201", "Estadística I", 3, 2, 2, 0),
+            ("SIS202", "Base de Datos I", 4, 2, 2, 2),
+            ("SIS203", "Sistemas Operativos", 3, 2, 2, 0),
+        ],
+        4: [
+            ("MAT301", "Ecuaciones Diferenciales", 4, 2, 2, 0),
+            ("SIS301", "Programación III (POO)", 4, 2, 2, 2),
+            ("SIS302", "Base de Datos II", 4, 2, 2, 2),
+            ("SIS303", "Redes y Comunicación", 3, 2, 2, 0),
+            ("SIS304", "Diseño de Algoritmos", 3, 2, 2, 0),
+        ],
+        5: [
+            ("SIS401", "Ingeniería de Software I", 4, 2, 2, 0),
+            ("SIS402", "Inteligencia Artificial I", 4, 2, 2, 2),
+            ("SIS403", "Desarrollo Web", 4, 2, 2, 2),
+            ("SIS404", "Base de Datos III", 3, 2, 2, 0),
+            ("SIS405", "Investigación de Operaciones", 3, 2, 2, 0),
+        ],
+        6: [
+            ("SIS501", "Ciberseguridad", 3, 2, 2, 0),
+            ("SIS502", "Ciencia de Datos I", 4, 2, 2, 2),
+            ("SIS503", "Desarrollo Móvil", 4, 2, 2, 2),
+            ("SIS504", "Ingeniería de Software II", 3, 2, 2, 0),
+            ("SIS505", "Inteligencia Artificial II", 4, 2, 2, 2),
+        ],
+        7: [
+            ("SIS601", "Cloud Computing", 3, 2, 2, 0),
+            ("SIS602", "Procesamiento de Lenguaje Natural", 4, 2, 2, 2),
+            ("SIS603", "Visión Computacional", 4, 2, 2, 2),
+            ("SIS604", "Ciencia de Datos II", 3, 2, 2, 0),
+            ("SIS605", "DevOps", 3, 2, 2, 0),
+        ],
+        8: [
+            ("SIS701", "Internet de las Cosas", 3, 2, 2, 0),
+            ("SIS702", "Deep Learning", 4, 2, 2, 2),
+            ("SIS703", "DevOps Avanzado", 3, 2, 2, 0),
+            ("SIS704", "Robótica", 3, 2, 2, 0),
+            ("SIS705", "Ética Legal y Profesional", 2, 2, 0, 0),
+        ],
+        9: [
+            ("SIS801", "Seminario de Investigación I", 3, 2, 2, 0),
+            ("SIS802", "Gestión de Proyectos TI", 3, 2, 2, 0),
+            ("SIS803", "Emprendimiento Digital", 3, 2, 2, 0),
+            ("SIS804", "Ciberseguridad Avanzada", 3, 2, 2, 0),
+            ("SIS805", "Análisis de Datos Masivos (Big Data)", 3, 2, 2, 0),
+        ],
+        10: [
+            ("SIS901", "Seminario de Investigación II (Tesis)", 4, 2, 4, 0),
+            ("SIS902", "Prácticas Pre-Profesionales", 6, 0, 6, 0),
+            ("SIS903", "Evaluación de Proyectos", 3, 2, 2, 0),
+            ("SIS904", "Gestión de la Innovación", 3, 2, 2, 0),
+            ("SIS905", "Auditoría de Sistemas", 3, 2, 2, 0),
+        ],
+    }
+
+    PREREQUISITES = {
+        "SIS102": ["MAT101"],
+        "MAT102": ["MAT101"],
+        "MAT201": ["MAT102"],
+        "MAT301": ["MAT201"],
+        "SIS201": ["SIS102"],
+        "SIS301": ["SIS201"],
+        "SIS302": ["SIS202"],
+        "SIS303": ["SIS203"],
+        "SIS304": ["SIS201"],
+        "SIS401": ["SIS301"],
+        "SIS402": ["SIS301", "EST201"],
+        "SIS403": ["SIS301"],
+        "SIS404": ["SIS302"],
+        "SIS405": ["EST201"],
+        "SIS501": ["SIS303"],
+        "SIS502": ["EST201", "SIS404"],
+        "SIS503": ["SIS403"],
+        "SIS504": ["SIS401"],
+        "SIS505": ["SIS402", "SIS502"],
+        "SIS601": ["SIS303"],
+        "SIS602": ["SIS505"],
+        "SIS603": ["SIS505"],
+        "SIS604": ["SIS502"],
+        "SIS605": ["SIS203"],
+        "SIS701": ["SIS601"],
+        "SIS702": ["SIS505", "SIS603"],
+        "SIS703": ["SIS605"],
+        "SIS704": ["SIS301", "MAT301"],
+        "SIS801": ["SIS504"],
+        "SIS802": ["SIS504"],
+        "SIS803": ["SIS405"],
+        "SIS804": ["SIS501"],
+        "SIS805": ["SIS604"],
+        "SIS901": ["SIS801"],
+        "SIS903": ["SIS802"],
+        "SIS904": ["SIS803"],
+        "SIS905": ["SIS501"],
+    }
+
+    course_map = {}
+    for cycle, courses in ISIA_2025_CYCLES.items():
+        for code, name, credits, ht, hp, hl in courses:
+            inst_course = InstitutionalCourse(
+                code=code,
+                name=name,
+                credits=credits,
+                cycle=cycle,
+                hours_theory=ht,
+                hours_practice=hp,
+                hours_lab=hl,
+            )
+            db.add(inst_course)
+            db.flush()
+            course_map[code] = inst_course
+
+    for code, prereq_codes in PREREQUISITES.items():
+        course = course_map.get(code)
+        if not course:
+            continue
+        for prereq_code in prereq_codes:
+            prereq = course_map.get(prereq_code)
+            if prereq:
+                assoc = InstitutionalCoursePrerequisite(
+                    course_id=course.id,
+                    prerequisite_id=prereq.id,
+                )
+                db.add(assoc)
+
+    db.commit()
+    print(f"[OK] {len(course_map)} cursos institucionales sembrados desde la malla ISIA 2025")
 
 
 if __name__ == "__main__":

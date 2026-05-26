@@ -18,6 +18,7 @@ from sqlalchemy import text
 
 from app.api.routes import (
     auth,
+    analytics,
     courses,
     objectives,
     resources,
@@ -25,6 +26,10 @@ from app.api.routes import (
     estudiantes,
     competencies,
     students,
+    curriculum,
+    tutor,
+    swarm,
+    idempotency,
 )
 
 from app.agents.router import router as agents_router
@@ -33,12 +38,19 @@ from app.db.base import Base
 from app.db.session import engine
 
 
+
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO),
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    format="%(asctime)s | %(levelname)s | %(name)s "
+            "| [%(trace_id)s/%(span_id)s] %(message)s",
 )
 
 logger = logging.getLogger("upao-mas-edu")
+
+# Install tracing logging filter — safe before correlation_engine is imported
+# (filter handles missing engine via try/except → empty strings).
+from app.tracing.propagation import TraceLoggingFilter
+logging.getLogger().addFilter(TraceLoggingFilter())
 
 
 @asynccontextmanager
@@ -131,6 +143,18 @@ app.add_middleware(
 )
 
 
+# Distributed tracing middleware — outermost, captures every request
+from app.tracing.fastapi import make_tracing_middleware
+from app.tracing import correlation_engine
+app.middleware("http")(make_tracing_middleware(correlation_engine))
+
+
+# Distributed idempotency middleware — wraps mutating endpoints with
+# automatic Idempotency-Key extraction, acquisition, and replay.
+from app.events.middleware import make_idempotency_middleware
+app.middleware("http")(make_idempotency_middleware())
+
+
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())
@@ -204,7 +228,12 @@ app.include_router(objectives.router)
 app.include_router(estudiantes.router)
 app.include_router(students.router)
 app.include_router(competencies.router)
+app.include_router(curriculum.router)
+app.include_router(analytics.router)
+app.include_router(tutor.router)
 app.include_router(agents_router)
+app.include_router(swarm.router)
+app.include_router(idempotency.router)
 
 
 @app.get("/", tags=["Sistema"])

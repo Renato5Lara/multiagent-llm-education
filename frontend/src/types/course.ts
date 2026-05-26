@@ -9,6 +9,8 @@ export interface Course {
     year: number
     status: CourseStatus
     teacher_id: string
+    institutional_course_id?: string
+    is_institutional: boolean
     created_at: string
     updated_at: string
 }
@@ -19,6 +21,7 @@ export interface CourseCreate {
     description?: string
     cycle: number
     year: number
+    institutional_course_id?: string
 }
 
 export interface CourseUpdate {

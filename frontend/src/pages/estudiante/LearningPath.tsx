@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Lock, CheckCircle, Circle, BookOpen, Play, FileText, Film, ImageIcon, Headphones, Gamepad2, Puzzle } from 'lucide-react'
+import { Lock, CheckCircle, Circle, BookOpen, Play, FileText, Film, ImageIcon, Headphones, Gamepad2, Puzzle, MessageCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +8,7 @@ import PageHeader from '@/components/common/PageHeader'
 import { useLearningPath, useGeneratePath } from '@/hooks/useStudent'
 import { MODALITY_LABELS, MODALITY_COLORS } from '@/lib/constants'
 import type { LearningPathItem } from '@/types/student'
+import TutorWidget from '@/components/ai/TutorWidget'
 
 const statusConfig = {
     completed: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50 border-green-200', label: 'Completado' },
@@ -81,6 +82,9 @@ export default function LearningPath() {
     const items = path.items ?? []
     const completedCount = items.filter(i => i.status === 'completed').length
     const totalCount = items.length
+
+    const completedModules = items.filter((i: LearningPathItem) => i.status === 'completed').length
+    const learningStyle = path.dominant_modality || undefined
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -201,6 +205,36 @@ export default function LearningPath() {
                     </CardContent>
                 </Card>
             )}
+
+            <div className="mt-6 flex justify-center">
+                <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => window.dispatchEvent(new CustomEvent('open-tutor', {
+                        detail: {
+                            courseId,
+                            courseName: path.course_name,
+                            moduleTitle: completedModules < totalCount
+                                ? items.find((i: LearningPathItem) => i.status === 'available')?.title
+                                : undefined,
+                            progress: completedModules,
+                            learningStyle,
+                        }
+                    }))}
+                >
+                    <MessageCircle className="h-4 w-4" />
+                    Preguntar al Tutor IA
+                </Button>
+            </div>
+
+            <TutorWidget
+                courseId={courseId || ''}
+                courseName={path.course_name}
+                moduleTitle={completedModules < totalCount
+                    ? items.find((i: LearningPathItem) => i.status === 'available')?.title
+                    : undefined
+                }
+            />
         </div>
     )
 }

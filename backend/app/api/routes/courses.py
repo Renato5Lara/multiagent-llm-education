@@ -7,13 +7,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_docente, get_current_user, get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.course import (
     CourseCreate,
     CourseListResponse,
     CourseResponse,
     CourseUpdate,
     EnrollRequest,
+    EnrolledStudentResponse,
 )
 from app.schemas.auth import MessageResponse
 from app.services import course_service
@@ -59,6 +60,7 @@ def create_course(
         cycle=course_data.cycle,
         year=course_data.year,
         description=course_data.description,
+        institutional_course_id=course_data.institutional_course_id,
     )
 
     log_action(db, current_user.id, "crear_curso", "course", course.id)
@@ -200,3 +202,27 @@ def enroll_students(
         {"success": result["success"]},
     )
     return result
+
+
+@router.get("/{course_id}/students", response_model=list[EnrolledStudentResponse])
+def get_enrolled_students(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retorna la lista de estudiantes inscritos en un curso. Solo el docente dueño o admin."""
+    course = course_service.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curso no encontrado",
+        )
+
+    if course.teacher_id != current_user.id and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo el docente del curso o un admin puede ver los estudiantes inscritos",
+        )
+
+    students = course_service.get_enrolled_students(db, course_id)
+    return students

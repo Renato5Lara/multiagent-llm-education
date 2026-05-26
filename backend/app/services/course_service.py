@@ -45,6 +45,7 @@ def create_course(
     cycle: int,
     year: int,
     description: Optional[str] = None,
+    institutional_course_id: Optional[str] = None,
 ) -> Course:
     course = Course(
         code=code,
@@ -53,6 +54,8 @@ def create_course(
         cycle=cycle,
         year=year,
         teacher_id=teacher_id,
+        institutional_course_id=institutional_course_id,
+        is_institutional=institutional_course_id is not None,
     )
     db.add(course)
     db.commit()
@@ -99,6 +102,9 @@ def publish_course(db: Session, course: Course) -> tuple[bool, str]:
 def enroll_students(
     db: Session, course_id: str, student_ids: list[str]
 ) -> dict:
+    from app.db.locks import advisory_lock
+    from sqlalchemy.exc import IntegrityError
+
     course = db.query(Course).filter(Course.id == course_id).first()
     if course and course.status != CourseStatus.PUBLICADO:
         return {"success": 0, "errors": [{"student_id": "", "message": "Solo se puede inscribir estudiantes en cursos publicados"}]}
@@ -116,29 +122,63 @@ def enroll_students(
             )
             continue
 
-        existing = (
-            db.query(Enrollment)
-            .filter(
-                Enrollment.course_id == course_id,
-                Enrollment.student_id == student_id,
+        lock_key = f"enroll:{course_id}:{student_id}"
+        with advisory_lock(db, lock_key):
+            existing = (
+                db.query(Enrollment)
+                .filter(
+                    Enrollment.course_id == course_id,
+                    Enrollment.student_id == student_id,
+                )
+                .first()
             )
-            .first()
-        )
-        if existing:
-            result["errors"].append(
-                {"student_id": student_id, "message": "Ya está inscrito en este curso"}
-            )
-            continue
+            if existing:
+                result["errors"].append(
+                    {"student_id": student_id, "message": "Ya está inscrito en este curso"}
+                )
+                continue
 
-        enrollment = Enrollment(
-            course_id=course_id,
-            student_id=student_id,
-            status=EnrollmentStatus.ACTIVO,
-        )
-        db.add(enrollment)
+            enrollment = Enrollment(
+                course_id=course_id,
+                student_id=student_id,
+                status=EnrollmentStatus.ACTIVO,
+            )
+            db.add(enrollment)
+            try:
+                db.flush()
+            except IntegrityError:
+                db.rollback()
+                result["errors"].append(
+                    {"student_id": student_id, "message": "Ya está inscrito en este curso"}
+                )
+                continue
         result["success"] += 1
 
     if result["success"] > 0:
         db.commit()
 
     return result
+
+
+def get_enrolled_students(db: Session, course_id: str) -> list[dict]:
+    enrollments = (
+        db.query(Enrollment)
+        .filter(Enrollment.course_id == course_id)
+        .all()
+    )
+    students_list = []
+    for enrollment in enrollments:
+        student = db.query(User).filter(User.id == enrollment.student_id).first()
+        if not student:
+            continue
+        students_list.append({
+            "id": enrollment.id,
+            "student_id": student.id,
+            "first_name": student.first_name,
+            "last_name": student.last_name,
+            "email": student.email,
+            "institutional_code": student.institutional_code,
+            "status": enrollment.status.value,
+            "enrolled_at": enrollment.enrolled_at.isoformat() if enrollment.enrolled_at else None,
+        })
+    return students_list

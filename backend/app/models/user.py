@@ -48,6 +48,7 @@ class User(Base):
     enrollments = relationship("Enrollment", back_populates="student", lazy="selectin")
     audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")
     student_profile = relationship("StudentProfile", back_populates="student", uselist=False, lazy="selectin")
+    teacher_assignments = relationship("TeacherAssignment", back_populates="teacher", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"<User {self.email} ({self.role.value})>"

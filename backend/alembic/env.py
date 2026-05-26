@@ -22,6 +22,9 @@ from app.models.diagnostic_result import DiagnosticResult
 from app.models.evaluation_attempt import EvaluationAttempt
 from app.models.student_profile import StudentProfile
 from app.models.student_progress import LearningPath, PathModule, StudentProgress
+from app.models.event_outbox import EventOutbox
+from app.models.idempotency_key import IdempotencyKey
+from app.models.student_memory import StudentMemory, ConversationMessage, WeaknessRecord, StrengthRecord
 
 config = context.config
 

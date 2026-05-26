@@ -120,3 +120,57 @@ class TestEnrollment:
         resp = client.post(f"/api/courses/{cid}/enroll", headers=auth_header(docente_token),
                            json={"student_ids": [estudiante_user.id]})
         assert resp.json()["errors"][0]["message"] == "Ya está inscrito en este curso"
+
+    def test_listar_estudiantes_inscritos(self, client, docente_token, docente_user, estudiante_user, db):
+        """GET /courses/{id}/students retorna los estudiantes inscritos."""
+        cid = self._create_published_course(client, docente_token, db, "ENR-03")
+
+        # Inscribir estudiante
+        client.post(f"/api/courses/{cid}/enroll", headers=auth_header(docente_token),
+                     json={"student_ids": [estudiante_user.id]})
+
+        # Obtener lista de inscritos
+        resp = client.get(f"/api/courses/{cid}/students", headers=auth_header(docente_token))
+        assert resp.status_code == 200
+        data = resp.json()
+        assert len(data) == 1
+        assert data[0]["student_id"] == estudiante_user.id
+        assert data[0]["first_name"] == estudiante_user.first_name
+        assert data[0]["status"] == "activo"
+
+    def test_listar_estudiantes_sin_inscripciones(self, client, docente_token):
+        """GET /courses/{id}/students sin inscritos retorna lista vacía."""
+        cr = client.post("/api/courses", headers=auth_header(docente_token), json={
+            "code": "ENR-04", "name": "Curso Vacío", "cycle": 1, "year": 2026,
+        })
+        cid = cr.json()["id"]
+
+        resp = client.get(f"/api/courses/{cid}/students", headers=auth_header(docente_token))
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    def test_listar_estudiantes_otro_docente_rejected(self, client, docente_token, estudiante_user, db):
+        """Docente no dueño del curso no puede ver estudiantes."""
+        cid = self._create_published_course(client, docente_token, db, "ENR-05")
+
+        # Crear otro docente
+        from app.models.user import User, UserRole
+        from app.core.security import get_password_hash
+        otro_docente = User(
+            email="otro@docente.com",
+            hashed_password=get_password_hash("Pass123!"),
+            first_name="Otro",
+            last_name="Docente",
+            role=UserRole.DOCENTE,
+            is_active=True,
+        )
+        db.add(otro_docente)
+        db.commit()
+
+        login_resp = client.post("/api/auth/login", json={
+            "identifier": "otro@docente.com", "password": "Pass123!",
+        })
+        otro_token = login_resp.json()["access_token"]
+
+        resp = client.get(f"/api/courses/{cid}/students", headers=auth_header(otro_token))
+        assert resp.status_code == 403

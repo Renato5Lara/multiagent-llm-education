@@ -1,6 +1,6 @@
 """
 Dependencias de inyección para FastAPI.
-Incluye: sesión de BD, autenticación, y verificación de roles.
+Incluye: sesión de BD, Unit of Work, autenticación, y verificación de roles.
 """
 
 from typing import Generator
@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_token
 from app.db.session import SessionLocal
+from app.db.uow import UnitOfWork
 from app.models.user import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -22,6 +23,24 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
+
+
+def get_uow() -> Generator[UnitOfWork, None, None]:
+    """Provee una Unit of Work con commit/rollback automático.
+
+    - Si el endpoint lanza una excepción → rollback
+    - Si todo es exitoso → commit
+    - Siempre cierra la sesión al final
+    """
+    uow = UnitOfWork(SessionLocal)
+    try:
+        yield uow
+        uow.commit()
+    except Exception:
+        uow.rollback()
+        raise
+    finally:
+        uow.close()
 
 
 def get_current_user(

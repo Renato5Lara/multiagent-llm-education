@@ -55,8 +55,9 @@ export function useAssignCompetencies() {
       const resp = await api.post(`/api/competencies/course/${courseId}/assign`, { competency_ids: competencyIds })
       return resp.data
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['course-competencies'] })
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['course-competencies', variables.courseId] })
+      queryClient.invalidateQueries({ queryKey: ['competencies'] })
       toast({ title: 'Competencias asignadas exitosamente' })
     },
     onError: (error) => {

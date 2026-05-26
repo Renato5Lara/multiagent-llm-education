@@ -1,7 +1,9 @@
 """
 Router de estudiantes.
-Flujo completo: perfil, diagnóstico, ruta adaptativa, progreso, evaluación.
+Flujo completo: onboarding, perfil, diagnóstico, ruta adaptativa, progreso, evaluación, tutor IA.
 """
+
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -25,10 +27,56 @@ from app.schemas.progress import (
     LearningPathItem,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
+from app.schemas.auth import MessageResponse, CycleUpdateRequest, TutorRequest
+from app.services.ai_service import ai_service
+from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service
 from app.services.audit_service import log_action
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/students", tags=["Estudiantes"])
+
+
+@router.patch("/onboarding/cycle", response_model=MessageResponse)
+def set_cycle(
+    data: CycleUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    current_user.current_cycle = data.cycle
+    db.commit()
+
+    # Auto-enroll in curriculum courses for the selected cycle
+    try:
+        student_service.auto_enroll_from_curriculum(db, current_user)
+    except Exception as e:
+        logger.warning(f"Auto-enrollment from curriculum failed: {e}")
+
+    db.refresh(current_user)
+    log_action(db, current_user.id, "set_cycle", "user", current_user.id)
+    return MessageResponse(message=f"Ciclo {data.cycle} asignado exitosamente")
+
+
+@router.get("/onboarding/status")
+def get_onboarding_status(
+    current_user: User = Depends(get_current_estudiante),
+):
+    return {
+        "has_cycle": current_user.current_cycle is not None,
+        "current_cycle": current_user.current_cycle,
+        "has_profile": False,
+        "onboarding_completed": current_user.current_cycle is not None,
+    }
+
+
+@router.get("/academic/summary")
+def get_academic_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    summary = student_service.get_academic_summary(db, current_user)
+    return summary
 
 
 @router.get("/my-courses", response_model=list[CourseProgressResponse])
@@ -74,6 +122,12 @@ def submit_diagnostic(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
+    course = get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Curso no encontrado",
+        )
     result = student_service.save_diagnostic(
         db, student_id=current_user.id, course_id=course_id, answers=data.answers
     )
@@ -81,6 +135,35 @@ def submit_diagnostic(
     student_service.save_student_profile_from_diagnostic(
         db, student_id=current_user.id, diagnostic=result
     )
+
+    try:
+        raw_answers = data.answers
+        profile_data = result.profile or {}
+        modality_scores = result.modality_scores or {}
+
+        learning_profile = {
+            "learning_style": result.dominant_modality or "reading",
+            "pace": "moderate",
+            "preferred_bloom_levels": [2, 3, 4],
+            "preferred_modalities": [result.dominant_modality] if result.dominant_modality else ["reading"],
+        }
+
+        ai_analysis = ai_service.analyze_diagnostic_ai(learning_profile, raw_answers)
+
+        enriched_profile = {
+            **profile_data,
+            "fortalezas": ai_analysis.get("fortalezas", []),
+            "debilidades": ai_analysis.get("debilidades", []),
+            "recomendaciones": ai_analysis.get("recomendaciones", []),
+            "nivel_bloom_estimado": ai_analysis.get("nivel_bloom_estimado", 2),
+            "confianza_analisis": ai_analysis.get("confianza", 0.5),
+        }
+        result.profile = enriched_profile
+        result.modality_scores = modality_scores
+        db.commit()
+        db.refresh(result)
+    except Exception as e:
+        logger.warning(f"AI analysis failed for diagnostic {result.id}: {e}")
 
     log_action(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
     return result
@@ -231,3 +314,105 @@ def submit_evaluation(
         "passed": bool(attempt.passed),
         "completed_at": attempt.completed_at,
     }
+
+
+@router.post("/tutor/chat")
+def tutor_chat(
+    data: TutorRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    course_name = ""
+    module_title = ""
+    progress = 0
+    learning_style = "visual"
+    bloom_level = 2
+
+    try:
+        from app.models.course import Course
+        from app.models.student_progress import LearningPath, PathModule
+        from app.services.student_service import get_student_profile
+
+        course = db.query(Course).filter(Course.id == data.course_id).first()
+        if course:
+            course_name = course.name
+
+        path = (
+            db.query(LearningPath)
+            .filter(
+                LearningPath.student_id == current_user.id,
+                LearningPath.course_id == data.course_id,
+            )
+            .first()
+        )
+        if path:
+            progress = round((path.completed_modules / path.total_modules * 100)) if path.total_modules > 0 else 0
+            current_module = (
+                db.query(PathModule)
+                .filter(
+                    PathModule.path_id == path.id,
+                    PathModule.status == "available",
+                )
+                .order_by(PathModule.order)
+                .first()
+            )
+            if current_module:
+                module_title = current_module.title
+                bloom_level = current_module.bloom_level or 2
+
+        profile = get_student_profile(db, current_user.id)
+        if profile and profile.dominant_style:
+            learning_style = profile.dominant_style
+
+        context = data.context or {}
+        if context.get("module_title"):
+            module_title = context["module_title"]
+        if context.get("bloom_level"):
+            bloom_level = int(context["bloom_level"])
+
+    except Exception as e:
+        logger.warning(f"Error building tutor context: {e}")
+
+    response_text = ai_service.generate_tutor_response(
+        message=data.message,
+        course_name=course_name,
+        module_title=module_title,
+        progress=progress,
+        learning_style=learning_style,
+        bloom_level=bloom_level,
+    )
+
+    return {
+        "response": response_text,
+        "context": {
+            "course_name": course_name,
+            "module_title": module_title,
+            "progress": progress,
+            "learning_style": learning_style,
+            "bloom_level": bloom_level,
+        },
+    }
+
+
+@router.post("/tutor/analyze-error")
+def analyze_error(
+    data: TutorRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    course_name = ""
+    try:
+        from app.models.course import Course
+        course = db.query(Course).filter(Course.id == data.course_id).first()
+        if course:
+            course_name = course.name
+    except Exception:
+        pass
+
+    response_text = ai_service.generate_tutor_response(
+        message=f"Explica por qué está mal esto y cómo corregirlo: {data.message}",
+        course_name=course_name,
+        bloom_level=2,
+    )
+
+    return {"response": response_text}

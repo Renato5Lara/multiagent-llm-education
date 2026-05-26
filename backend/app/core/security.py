@@ -32,6 +32,16 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
+def create_refresh_token(data: dict) -> str:
+    """Crea un refresh token JWT con expiración larga (7 días por defecto)."""
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifica una contraseña plana contra su hash bcrypt."""
     return bcrypt.checkpw(

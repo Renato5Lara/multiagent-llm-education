@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { isTokenExpired } from '@/lib/jwt'
 import { useAuthStore } from '@/stores/authStore'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || ''
@@ -48,6 +49,11 @@ api.interceptors.response.use(
     }
 
     if (error.response.status === 401 && !originalRequest._retry) {
+      // NEVER retry /api/auth/refresh — that creates an infinite deadlock
+      if (originalRequest.url?.includes('/api/auth/refresh')) {
+        return Promise.reject(error)
+      }
+
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           pendingRequests.push({ resolve, reject })
@@ -61,20 +67,59 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const resp = await api.post('/api/auth/refresh')
-        const { access_token } = resp.data
-        const { login } = useAuthStore.getState()
-        login(access_token, resp.data.user || useAuthStore.getState().user!)
+        // Use a direct axios call to bypass the interceptor entirely
+        // This prevents the refresh request from creating a deadlock
+        const refreshToken = useAuthStore.getState().refreshToken
+        if (!refreshToken) {
+          throw new Error('No refresh token available')
+        }
+
+        // Verificar si el refresh token ya expiró localmente
+        // para evitar el POST innecesario que genera un 401 en consola
+        if (isTokenExpired(refreshToken)) {
+          useAuthStore.getState().logout()
+          window.location.href = '/login'
+          return Promise.reject(new Error('Refresh token expired'))
+        }
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+        const resp = await axios.post(
+          `${API_BASE_URL}/api/auth/refresh`,
+          { refresh_token: refreshToken },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+          },
+        )
+        clearTimeout(timeoutId)
+
+        const { access_token, refresh_token: newRefreshToken, user } = resp.data
+        const store = useAuthStore.getState()
+        store.login(access_token, newRefreshToken, user || store.user!)
         processPendingRequests(access_token)
         originalRequest.headers.Authorization = `Bearer ${access_token}`
         return api(originalRequest)
-      } catch (refreshError) {
+      } catch (refreshError: unknown) {
         clearPendingRequests(refreshError)
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
+        const axiosError = refreshError as AxiosError
+        if (axiosError.response?.status === 401 || axiosError.response?.status === 403) {
+          useAuthStore.getState().logout()
+          window.location.href = '/login'
+        }
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
+        if (pendingRequests.length > 0) {
+          const token = useAuthStore.getState().token
+          if (token) {
+            const orphaned = pendingRequests.splice(0)
+            orphaned.forEach((p) => p.resolve(token))
+          } else {
+            clearPendingRequests(new Error('Session expired'))
+          }
+        }
       }
     }
 

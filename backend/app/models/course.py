@@ -7,7 +7,7 @@ import enum
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text, Boolean
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -34,7 +34,9 @@ class Course(Base):
         default=CourseStatus.BORRADOR,
         nullable=False,
     )
-    teacher_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    teacher_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+    institutional_course_id = Column(String(36), ForeignKey("institutional_courses.id"), nullable=True, index=True)
+    is_institutional = Column(Boolean, default=False, nullable=False)
     created_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -46,6 +48,7 @@ class Course(Base):
     )
 
     teacher = relationship("User", back_populates="courses_taught")
+    institutional_course = relationship("InstitutionalCourse", backref="course_instances")
     objectives = relationship(
         "LearningObjective", back_populates="course", cascade="all, delete-orphan"
     )

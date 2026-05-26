@@ -14,6 +14,7 @@ from app.models.competency import Competency, CourseCompetency
 from app.models.course import Course, CourseStatus
 from app.models.diagnostic_result import DiagnosticResult
 from app.models.enrollment import Enrollment, EnrollmentStatus
+from app.models.institutional_course import InstitutionalCourse
 from app.models.resource import Resource, ResourceType
 from app.models.student_profile import StudentProfile
 from app.models.student_progress import LearningPath, PathModule, StudentProgress
@@ -75,44 +76,72 @@ def get_dominant_modality(modality_scores: dict) -> str:
 def save_diagnostic(
     db: Session, student_id: str, course_id: str, answers: dict
 ) -> DiagnosticResult:
-    existing = (
-        db.query(DiagnosticResult)
-        .filter(
-            DiagnosticResult.student_id == student_id,
-            DiagnosticResult.course_id == course_id,
+    from app.db.locks import advisory_lock
+    from sqlalchemy.exc import IntegrityError
+
+    lock_key = f"diagnostic:{student_id}:{course_id}"
+
+    with advisory_lock(db, lock_key):
+        existing = (
+            db.query(DiagnosticResult)
+            .filter(
+                DiagnosticResult.student_id == student_id,
+                DiagnosticResult.course_id == course_id,
+            )
+            .with_for_update()
+            .first()
         )
-        .first()
-    )
 
-    modality_scores = compute_modality_scores(answers)
-    dominant = get_dominant_modality(modality_scores)
+        modality_scores = compute_modality_scores(answers)
+        dominant = get_dominant_modality(modality_scores)
 
-    profile = {
-        "dominant_modality": dominant,
-        "modality_scores": modality_scores,
-    }
+        profile = {
+            "dominant_modality": dominant,
+            "modality_scores": modality_scores,
+        }
 
-    if existing:
-        existing.answers = answers
-        existing.profile = profile
-        existing.modality_scores = modality_scores
-        existing.dominant_modality = dominant
-        existing.completed_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(existing)
-        return existing
+        if existing:
+            existing.answers = answers
+            existing.profile = profile
+            existing.modality_scores = modality_scores
+            existing.dominant_modality = dominant
+            existing.completed_at = datetime.now(timezone.utc)
+            db.commit()
+            db.refresh(existing)
+            return existing
 
-    result = DiagnosticResult(
-        student_id=student_id,
-        course_id=course_id,
-        answers=answers,
-        profile=profile,
-        modality_scores=modality_scores,
-        dominant_modality=dominant,
-    )
-    db.add(result)
-    db.commit()
-    db.refresh(result)
+        result = DiagnosticResult(
+            student_id=student_id,
+            course_id=course_id,
+            answers=answers,
+            profile=profile,
+            modality_scores=modality_scores,
+            dominant_modality=dominant,
+        )
+        db.add(result)
+        try:
+            db.commit()
+            db.refresh(result)
+        except IntegrityError:
+            db.rollback()
+            existing = (
+                db.query(DiagnosticResult)
+                .filter(
+                    DiagnosticResult.student_id == student_id,
+                    DiagnosticResult.course_id == course_id,
+                )
+                .first()
+            )
+            if existing:
+                existing.answers = answers
+                existing.profile = profile
+                existing.modality_scores = modality_scores
+                existing.dominant_modality = dominant
+                existing.completed_at = datetime.now(timezone.utc)
+                db.commit()
+                db.refresh(existing)
+                return existing
+            raise
     return result
 
 
@@ -209,56 +238,64 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
         db.add(enrollment)
     if auto_courses:
         db.commit()
+        db.refresh(auto_courses[0]) if auto_courses else None
 
-    all_course_ids = enrolled_course_ids | {c.id for c in auto_courses}
+    all_course_ids = list(enrolled_course_ids | {c.id for c in auto_courses})
+
+    resource_counts = dict(
+        db.query(Resource.course_id, func.count(Resource.id))
+        .filter(Resource.course_id.in_(all_course_ids))
+        .group_by(Resource.course_id)
+        .all()
+    )
+
+    progress_counts = dict(
+        db.query(StudentProgress.course_id, func.count(StudentProgress.id))
+        .filter(
+            StudentProgress.student_id == student.id,
+            StudentProgress.course_id.in_(all_course_ids),
+            StudentProgress.completed == True,
+        )
+        .group_by(StudentProgress.course_id)
+        .all()
+    )
+
+    diagnostic_map: dict[str, DiagnosticResult] = {}
+    for row in (
+        db.query(DiagnosticResult)
+        .filter(
+            DiagnosticResult.student_id == student.id,
+            DiagnosticResult.course_id.in_(all_course_ids),
+        )
+        .all()
+    ):
+        diagnostic_map[row.course_id] = row
+
+    path_map: dict[str, LearningPath] = {}
+    for row in (
+        db.query(LearningPath)
+        .filter(
+            LearningPath.student_id == student.id,
+            LearningPath.course_id.in_(all_course_ids),
+        )
+        .all()
+    ):
+        path_map[row.course_id] = row
+
+    course_map = {c.id: c for c in db.query(Course).filter(Course.id.in_(all_course_ids)).all()}
 
     results = []
     for course_id in all_course_ids:
-        course = db.query(Course).filter(Course.id == course_id).first()
+        course = course_map.get(course_id)
         if not course:
             continue
 
-        total_resources = (
-            db.query(Resource).filter(Resource.course_id == course_id).count()
-        )
+        total_resources = resource_counts.get(course_id, 0)
+        completed_resources = progress_counts.get(course_id, 0)
+        progress_pct = round((completed_resources / total_resources) * 100) if total_resources > 0 else 0
 
-        completed_resources = (
-            db.query(StudentProgress)
-            .filter(
-                StudentProgress.student_id == student.id,
-                StudentProgress.course_id == course_id,
-                StudentProgress.completed == True,
-            )
-            .count()
-        )
-
-        progress_pct = (
-            round((completed_resources / total_resources) * 100)
-            if total_resources > 0
-            else 0
-        )
-
-        diagnostic = (
-            db.query(DiagnosticResult)
-            .filter(
-                DiagnosticResult.student_id == student.id,
-                DiagnosticResult.course_id == course_id,
-            )
-            .first()
-        )
-
-        learning_path = (
-            db.query(LearningPath)
-            .filter(
-                LearningPath.student_id == student.id,
-                LearningPath.course_id == course_id,
-            )
-            .first()
-        )
-
-        dominant_modality = None
-        if diagnostic:
-            dominant_modality = diagnostic.dominant_modality
+        diagnostic = diagnostic_map.get(course_id)
+        learning_path = path_map.get(course_id)
 
         results.append(
             CourseProgressResponse(
@@ -271,7 +308,7 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
                 progress_percentage=progress_pct,
                 has_diagnostic=diagnostic is not None,
                 has_learning_path=learning_path is not None,
-                dominant_modality=dominant_modality,
+                dominant_modality=diagnostic.dominant_modality if diagnostic else None,
             )
         )
 
@@ -608,3 +645,115 @@ def generate_learning_path(
     db: Session, student_id: str, course_id: str, diagnostic: DiagnosticResult
 ) -> LearningPath:
     return generate_learning_path_adaptive(db, student_id, course_id, diagnostic)
+
+
+def get_academic_summary(db: Session, student: User) -> dict:
+    enrollments = (
+        db.query(Enrollment)
+        .filter(
+            Enrollment.student_id == student.id,
+            Enrollment.status == EnrollmentStatus.ACTIVO,
+        )
+        .all()
+    )
+    total_courses = len(enrollments)
+    course_ids = [e.course_id for e in enrollments]
+
+    diagnostic_count = 0
+    total_modules = 0
+    completed_modules = 0
+
+    if course_ids:
+        diagnostic_count = (
+            db.query(DiagnosticResult)
+            .filter(
+                DiagnosticResult.student_id == student.id,
+                DiagnosticResult.course_id.in_(course_ids),
+            )
+            .count()
+        )
+
+        paths = (
+            db.query(LearningPath)
+            .filter(
+                LearningPath.student_id == student.id,
+                LearningPath.course_id.in_(course_ids),
+            )
+            .all()
+        )
+        for p in paths:
+            total_modules += p.total_modules or 0
+            completed_modules += p.completed_modules or 0
+
+    profile = get_student_profile(db, student.id)
+    dominant_style = profile.dominant_style if profile else None
+
+    return {
+        "current_cycle": student.current_cycle,
+        "total_courses": total_courses,
+        "completed_diagnostics": diagnostic_count,
+        "total_modules": total_modules,
+        "completed_modules": completed_modules,
+        "progress_percentage": round((completed_modules / total_modules * 100)) if total_modules > 0 else 0,
+        "dominant_modality": dominant_style,
+        "has_onboarded": student.current_cycle is not None,
+    }
+
+
+def auto_enroll_from_curriculum(db: Session, student: User) -> int:
+    cycle = student.current_cycle
+    if not cycle:
+        return 0
+
+    inst_courses = (
+        db.query(InstitutionalCourse)
+        .filter(InstitutionalCourse.cycle == cycle)
+        .all()
+    )
+    enrolled_count = 0
+
+    for inst in inst_courses:
+        course = (
+            db.query(Course)
+            .filter(
+                Course.institutional_course_id == inst.id,
+                Course.year == datetime.now(timezone.utc).year,
+            )
+            .first()
+        )
+        if not course:
+            course = Course(
+                code=inst.code,
+                name=inst.name,
+                description=inst.competencies,
+                cycle=inst.cycle,
+                year=datetime.now(timezone.utc).year,
+                teacher_id=None,
+                institutional_course_id=inst.id,
+                is_institutional=True,
+                status=CourseStatus.PUBLICADO,
+            )
+            db.add(course)
+            db.flush()
+
+        existing_enroll = (
+            db.query(Enrollment)
+            .filter(
+                Enrollment.course_id == course.id,
+                Enrollment.student_id == student.id,
+            )
+            .first()
+        )
+        if not existing_enroll:
+            enrollment = Enrollment(
+                course_id=course.id,
+                student_id=student.id,
+                status=EnrollmentStatus.ACTIVO,
+            )
+            db.add(enrollment)
+            enrolled_count += 1
+
+    if enrolled_count > 0:
+        db.commit()
+
+    return enrolled_count

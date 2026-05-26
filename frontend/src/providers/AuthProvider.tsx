@@ -2,6 +2,7 @@ import { createContext, useContext, useCallback, useEffect, useRef, useState, ty
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
+import { isTokenExpired } from '@/lib/jwt'
 import { useAuthStore } from '@/stores/authStore'
 import type { UserAuth } from '@/types/auth'
 
@@ -30,11 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     user,
     isAuthenticated,
+    _hydrated,
     logout: storeLogout,
     setUser,
   } = useAuthStore()
 
-  const [isValidating, setIsValidating] = useState(() => !!token)
+  const [isValidating, setIsValidating] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const validatingRef = useRef(false)
   const navigate = useNavigate()
@@ -48,8 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
+    // Si ambos tokens están expirados, hacemos logout inmediato
+    // sin contactar al servidor (evita los 401 innecesarios en consola)
+    if (isTokenExpired(stored.token) && isTokenExpired(stored.refreshToken)) {
+      storeLogout()
+      queryClient.clear()
+      setIsValidating(false)
+      setIsReady(true)
+      return
+    }
+
     if (validatingRef.current) return
     validatingRef.current = true
+    setIsValidating(true)
 
     try {
       const resp = await api.get<UserAuth>('/api/auth/me')
@@ -64,21 +77,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setUser, storeLogout, queryClient])
 
+  // Validate when hydration completes AND token exists
   useEffect(() => {
-    validateSession()
-  }, [validateSession])
+    if (_hydrated && !!useAuthStore.getState().token) {
+      validateSession()
+    } else if (_hydrated && !useAuthStore.getState().token) {
+      setIsReady(true)
+    }
+  }, [_hydrated, validateSession])
 
+  // Validate when token appears (e.g. login in another tab)
+  useEffect(() => {
+    if (_hydrated && token && !validatingRef.current) {
+      validateSession()
+    }
+    // Only run when token changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, _hydrated])
+
+  // Multi-tab sync: react to storage changes from other tabs
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'upao-auth' && !e.newValue) {
+      if (e.key !== 'upao-auth') return
+
+      if (!e.newValue) {
+        // Auth data cleared in another tab → logout
         storeLogout()
         queryClient.clear()
         navigate('/login')
+      } else {
+        // Auth data changed (login in another tab) → re-validate
+        try {
+          const parsed = JSON.parse(e.newValue)
+          if (parsed?.state?.token && parsed?.state?.token !== token) {
+            validateSession()
+          }
+        } catch {
+          // ignore parse errors
+        }
       }
     }
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [storeLogout, queryClient, navigate])
+  }, [storeLogout, queryClient, navigate, token, validateSession])
 
   return (
     <AuthContext.Provider

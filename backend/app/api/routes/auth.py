@@ -12,6 +12,7 @@ from app.schemas.auth import (
     LoginRequest,
     MessageResponse,
     RecoverRequest,
+    RefreshRequest,
     TokenResponse,
 )
 from app.schemas.user import UserResponse
@@ -50,13 +51,14 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = auth_service.create_user_token(user)
+    access_token, refresh_token = auth_service.create_user_tokens(user)
     user_dict = auth_service.get_user_response_dict(user)
 
     log_action(db, user.id, "login", "user", user.id)
 
     return TokenResponse(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
         user=user_dict,
     )
@@ -73,15 +75,28 @@ def logout(current_user: User = Depends(get_current_user)):
 
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_token(
-    current_user: User = Depends(get_current_user),
+    refresh_data: RefreshRequest,
     db: Session = Depends(get_db),
 ):
-    """Renueva el token de acceso del usuario actual."""
-    new_token = auth_service.create_user_token(current_user)
-    user_dict = auth_service.get_user_response_dict(current_user)
+    """
+    Renueva tokens usando refresh_token.
+    NO depende de get_current_user — valida el refresh_token directamente.
+    """
+    new_access, new_refresh, user = auth_service.refresh_user_token(
+        refresh_data.refresh_token, db
+    )
+    if not new_access or not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token inválido o expirado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_dict = auth_service.get_user_response_dict(user)
 
     return TokenResponse(
-        access_token=new_token,
+        access_token=new_access,
+        refresh_token=new_refresh,
         token_type="bearer",
         user=user_dict,
     )

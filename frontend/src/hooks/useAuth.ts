@@ -19,7 +19,7 @@ export function useAuth() {
             return resp.data
         },
         onSuccess: (data) => {
-            storeLogin(data.access_token, data.user)
+            storeLogin(data.access_token, data.refresh_token, data.user)
             queryClient.clear()
             const role = data.user.role
             if (role === 'admin') navigate('/admin')

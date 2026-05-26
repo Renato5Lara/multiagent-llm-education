@@ -1,19 +1,23 @@
 """
 Configuración compartida de tests.
-Provee cliente FastAPI y BD SQLite en memoria.
+Provee cliente FastAPI, BD SQLite en memoria y Unit of Work para tests.
 """
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
+from app.db.uow import UnitOfWork
 from app.api.deps import get_db
 from app.main import app
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
+from app.models.learning_objective import LearningObjective
+from app.models.event_outbox import EventOutbox  # noqa: F401 — ensure event_outbox table is created
+from app.models.shared_memory_record import SharedMemoryRecord  # noqa: F401 — ensure shared_memory_records table is created
 
 SQLALCHEMY_DATABASE_URL = "sqlite://"
 
@@ -34,6 +38,12 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 @pytest.fixture(scope="function")
+def db_engine():
+    """Provee el engine de BD compartido (in-memory con StaticPool)."""
+    return engine
+
+
+@pytest.fixture(scope="function")
 def db():
     """Provee una sesión de BD limpia para cada test."""
     Base.metadata.create_all(bind=engine)
@@ -46,6 +56,21 @@ def db():
 
 
 @pytest.fixture(scope="function")
+def test_uow(db: Session):
+    """Provee una Unit of Work envuelta en la sesión de test.
+
+    Útil para tests que ejercitan servicios refactorizados a UoW.
+    El commit manual queda a cargo del test.
+    """
+    uow = UnitOfWork(lambda: db)
+    yield uow
+    try:
+        uow.rollback()
+    finally:
+        uow.close()
+
+
+@pytest.fixture(scope="function")
 def client(db):
     """Provee un cliente de test con la BD inyectada."""
     def override_get_db():
@@ -54,7 +79,22 @@ def client(db):
         finally:
             pass
 
+    from app.api.deps import get_uow
+    from app.db.uow import UnitOfWork
+
+    def override_get_uow():
+        uow = UnitOfWork(lambda: db)
+        try:
+            yield uow
+            uow.commit()
+        except Exception:
+            uow.rollback()
+            raise
+        finally:
+            uow.close()
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_uow] = override_get_uow
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -136,3 +176,21 @@ def estudiante_token(client, estudiante_user) -> str:
 def auth_header(token: str) -> dict:
     """Helper: genera header de autorización."""
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def curso_publicado(client, docente_token, db):
+    """Crea y retorna un curso publicado para tests de inscripcion."""
+    from app.models.course import Course
+    cr = client.post("/api/courses", headers=auth_header(docente_token), json={
+        "code": "PUB-01", "name": "Curso Publicado", "cycle": 1, "year": 2026,
+    })
+    cid = cr.json()["id"]
+    for i in range(3):
+        obj = LearningObjective(
+            course_id=cid, title=f"Obj {i+1}", bloom_level=i+1, order=i,
+        )
+        db.add(obj)
+    db.commit()
+    client.post(f"/api/courses/{cid}/publish", headers=auth_header(docente_token))
+    return db.query(Course).filter(Course.id == cid).first()

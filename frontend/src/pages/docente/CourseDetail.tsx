@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import PageHeader from '@/components/common/PageHeader'
 import FileUploader from '@/components/common/FileUploader'
-import { useCourse, usePublishCourse, useEnrollStudents } from '@/hooks/useCourses'
+import { useCourse, usePublishCourse, useEnrollStudents, useEnrolledStudents } from '@/hooks/useCourses'
 import { useObjectives, useCreateObjective, useDeleteObjective } from '@/hooks/useObjectives'
 import { useResources, useUploadResource, useDeleteResource } from '@/hooks/useResources'
 import { useUsers } from '@/hooks/useUsers'
@@ -37,6 +37,7 @@ export default function CourseDetail() {
     const createObj = useCreateObjective()
     const deleteObj = useDeleteObjective()
     const { data: studentsData } = useUsers({ page: 1, size: 100, role: 'estudiante' })
+    const { data: enrolledStudents } = useEnrolledStudents(id)
     const enroll = useEnrollStudents()
     const [selectedStudents, setSelectedStudents] = useState<string[]>([])
     const [objForm, setObjForm] = useState({ title: '', description: '', bloom_level: 1, order: 0 })
@@ -225,15 +226,56 @@ export default function CourseDetail() {
                 </TabsContent>
 
                 <TabsContent value="students">
-                    <Card><CardHeader><CardTitle className="text-lg">Estudiantes Inscritos</CardTitle></CardHeader><CardContent>
-                        <div className="space-y-4">
-                            <div className="flex gap-2 flex-wrap">{studentsData?.users?.map(s => (
-                                <label key={s.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${selectedStudents.includes(s.id) ? 'bg-primary/10 border-primary' : 'hover:bg-gray-50'}`}>
-                                    <input type="checkbox" checked={selectedStudents.includes(s.id)} onChange={e => { if (e.target.checked) setSelectedStudents(p => [...p, s.id]); else setSelectedStudents(p => p.filter(x => x !== s.id)) }} />
-                                    {s.first_name} {s.last_name}
-                                </label>
-                            ))}</div>
-                            {selectedStudents.length > 0 && <Button onClick={() => enroll.mutate({ courseId: id!, data: { student_ids: selectedStudents } }, { onSuccess: () => setSelectedStudents([]) })} disabled={enroll.isPending}>Inscribir {selectedStudents.length} estudiante(s)</Button>}
+                    <Card><CardHeader><CardTitle className="text-lg">Estudiantes Inscritos</CardTitle></CardHeader><CardContent className="space-y-6">
+                        {enrolledStudents && enrolledStudents.length > 0 ? (
+                            <div>
+                                <h4 className="text-sm font-medium mb-3">Inscritos actualmente ({enrolledStudents.length})</h4>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Estudiante</TableHead>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Código</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {enrolledStudents.map(s => (
+                                            <TableRow key={s.id}>
+                                                <TableCell className="font-medium">{s.first_name} {s.last_name}</TableCell>
+                                                <TableCell>{s.email}</TableCell>
+                                                <TableCell>{s.institutional_code || '-'}</TableCell>
+                                                <TableCell><Badge variant="secondary">{s.status}</Badge></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground text-sm">No hay estudiantes inscritos aún.</p>
+                        )}
+
+                        <div className="border-t pt-4">
+                            <h4 className="text-sm font-medium mb-3">Inscribir nuevos estudiantes</h4>
+                            {studentsData?.users ? (
+                                <div className="flex gap-2 flex-wrap">
+                                    {studentsData.users
+                                        .filter(s => !enrolledStudents?.find(e => e.student_id === s.id))
+                                        .map(s => (
+                                        <label key={s.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer text-sm transition-colors ${selectedStudents.includes(s.id) ? 'bg-primary/10 border-primary' : 'hover:bg-gray-50'}`}>
+                                            <input type="checkbox" checked={selectedStudents.includes(s.id)} onChange={e => { if (e.target.checked) setSelectedStudents(p => [...p, s.id]); else setSelectedStudents(p => p.filter(x => x !== s.id)) }} />
+                                            {s.first_name} {s.last_name}
+                                        </label>
+                                    ))}
+                                </div>
+                            ) : <p className="text-muted-foreground text-sm">Cargando estudiantes...</p>}
+                            {selectedStudents.length > 0 && (
+                                <div className="mt-4">
+                                    <Button onClick={() => enroll.mutate({ courseId: id!, data: { student_ids: selectedStudents } }, { onSuccess: () => setSelectedStudents([]) })} disabled={enroll.isPending}>
+                                        {enroll.isPending ? 'Inscribiendo...' : `Inscribir ${selectedStudents.length} estudiante(s)`}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </CardContent></Card>
                 </TabsContent>

@@ -101,6 +101,28 @@ export function usePublishCourse() {
     })
 }
 
+export interface EnrolledStudent {
+    id: string
+    student_id: string
+    first_name: string
+    last_name: string
+    email: string
+    institutional_code?: string
+    status: string
+    enrolled_at: string
+}
+
+export function useEnrolledStudents(courseId: string | undefined) {
+    return useQuery({
+        queryKey: ['courses', courseId, 'students'],
+        queryFn: async () => {
+            const resp = await api.get<EnrolledStudent[]>(`/api/courses/${courseId}/students`)
+            return resp.data
+        },
+        enabled: !!courseId,
+    })
+}
+
 export function useEnrollStudents() {
     const queryClient = useQueryClient()
     const { toast } = useToast()

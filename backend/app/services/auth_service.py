@@ -9,7 +9,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, get_password_hash, verify_password
+from app.core.security import create_access_token, create_refresh_token, decode_token, get_password_hash, verify_password
 from app.models.login_attempt import LoginAttempt
 from app.models.user import User
 
@@ -59,10 +59,29 @@ def is_account_locked(db: Session, identifier: str) -> bool:
     return failed_attempts >= MAX_FAILED_ATTEMPTS
 
 
-def create_user_token(user: User) -> str:
-    return create_access_token(
-        data={"sub": user.id, "email": user.email, "role": user.role.value}
-    )
+def create_user_tokens(user: User) -> tuple[str, str]:
+    payload = {"sub": user.id, "email": user.email, "role": user.role.value}
+    access_token = create_access_token(data=payload)
+    refresh_token = create_refresh_token(data=payload)
+    return access_token, refresh_token
+
+
+def refresh_user_token(refresh_token_str: str, db: Session) -> tuple[Optional[str], Optional[str], Optional[User]]:
+    payload = decode_token(refresh_token_str)
+    if payload is None:
+        return None, None, None
+    if payload.get("type") != "refresh":
+        return None, None, None
+
+    user_id = payload.get("sub")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.is_active:
+        return None, None, None
+
+    new_payload = {"sub": user.id, "email": user.email, "role": user.role.value}
+    new_access = create_access_token(data=new_payload)
+    new_refresh = create_refresh_token(data=new_payload)
+    return new_access, new_refresh, user
 
 
 def get_user_response_dict(user: User) -> dict:

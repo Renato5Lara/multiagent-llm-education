@@ -8,6 +8,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from app.models.course import CourseStatus
+from app.models.enrollment import EnrollmentStatus
 
 
 class CourseBase(BaseModel):
@@ -19,9 +20,22 @@ class CourseBase(BaseModel):
     year: int = Field(..., ge=2020, le=2100, description="Año académico")
 
 
+class EnrolledStudentResponse(BaseModel):
+    id: str
+    student_id: str
+    first_name: str
+    last_name: str
+    email: str
+    institutional_code: Optional[str] = None
+    status: EnrollmentStatus
+    enrolled_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class CourseCreate(CourseBase):
     """Schema para crear curso."""
-    pass
+    institutional_course_id: Optional[str] = Field(None, description="ID del curso institucional (malla curricular)")
 
 
 class CourseUpdate(BaseModel):
@@ -43,6 +57,8 @@ class CourseResponse(BaseModel):
     year: int
     status: CourseStatus
     teacher_id: str
+    institutional_course_id: Optional[str] = None
+    is_institutional: bool = False
     created_at: datetime
     updated_at: datetime
 

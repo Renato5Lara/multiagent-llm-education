@@ -24,6 +24,9 @@ class LearningPath(Base):
     total_modules = Column(Integer, default=0)
     completed_modules = Column(Integer, default=0)
     status = Column(String(20), default="active")
+    version = Column(Integer, default=1, nullable=False)
+
+    __mapper_args__ = {"version_id_col": version}
 
     student = relationship("User")
     course = relationship("Course")
@@ -46,6 +49,9 @@ class PathModule(Base):
     resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
     score = Column(Float, nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    version = Column(Integer, default=1, nullable=False)
+
+    __mapper_args__ = {"version_id_col": version}
 
     path = relationship("LearningPath", back_populates="modules")
     resource = relationship("Resource")

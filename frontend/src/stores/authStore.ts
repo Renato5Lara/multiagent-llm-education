@@ -5,12 +5,13 @@ import type { UserAuth } from '@/types/auth'
 interface AuthState {
   user: UserAuth | null
   token: string | null
+  refreshToken: string | null
   isAuthenticated: boolean
   _hydrated: boolean
 }
 
 interface AuthActions {
-  login: (token: string, user: UserAuth) => void
+  login: (token: string, refreshToken: string, user: UserAuth) => void
   logout: () => void
   setUser: (user: UserAuth) => void
   setHydrated: () => void
@@ -23,14 +24,15 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       token: null,
+      refreshToken: null,
       isAuthenticated: false,
       _hydrated: false,
 
-      login: (token, user) =>
-        set({ token, user, isAuthenticated: true }),
+      login: (token, refreshToken, user) =>
+        set({ token, refreshToken, user, isAuthenticated: true }),
 
       logout: () => {
-        set({ token: null, user: null, isAuthenticated: false })
+        set({ token: null, refreshToken: null, user: null, isAuthenticated: false })
       },
 
       setUser: (user) =>
@@ -43,6 +45,7 @@ export const useAuthStore = create<AuthStore>()(
       name: 'upao-auth',
       partialize: (state) => ({
         token: state.token,
+        refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),

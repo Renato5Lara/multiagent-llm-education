@@ -1,11 +1,5 @@
-"""
-Nodos del sistema multiagente LangGraph.
-Cada nodo procesa el estado compartido y retorna actualizaciones.
-"""
-
 import logging
-import random
-from typing import Any
+from typing import Any, Optional
 
 from app.agents.schemas import (
     DiagnosticAnswers,
@@ -15,8 +9,6 @@ from app.agents.schemas import (
     EvaluationPlan,
     EvaluationQuestion,
 )
-from app.models.learning_objective import LearningObjective
-from app.models.resource import Resource
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +79,17 @@ def diagnostic_analyzer(state: dict) -> dict:
 
     recommendations = _generate_recommendations(profile)
 
+    risk_data = {
+        "progress_rate": min(avg / 5.0, 1.0),
+        "completion_rate": min(avg / 5.0, 1.0),
+        "diagnostic_rate": 1.0 if any(v > 0 for v in raw.values()) else 0.0,
+        "prerequisite_gaps": [],
+    }
+
     return {
         "learning_profile": profile.model_dump(),
         "profile_recommendations": recommendations,
+        "risk_data": risk_data,
     }
 
 
@@ -116,12 +116,29 @@ def _generate_recommendations(profile: LearningProfile) -> list[str]:
 
 def path_planner(state: dict) -> dict:
     profile = LearningProfile(**state["learning_profile"])
-    objectives: list[LearningObjective] = state["course_objectives"]
+    objectives = state.get("course_objectives", [])
+    prerequisites_completed = state.get("prerequisites_completed", [])
 
-    sorted_objectives = sorted(objectives, key=lambda o: abs(o.bloom_level - profile.preferred_bloom_levels[0]))
+    sorted_objectives = sorted(
+        objectives,
+        key=lambda o: abs(o.bloom_level - profile.preferred_bloom_levels[0]) if hasattr(o, 'bloom_level') else 0,
+    )
+
+    base_bloom = 1
+    if prerequisites_completed:
+        completed_blooms = [
+            getattr(p, 'bloom_level', 1) if not isinstance(p, dict) else p.get('bloom_level', 1)
+            for p in prerequisites_completed
+        ]
+        if completed_blooms:
+            base_bloom = max(completed_blooms)
+
     modules = []
-
     for i, obj in enumerate(sorted_objectives):
+        obj_bloom = getattr(obj, 'bloom_level', 1)
+        adjusted_bloom = max(obj_bloom, base_bloom)
+        adjusted_bloom = min(adjusted_bloom, 6)
+
         resource_types = profile.preferred_modalities.copy()
         if profile.learning_style == "visual":
             resource_types = ["pdf", "video", "image"]
@@ -136,10 +153,10 @@ def path_planner(state: dict) -> dict:
 
         modules.append(
             ModulePlan(
-                title=obj.title,
-                description=obj.description or f"Módulo sobre {obj.title}",
+                title=getattr(obj, 'title', f"Módulo {i+1}"),
+                description=getattr(obj, 'description', None) or f"Módulo sobre {getattr(obj, 'title', '')}",
                 order=i + 1,
-                bloom_level=obj.bloom_level,
+                bloom_level=adjusted_bloom,
                 recommended_resource_types=resource_types,
                 estimated_duration=duration_map.get(profile.pace, "25 min"),
             )
@@ -151,27 +168,25 @@ def path_planner(state: dict) -> dict:
 
 def content_recommender(state: dict) -> dict:
     plan = LearningPathPlan(**state["learning_path_plan"])
-    resources: list[Resource] = state["course_resources"]
+    resources = state.get("course_resources", [])
     recommendations = {}
 
     for module in plan.modules:
         matching = [
             r
             for r in resources
-            if r.resource_type.value in module.recommended_resource_types
-            and (
-                hasattr(r, "objective_associations")
-                and any(
-                    assoc.objective.bloom_level == module.bloom_level
-                    for assoc in r.objective_associations
-                )
-            )
+            if hasattr(r, 'resource_type') and r.resource_type.value in module.recommended_resource_types
         ]
-        matching.sort(key=lambda r: r.size_bytes, reverse=True)
+
+        matching.sort(key=lambda r: getattr(r, 'size_bytes', 0) if hasattr(r, 'size_bytes') else 0, reverse=True)
 
         recommendations[module.title] = {
             "resources": [
-                {"id": r.id, "filename": r.original_filename, "type": r.resource_type.value}
+                {
+                    "id": r.id,
+                    "filename": getattr(r, 'original_filename', r.id),
+                    "type": getattr(r, 'resource_type', 'pdf').value if hasattr(getattr(r, 'resource_type', ''), 'value') else 'pdf',
+                }
                 for r in matching[:3]
             ]
         }
@@ -194,6 +209,65 @@ def evaluation_generator(state: dict) -> dict:
         )
 
     return {"evaluation_plan": [e.model_dump() for e in evaluations]}
+
+
+def risk_analyzer(state: dict) -> dict:
+    risk_data = state.get("risk_data", {})
+
+    progress_rate = risk_data.get("progress_rate", 0.5)
+    completion_rate = risk_data.get("completion_rate", 0.5)
+    diagnostic_rate = risk_data.get("diagnostic_rate", 1.0)
+    prerequisite_gaps = risk_data.get("prerequisite_gaps", [])
+
+    factors = []
+    if progress_rate < 0.3:
+        factors.append("Bajo progreso en cursos activos")
+    if completion_rate < 0.2:
+        factors.append("Baja tasa de finalización de cursos")
+    if diagnostic_rate < 0.5:
+        factors.append("Diagnósticos de aprendizaje pendientes")
+    if prerequisite_gaps:
+        factors.append(f"{len(prerequisite_gaps)} prerrequisitos sin completar")
+
+    if progress_rate >= 0.7 and completion_rate >= 0.5 and not prerequisite_gaps:
+        risk_level = "bajo"
+        risk_score = 0.2
+    elif progress_rate >= 0.4 and completion_rate >= 0.3 and len(prerequisite_gaps) <= 1:
+        risk_level = "medio"
+        risk_score = 0.5
+    else:
+        risk_level = "alto"
+        risk_score = 0.8
+
+    recommendations = []
+    if risk_level == "alto":
+        recommendations.append("Revisar plan de estudios con el tutor académico personalmente")
+        recommendations.append("Establecer un horario semanal de estudio con metas concretas")
+        if prerequisite_gaps:
+            recommendations.append(f"Completar los prerrequisitos pendientes antes de avanzar")
+        if progress_rate < 0.3:
+            recommendations.append("Dedicar al menos 2 horas diarias a los cursos activos")
+    elif risk_level == "medio":
+        recommendations.append("Mantener el ritmo de estudio actual y completar tareas pendientes")
+        recommendations.append("Realizar los diagnósticos de cursos pendientes")
+    else:
+        recommendations.append("Excelente progreso. Continuar con el ritmo actual.")
+
+    explanation_parts = []
+    if factors:
+        explanation_parts.append("Factores de riesgo detectados: " + "; ".join(factors[:3]))
+    explanation_parts.append(f"Progreso general: {int(progress_rate * 100)}%")
+    explanation_parts.append(f"Cursos finalizados: {int(completion_rate * 100)}%")
+
+    return {
+        "risk_prediction": {
+            "risk_level": risk_level,
+            "risk_score": risk_score,
+            "explanation": ". ".join(explanation_parts),
+            "factors": factors[:5],
+            "recommendations": recommendations[:4],
+        }
+    }
 
 
 def _generate_questions(module: ModulePlan) -> list[EvaluationQuestion]:
@@ -226,15 +300,6 @@ def _generate_questions(module: ModulePlan) -> list[EvaluationQuestion]:
                     "Repetir la definición textual",
                     "Solo dar un ejemplo sin explicación",
                     "Describir temas no relacionados",
-                ],
-            },
-            {
-                "question": f"¿Cuál de las siguientes opciones interpreta correctamente '{module.title}'?",
-                "options": [
-                    "Parafrasear el concepto con ejemplos nuevos",
-                    "Copiar la definición del material",
-                    "Relacionarlo con un tema diferente",
-                    "Ignorar su propósito principal",
                 ],
             },
         ],
@@ -301,12 +366,11 @@ def _generate_questions(module: ModulePlan) -> list[EvaluationQuestion]:
 
     result = []
     for i, q in enumerate(questions):
-        correct_idx = i % len(q["options"])
         result.append(
             EvaluationQuestion(
                 question=q["question"],
                 options=q["options"],
-                correct=correct_idx,
+                correct=0,
             )
         )
     return result
