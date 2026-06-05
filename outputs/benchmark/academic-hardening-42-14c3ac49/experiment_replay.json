@@ -1,0 +1,3785 @@
+{
+  "event_count": 60,
+  "events": [
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-001",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Recordar conceptos de listas",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.2,
+          "grounding_score": 0.37,
+          "misconception_coverage": 0.32,
+          "bloom_alignment": 0.45,
+          "adaptation_impact": 0.24,
+          "retrieval_confidence": 0.1875,
+          "execution_success": 0.5973,
+          "sandbox_validation_success": 0.4173,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.5
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-001",
+              "bloom_level": 1
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.5
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-001",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Recordar conceptos de listas",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8068,
+          "grounding_score": 0.8168,
+          "misconception_coverage": 0.5068,
+          "bloom_alignment": 0.6368,
+          "adaptation_impact": 0.7668,
+          "retrieval_confidence": 0.788,
+          "execution_success": 0.8302,
+          "sandbox_validation_success": 0.8302,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7568
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-001",
+              "bloom_level": 1
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8168
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7668
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8302
+          },
+          {
+            "step": "consensus",
+            "score": 0.7568
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-001",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Recordar conceptos de listas",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4034,
+          "grounding_score": 0.4134,
+          "misconception_coverage": 0.4034,
+          "bloom_alignment": 0.6534,
+          "adaptation_impact": 0.7834,
+          "retrieval_confidence": 0.2177,
+          "execution_success": 0.7619,
+          "sandbox_validation_success": 0.7619,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7734
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-001",
+              "bloom_level": 1
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7834
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7619
+          },
+          {
+            "step": "consensus",
+            "score": 0.7734
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-001",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Recordar conceptos de listas",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7933,
+          "grounding_score": 0.8833,
+          "misconception_coverage": 0.4533,
+          "bloom_alignment": 0.7033,
+          "adaptation_impact": 0.7333,
+          "retrieval_confidence": 0.7819,
+          "execution_success": 0.803,
+          "sandbox_validation_success": 0.803,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7533
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-001",
+              "bloom_level": 1
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8833
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.803
+          },
+          {
+            "step": "consensus",
+            "score": 0.7533
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-001",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Recordar conceptos de listas",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.827,
+          "grounding_score": 0.837,
+          "misconception_coverage": 0.527,
+          "bloom_alignment": 0.657,
+          "adaptation_impact": 0.787,
+          "retrieval_confidence": 0.8047,
+          "execution_success": 0.6591,
+          "sandbox_validation_success": 0.4791,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.737
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-001",
+              "bloom_level": 1
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.837
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.787
+          },
+          {
+            "step": "consensus",
+            "score": 0.737
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-001",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Recordar conceptos de listas",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8115,
+          "grounding_score": 0.8215,
+          "misconception_coverage": 0.5115,
+          "bloom_alignment": 0.4815,
+          "adaptation_impact": 0.2915,
+          "retrieval_confidence": 0.8364,
+          "execution_success": 0.8364,
+          "sandbox_validation_success": 0.8364,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7615
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-001",
+              "bloom_level": 1
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8215
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.2915
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8364
+          },
+          {
+            "step": "consensus",
+            "score": 0.7615
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-002",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Analizar complejidad de insercion",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.183,
+          "grounding_score": 0.353,
+          "misconception_coverage": 0.483,
+          "bloom_alignment": 0.458,
+          "adaptation_impact": 0.223,
+          "retrieval_confidence": 0.2341,
+          "execution_success": 0.6118,
+          "sandbox_validation_success": 0.4318,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.483
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.483
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-002",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Analizar complejidad de insercion",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8553,
+          "grounding_score": 0.8653,
+          "misconception_coverage": 0.7353,
+          "bloom_alignment": 0.7103,
+          "adaptation_impact": 0.8153,
+          "retrieval_confidence": 0.8593,
+          "execution_success": 0.7863,
+          "sandbox_validation_success": 0.7863,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8053
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8653
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8153
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7863
+          },
+          {
+            "step": "consensus",
+            "score": 0.8053
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-002",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Analizar complejidad de insercion",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4275,
+          "grounding_score": 0.4375,
+          "misconception_coverage": 0.6075,
+          "bloom_alignment": 0.7025,
+          "adaptation_impact": 0.8075,
+          "retrieval_confidence": 0.1753,
+          "execution_success": 0.8262,
+          "sandbox_validation_success": 0.8262,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7975
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8075
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8262
+          },
+          {
+            "step": "consensus",
+            "score": 0.7975
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-002",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Analizar complejidad de insercion",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7802,
+          "grounding_score": 0.8702,
+          "misconception_coverage": 0.6202,
+          "bloom_alignment": 0.7152,
+          "adaptation_impact": 0.7202,
+          "retrieval_confidence": 0.8252,
+          "execution_success": 0.828,
+          "sandbox_validation_success": 0.828,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7402
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8702
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.828
+          },
+          {
+            "step": "consensus",
+            "score": 0.7402
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-002",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Analizar complejidad de insercion",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8672,
+          "grounding_score": 0.8772,
+          "misconception_coverage": 0.7472,
+          "bloom_alignment": 0.7222,
+          "adaptation_impact": 0.8272,
+          "retrieval_confidence": 0.8052,
+          "execution_success": 0.6117,
+          "sandbox_validation_success": 0.4317,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7772
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8772
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8272
+          },
+          {
+            "step": "consensus",
+            "score": 0.7772
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "bloom-002",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Analizar complejidad de insercion",
+        "dataset": "bloom_level_tasks",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8441,
+          "grounding_score": 0.8541,
+          "misconception_coverage": 0.7241,
+          "bloom_alignment": 0.5391,
+          "adaptation_impact": 0.3241,
+          "retrieval_confidence": 0.782,
+          "execution_success": 0.8259,
+          "sandbox_validation_success": 0.8259,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7941
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "bloom-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8541
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3241
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8259
+          },
+          {
+            "step": "consensus",
+            "score": 0.7941
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-001",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Busqueda lineal en arreglos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.209,
+          "grounding_score": 0.379,
+          "misconception_coverage": 0.509,
+          "bloom_alignment": 0.509,
+          "adaptation_impact": 0.249,
+          "retrieval_confidence": 0.2281,
+          "execution_success": 0.4965,
+          "sandbox_validation_success": 0.3165,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.509
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.509
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-001",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Busqueda lineal en arreglos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.819,
+          "grounding_score": 0.829,
+          "misconception_coverage": 0.699,
+          "bloom_alignment": 0.699,
+          "adaptation_impact": 0.779,
+          "retrieval_confidence": 0.836,
+          "execution_success": 0.6745,
+          "sandbox_validation_success": 0.6745,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.769
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.829
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.779
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6745
+          },
+          {
+            "step": "consensus",
+            "score": 0.769
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-001",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Busqueda lineal en arreglos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.3908,
+          "grounding_score": 0.4008,
+          "misconception_coverage": 0.5708,
+          "bloom_alignment": 0.6908,
+          "adaptation_impact": 0.7708,
+          "retrieval_confidence": 0.1957,
+          "execution_success": 0.7256,
+          "sandbox_validation_success": 0.7256,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7608
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7708
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7256
+          },
+          {
+            "step": "consensus",
+            "score": 0.7608
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-001",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Busqueda lineal en arreglos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7592,
+          "grounding_score": 0.8492,
+          "misconception_coverage": 0.5992,
+          "bloom_alignment": 0.7192,
+          "adaptation_impact": 0.6992,
+          "retrieval_confidence": 0.8321,
+          "execution_success": 0.6894,
+          "sandbox_validation_success": 0.6894,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7192
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8492
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6894
+          },
+          {
+            "step": "consensus",
+            "score": 0.7192
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-001",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Busqueda lineal en arreglos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8655,
+          "grounding_score": 0.8755,
+          "misconception_coverage": 0.7455,
+          "bloom_alignment": 0.7455,
+          "adaptation_impact": 0.8255,
+          "retrieval_confidence": 0.7933,
+          "execution_success": 0.5231,
+          "sandbox_validation_success": 0.3431,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7755
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8755
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8255
+          },
+          {
+            "step": "consensus",
+            "score": 0.7755
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-001",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Busqueda lineal en arreglos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8156,
+          "grounding_score": 0.8256,
+          "misconception_coverage": 0.6956,
+          "bloom_alignment": 0.5356,
+          "adaptation_impact": 0.2956,
+          "retrieval_confidence": 0.7866,
+          "execution_success": 0.7281,
+          "sandbox_validation_success": 0.7281,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7656
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8256
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.2956
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7281
+          },
+          {
+            "step": "consensus",
+            "score": 0.7656
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-002",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Validacion de rangos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.2136,
+          "grounding_score": 0.3836,
+          "misconception_coverage": 0.5136,
+          "bloom_alignment": 0.4886,
+          "adaptation_impact": 0.2536,
+          "retrieval_confidence": 0.1687,
+          "execution_success": 0.4988,
+          "sandbox_validation_success": 0.3188,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.5136
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.5136
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-002",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Validacion de rangos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8246,
+          "grounding_score": 0.8346,
+          "misconception_coverage": 0.7046,
+          "bloom_alignment": 0.6796,
+          "adaptation_impact": 0.7846,
+          "retrieval_confidence": 0.8351,
+          "execution_success": 0.6524,
+          "sandbox_validation_success": 0.6524,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7746
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8346
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7846
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6524
+          },
+          {
+            "step": "consensus",
+            "score": 0.7746
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-002",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Validacion de rangos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4076,
+          "grounding_score": 0.4176,
+          "misconception_coverage": 0.5876,
+          "bloom_alignment": 0.6826,
+          "adaptation_impact": 0.7876,
+          "retrieval_confidence": 0.1683,
+          "execution_success": 0.7132,
+          "sandbox_validation_success": 0.7132,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7776
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7876
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7132
+          },
+          {
+            "step": "consensus",
+            "score": 0.7776
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-002",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Validacion de rangos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7764,
+          "grounding_score": 0.8664,
+          "misconception_coverage": 0.6164,
+          "bloom_alignment": 0.7114,
+          "adaptation_impact": 0.7164,
+          "retrieval_confidence": 0.835,
+          "execution_success": 0.7083,
+          "sandbox_validation_success": 0.7083,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7364
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8664
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7083
+          },
+          {
+            "step": "consensus",
+            "score": 0.7364
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-002",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Validacion de rangos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8299,
+          "grounding_score": 0.8399,
+          "misconception_coverage": 0.7099,
+          "bloom_alignment": 0.6849,
+          "adaptation_impact": 0.7899,
+          "retrieval_confidence": 0.8461,
+          "execution_success": 0.4829,
+          "sandbox_validation_success": 0.3029,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7399
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8399
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7899
+          },
+          {
+            "step": "consensus",
+            "score": 0.7399
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "humaneval-ped-002",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Validacion de rangos",
+        "dataset": "humaneval_pedagogical",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8606,
+          "grounding_score": 0.8706,
+          "misconception_coverage": 0.7406,
+          "bloom_alignment": 0.5556,
+          "adaptation_impact": 0.3406,
+          "retrieval_confidence": 0.8372,
+          "execution_success": 0.6336,
+          "sandbox_validation_success": 0.6336,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8106
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "humaneval-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8706
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3406
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6336
+          },
+          {
+            "step": "consensus",
+            "score": 0.8106
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-001",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Conteo de frecuencias",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.2062,
+          "grounding_score": 0.3762,
+          "misconception_coverage": 0.5062,
+          "bloom_alignment": 0.5062,
+          "adaptation_impact": 0.2462,
+          "retrieval_confidence": 0.1773,
+          "execution_success": 0.4886,
+          "sandbox_validation_success": 0.3086,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.5062
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.5062
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-001",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Conteo de frecuencias",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8746,
+          "grounding_score": 0.8846,
+          "misconception_coverage": 0.7546,
+          "bloom_alignment": 0.7546,
+          "adaptation_impact": 0.8346,
+          "retrieval_confidence": 0.8508,
+          "execution_success": 0.6872,
+          "sandbox_validation_success": 0.6872,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8246
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8846
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8346
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6872
+          },
+          {
+            "step": "consensus",
+            "score": 0.8246
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-001",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Conteo de frecuencias",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4013,
+          "grounding_score": 0.4113,
+          "misconception_coverage": 0.5813,
+          "bloom_alignment": 0.7013,
+          "adaptation_impact": 0.7813,
+          "retrieval_confidence": 0.1862,
+          "execution_success": 0.6653,
+          "sandbox_validation_success": 0.6653,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7713
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7813
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6653
+          },
+          {
+            "step": "consensus",
+            "score": 0.7713
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-001",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Conteo de frecuencias",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7308,
+          "grounding_score": 0.8208,
+          "misconception_coverage": 0.5708,
+          "bloom_alignment": 0.6908,
+          "adaptation_impact": 0.6708,
+          "retrieval_confidence": 0.7886,
+          "execution_success": 0.7168,
+          "sandbox_validation_success": 0.7168,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.6908
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8208
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7168
+          },
+          {
+            "step": "consensus",
+            "score": 0.6908
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-001",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Conteo de frecuencias",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8146,
+          "grounding_score": 0.8246,
+          "misconception_coverage": 0.6946,
+          "bloom_alignment": 0.6946,
+          "adaptation_impact": 0.7746,
+          "retrieval_confidence": 0.7976,
+          "execution_success": 0.4685,
+          "sandbox_validation_success": 0.2885,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7246
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8246
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7746
+          },
+          {
+            "step": "consensus",
+            "score": 0.7246
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-001",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Conteo de frecuencias",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8512,
+          "grounding_score": 0.8612,
+          "misconception_coverage": 0.7312,
+          "bloom_alignment": 0.5712,
+          "adaptation_impact": 0.3312,
+          "retrieval_confidence": 0.8141,
+          "execution_success": 0.7101,
+          "sandbox_validation_success": 0.7101,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8012
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-001",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8612
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3312
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7101
+          },
+          {
+            "step": "consensus",
+            "score": 0.8012
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-002",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Ordenamiento conceptual",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.1939,
+          "grounding_score": 0.3639,
+          "misconception_coverage": 0.4939,
+          "bloom_alignment": 0.4689,
+          "adaptation_impact": 0.2339,
+          "retrieval_confidence": 0.2382,
+          "execution_success": 0.4383,
+          "sandbox_validation_success": 0.2583,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.4939
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.4939
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-002",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Ordenamiento conceptual",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8373,
+          "grounding_score": 0.8473,
+          "misconception_coverage": 0.7173,
+          "bloom_alignment": 0.6923,
+          "adaptation_impact": 0.7973,
+          "retrieval_confidence": 0.8377,
+          "execution_success": 0.6399,
+          "sandbox_validation_success": 0.6399,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7873
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8473
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7973
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6399
+          },
+          {
+            "step": "consensus",
+            "score": 0.7873
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-002",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Ordenamiento conceptual",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4007,
+          "grounding_score": 0.4107,
+          "misconception_coverage": 0.5807,
+          "bloom_alignment": 0.6757,
+          "adaptation_impact": 0.7807,
+          "retrieval_confidence": 0.1641,
+          "execution_success": 0.7268,
+          "sandbox_validation_success": 0.7268,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7707
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7807
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7268
+          },
+          {
+            "step": "consensus",
+            "score": 0.7707
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-002",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Ordenamiento conceptual",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7278,
+          "grounding_score": 0.8178,
+          "misconception_coverage": 0.5678,
+          "bloom_alignment": 0.6628,
+          "adaptation_impact": 0.6678,
+          "retrieval_confidence": 0.7955,
+          "execution_success": 0.6915,
+          "sandbox_validation_success": 0.6915,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.6878
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8178
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6915
+          },
+          {
+            "step": "consensus",
+            "score": 0.6878
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-002",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Ordenamiento conceptual",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.836,
+          "grounding_score": 0.846,
+          "misconception_coverage": 0.716,
+          "bloom_alignment": 0.691,
+          "adaptation_impact": 0.796,
+          "retrieval_confidence": 0.8371,
+          "execution_success": 0.4674,
+          "sandbox_validation_success": 0.2874,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.746
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.846
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.796
+          },
+          {
+            "step": "consensus",
+            "score": 0.746
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "mbpp-ped-002",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Ordenamiento conceptual",
+        "dataset": "mbpp_pedagogical",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8672,
+          "grounding_score": 0.8772,
+          "misconception_coverage": 0.7472,
+          "bloom_alignment": 0.5622,
+          "adaptation_impact": 0.3472,
+          "retrieval_confidence": 0.8548,
+          "execution_success": 0.7167,
+          "sandbox_validation_success": 0.7167,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8172
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "mbpp-ped-002",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8772
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3472
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7167
+          },
+          {
+            "step": "consensus",
+            "score": 0.8172
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-001",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Errores off-by-one",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.186,
+          "grounding_score": 0.356,
+          "misconception_coverage": 0.486,
+          "bloom_alignment": 0.461,
+          "adaptation_impact": 0.226,
+          "retrieval_confidence": 0.232,
+          "execution_success": 0.4837,
+          "sandbox_validation_success": 0.3037,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.486
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-001",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.486
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-001",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Errores off-by-one",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8507,
+          "grounding_score": 0.8607,
+          "misconception_coverage": 0.7307,
+          "bloom_alignment": 0.7057,
+          "adaptation_impact": 0.8107,
+          "retrieval_confidence": 0.8118,
+          "execution_success": 0.6871,
+          "sandbox_validation_success": 0.6871,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8007
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-001",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8607
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8107
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6871
+          },
+          {
+            "step": "consensus",
+            "score": 0.8007
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-001",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Errores off-by-one",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4221,
+          "grounding_score": 0.4321,
+          "misconception_coverage": 0.6021,
+          "bloom_alignment": 0.6971,
+          "adaptation_impact": 0.8021,
+          "retrieval_confidence": 0.2358,
+          "execution_success": 0.7007,
+          "sandbox_validation_success": 0.7007,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7921
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-001",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8021
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7007
+          },
+          {
+            "step": "consensus",
+            "score": 0.7921
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-001",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Errores off-by-one",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7594,
+          "grounding_score": 0.8494,
+          "misconception_coverage": 0.5994,
+          "bloom_alignment": 0.6944,
+          "adaptation_impact": 0.6994,
+          "retrieval_confidence": 0.7862,
+          "execution_success": 0.6872,
+          "sandbox_validation_success": 0.6872,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7194
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-001",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8494
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6872
+          },
+          {
+            "step": "consensus",
+            "score": 0.7194
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-001",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Errores off-by-one",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8402,
+          "grounding_score": 0.8502,
+          "misconception_coverage": 0.7202,
+          "bloom_alignment": 0.6952,
+          "adaptation_impact": 0.8002,
+          "retrieval_confidence": 0.7975,
+          "execution_success": 0.5038,
+          "sandbox_validation_success": 0.3238,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7502
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-001",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8502
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8002
+          },
+          {
+            "step": "consensus",
+            "score": 0.7502
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-001",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Errores off-by-one",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8363,
+          "grounding_score": 0.8463,
+          "misconception_coverage": 0.7163,
+          "bloom_alignment": 0.5313,
+          "adaptation_impact": 0.3163,
+          "retrieval_confidence": 0.8309,
+          "execution_success": 0.6797,
+          "sandbox_validation_success": 0.6797,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7863
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-001",
+              "bloom_level": 4
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8463
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3163
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.6797
+          },
+          {
+            "step": "consensus",
+            "score": 0.7863
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-002",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Indice versus valor",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.1948,
+          "grounding_score": 0.3648,
+          "misconception_coverage": 0.4948,
+          "bloom_alignment": 0.4948,
+          "adaptation_impact": 0.2348,
+          "retrieval_confidence": 0.2351,
+          "execution_success": 0.5662,
+          "sandbox_validation_success": 0.3862,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.4948
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.4948
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-002",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Indice versus valor",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8455,
+          "grounding_score": 0.8555,
+          "misconception_coverage": 0.7255,
+          "bloom_alignment": 0.7255,
+          "adaptation_impact": 0.8055,
+          "retrieval_confidence": 0.7867,
+          "execution_success": 0.7801,
+          "sandbox_validation_success": 0.7801,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7955
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8555
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8055
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7801
+          },
+          {
+            "step": "consensus",
+            "score": 0.7955
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-002",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Indice versus valor",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.4061,
+          "grounding_score": 0.4161,
+          "misconception_coverage": 0.5861,
+          "bloom_alignment": 0.7061,
+          "adaptation_impact": 0.7861,
+          "retrieval_confidence": 0.201,
+          "execution_success": 0.8351,
+          "sandbox_validation_success": 0.8351,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7761
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7861
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8351
+          },
+          {
+            "step": "consensus",
+            "score": 0.7761
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-002",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Indice versus valor",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7872,
+          "grounding_score": 0.8772,
+          "misconception_coverage": 0.6272,
+          "bloom_alignment": 0.7472,
+          "adaptation_impact": 0.7272,
+          "retrieval_confidence": 0.7983,
+          "execution_success": 0.7517,
+          "sandbox_validation_success": 0.7517,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7472
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8772
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7517
+          },
+          {
+            "step": "consensus",
+            "score": 0.7472
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-002",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Indice versus valor",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.813,
+          "grounding_score": 0.823,
+          "misconception_coverage": 0.693,
+          "bloom_alignment": 0.693,
+          "adaptation_impact": 0.773,
+          "retrieval_confidence": 0.843,
+          "execution_success": 0.5874,
+          "sandbox_validation_success": 0.4074,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.723
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.823
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.773
+          },
+          {
+            "step": "consensus",
+            "score": 0.723
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "misc-002",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Indice versus valor",
+        "dataset": "misconception_dataset",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.85,
+          "grounding_score": 0.86,
+          "misconception_coverage": 0.73,
+          "bloom_alignment": 0.57,
+          "adaptation_impact": 0.33,
+          "retrieval_confidence": 0.8535,
+          "execution_success": 0.79,
+          "sandbox_validation_success": 0.79,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "misc-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.86
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.33
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.79
+          },
+          {
+            "step": "consensus",
+            "score": 0.8
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-001",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Visualizacion de arreglos",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.1858,
+          "grounding_score": 0.3558,
+          "misconception_coverage": 0.4858,
+          "bloom_alignment": 0.4608,
+          "adaptation_impact": 0.2258,
+          "retrieval_confidence": 0.2384,
+          "execution_success": 0.6263,
+          "sandbox_validation_success": 0.4463,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.4858
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-001",
+              "bloom_level": 2
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.4858
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-001",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Visualizacion de arreglos",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8299,
+          "grounding_score": 0.8399,
+          "misconception_coverage": 0.7099,
+          "bloom_alignment": 0.6849,
+          "adaptation_impact": 0.7899,
+          "retrieval_confidence": 0.8221,
+          "execution_success": 0.7791,
+          "sandbox_validation_success": 0.7791,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7799
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-001",
+              "bloom_level": 2
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8399
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7899
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7791
+          },
+          {
+            "step": "consensus",
+            "score": 0.7799
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-001",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Visualizacion de arreglos",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.3951,
+          "grounding_score": 0.4051,
+          "misconception_coverage": 0.5751,
+          "bloom_alignment": 0.6701,
+          "adaptation_impact": 0.7751,
+          "retrieval_confidence": 0.2223,
+          "execution_success": 0.804,
+          "sandbox_validation_success": 0.804,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7651
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-001",
+              "bloom_level": 2
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7751
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.804
+          },
+          {
+            "step": "consensus",
+            "score": 0.7651
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-001",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Visualizacion de arreglos",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.774,
+          "grounding_score": 0.864,
+          "misconception_coverage": 0.614,
+          "bloom_alignment": 0.709,
+          "adaptation_impact": 0.714,
+          "retrieval_confidence": 0.8181,
+          "execution_success": 0.7791,
+          "sandbox_validation_success": 0.7791,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.734
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-001",
+              "bloom_level": 2
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.864
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7791
+          },
+          {
+            "step": "consensus",
+            "score": 0.734
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-001",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Visualizacion de arreglos",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8576,
+          "grounding_score": 0.8676,
+          "misconception_coverage": 0.7376,
+          "bloom_alignment": 0.7126,
+          "adaptation_impact": 0.8176,
+          "retrieval_confidence": 0.844,
+          "execution_success": 0.6373,
+          "sandbox_validation_success": 0.4573,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7676
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-001",
+              "bloom_level": 2
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8676
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8176
+          },
+          {
+            "step": "consensus",
+            "score": 0.7676
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-001",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Visualizacion de arreglos",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8641,
+          "grounding_score": 0.8741,
+          "misconception_coverage": 0.7441,
+          "bloom_alignment": 0.5591,
+          "adaptation_impact": 0.3441,
+          "retrieval_confidence": 0.8548,
+          "execution_success": 0.7944,
+          "sandbox_validation_success": 0.7944,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.8141
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-001",
+              "bloom_level": 2
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8741
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3441
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7944
+          },
+          {
+            "step": "consensus",
+            "score": 0.8141
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-002",
+      "variant": "single_agent_static",
+      "payload": {
+        "topic": "Simulacion de insercion",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "single_agent_static",
+          "swarm": false,
+          "retrieval": false,
+          "memory": false,
+          "reviewer": false,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 0.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.2021,
+          "grounding_score": 0.3721,
+          "misconception_coverage": 0.5021,
+          "bloom_alignment": 0.5021,
+          "adaptation_impact": 0.2421,
+          "retrieval_confidence": 0.2044,
+          "execution_success": 0.5463,
+          "sandbox_validation_success": 0.3663,
+          "trajectory_length": 2.0,
+          "consensus_confidence": 0.5021
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "single_agent_static",
+              "swarm": false,
+              "retrieval": false,
+              "memory": false,
+              "reviewer": false,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "consensus",
+            "score": 0.5021
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-002",
+      "variant": "swarm_full",
+      "payload": {
+        "topic": "Simulacion de insercion",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_full",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8412,
+          "grounding_score": 0.8512,
+          "misconception_coverage": 0.7212,
+          "bloom_alignment": 0.7212,
+          "adaptation_impact": 0.8012,
+          "retrieval_confidence": 0.8403,
+          "execution_success": 0.7515,
+          "sandbox_validation_success": 0.7515,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7912
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_full",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8512
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8012
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.7515
+          },
+          {
+            "step": "consensus",
+            "score": 0.7912
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-002",
+      "variant": "swarm_no_retrieval",
+      "payload": {
+        "topic": "Simulacion de insercion",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_no_retrieval",
+          "swarm": true,
+          "retrieval": false,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.3944,
+          "grounding_score": 0.4044,
+          "misconception_coverage": 0.5744,
+          "bloom_alignment": 0.6944,
+          "adaptation_impact": 0.7744,
+          "retrieval_confidence": 0.1692,
+          "execution_success": 0.8303,
+          "sandbox_validation_success": 0.8303,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7644
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_retrieval",
+              "swarm": true,
+              "retrieval": false,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.7744
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8303
+          },
+          {
+            "step": "consensus",
+            "score": 0.7644
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-002",
+      "variant": "swarm_no_memory",
+      "payload": {
+        "topic": "Simulacion de insercion",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_no_memory",
+          "swarm": true,
+          "retrieval": true,
+          "memory": false,
+          "reviewer": true,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.7762,
+          "grounding_score": 0.8662,
+          "misconception_coverage": 0.6162,
+          "bloom_alignment": 0.7362,
+          "adaptation_impact": 0.7162,
+          "retrieval_confidence": 0.8316,
+          "execution_success": 0.8346,
+          "sandbox_validation_success": 0.8346,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7362
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_memory",
+              "swarm": true,
+              "retrieval": true,
+              "memory": false,
+              "reviewer": true,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8662
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8346
+          },
+          {
+            "step": "consensus",
+            "score": 0.7362
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-002",
+      "variant": "swarm_no_reviewer",
+      "payload": {
+        "topic": "Simulacion de insercion",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_no_reviewer",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": false,
+          "adaptive": true
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8509,
+          "grounding_score": 0.8609,
+          "misconception_coverage": 0.7309,
+          "bloom_alignment": 0.7309,
+          "adaptation_impact": 0.8109,
+          "retrieval_confidence": 0.8323,
+          "execution_success": 0.6271,
+          "sandbox_validation_success": 0.4471,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7609
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_no_reviewer",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": false,
+              "adaptive": true
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8609
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.8109
+          },
+          {
+            "step": "consensus",
+            "score": 0.7609
+          }
+        ]
+      }
+    },
+    {
+      "event_type": "benchmark.task_evaluated",
+      "task_id": "multi-ped-002",
+      "variant": "swarm_static_pedagogy",
+      "payload": {
+        "topic": "Simulacion de insercion",
+        "dataset": "multimodal_pedagogical_tasks",
+        "variant": {
+          "name": "swarm_static_pedagogy",
+          "swarm": true,
+          "retrieval": true,
+          "memory": true,
+          "reviewer": true,
+          "adaptive": false
+        },
+        "metrics": {
+          "pass_at_1": 1.0,
+          "correction_rate": 0.0,
+          "hallucination_reduction": 0.8282,
+          "grounding_score": 0.8382,
+          "misconception_coverage": 0.7082,
+          "bloom_alignment": 0.5482,
+          "adaptation_impact": 0.3082,
+          "retrieval_confidence": 0.7814,
+          "execution_success": 0.8396,
+          "sandbox_validation_success": 0.8396,
+          "trajectory_length": 1.0,
+          "consensus_confidence": 0.7782
+        },
+        "pedagogical_trace": [
+          {
+            "step": "task_loaded",
+            "evidence": {
+              "task_id": "multi-ped-002",
+              "bloom_level": 3
+            }
+          },
+          {
+            "step": "variant_selected",
+            "evidence": {
+              "name": "swarm_static_pedagogy",
+              "swarm": true,
+              "retrieval": true,
+              "memory": true,
+              "reviewer": true,
+              "adaptive": false
+            }
+          },
+          {
+            "step": "retrieval_grounding",
+            "score": 0.8382
+          },
+          {
+            "step": "memory_adaptation",
+            "score": 0.3082
+          },
+          {
+            "step": "sandbox_review",
+            "score": 0.8396
+          },
+          {
+            "step": "consensus",
+            "score": 0.7782
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,631 @@
+{
+  "experiment_id": "academic-hardening-42-f446121e",
+  "aggregate_metrics": [
+    {
+      "variant": "single_agent_static",
+      "metric": "adaptation_impact",
+      "mean": 0.2374,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "bloom_alignment",
+      "mean": 0.4799,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "consensus_confidence",
+      "mean": 0.4974,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "correction_rate",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "execution_success",
+      "mean": 0.5354,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "grounding_score",
+      "mean": 0.3674,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "hallucination_reduction",
+      "mean": 0.1974,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "misconception_coverage",
+      "mean": 0.4794,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "pass_at_1",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "retrieval_confidence",
+      "mean": 0.2144,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "sandbox_validation_success",
+      "mean": 0.3554,
+      "n": 10
+    },
+    {
+      "variant": "single_agent_static",
+      "metric": "trajectory_length",
+      "mean": 2.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "adaptation_impact",
+      "mean": 0.7985,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "bloom_alignment",
+      "mean": 0.701,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "consensus_confidence",
+      "mean": 0.7885,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "correction_rate",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "execution_success",
+      "mean": 0.7268,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "grounding_score",
+      "mean": 0.8485,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "hallucination_reduction",
+      "mean": 0.8385,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "misconception_coverage",
+      "mean": 0.7005,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "pass_at_1",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "retrieval_confidence",
+      "mean": 0.8268,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "sandbox_validation_success",
+      "mean": 0.7268,
+      "n": 10
+    },
+    {
+      "variant": "swarm_full",
+      "metric": "trajectory_length",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "adaptation_impact",
+      "mean": 0.7065,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "bloom_alignment",
+      "mean": 0.7089,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "consensus_confidence",
+      "mean": 0.7265,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "correction_rate",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "execution_success",
+      "mean": 0.749,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "grounding_score",
+      "mean": 0.8564,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "hallucination_reduction",
+      "mean": 0.7664,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "misconception_coverage",
+      "mean": 0.5885,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "pass_at_1",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "retrieval_confidence",
+      "mean": 0.8093,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "sandbox_validation_success",
+      "mean": 0.749,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_memory",
+      "metric": "trajectory_length",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "adaptation_impact",
+      "mean": 0.7849,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "bloom_alignment",
+      "mean": 0.6874,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "consensus_confidence",
+      "mean": 0.7749,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "correction_rate",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "execution_success",
+      "mean": 0.7589,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "grounding_score",
+      "mean": 0.4149,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "hallucination_reduction",
+      "mean": 0.4049,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "misconception_coverage",
+      "mean": 0.5669,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "pass_at_1",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "retrieval_confidence",
+      "mean": 0.1936,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "sandbox_validation_success",
+      "mean": 0.7589,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_retrieval",
+      "metric": "trajectory_length",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "adaptation_impact",
+      "mean": 0.8002,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "bloom_alignment",
+      "mean": 0.7027,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "consensus_confidence",
+      "mean": 0.7502,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "correction_rate",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "execution_success",
+      "mean": 0.5568,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "grounding_score",
+      "mean": 0.8502,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "hallucination_reduction",
+      "mean": 0.8402,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "misconception_coverage",
+      "mean": 0.7022,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "pass_at_1",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "retrieval_confidence",
+      "mean": 0.8201,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "sandbox_validation_success",
+      "mean": 0.3768,
+      "n": 10
+    },
+    {
+      "variant": "swarm_no_reviewer",
+      "metric": "trajectory_length",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "adaptation_impact",
+      "mean": 0.3229,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "bloom_alignment",
+      "mean": 0.5454,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "consensus_confidence",
+      "mean": 0.7929,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "correction_rate",
+      "mean": 0.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "execution_success",
+      "mean": 0.7554,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "grounding_score",
+      "mean": 0.8529,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "hallucination_reduction",
+      "mean": 0.8429,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "misconception_coverage",
+      "mean": 0.7049,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "pass_at_1",
+      "mean": 1.0,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "retrieval_confidence",
+      "mean": 0.8232,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "sandbox_validation_success",
+      "mean": 0.7554,
+      "n": 10
+    },
+    {
+      "variant": "swarm_static_pedagogy",
+      "metric": "trajectory_length",
+      "mean": 1.0,
+      "n": 10
+    }
+  ],
+  "statistical_comparisons": [
+    {
+      "metric": "pass_at_1",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.0,
+      "treatment_mean": 1.0,
+      "delta": 1.0,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 0.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0,
+      "mcnemar_chi2": 8.1,
+      "mcnemar_p": 0.004427
+    },
+    {
+      "metric": "correction_rate",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.0,
+      "treatment_mean": 0.0,
+      "delta": 0.0,
+      "mann_whitney_u": 50.0,
+      "mann_whitney_p": 1.0,
+      "rank_biserial": 0.0,
+      "cohens_d": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "hallucination_reduction",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.1974,
+      "treatment_mean": 0.8385,
+      "delta": 0.641,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 43.0318,
+      "ci_low": 0.628,
+      "ci_high": 0.6541,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "grounding_score",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.3674,
+      "treatment_mean": 0.8485,
+      "delta": 0.481,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 32.2914,
+      "ci_low": 0.468,
+      "ci_high": 0.4941,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "misconception_coverage",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.4794,
+      "treatment_mean": 0.7005,
+      "delta": 0.2211,
+      "mann_whitney_u": 2.0,
+      "mann_whitney_p": 0.000285,
+      "rank_biserial": -0.96,
+      "cohens_d": 3.6527,
+      "ci_low": 0.168,
+      "ci_high": 0.2741,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "bloom_alignment",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.4799,
+      "treatment_mean": 0.701,
+      "delta": 0.2211,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 8.5228,
+      "ci_low": 0.1983,
+      "ci_high": 0.2438,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "adaptation_impact",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.2374,
+      "treatment_mean": 0.7985,
+      "delta": 0.5611,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 37.6616,
+      "ci_low": 0.548,
+      "ci_high": 0.5741,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "retrieval_confidence",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.2144,
+      "treatment_mean": 0.8268,
+      "delta": 0.6124,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 24.8031,
+      "ci_low": 0.5908,
+      "ci_high": 0.634,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "execution_success",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.5354,
+      "treatment_mean": 0.7268,
+      "delta": 0.1915,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 3.1154,
+      "ci_low": 0.1376,
+      "ci_high": 0.2453,
+      "mcnemar_chi2": 3.2,
+      "mcnemar_p": 0.073638
+    },
+    {
+      "metric": "sandbox_validation_success",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.3554,
+      "treatment_mean": 0.7268,
+      "delta": 0.3715,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 6.0445,
+      "ci_low": 0.3176,
+      "ci_high": 0.4253,
+      "mcnemar_chi2": 8.1,
+      "mcnemar_p": 0.004427
+    },
+    {
+      "metric": "trajectory_length",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 2.0,
+      "treatment_mean": 1.0,
+      "delta": -1.0,
+      "mann_whitney_u": 100.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": 1.0,
+      "cohens_d": 0.0,
+      "ci_low": -1.0,
+      "ci_high": -1.0,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    },
+    {
+      "metric": "consensus_confidence",
+      "baseline": "single_agent_static",
+      "treatment": "swarm_full",
+      "baseline_mean": 0.4974,
+      "treatment_mean": 0.7885,
+      "delta": 0.2911,
+      "mann_whitney_u": 0.0,
+      "mann_whitney_p": 0.000157,
+      "rank_biserial": -1.0,
+      "cohens_d": 19.5373,
+      "ci_low": 0.278,
+      "ci_high": 0.3041,
+      "mcnemar_chi2": null,
+      "mcnemar_p": null
+    }
+  ]
+}
