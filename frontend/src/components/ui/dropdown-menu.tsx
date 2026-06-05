@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 type DropdownMenuContextType = {
@@ -19,11 +18,6 @@ function useDropdown() {
 export function DropdownMenu({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef<HTMLDivElement>(null)
-  const location = useLocation()
-
-  React.useEffect(() => {
-    setOpen(false)
-  }, [location.pathname])
 
   React.useEffect(() => {
     if (!open) return

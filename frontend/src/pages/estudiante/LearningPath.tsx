@@ -133,8 +133,8 @@ export default function LearningPath() {
                                     item.status === 'available' ? 'cursor-pointer hover:shadow-md' : ''
                                 } ${item.status === 'locked' ? 'opacity-60' : ''}`}
                                 onClick={() => {
-                                    if (item.status === 'available' && item.resource_id && courseId) {
-                                        navigate(`/estudiante/content/${item.resource_id}?courseId=${courseId}`)
+                                    if (item.status === 'available' && courseId) {
+                                        navigate(`/estudiante/module/${item.id}?courseId=${courseId}`)
                                     }
                                 }}>
                                     <CardContent className="p-4">
@@ -180,7 +180,7 @@ export default function LearningPath() {
                                                         size="sm"
                                                         onClick={(e) => {
                                                             e.stopPropagation()
-                                                            navigate(`/estudiante/content/${item.resource_id}?courseId=${courseId}`)
+                                                            navigate(`/estudiante/module/${item.id}?courseId=${courseId}`)
                                                         }}
                                                     >
                                                         <Play className="h-3 w-3 mr-1" />Repasar

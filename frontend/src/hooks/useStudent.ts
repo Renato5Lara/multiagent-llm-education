@@ -120,12 +120,15 @@ export function useUpdateModule() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ moduleId, status, score }: { moduleId: string; status: string; score?: number }) => {
-      const resp = await api.patch<PathModule>(`/api/estudiante/module/${moduleId}`, { status, score })
+    mutationFn: async ({ moduleId, status, score }: { moduleId: string; status: string; score?: number; courseId?: string }) => {
+      const resp = await api.patch<PathModule>(`/api/students/module/${moduleId}`, { status, score })
       return resp.data
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['my-courses'] })
+      if (variables.courseId) {
+        queryClient.invalidateQueries({ queryKey: ['learning-path', variables.courseId] })
+      }
     },
   })
 }
@@ -184,50 +187,6 @@ export function useAgentGeneratePlan() {
   })
 }
 
-export function useUpdateProgress() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: async ({ courseId, resourceId, progressPercentage }: { courseId: string; resourceId?: string; progressPercentage?: number }) => {
-      const resp = await api.post<StudentProgressEntry>(`/api/students/progress/${courseId}`, {
-        resource_id: resourceId,
-        progress_percentage: progressPercentage,
-      })
-      return resp.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
-      toast({ title: 'Progreso actualizado' })
-    },
-  })
-}
-
-export function useCourseProgress(courseId: string | undefined) {
-  return useQuery({
-    queryKey: ['course-progress', courseId],
-    queryFn: async () => {
-      const resp = await api.get(`/api/students/progress/${courseId}`)
-      return resp.data
-    },
-    enabled: !!courseId,
-  })
-}
-
-export function useAgentGeneratePlan() {
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<AgentPlan>('/api/agents/generate-plan', { course_id: courseId, answers })
-      return resp.data
-    },
-    onError: (error) => {
-      toast({ variant: 'destructive', title: 'Error del agente', description: getErrorMessage(error) })
-    },
-  })
-}
-
 export function useAcademicSummary() {
   return useQuery({
     queryKey: ['academic-summary'],
@@ -243,6 +202,20 @@ export function useAcademicSummary() {
         dominant_modality: string | null
         has_onboarded: boolean
       }
+    },
+  })
+}
+
+export function useModuleOrchestration() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (moduleId: string) => {
+      const resp = await api.post(`/api/students/module/${moduleId}/orchestrate`)
+      return resp.data
+    },
+    onError: (error) => {
+      toast({ variant: 'destructive', title: 'Error al orquestar módulo', description: getErrorMessage(error) })
     },
   })
 }

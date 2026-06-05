@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { Menu, X, type LucideIcon } from 'lucide-react'
 
@@ -16,11 +16,6 @@ interface SidebarProps {
 
 export default function Sidebar({ items, title = 'UPAO-MAS-EDU' }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const location = useLocation()
-
-  useEffect(() => {
-    setIsOpen(false)
-  }, [location.pathname])
 
   useEffect(() => {
     if (isOpen) {
@@ -70,6 +65,7 @@ export default function Sidebar({ items, title = 'UPAO-MAS-EDU' }: SidebarProps)
               key={item.href}
               to={item.href}
               end={item.href.split('/').length <= 2}
+              onClick={() => setIsOpen(false)}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
