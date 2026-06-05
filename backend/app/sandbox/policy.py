@@ -63,6 +63,15 @@ DENIED_ATTRIBUTES = {
     ("shutil", "rmtree"),
     ("pathlib", "Path"),
     ("multiprocessing", "Process"),
+    ("io", "open"),
+    ("os", "chdir"),
+    ("os", "chmod"),
+    ("os", "chown"),
+    ("os", "kill"),
+    ("os", "remove"),
+    ("os", "unlink"),
+    ("os", "rmdir"),
+    ("os", "rename"),
 }
 
 

@@ -8,6 +8,7 @@ import AcademicGuard from '@/components/auth/AcademicGuard'
 import AdminLayout from '@/components/layout/AdminLayout'
 import DocenteLayout from '@/components/layout/DocenteLayout'
 import EstudianteLayout from '@/components/layout/EstudianteLayout'
+import InvestigadorLayout from '@/components/layout/InvestigadorLayout'
 
 import Login from '@/pages/Login'
 import NotFound from '@/pages/NotFound'
@@ -26,7 +27,11 @@ const EstudianteOnboarding = lazy(() => import('@/pages/estudiante/Onboarding'))
 const DiagnosticTest = lazy(() => import('@/pages/estudiante/DiagnosticTest'))
 const LearningPath = lazy(() => import('@/pages/estudiante/LearningPath'))
 const ContentViewer = lazy(() => import('@/pages/estudiante/ContentViewer'))
+const ModuleLearningView = lazy(() => import('@/pages/estudiante/ModuleLearningView'))
 const Evaluation = lazy(() => import('@/pages/estudiante/Evaluation'))
+const SwarmDemo = lazy(() => import('@/pages/demo/SwarmDemo'))
+const ReplayDashboard = lazy(() => import('@/pages/replay/ReplayDashboard'))
+const InvestigadorDashboard = lazy(() => import('@/pages/investigador/Dashboard'))
 
 function RootRedirect() {
     const { isAuthenticated, user } = useAuthStore()
@@ -40,6 +45,8 @@ export default function App() {
         <Suspense fallback={<LoadingScreen />}>
             <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/swarm-demo" element={<SwarmDemo />} />
+                <Route path="/replay" element={<ReplayDashboard />} />
                 <Route path="/" element={<RootRedirect />} />
 
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
@@ -67,20 +74,16 @@ export default function App() {
                             <Route path="/estudiante/diagnostic/:courseId" element={<DiagnosticTest />} />
                             <Route path="/estudiante/path/:courseId" element={<LearningPath />} />
                             <Route path="/estudiante/content/:resourceId" element={<ContentViewer />} />
+                            <Route path="/estudiante/module/:moduleId" element={<ModuleLearningView />} />
                             <Route path="/estudiante/evaluation/:courseId" element={<Evaluation />} />
                         </Route>
                     </Route>
                 </Route>
 
                 <Route element={<ProtectedRoute allowedRoles={['investigador']} />}>
-                    <Route path="/investigador" element={
-                        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                            <div className="text-center">
-                                <h1 className="text-2xl font-bold mb-2">Panel del Investigador</h1>
-                                <p className="text-muted-foreground">Disponible en Fase 4</p>
-                            </div>
-                        </div>
-                    } />
+                    <Route element={<InvestigadorLayout />}>
+                        <Route path="/investigador" element={<InvestigadorDashboard />} />
+                    </Route>
                 </Route>
 
                 <Route path="/404" element={<NotFound />} />

@@ -1,0 +1,18 @@
+## Final System Metrics
+
+| Metric | Value |
+|--------|-------|
+| Tests available | 1338 collected |
+| Tests passed | 179 / 179 (validated) |
+| API endpoints | 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 |
+| Frontend build | ? Pass |
+| Swarm status | healthy |
+| Swarm anomalies | 0 |
+| System status | degraded |
+| Database | ok |
+| OpenAI | missing |
+| Tavily | missing |
+| Modalities | deterministic_fallback |
+| Version | 1.0.0 |
+
+Generated: 2026-06-04 23:56:27

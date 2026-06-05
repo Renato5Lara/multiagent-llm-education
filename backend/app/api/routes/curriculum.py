@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_docente, get_current_user, get_db
+from app.api.deps import get_current_admin, get_current_docente, get_current_user, get_db
 from app.models.user import User
 from app.schemas.curriculum import (
     CycleResponse,
@@ -10,9 +10,27 @@ from app.schemas.curriculum import (
     TeacherAssignmentResponse,
 )
 from app.services import curriculum_service
+from app.services.academic_activation_service import enrollment_consistency_validator
 from app.services.audit_service import log_action
 
 router = APIRouter(prefix="/api/curriculum", tags=["Currículum"])
+
+
+@router.get("/academic-audit")
+def academic_audit(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """Audita conexiones academicas reales: inscripciones, docentes y rutas semanales."""
+    audit = enrollment_consistency_validator.audit(db)
+    log_action(
+        db,
+        current_user.id,
+        "auditoria_academica",
+        "curriculum",
+        details={key: len(value) for key, value in audit.items()},
+    )
+    return audit
 
 
 @router.get("/cycles", response_model=list[CycleResponse])

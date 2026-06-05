@@ -11,11 +11,11 @@ class ReplayExporter:
     def export(self, replay: ReplaySession, fmt: str) -> tuple[str | dict, str]:
         normalized = fmt.lower()
         if normalized == "json":
-            return self.serializer.to_json(replay), "application/json"
+            return self.serializer.to_json(replay), "application/json; charset=utf-8"
         if normalized in {"md", "markdown"}:
-            return self.serializer.to_markdown(replay), "text/markdown"
+            return self.serializer.to_markdown(replay), "text/markdown; charset=utf-8"
         if normalized == "html":
-            return self.serializer.to_html(replay), "text/html"
+            return self.serializer.to_html(replay), "text/html; charset=utf-8"
         if normalized == "summary":
-            return self.serializer.to_summary(replay), "application/json"
+            return self.serializer.to_summary(replay), "application/json; charset=utf-8"
         raise ValueError(f"Unsupported replay export format: {fmt}")

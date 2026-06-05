@@ -13,6 +13,7 @@ from app.models.competency import Competency, CompetencyType, CourseCompetency
 from app.models.student_profile import StudentProfile
 from app.models.institutional_course import InstitutionalCourse, InstitutionalCoursePrerequisite
 from app.models.teacher_assignment import TeacherAssignment
+from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
 from app.models.course_prerequisite import CoursePrerequisite
 from app.models.student_memory import StudentMemory, ConversationMessage, WeaknessRecord, StrengthRecord
 from app.models.knowledge_graph import KnowledgeNode, KnowledgeEdge
@@ -35,6 +36,7 @@ __all__ = [
     "StudentProfile",
     "InstitutionalCourse", "InstitutionalCoursePrerequisite",
     "TeacherAssignment",
+    "WeeklyPedagogicalPlan",
     "CoursePrerequisite",
     "StudentMemory", "ConversationMessage", "WeaknessRecord", "StrengthRecord",
     "KnowledgeNode", "KnowledgeEdge",

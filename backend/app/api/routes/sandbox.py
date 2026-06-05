@@ -44,7 +44,7 @@ async def stream_sandbox_execution(request: SandboxRequest):
             },
         )
 
-    return StreamingResponse(events(), media_type="text/event-stream")
+    return StreamingResponse(events(), media_type="text/event-stream; charset=utf-8")
 
 
 def _sse(event: str, payload: dict) -> str:

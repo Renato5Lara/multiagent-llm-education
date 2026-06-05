@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Database, Play, RotateCcw, Signal, type LucideIcon } from 'lucide-react'
+import { CheckCircle, Database, Play, RotateCcw, Signal, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { BloomProgressionView } from '@/components/swarm/BloomProgressionView'
 import { ConsensusTimeline } from '@/components/swarm/ConsensusTimeline'
@@ -166,7 +166,7 @@ export default function SwarmDemo() {
               <Metric icon={Signal} label="SSE" value={status} />
               <Metric icon={Database} label="Session" value={sessionId ?? 'waiting'} />
               <Metric
-                icon={Signal}
+                icon={CheckCircle}
                 label="Decision"
                 value={completed?.decision ? `${completed.decision} ${(Number(completed.confidence) * 100).toFixed(0)}%` : 'deliberating'}
               />

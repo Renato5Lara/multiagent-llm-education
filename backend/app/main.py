@@ -27,10 +27,15 @@ from app.api.routes import (
     competencies,
     students,
     curriculum,
+    pedagogy,
     tutor,
     swarm,
+    swarm_demo,
+    sandbox,
     idempotency,
+    replay,
 )
+from app.weekly_learning.routes import router as weekly_learning_router
 
 from app.agents.router import router as agents_router
 from app.core.config import settings
@@ -91,6 +96,17 @@ async def lifespan(app: FastAPI):
         conn.execute(text("SELECT 1"))
     logger.info("Conexion a base de datos verificada")
 
+    # ── API key validation ──────────────────────────────────────────
+    secrets = settings.secrets_summary()
+    logger.info("API keys: tavily=%s openai=%s", secrets["tavily"], secrets["openai"])
+    for warning in settings.validate_api_keys():
+        logger.warning(warning)
+    if settings.has_tavily:
+        logger.info("Tavily web search available")
+    if settings.has_openai:
+        logger.info("OpenAI LLM generation available")
+    # ────────────────────────────────────────────────────────────────
+
     yield
 
     logger.info("Apagando UPAO-MAS-EDU API")
@@ -112,6 +128,10 @@ tags_metadata = [
     {
         "name": "Recursos",
         "description": "Subida y gestión de material educativo",
+    },
+    {
+        "name": "Pedagogical Orchestration",
+        "description": "Planificacion semanal, retrieval y generacion pedagogica por swarm",
     },
     {
         "name": "Objetivos de Aprendizaje",
@@ -247,11 +267,16 @@ app.include_router(estudiantes.router)
 app.include_router(students.router)
 app.include_router(competencies.router)
 app.include_router(curriculum.router)
+app.include_router(pedagogy.router)
 app.include_router(analytics.router)
 app.include_router(tutor.router)
 app.include_router(agents_router)
 app.include_router(swarm.router)
+app.include_router(swarm_demo.router)
+app.include_router(sandbox.router)
 app.include_router(idempotency.router)
+app.include_router(replay.router)
+app.include_router(weekly_learning_router)
 
 
 @app.get("/", tags=["Sistema"])
@@ -275,9 +300,16 @@ def health_check():
         db_status = f"error: {str(e)}"
         logger.error("Health check — DB connection failed: %s", e)
 
+    service_status = "ok" if db_status == "ok" else "degraded"
+    if db_status == "ok" and not (settings.has_tavily and settings.has_openai):
+        service_status = "degraded"
+
     return {
-        "status": "ok" if db_status == "ok" else "degraded",
+        "status": service_status,
         "database": db_status,
+        "tavily": "available" if settings.has_tavily else "missing",
+        "openai": "available" if settings.has_openai else "missing",
+        "modalities": settings.available_modalities,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": settings.APP_VERSION,
         "env": settings.ENV,
