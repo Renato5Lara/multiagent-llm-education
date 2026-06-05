@@ -1,59 +1,126 @@
 # UPAO-MAS-EDU
 
-Sistema Multiagente Educativo con IA para la personalización de rutas de aprendizaje.
-Desarrollado para el Taller Integrador 1 de la Universidad Privada Antenor Orrego (UPAO), Trujillo, Perú.
+Sistema Multiagente Educativo con IA para la personalización adaptativa de rutas de aprendizaje mediante swarm intelligence, memoria compartida y deliberación colectiva.
+
+Desarrollado para el **Taller Integrador 1** de la **Universidad Privada Antenor Orrego (UPAO)**, Trujillo, Perú.
+
+---
+
+## Arquitectura Multiagente
+
+```
+                    ┌─────────────────────────────────────┐
+                    │           Frontend React             │
+                    │    (Vite + TypeScript + Tailwind)     │
+                    └──────────────┬──────────────────────┘
+                                   │ REST (JWT) + SSE
+                    ┌──────────────▼──────────────────────┐
+                    │        FastAPI + LangGraph            │
+                    │                                      │
+                    │  ┌─────────┐  ┌──────────┐          │
+                    │  │ Research │  │ Visual   │          │
+                    │  │  Agent   │  │ Designer │          │
+                    │  └────┬────┘  └────┬─────┘          │
+                    │       │             │                 │
+                    │  ┌────▼─────────────▼─────┐          │
+                    │  │   Swarm Coordinator    │          │
+                    │  │  (deliberación/voto)    │          │
+                    │  └────┬─────────────┬─────┘          │
+                    │       │             │                 │
+                    │  ┌────▼────┐  ┌────▼─────┐          │
+                    │  │Programmer│  │ Reviewer │          │
+                    │  │  Agent  │  │  Agent   │          │
+                    │  └─────────┘  └──────────┘          │
+                    │                                      │
+                    │  ┌──────────────────────────┐       │
+                    │  │  Shared Memory /         │       │
+                    │  │  Collective Inference    │       │
+                    │  └──────────────────────────┘       │
+                    │                                      │
+                    │  ┌──────────────────────────┐       │
+                    │  │  Sandbox Docker (código) │       │
+                    │  └──────────────────────────┘       │
+                    └──────────────┬──────────────────────┘
+                                   │ SQL
+                    ┌──────────────▼──────────────────────┐
+                    │         PostgreSQL 16                │
+                    │   + Alembic Migrations              │
+                    └─────────────────────────────────────┘
+```
 
 ## Stack Tecnológico
 
 | Capa | Tecnología |
 |------|-----------|
-| Backend | Python 3.12+, FastAPI, SQLAlchemy 2.0, Alembic |
+| Backend | Python 3.12+, FastAPI, SQLAlchemy 2.0, Alembic 1.18 |
 | Base de datos | PostgreSQL 16 |
 | Frontend | React 19, Vite 8, TypeScript 6, Tailwind CSS 3, shadcn/ui |
 | Estado | Zustand + TanStack React Query |
 | Auth | JWT (python-jose) + bcrypt |
 | Agentes | LangGraph 0.2.x |
+| Sandbox | Docker (ejecución aislada de código Python) |
 | Despliegue Backend | Render |
 | Despliegue Frontend | Vercel |
 
-## Arquitectura
+## Módulos Principales
 
-```
-frontend/ (React + Vite + TypeScript)
-    ↕ API REST (JWT)
-backend/ (FastAPI + SQLAlchemy + LangGraph)
-    ↕ SQL
-PostgreSQL
-```
+### Backend (`backend/app/`)
 
-### Flujo de estudiante
+| Módulo | Descripción |
+|--------|-------------|
+| `agents/` | Sistema multiagente: ResearchAgent, ProgrammerAgent, ReviewerAgent, VisualDesignerAgent |
+| `api/routes/` | Endpoints REST: auth, courses, students, resources, swarm, sandbox, replay, pedagogy |
+| `swarm_diagnostics/` | Detectores de anomalías: loops, deadlocks, hallucination, event storm, propagation |
+| `memory/` | Memoria compartida, inferencia colectiva, narrative continuity |
+| `replay/` | Reconstrucción cognitiva adaptativa, session management, timeline export |
+| `sandbox/` | Docker sandbox para ejecución aislada de código Python |
+| `benchmark/` | Framework reproducible de evaluación: AcademicBenchmarkRunner, metrics |
+| `demo/` | Orquestación de demos sintéticas con SSE en tiempo real |
+| `explainability/` | Explicabilidad pedagógica: SHAP, LIME, contrafactuales |
+| `events/` | Sistema de eventos: outbox, idempotency, propagation TTL, dedup |
+| `observability/` | Métricas de consenso, trazabilidad distribuida |
 
-1. Login (email o código institucional)
-2. Dashboard → ver cursos del ciclo
-3. Diagnóstico → test multimodal (12 preguntas Likert)
-4. Perfil adaptativo → IA analiza estilo de aprendizaje
-5. Ruta personalizada → módulos ordenados por preferencia
-6. Consumir contenido (PDF, video, imágenes, interactivos)
-7. Evaluación por módulo → preguntas generadas por IA
-8. Progreso persistente → siguiente módulo disponible
+### Frontend (`frontend/src/`)
 
-## Setup Local
+| Módulo | Descripción |
+|--------|-------------|
+| `pages/demo/` | Panel Swarm Demo con SSE, timeline de deliberación, trust evolution |
+| `pages/replay/` | Dashboard de replay cognitivo longitudinal |
+| `components/swarm/` | Componentes de visualización: BloomProgression, ConsensusTimeline, SandboxPanel |
+| `components/docente/` | Planificador pedagógico semanal, estructura de cursos |
+| `components/estudiante/` | Vista de aprendizaje semanal del estudiante |
+| `hooks/` | Custom hooks: useDemoSSE, usePedagogy, useWeeklyLearning |
 
-### 1. Requisitos
+### Datasets (`datasets/`)
+
+| Dataset | Propósito |
+|---------|-----------|
+| `bloom_level_tasks.json` | Tareas etiquetadas por nivel Bloom |
+| `humaneval_pedagogical.json` | HumanEval adaptado pedagógicamente |
+| `mbpp_pedagogical.json` | MBPP con metadatos pedagógicos |
+| `misconception_dataset.json` | Dataset de misconceptions |
+| `multimodal_pedagogical.json` | Ejercicios multimodales |
+
+---
+
+## Instalación
+
+### Requisitos
 
 - Python 3.12+
 - Node.js 20+
 - PostgreSQL 16 (o Docker)
+- Docker (para sandbox de agentes)
 - npm 10+
 
-### 2. Clonar
+### 1. Clonar
 
 ```bash
 git clone <repo-url>
 cd upao-mas-edu
 ```
 
-### 3. Base de datos (PostgreSQL con Docker)
+### 2. Base de datos (PostgreSQL con Docker)
 
 ```bash
 docker compose up -d
@@ -62,247 +129,253 @@ docker compose up -d
 O usando PostgreSQL local:
 
 ```bash
-# Crear base de datos
 createdb upao_mas_edu
 ```
 
-### 4. Backend
+### 3. Backend
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# o: venv\Scripts\activate  # Windows
+# Windows: venv\Scripts\activate
+# Linux/Mac: source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Editar .env si es necesario (DATABASE_URL, SECRET_KEY, etc.)
+# Editar .env si es necesario
 alembic upgrade head
 python seed.py
 ```
 
-### 5. Frontend
+### 4. Frontend
 
 ```bash
 cd frontend
 npm install
 cp .env.example .env
-# VITE_API_URL=vacio para desarrollo (usa proxy Vite)
 ```
 
-### 6. Ejecutar
+### 5. Ejecutar
 
 ```bash
-# Terminal 1 - Backend
+# Terminal 1 — Backend
 cd backend
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Terminal 2 - Frontend
+# Terminal 2 — Frontend
 cd frontend
 npm run dev
 ```
 
-Frontend: http://localhost:5173
-Backend API: http://localhost:8000
-Swagger UI: http://localhost:8000/docs
-ReDoc: http://localhost:8000/redoc
-
-## Setup Producción (Render + Vercel)
-
-### Variables de Entorno
-
-#### Backend (Render)
-
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `ENV` | Entorno | `production` |
-| `DEBUG` | Modo debug | `False` |
-| `DATABASE_URL` | PostgreSQL URL | `postgresql+psycopg://user:pass@host:5432/db?sslmode=require` |
-| `SECRET_KEY` | Clave JWT (generar aleatoria) | `38-caracteres-aleatorios` |
-| `ALGORITHM` | Algoritmo JWT | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | Expiración JWT | `60` |
-| `FRONTEND_URL` | URL del frontend | `https://upao-mas-edu.vercel.app` |
-| `BACKEND_URL` | URL del backend | `https://upao-mas-edu-api.onrender.com` |
-| `UPLOAD_DIR` | Directorio uploads | `./uploads` |
-| `MAX_UPLOAD_SIZE_MB` | Máximo subida | `50` |
-| `LOG_LEVEL` | Nivel logging | `INFO` |
-
-#### Frontend (Vercel)
-
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `VITE_API_URL` | URL del backend | `https://upao-mas-edu-api.onrender.com` |
-
-### Deploy Backend en Render
-
-1. Crear cuenta en https://render.com
-2. Crear nuevo **Web Service**
-   - Conectar repositorio GitHub
-   - **Root Directory**: `backend`
-   - **Runtime**: Python
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-3. Crear nueva **PostgreSQL** en Render
-4. Enlazar base de datos al Web Service (variable `DATABASE_URL`)
-5. Agregar variables de entorno:
-   - `ENV=production`
-   - `DEBUG=False`
-   - `SECRET_KEY=<generar-aleatorio>`
-   - `FRONTEND_URL=https://upao-mas-edu.vercel.app`
-   - `BACKEND_URL=https://tu-api.onrender.com`
-6. Desplegar
-7. Ejecutar migraciones y seed vía **Render Shell**:
-
-```bash
-alembic upgrade head
-python seed.py
-```
-
-O usar el archivo `render.yaml` incluido (Blueprint).
-
-### Deploy Frontend en Vercel
-
-1. Crear cuenta en https://vercel.com
-2. Importar repositorio GitHub
-3. **Root Directory**: `frontend`
-4. **Framework**: Vite
-5. **Build Command**: `npm run build`
-6. **Output Directory**: `dist`
-7. Agregar variable de entorno:
-   - `VITE_API_URL=https://tu-api.onrender.com`
-8. Desplegar (el archivo `vercel.json` maneja SPA routing)
-
-### Migraciones
-
-```bash
-cd backend
-alembic upgrade head   # Aplicar migraciones
-alembic downgrade -1   # Revertir última
-alembic history        # Ver historial
-alembic current        # Ver revisión actual
-```
-
-### Seed
-
-```bash
-cd backend
-python seed.py
-```
-
-El seed es **idempotente**: no duplica usuarios, cursos, ni competencias si ya existen.
-
-## Usuarios Demo
-
-| Rol | Email | Contraseña | Código |
-|-----|-------|-----------|--------|
-| Admin | admin@upao.edu.pe | Admin2026! | — |
-| Docente | docente@upao.edu.pe | Docente2026! | DOC001 |
-| Estudiante Ciclo 3 | estudiante3@upao.edu.pe | Student2026! | 202312345 |
-| Estudiante Ciclo 5 | estudiante5@upao.edu.pe | Student2026! | 202254321 |
-
-## Tests
-
-```bash
-# Backend (38 tests)
-cd backend
-pytest -v
-
-# Frontend (build check)
-cd frontend
-npm run build
-```
-
-## API Endpoints
-
-### Autenticación
-- `POST /api/auth/login` — Login (email o código)
-- `POST /api/auth/logout` — Logout
-- `GET /api/auth/me` — Usuario actual
-- `POST /api/auth/refresh` — Renovar token
-
-### Usuarios (Admin)
-- `GET /api/users` — Listar (paginado, filtro por rol)
-- `POST /api/users` — Crear
-- `PUT /api/users/{id}` — Actualizar
-- `DELETE /api/users/{id}` — Soft delete
-- `PATCH /api/users/{id}/role` — Cambiar rol
-- `POST /api/users/bulk` — CSV masivo
-
-### Cursos
-- `GET /api/courses` — Listar
-- `POST /api/courses` — Crear (docente)
-- `GET /api/courses/{id}` — Obtener
-- `PUT /api/courses/{id}` — Actualizar
-- `DELETE /api/courses/{id}` — Archivar
-- `POST /api/courses/{id}/publish` — Publicar (requiere 3+ objetivos)
-- `POST /api/courses/{id}/enroll` — Inscribir estudiantes
-
-### Recursos
-- `POST /api/courses/{id}/resources` — Subir archivo
-- `GET /api/courses/{id}/resources` — Listar
-- `GET /api/resources/{id}/download` — Descargar
-- `DELETE /api/resources/{id}` — Eliminar
-
-### Competencias
-- `GET /api/competencies` — Listar todas
-- `GET /api/competencies/institutional` — Institucionales
-- `GET /api/competencies/career` — De carrera
-- `GET /api/competencies/course/{id}` — Por curso
-- `POST /api/competencies/course/{id}/assign` — Asignar
-
-### Estudiantes
-- `GET /api/students/my-courses` — Cursos del ciclo
-- `POST /api/students/profile` — Crear perfil
-- `GET /api/students/profile` — Obtener perfil
-- `POST /api/students/diagnostic/{course_id}` — Enviar diagnóstico
-- `GET /api/students/diagnostic/{course_id}` — Resultados
-- `POST /api/students/learning-path/{course_id}` — Generar ruta
-- `GET /api/students/learning-path/{course_id}` — Ver ruta
-- `PATCH /api/estudiante/module/{module_id}` — Avanzar módulo
-- `POST /api/students/progress/{course_id}` — Actualizar progreso
-- `GET /api/students/progress/{course_id}` — Ver progreso
-- `POST /api/students/evaluation/{course_id}/start` — Iniciar evaluación
-- `POST /api/students/evaluation/{attempt_id}/submit` — Enviar evaluación
-
-### Agentes IA
-- `POST /api/agents/analyze-diagnostic` — Analizar diagnóstico
-- `POST /api/agents/generate-plan` — Generar plan
-- `POST /api/agents/generate-evaluation` — Generar evaluación
-
-### Sistema
-- `GET /health` — Health check
-
-## URLs Finales Esperadas
-
 | Servicio | URL |
 |----------|-----|
-| Frontend (Vercel) | `https://upao-mas-edu.vercel.app` |
-| Backend API (Render) | `https://upao-mas-edu-api.onrender.com` |
-| Swagger Docs | `https://upao-mas-edu-api.onrender.com/docs` |
-| Health Check | `https://upao-mas-edu-api.onrender.com/health` |
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/redoc |
 
-## Checklist de Verificación Final
+---
 
-- [ ] Backend tests pasan (`pytest -v`)
-- [ ] Frontend compila (`npm run build`)
-- [ ] Migraciones aplican (`alembic upgrade head`)
-- [ ] Seed ejecuta sin errores (`python seed.py`)
-- [ ] Login admin funciona
-- [ ] Login docente funciona
-- [ ] Login estudiante funciona (código institucional)
-- [ ] Admin crea estudiante con ciclo
-- [ ] Estudiante ve cursos del ciclo (autoinscripción)
-- [ ] Estudiante realiza diagnóstico
-- [ ] Estudiante ve ruta adaptativa generada
-- [ ] Estudiante consume contenido
-- [ ] Estudiante completa evaluación
-- [ ] Docente sube recursos
-- [ ] Docente asocia competencias
-- [ ] Datos persisten al recargar
-- [ ] JWT expira correctamente
-- [ ] CORS funciona con frontend producción
-- [ ] Uploads se guardan correctamente
-- [ ] Health check retorna 200
-- [ ] Errores no exponen tracebacks
+## Docker Sandbox
+
+El sandbox permite ejecución aislada de código Python generado por los agentes:
+
+```bash
+# Build de la imagen sandbox
+docker build -t upao-sandbox -f backend/app/sandbox/docker/Dockerfile.backend backend/
+
+# O usar docker-compose (incluye PostgreSQL + backend)
+docker compose up -d
+```
+
+## Ollama Setup (opcional)
+
+Para usar modelos locales en lugar de OpenAI:
+
+```bash
+# Instalar Ollama
+# https://ollama.com
+
+# Descargar modelo
+ollama pull llama3.2
+
+# Configurar .env
+# OPENAI_API_KEY=ollama
+# OPENAI_BASE_URL=http://localhost:11434/v1
+```
+
+## API Keys
+
+| Key | Proveedor | ¿Requerida? | ¿Dónde obtener? |
+|-----|-----------|-------------|-----------------|
+| `OPENAI_API_KEY` | OpenAI | No (fallback a templates) | https://platform.openai.com/api-keys |
+| `TAVILY_API_KEY` | Tavily | No (búsqueda degradada) | https://app.tavily.com |
+
+Las API keys se configuran en `backend/.env` (copiar desde `.env.example`).
+
+---
+
+## Demo Swarm
+
+### Ruta de demo
+
+```bash
+# Backend debe estar corriendo
+# Endpoints SSE en tiempo real:
+GET  /api/swarm-demo/stream
+POST /api/swarm-demo/start
+POST /api/swarm-demo/stop
+GET  /api/swarm-demo/status
+
+# Abrir en el navegador:
+# http://localhost:5173/demo/swarm
+```
+
+La demo muestra:
+- Orquestación multiagente en tiempo real vía SSE
+- Timeline de deliberación con consenso ponderado
+- Evolución de trust entre agentes
+- Paneles de sandbox, memoria compartida, consistencia narrativa
+- Replay cognitivo de sesiones
+
+## Benchmark
+
+```bash
+cd backend
+python -m pytest tests/test_benchmark.py -v
+python -m app.benchmark.cli --output outputs/benchmark
+```
+
+El benchmark evalúa:
+- Precisión pedagógica (Bloom taxonomy alignment)
+- Diversidad de fuentes (research agent)
+- Calidad de código (programmer agent)
+- Tasa de revisión (reviewer agent)
+- Coherencia visual (visual designer agent)
+
+Resultados en `outputs/benchmark/`.
+
+## Replay Cognitivo
+
+```bash
+# API
+GET  /api/replay/sessions
+GET  /api/replay/sessions/{id}
+GET  /api/replay/sessions/{id}/timeline
+POST /api/replay/sessions/{id}/export
+
+# Frontend
+# http://localhost:5173/replay
+```
+
+El replay reconstructivo permite:
+- Navegar la línea de tiempo de decisiones del swarm
+- Ver adaptaciones por sesión de estudiante
+- Exportar sesiones a JSON, CSV o HTML
+- Analizar métricas longitudinales
+
+## Explainability
+
+```bash
+# API
+POST /api/explain/decision
+POST /api/explain/session/{id}
+```
+
+Paneles de explicabilidad:
+- SHAP values para decisiones de ruta adaptativa
+- Análisis contrafactual ("qué cambiaría la recomendación")
+- Atribución de influencia por agente
+
+---
+
+## Estructura del Repositorio
+
+```
+upao-mas-edu/
+├── backend/
+│   ├── app/
+│   │   ├── agents/              # Sistema multiagente (LangGraph)
+│   │   ├── api/routes/          # Endpoints REST
+│   │   ├── benchmark/           # Benchmark académico
+│   │   ├── core/                # Config, health, consensus, trust
+│   │   ├── db/                  # SQLAlchemy, Unit of Work
+│   │   ├── demo/                # Demo sintética SSE
+│   │   ├── events/              # Sistema de eventos
+│   │   ├── explainability/      # SHAP, LIME, contrafactuales
+│   │   ├── memory/              # Shared memory, collective inference
+│   │   ├── models/              # SQLAlchemy models
+│   │   ├── observability/       # Métricas y tracing
+│   │   ├── replay/              # Replay cognitivo
+│   │   ├── sandbox/             # Docker sandbox
+│   │   ├── schemas/             # Pydantic schemas
+│   │   ├── services/            # Lógica de negocio
+│   │   └── weekly_learning/     # Planificación semanal
+│   ├── alembic/                 # Migraciones (12 revisiones)
+│   ├── tests/                   # Tests (pytest)
+│   ├── scripts/                 # Scripts auxiliares
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── setup.sh
+├── frontend/
+│   ├── src/
+│   │   ├── components/          # Componentes React
+│   │   ├── hooks/               # Custom hooks
+│   │   ├── pages/               # Páginas
+│   │   ├── providers/           # AuthProvider, etc.
+│   │   ├── stores/              # Zustand stores
+│   │   └── types/               # TypeScript types
+│   ├── package.json
+│   └── vite.config.ts
+├── datasets/                    # Datasets pedagógicos
+├── docs/                        # Documentación técnica
+├── outputs/                     # Benchmark results
+├── docker-compose.yml
+├── render.yaml
+└── run_demo.py
+```
+
+---
+
+## Troubleshooting
+
+| Problema | Solución |
+|----------|----------|
+| `psycopg2` connection error | Verificar PostgreSQL en ejecución y `DATABASE_URL` en `.env` |
+| Alembic `Target database is not up to date` | Ejecutar `alembic upgrade head` |
+| Frontend no carga | Verificar `npm install` y `npm run dev` |
+| Agente no responde | Verificar `OPENAI_API_KEY` o configurar Ollama |
+| Sandbox falla | Verificar Docker en ejecución e imagen `upao-sandbox` |
+| Seed duplica datos | Es idempotente — ejecutar sin riesgo |
+| `Port 8000 in use` | Cambiar puerto o matar proceso: `npx kill-port 8000` |
+| CORS errors | Verificar `FRONTEND_URL` en backend `.env` |
+
+## Comandos Importantes
+
+```bash
+# Backend
+pytest -v                           # Ejecutar tests (38+ tests)
+alembic upgrade head                # Aplicar migraciones
+alembic downgrade -1                # Revertir última migración
+python seed.py                      # Seed idempotente
+uvicorn app.main:app --reload       # Servidor dev
+
+# Frontend
+npm run dev                         # Servidor dev
+npm run build                       # Build producción
+npm run lint                        # ESLint
+
+# Docker
+docker compose up -d                # Iniciar PostgreSQL + backend
+docker compose down                 # Detener servicios
+
+# Benchmark
+python -m pytest tests/test_benchmark.py -v
+
+# Demo
+python run_demo.py                  # Demo rápida desde CLI
+```
+
+---
 
 ## Licencia
 
