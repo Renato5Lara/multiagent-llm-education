@@ -22,6 +22,7 @@ from app.models.learning_objective import LearningObjective
 from app.models.user import User, UserRole
 from app.schemas.diagnostic import StudentProfileCreate
 from app.schemas.progress import CourseProgressResponse, LearningPathDetailResponse, LearningPathItem
+from app.services.academic_activation_service import academic_activation_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -210,37 +211,21 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
     if not cycle:
         return []
 
+    academic_activation_pipeline.activate_student(db, student)
+    db.commit()
+
     enrollments = (
         db.query(Enrollment)
+        .join(Course, Enrollment.course_id == Course.id)
         .filter(
             Enrollment.student_id == student.id,
             Enrollment.status == EnrollmentStatus.ACTIVO,
+            Course.status == CourseStatus.PUBLICADO,
         )
         .all()
     )
 
-    enrolled_course_ids = {e.course_id for e in enrollments}
-
-    query = db.query(Course).filter(
-        Course.cycle == cycle,
-        Course.status == CourseStatus.PUBLICADO,
-    )
-    if enrolled_course_ids:
-        query = query.filter(~Course.id.in_(enrolled_course_ids))
-    auto_courses = query.all()
-
-    for course in auto_courses:
-        enrollment = Enrollment(
-            course_id=course.id,
-            student_id=student.id,
-            status=EnrollmentStatus.ACTIVO,
-        )
-        db.add(enrollment)
-    if auto_courses:
-        db.commit()
-        db.refresh(auto_courses[0]) if auto_courses else None
-
-    all_course_ids = list(enrolled_course_ids | {c.id for c in auto_courses})
+    all_course_ids = [e.course_id for e in enrollments]
 
     resource_counts = dict(
         db.query(Resource.course_id, func.count(Resource.id))
@@ -455,13 +440,14 @@ def get_learning_path_detail(
             if resource:
                 resource_type = resource.resource_type.value
 
+        normalized_status = mod.status.lower() if mod.status else "locked"
         items.append(
             LearningPathItem(
                 id=mod.id,
                 title=mod.title,
                 description=mod.description,
                 order=mod.order,
-                status=mod.status,
+                status=normalized_status,
                 resource_id=mod.resource_id,
                 resource_type=resource_type,
                 competencies=comp_names,
@@ -701,59 +687,6 @@ def get_academic_summary(db: Session, student: User) -> dict:
 
 
 def auto_enroll_from_curriculum(db: Session, student: User) -> int:
-    cycle = student.current_cycle
-    if not cycle:
-        return 0
-
-    inst_courses = (
-        db.query(InstitutionalCourse)
-        .filter(InstitutionalCourse.cycle == cycle)
-        .all()
-    )
-    enrolled_count = 0
-
-    for inst in inst_courses:
-        course = (
-            db.query(Course)
-            .filter(
-                Course.institutional_course_id == inst.id,
-                Course.year == datetime.now(timezone.utc).year,
-            )
-            .first()
-        )
-        if not course:
-            course = Course(
-                code=inst.code,
-                name=inst.name,
-                description=inst.competencies,
-                cycle=inst.cycle,
-                year=datetime.now(timezone.utc).year,
-                teacher_id=None,
-                institutional_course_id=inst.id,
-                is_institutional=True,
-                status=CourseStatus.PUBLICADO,
-            )
-            db.add(course)
-            db.flush()
-
-        existing_enroll = (
-            db.query(Enrollment)
-            .filter(
-                Enrollment.course_id == course.id,
-                Enrollment.student_id == student.id,
-            )
-            .first()
-        )
-        if not existing_enroll:
-            enrollment = Enrollment(
-                course_id=course.id,
-                student_id=student.id,
-                status=EnrollmentStatus.ACTIVO,
-            )
-            db.add(enrollment)
-            enrolled_count += 1
-
-    if enrolled_count > 0:
-        db.commit()
-
-    return enrolled_count
+    result = academic_activation_pipeline.activate_student(db, student)
+    db.commit()
+    return result.enrollments_created + result.enrollments_reactivated

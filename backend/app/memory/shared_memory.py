@@ -34,6 +34,22 @@ from app.observability.tracing import TraceContext, TracingSpan
 logger = logging.getLogger(__name__)
 
 
+def memory_store_from_session(session: Session, dedup_engine: Any | None = None) -> SharedMemoryStore:
+    """Create a SharedMemoryStore scoped to an existing SQLAlchemy Session.
+
+    The returned store shares the caller's transactional context — flush
+    commits go to the same session, and the session lifecycle (commit /
+    rollback / close) remains the caller's responsibility.
+
+    Usage in route handlers::
+
+        store = memory_store_from_session(db)
+        await week_orchestrator.orchestrate_week(db, course, week, memory_store=store)
+    """
+    uow = UnitOfWork(lambda: session)
+    return SharedMemoryStore(uow, dedup_engine=dedup_engine)
+
+
 class SharedMemoryStore:
     """Deterministic shared memory store backed by SQLAlchemy + UoW.
 
