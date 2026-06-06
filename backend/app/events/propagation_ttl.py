@@ -640,9 +640,10 @@ def ttl_event_guard(
         agent_id: str | None = None,
     ) -> PropagationTTL | None:
         if current_ttl is None:
-            return lifecycle.start(
+            ttl = lifecycle.start(
                 source_id=f"{event_type}:{aggregate_id}",
             )
+            return lifecycle.forward(ttl, agent_id=agent_id, event_id=aggregate_id)
         try:
             return lifecycle.forward(
                 current_ttl,
@@ -679,8 +680,14 @@ def ttl_consensus_hook(
         ttl: PropagationTTL | None = None,
     ) -> PropagationTTL:
         if ttl is None:
-            return lifecycle.start(
+            ttl = lifecycle.start(
                 source_id=f"consensus:{module_id}:{student_id}",
+            )
+            return lifecycle.forward(
+                ttl,
+                agent_id="consensus_engine",
+                event_id=f"{module_id}:{student_id}",
+                check_storm=True,
             )
         return lifecycle.forward(
             ttl,

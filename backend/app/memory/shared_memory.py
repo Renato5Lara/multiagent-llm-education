@@ -8,6 +8,8 @@ Every operation is:
     - deterministic (same inputs → same results)
     - auditable (trace IDs, parent links, versioning)
     - thread-safe (via UoW / advisory locks)
+
+All DB methods are async (AsyncSession-compatible).
 """
 
 from __future__ import annotations
@@ -17,10 +19,10 @@ import logging
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.uow import UnitOfWork
+from app.db.uow import AsyncUnitOfWork, UnitOfWork
 from app.memory.memory_rules import (
     compute_memory_confidence,
     compute_ttl,
@@ -35,36 +37,17 @@ logger = logging.getLogger(__name__)
 
 
 class SharedMemoryStore:
-    """Deterministic shared memory store backed by SQLAlchemy + UoW.
-
-    All operations run inside the caller's UnitOfWork, sharing the
-    same transaction as the consensus run.
-
-    Usage:
-        store = SharedMemoryStore(uow)
-        record_id = store.publish_observation(
-            voter_name="mastery",
-            student_id="stu-1",
-            module_id="mod-1",
-            key="performance:trend",
-            value={"trend": "improving", "slope": 0.05},
-            confidence=0.85,
-            trace_ctx=trace_ctx,
-        )
-        records = store.query(student_id="stu-1", memory_type="observation")
-    """
-
-    def __init__(self, uow: UnitOfWork, dedup_engine: Any | None = None):
+    def __init__(self, uow: UnitOfWork | AsyncUnitOfWork, dedup_engine: Any | None = None):
         self._uow = uow
         self._dedup_engine = dedup_engine
 
     @property
-    def _db(self) -> Session:
+    def _db(self) -> AsyncSession:
         return self._uow.db
 
     # ── Publish ──────────────────────────────────────────────────
 
-    def publish_observation(
+    async def publish_observation(
         self,
         voter_name: str,
         key: str,
@@ -80,69 +63,62 @@ class SharedMemoryStore:
         ttl_seconds: int | None = None,
         metadata_json: dict[str, Any] | None = None,
     ) -> str:
-        """Publish an observation to shared memory.
-
-        If ttl_seconds is None, computes a default from memory_type
-        and confidence.
-
-        When a DistributedDedupEngine is configured via the constructor,
-        the publish is protected by content-hash dedup: duplicate
-        observations return the existing record ID instead of creating
-        a new record.
-
-        Args:
-            propagation_ctx: Optional PropagationContext for distributed
-                             tracing. If provided, creates a child span
-                             and derives trace_ctx from it.
-        Returns:
-            str: The record ID.
-        """
         _dedup_content_key: str | None = None
         _dedup_acquired = False
 
         if self._dedup_engine is not None:
-            from app.events.integration import _memory_key
-            _db = self._uow.db
-            _dedup_content_key = _memory_key(
-                voter_name, key, value, confidence,
-                student_id, module_id, memory_type,
-            )
-
-            existing_id = self._dedup_engine.check_memory_duplicate(
-                _db, voter_name, key, value,
-                confidence=confidence,
-                student_id=student_id,
-                module_id=module_id,
-                memory_type=memory_type,
-            )
-            if existing_id is not None:
-                logger.info(
-                    "Dedup memory: %s/%s → existing record %s",
-                    voter_name, key, existing_id,
+            if isinstance(self._uow, AsyncUnitOfWork):
+                # The dedup engine uses synchronous DB operations (advisory_lock,
+                # _idem.check, _idem.acquire) that are incompatible with AsyncSession.
+                # Skip dedup in the async path to avoid sync/async ORM misuse.
+                # TODO: implement async-compatible dedup (Phase 2).
+                logger.warning(
+                    "SharedMemoryStore: dedup_engine skipped (async UoW not supported) "
+                    "voter=%s key=%s — duplicate records may be created",
+                    voter_name, key,
                 )
-                return existing_id
-
-            from app.db.locks import advisory_lock
-            with advisory_lock(_db, f"idempotency:memory:{_dedup_content_key}"):
-                existing_under_lock = self._dedup_engine._idem.check(
-                    _db, _dedup_content_key,
+            else:
+                from app.events.integration import _memory_key
+                _db = self._uow.db
+                _dedup_content_key = _memory_key(
+                    voter_name, key, value, confidence,
+                    student_id, module_id, memory_type,
                 )
-                if existing_under_lock and existing_under_lock.status == "completed":
-                    cached = (
-                        json.loads(existing_under_lock.response_body)
-                        if existing_under_lock.response_body else None
+                existing_id = self._dedup_engine.check_memory_duplicate(
+                    _db, voter_name, key, value,
+                    confidence=confidence,
+                    student_id=student_id,
+                    module_id=module_id,
+                    memory_type=memory_type,
+                )
+                if existing_id is not None:
+                    logger.info(
+                        "Dedup memory: %s/%s → existing record %s",
+                        voter_name, key, existing_id,
                     )
-                    if cached and "record_id" in cached:
-                        return cached["record_id"]
-                try:
-                    self._dedup_engine._idem.acquire(
+                    return existing_id
+
+                from app.db.locks import advisory_lock
+                with advisory_lock(_db, f"idempotency:memory:{_dedup_content_key}"):
+                    existing_under_lock = self._dedup_engine._idem.check(
                         _db, _dedup_content_key,
-                        event_type=f"memory:{memory_type}",
-                        aggregate_id=f"{voter_name}:{key}",
                     )
-                    _dedup_acquired = True
-                except Exception:
-                    pass
+                    if existing_under_lock and existing_under_lock.status == "completed":
+                        cached = (
+                            json.loads(existing_under_lock.response_body)
+                            if existing_under_lock.response_body else None
+                        )
+                        if cached and "record_id" in cached:
+                            return cached["record_id"]
+                    try:
+                        self._dedup_engine._idem.acquire(
+                            _db, _dedup_content_key,
+                            event_type=f"memory:{memory_type}",
+                            aggregate_id=f"{voter_name}:{key}",
+                        )
+                        _dedup_acquired = True
+                    except Exception:
+                        pass
 
         if propagation_ctx is not None and trace_ctx is None:
             try:
@@ -177,7 +153,7 @@ class SharedMemoryStore:
                 actual_ttl = compute_ttl(memory_type, confidence)
 
             source_trace_id = trace_ctx.trace_id if trace_ctx else None
-            source_event_id = None  # Set externally if needed
+            source_event_id = None
 
             record = SharedMemoryRecord(
                 voter_name=voter_name,
@@ -194,7 +170,10 @@ class SharedMemoryStore:
                 metadata_json=metadata_json or {},
             )
             self._db.add(record)
-            self._uow.flush()
+            if isinstance(self._uow, AsyncUnitOfWork):
+                await self._uow.flush()
+            else:
+                self._uow.flush()
 
             if _dedup_acquired and _dedup_content_key is not None:
                 try:
@@ -235,7 +214,7 @@ class SharedMemoryStore:
 
     # ── Query ────────────────────────────────────────────────────
 
-    def query(
+    async def query(
         self,
         *,
         student_id: str | None = None,
@@ -248,23 +227,6 @@ class SharedMemoryStore:
         order_desc: bool = True,
         propagation_ctx: Any | None = None,
     ) -> list[SharedMemoryRecord]:
-        """Query shared memory by scope and type.
-
-        Args:
-            student_id: Filter by student (None = any).
-            module_id: Filter by module (None = any).
-            memory_type: Filter by type (None = all).
-            key: Filter by exact key (None = all).
-            voter_name: Filter by publisher (None = all).
-            limit: Max records to return.
-            include_stale: If True, include expired records.
-            order_desc: If True, newest first.
-            propagation_ctx: Optional PropagationContext for distributed
-                             tracing. Creates a child span if provided.
-
-        Returns:
-            List of SharedMemoryRecord matching the criteria.
-        """
         _prop_ended = False
         if propagation_ctx is not None:
             try:
@@ -298,6 +260,7 @@ class SharedMemoryStore:
             except Exception:
                 pass
 
+        stmt = select(SharedMemoryRecord)
         filters = []
         if student_id is not None:
             filters.append(SharedMemoryRecord.student_id == student_id)
@@ -310,14 +273,14 @@ class SharedMemoryStore:
         if voter_name is not None:
             filters.append(SharedMemoryRecord.voter_name == voter_name)
 
-        q = self._db.query(SharedMemoryRecord).filter(
-            and_(True, *filters) if not filters else and_(*filters)
-        )
+        if filters:
+            stmt = stmt.where(and_(*filters))
 
-        order = SharedMemoryRecord.created_at.desc() if order_desc else SharedMemoryRecord.created_at.asc()
-        q = q.order_by(order).limit(limit)
+        order_col = SharedMemoryRecord.created_at.desc() if order_desc else SharedMemoryRecord.created_at.asc()
+        stmt = stmt.order_by(order_col).limit(limit)
 
-        records = q.all()
+        result = await self._db.execute(stmt)
+        records = list(result.scalars().all())
 
         if not include_stale:
             records = [r for r in records if not is_stale(r)]
@@ -331,7 +294,7 @@ class SharedMemoryStore:
 
         return records
 
-    def query_by_key_pattern(
+    async def query_by_key_pattern(
         self,
         key_prefix: str,
         *,
@@ -341,21 +304,6 @@ class SharedMemoryStore:
         limit: int = 50,
         propagation_ctx: Any | None = None,
     ) -> list[SharedMemoryRecord]:
-        """Query memory by key prefix (e.g., 'performance:').
-
-        Uses SQL LIKE.
-
-        Args:
-            key_prefix: Prefix to match (appended with '%').
-            student_id: Optional student scope.
-            module_id: Optional module scope.
-            memory_type: Optional type filter.
-            limit: Max records.
-            propagation_ctx: Optional PropagationContext for distributed tracing.
-
-        Returns:
-            List of matching records.
-        """
         _prop_ended = False
         if propagation_ctx is not None:
             try:
@@ -391,13 +339,14 @@ class SharedMemoryStore:
         if memory_type is not None:
             filters.append(SharedMemoryRecord.memory_type == memory_type)
 
-        q = (
-            self._db.query(SharedMemoryRecord)
-            .filter(and_(*filters))
+        stmt = (
+            select(SharedMemoryRecord)
+            .where(and_(*filters))
             .order_by(SharedMemoryRecord.created_at.desc())
             .limit(limit)
         )
-        result = [r for r in q.all() if not is_stale(r)]
+        result = await self._db.execute(stmt)
+        result_list = [r for r in result.scalars().all() if not is_stale(r)]
 
         if _prop_ended:
             try:
@@ -406,16 +355,11 @@ class SharedMemoryStore:
             except Exception:
                 pass
 
-        return result
+        return result_list
 
     # ── Single Record Access ─────────────────────────────────────
 
-    def get_by_id(self, record_id: str, propagation_ctx: Any | None = None) -> SharedMemoryRecord | None:
-        """Fetch a single record by ID.
-
-        Args:
-            propagation_ctx: Optional PropagationContext for distributed tracing.
-        """
+    async def get_by_id(self, record_id: str, propagation_ctx: Any | None = None) -> SharedMemoryRecord | None:
         _prop_ended = False
         if propagation_ctx is not None:
             try:
@@ -435,11 +379,9 @@ class SharedMemoryStore:
             except Exception:
                 pass
 
-        result = (
-            self._db.query(SharedMemoryRecord)
-            .filter(SharedMemoryRecord.id == record_id)
-            .first()
-        )
+        stmt = select(SharedMemoryRecord).where(SharedMemoryRecord.id == record_id)
+        result = await self._db.execute(stmt)
+        record = result.scalar_one_or_none()
 
         if _prop_ended:
             try:
@@ -448,29 +390,20 @@ class SharedMemoryStore:
             except Exception:
                 pass
 
-        return result
+        return record
 
     # ── Lineage ──────────────────────────────────────────────────
 
-    def get_lineage(
+    async def get_lineage(
         self,
         record_id: str,
         max_depth: int = 100,
     ) -> list[SharedMemoryRecord]:
-        """Walk the parent_id chain to build the full lineage.
-
-        Args:
-            record_id: Starting record ID.
-            max_depth: Safety limit.
-
-        Returns:
-            List from oldest ancestor to the given record.
-        """
         chain: list[SharedMemoryRecord] = []
         current_id: str | None = record_id
         depth = 0
         while current_id is not None and depth < max_depth:
-            record = self.get_by_id(current_id)
+            record = await self.get_by_id(current_id)
             if record is None:
                 break
             chain.append(record)
@@ -481,7 +414,7 @@ class SharedMemoryStore:
 
     # ── Conflict Resolution ──────────────────────────────────────
 
-    def resolve_conflicts(
+    async def resolve_conflicts(
         self,
         key: str,
         *,
@@ -489,18 +422,7 @@ class SharedMemoryStore:
         module_id: str | None = None,
         propagation_ctx: Any | None = None,
     ) -> dict[str, Any]:
-        """Find all records with the same key and resolve conflicts.
-
-        Args:
-            key: The key to resolve.
-            student_id: Scope filter.
-            module_id: Scope filter.
-            propagation_ctx: Optional PropagationContext for distributed tracing.
-
-        Returns:
-            The resolved value dict.
-        """
-        records = self.query(
+        records = await self.query(
             student_id=student_id,
             module_id=module_id,
             key=key,
@@ -512,28 +434,25 @@ class SharedMemoryStore:
 
     # ── Staleness Management ─────────────────────────────────────
 
-    def remove_stale(self, batch_size: int = 100) -> int:
-        """Delete all stale records from the database.
-
-        Should be called periodically (e.g., via a scheduled job).
-
-        Args:
-            batch_size: Max records to delete in one call.
-
-        Returns:
-            int: Number of deleted records.
-        """
+    async def remove_stale(self, batch_size: int = 100) -> int:
         now = datetime.now(timezone.utc)
-        records = (
-            self._db.query(SharedMemoryRecord)
-            .filter(SharedMemoryRecord.ttl_seconds.isnot(None))
+        stmt = (
+            select(SharedMemoryRecord)
+            .where(SharedMemoryRecord.ttl_seconds.isnot(None))
             .limit(batch_size)
-            .all()
         )
+        result = await self._db.execute(stmt)
+        records = list(result.scalars().all())
         stale = [r for r in records if is_stale(r, now=now)]
         for r in stale:
-            self._db.delete(r)
-        self._uow.flush()
+            if isinstance(self._uow, AsyncUnitOfWork):
+                await self._db.delete(r)
+            else:
+                self._db.delete(r)
+        if isinstance(self._uow, AsyncUnitOfWork):
+            await self._uow.flush()
+        else:
+            self._uow.flush()
 
         count = len(stale)
         if count > 0:
@@ -542,7 +461,7 @@ class SharedMemoryStore:
 
     # ── Aggregation ──────────────────────────────────────────────
 
-    def aggregate_confidence(
+    async def aggregate_confidence(
         self,
         key: str,
         *,
@@ -550,12 +469,7 @@ class SharedMemoryStore:
         module_id: str | None = None,
         propagation_ctx: Any | None = None,
     ) -> float:
-        """Compute aggregated confidence for all records with a key.
-
-        Args:
-            propagation_ctx: Optional PropagationContext for distributed tracing.
-        """
-        records = self.query(
+        records = await self.query(
             student_id=student_id,
             module_id=module_id,
             key=key,
@@ -567,17 +481,13 @@ class SharedMemoryStore:
 
     # ── Count ────────────────────────────────────────────────────
 
-    def count(
+    async def count(
         self,
         *,
         student_id: str | None = None,
         module_id: str | None = None,
         memory_type: str | None = None,
     ) -> int:
-        """Count records matching scope.
-
-        Does NOT filter stale records for performance.
-        """
         filters = []
         if student_id is not None:
             filters.append(SharedMemoryRecord.student_id == student_id)
@@ -586,21 +496,18 @@ class SharedMemoryStore:
         if memory_type is not None:
             filters.append(SharedMemoryRecord.memory_type == memory_type)
 
-        return (
-            self._db.query(SharedMemoryRecord)
-            .filter(and_(True, *filters) if not filters else and_(*filters))
-            .count()
-        )
+        stmt = select(func.count()).select_from(SharedMemoryRecord)
+        if filters:
+            stmt = stmt.where(and_(*filters))
+
+        result = await self._db.execute(stmt)
+        return result.scalar_one()
 
 
 def _nullspan():
-    """No-op context manager for when trace_ctx is None."""
-
     class _NullSpan:
         def __enter__(self):
             return self
-
         def __exit__(self, *args):
             pass
-
     return _NullSpan()

@@ -15,6 +15,8 @@ from app.db.uow import UnitOfWork
 from app.observability.tracing import TraceContext, TracingSpan
 from app.observability.consensus_metrics import metrics
 from app.observability.swarm_diagnostics import diagnostics
+from app.observability.metrics_exporter import exporter
+from app.observability.stream import stream
 from app.models.course import Course, CourseStatus
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.student_memory import StudentMemory
@@ -108,7 +110,6 @@ def evaluate_module_completion(
                 trace_ctx=trace_ctx,
                 trust_system=trust,
                 specialization_tracker=spec,
-                shared_memory_store=shared_memory_store,
             )
 
             # Emit event with full trace + trust metadata in payload
@@ -140,6 +141,27 @@ def evaluate_module_completion(
                 "trace_id": trace_ctx.trace_id,
             })
             metrics.record_run(consensus, root_span.duration_ms or 0.0)
+
+            # Export metrics to Prometheus/SSE
+            exporter.inc_counter("consensus_total")
+            exporter.set_gauge("consensus_confidence", consensus.confidence)
+            for timing in consensus.voter_timings:
+                exporter.observe_histogram("voter_latency", timing.get("duration_ms", 0))
+            try:
+                import asyncio
+                _sse_future = asyncio.ensure_future(stream.push("consensus", {
+                    "module_id": module_id,
+                    "decision": consensus.decision.value,
+                    "confidence": consensus.confidence,
+                    "unanimous": consensus.unanimous,
+                    "duration_ms": root_span.duration_ms or 0.0,
+                    "voters": len(consensus.votes),
+                }))
+                _sse_future.add_done_callback(
+                    lambda f: logger.debug("SSE push done: %s", f.exception() if f.exception() else "ok")
+                )
+            except Exception:
+                pass
 
             # ── Decision and state mutation (inside advisory lock) ──────
 

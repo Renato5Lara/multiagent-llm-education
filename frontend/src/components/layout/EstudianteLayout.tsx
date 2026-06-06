@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { LayoutDashboard, BarChart3 } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
@@ -14,7 +14,6 @@ export default function EstudianteLayout() {
   const [tutorConfig, setTutorConfig] = useState<{
     courseId: string
     courseName?: string
-    moduleTitle?: string
     bloomLevel?: number
   } | null>(null)
 
@@ -22,11 +21,11 @@ export default function EstudianteLayout() {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail
       if (detail?.courseId) {
-        setTutorConfig({ courseId: detail.courseId, courseName: detail.courseName, moduleTitle: detail.moduleTitle, bloomLevel: detail.bloomLevel })
+        setTutorConfig({ courseId: detail.courseId, courseName: detail.courseName, bloomLevel: detail.bloomLevel })
       }
     }
-    window.addEventListener('open-tutor' as any, handler)
-    return () => window.removeEventListener('open-tutor' as any, handler)
+    window.addEventListener('open-tutor', handler)
+    return () => window.removeEventListener('open-tutor', handler)
   }, [])
 
   return (
@@ -38,14 +37,11 @@ export default function EstudianteLayout() {
           <Outlet />
         </main>
       </div>
-      {tutorConfig && (
-        <TutorWidget
-          courseId={tutorConfig.courseId}
-          courseName={tutorConfig.courseName}
-          moduleTitle={tutorConfig.moduleTitle}
-          bloomLevel={tutorConfig.bloomLevel}
-        />
-      )}
+      <TutorWidget
+        courseId={tutorConfig?.courseId || ''}
+        courseName={tutorConfig?.courseName}
+        bloomLevel={tutorConfig?.bloomLevel}
+      />
     </div>
   )
 }

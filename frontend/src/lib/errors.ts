@@ -26,6 +26,12 @@ export function getErrorMessage(error: unknown): string {
     const detail = data?.detail
     if (typeof detail === 'string') return detail
     if (Array.isArray(detail)) return detail.map((d: { msg?: string }) => d.msg).join(', ')
+    if (typeof detail === 'object' && detail !== null) {
+      if (detail.message) return detail.message
+      if (detail.remaining_attempts !== undefined) {
+        return `Credenciales incorrectas. Intentos restantes: ${detail.remaining_attempts}`
+      }
+    }
 
     const statusMessages: Record<number, string> = {
       400: 'Solicitud inválida. Verifique los datos ingresados',
@@ -34,7 +40,7 @@ export function getErrorMessage(error: unknown): string {
       404: 'Recurso no encontrado',
       409: 'Ya existe un registro con esos datos',
       422: 'Los datos enviados no son válidos',
-      429: 'Demasiadas solicitudes. Espere unos segundos',
+      429: 'Demasiados intentos. Su cuenta ha sido bloqueada temporalmente.',
     }
 
     return statusMessages[status] || 'Error interno del servidor. Intente de nuevo más tarde'

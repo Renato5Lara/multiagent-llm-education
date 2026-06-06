@@ -5,13 +5,13 @@ Registra acciones de usuarios en la tabla audit_logs.
 
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.audit_log import AuditLog
 
 
-def log_action(
-    db: Session,
+async def log_action(
+    db: AsyncSession,
     user_id: str,
     action: str,
     entity_type: str,
@@ -26,6 +26,6 @@ def log_action(
         details=details,
     )
     db.add(audit)
-    db.commit()
-    db.refresh(audit)
+    await db.commit()
+    await db.refresh(audit)
     return audit

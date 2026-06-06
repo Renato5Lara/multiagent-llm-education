@@ -76,6 +76,7 @@ class AnomalySignal:
     evidence: dict[str, Any] = field(default_factory=dict)
     recommendation: str = ""
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    correlation_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,4 +92,5 @@ class AnomalySignal:
             "evidence": self.evidence,
             "recommendation": self.recommendation,
             "created_at": self.created_at.isoformat(),
+            "correlation_id": self.correlation_id,
         }

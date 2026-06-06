@@ -612,7 +612,8 @@ class TestTTLConsensusHook:
             self.hooks["voter_hook"]("MasteryVoter", ttl)
 
     def test_stop_in_pre_run(self):
-        ttl = self.lifecycle.start("test", max_hops=0)
+        ttl = self.lifecycle.start("test", max_hops=1)
+        ttl = self.lifecycle.forward(ttl)
         with pytest.raises(PropagationStoppedError):
             self.hooks["pre_run"]("mod-1", "stu-1", ttl=ttl)
 
@@ -621,7 +622,10 @@ class TestEdgeCases:
     def test_visited_agents_limit(self):
         from app.events.propagation_ttl import MAX_VISITED_AGENTS
         manager = PropagationTTLManager()
-        ttl = manager.start_propagation("src")
+        ttl = manager.start_propagation(
+            "src", max_hops=MAX_VISITED_AGENTS + 5,
+            decay_factor=1.0, min_strength=0.001,
+        )
         for i in range(MAX_VISITED_AGENTS):
             ttl = manager.forward(ttl, agent_id=f"agent_{i}")
         with pytest.raises(PropagationError, match="visited_agents"):
@@ -630,18 +634,20 @@ class TestEdgeCases:
     def test_visited_events_limit(self):
         from app.events.propagation_ttl import MAX_VISITED_EVENTS
         manager = PropagationTTLManager()
-        ttl = manager.start_propagation("src")
+        ttl = manager.start_propagation(
+            "src", max_hops=MAX_VISITED_EVENTS + 5,
+            decay_factor=1.0, min_strength=0.001,
+        )
         for i in range(MAX_VISITED_EVENTS):
             ttl = manager.forward(ttl, event_id=f"evt_{i}")
         with pytest.raises(PropagationError, match="visited_events"):
             manager.forward(ttl, event_id="overflow")
 
-    def test_zero_hop_chain(self):
-        manager = PropagationTTLManager()
-        ttl = manager.start_propagation("src", max_hops=0)
-        assert ttl.hop_count == 0
-        with pytest.raises(PropagationStoppedError):
-            manager.forward(ttl)
+    def test_zero_hop_chain_invalid(self):
+        with pytest.raises(ValueError, match="max_hops"):
+            PropagationTTL(
+                propagation_id="x", source_id="x", max_hops=0,
+            )
 
     def test_single_hop_chain(self):
         manager = PropagationTTLManager()
@@ -669,7 +675,9 @@ class TestEdgeCases:
 
     def test_deep_chain(self):
         manager = PropagationTTLManager()
-        ttl = manager.start_propagation("src", max_hops=50, decay_factor=0.95)
+        ttl = manager.start_propagation(
+            "src", max_hops=50, decay_factor=0.95, min_strength=0.01,
+        )
         for i in range(50):
             ttl = manager.forward(ttl, agent_id=f"a{i}", event_id=f"e{i}")
         assert ttl.hop_count == 50
@@ -797,3 +805,133 @@ class TestSwarmDiagnosticsDetectors:
         assert "propagation_storm" in engine._detectors
         assert "recursive_amplification" in engine._detectors
         assert "dag_traversal_pitfall" in engine._detectors
+
+
+class TestBoundaryConditions:
+    """Propagation boundary, TTL=0/1, recursion prevention, cycle detection,
+    replay propagation validation, and concurrent safety tests."""
+
+    def test_ttl_expires_at_boundary(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src", ttl_seconds=0.001)
+        time.sleep(0.01)
+        should_stop, reason = manager.should_stop(ttl)
+        assert should_stop is True
+        assert reason == PropagationStopReason.TTL_EXPIRED
+
+    def test_ttl_not_expired_below_boundary(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src", ttl_seconds=60.0)
+        should_stop, reason = manager.should_stop(ttl)
+        assert should_stop is False
+
+    def test_hop_count_stops_at_exact_max(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src", max_hops=3)
+        ttl = manager.forward(ttl)
+        ttl = manager.forward(ttl)
+        ttl = manager.forward(ttl)
+        assert ttl.hop_count == 3
+        should_stop, reason = manager.should_stop(ttl)
+        assert should_stop is True
+        assert reason == PropagationStopReason.MAX_HOPS_EXCEEDED
+
+    def test_recursive_agent_loop_prevented(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src")
+        ttl = manager.forward(ttl, agent_id="agent_x")
+        with pytest.raises(FeedbackLoopError):
+            manager.forward(ttl, agent_id="agent_x")
+
+    def test_recursive_agent_loop_different_agent_allowed(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src")
+        ttl = manager.forward(ttl, agent_id="agent_x")
+        ttl = manager.forward(ttl, agent_id="agent_y")
+        assert "agent_x" in ttl.visited_agents
+        assert "agent_y" in ttl.visited_agents
+        assert ttl.hop_count == 2
+
+    def test_event_cycle_detected(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src")
+        ttl = manager.forward(ttl, event_id="evt_cycle")
+        with pytest.raises(DAGCycleError):
+            manager.forward(ttl, event_id="evt_cycle")
+
+    def test_event_cycle_different_event_allowed(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src")
+        ttl = manager.forward(ttl, event_id="evt_a")
+        ttl = manager.forward(ttl, event_id="evt_b")
+        assert ttl.hop_count == 2
+        assert "evt_a" in ttl.visited_events
+        assert "evt_b" in ttl.visited_events
+
+    def test_replay_propagation_validates_ttl(self):
+        guard = ttl_event_guard()
+        ttl = guard("replay.event", "agg-1", {}, None)
+        ttl = guard("replay.event", "agg-2", {}, ttl, agent_id="agent_a")
+        ttl = guard("replay.event", "agg-3", {}, ttl, agent_id="agent_b")
+        assert ttl.hop_count == 3
+        assert len(ttl.visited_agents) == 2
+
+    def test_replay_exhausted_returns_none(self):
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation("src", max_hops=1)
+        ttl = manager.forward(ttl)
+        ttl2 = manager.start_propagation("src-replay", parent_propagation=ttl)
+        assert ttl2.hop_count == 0
+        assert ttl2.parent_propagation_id == ttl.propagation_id
+
+    def test_concurrent_forward_safety(self):
+        import threading
+        manager = PropagationTTLManager()
+        ttl = manager.start_propagation(
+            "src", max_hops=100, decay_factor=1.0, min_strength=0.001,
+        )
+        lock = threading.Lock()
+        errors = []
+
+        def forward_agent(agent: str):
+            nonlocal ttl
+            try:
+                with lock:
+                    ttl = manager.forward(ttl, agent_id=agent)
+            except Exception as e:
+                errors.append(e)
+
+        threads = [threading.Thread(target=forward_agent, args=(f"t{i}",)) for i in range(20)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(errors) == 0
+        assert len(ttl.visited_agents) == 20
+        assert ttl.hop_count == 20
+
+    def test_concurrent_rate_tracker_safety(self):
+        import threading
+        tracker = PropagationRateTracker(window_seconds=60.0)
+        errors = []
+
+        def record_events(chain: str):
+            try:
+                for _ in range(50):
+                    tracker.record_event(chain)
+            except Exception as e:
+                errors.append(e)
+
+        threads = [
+            threading.Thread(target=record_events, args=("chain-concurrent",))
+            for _ in range(10)
+        ]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(errors) == 0
+        rate = tracker.get_rate("chain-concurrent")
+        assert rate >= 0

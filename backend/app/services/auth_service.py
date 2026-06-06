@@ -9,7 +9,13 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, create_refresh_token, decode_token, get_password_hash, verify_password
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token_verbose,
+    get_password_hash,
+    verify_password,
+)
 from app.models.login_attempt import LoginAttempt
 from app.models.user import User
 
@@ -46,10 +52,16 @@ def authenticate_user(
 def is_account_locked(db: Session, identifier: str) -> bool:
     cutoff = datetime.now(timezone.utc) - timedelta(minutes=LOCKOUT_WINDOW_MINUTES)
 
+    # When a user logs in with institutional_code, _record_attempt stores
+    # the email as "code:{identifier}".  We must check both formats.
+    identifiers_to_check = [identifier]
+    if "@" not in identifier:
+        identifiers_to_check.append(f"code:{identifier}")
+
     failed_attempts = (
         db.query(LoginAttempt)
         .filter(
-            LoginAttempt.email == identifier,
+            LoginAttempt.email.in_(identifiers_to_check),
             LoginAttempt.success == False,
             LoginAttempt.attempted_at >= cutoff,
         )
@@ -60,27 +72,54 @@ def is_account_locked(db: Session, identifier: str) -> bool:
 
 
 def create_user_tokens(user: User) -> tuple[str, str]:
-    payload = {"sub": user.id, "email": user.email, "role": user.role.value}
-    access_token = create_access_token(data=payload)
-    refresh_token = create_refresh_token(data=payload)
+    access_payload = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role.value,
+        "token_version": user.token_version,
+    }
+    refresh_payload = {
+        "sub": user.id,
+        "token_version": user.token_version,
+    }
+    access_token = create_access_token(data=access_payload)
+    refresh_token = create_refresh_token(data=refresh_payload)
     return access_token, refresh_token
 
 
 def refresh_user_token(refresh_token_str: str, db: Session) -> tuple[Optional[str], Optional[str], Optional[User]]:
-    payload = decode_token(refresh_token_str)
-    if payload is None:
+    payload_dict, error = decode_token_verbose(refresh_token_str)
+    if payload_dict is None:
         return None, None, None
-    if payload.get("type") != "refresh":
+    if payload_dict.get("type") != "refresh":
         return None, None, None
 
-    user_id = payload.get("sub")
+    user_id = payload_dict.get("sub")
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
         return None, None, None
 
-    new_payload = {"sub": user.id, "email": user.email, "role": user.role.value}
-    new_access = create_access_token(data=new_payload)
-    new_refresh = create_refresh_token(data=new_payload)
+    # Token rotation check: reject if token_version doesn't match
+    token_version = payload_dict.get("token_version")
+    if token_version is not None and token_version != user.token_version:
+        logger.warning(
+            "Token version mismatch for user %s: expected %s, got %s",
+            user_id, user.token_version, token_version,
+        )
+        return None, None, None
+
+    access_payload = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role.value,
+        "token_version": user.token_version,
+    }
+    refresh_payload = {
+        "sub": user.id,
+        "token_version": user.token_version,
+    }
+    new_access = create_access_token(data=access_payload)
+    new_refresh = create_refresh_token(data=refresh_payload)
     return new_access, new_refresh, user
 
 

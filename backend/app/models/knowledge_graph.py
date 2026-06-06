@@ -18,8 +18,8 @@ class KnowledgeNode(Base):
     metadata_json = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    outgoing_edges = relationship("KnowledgeEdge", foreign_keys="KnowledgeEdge.source_id", back_populates="source", lazy="selectin")
-    incoming_edges = relationship("KnowledgeEdge", foreign_keys="KnowledgeEdge.target_id", back_populates="target", lazy="selectin")
+    outgoing_edges = relationship("KnowledgeEdge", foreign_keys="KnowledgeEdge.source_id", back_populates="source", lazy="select")
+    incoming_edges = relationship("KnowledgeEdge", foreign_keys="KnowledgeEdge.target_id", back_populates="target", lazy="select")
 
 
 class KnowledgeEdge(Base):

@@ -184,50 +184,6 @@ export function useAgentGeneratePlan() {
   })
 }
 
-export function useUpdateProgress() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: async ({ courseId, resourceId, progressPercentage }: { courseId: string; resourceId?: string; progressPercentage?: number }) => {
-      const resp = await api.post<StudentProgressEntry>(`/api/students/progress/${courseId}`, {
-        resource_id: resourceId,
-        progress_percentage: progressPercentage,
-      })
-      return resp.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
-      toast({ title: 'Progreso actualizado' })
-    },
-  })
-}
-
-export function useCourseProgress(courseId: string | undefined) {
-  return useQuery({
-    queryKey: ['course-progress', courseId],
-    queryFn: async () => {
-      const resp = await api.get(`/api/students/progress/${courseId}`)
-      return resp.data
-    },
-    enabled: !!courseId,
-  })
-}
-
-export function useAgentGeneratePlan() {
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<AgentPlan>('/api/agents/generate-plan', { course_id: courseId, answers })
-      return resp.data
-    },
-    onError: (error) => {
-      toast({ variant: 'destructive', title: 'Error del agente', description: getErrorMessage(error) })
-    },
-  })
-}
-
 export function useAcademicSummary() {
   return useQuery({
     queryKey: ['academic-summary'],

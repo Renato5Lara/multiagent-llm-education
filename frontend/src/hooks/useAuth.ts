@@ -20,7 +20,9 @@ export function useAuth() {
         },
         onSuccess: (data) => {
             storeLogin(data.access_token, data.refresh_token, data.user)
-            queryClient.clear()
+            // WARNING: do NOT call queryClient.clear() here — it wipes ALL cached
+            // queries and races meQuery against validateSession, causing intermittent
+            // logouts. The meQuery cache entry will naturally become stale.
             const role = data.user.role
             if (role === 'admin') navigate('/admin')
             else if (role === 'docente') navigate('/docente')
@@ -63,11 +65,9 @@ export function useAuth() {
         staleTime: 5 * 60 * 1000,
     })
 
-    useEffect(() => {
-        if (meQuery.data) {
-            setUser(meQuery.data)
-        }
-    }, [meQuery.data, setUser])
+    // NOTE: setUser is already called inside meQuery.queryFn (line above).
+    // A separate useEffect on meQuery.data would call setUser a second time.
+    // We removed it to avoid double dispatch.
 
     const hasRole = (role: string) => user?.role === role
 

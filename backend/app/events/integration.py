@@ -48,7 +48,7 @@ class IdempotentSharedMemory:
         self._store = shared_memory_store
         self._idem = idempotency_service or IdempotencyService()
 
-    def publish_observation(
+    async def publish_observation(
         self,
         db: Session,
         voter_name: str,
@@ -69,7 +69,7 @@ class IdempotentSharedMemory:
         When force=True, bypasses idempotency check (always publishes).
         """
         if force:
-            return self._store.publish_observation(
+            return await self._store.publish_observation(
                 voter_name=voter_name,
                 key=key,
                 value=value,
@@ -99,7 +99,7 @@ class IdempotentSharedMemory:
             self._idem.acquire(db, content_key)
 
         try:
-            record_id = self._store.publish_observation(
+            record_id = await self._store.publish_observation(
                 voter_name=voter_name,
                 key=key,
                 value=value,

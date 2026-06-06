@@ -169,6 +169,8 @@ class VoteContext:
     score: float
     module: PathModule
     path: LearningPath
+    evidence: dict = field(default_factory=dict)
+    """Evidence dict for specialized voters (code_correctness, ct_score, concept, etc.)."""
     timestamp: datetime = field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -542,20 +544,15 @@ class ConsensusEngine:
         memory_ids: list[str] = []
         inference_ids: list[str] = []
 
-        if shared_memory_store is not None and ctx.shared_memory is None:
-            try:
-                ctx.shared_memory = shared_memory_store.query(
-                    student_id=ctx.student_id,
-                    module_id=ctx.module_id,
-                    limit=30,
-                    propagation_ctx=propagation_ctx,
-                )
-            except Exception:
-                logger.warning(
-                    "Consensus[%s/%s]: shared memory query failed",
-                    ctx.module_id[:8], ctx.student_id[:8],
-                )
-                ctx.shared_memory = []
+        if shared_memory_store is not None:
+            logger.warning(
+                "Consensus.run() received shared_memory_store=%s — sync method "
+                "cannot await async store methods. Memory enrichment and "
+                "publication are SKIPPED. Use async_run() for shared memory.",
+                type(shared_memory_store).__name__,
+            )
+            shared_memory_store = None  # type: ignore[assignment]
+            ctx.shared_memory = []
 
         for voter in self._voters:
             start_ns = time.monotonic_ns() if (trace_ctx is not None or tmo_state is not None) else 0
@@ -781,124 +778,8 @@ class ConsensusEngine:
                     agreed_with_consensus=agreed,
                 )
 
-        # ── Publish vote observations to shared memory ──────────
-        if shared_memory_store is not None:
-            try:
-                for vote in votes:
-                    mem_key = f"vote:{vote.voter_name}:{ctx.module_id[:12]}"
-                    rec_id = shared_memory_store.publish_observation(
-                        voter_name=vote.voter_name,
-                        key=mem_key,
-                        value={
-                            "decision": vote.decision.value,
-                            "confidence": vote.confidence,
-                            "reason": vote.reason,
-                            "evidence": vote.evidence,
-                        },
-                        confidence=vote.confidence,
-                        student_id=ctx.student_id,
-                        module_id=ctx.module_id,
-                        memory_type="observation",
-                        trace_ctx=trace_ctx,
-                        propagation_ctx=propagation_ctx,
-                        metadata_json={
-                            "path_id": ctx.path_id,
-                            "course_id": ctx.course_id,
-                            "consensus_decision": decision.value,
-                            "consensus_confidence": confidence,
-                        },
-                    )
-                    memory_ids.append(rec_id)
-
-                # Publish consensus result as an inference record
-                result_key = f"consensus:{ctx.module_id[:12]}"
-                rec_id = shared_memory_store.publish_observation(
-                    voter_name="_engine",
-                    key=result_key,
-                    value={
-                        "decision": decision.value,
-                        "confidence": confidence,
-                        "num_votes": len(votes),
-                        "unanimous": decision == VoteDecision.APPROVE and all(
-                            v.decision == VoteDecision.APPROVE for v in votes
-                        ),
-                    },
-                    confidence=confidence,
-                    student_id=ctx.student_id,
-                    module_id=ctx.module_id,
-                    memory_type="inference",
-                    trace_ctx=trace_ctx,
-                    propagation_ctx=propagation_ctx,
-                    ttl_seconds=86400 * 14,  # 14 days for inferences
-                    metadata_json={
-                        "voter_names": [v.voter_name for v in votes],
-                        "voter_decisions": [v.decision.value for v in votes],
-                    },
-                )
-                memory_ids.append(rec_id)
-
-                # Detect contradictions if multiple voters
-                if ctx.shared_memory:
-                    from app.memory.patterns import PatternDetector
-                    detector = PatternDetector()
-                    contradictions = detector.detect_contradictions(ctx.shared_memory)
-                    for c in contradictions:
-                        shared_memory_store.publish_observation(
-                            voter_name="_engine",
-                            key=f"pattern:contradiction:{ctx.module_id[:8]}",
-                            value={
-                                "contradiction_key": c.metadata.get("key"),
-                                "unique_values": c.metadata.get("unique_values"),
-                                "num_records": c.metadata.get("total_records"),
-                            },
-                            confidence=c.confidence,
-                            student_id=ctx.student_id,
-                            module_id=ctx.module_id,
-                            memory_type="pattern",
-                            trace_ctx=trace_ctx,
-                            propagation_ctx=propagation_ctx,
-                            ttl_seconds=86400 * 7,
-                        )
-
-                # Generate collective inference if we have memory + votes
-                if ctx.shared_memory and len(votes) >= 2:
-                    try:
-                        from app.memory.collective_inference import (
-                            CollectiveInferenceEngine,
-                        )
-                        inf_engine = CollectiveInferenceEngine()
-                        inference = inf_engine.infer_from_votes(
-                            votes, result,
-                            shared_memory_records=ctx.shared_memory,
-                        )
-                        inference_ids.append(inference.inference_id)
-
-                        shared_memory_store.publish_observation(
-                            voter_name="_engine",
-                            key=f"inference:{ctx.module_id[:12]}",
-                            value=inference.to_dict(),
-                            confidence=inference.confidence,
-                            student_id=ctx.student_id,
-                            module_id=ctx.module_id,
-                            memory_type="inference",
-                            trace_ctx=trace_ctx,
-                            propagation_ctx=propagation_ctx,
-                            ttl_seconds=86400 * 7,
-                            metadata_json={
-                                "inference_id": inference.inference_id,
-                                "reasoning_chain": inference.reasoning_chain,
-                            },
-                        )
-                    except Exception:
-                        logger.warning(
-                            "Consensus[%s/%s]: collective inference failed",
-                            ctx.module_id[:8], ctx.student_id[:8],
-                        )
-            except Exception:
-                logger.warning(
-                    "Consensus[%s/%s]: shared memory publish failed",
-                    ctx.module_id[:8], ctx.student_id[:8],
-                )
+        # ── Shared memory publication skipped in sync run() ─────
+        # Use async_run() which properly awaits publish_observation().
 
         result = ConsensusResult(
             module_id=ctx.module_id,
@@ -992,13 +873,14 @@ class ConsensusEngine:
     ) -> ConsensusResult:
         """Async consensus with per-voter asyncio-based preemption.
 
-        Each voter runs in a thread pool via asyncio.to_thread() and
-        is subject to a per-voter timeout via asyncio.wait_for().
-        When a timeout fires, a fallback vote is generated via the
-        provided timeout_policy.
+        Functionally IDENTICAL to run() for the same inputs:
+        - same adaptive weights (trust system + specialization)
+        - same shared memory enrichment + publication
+        - same diagnostics recording
+        - same propagation span management
 
-        Cancellation context is propagated via ContextVar, enabling
-        cooperative cancellation checks inside voters.
+        Additionally adds per-voter asyncio timeout via wait_for(),
+        enabling preemptive cancellation of hung voters.
 
         Args:
             ctx: Vote context.
@@ -1012,8 +894,7 @@ class ConsensusEngine:
             overall_deadline_ms: Overall deadline in ms (default 30000).
 
         Returns:
-            A ConsensusResult (same shape as run(), with timeout_info
-            populated if timeout_policy is provided).
+            A ConsensusResult with all fields populated identically to run().
         """
         from app.core.consensus_cancellation import (
             CancellationReason,
@@ -1037,6 +918,63 @@ class ConsensusEngine:
 
         votes: list[ConsensusVote] = []
         voter_timings: list[dict] = []
+        trace_id: str | None = None
+
+        # ── Derive trace_ctx from propagation_ctx (same as run()) ─
+        if propagation_ctx is not None and trace_ctx is None:
+            try:
+                from app.tracing import correlation_engine as _ce
+                _child = _ce.child(
+                    operation_name="consensus:async_run",
+                    tags={
+                        "module_id": ctx.module_id[:20],
+                        "student_id": ctx.student_id[:20],
+                    },
+                )
+                if _child is not None:
+                    trace_ctx = _child.to_legacy_trace_context()
+            except Exception:
+                pass
+
+        if propagation_ctx is None and trace_ctx is None:
+            try:
+                from app.tracing import correlation_engine as _ce
+                current = _ce.get_current()
+                if current is not None:
+                    _child = _ce.child(
+                        operation_name="consensus:async_run",
+                        tags={
+                            "module_id": ctx.module_id[:20],
+                            "student_id": ctx.student_id[:20],
+                        },
+                    )
+                    if _child is not None:
+                        trace_ctx = _child.to_legacy_trace_context()
+                        propagation_ctx = True
+            except Exception:
+                pass
+
+        if trace_ctx is not None:
+            trace_id = trace_ctx.trace_id
+
+        # ── Enrich context with shared memory (same as run()) ────
+        memory_ids: list[str] = []
+        inference_ids: list[str] = []
+
+        if shared_memory_store is not None and ctx.shared_memory is None:
+            try:
+                ctx.shared_memory = await shared_memory_store.query(
+                    student_id=ctx.student_id,
+                    module_id=ctx.module_id,
+                    limit=30,
+                    propagation_ctx=propagation_ctx,
+                )
+            except Exception:
+                logger.warning(
+                    "Consensus[%s/%s]: shared memory query failed",
+                    ctx.module_id[:8], ctx.student_id[:8],
+                )
+                ctx.shared_memory = []
 
         try:
             for voter in self._voters:
@@ -1048,37 +986,35 @@ class ConsensusEngine:
                     cancel_ctx.cancel(CancellationReason.OVERALL_DEADLINE, source=vname)
                     if tmo_state:
                         tmo_state.deadline_exceeded = True
-                    votes.append(
-                        ConsensusVote(
-                            voter_name=vname,
-                            decision=VoteDecision.ABSTAIN,
-                            confidence=0.0,
-                            reason="Skipped — overall deadline exceeded",
-                            evidence={"deadline_exceeded": True},
-                        )
+                    v = ConsensusVote(
+                        voter_name=vname,
+                        decision=VoteDecision.ABSTAIN,
+                        confidence=0.0,
+                        reason="Skipped — overall deadline exceeded",
+                        evidence={"deadline_exceeded": True},
                     )
+                    votes.append(v)
                     voter_timings.append({
-                        "voter_name": vname, "decision": "abstain",
-                        "confidence": 0.0, "duration_ms": 0.0,
-                        "status": "deadline_skipped",
+                        "voter_name": vname, "decision": v.decision.value,
+                        "confidence": v.confidence, "duration_ms": 0.0,
+                        "status": "deadline_skipped", "timeout": True,
                     })
                     continue
 
                 # Hung check from timeout policy
                 if use_tmo and tmo_state and tmo_state.deadline_exceeded:
-                    votes.append(
-                        ConsensusVote(
-                            voter_name=vname,
-                            decision=VoteDecision.ABSTAIN,
-                            confidence=0.0,
-                            reason="Skipped — deadline exceeded",
-                            evidence={"deadline_exceeded": True},
-                        )
+                    v = ConsensusVote(
+                        voter_name=vname,
+                        decision=VoteDecision.ABSTAIN,
+                        confidence=0.0,
+                        reason="Skipped — deadline exceeded",
+                        evidence={"deadline_exceeded": True},
                     )
+                    votes.append(v)
                     voter_timings.append({
-                        "voter_name": vname, "decision": "abstain",
-                        "confidence": 0.0, "duration_ms": 0.0,
-                        "status": "deadline_skipped",
+                        "voter_name": vname, "decision": v.decision.value,
+                        "confidence": v.confidence, "duration_ms": 0.0,
+                        "status": "deadline_skipped", "timeout": True,
                     })
                     continue
 
@@ -1149,6 +1085,9 @@ class ConsensusEngine:
                         evidence={"error": str(exc)},
                     )
                     status = "error"
+                    # Record error in trust system (same as run())
+                    if trust_system is not None:
+                        trust_system.record_error(vname)
 
                 votes.append(v)
                 voter_timings.append({
@@ -1157,17 +1096,19 @@ class ConsensusEngine:
                     "confidence": v.confidence,
                     "duration_ms": round(elapsed_ms, 3),
                     "status": status,
+                    "timeout": status in ("timeout", "cancelled", "deadline_skipped"),
                 })
 
-                # Check cascading delay
+                # Check cascading delay after each voter
                 if use_tmo and tmo_state and len(voter_timings) >= 2:
                     timings = [t.get("duration_ms", 0.0) for t in voter_timings[:-1]]
                     use_tmo.check_cascading_delay(tmo_state, timings)
 
-            # ── Aggregate ──────────────────────────────────────
-            decision, confidence = self._aggregate(votes)
+                # Check overall deadline after each voter (same as run())
+                if use_tmo and tmo_state:
+                    use_tmo.check_overall_deadline(tmo_state)
 
-            # ── Final timeout state checks ─────────────────────
+            # ── Final timeout state checks (same as run()) ───────
             timeout_info = None
             if use_tmo and tmo_state:
                 use_tmo.check_overall_deadline(tmo_state)
@@ -1177,7 +1118,192 @@ class ConsensusEngine:
                 use_tmo.check_degraded(tmo_state, completed_count, len(self._voters))
                 if not use_tmo.is_quorum_met(tmo_state, completed_count):
                     use_tmo.trigger_quorum_fallback(tmo_state, completed_count)
+
+                # Attach timeout baggage to propagation_ctx (same as run())
+                if propagation_ctx is not None:
+                    try:
+                        baggage = use_tmo.to_baggage(tmo_state)
+                        for k, v in baggage.items():
+                            if hasattr(propagation_ctx, "set_baggage"):
+                                propagation_ctx.set_baggage(k, v)
+                    except Exception:
+                        pass
+
                 timeout_info = use_tmo.get_state_summary(tmo_state)
+
+            # ── Compute adaptive weights (same as run()) ──────────
+            voter_names = [v.voter_name for v in self._voters]
+            weights_used: dict[str, float] = {}
+            trust_scores: dict[str, float] = {}
+            specialization_affinities: dict[str, float] = {}
+
+            if trust_system is not None or specialization_tracker is not None:
+                from app.core.weighting import compute_weights_detailed
+
+                ctx_key = None
+                if specialization_tracker is not None:
+                    from app.core.specialization import context_key as spec_ctx_key
+                    ctx_key = spec_ctx_key(ctx)
+
+                weight_details = compute_weights_detailed(
+                    voter_names,
+                    trust_system=trust_system,
+                    specialization_tracker=specialization_tracker,
+                    context_key=ctx_key,
+                )
+                for name in voter_names:
+                    weights_used[name] = weight_details[name]["final_weight"]
+                    trust_scores[name] = weight_details[name]["trust"]
+                    specialization_affinities[name] = weight_details[name]["affinity"]
+
+            # ── Aggregate with weights (same as run()) ────────────
+            weights_for_agg = weights_used if weights_used else None
+            decision, confidence = self._aggregate(votes, weights=weights_for_agg)
+
+            # ── Update trust and specialization post-decision (same as run()) ──
+            if trust_system is not None:
+                for vote in votes:
+                    trust_system.record_vote_outcome(
+                        voter_name=vote.voter_name,
+                        decision=vote.decision,
+                        confidence=vote.confidence,
+                        latency_ms=next(
+                            (t.get("duration_ms", 0.0) for t in voter_timings
+                             if t.get("voter_name") == vote.voter_name),
+                            0.0,
+                        ),
+                        final_decision=decision,
+                    )
+
+            if specialization_tracker is not None:
+                ctx_key = None
+                if specialization_tracker is not None:
+                    from app.core.specialization import context_key as spec_ctx_key
+                    ctx_key = spec_ctx_key(ctx)
+                for vote in votes:
+                    if vote.decision == VoteDecision.ABSTAIN:
+                        continue
+                    agreed = vote.decision == decision
+                    specialization_tracker.record_vote(
+                        voter_name=vote.voter_name,
+                        context_key=ctx_key,
+                        agreed_with_consensus=agreed,
+                    )
+
+            # ── Publish vote observations to shared memory (same as run()) ──
+            if shared_memory_store is not None:
+                try:
+                    for vote in votes:
+                        mem_key = f"vote:{vote.voter_name}:{ctx.module_id[:12]}"
+                        rec_id = await shared_memory_store.publish_observation(
+                            voter_name=vote.voter_name,
+                            key=mem_key,
+                            value={
+                                "decision": vote.decision.value,
+                                "confidence": vote.confidence,
+                                "reason": vote.reason,
+                                "evidence": vote.evidence,
+                            },
+                            confidence=vote.confidence,
+                            student_id=ctx.student_id,
+                            module_id=ctx.module_id,
+                            memory_type="observation",
+                            trace_ctx=trace_ctx,
+                            propagation_ctx=propagation_ctx,
+                            metadata_json={
+                                "path_id": ctx.path_id,
+                                "course_id": ctx.course_id,
+                                "consensus_decision": decision.value,
+                                "consensus_confidence": confidence,
+                            },
+                        )
+                        memory_ids.append(rec_id)
+
+                    result_key = f"consensus:{ctx.module_id[:12]}"
+                    rec_id = await shared_memory_store.publish_observation(
+                        voter_name="_engine",
+                        key=result_key,
+                        value={
+                            "decision": decision.value,
+                            "confidence": confidence,
+                            "num_votes": len(votes),
+                            "unanimous": decision == VoteDecision.APPROVE and all(
+                                v.decision == VoteDecision.APPROVE for v in votes
+                            ),
+                        },
+                        confidence=confidence,
+                        student_id=ctx.student_id,
+                        module_id=ctx.module_id,
+                        memory_type="inference",
+                        trace_ctx=trace_ctx,
+                        propagation_ctx=propagation_ctx,
+                        ttl_seconds=86400 * 14,
+                        metadata_json={
+                            "voter_names": [v.voter_name for v in votes],
+                            "voter_decisions": [v.decision.value for v in votes],
+                        },
+                    )
+                    memory_ids.append(rec_id)
+
+                    if ctx.shared_memory:
+                        from app.memory.patterns import PatternDetector
+                        detector = PatternDetector()
+                        contradictions = detector.detect_contradictions(ctx.shared_memory)
+                        for c in contradictions:
+                            await shared_memory_store.publish_observation(
+                                voter_name="_engine",
+                                key=f"pattern:contradiction:{ctx.module_id[:8]}",
+                                value={
+                                    "contradiction_key": c.metadata.get("key"),
+                                    "unique_values": c.metadata.get("unique_values"),
+                                    "num_records": c.metadata.get("total_records"),
+                                },
+                                confidence=c.confidence,
+                                student_id=ctx.student_id,
+                                module_id=ctx.module_id,
+                                memory_type="pattern",
+                                trace_ctx=trace_ctx,
+                                propagation_ctx=propagation_ctx,
+                                ttl_seconds=86400 * 7,
+                            )
+
+                    if ctx.shared_memory and len(votes) >= 2:
+                        try:
+                            from app.memory.collective_inference import (
+                                CollectiveInferenceEngine,
+                            )
+                            inf_engine = CollectiveInferenceEngine()
+                            inference = inf_engine.infer_from_votes(
+                                votes, result,
+                                shared_memory_records=ctx.shared_memory,
+                            )
+                            inference_ids.append(inference.inference_id)
+                            await shared_memory_store.publish_observation(
+                                voter_name="_engine",
+                                key=f"inference:{ctx.module_id[:12]}",
+                                value=inference.to_dict(),
+                                confidence=inference.confidence,
+                                student_id=ctx.student_id,
+                                module_id=ctx.module_id,
+                                memory_type="inference",
+                                trace_ctx=trace_ctx,
+                                propagation_ctx=propagation_ctx,
+                                ttl_seconds=86400 * 7,
+                                metadata_json={
+                                    "inference_id": inference.inference_id,
+                                    "reasoning_chain": inference.reasoning_chain,
+                                },
+                            )
+                        except Exception:
+                            logger.warning(
+                                "Consensus[%s/%s]: collective inference failed",
+                                ctx.module_id[:8], ctx.student_id[:8],
+                            )
+                except Exception:
+                    logger.warning(
+                        "Consensus[%s/%s]: shared memory publish failed",
+                        ctx.module_id[:8], ctx.student_id[:8],
+                    )
 
             result = ConsensusResult(
                 module_id=ctx.module_id,
@@ -1185,10 +1311,73 @@ class ConsensusEngine:
                 decision=decision,
                 confidence=confidence,
                 votes=votes,
-                trace_id=getattr(trace_ctx, "trace_id", None) if trace_ctx else None,
+                trace_id=trace_id,
                 voter_timings=voter_timings,
+                weights_used=weights_used,
+                trust_scores=trust_scores,
+                specialization_affinities=specialization_affinities,
+                memory_ids=memory_ids,
+                inference_ids=inference_ids,
                 timeout_info=timeout_info,
             )
+
+            # ── Log with weights (same as run()) ─────────────────
+            if trace_ctx is not None:
+                latency = sum(t.get("duration_ms", 0) for t in voter_timings)
+                logger.info(
+                    "Consensus[%s/%s]: decision=%s confidence=%.2f votes=%d "
+                    "trace=%s latency=%.2fms weights=%s",
+                    ctx.module_id[:8],
+                    ctx.student_id[:8],
+                    decision.value,
+                    confidence,
+                    len(votes),
+                    trace_id[:8],
+                    latency,
+                    {k: round(v, 3) for k, v in weights_used.items()} if weights_used else "none",
+                )
+
+            # ── Record swarm diagnostics (same as run()) ─────────
+            try:
+                from app.swarm_diagnostics import diagnostics_engine as _diag_engine
+                _diag_engine.record_consensus(
+                    decision=decision.value,
+                    confidence=confidence,
+                    votes=[{
+                        "voter_name": v.voter_name,
+                        "decision": v.decision.value,
+                        "confidence": v.confidence,
+                    } for v in votes],
+                    student_id=ctx.student_id,
+                    module_id=ctx.module_id,
+                    trace_id=trace_id,
+                    duration_ms=latency if trace_ctx else None,
+                )
+                for v in votes:
+                    timing = next(
+                        (t for t in voter_timings if t.get("voter_name") == v.voter_name),
+                        None,
+                    )
+                    _diag_engine.record_vote(
+                        voter_name=v.voter_name,
+                        decision=v.decision.value,
+                        confidence=v.confidence,
+                        student_id=ctx.student_id,
+                        module_id=ctx.module_id,
+                        trace_id=trace_id,
+                        duration_ms=timing.get("duration_ms") if timing else None,
+                    )
+            except Exception:
+                logger.debug("Swarm diagnostics recording failed (non-fatal)", exc_info=True)
+
+            # ── End propagation span (same as run()) ─────────────
+            if propagation_ctx is not None:
+                try:
+                    from app.tracing import correlation_engine as _ce
+                    _ce.end()
+                except Exception:
+                    pass
+
             return result
 
         finally:

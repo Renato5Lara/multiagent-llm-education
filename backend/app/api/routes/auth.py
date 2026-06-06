@@ -18,6 +18,14 @@ from app.schemas.auth import (
 from app.schemas.user import UserResponse
 from app.services import auth_service
 from app.services.audit_service import log_action
+from app.services.auth_tracing import (
+    trace_login_success,
+    trace_login_failure,
+    trace_login_locked,
+    trace_logout,
+    trace_refresh_success,
+    trace_refresh_failure,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["Autenticación"])
 
@@ -33,10 +41,15 @@ def login(
     Bloquea la cuenta tras 3 intentos fallidos en 5 minutos.
     """
     if auth_service.is_account_locked(db, login_data.identifier):
+        remaining_lockout = auth_service.LOCKOUT_DURATION_MINUTES
+        trace_login_locked(login_data.identifier)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Cuenta bloqueada temporalmente por múltiples intentos fallidos. "
-            "Intente de nuevo en 5 minutos.",
+            detail={
+                "message": "Cuenta bloqueada temporalmente por múltiples intentos fallidos.",
+                "retry_after_minutes": remaining_lockout,
+                "code": "ACCOUNT_LOCKED",
+            },
         )
 
     ip_address = request.client.host if request.client else None
@@ -45,9 +58,30 @@ def login(
     )
 
     if not user:
+        trace_login_failure(login_data.identifier, "invalid_credentials")
+        from datetime import datetime, timedelta, timezone
+        from app.models.login_attempt import LoginAttempt
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=auth_service.LOCKOUT_WINDOW_MINUTES)
+        ids_to_check = [login_data.identifier]
+        if "@" not in login_data.identifier:
+            ids_to_check.append(f"code:{login_data.identifier}")
+        failed_count = (
+            db.query(LoginAttempt)
+            .filter(
+                LoginAttempt.email.in_(ids_to_check),
+                LoginAttempt.success == False,
+                LoginAttempt.attempted_at >= cutoff,
+            )
+            .count()
+        )
+        remaining = max(0, auth_service.MAX_FAILED_ATTEMPTS - failed_count)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales incorrectas",
+            detail={
+                "message": "Credenciales incorrectas",
+                "remaining_attempts": remaining,
+                "code": "INVALID_CREDENTIALS",
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -55,6 +89,7 @@ def login(
     user_dict = auth_service.get_user_response_dict(user)
 
     log_action(db, user.id, "login", "user", user.id)
+    trace_login_success(user.id)
 
     return TokenResponse(
         access_token=access_token,
@@ -70,6 +105,7 @@ def logout(current_user: User = Depends(get_current_user)):
     Cierre de sesión.
     Con JWT stateless, el cliente descarta el token.
     """
+    trace_logout(current_user.id)
     return MessageResponse(message="Sesión cerrada exitosamente")
 
 
@@ -86,6 +122,7 @@ def refresh_token(
         refresh_data.refresh_token, db
     )
     if not new_access or not user:
+        trace_refresh_failure("invalid_token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token inválido o expirado",
@@ -93,6 +130,7 @@ def refresh_token(
         )
 
     user_dict = auth_service.get_user_response_dict(user)
+    trace_refresh_success(user.id)
 
     return TokenResponse(
         access_token=new_access,

@@ -1,14 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Lock, CheckCircle, Circle, BookOpen, Play, FileText, Film, ImageIcon, Headphones, Gamepad2, Puzzle, MessageCircle } from 'lucide-react'
+import { Lock, CheckCircle, Circle, BookOpen, Play, FileText, Film, ImageIcon, Headphones, Gamepad2, Puzzle, MessageCircle, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useMutation } from '@tanstack/react-query'
 import PageHeader from '@/components/common/PageHeader'
 import { useLearningPath, useGeneratePath } from '@/hooks/useStudent'
 import { MODALITY_LABELS, MODALITY_COLORS } from '@/lib/constants'
+import api from '@/lib/api'
 import type { LearningPathItem } from '@/types/student'
-import TutorWidget from '@/components/ai/TutorWidget'
 
 const statusConfig = {
     completed: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50 border-green-200', label: 'Completado' },
@@ -46,6 +47,21 @@ export default function LearningPath() {
     const navigate = useNavigate()
     const { data: path, isLoading, error } = useLearningPath(courseId)
     const generatePath = useGeneratePath()
+
+    const enterModule = useMutation({
+        mutationFn: async (moduleId: string) => {
+            const resp = await api.post(`/api/sessions/module/${moduleId}/enter`)
+            return resp.data
+        },
+        onSuccess: (data, moduleId) => {
+            const resourceId = data.resource_id
+            if (resourceId && courseId) {
+                navigate(`/estudiante/content/${resourceId}?courseId=${courseId}&sessionId=${data.session_id}`)
+            } else {
+                navigate(`/estudiante/content/no-resource?courseId=${courseId}&moduleId=${moduleId}&sessionId=${data.session_id}`)
+            }
+        },
+    })
 
     if (isLoading) {
         return (
@@ -133,8 +149,8 @@ export default function LearningPath() {
                                     item.status === 'available' ? 'cursor-pointer hover:shadow-md' : ''
                                 } ${item.status === 'locked' ? 'opacity-60' : ''}`}
                                 onClick={() => {
-                                    if (item.status === 'available' && item.resource_id && courseId) {
-                                        navigate(`/estudiante/content/${item.resource_id}?courseId=${courseId}`)
+                                    if (item.status === 'available' && courseId) {
+                                        enterModule.mutate(item.id)
                                     }
                                 }}>
                                     <CardContent className="p-4">
@@ -180,7 +196,7 @@ export default function LearningPath() {
                                                         size="sm"
                                                         onClick={(e) => {
                                                             e.stopPropagation()
-                                                            navigate(`/estudiante/content/${item.resource_id}?courseId=${courseId}`)
+                                                            enterModule.mutate(item.id)
                                                         }}
                                                     >
                                                         <Play className="h-3 w-3 mr-1" />Repasar
@@ -227,14 +243,6 @@ export default function LearningPath() {
                 </Button>
             </div>
 
-            <TutorWidget
-                courseId={courseId || ''}
-                courseName={path.course_name}
-                moduleTitle={completedModules < totalCount
-                    ? items.find((i: LearningPathItem) => i.status === 'available')?.title
-                    : undefined
-                }
-            />
         </div>
     )
 }

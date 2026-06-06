@@ -210,19 +210,12 @@ def get_enrolled_students(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Retorna la lista de estudiantes inscritos en un curso. Solo el docente dueño o admin."""
-    course = course_service.get_course_by_id(db, course_id)
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Curso no encontrado",
-        )
-
-    if course.teacher_id != current_user.id and current_user.role != UserRole.ADMIN:
+    """Retorna la lista de estudiantes inscritos en un curso. Solo el docente dueño, asignado, o admin."""
+    try:
+        students = course_service.get_enrolled_students(db, course_id, current_user)
+    except PermissionError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo el docente del curso o un admin puede ver los estudiantes inscritos",
         )
-
-    students = course_service.get_enrolled_students(db, course_id)
     return students

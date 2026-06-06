@@ -49,8 +49,9 @@ api.interceptors.response.use(
     }
 
     if (error.response.status === 401 && !originalRequest._retry) {
-      // NEVER retry /api/auth/refresh — that creates an infinite deadlock
-      if (originalRequest.url?.includes('/api/auth/refresh')) {
+      // NEVER retry auth endpoints — login 401 is a real credential error,
+      // and retrying /api/auth/refresh creates an infinite deadlock
+      if (originalRequest.url?.includes('/api/auth/')) {
         return Promise.reject(error)
       }
 

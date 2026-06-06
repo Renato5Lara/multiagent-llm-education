@@ -18,6 +18,13 @@ from app.models.student_memory import StudentMemory, ConversationMessage, Weakne
 from app.models.knowledge_graph import KnowledgeNode, KnowledgeEdge
 from app.models.idempotency_key import IdempotencyKey
 from app.models.shared_memory_record import SharedMemoryRecord
+from app.models.educational_context import EducationalContext, EducationalContextStatus
+from app.models.programming_domain import ProgrammingConcept, ProgrammingStage, ProgrammingCourseProfile, STAGE_CONFIG
+from app.models.programming_prerequisite import ConceptPrerequisite, CONCEPT_DEPENDENCY_GRAPH
+from app.models.programming_metrics import ProgrammingMetrics
+from app.models.resource_programming_tag import ResourceProgrammingTag
+from app.models.learning_session import LearningSession
+from app.models.retrieval import RetrievalCache, RetrievalHistory, ResearchSession
 
 __all__ = [
     "User", "UserRole",
@@ -26,6 +33,7 @@ __all__ = [
     "Resource", "ResourceType",
     "ResourceObjective",
     "Enrollment", "EnrollmentStatus",
+    "EducationalContext", "EducationalContextStatus",
     "AuditLog",
     "LoginAttempt",
     "DiagnosticResult",
@@ -40,4 +48,10 @@ __all__ = [
     "KnowledgeNode", "KnowledgeEdge",
     "IdempotencyKey",
     "SharedMemoryRecord",
+    "ProgrammingConcept", "ProgrammingStage", "ProgrammingCourseProfile", "STAGE_CONFIG",
+    "ConceptPrerequisite", "CONCEPT_DEPENDENCY_GRAPH",
+    "ProgrammingMetrics",
+    "ResourceProgrammingTag",
+    "LearningSession",
+    "RetrievalCache", "RetrievalHistory", "ResearchSession",
 ]

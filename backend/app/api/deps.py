@@ -1,21 +1,25 @@
 """
 Dependencias de inyección para FastAPI.
 Incluye: sesión de BD, Unit of Work, autenticación, y verificación de roles.
+
+Provee tanto dependencias síncronas (legacy) como asíncronas (FastAPI runtime).
 """
 
-from typing import Generator
+from typing import AsyncGenerator, Generator
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.core.security import decode_token
-from app.db.session import SessionLocal
-from app.db.uow import UnitOfWork
+from app.db.session import AsyncSessionLocal, SessionLocal
+from app.db.uow import AsyncUnitOfWork, UnitOfWork
 from app.models.user import User, UserRole
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
+# ── Sync deps (legacy, for Alembic scripts, seed, tests) ───────
 
 def get_db() -> Generator:
     db = SessionLocal()
@@ -26,12 +30,6 @@ def get_db() -> Generator:
 
 
 def get_uow() -> Generator[UnitOfWork, None, None]:
-    """Provee una Unit of Work con commit/rollback automático.
-
-    - Si el endpoint lanza una excepción → rollback
-    - Si todo es exitoso → commit
-    - Siempre cierra la sesión al final
-    """
     uow = UnitOfWork(SessionLocal)
     try:
         yield uow
@@ -109,6 +107,118 @@ def get_current_estudiante(
 
 def get_current_investigador(
     current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role != UserRole.INVESTIGADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de investigador",
+        )
+    return current_user
+
+
+# ═════════════════════════════════════════════════════════════════
+# Async deps (FastAPI runtime — non-blocking)
+# ═════════════════════════════════════════════════════════════════
+
+
+async def aget_db() -> AsyncGenerator[AsyncSession, None]:
+    """Async DB session — use for all FastAPI route handlers.
+
+    Replaces get_db() for async endpoints. Session is automatically
+    closed when the request completes.
+    """
+    async with AsyncSessionLocal() as db:
+        yield db
+
+
+async def aget_uow() -> AsyncGenerator[AsyncUnitOfWork, None]:
+    """Async UnitOfWork — wraps aget_db() with commit/rollback.
+
+    Usage:
+        @router.post("/...")
+        async def handler(uow: AsyncUnitOfWork = Depends(aget_uow)):
+            ...
+    """
+    uow = AsyncUnitOfWork(AsyncSessionLocal)
+    try:
+        yield uow
+        await uow.commit()
+    except Exception:
+        await uow.rollback()
+        raise
+    finally:
+        await uow.close()
+
+
+async def aget_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(aget_db),
+) -> User:
+    """Async version of get_current_user — uses AsyncSession."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="No se pudieron validar las credenciales",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    payload = decode_token(token)
+    if payload is None:
+        raise credentials_exception
+
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        raise credentials_exception
+
+    from sqlalchemy import select
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise credentials_exception
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario desactivado",
+        )
+
+    return user
+
+
+async def aget_current_admin(
+    current_user: User = Depends(aget_current_user),
+) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de administrador",
+        )
+    return current_user
+
+
+async def aget_current_docente(
+    current_user: User = Depends(aget_current_user),
+) -> User:
+    if current_user.role != UserRole.DOCENTE:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de docente",
+        )
+    return current_user
+
+
+async def aget_current_estudiante(
+    current_user: User = Depends(aget_current_user),
+) -> User:
+    if current_user.role != UserRole.ESTUDIANTE:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de estudiante",
+        )
+    return current_user
+
+
+async def aget_current_investigador(
+    current_user: User = Depends(aget_current_user),
 ) -> User:
     if current_user.role != UserRole.INVESTIGADOR:
         raise HTTPException(

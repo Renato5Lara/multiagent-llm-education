@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react'
+import { AlertTriangle, Eye, EyeOff, GraduationCap, Loader2, Clock } from 'lucide-react'
+import axios from 'axios'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
@@ -10,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function Login() {
     const { isAuthenticated, user } = useAuthStore()
-    const { login, isLoggingIn } = useAuth()
+    const { login, isLoggingIn, loginError } = useAuth()
     const [identifier, setIdentifier] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -59,6 +60,41 @@ export default function Login() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-5">
+                        {loginError && axios.isAxiosError(loginError) && loginError.response?.status === 429 && (
+                            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                                <Clock className="h-5 w-5 mt-0.5 shrink-0 text-red-500" />
+                                <span>
+                                    {(() => {
+                                        const detail = loginError.response?.data?.detail
+                                        if (typeof detail === 'object' && detail?.message) {
+                                            const retryAfter = detail.retry_after_seconds ?? (detail.retry_after_minutes ? detail.retry_after_minutes * 60 : null)
+                                            const retryText = retryAfter
+                                                ? retryAfter >= 120
+                                                    ? `Intente de nuevo en ${Math.round(retryAfter / 60)} minutos.`
+                                                    : `Intente de nuevo en ${retryAfter} segundos.`
+                                                : ''
+                                            return `${detail.message} ${retryText}`
+                                        }
+                                        if (typeof detail === 'string') return detail
+                                        return 'Demasiados intentos. Intente de nuevo más tarde.'
+                                    })()}
+                                </span>
+                            </div>
+                        )}
+                        {loginError && axios.isAxiosError(loginError) && loginError.response?.status === 401 && (
+                            <div className="flex items-start gap-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+                                <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0 text-red-500" />
+                                <span>
+                                    {(() => {
+                                        const detail = loginError.response?.data?.detail
+                                        if (typeof detail === 'object' && detail?.remaining_attempts !== undefined) {
+                                            return `Credenciales incorrectas. Intentos restantes: ${detail.remaining_attempts}`
+                                        }
+                                        return 'Credenciales incorrectas'
+                                    })()}
+                                </span>
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <Label htmlFor="identifier">Correo o código institucional</Label>
                             <Input
@@ -66,7 +102,10 @@ export default function Login() {
                                 type="text"
                                 placeholder="usuario@upao.edu.pe o 20231234"
                                 value={identifier}
-                                onChange={(e) => setIdentifier(e.target.value)}
+                                onChange={(e) => {
+                                    setIdentifier(e.target.value)
+                                    setErrors({})
+                                }}
                                 className={errors.identifier ? 'border-red-500' : ''}
                                 autoComplete="username"
                                 autoFocus
@@ -82,7 +121,10 @@ export default function Login() {
                                     type={showPassword ? 'text' : 'password'}
                                     placeholder="••••••••"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value)
+                                        setErrors({})
+                                    }}
                                     className={errors.password ? 'border-red-500 pr-10' : 'pr-10'}
                                     autoComplete="current-password"
                                 />

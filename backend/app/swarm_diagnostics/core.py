@@ -46,6 +46,7 @@ from app.swarm_diagnostics.detectors.degraded_agent import DegradedAgentDetector
 from app.swarm_diagnostics.detectors.hallucination import HallucinationDetector
 from app.swarm_diagnostics.detectors.slow_agent import SlowAgentDetector
 from app.swarm_diagnostics.models.diagnostic_event import DiagnosticEvent
+from app.observability.metrics_exporter import exporter as obs_exporter
 from app.swarm_diagnostics.models.anomaly_signal import AnomalySignal, Severity, AnomalyType
 from app.swarm_diagnostics.models.health_snapshot import HealthSnapshot
 from app.swarm_diagnostics.pipeline.metrics import SwarmMetricsCollector
@@ -73,6 +74,7 @@ class SwarmDiagnosticsEngine:
         self.lineage = EventLineageTracker()
 
         self._detectors: dict[str, BaseDetector] = {}
+        self._post_anomaly_hooks: list[Any] = []
         self._register_default_detectors()
 
     def _register_default_detectors(self) -> None:
@@ -113,6 +115,11 @@ class SwarmDiagnosticsEngine:
                 self._events = self._events[-self._max_events:]
         self.metrics.record_event(event)
         self.lineage.record(event)
+        obs_exporter.inc_counter(f"diag_event_{event.event_type.split(':')[0]}")
+        if event.duration_ms is not None:
+            obs_exporter.observe_histogram("diag_event_duration", event.duration_ms)
+        if event.error:
+            obs_exporter.inc_counter("diag_errors_total")
 
     def make_event(
         self,
@@ -273,10 +280,22 @@ class SwarmDiagnosticsEngine:
         if scope:
             window_events = [e for e in window_events if e.scope == scope or e.scope == "global"]
 
+        # Collect correlation IDs from the window for traceability
+        window_correlation_id: str | None = None
+        for e in window_events:
+            if e.correlation_id:
+                window_correlation_id = e.correlation_id
+                break
+
         signals: list[AnomalySignal] = []
         for detector in self._detectors.values():
             try:
                 result = detector.analyze(window_events, metrics=self.metrics)
+                # Enrich each signal with traceability info if detector didn't set one
+                if window_correlation_id:
+                    for s in result:
+                        if not s.correlation_id:
+                            s.correlation_id = window_correlation_id
                 signals.extend(result)
             except Exception:
                 pass
@@ -286,7 +305,26 @@ class SwarmDiagnosticsEngine:
             if len(self._anomalies) > self._max_anomalies:
                 self._anomalies = self._anomalies[-self._max_anomalies:]
 
+        # Export anomaly metrics to the exporter
+        obs_exporter.set_gauge("active_anomalies", len(self._anomalies))
+        obs_exporter.inc_counter("anomaly_signals", len(signals))
+        obs_exporter.track_anomalies([s.to_dict() for s in signals])
+
+        # Run post-anomaly hooks (bug report auto-creation, regression detection)
+        signals_copy = list(signals)
+        for hook in self._post_anomaly_hooks:
+            try:
+                hook(signals_copy)
+            except Exception:
+                pass
+
         return signals
+
+    @property
+    def anomalies(self) -> list[AnomalySignal]:
+        """All anomaly signals (most recent first)."""
+        with self._lock:
+            return list(reversed(self._anomalies))
 
     def get_active_anomalies(
         self,
@@ -311,6 +349,12 @@ class SwarmDiagnosticsEngine:
 
     def register_detector(self, detector: BaseDetector) -> None:
         self._detectors[detector.name] = detector
+
+    def register_post_anomaly_hook(self, hook: Any) -> None:
+        """Register a callable that receives the list of AnomalySignals
+        after run_detectors() completes.  Used by BugDiagnosticsBridge
+        to auto-create bug reports."""
+        self._post_anomaly_hooks.append(hook)
 
     # ── Health report ────────────────────────────────────────────
 

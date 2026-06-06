@@ -28,8 +28,13 @@ from app.models.student_memory import StudentMemory, ConversationMessage, Weakne
 from app.models.course_prerequisite import CoursePrerequisite
 from app.models.institutional_course import InstitutionalCourse, InstitutionalCoursePrerequisite
 from app.models.knowledge_graph import KnowledgeNode, KnowledgeEdge
+from app.models.learning_session import LearningSession
 from app.models.shared_memory_record import SharedMemoryRecord
 from app.models.teacher_assignment import TeacherAssignment
+from app.models.educational_context import EducationalContext
+from app.models.programming_prerequisite import ConceptPrerequisite
+from app.models.programming_metrics import ProgrammingMetrics
+from app.models.resource_programming_tag import ResourceProgrammingTag
 
 config = context.config
 

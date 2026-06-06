@@ -18,7 +18,7 @@ export default function AcademicGuard() {
       const resp = await api.get('/api/students/onboarding/status')
       return resp.data as { has_cycle: boolean; current_cycle: number | null; onboarding_completed: boolean }
     },
-    enabled: isAuthenticated && user?.role === 'estudiante',
+    enabled: isAuthenticated && user?.role === 'estudiante' && !isOnboardingRoute,
     retry: false,
     staleTime: 30000,
   })

@@ -67,9 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const resp = await api.get<UserAuth>('/api/auth/me')
       setUser(resp.data)
-    } catch {
-      storeLogout()
-      queryClient.clear()
+    } catch (error) {
+      const axiosError = error as { response?: { status?: number }; message?: string }
+      const status = axiosError.response?.status
+      if (status === 401 || status === 403) {
+        storeLogout()
+        queryClient.clear()
+      }
     } finally {
       validatingRef.current = false
       setIsValidating(false)
@@ -77,7 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setUser, storeLogout, queryClient])
 
-  // Validate when hydration completes AND token exists
+  // Validate when hydration completes AND token exists.
+  // This is the ONLY effect that calls validateSession — the second effect on
+  // token change (below) was removed because it raced with meQuery in useAuth,
+  // causing intermittent logouts when the second /api/auth/me call failed.
   useEffect(() => {
     if (_hydrated && !!useAuthStore.getState().token) {
       validateSession()
@@ -86,14 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [_hydrated, validateSession])
 
-  // Validate when token appears (e.g. login in another tab)
-  useEffect(() => {
-    if (_hydrated && token && !validatingRef.current) {
-      validateSession()
-    }
-    // Only run when token changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, _hydrated])
+  // Detect token change (login/refresh in another tab) via storage event only.
+  // Cross-tab sync is handled below. We no longer re-validate on token change
+  // within the same tab — useAuth.meQuery handles that after login.
 
   // Multi-tab sync: react to storage changes from other tabs
   useEffect(() => {

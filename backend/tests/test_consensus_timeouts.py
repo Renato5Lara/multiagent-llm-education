@@ -72,7 +72,7 @@ def make_ctx(**overrides) -> VoteContext:
     module.order = 1
     module.status = "available"
     path = MagicMock(spec=LearningPath)
-    return VoteContext(
+    kwargs = dict(
         uow=uow,
         student_id="stu-1",
         module_id="mod-1",
@@ -81,8 +81,9 @@ def make_ctx(**overrides) -> VoteContext:
         score=0.8,
         module=module,
         path=path,
-        **overrides,
     )
+    kwargs.update(overrides)
+    return VoteContext(**kwargs)
 
 
 # ── ConsensusTimeoutConfig ─────────────────────────────────────────────
@@ -1564,3 +1565,301 @@ class TestV2Integration:
         mw_result = await mw.run_async(ctx)
         # Should be serializable
         json.dumps(mw_result.metrics_snapshot)
+
+
+# ── Parity: run() vs async_run() equivalence ──────────────────────────
+
+
+def _compare_results_same(r1: ConsensusResult, r2: ConsensusResult) -> None:
+    """Assert two ConsensusResults have identical business fields."""
+    assert r1.module_id == r2.module_id
+    assert r1.student_id == r2.student_id
+    assert r1.decision == r2.decision
+    assert r1.confidence == r2.confidence
+    assert len(r1.votes) == len(r2.votes)
+    for v1, v2 in zip(r1.votes, r2.votes):
+        assert v1.voter_name == v2.voter_name
+        assert v1.decision == v2.decision
+        assert v1.confidence == v2.confidence
+        assert v1.reason == v2.reason
+        assert v1.evidence == v2.evidence
+    assert r1.weights_used == r2.weights_used
+    assert r1.trust_scores == r2.trust_scores
+    assert r1.specialization_affinities == r2.specialization_affinities
+    assert r1.trace_id == r2.trace_id
+    assert r1.timeout_info == r2.timeout_info
+
+
+class TestRunAsyncRunParity:
+    """Functional parity: run() and async_run() produce identical results.
+
+    For the same inputs (ctx, trust_system, shared_memory_store, etc.),
+    both methods MUST yield the same consensus decision, weights, trust
+    scores, specialization affinities, memory IDs, and diagnostics.
+    """
+
+    def _make_ctx(self, **overrides) -> VoteContext:
+        return make_ctx(**overrides)
+
+    def _make_engine(self, voter_names: list[str] | None = None) -> ConsensusEngine:
+        names = voter_names or ["mastery", "prereq", "sequence", "time"]
+        return ConsensusEngine()
+        # Uses the default 4 voters which match the names above
+
+    def test_basic_parity(self):
+        """Same decision, votes, timings structure without adaptivity."""
+        ctx = self._make_ctx(score=0.85)
+        engine = self._make_engine()
+
+        result_sync = engine.run(ctx)
+        result_async = asyncio.run(engine.async_run(ctx))
+
+        _compare_results_same(result_sync, result_async)
+
+    def test_basic_parity_two_voters(self):
+        """ConsensusEngine with two fast voters."""
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1), SlowVoter("b", delay_ms=1)])
+        ctx = self._make_ctx()
+        sync_ctx = self._make_ctx()
+        async_ctx = self._make_ctx()
+
+        result_sync = engine.run(sync_ctx)
+        result_async = asyncio.run(engine.async_run(async_ctx))
+
+        _compare_results_same(result_sync, result_async)
+        assert result_sync.decision == VoteDecision.APPROVE
+        assert len(result_sync.votes) == 2
+
+    def test_trust_system_parity(self):
+        """Same trust scores and weight computation."""
+        from app.core.trust import TrustSystem
+
+        engine = ConsensusEngine([SlowVoter("alice", delay_ms=1), SlowVoter("bob", delay_ms=1)])
+        trust = TrustSystem()
+        ctx = self._make_ctx()
+
+        # Run both with same trust system
+        result_sync = engine.run(ctx, trust_system=trust)
+        # Reset ctx.shared_memory since run() mutates it
+        ctx2 = self._make_ctx()
+        result_async = asyncio.run(engine.async_run(ctx2, trust_system=trust))
+
+        _compare_results_same(result_sync, result_async)
+        assert "alice" in result_sync.trust_scores
+        assert "bob" in result_sync.trust_scores
+
+    def test_specialization_parity(self):
+        """Same specialization affinities."""
+        from app.core.specialization import SpecializationTracker
+
+        engine = ConsensusEngine([SlowVoter("alice", delay_ms=1), SlowVoter("bob", delay_ms=1)])
+        spec = SpecializationTracker()
+        ctx = self._make_ctx()
+        ctx2 = self._make_ctx()
+
+        result_sync = engine.run(ctx, specialization_tracker=spec)
+        result_async = asyncio.run(engine.async_run(ctx2, specialization_tracker=spec))
+
+        _compare_results_same(result_sync, result_async)
+        assert "alice" in result_sync.specialization_affinities
+
+    def test_trust_and_specialization_parity(self):
+        """Same weights when both trust and specialization are active."""
+        from app.core.trust import TrustSystem
+        from app.core.specialization import SpecializationTracker
+
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1), SlowVoter("b", delay_ms=1)])
+        trust = TrustSystem()
+        spec = SpecializationTracker()
+        ctx = self._make_ctx(score=0.7)
+        ctx2 = self._make_ctx(score=0.7)
+
+        result_sync = engine.run(ctx, trust_system=trust, specialization_tracker=spec)
+        result_async = asyncio.run(engine.async_run(
+            ctx2, trust_system=trust, specialization_tracker=spec,
+        ))
+
+        _compare_results_same(result_sync, result_async)
+        # After one run, weights should be computed
+        if result_sync.weights_used:
+            assert abs(sum(result_sync.weights_used.values()) - 2.0) < 0.01
+
+    def test_trace_id_parity(self):
+        """Same trace_id propagated through trace_ctx."""
+        try:
+            from app.tracing import make_trace_context
+        except ImportError:
+            pytest.skip("tracing module not available")
+        ctx = self._make_ctx()
+        ctx2 = self._make_ctx()
+
+        trace_ctx = make_trace_context("test-parity-trace")
+
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1)])
+        result_sync = engine.run(ctx, trace_ctx=trace_ctx)
+        result_async = asyncio.run(engine.async_run(ctx2, trace_ctx=trace_ctx))
+
+        assert result_sync.trace_id == result_async.trace_id
+        assert result_sync.trace_id == "test-parity-trace"
+
+    def test_trace_id_from_propagation_ctx_parity(self):
+        """Same trace_id derived from propagation_ctx."""
+        try:
+            from app.tracing import make_propagation_context
+        except ImportError:
+            pytest.skip("tracing module not available")
+
+        prop_ctx = make_propagation_context("test-prop-trace")
+
+        ctx = self._make_ctx()
+        ctx2 = self._make_ctx()
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1)])
+
+        result_sync = engine.run(ctx, propagation_ctx=prop_ctx)
+        # Reset propagation context for async
+        prop_ctx2 = make_propagation_context("test-prop-trace")
+        result_async = asyncio.run(engine.async_run(ctx2, propagation_ctx=prop_ctx2))
+
+        assert result_sync.trace_id == result_async.trace_id
+
+    def test_shared_memory_query_parity(self):
+        """Same shared memory enrichment before voting."""
+        from unittest.mock import MagicMock
+
+        store = MagicMock()
+        store.query.return_value = [{"id": "mem1", "content": "test"}]
+
+        ctx = self._make_ctx()
+        ctx2 = self._make_ctx()
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1)])
+
+        result_sync = engine.run(ctx, shared_memory_store=store)
+        result_async = asyncio.run(engine.async_run(ctx2, shared_memory_store=store))
+
+        _compare_results_same(result_sync, result_async)
+        # Both should have queried shared memory
+        assert store.query.call_count == 2
+
+    def test_diagnostics_parity(self):
+        """Both paths record the same diagnostics events."""
+        from app.swarm_diagnostics import diagnostics_engine as _diag
+
+        ctx = self._make_ctx()
+        ctx2 = self._make_ctx()
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1)])
+        before = _diag.metrics.get_total_events()
+
+        engine.run(ctx)
+        after_sync = _diag.metrics.get_total_events()
+        assert after_sync > before, "sync run() did not record diagnostics"
+
+        asyncio.run(engine.async_run(ctx2))
+        after_async = _diag.metrics.get_total_events()
+        assert after_async > after_sync, "async_run() did not record diagnostics"
+
+    def test_voter_timings_structure_parity(self):
+        """Same voter timings shape when trace_ctx is provided."""
+        try:
+            from app.tracing import make_trace_context
+        except ImportError:
+            pytest.skip("tracing module not available")
+        ctx = self._make_ctx()
+        ctx2 = self._make_ctx()
+        trace_ctx = make_trace_context("voter-timing-parity")
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1), SlowVoter("b", delay_ms=1)])
+
+        result_sync = engine.run(ctx, trace_ctx=trace_ctx)
+        result_async = asyncio.run(engine.async_run(ctx2, trace_ctx=trace_ctx))
+
+        assert len(result_sync.voter_timings) == len(result_async.voter_timings)
+        for ts, ta in zip(result_sync.voter_timings, result_async.voter_timings):
+            assert ts["voter_name"] == ta["voter_name"]
+            assert ts["decision"] == ta["decision"]
+            assert ts["confidence"] == ta["confidence"]
+            assert ts["status"] == ta["status"]
+
+    def test_reject_consensus_parity(self):
+        """Same REJECT decision across both paths."""
+        from app.core.consensus import VoteContext as VC
+        ctx = self._make_ctx(score=0.3)
+        ctx2 = self._make_ctx(score=0.3)
+        engine = self._make_engine()
+
+        result_sync = engine.run(ctx)
+        result_async = asyncio.run(engine.async_run(ctx2))
+
+        assert result_sync.decision == result_async.decision
+        # Low score should trigger rejection
+        # Note: this depends on MasteryVoter threshold
+
+    def test_parity_roundtrip_same_instance(self):
+        """Multiple runs on same engine produce deterministic results."""
+        from app.core.trust import TrustSystem
+        trust = TrustSystem()
+        engine = ConsensusEngine([SlowVoter("a", delay_ms=1), SlowVoter("b", delay_ms=1)])
+
+        ctx1 = self._make_ctx(score=0.9)
+        ctx2 = self._make_ctx(score=0.9)
+
+        r1_sync = engine.run(ctx1, trust_system=trust)
+        r2_async = asyncio.run(engine.async_run(ctx2, trust_system=trust))
+
+        _compare_results_same(r1_sync, r2_async)
+
+        # Second round — trust system updated identically by both paths
+        ctx3 = self._make_ctx(score=0.9)
+        ctx4 = self._make_ctx(score=0.9)
+
+        r3_sync = engine.run(ctx3, trust_system=trust)
+        r4_async = asyncio.run(engine.async_run(ctx4, trust_system=trust))
+
+        _compare_results_same(r3_sync, r4_async)
+
+    def test_weights_deterministic_identity(self):
+        """Weights after identical input sequences are identical."""
+        from app.core.trust import TrustSystem
+        from app.core.specialization import SpecializationTracker
+
+        trust_sync = TrustSystem()
+        trust_async = TrustSystem()
+        spec_sync = SpecializationTracker()
+        spec_async = SpecializationTracker()
+
+        engine_sync = ConsensusEngine([SlowVoter("a", delay_ms=1), SlowVoter("b", delay_ms=1)])
+        engine_async = ConsensusEngine([SlowVoter("a", delay_ms=1), SlowVoter("b", delay_ms=1)])
+
+        ctx_sync = self._make_ctx(score=0.75)
+        ctx_async = self._make_ctx(score=0.75)
+
+        r_sync = engine_sync.run(ctx_sync, trust_system=trust_sync, specialization_tracker=spec_sync)
+        r_async = asyncio.run(engine_async.async_run(
+            ctx_async, trust_system=trust_async, specialization_tracker=spec_async,
+        ))
+
+        _compare_results_same(r_sync, r_async)
+
+    def test_voter_error_trust_recorded_parity(self):
+        """Voter error records in trust system for both paths."""
+        from app.core.trust import TrustSystem
+
+        trust_sync = TrustSystem()
+        trust_async = TrustSystem()
+        engine = ConsensusEngine([ErrorVoter()])
+
+        ctx_sync = self._make_ctx()
+        ctx_async = self._make_ctx()
+
+        r_sync = engine.run(ctx_sync, trust_system=trust_sync)
+        r_async = asyncio.run(engine.async_run(ctx_async, trust_system=trust_async))
+
+        assert r_sync.votes[0].decision == VoteDecision.ABSTAIN
+        assert r_async.votes[0].decision == VoteDecision.ABSTAIN
+
+        # Trust should have recorded errors for both (latency differs due
+        # to async overhead — compare business-critical fields only)
+        ts_sync = trust_sync.get_snapshot()["error"]
+        ts_async = trust_async.get_snapshot()["error"]
+        assert ts_sync["voter_name"] == ts_async["voter_name"] == "error"
+        assert ts_sync["errors"] == ts_async["errors"] == 1
+        assert ts_sync["total_votes"] == ts_async["total_votes"] == 1
+        assert ts_sync["trust_score"] == ts_async["trust_score"]

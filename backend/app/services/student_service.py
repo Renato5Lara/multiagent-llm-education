@@ -1,8 +1,3 @@
-"""
-Servicio de estudiantes.
-Flujo adaptativo: diagnóstico, perfil, ruta adaptativa, progreso.
-"""
-
 import logging
 from datetime import datetime, timezone
 from typing import Optional
@@ -18,10 +13,13 @@ from app.models.institutional_course import InstitutionalCourse
 from app.models.resource import Resource, ResourceType
 from app.models.student_profile import StudentProfile
 from app.models.student_progress import LearningPath, PathModule, StudentProgress
+from app.models.teacher_assignment import TeacherAssignment
 from app.models.learning_objective import LearningObjective
 from app.models.user import User, UserRole
 from app.schemas.diagnostic import StudentProfileCreate
 from app.schemas.progress import CourseProgressResponse, LearningPathDetailResponse, LearningPathItem
+from app.services.course_service import resolve_or_create_course
+from app.events.types import emit_event, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +212,7 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
         db.query(Enrollment)
         .filter(
             Enrollment.student_id == student.id,
-            Enrollment.status == EnrollmentStatus.ACTIVO,
+            Enrollment.status.in_([EnrollmentStatus.PENDING_ACTIVATION, EnrollmentStatus.ACTIVO]),
         )
         .all()
     )
@@ -233,12 +231,19 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
         enrollment = Enrollment(
             course_id=course.id,
             student_id=student.id,
-            status=EnrollmentStatus.ACTIVO,
+            teacher_id=course.teacher_id,
+            status=EnrollmentStatus.PENDING_ACTIVATION,
         )
         db.add(enrollment)
+        db.flush()
+        emit_event(db, EventType.ENROLLMENT_CREATED, enrollment.id, {
+            "enrollment_id": enrollment.id,
+            "student_id": student.id,
+            "course_id": course.id,
+            "teacher_id": course.teacher_id,
+        })
     if auto_courses:
         db.commit()
-        db.refresh(auto_courses[0]) if auto_courses else None
 
     all_course_ids = list(enrolled_course_ids | {c.id for c in auto_courses})
 
@@ -354,24 +359,33 @@ def generate_learning_path_adaptive(
 
     priority_types = RESOURCE_TYPE_PRIORITY.get(dominant, [ResourceType.PDF, ResourceType.TEXT])
 
-    def get_best_resource_for_objective(obj: LearningObjective) -> Optional[Resource]:
+    resource_ids_with_association = set()
+    if resources:
+        associated_rows = (
+            db.query(Resource.id)
+            .join(Resource.objective_associations)
+            .filter(Resource.course_id == course_id)
+            .distinct()
+            .all()
+        )
+        resource_ids_with_association = {r.id for r in associated_rows}
+
+    first_resource_by_type: dict[str, Optional[Resource]] = {}
+    for rtype in priority_types:
+        for r in resources:
+            if r.resource_type == rtype:
+                first_resource_by_type[rtype] = r
+                break
+
+    def get_best_resource_for_objective(_obj: LearningObjective) -> Optional[Resource]:
         for rtype in priority_types:
-            for r in resources:
-                if r.resource_type == rtype:
-                    is_associated = (
-                        db.query(Resource)
-                        .join(Resource.objective_associations)
-                        .filter(
-                            Resource.course_id == course_id,
-                            Resource.resource_type == rtype,
-                        )
-                        .first()
-                    )
-                    if is_associated:
-                        return r
-            for r in resources:
-                if r.resource_type == rtype:
-                    return r
+            r = first_resource_by_type.get(rtype)
+            if r and r.id in resource_ids_with_association:
+                return r
+        for rtype in priority_types:
+            r = first_resource_by_type.get(rtype)
+            if r:
+                return r
         return resources[0] if resources else None
 
     path = LearningPath(
@@ -446,12 +460,18 @@ def get_learning_path_detail(
     )
     comp_names = [c.name for c in course_competencies]
 
+    resource_ids = [mod.resource_id for mod in modules if mod.resource_id]
+    resource_map = {}
+    if resource_ids:
+        for r in db.query(Resource).filter(Resource.id.in_(resource_ids)).all():
+            resource_map[r.id] = r
+
     items = []
     for mod in modules:
         resource = None
         resource_type = None
         if mod.resource_id:
-            resource = db.query(Resource).filter(Resource.id == mod.resource_id).first()
+            resource = resource_map.get(mod.resource_id)
             if resource:
                 resource_type = resource.resource_type.value
 
@@ -652,7 +672,7 @@ def get_academic_summary(db: Session, student: User) -> dict:
         db.query(Enrollment)
         .filter(
             Enrollment.student_id == student.id,
-            Enrollment.status == EnrollmentStatus.ACTIVO,
+            Enrollment.status.in_([EnrollmentStatus.PENDING_ACTIVATION, EnrollmentStatus.ACTIVO]),
         )
         .all()
     )
@@ -710,30 +730,31 @@ def auto_enroll_from_curriculum(db: Session, student: User) -> int:
         .filter(InstitutionalCourse.cycle == cycle)
         .all()
     )
+    if not inst_courses:
+        return 0
+
     enrolled_count = 0
+    inst_ids = [inst.id for inst in inst_courses]
+
+    assignment_map = {
+        a.institutional_course_id: a
+        for a in db.query(TeacherAssignment)
+        .filter(TeacherAssignment.institutional_course_id.in_(inst_ids))
+        .all()
+    }
 
     for inst in inst_courses:
-        course = (
-            db.query(Course)
-            .filter(
-                Course.institutional_course_id == inst.id,
-                Course.year == datetime.now(timezone.utc).year,
-            )
-            .first()
+        course = resolve_or_create_course(
+            db,
+            institutional_course_id=inst.id,
+            year=datetime.now(timezone.utc).year,
+            teacher_id=None,
+            status=CourseStatus.PUBLICADO,
         )
-        if not course:
-            course = Course(
-                code=inst.code,
-                name=inst.name,
-                description=inst.competencies,
-                cycle=inst.cycle,
-                year=datetime.now(timezone.utc).year,
-                teacher_id=None,
-                institutional_course_id=inst.id,
-                is_institutional=True,
-                status=CourseStatus.PUBLICADO,
-            )
-            db.add(course)
+
+        assignment = assignment_map.get(inst.id)
+        if assignment and course.teacher_id is None:
+            course.teacher_id = assignment.teacher_id
             db.flush()
 
         existing_enroll = (
@@ -748,12 +769,24 @@ def auto_enroll_from_curriculum(db: Session, student: User) -> int:
             enrollment = Enrollment(
                 course_id=course.id,
                 student_id=student.id,
-                status=EnrollmentStatus.ACTIVO,
+                teacher_id=course.teacher_id,
+                status=EnrollmentStatus.PENDING_ACTIVATION,
             )
             db.add(enrollment)
+            db.flush()
             enrolled_count += 1
+
+            emit_event(db, EventType.ENROLLMENT_CREATED, enrollment.id, {
+                "enrollment_id": enrollment.id,
+                "student_id": student.id,
+                "course_id": course.id,
+                "teacher_id": course.teacher_id,
+                "cycle": cycle,
+            })
 
     if enrolled_count > 0:
         db.commit()
+        from app.services.activation_service import activate_all_pending_for_student_sync
+        activate_all_pending_for_student_sync(db, student.id)
 
     return enrolled_count

@@ -52,3 +52,7 @@ coverage.xml
 # Build
 dist/
 build/
+
+# Generated docs
+*.md~
+*.swp

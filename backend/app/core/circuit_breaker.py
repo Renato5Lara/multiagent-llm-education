@@ -157,6 +157,28 @@ class SwarmCircuitBreaker:
         with self._lock:
             return self._state
 
+    # ── Diagnostics instrumentation ────────────────────────────
+
+    def _emit_event(self, event_type: str, payload: dict | None = None) -> None:
+        """Emit a circuit-breaker event to the diagnostics engine (fail-soft)."""
+        try:
+            from app.swarm_diagnostics import diagnostics_engine
+            diagnostics_engine.make_event(
+                event_type=event_type,
+                scope=f"circuit_breaker:{self._agent}",
+                source=f"circuit_breaker/{self._agent}",
+                payload={
+                    "agent": self._agent,
+                    "state": self._state.value,
+                    "failure_count": self._failure_count,
+                    "consecutive_failures": self._consecutive_failures,
+                    "total_open_count": self._total_open_count,
+                    **(payload or {}),
+                },
+            )
+        except Exception:
+            logger.debug("Diagnostics unavailable for circuit breaker", exc_info=True)
+
     # ── Core decision ───────────────────────────────────────────
 
     def allow_request(self) -> bool:
@@ -181,6 +203,7 @@ class SwarmCircuitBreaker:
                     self._state = CircuitState.OPEN
                     self._state_change_time_ms = now_ms
                     self._isolation_strikes = 0
+                    self._emit_event("circuit_breaker:auto_recover", {"elapsed_ms": elapsed})
                     return True
                 return False  # still isolated
 
@@ -195,6 +218,7 @@ class SwarmCircuitBreaker:
                     self._state_change_time_ms = now_ms
                     self._half_open_calls = 0
                     self._half_open_successes = 0
+                    self._emit_event("circuit_breaker:half_open", {"elapsed_ms": elapsed})
                     return True
                 return False  # still open
 
@@ -229,11 +253,13 @@ class SwarmCircuitBreaker:
                         "Breaker[%s]: half-open -> closed (%d consecutive successes)",
                         self._agent, self._half_open_successes,
                     )
+                    successes = self._half_open_successes
                     self._state = CircuitState.CLOSED
                     self._failure_count = 0
                     self._consecutive_failures = 0
                     self._half_open_calls = 0
                     self._half_open_successes = 0
+                    self._emit_event("circuit_breaker:close", {"half_open_successes": successes})
 
     def record_failure(self) -> None:
         """Record a failed execution.
@@ -258,6 +284,7 @@ class SwarmCircuitBreaker:
                     self._state = CircuitState.OPEN
                     self._state_change_time_ms = now_ms
                     self._total_open_count += 1
+                    self._emit_event("circuit_breaker:open", {"consecutive_failures": self._consecutive_failures})
 
             elif self._state == CircuitState.HALF_OPEN:
                 logger.warning(
@@ -267,6 +294,7 @@ class SwarmCircuitBreaker:
                 self._state = CircuitState.OPEN
                 self._state_change_time_ms = now_ms
                 self._total_open_count += 1
+                self._emit_event("circuit_breaker:reopen", {"phase": "half_open_probe_failed"})
 
             # Check isolation strikes after state transition
             if self._state == CircuitState.OPEN:
@@ -277,6 +305,7 @@ class SwarmCircuitBreaker:
                     )
                     self._state = CircuitState.ISOLATED
                     self._state_change_time_ms = now_ms
+                    self._emit_event("circuit_breaker:isolate", {"total_open_count": self._total_open_count})
 
     # ── Fallback vote ───────────────────────────────────────────
 
@@ -317,6 +346,7 @@ class SwarmCircuitBreaker:
             self._state = CircuitState.OPEN
             self._state_change_time_ms = time.monotonic_ns() / 1_000_000
             logger.info("Breaker[%s]: forced open (%s)", self._agent, reason)
+            self._emit_event("circuit_breaker:force_open", {"reason": reason})
 
     def force_close(self) -> None:
         """Force the circuit closed (e.g., from administrative action)."""
@@ -329,6 +359,7 @@ class SwarmCircuitBreaker:
             self._half_open_successes = 0
             self._state_change_time_ms = time.monotonic_ns() / 1_000_000
             logger.info("Breaker[%s]: forced closed", self._agent)
+            self._emit_event("circuit_breaker:force_close")
 
     def force_isolate(self, reason: str = "") -> None:
         """Force the circuit into isolated state."""
@@ -336,6 +367,7 @@ class SwarmCircuitBreaker:
             self._state = CircuitState.ISOLATED
             self._state_change_time_ms = time.monotonic_ns() / 1_000_000
             logger.warning("Breaker[%s]: forced isolated (%s)", self._agent, reason)
+            self._emit_event("circuit_breaker:force_isolate", {"reason": reason})
 
     # ── Health inspection ───────────────────────────────────────
 
