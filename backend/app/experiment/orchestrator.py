@@ -357,7 +357,7 @@ class ExperimentOrchestrator:
                 swarm_metrics = SwarmMetrics.compute(delib_result)
             else:
                 # Run all voters through engine
-                consensus_result = engine.run(ctx, **engine_kwargs)
+                consensus_result = await engine.async_run(ctx, **engine_kwargs)
                 decision = consensus_result.decision
                 confidence = consensus_result.confidence
                 swarm_metrics = None

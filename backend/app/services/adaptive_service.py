@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -119,6 +120,65 @@ async def _publish_consensus_memory(
         await uow.close()
 
 
+async def _run_consensus_async(
+    eng: ConsensusEngine,
+    ctx: VoteContext,
+    trace_ctx: Any,
+    trust_system: Any,
+    specialization_tracker: Any,
+) -> Any:
+    """Run async consensus with full shared memory from a sync caller.
+
+    Two isolated UnitOfWork instances are created:
+    - mem_uow (AsyncUnitOfWork): handles all shared memory read/write.
+    - voter_uow (UnitOfWork): provides voter DB queries; kept separate from
+      the caller's progression transaction so the progression Session is never
+      passed to asyncio.to_thread threadpool threads.
+
+    Safe to call via asyncio.run() from FastAPI sync routes, which run in
+    a threadpool thread with no running event loop.
+    """
+    from app.db.session import AsyncSessionLocal, SessionLocal
+    from app.db.uow import AsyncUnitOfWork, UnitOfWork as SyncUnitOfWork
+    from app.memory.shared_memory import SharedMemoryStore
+
+    mem_uow = AsyncUnitOfWork(AsyncSessionLocal)
+    voter_uow = SyncUnitOfWork(SessionLocal)
+    try:
+        store = SharedMemoryStore(mem_uow)
+
+        voter_ctx = VoteContext(
+            uow=voter_uow,
+            student_id=ctx.student_id,
+            module_id=ctx.module_id,
+            path_id=ctx.path_id,
+            course_id=ctx.course_id,
+            score=ctx.score,
+            module=ctx.module,
+            path=ctx.path,
+            evidence=ctx.evidence,
+        )
+
+        result = await eng.async_run(
+            voter_ctx,
+            trace_ctx=trace_ctx,
+            trust_system=trust_system,
+            specialization_tracker=specialization_tracker,
+            shared_memory_store=store,
+        )
+        await mem_uow.commit()
+        return result
+    except Exception:
+        if mem_uow.is_active:
+            await mem_uow.rollback()
+        raise
+    finally:
+        await mem_uow.close()
+        if voter_uow.is_active:
+            voter_uow.rollback()
+        voter_uow.close()
+
+
 def evaluate_module_completion(
     uow: UnitOfWork,
     student_id: str,
@@ -178,11 +238,8 @@ def evaluate_module_completion(
             # Pass trace context and adaptive trust/specialization systems
             trust = get_trust_system()
             spec = get_specialization_tracker()
-            consensus = eng.run(
-                ctx,
-                trace_ctx=trace_ctx,
-                trust_system=trust,
-                specialization_tracker=spec,
+            consensus = asyncio.run(
+                _run_consensus_async(eng, ctx, trace_ctx, trust, spec)
             )
 
             # Emit event with full trace + trust metadata in payload

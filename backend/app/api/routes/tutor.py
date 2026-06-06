@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -13,7 +13,6 @@ from app.db.uow import UnitOfWork
 from app.models.user import User
 from app.services import ai_service as ai_svc
 from app.services.adaptive_service import (
-    _publish_consensus_memory,
     check_adaptive_unlocks,
     evaluate_module_completion,
     generate_adaptive_recommendation,
@@ -178,7 +177,6 @@ def get_history(
 @router.post("/explain")
 async def explain_topic(
     data: dict,
-    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
     topic = data.get("topic", "")
@@ -226,27 +224,11 @@ def get_replan(
 def complete_module(
     module_id: str,
     data: dict,
-    background_tasks: BackgroundTasks,
     uow: UnitOfWork = Depends(get_uow),
     current_user: User = Depends(get_current_estudiante),
 ):
     score = data.get("score", 0.0)
-    result = evaluate_module_completion(uow, current_user.id, module_id, score)
-    # Schedule async shared memory publication after the progression commit.
-    # _publish_consensus_memory uses a fresh AsyncUnitOfWork so it is independent
-    # of this transaction. FastAPI only runs BackgroundTasks on successful response,
-    # so if the UoW above rolled back this task is never scheduled.
-    consensus_data = result.get("consensus")
-    if consensus_data:
-        background_tasks.add_task(
-            _publish_consensus_memory,
-            votes_data=consensus_data.get("votes", []),
-            student_id=current_user.id,
-            module_id=module_id,
-            consensus_decision=consensus_data.get("decision", ""),
-            consensus_confidence=consensus_data.get("confidence", 0.0),
-        )
-    return result
+    return evaluate_module_completion(uow, current_user.id, module_id, score)
 
 
 @router.get("/knowledge-graph")

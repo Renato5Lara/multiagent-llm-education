@@ -23,6 +23,7 @@ import abc
 import asyncio
 import logging
 import time
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -492,6 +493,14 @@ class ConsensusEngine:
                                  and each vote is published as an observation
                                  after decision.
         """
+        warnings.warn(
+            "ConsensusEngine.run() is deprecated. "
+            "Use async_run() from async callers; "
+            "wrap with asyncio.run() from sync callers that have no running event loop.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         votes: list[ConsensusVote] = []
         voter_timings: list[dict] = []
         trace_id: str | None = None
