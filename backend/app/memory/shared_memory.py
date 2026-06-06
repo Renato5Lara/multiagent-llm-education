@@ -435,6 +435,15 @@ class SharedMemoryStore:
     # ── Staleness Management ─────────────────────────────────────
 
     async def remove_stale(self, batch_size: int = 100) -> int:
+        # remove_stale uses await self._db.execute() and await self._db.delete(),
+        # so it requires an AsyncSession.  Calling it with a sync UoW would fail
+        # on the first await with TypeError.
+        if not isinstance(self._uow, AsyncUnitOfWork):
+            raise TypeError(
+                "remove_stale() requires AsyncUnitOfWork; "
+                f"got {type(self._uow).__name__}"
+            )
+
         now = datetime.now(timezone.utc)
         stmt = (
             select(SharedMemoryRecord)
@@ -445,14 +454,9 @@ class SharedMemoryStore:
         records = list(result.scalars().all())
         stale = [r for r in records if is_stale(r, now=now)]
         for r in stale:
-            if isinstance(self._uow, AsyncUnitOfWork):
-                await self._db.delete(r)
-            else:
-                self._db.delete(r)
-        if isinstance(self._uow, AsyncUnitOfWork):
-            await self._uow.flush()
-        else:
-            self._uow.flush()
+            # AsyncSession.delete() is a coroutine in SQLAlchemy 2.0 (greenlet_spawn).
+            await self._db.delete(r)
+        await self._uow.flush()
 
         count = len(stale)
         if count > 0:

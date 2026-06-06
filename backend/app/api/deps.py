@@ -35,7 +35,11 @@ def get_uow() -> Generator[UnitOfWork, None, None]:
         yield uow
         uow.commit()
     except Exception:
-        uow.rollback()
+        # is_active guard: commit() already does an internal rollback on failure
+        # and sets _rolled_back=True.  Calling rollback() again would raise
+        # UnitOfWorkError and mask the original exception.
+        if uow.is_active:
+            uow.rollback()
         raise
     finally:
         uow.close()
@@ -144,7 +148,11 @@ async def aget_uow() -> AsyncGenerator[AsyncUnitOfWork, None]:
         yield uow
         await uow.commit()
     except Exception:
-        await uow.rollback()
+        # is_active guard: commit() already does an internal rollback on failure
+        # and sets _rolled_back=True.  Calling rollback() again would raise
+        # AsyncUnitOfWorkError and mask the original exception.
+        if uow.is_active:
+            await uow.rollback()
         raise
     finally:
         await uow.close()

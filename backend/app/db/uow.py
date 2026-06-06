@@ -312,7 +312,10 @@ class UnitOfWork:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        if exc_type is not None:
+        # Guard against double-rollback: commit() already rolls back internally
+        # on failure and sets _rolled_back=True, which would cause rollback()
+        # to raise UnitOfWorkError and shadow the original exception.
+        if exc_type is not None and self.is_active:
             self.rollback()
         self.close()
 
@@ -544,7 +547,10 @@ class AsyncUnitOfWork:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        if exc_type is not None:
+        # Guard against double-rollback: commit() already rolls back internally
+        # on failure and sets _rolled_back=True, which would cause rollback()
+        # to raise AsyncUnitOfWorkError and shadow the original exception.
+        if exc_type is not None and self.is_active:
             await self.rollback()
         await self.close()
 
