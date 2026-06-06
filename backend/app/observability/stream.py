@@ -18,12 +18,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator
 
 from app.observability.metrics_exporter import exporter
 
+logger = logging.getLogger(__name__)
 
 class MetricsStream:
     """Async fan-out event bus with bounded per-subscriber buffers."""
@@ -114,17 +116,28 @@ class MetricsStream:
     def push_sync(self, event_type: str, data: Any) -> None:
         """Synchronous push for use from non-async contexts (engine hooks).
 
-        Safely schedules the async push on the running event loop.
-        If no loop is running, the event is silently dropped.
+        Uses run_coroutine_threadsafe to schedule on the running event loop.
+        Safe to call from the event loop thread or from a threadpool thread
+        that can reference the loop via get_running_loop().
+
+        If no event loop is running on the calling thread (e.g. threadpool
+        workers in certain deployment configs), the event is dropped and a
+        DEBUG log is emitted.  SSE delivery is best-effort; dropping here
+        does not affect transactional correctness.
         """
         try:
             loop = asyncio.get_running_loop()
-            if loop.is_running():
-                asyncio.run_coroutine_threadsafe(
-                    self.push(event_type, data), loop
-                )
+            # get_running_loop() only returns if a loop IS running, so the
+            # is_running() check is redundant and omitted.
+            asyncio.run_coroutine_threadsafe(self.push(event_type, data), loop)
+            logger.debug("SSE push scheduled: event_type=%s", event_type)
         except RuntimeError:
-            pass  # no running loop
+            # No event loop on this thread — drop the notification.
+            logger.debug(
+                "SSE push dropped: no running event loop on calling thread "
+                "(event_type=%s) — notification is best-effort",
+                event_type,
+            )
 
 
 # Module-level singleton

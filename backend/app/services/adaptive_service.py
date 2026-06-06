@@ -147,21 +147,19 @@ def evaluate_module_completion(
             exporter.set_gauge("consensus_confidence", consensus.confidence)
             for timing in consensus.voter_timings:
                 exporter.observe_histogram("voter_latency", timing.get("duration_ms", 0))
-            try:
-                import asyncio
-                _sse_future = asyncio.ensure_future(stream.push("consensus", {
-                    "module_id": module_id,
-                    "decision": consensus.decision.value,
-                    "confidence": consensus.confidence,
-                    "unanimous": consensus.unanimous,
-                    "duration_ms": root_span.duration_ms or 0.0,
-                    "voters": len(consensus.votes),
-                }))
-                _sse_future.add_done_callback(
-                    lambda f: logger.debug("SSE push done: %s", f.exception() if f.exception() else "ok")
-                )
-            except Exception:
-                pass
+
+            # SSE notification: best-effort, fire-and-forget.
+            # push_sync() is the correct API for sync callers — it uses
+            # run_coroutine_threadsafe when an event loop is available, and
+            # logs at DEBUG level when the event must be dropped (no loop).
+            stream.push_sync("consensus", {
+                "module_id": module_id,
+                "decision": consensus.decision.value,
+                "confidence": consensus.confidence,
+                "unanimous": consensus.unanimous,
+                "duration_ms": root_span.duration_ms or 0.0,
+                "voters": len(consensus.votes),
+            })
 
             # ── Decision and state mutation (inside advisory lock) ──────
 
