@@ -1,16 +1,19 @@
+import asyncio
 import json
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.agents.prompts import TUTOR_SYSTEM_PROMPT
-from app.api.deps import get_current_estudiante, get_current_user, get_db, get_uow
+from app.api.deps import aget_current_estudiante, get_current_estudiante, get_current_user, get_db, get_uow
+from app.db.session import SessionLocal
 from app.db.uow import UnitOfWork
 from app.models.user import User
 from app.services import ai_service as ai_svc
 from app.services.adaptive_service import (
+    _publish_consensus_memory,
     check_adaptive_unlocks,
     evaluate_module_completion,
     generate_adaptive_recommendation,
@@ -29,6 +32,36 @@ from app.services.memory_service import (
 from app.services.streaming_service import streaming_service
 
 logger = logging.getLogger(__name__)
+
+
+def _build_context_sync(current_user: User, course_id: str | None) -> dict:
+    """Sync helper: runs build_tutor_context with a dedicated Session.
+    Safe to pass to asyncio.to_thread — Session is created and closed within
+    the same threadpool thread; never shared across threads.
+    """
+    db = SessionLocal()
+    try:
+        return build_tutor_context(db, current_user, course_id)
+    finally:
+        db.close()
+
+
+def _save_message_sync(user_id: str, course_id: str | None, role: str, content: str) -> None:
+    """Sync helper: saves a conversation message with its own UoW lifecycle.
+    Safe to pass to asyncio.to_thread — Session is created and closed within
+    the same threadpool thread; never shared across threads.
+    """
+    uow = UnitOfWork(SessionLocal)
+    try:
+        save_conversation_message(uow, user_id, course_id, role, content)
+        uow.commit()
+    except Exception:
+        if uow.is_active:
+            uow.rollback()
+        raise
+    finally:
+        uow.close()
+
 
 router = APIRouter(prefix="/api/tutor", tags=["Tutor Inteligente"])
 
@@ -66,27 +99,20 @@ def tutor_chat(
 @router.post("/chat/stream")
 async def tutor_chat_stream(
     data: dict,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_estudiante),
+    current_user: User = Depends(aget_current_estudiante),
 ):
     """Streaming SSE chat.
 
-    NOTA: Usa get_db() en lugar de get_uow() porque el ciclo de vida
-    del streaming excede el del endpoint. Creamos UoWs inline para
-    cada operacion de escritura, dando commit parcial.
-
-    Esto es un tradeoff consciente: perdemos atomicidad completa entre
-    user y assistant message a cambio de no mantener transacciones
-    abiertas durante streaming prolongado.
+    Sync DB operations run in the threadpool via asyncio.to_thread() so they
+    never block the event loop. Each operation gets its own dedicated Session
+    (_build_context_sync / _save_message_sync) — Session lifetime is bounded
+    to the operation, not the stream, eliminating cross-thread Session sharing.
     """
     message = data.get("message", "")
     course_id = data.get("course_id")
 
-    context = build_tutor_context(db, current_user, course_id)
-
-    stream_uow = UnitOfWork(lambda: db)
-    save_conversation_message(stream_uow, current_user.id, course_id, "user", message)
-    stream_uow.commit()
+    context = await asyncio.to_thread(_build_context_sync, current_user, course_id)
+    await asyncio.to_thread(_save_message_sync, current_user.id, course_id, "user", message)
 
     async def event_stream():
         full_response = ""
@@ -104,13 +130,9 @@ async def tutor_chat_stream(
                 pass
 
         if full_response:
-            assistant_uow = UnitOfWork(lambda: db)
-            try:
-                save_conversation_message(assistant_uow, current_user.id, course_id, "assistant", full_response)
-                assistant_uow.commit()
-            except Exception:
-                assistant_uow.rollback()
-                raise
+            await asyncio.to_thread(
+                _save_message_sync, current_user.id, course_id, "assistant", full_response
+            )
 
     return StreamingResponse(
         event_stream(),
@@ -204,11 +226,26 @@ def get_replan(
 def complete_module(
     module_id: str,
     data: dict,
+    background_tasks: BackgroundTasks,
     uow: UnitOfWork = Depends(get_uow),
     current_user: User = Depends(get_current_estudiante),
 ):
     score = data.get("score", 0.0)
     result = evaluate_module_completion(uow, current_user.id, module_id, score)
+    # Schedule async shared memory publication after the progression commit.
+    # _publish_consensus_memory uses a fresh AsyncUnitOfWork so it is independent
+    # of this transaction. FastAPI only runs BackgroundTasks on successful response,
+    # so if the UoW above rolled back this task is never scheduled.
+    consensus_data = result.get("consensus")
+    if consensus_data:
+        background_tasks.add_task(
+            _publish_consensus_memory,
+            votes_data=consensus_data.get("votes", []),
+            student_id=current_user.id,
+            module_id=module_id,
+            consensus_decision=consensus_data.get("decision", ""),
+            consensus_confidence=consensus_data.get("confidence", 0.0),
+        )
     return result
 
 

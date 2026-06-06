@@ -9,7 +9,9 @@
       "Bash(python -m pytest tests/ -x -q --timeout=30 -k \"not test_agent_health\")",
       "Bash(python -m pytest tests/test_concurrency.py tests/test_consensus_timeouts.py tests/test_propagation_ttl.py -x -q)",
       "Bash(python *)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(awk -F: '{print $1}')",
+      "Bash(awk -F: '{split\\($2, a, \" \"\\); print a[1], $1}')"
     ]
   }
 }

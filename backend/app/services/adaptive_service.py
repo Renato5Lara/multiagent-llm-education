@@ -46,6 +46,79 @@ def _batch_store_memory(
     return results
 
 
+async def _publish_consensus_memory(
+    votes_data: list[dict],
+    student_id: str,
+    module_id: str,
+    consensus_decision: str,
+    consensus_confidence: float,
+) -> None:
+    """Post-commit background task: publish consensus votes to shared memory.
+
+    Uses a dedicated AsyncUnitOfWork independent of the progression transaction.
+    Called via FastAPI BackgroundTasks after complete_module commits — safe because
+    BackgroundTasks only run when a response is successfully returned (no rollback).
+    Best-effort: failures are logged and swallowed, never raised to the caller.
+    """
+    from app.db.session import AsyncSessionLocal
+    from app.db.uow import AsyncUnitOfWork
+    from app.memory.shared_memory import SharedMemoryStore
+
+    uow = AsyncUnitOfWork(AsyncSessionLocal)
+    try:
+        store = SharedMemoryStore(uow)
+        for v in votes_data:
+            await store.publish_observation(
+                voter_name=v["voter_name"],
+                key=f"vote:{v['voter_name']}:{module_id[:12]}",
+                value={
+                    "decision": v["decision"],
+                    "confidence": v["confidence"],
+                    "reason": v.get("reason", ""),
+                    "evidence": v.get("evidence", {}),
+                },
+                confidence=v["confidence"],
+                student_id=student_id,
+                module_id=module_id,
+                memory_type="observation",
+                metadata_json={
+                    "consensus_decision": consensus_decision,
+                    "consensus_confidence": consensus_confidence,
+                },
+            )
+        await store.publish_observation(
+            voter_name="_engine",
+            key=f"consensus:{module_id[:12]}",
+            value={
+                "decision": consensus_decision,
+                "confidence": consensus_confidence,
+                "num_votes": len(votes_data),
+                "unanimous": all(v["decision"] == "approve" for v in votes_data),
+            },
+            confidence=consensus_confidence,
+            student_id=student_id,
+            module_id=module_id,
+            memory_type="inference",
+            ttl_seconds=86400 * 14,
+            metadata_json={
+                "voter_names": [v["voter_name"] for v in votes_data],
+                "voter_decisions": [v["decision"] for v in votes_data],
+            },
+        )
+        await uow.commit()
+    except Exception:
+        logger.warning(
+            "Consensus memory publication failed (non-fatal): module=%s student=%s",
+            module_id[:12],
+            student_id[:8],
+            exc_info=True,
+        )
+        if uow.is_active:
+            await uow.rollback()
+    finally:
+        await uow.close()
+
+
 def evaluate_module_completion(
     uow: UnitOfWork,
     student_id: str,
