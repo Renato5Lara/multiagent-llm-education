@@ -31,7 +31,7 @@ from app.schemas.auth import MessageResponse, CycleUpdateRequest, TutorRequest
 from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ def set_cycle(
         logger.warning(f"Auto-enrollment from curriculum failed: {e}")
 
     db.refresh(current_user)
-    log_action(db, current_user.id, "set_cycle", "user", current_user.id)
+    log_action_sync(db, current_user.id, "set_cycle", "user", current_user.id)
     return MessageResponse(message=f"Ciclo {data.cycle} asignado exitosamente")
 
 
@@ -97,7 +97,7 @@ def create_or_update_profile(
     profile = student_service.save_student_profile(
         db, student_id=current_user.id, data=data
     )
-    log_action(db, current_user.id, "actualizar_perfil", "student_profile", profile.id)
+    log_action_sync(db, current_user.id, "actualizar_perfil", "student_profile", profile.id)
     return profile
 
 
@@ -165,7 +165,7 @@ def submit_diagnostic(
     except Exception as e:
         logger.warning(f"AI analysis failed for diagnostic {result.id}: {e}")
 
-    log_action(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
+    log_action_sync(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
     return result
 
 
@@ -200,7 +200,7 @@ def generate_learning_path(
     path = student_service.generate_learning_path_adaptive(
         db, student_id=current_user.id, course_id=course_id, diagnostic=diagnostic
     )
-    log_action(db, current_user.id, "generar_ruta", "learning_path", path.id)
+    log_action_sync(db, current_user.id, "generar_ruta", "learning_path", path.id)
     return path
 
 
@@ -251,7 +251,7 @@ def update_progress(
         resource_id=data.resource_id,
         progress_percentage=data.progress_percentage,
     )
-    log_action(db, current_user.id, "actualizar_progreso", "student_progress", progress.id)
+    log_action_sync(db, current_user.id, "actualizar_progreso", "student_progress", progress.id)
     return progress
 
 
@@ -281,7 +281,7 @@ def start_evaluation(
         )
 
     questions_clean = evaluation_service.strip_correct_answers(attempt.questions)
-    log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
+    log_action_sync(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
     return {
         "attempt_id": attempt.id,
         "module_id": attempt.module_id,
@@ -306,7 +306,7 @@ def submit_evaluation(
             detail="Intento de evaluación no encontrado",
         )
 
-    log_action(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+    log_action_sync(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,

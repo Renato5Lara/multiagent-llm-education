@@ -17,7 +17,7 @@ from app.schemas.auth import (
 )
 from app.schemas.user import UserResponse
 from app.services import auth_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 from app.services.auth_tracing import (
     trace_login_success,
     trace_login_failure,
@@ -88,7 +88,7 @@ def login(
     access_token, refresh_token = auth_service.create_user_tokens(user)
     user_dict = auth_service.get_user_response_dict(user)
 
-    log_action(db, user.id, "login", "user", user.id)
+    log_action_sync(db, user.id, "login", "user", user.id)
     trace_login_success(user.id)
 
     return TokenResponse(

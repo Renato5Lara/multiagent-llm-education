@@ -17,7 +17,7 @@ from app.schemas.user import (
     UserUpdate,
 )
 from app.services import user_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 router = APIRouter(prefix="/api/users", tags=["Usuarios"])
 
@@ -72,7 +72,7 @@ def create_user(
         current_cycle=user_data.current_cycle,
     )
 
-    log_action(db, current_user.id, "crear_usuario", "user", user.id)
+    log_action_sync(db, current_user.id, "crear_usuario", "user", user.id)
     return user
 
 
@@ -100,7 +100,7 @@ def bulk_create_users(
 
     result = user_service.bulk_create_users_from_csv(db, content)
 
-    log_action(
+    log_action_sync(
         db,
         current_user.id,
         "carga_masiva_usuarios",
@@ -159,7 +159,7 @@ def update_user(
     update_data = user_data.model_dump(exclude_unset=True)
     updated = user_service.update_user(db, user, update_data)
 
-    log_action(db, current_user.id, "actualizar_usuario", "user", user_id)
+    log_action_sync(db, current_user.id, "actualizar_usuario", "user", user_id)
     return updated
 
 
@@ -183,7 +183,7 @@ def delete_user(
         )
 
     deleted = user_service.soft_delete_user(db, user)
-    log_action(db, current_user.id, "desactivar_usuario", "user", user_id)
+    log_action_sync(db, current_user.id, "desactivar_usuario", "user", user_id)
     return deleted
 
 
@@ -202,7 +202,7 @@ def change_user_role(
         )
 
     updated = user_service.change_user_role(db, user, role_data.role)
-    log_action(
+    log_action_sync(
         db,
         current_user.id,
         "cambiar_rol",

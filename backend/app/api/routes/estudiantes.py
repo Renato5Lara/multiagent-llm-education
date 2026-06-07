@@ -7,7 +7,7 @@ from app.schemas.diagnostic import DiagnosticSubmit, DiagnosticResponse
 from app.schemas.progress import LearningPathResponse, ModuleUpdate, PathModuleResponse
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.services import student_service, evaluation_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 router = APIRouter(prefix="/api/estudiante", tags=["Estudiante"])
 
@@ -22,7 +22,7 @@ def submit_diagnostic(
     result = student_service.save_diagnostic(
         db, student_id=current_user.id, course_id=course_id, answers=data.answers
     )
-    log_action(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
+    log_action_sync(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
     return result
 
 
@@ -57,7 +57,7 @@ def generate_path(
     path = student_service.generate_learning_path(
         db, student_id=current_user.id, course_id=course_id, diagnostic=diagnostic
     )
-    log_action(db, current_user.id, "generar_ruta", "learning_path", path.id)
+    log_action_sync(db, current_user.id, "generar_ruta", "learning_path", path.id)
     return path
 
 
@@ -110,7 +110,7 @@ def start_evaluation(
         )
 
     questions_clean = evaluation_service.strip_correct_answers(attempt.questions)
-    log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
+    log_action_sync(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
     return {
         "attempt_id": attempt.id,
         "module_id": attempt.module_id,
@@ -135,7 +135,7 @@ def submit_evaluation(
             detail="Intento de evaluación no encontrado",
         )
 
-    log_action(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+    log_action_sync(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,

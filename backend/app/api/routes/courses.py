@@ -18,7 +18,7 @@ from app.schemas.course import (
 )
 from app.schemas.auth import MessageResponse
 from app.services import course_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 router = APIRouter(prefix="/api/courses", tags=["Cursos"])
 
@@ -63,7 +63,7 @@ def create_course(
         institutional_course_id=course_data.institutional_course_id,
     )
 
-    log_action(db, current_user.id, "crear_curso", "course", course.id)
+    log_action_sync(db, current_user.id, "crear_curso", "course", course.id)
     return course
 
 
@@ -107,7 +107,7 @@ def update_course(
     update_data = course_data.model_dump(exclude_unset=True)
     updated = course_service.update_course(db, course, update_data)
 
-    log_action(db, current_user.id, "actualizar_curso", "course", course_id)
+    log_action_sync(db, current_user.id, "actualizar_curso", "course", course_id)
     return updated
 
 
@@ -132,7 +132,7 @@ def delete_course(
         )
 
     archived = course_service.soft_delete_course(db, course)
-    log_action(db, current_user.id, "archivar_curso", "course", course_id)
+    log_action_sync(db, current_user.id, "archivar_curso", "course", course_id)
     return archived
 
 
@@ -166,7 +166,7 @@ def publish_course(
             detail=message,
         )
 
-    log_action(db, current_user.id, "publicar_curso", "course", course_id)
+    log_action_sync(db, current_user.id, "publicar_curso", "course", course_id)
     return MessageResponse(message=message)
 
 
@@ -193,7 +193,7 @@ def enroll_students(
 
     result = course_service.enroll_students(db, course_id, enroll_data.student_ids)
 
-    log_action(
+    log_action_sync(
         db,
         current_user.id,
         "inscribir_estudiantes",

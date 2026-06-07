@@ -10,7 +10,7 @@ from app.schemas.curriculum import (
     TeacherAssignmentResponse,
 )
 from app.services import curriculum_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 router = APIRouter(prefix="/api/curriculum", tags=["Currículum"])
 
@@ -81,7 +81,7 @@ def create_teacher_assignment(
         db, current_user.id, data.institutional_course_id, 2026
     )
 
-    log_action(
+    log_action_sync(
         db, current_user.id, "asignar_curso", "teacher_assignment", assignment.id
     )
 
