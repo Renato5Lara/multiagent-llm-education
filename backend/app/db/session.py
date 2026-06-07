@@ -5,12 +5,20 @@ Soporta PostgreSQL online con SSL, pool de conexiones y reconexión automática.
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
 
 connect_args = {}
 
-if settings.is_production:
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+elif settings.is_production:
     connect_args["sslmode"] = "require"
     engine = create_engine(
         settings.DATABASE_URL,

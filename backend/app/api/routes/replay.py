@@ -303,10 +303,10 @@ def get_student_export(
     replay = session_replay.replay(db, student_id=student_id, course_id="", memory_store=store)
 
     content_type_map = {
-        "json": "application/json",
-        "csv": "text/csv",
-        "markdown": "text/markdown",
-        "latex": "application/x-latex",
+        "json": "application/json; charset=utf-8",
+        "csv": "text/csv; charset=utf-8",
+        "markdown": "text/markdown; charset=utf-8",
+        "latex": "application/x-latex; charset=utf-8",
     }
     content_type = content_type_map.get(fmt, "application/json")
 
@@ -353,7 +353,7 @@ async def stream_replay(
     """
     return StreamingResponse(
         _replay_event_stream(student_id, db),
-        media_type="text/event-stream",
+        media_type="text/event-stream; charset=utf-8",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",

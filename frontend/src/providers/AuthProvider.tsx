@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -80,9 +81,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Validate when hydration completes AND token exists
   useEffect(() => {
     if (_hydrated && !!useAuthStore.getState().token) {
-      validateSession()
+      const timer = window.setTimeout(() => {
+        validateSession()
+      }, 0)
+      return () => window.clearTimeout(timer)
     } else if (_hydrated && !useAuthStore.getState().token) {
-      setIsReady(true)
+      const timer = window.setTimeout(() => {
+        setIsReady(true)
+      }, 0)
+      return () => window.clearTimeout(timer)
     }
   }, [_hydrated, validateSession])
 

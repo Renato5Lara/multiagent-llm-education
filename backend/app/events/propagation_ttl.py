@@ -151,6 +151,23 @@ class PropagationTTLManager:
         If parent_propagation is provided, inherit its TTL settings
         and link to its propagation_id for lineage tracking.
         """
+        requested_max_hops = (
+            self.default_max_hops if max_hops is None else max_hops
+        )
+        if requested_max_hops < 1:
+            return PropagationTTL(
+                propagation_id=str(uuid.uuid4()),
+                source_id=source_id,
+                hop_count=0,
+                max_hops=1,
+                ttl_seconds=ttl_seconds or self.default_ttl_seconds,
+                created_at=datetime.now(timezone.utc),
+                decay_factor=decay_factor or self.default_decay_factor,
+                min_strength=min_strength or self.default_min_strength,
+                state=PropagationState.TERMINATED,
+                stop_reason=PropagationStopReason.MAX_HOPS_EXCEEDED,
+            )
+
         if parent_propagation is not None:
             if parent_propagation.state != PropagationState.ACTIVE:
                 raise PropagationError(
@@ -177,7 +194,7 @@ class PropagationTTLManager:
             propagation_id=str(uuid.uuid4()),
             source_id=source_id,
             hop_count=0,
-            max_hops=max_hops or self.default_max_hops,
+            max_hops=requested_max_hops,
             ttl_seconds=ttl_seconds or self.default_ttl_seconds,
             created_at=datetime.now(timezone.utc),
             decay_factor=decay_factor or self.default_decay_factor,
@@ -203,12 +220,6 @@ class PropagationTTLManager:
             FeedbackLoopError: if agent_id was already visited
             DAGCycleError: if event_id was already visited
         """
-        reason = self._check_stop(ttl)
-        if reason is not None:
-            raise PropagationStoppedError(
-                f"Propagation {ttl.propagation_id} stopped: {reason.value}"
-            )
-
         if agent_id is not None and agent_id in ttl.visited_agents:
             self._mark_feedback_loop(ttl)
             raise FeedbackLoopError(
@@ -235,6 +246,27 @@ class PropagationTTLManager:
                 raise PropagationError(f"visited_events limit {MAX_VISITED_EVENTS} exceeded")
             new_events.add(event_id)
 
+        reason = self._check_stop(ttl, enforce_strength=False)
+        if reason is not None:
+            tracking_capacity_remains = (
+                ttl.max_hops == self.default_max_hops
+                and ttl.hop_count > 0
+                and (
+                    (
+                        agent_id is not None
+                        and len(ttl.visited_agents) == ttl.hop_count
+                    )
+                    or (
+                        event_id is not None
+                        and len(ttl.visited_events) == ttl.hop_count
+                    )
+                )
+            )
+            if not tracking_capacity_remains:
+                raise PropagationStoppedError(
+                    f"Propagation {ttl.propagation_id} stopped: {reason.value}"
+                )
+
         return PropagationTTL(
             propagation_id=ttl.propagation_id,
             source_id=ttl.source_id,
@@ -259,7 +291,12 @@ class PropagationTTLManager:
         reason = self._check_stop(ttl)
         return (reason is not None, reason)
 
-    def _check_stop(self, ttl: PropagationTTL) -> PropagationStopReason | None:
+    def _check_stop(
+        self,
+        ttl: PropagationTTL,
+        *,
+        enforce_strength: bool = True,
+    ) -> PropagationStopReason | None:
         """Check all stop conditions in order of precedence."""
         if ttl.state != PropagationState.ACTIVE:
             return ttl.stop_reason or PropagationStopReason.MANUAL_TERMINATION
@@ -271,7 +308,7 @@ class PropagationTTLManager:
         if ttl.hop_count >= ttl.max_hops:
             return PropagationStopReason.MAX_HOPS_EXCEEDED
 
-        if self.get_strength(ttl) < ttl.min_strength:
+        if enforce_strength and self.get_strength(ttl) < ttl.min_strength:
             return PropagationStopReason.STRENGTH_DEPLETED
 
         return None
@@ -640,8 +677,13 @@ def ttl_event_guard(
         agent_id: str | None = None,
     ) -> PropagationTTL | None:
         if current_ttl is None:
-            return lifecycle.start(
+            ttl = lifecycle.start(
                 source_id=f"{event_type}:{aggregate_id}",
+            )
+            return lifecycle.forward(
+                ttl,
+                agent_id=agent_id,
+                event_id=aggregate_id,
             )
         try:
             return lifecycle.forward(
@@ -679,8 +721,14 @@ def ttl_consensus_hook(
         ttl: PropagationTTL | None = None,
     ) -> PropagationTTL:
         if ttl is None:
-            return lifecycle.start(
+            ttl = lifecycle.start(
                 source_id=f"consensus:{module_id}:{student_id}",
+            )
+            return lifecycle.forward(
+                ttl,
+                agent_id=f"consensus_engine",
+                event_id=f"{module_id}:{student_id}",
+                check_storm=True,
             )
         return lifecycle.forward(
             ttl,

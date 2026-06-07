@@ -30,6 +30,10 @@ from app.models.institutional_course import InstitutionalCourse, InstitutionalCo
 from app.models.knowledge_graph import KnowledgeNode, KnowledgeEdge
 from app.models.shared_memory_record import SharedMemoryRecord
 from app.models.teacher_assignment import TeacherAssignment
+from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
+
+# New weekly learning architecture (replaces the old per-week plan)
+from app.weekly_learning.models import WeeklyPlan, CourseWeek, WeekContent
 
 config = context.config
 

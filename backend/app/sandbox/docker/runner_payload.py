@@ -67,6 +67,15 @@ DENIED_ATTRIBUTES = {
     ("socket", "socket"),
     ("subprocess", "Popen"),
     ("subprocess", "run"),
+    ("io", "open"),
+    ("os", "chdir"),
+    ("os", "chmod"),
+    ("os", "chown"),
+    ("os", "kill"),
+    ("os", "remove"),
+    ("os", "unlink"),
+    ("os", "rmdir"),
+    ("os", "rename"),
 }
 
 
@@ -157,6 +166,7 @@ _original_open = builtins.open
 _original_compile = builtins.compile
 builtins.__import__ = restricted_import
 builtins.open = blocked_call("open")
+import io as _io; _io.open = builtins.open  # also patch io.open
 builtins.input = blocked_call("input")
 builtins.eval = blocked_call("eval")
 builtins.compile = blocked_call("compile")

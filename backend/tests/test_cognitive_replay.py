@@ -53,10 +53,10 @@ def test_replay_export_formats(tmp_path: Path):
     html_body, html_type = exporter.export(replay, "html")
     summary_body, summary_type = exporter.export(replay, "summary")
 
-    assert json_type == "application/json"
+    assert json_type == "application/json; charset=utf-8"
     assert "Cognitive Replay" in md_body
-    assert md_type == "text/markdown"
+    assert md_type == "text/markdown; charset=utf-8"
     assert "<html" in html_body
-    assert html_type == "text/html"
+    assert html_type == "text/html; charset=utf-8"
     assert summary_body["final_decision"] == "reject"
-    assert summary_type == "application/json"
+    assert summary_type == "application/json; charset=utf-8"

@@ -96,14 +96,14 @@ async def replay_stream(
                 f"data: {json.dumps(event.to_dict(), ensure_ascii=False)}\n\n"
             )
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(event_stream(), media_type="text/event-stream; charset=utf-8")
 
 
 @router.get("/events/{session_id}")
 async def demo_events(session_id: str, after_id: int = Query(0, ge=0)):
     return StreamingResponse(
         emitter.subscribe(session_id, after_id),
-        media_type="text/event-stream",
+        media_type="text/event-stream; charset=utf-8",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",

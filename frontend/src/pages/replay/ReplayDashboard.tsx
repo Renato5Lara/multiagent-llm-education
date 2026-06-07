@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Play, RotateCcw, SkipForward, Gauge } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, SkipForward, Gauge } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ReplayTimeline } from '@/components/swarm/ReplayTimeline'
 import { StudentEvolutionView } from '@/components/swarm/StudentEvolutionView'
@@ -208,7 +208,7 @@ export default function ReplayDashboard() {
                 <Button size="sm" variant={playMode === 'full' ? 'default' : 'outline'} onClick={() => setPlayMode('full')}>Full</Button>
               </div>
               <Button size="sm" onClick={() => setPlaying((p) => !p)} disabled={!replay.steps.length}>
-                {playing ? <><RotateCcw className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4" /> Play</>}
+                {playing ? <><Pause className="mr-1 h-4 w-4" /> Pause</> : <><Play className="mr-1 h-4 w-4" /> Play</>}
               </Button>
               <Button size="sm" variant="outline" onClick={() => { setActiveStep(0); setPlaying(false) }}>
                 <RotateCcw className="mr-1 h-4 w-4" /> Restart

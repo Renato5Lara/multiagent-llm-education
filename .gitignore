@@ -132,3 +132,5 @@ docker-compose.override.yml
 
 # ===== TYPING =====
 *.pyi
+
+outputs/pptx-audit/
