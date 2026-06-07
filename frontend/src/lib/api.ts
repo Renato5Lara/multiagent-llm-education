@@ -49,9 +49,11 @@ api.interceptors.response.use(
     }
 
     if (error.response.status === 401 && !originalRequest._retry) {
-      // NEVER retry auth endpoints — login 401 is a real credential error,
-      // and retrying /api/auth/refresh creates an infinite deadlock
-      if (originalRequest.url?.includes('/api/auth/')) {
+      // Don't retry login or refresh — login 401 is a real credential error,
+      // and retrying /api/auth/refresh creates an infinite deadlock.
+      // /api/auth/me MUST be allowed through so an expired token triggers a refresh.
+      const noRetryEndpoints = ['/api/auth/login', '/api/auth/refresh']
+      if (noRetryEndpoints.some((url) => originalRequest.url?.includes(url))) {
         return Promise.reject(error)
       }
 

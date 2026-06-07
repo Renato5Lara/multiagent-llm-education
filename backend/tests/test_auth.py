@@ -26,7 +26,7 @@ class TestLogin:
             "identifier": "admin@test.com", "password": "WrongPass!",
         })
         assert resp.status_code == 401
-        assert "Credenciales incorrectas" in resp.json()["detail"]
+        assert resp.json()["detail"]["code"] == "INVALID_CREDENTIALS"
 
     def test_login_email_inexistente(self, client):
         """Login con email no registrado retorna 401."""
@@ -47,7 +47,7 @@ class TestLogin:
             "identifier": "admin@test.com", "password": "Admin123!",
         })
         assert resp.status_code == 429
-        assert "bloqueada" in resp.json()["detail"].lower()
+        assert resp.json()["detail"]["code"] == "ACCOUNT_LOCKED"
 
 
 class TestMe:

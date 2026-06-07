@@ -63,7 +63,21 @@ export function useAuth() {
         enabled: isAuthenticated && !!token,
         retry: false,
         staleTime: 5 * 60 * 1000,
+        throwOnError: false,
     })
+
+    // Auto-logout when /api/auth/me returns 401 or 403 and the interceptor
+    // already attempted a refresh. Prevents the broken state where the store
+    // says "authenticated" but all subsequent calls will fail.
+    useEffect(() => {
+        if (!meQuery.error) return
+        const status = (meQuery.error as { response?: { status?: number } })?.response?.status
+        if (status === 401 || status === 403) {
+            storeLogout()
+            queryClient.clear()
+            navigate('/login')
+        }
+    }, [meQuery.error, storeLogout, queryClient, navigate])
 
     // NOTE: setUser is already called inside meQuery.queryFn (line above).
     // A separate useEffect on meQuery.data would call setUser a second time.

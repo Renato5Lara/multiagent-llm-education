@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
+from unittest.mock import MagicMock, patch
 
 from app.db.base import Base
 from app.db.uow import AsyncUnitOfWork, UnitOfWork
@@ -97,8 +98,16 @@ def client(db):
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_uow] = override_get_uow
-    with TestClient(app) as c:
-        yield c
+
+    # The lifespan in main.py does `engine.connect()` to verify the DB connection.
+    # Tests use SQLite in-memory, so we mock that check to avoid needing PostgreSQL.
+    from app.db.session import engine as pg_engine
+    mock_ctx = MagicMock()
+    mock_ctx.__enter__ = MagicMock(return_value=mock_ctx)
+    mock_ctx.__exit__ = MagicMock(return_value=False)
+    with patch.object(pg_engine, "connect", return_value=mock_ctx):
+        with TestClient(app) as c:
+            yield c
     app.dependency_overrides.clear()
 
 
@@ -178,6 +187,19 @@ def estudiante_token(client, estudiante_user) -> str:
 def auth_header(token: str) -> dict:
     """Helper: genera header de autorización."""
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    """Limpia el rate limiter en memoria antes de cada test.
+
+    El limiter es un singleton de módulo — sin este reset, los intentos
+    fallidos de un test se acumulan y disparan 429 en tests posteriores.
+    """
+    from app.middleware.rate_limit import _limiter
+    _limiter._buckets.clear()
+    yield
+    _limiter._buckets.clear()
 
 
 @pytest.fixture

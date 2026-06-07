@@ -43,6 +43,9 @@ def authenticate_user(
         return None
 
     if not user.is_active:
+        # Record attempt so the lockout counter advances (same as wrong password).
+        # Do NOT reveal that the account is inactive to the caller.
+        _record_attempt(db, user.email, success=False, ip_address=ip_address)
         return None
 
     _record_attempt(db, user.email, success=True, ip_address=ip_address)
