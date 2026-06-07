@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Lock, CheckCircle, Circle, BookOpen, Play, FileText, Film, ImageIcon, Headphones, Gamepad2, Puzzle, MessageCircle, Loader2 } from 'lucide-react'
+import { Lock, CheckCircle, Circle, BookOpen, Play, FileText, Film, ImageIcon, Headphones, Gamepad2, Puzzle, MessageCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

@@ -26,7 +26,6 @@ export default function ContentViewer() {
     const [searchParams] = useSearchParams()
     const courseId = searchParams.get('courseId') || undefined
     const sessionId = searchParams.get('sessionId') || undefined
-    const moduleId = searchParams.get('moduleId') || undefined
     const navigate = useNavigate()
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -114,6 +113,8 @@ export default function ContentViewer() {
             </div>
         )
     }
+
+    if (!resource) return null
 
     return (
         <div className="max-w-4xl mx-auto">

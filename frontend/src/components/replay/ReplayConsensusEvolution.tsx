@@ -23,9 +23,6 @@ export function ReplayConsensusEvolution({ data, loading }: ConsensusEvolutionPr
       : 'text-red-400'
     : 'text-slate-400'
 
-  const totalVoters = new Set(data.map(d => d.voterCount)).values()
-  const maxVoters = data.length > 0 ? Math.max(...data.map(d => d.voterCount)) : 0
-
   return (
     <Card className="bg-slate-900 border-slate-700">
       <CardHeader>
