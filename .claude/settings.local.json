@@ -11,7 +11,20 @@
       "Bash(python *)",
       "Bash(git stash *)",
       "Bash(awk -F: '{print $1}')",
-      "Bash(awk -F: '{split\\($2, a, \" \"\\); print a[1], $1}')"
+      "Bash(awk -F: '{split\\($2, a, \" \"\\); print a[1], $1}')",
+      "Bash(awk -F: '{print $2, $3}')",
+      "Bash(awk '{print NR, $0}')",
+      "Bash(xargs cat -n)",
+      "Bash(xargs ls -la)",
+      "Bash(git -C /var/home/rlara/Documentos/Proyecto/multiagent-llm-education diff -- backend/app/api/routes/courses.py)",
+      "Bash(git -C /var/home/rlara/Documentos/Proyecto/multiagent-llm-education diff -- backend/app/api/routes/users.py)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh auth *)",
+      "Bash(git config *)",
+      "Bash(ssh *)",
+      "Read(//home/rlara/**)"
     ]
   }
 }
