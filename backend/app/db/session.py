@@ -45,12 +45,17 @@ SessionLocal = sessionmaker(
 )
 
 # ── Async engine (FastAPI runtime) ────────────────────────────────
+# Always use psycopg3 for async — asyncpg is not in requirements.txt.
+# psycopg3 (psycopg>=3) supports async natively via postgresql+psycopg://.
 
-ASYNC_DATABASE_URL = (
-    settings.DATABASE_URL.replace("+psycopg", "+asyncpg")
-    if "+psycopg" in settings.DATABASE_URL
-    else settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-)
+def _build_async_url(url: str) -> str:
+    if "+psycopg" in url:
+        return url  # already correct (postgresql+psycopg://...)
+    # Render / raw postgres:// URLs arrive as postgresql:// after validation;
+    # rewrite to postgresql+psycopg:// so psycopg3 handles async connections.
+    return url.replace("postgresql://", "postgresql+psycopg://", 1)
+
+ASYNC_DATABASE_URL = _build_async_url(settings.DATABASE_URL)
 
 async_connect_args = {}
 if settings.is_production:

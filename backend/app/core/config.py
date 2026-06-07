@@ -25,8 +25,13 @@ class Settings(BaseSettings):
     @field_validator("DATABASE_URL")
     @classmethod
     def fix_postgres_scheme(cls, v: str) -> str:
+        # Render and Heroku provide `postgres://` — SQLAlchemy requires `postgresql://`.
         if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql://", 1)
+            v = v.replace("postgres://", "postgresql://", 1)
+        # Ensure psycopg3 is used explicitly; avoids psycopg2 fallback on plain
+        # `postgresql://` URLs that arrive from cloud providers without a driver hint.
+        if v.startswith("postgresql://") and "+psycopg" not in v:
+            v = v.replace("postgresql://", "postgresql+psycopg://", 1)
         return v
 
     # URLs
