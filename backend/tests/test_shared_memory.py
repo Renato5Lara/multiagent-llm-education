@@ -1125,16 +1125,24 @@ class TestUniqueConstraint:
     """The table has a unique constraint on (voter, student, module, type, key)."""
 
     @pytest.mark.asyncio
-    async def test_duplicate_same_voter_key_raises(self, async_mem_store):
-        await async_mem_store.publish_observation(
+    async def test_duplicate_same_voter_key_returns_existing_id(self, async_mem_store):
+        # Phase A fix: duplicate writes are idempotent — return the existing record's
+        # ID instead of crashing with IntegrityError.
+        first_id = await async_mem_store.publish_observation(
             voter_name="v1", key="uq:test",
             value={"v": 1}, student_id="uq-stu", module_id="uq-mod",
         )
-        with pytest.raises(Exception):
-            await async_mem_store.publish_observation(
-                voter_name="v1", key="uq:test",
-                value={"v": 1}, student_id="uq-stu", module_id="uq-mod",
-            )
+        second_id = await async_mem_store.publish_observation(
+            voter_name="v1", key="uq:test",
+            value={"v": 1}, student_id="uq-stu", module_id="uq-mod",
+        )
+        assert second_id == first_id
+        # Only one record should exist in the DB.
+        records = await async_mem_store.query(
+            voter_name="v1", key="uq:test",
+            student_id="uq-stu", module_id="uq-mod",
+        )
+        assert len(records) == 1
 
     @pytest.mark.asyncio
     async def test_different_voter_same_key_allowed(self, async_mem_store):

@@ -233,13 +233,39 @@ class SwarmDeliberationOrchestrator:
         self, loop: asyncio.AbstractEventLoop,
         ctx: VoteContext, voters: list[BaseVoter],
     ) -> list[ConsensusVote]:
-        """Run a single voting round, executing each voter in a thread."""
+        """Run a single voting round, executing each voter in a thread.
+
+        Each voter receives its own VoteContext backed by a dedicated UnitOfWork
+        so concurrent threadpool execution never touches a shared Session.
+        """
+        from app.db.session import SessionLocal
+        from app.db.uow import UnitOfWork
+
+        voter_uows = []
         tasks = []
         for voter in voters:
-            tasks.append(
-                loop.run_in_executor(None, voter.vote, ctx)
+            voter_uow = UnitOfWork(SessionLocal)
+            voter_uows.append(voter_uow)
+            voter_ctx = VoteContext(
+                uow=voter_uow,
+                student_id=ctx.student_id,
+                module_id=ctx.module_id,
+                path_id=ctx.path_id,
+                course_id=ctx.course_id,
+                score=ctx.score,
+                module=ctx.module,
+                path=ctx.path,
+                evidence=ctx.evidence,
+                shared_memory=ctx.shared_memory,
             )
-        return await asyncio.gather(*tasks)
+            tasks.append(loop.run_in_executor(None, voter.vote, voter_ctx))
+        try:
+            return await asyncio.gather(*tasks)
+        finally:
+            for voter_uow in voter_uows:
+                if voter_uow.is_active:
+                    voter_uow.rollback()
+                voter_uow.close()
 
     def _build_deliberation_context(
         self, round_num: int, rounds: list[RoundResult],

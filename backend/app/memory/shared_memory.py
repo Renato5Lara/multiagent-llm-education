@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import and_, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.uow import AsyncUnitOfWork, UnitOfWork
@@ -169,11 +170,55 @@ class SharedMemoryStore:
                 ttl_seconds=actual_ttl,
                 metadata_json=metadata_json or {},
             )
-            self._db.add(record)
-            if isinstance(self._uow, AsyncUnitOfWork):
-                await self._uow.flush()
-            else:
-                self._uow.flush()
+            try:
+                if isinstance(self._uow, AsyncUnitOfWork):
+                    async with self._db.begin_nested():
+                        self._db.add(record)
+                        await self._db.flush()
+                else:
+                    self._uow.begin_savepoint()
+                    try:
+                        self._db.add(record)
+                        self._uow.flush()
+                    except IntegrityError:
+                        self._uow.savepoint_rollback()
+                        raise
+            except IntegrityError:
+                # Duplicate write (concurrent activation or retry after partial commit).
+                # The savepoint was rolled back; the outer transaction is intact.
+                # Return the ID of the already-persisted record so the caller is idempotent.
+                _dedup_filters = [
+                    SharedMemoryRecord.voter_name == voter_name,
+                    SharedMemoryRecord.memory_type == memory_type,
+                    SharedMemoryRecord.key == key,
+                ]
+                if student_id is not None:
+                    _dedup_filters.append(SharedMemoryRecord.student_id == student_id)
+                else:
+                    _dedup_filters.append(SharedMemoryRecord.student_id.is_(None))
+                if module_id is not None:
+                    _dedup_filters.append(SharedMemoryRecord.module_id == module_id)
+                else:
+                    _dedup_filters.append(SharedMemoryRecord.module_id.is_(None))
+                _lookup = select(SharedMemoryRecord).where(and_(*_dedup_filters))
+                if isinstance(self._uow, AsyncUnitOfWork):
+                    _existing = (await self._db.execute(_lookup)).scalar_one_or_none()
+                else:
+                    _existing = self._db.execute(_lookup).scalar_one_or_none()
+                _existing_id = _existing.id if _existing else None
+                if _existing_id is None:
+                    logger.warning(
+                        "Memory conflict: no existing record found after IntegrityError "
+                        "voter=%s type=%s key=%s student=%s — concurrent race window",
+                        voter_name, memory_type, key, student_id,
+                    )
+                else:
+                    logger.info(
+                        "Memory conflict resolved: voter=%s type=%s key=%s "
+                        "student=%s → existing=%s",
+                        voter_name, memory_type, key, student_id, _existing_id,
+                    )
+                return _existing_id or ""
 
             if _dedup_acquired and _dedup_content_key is not None:
                 try:

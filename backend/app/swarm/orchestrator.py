@@ -547,7 +547,7 @@ class SwarmOrchestrator:
         agent = self._agents["pedagogical"]
         causation_id = self._last_event_id()
 
-        result = agent.run(
+        result = await agent.run(
             state={
                 "is_programming_course": True,
                 "student_id": self.student_id,
@@ -576,7 +576,7 @@ class SwarmOrchestrator:
         agent = self._agents["adaptive"]
         causation_id = self._last_event_id()
 
-        result = agent.run(
+        result = await agent.run(
             state={"is_programming_course": True},
             causation_id=causation_id,
         )
@@ -595,7 +595,7 @@ class SwarmOrchestrator:
         agent = self._agents["risk"]
         causation_id = self._last_event_id()
 
-        result = agent.run(
+        result = await agent.run(
             state={
                 "is_programming_course": self.lifecycle.metadata.get("is_programming_course", False),
                 "cognitive_stage": self.lifecycle.metadata.get("cognitive_stage", "unknown"),
@@ -671,8 +671,25 @@ class SwarmOrchestrator:
             evidence=evidence,
         )
 
-        context_key_spec = spec_context_key(ctx)
-        result = engine.run(ctx=ctx, specialization_tracker=self._specialization_tracker)
+        from app.db.session import SessionLocal
+        voter_uow = UnitOfWork(SessionLocal)
+        try:
+            voter_ctx = VoteContext(
+                uow=voter_uow,
+                student_id=ctx.student_id,
+                module_id=ctx.module_id,
+                path_id=ctx.path_id,
+                course_id=ctx.course_id,
+                score=ctx.score,
+                module=ctx.module,
+                path=ctx.path,
+                evidence=ctx.evidence,
+            )
+            result = await engine.async_run(ctx=voter_ctx, specialization_tracker=self._specialization_tracker)
+        finally:
+            if voter_uow.is_active:
+                voter_uow.rollback()
+            voter_uow.close()
 
         for vote in result.votes:
             swarm_metrics.record_consensus_vote(vote.voter_name, vote.decision.value)
@@ -887,7 +904,7 @@ class SwarmOrchestrator:
         causation_id = self._last_event_id()
 
         concept_sequence = self.lifecycle.metadata.get("concept_sequence", [])
-        result = agent.run(
+        result = await agent.run(
             state={
                 "is_programming_course": True,
                 "concept_sequence": concept_sequence,
