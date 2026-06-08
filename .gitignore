@@ -56,3 +56,12 @@ build/
 # Generated docs
 *.md~
 *.swp
+
+# Claude local settings
+.claude/settings.local.json
+
+# CodeGraph runtime
+.codegraph/daemon.pid
+
+# TypeScript build cache
+*.tsbuildinfo
