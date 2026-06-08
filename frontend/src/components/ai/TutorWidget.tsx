@@ -60,6 +60,12 @@ export default function TutorWidget({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  useEffect(() => {
+    const handler = () => setIsOpen(true)
+    window.addEventListener('open-tutor', handler)
+    return () => window.removeEventListener('open-tutor', handler)
+  }, [])
+
   const handleSend = () => {
     if (!input.trim() || chatMutation.isPending) return
     const userMessage = input.trim()

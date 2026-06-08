@@ -19,8 +19,9 @@ Uso:
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Callable
+from typing import AsyncGenerator, Callable
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -311,13 +312,251 @@ class UnitOfWork:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        if exc_type is not None:
+        # Guard against double-rollback: commit() already rolls back internally
+        # on failure and sets _rolled_back=True, which would cause rollback()
+        # to raise UnitOfWorkError and shadow the original exception.
+        if exc_type is not None and self.is_active:
             self.rollback()
         self.close()
 
     def __repr__(self) -> str:
         return (
             f"<UnitOfWork[{self._id}] "
+            f"session={'open' if self._session is not None else 'none'} "
+            f"committed={self._committed} "
+            f"rolled_back={self._rolled_back} "
+            f"savepoints={len(self._savepoint_stack)} "
+            f"events={len(self._events)}>"
+        )
+
+
+class AsyncUnitOfWorkError(RuntimeError):
+    """Raised when an async UoW operation is attempted in an invalid state."""
+
+
+class AsyncUnitOfWork:
+    """Async version of UnitOfWork for use with AsyncSession.
+
+    Same transaction semantics as UnitOfWork but with async commit/rollback/flush.
+    Critical for DB-002: eliminates event-loop blocking from sync Session calls.
+
+    Usage:
+        uow = AsyncUnitOfWork(AsyncSessionLocal)
+        async with uow:
+            ...
+            await uow.commit()
+    """
+
+    def __init__(self, session_factory: Callable[[], AsyncSession]):
+        self._id = str(uuid.uuid4())[:8]
+        self._session_factory = session_factory
+        self._session: AsyncSession | None = None
+        self._events: list = []
+        self._committed = False
+        self._rolled_back = False
+        self._savepoint_stack: list = []
+
+    # ── Lifecycle guards ─────────────────────────────────────────
+
+    def _assert_writable(self, operation: str) -> None:
+        if self._rolled_back:
+            raise AsyncUnitOfWorkError(
+                f"Cannot {operation} on AsyncUoW[{self._id}]: already rolled back"
+            )
+
+    @property
+    def id(self) -> str:
+        return self._id
+
+    @property
+    def db(self) -> AsyncSession:
+        if self._session is None:
+            logger.debug("AsyncUoW[%s]: Creating DB session", self._id)
+            self._session = self._session_factory()
+        if self._committed:
+            logger.debug("AsyncUoW[%s]: Accessing db after commit (read)", self._id)
+        return self._session
+
+    # ── Savepoint support ────────────────────────────────────────
+
+    async def begin_savepoint(self) -> None:
+        if self._committed:
+            raise AsyncUnitOfWorkError(
+                f"Cannot begin savepoint on AsyncUoW[{self._id}]: already committed"
+            )
+        self._assert_writable("begin savepoint")
+        db = self.db
+        nested = await db.begin_nested()
+        await nested.__aenter__()
+        self._savepoint_stack.append(nested)
+        logger.debug("AsyncUoW[%s]: Savepoint created (depth=%d)", self._id, len(self._savepoint_stack))
+
+    async def savepoint_rollback(self) -> None:
+        if self._committed:
+            raise AsyncUnitOfWorkError(
+                f"Cannot rollback savepoint on AsyncUoW[{self._id}]: already committed"
+            )
+        self._assert_writable("rollback savepoint")
+        if not self._savepoint_stack:
+            raise AsyncUnitOfWorkError(
+                f"AsyncUoW[{self._id}]: no savepoint to roll back"
+            )
+        nested = self._savepoint_stack.pop()
+        try:
+            await nested.__aexit__(None, None, None)
+        except Exception as exc:
+            logger.error(
+                "AsyncUoW[%s]: Savepoint rollback failed: %s",
+                self._id, exc, exc_info=True,
+            )
+            self._rolled_back = True
+            raise
+        logger.debug("AsyncUoW[%s]: Savepoint rolled back (depth=%d)", self._id, len(self._savepoint_stack))
+
+    # -- Event Outbox Pattern --
+
+    def add_event(
+        self,
+        event_type: str,
+        aggregate_id: str,
+        payload: dict | None = None,
+        correlation_id: str | None = None,
+        causation_id: str | None = None,
+    ):
+        if correlation_id is None:
+            try:
+                from app.tracing import correlation_engine as _ce
+                current = _ce.get_current()
+                if current is not None:
+                    correlation_id = current.correlation.correlation_id
+            except Exception:
+                pass
+
+        from app.models.event_outbox import EventOutbox
+
+        if self._committed:
+            raise AsyncUnitOfWorkError(
+                f"Cannot add event on AsyncUoW[{self._id}]: already committed"
+            )
+        self._assert_writable("add event")
+        event = EventOutbox(
+            event_type=event_type,
+            aggregate_id=aggregate_id,
+            payload=payload or {},
+            correlation_id=correlation_id or str(uuid.uuid4()),
+            causation_id=causation_id,
+        )
+        self.db.add(event)
+        self._events.append(event)
+        logger.debug(
+            "AsyncUoW[%s]: Event persisted: %s[%s] (id=%s, correlation=%s)",
+            self._id, event_type, aggregate_id, event.id, event.correlation_id,
+        )
+        return event
+
+    @property
+    def pending_events(self) -> list:
+        return list(self._events)
+
+    def clear_events(self) -> list:
+        events = list(self._events)
+        self._events.clear()
+        return events
+
+    # -- Async transaction management --
+
+    async def flush(self) -> None:
+        if self._rolled_back:
+            raise AsyncUnitOfWorkError(
+                f"Cannot flush on AsyncUoW[{self._id}]: already rolled back"
+            )
+        if self._session is not None:
+            logger.debug("AsyncUoW[%s]: Flushing session", self._id)
+            await self._session.flush()
+
+    async def commit(self) -> None:
+        self._assert_writable("commit")
+        if self._session is None:
+            self._committed = True
+            logger.debug("AsyncUoW[%s]: commit() — no session (marked committed)", self._id)
+            return
+        try:
+            dirty = len(self._session.dirty)
+            new = len(self._session.new)
+            deleted = len(self._session.deleted)
+            logger.info(
+                "AsyncUoW[%s]: Committing (%d dirty, %d new, %d deleted, %d events)",
+                self._id, dirty, new, deleted, len(self._events),
+            )
+            await self._session.commit()
+            self._committed = True
+            logger.info("AsyncUoW[%s]: Commit successful", self._id)
+        except Exception as exc:
+            logger.error(
+                "AsyncUoW[%s]: Commit failed: %s", self._id, str(exc), exc_info=True,
+            )
+            try:
+                await self._session.rollback()
+            except Exception as rb_exc:
+                logger.error(
+                    "AsyncUoW[%s]: Rollback after commit failure also failed: %s",
+                    self._id, rb_exc,
+                )
+            self._rolled_back = True
+            raise
+
+    async def rollback(self) -> None:
+        if self._rolled_back:
+            raise AsyncUnitOfWorkError(
+                f"Cannot rollback on AsyncUoW[{self._id}]: already rolled back"
+            )
+        if self._committed:
+            logger.debug("AsyncUoW[%s]: rollback() called after commit (no-op)", self._id)
+            return
+        if self._session is None:
+            self._rolled_back = True
+            logger.debug("AsyncUoW[%s]: rollback() — no session (marked rolled back)", self._id)
+            return
+        logger.warning("AsyncUoW[%s]: Rolling back (%d pending events)", self._id, len(self._events))
+        self._savepoint_stack.clear()
+        try:
+            await self._session.rollback()
+        except Exception as exc:
+            logger.error("AsyncUoW[%s]: Rollback failed: %s", self._id, str(exc))
+        self._rolled_back = True
+        self._events.clear()
+
+    async def close(self) -> None:
+        if self._session is not None:
+            logger.debug("AsyncUoW[%s]: Closing session", self._id)
+            try:
+                await self._session.close()
+            except Exception as exc:
+                logger.warning(
+                    "AsyncUoW[%s]: Error closing session: %s", self._id, str(exc),
+                )
+            self._session = None
+
+    @property
+    def is_active(self) -> bool:
+        return not self._committed and not self._rolled_back
+
+    # -- Async context manager support --
+
+    async def __aenter__(self) -> "AsyncUnitOfWork":
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        # Guard against double-rollback: commit() already rolls back internally
+        # on failure and sets _rolled_back=True, which would cause rollback()
+        # to raise AsyncUnitOfWorkError and shadow the original exception.
+        if exc_type is not None and self.is_active:
+            await self.rollback()
+        await self.close()
+
+    def __repr__(self) -> str:
+        return (
+            f"<AsyncUnitOfWork[{self._id}] "
             f"session={'open' if self._session is not None else 'none'} "
             f"committed={self._committed} "
             f"rolled_back={self._rolled_back} "

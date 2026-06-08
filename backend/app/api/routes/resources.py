@@ -11,7 +11,7 @@ from app.api.deps import get_current_docente, get_current_user, get_db
 from app.models.user import User
 from app.schemas.resource import ResourceObjectiveAssociation, ResourceResponse
 from app.services import course_service, resource_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 router = APIRouter(tags=["Recursos"])
 
@@ -50,7 +50,7 @@ async def upload_resource(
         db, course_id=course_id, filename=file.filename or "unknown",
         content_type=file.content_type or "application/octet-stream", file_content=file_content,
     )
-    log_action(db, current_user.id, "subir_recurso", "resource", resource.id)
+    log_action_sync(db, current_user.id, "subir_recurso", "resource", resource.id)
     return resource
 
 
@@ -102,7 +102,7 @@ def delete_resource(resource_id: str, db: Session = Depends(get_db), current_use
     if not course or course.teacher_id != current_user.id:
         raise HTTPException(status_code=403, detail="No tiene permisos para eliminar este recurso")
     resource_service.delete_resource(db, resource)
-    log_action(db, current_user.id, "eliminar_recurso", "resource", resource_id)
+    log_action_sync(db, current_user.id, "eliminar_recurso", "resource", resource_id)
 
 
 @router.post("/api/resources/{resource_id}/objectives")

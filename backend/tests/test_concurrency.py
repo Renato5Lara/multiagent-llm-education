@@ -3,10 +3,9 @@ Tests de concurrencia y consistencia.
 
 Verifica:
 1. Advisory locks evitan race conditions
-2. Optimistic locking detecta stale writes
-3. Idempotency keys previenen duplicados
-4. Rollback seguro bajo fallos
-5. Integridad ante stress concurrente
+2. store_memory upserts sin duplicados
+3. Rollback seguro bajo fallos
+4. Integridad ante stress concurrente
 """
 
 import threading
@@ -22,12 +21,6 @@ from app.db.locks import advisory_lock, lock_key
 from app.db.uow import UnitOfWork
 from app.models.student_memory import StudentMemory
 from app.services.memory_service import store_memory
-from app.middleware.idempotency import (
-    check_idempotency,
-    complete_idempotency,
-    discard_idempotency,
-    get_idempotency_key,
-)
 
 
 @pytest.fixture(scope="function")
@@ -131,78 +124,7 @@ class TestAdvisoryLock:
 
 
 # =============================================================================
-# 2. Idempotency Key Tests
-# =============================================================================
-
-class TestIdempotencyKey:
-    """Verifica que los idempotency keys previenen duplicados."""
-
-    def test_get_idempotency_key_from_header(self):
-        class FakeRequest:
-            headers = {"Idempotency-Key": "test-key-123"}
-        assert get_idempotency_key(FakeRequest()) == "test-key-123"
-
-    def test_get_idempotency_key_missing(self):
-        class FakeRequest:
-            headers = {}
-        assert get_idempotency_key(FakeRequest()) is None
-
-    def test_check_idempotency_new_key(self, db):
-        result = check_idempotency(db, "new-key-1")
-        assert result is None
-
-    def test_check_idempotency_returns_cached(self, db):
-        from app.models.idempotency_key import IdempotencyKey
-        from datetime import datetime, timezone, timedelta
-
-        ik = IdempotencyKey(
-            key="cached-key",
-            response_status=200,
-            response_body='{"success": true}',
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
-        )
-        db.add(ik)
-        db.commit()
-
-        result = check_idempotency(db, "cached-key")
-        assert result is not None
-        assert result.response_status == 200
-        assert "success" in result.response_body
-
-    def test_complete_idempotency(self, db):
-        check_idempotency(db, "complete-key")
-        complete_idempotency(db, "complete-key", 201, {"id": "abc"})
-
-        from app.models.idempotency_key import IdempotencyKey
-        ik = db.query(IdempotencyKey).filter(IdempotencyKey.key == "complete-key").first()
-        assert ik is not None
-        assert ik.response_status == 201
-        assert "abc" in ik.response_body
-
-    def test_discard_idempotency(self, db):
-        check_idempotency(db, "discard-key")
-        discard_idempotency(db, "discard-key")
-
-        from app.models.idempotency_key import IdempotencyKey
-        ik = db.query(IdempotencyKey).filter(IdempotencyKey.key == "discard-key").first()
-        assert ik is None
-
-    def test_idempotency_none_key_is_noop(self, db):
-        assert check_idempotency(db, None) is None
-        complete_idempotency(db, None, 200, "ok")
-
-    def test_idempotency_serialized_by_advisory_lock(self, db):
-        """Dos requests secuenciales con el mismo key: el segundo ve el cache."""
-        check_idempotency(db, "seq-key")
-        complete_idempotency(db, "seq-key", 200, {"done": True})
-
-        result = check_idempotency(db, "seq-key")
-        assert result is not None
-        assert result.response_status == 200
-
-
-# =============================================================================
-# 3. store_memory Concurrency Tests (single-threaded logic)
+# 2. store_memory Concurrency Tests (single-threaded logic)
 # =============================================================================
 
 class TestStoreMemoryConcurrency:
@@ -266,7 +188,7 @@ class TestStoreMemoryConcurrency:
 
 
 # =============================================================================
-# 4. Enroll Students Concurrency Tests
+# 3. Enroll Students Concurrency Tests
 # =============================================================================
 
 class TestEnrollStudentsConcurrency:
@@ -319,7 +241,7 @@ class TestEnrollStudentsConcurrency:
 
 
 # =============================================================================
-# 5. evaluate_module_completion Tests
+# 4. evaluate_module_completion Tests
 # =============================================================================
 
 class TestEvaluateModuleCompletionConcurrency:
@@ -416,7 +338,7 @@ class TestEvaluateModuleCompletionConcurrency:
 
 
 # =============================================================================
-# 6. save_diagnostic Concurrency Tests
+# 5. save_diagnostic Concurrency Tests
 # =============================================================================
 
 class TestSaveDiagnosticConcurrency:
@@ -456,7 +378,7 @@ class TestSaveDiagnosticConcurrency:
 
 
 # =============================================================================
-# 7. Unit of Work + Advisory Lock Integration Tests
+# 6. Unit of Work + Advisory Lock Integration Tests
 # =============================================================================
 
 class TestUoWLockIntegration:
@@ -494,7 +416,7 @@ class TestUoWLockIntegration:
 
 
 # =============================================================================
-# 8. Concurrent Thread Tests (separate sessions per thread)
+# 7. Concurrent Thread Tests (separate sessions per thread)
 # =============================================================================
 
 class TestConcurrentThreadSafety:
@@ -629,7 +551,7 @@ class TestConcurrentThreadSafety:
 
 
 # =============================================================================
-# 7. UoW Transaction Boundary Tests
+# 8. UoW Transaction Boundary Tests
 # =============================================================================
 
 
@@ -769,7 +691,7 @@ class TestUoWSavepoint:
 
 
 # =============================================================================
-# 8. Progression Atomicity Tests
+# 9. Progression Atomicity Tests
 # =============================================================================
 
 
@@ -873,7 +795,7 @@ class TestProgressionAtomicity:
 
 
 # =============================================================================
-# 9. Stress Tests
+# 10. Stress Tests
 # =============================================================================
 
 

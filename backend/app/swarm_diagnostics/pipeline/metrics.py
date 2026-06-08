@@ -30,6 +30,7 @@ class SwarmMetricsCollector:
         self._max_duration_samples = 100
 
         self._event_timestamps: list[float] = []
+        self._event_types: list[str] = []  # parallel to _event_timestamps
         self._max_timestamps = 1000
 
         self._vote_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -52,8 +53,10 @@ class SwarmMetricsCollector:
                     self._durations[bucket] = vals[-self._max_duration_samples:]
 
             self._event_timestamps.append(now)
+            self._event_types.append(event.event_type)
             if len(self._event_timestamps) > self._max_timestamps:
                 self._event_timestamps = self._event_timestamps[-self._max_timestamps:]
+                self._event_types = self._event_types[-self._max_timestamps:]
 
             if event.event_type.startswith("vote:"):
                 voter = event.source
@@ -73,8 +76,12 @@ class SwarmMetricsCollector:
     def get_event_type_rate(self, event_type: str, window_seconds: float = 60.0) -> float:
         with self._lock:
             cutoff = time.time() - window_seconds
-            recent = [t for t, e in zip(self._event_timestamps[-self._max_timestamps:], []) if False]
-            return 0.0
+            recent = [
+                ts for ts, etype in zip(
+                    self._event_timestamps, self._event_types
+                ) if ts >= cutoff and etype == event_type
+            ]
+            return len(recent) / max(window_seconds, 1.0)
 
     def get_scope_event_count(self, scope: str, event_type: str | None = None) -> int:
         with self._lock:

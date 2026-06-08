@@ -1,16 +1,71 @@
-"""
-Servicio de cursos.
-Lógica de negocio para CRUD de cursos, publicación e inscripciones.
-"""
-
+from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models.course import Course, CourseStatus
 from app.models.enrollment import Enrollment, EnrollmentStatus
+from app.models.institutional_course import InstitutionalCourse
 from app.models.learning_objective import LearningObjective
+from app.models.teacher_assignment import TeacherAssignment
 from app.models.user import User, UserRole
+from app.events.types import emit_event, EventType
+
+
+def resolve_or_create_course(
+    db: Session,
+    institutional_course_id: str,
+    year: int,
+    teacher_id: str | None = None,
+    status: CourseStatus = CourseStatus.BORRADOR,
+) -> Course:
+    course = (
+        db.query(Course)
+        .filter(
+            Course.institutional_course_id == institutional_course_id,
+            Course.year == year,
+        )
+        .first()
+    )
+
+    if course:
+        if teacher_id is not None and course.teacher_id is None:
+            course.teacher_id = teacher_id
+            db.flush()
+            emit_event(db, EventType.COURSE_TEACHER_ASSIGNED, course.id, {
+                "course_id": course.id,
+                "teacher_id": teacher_id,
+                "institutional_course_id": institutional_course_id,
+            })
+        return course
+
+    inst = db.query(InstitutionalCourse).filter(
+        InstitutionalCourse.id == institutional_course_id
+    ).first()
+    if not inst:
+        raise ValueError(f"InstitutionalCourse {institutional_course_id} not found")
+
+    course = Course(
+        code=inst.code,
+        name=inst.name,
+        description=inst.competencies,
+        cycle=inst.cycle,
+        year=year,
+        teacher_id=teacher_id,
+        institutional_course_id=institutional_course_id,
+        is_institutional=True,
+        status=status,
+    )
+    db.add(course)
+    db.flush()
+    emit_event(db, EventType.COURSE_CREATED, course.id, {
+        "course_id": course.id,
+        "code": inst.code,
+        "cycle": inst.cycle,
+        "teacher_id": teacher_id,
+    })
+    return course
 
 
 def get_courses(
@@ -22,7 +77,18 @@ def get_courses(
     query = db.query(Course)
 
     if user.role == UserRole.DOCENTE:
-        query = query.filter(Course.teacher_id == user.id)
+        assigned_ids = [
+            a.institutional_course_id
+            for a in db.query(TeacherAssignment)
+            .filter(TeacherAssignment.teacher_id == user.id)
+            .all()
+        ]
+        query = query.filter(
+            or_(
+                Course.teacher_id == user.id,
+                Course.institutional_course_id.in_(assigned_ids),
+            )
+        )
     elif user.role == UserRole.ESTUDIANTE:
         query = (
             query.join(Enrollment, Enrollment.course_id == Course.id)
@@ -101,6 +167,9 @@ def publish_course(db: Session, course: Course) -> tuple[bool, str]:
     course.status = CourseStatus.PUBLICADO
     db.commit()
     db.refresh(course)
+    emit_event(db, EventType.COURSE_PUBLISHED, course.id, {
+        "course_id": course.id,
+    })
     return True, "Curso publicado exitosamente"
 
 
@@ -146,6 +215,7 @@ def enroll_students(
             enrollment = Enrollment(
                 course_id=course_id,
                 student_id=student_id,
+                teacher_id=course.teacher_id,
                 status=EnrollmentStatus.ACTIVO,
             )
             db.add(enrollment)
@@ -157,6 +227,13 @@ def enroll_students(
                     {"student_id": student_id, "message": "Ya está inscrito en este curso"}
                 )
                 continue
+
+            emit_event(db, EventType.ENROLLMENT_CREATED, enrollment.id, {
+                "enrollment_id": enrollment.id,
+                "student_id": student_id,
+                "course_id": course_id,
+                "teacher_id": course.teacher_id,
+            })
         result["success"] += 1
 
     if result["success"] > 0:
@@ -165,15 +242,39 @@ def enroll_students(
     return result
 
 
-def get_enrolled_students(db: Session, course_id: str) -> list[dict]:
+def get_enrolled_students(db: Session, course_id: str, current_user: User | None = None) -> list[dict]:
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        return []
+
+    if current_user and current_user.role != UserRole.ADMIN:
+        is_owner = course.teacher_id == current_user.id
+        is_assigned = False
+        if course.institutional_course_id:
+            assignment = db.query(TeacherAssignment).filter(
+                TeacherAssignment.teacher_id == current_user.id,
+                TeacherAssignment.institutional_course_id == course.institutional_course_id,
+            ).first()
+            is_assigned = assignment is not None
+        if not is_owner and not is_assigned:
+            raise PermissionError("Solo el docente del curso o un admin puede ver los estudiantes inscritos")
+
     enrollments = (
         db.query(Enrollment)
         .filter(Enrollment.course_id == course_id)
         .all()
     )
+    student_ids = [e.student_id for e in enrollments]
+    if not student_ids:
+        return []
+
+    user_map = {}
+    for row in db.query(User).filter(User.id.in_(student_ids)).all():
+        user_map[row.id] = row
+
     students_list = []
     for enrollment in enrollments:
-        student = db.query(User).filter(User.id == enrollment.student_id).first()
+        student = user_map.get(enrollment.student_id)
         if not student:
             continue
         students_list.append({

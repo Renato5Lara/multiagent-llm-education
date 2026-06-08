@@ -14,92 +14,81 @@ logger = logging.getLogger(__name__)
 
 def ensure_course_nodes(db: Session):
     courses = db.query(InstitutionalCourse).all()
+    existing_nodes = {
+        n.external_id: n
+        for n in db.query(KnowledgeNode)
+        .filter(KnowledgeNode.node_type == "institutional_course")
+        .all()
+        if n.external_id
+    }
     for course in courses:
-        existing = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "institutional_course",
-                KnowledgeNode.external_id == course.id,
-            )
-            .first()
+        if course.id in existing_nodes:
+            continue
+        node = KnowledgeNode(
+            node_type="institutional_course",
+            label=f"{course.code}: {course.name}",
+            description=course.competencies,
+            external_id=course.id,
+            metadata_json={
+                "code": course.code,
+                "credits": course.credits,
+                "cycle": course.cycle,
+            },
         )
-        if not existing:
-            node = KnowledgeNode(
-                node_type="institutional_course",
-                label=f"{course.code}: {course.name}",
-                description=course.competencies,
-                external_id=course.id,
-                metadata_json={
-                    "code": course.code,
-                    "credits": course.credits,
-                    "cycle": course.cycle,
-                },
-            )
-            db.add(node)
+        db.add(node)
     db.commit()
 
 
 def ensure_prerequisite_edges(db: Session):
     ensure_course_nodes(db)
     prereqs = db.query(InstitutionalCoursePrerequisite).all()
+    nodes = {
+        n.external_id: n
+        for n in db.query(KnowledgeNode)
+        .filter(KnowledgeNode.node_type == "institutional_course")
+        .all()
+        if n.external_id
+    }
+    existing_edges = {
+        (e.source_id, e.target_id)
+        for e in db.query(KnowledgeEdge)
+        .filter(KnowledgeEdge.relationship_type == "prerequisite")
+        .all()
+    }
     for prereq in prereqs:
-        source = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "institutional_course",
-                KnowledgeNode.external_id == prereq.prerequisite_id,
+        source = nodes.get(prereq.prerequisite_id)
+        target = nodes.get(prereq.course_id)
+        if source and target and (source.id, target.id) not in existing_edges:
+            edge = KnowledgeEdge(
+                source_id=source.id,
+                target_id=target.id,
+                relationship_type="prerequisite",
+                weight=1.0,
             )
-            .first()
-        )
-        target = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "institutional_course",
-                KnowledgeNode.external_id == prereq.course_id,
-            )
-            .first()
-        )
-        if source and target:
-            existing = (
-                db.query(KnowledgeEdge)
-                .filter(
-                    KnowledgeEdge.source_id == source.id,
-                    KnowledgeEdge.target_id == target.id,
-                    KnowledgeEdge.relationship_type == "prerequisite",
-                )
-                .first()
-            )
-            if not existing:
-                edge = KnowledgeEdge(
-                    source_id=source.id,
-                    target_id=target.id,
-                    relationship_type="prerequisite",
-                    weight=1.0,
-                )
-                db.add(edge)
+            db.add(edge)
     db.commit()
 
 
 def ensure_competency_nodes(db: Session):
     competencies = db.query(Competency).all()
+    existing_nodes = {
+        n.external_id: n
+        for n in db.query(KnowledgeNode)
+        .filter(KnowledgeNode.node_type == "competency")
+        .all()
+        if n.external_id
+    }
     for comp in competencies:
-        existing = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "competency",
-                KnowledgeNode.external_id == comp.id,
-            )
-            .first()
+        if comp.id in existing_nodes:
+            continue
+        node = KnowledgeNode(
+            node_type="competency",
+            label=comp.name,
+            description=comp.description,
+            external_id=comp.id,
+            metadata_json={"competency_type": comp.competency_type.value if hasattr(comp.competency_type, 'value') else comp.competency_type},
         )
-        if not existing:
-            node = KnowledgeNode(
-                node_type="competency",
-                label=comp.name,
-                description=comp.description,
-                external_id=comp.id,
-                metadata_json={"competency_type": comp.competency_type.value if hasattr(comp.competency_type, 'value') else comp.competency_type},
-            )
-            db.add(node)
+        db.add(node)
     db.commit()
 
 
@@ -107,41 +96,38 @@ def ensure_competency_course_edges(db: Session):
     ensure_competency_nodes(db)
     ensure_course_nodes(db)
 
+    course_nodes = {
+        n.external_id: n
+        for n in db.query(KnowledgeNode)
+        .filter(KnowledgeNode.node_type == "institutional_course")
+        .all()
+        if n.external_id
+    }
+    comp_nodes = {
+        n.external_id: n
+        for n in db.query(KnowledgeNode)
+        .filter(KnowledgeNode.node_type == "competency")
+        .all()
+        if n.external_id
+    }
+    existing_edges = {
+        (e.source_id, e.target_id)
+        for e in db.query(KnowledgeEdge)
+        .filter(KnowledgeEdge.relationship_type == "teaches")
+        .all()
+    }
+
     assocs = db.query(CourseCompetency).all()
     for assoc in assocs:
-        course_node = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "institutional_course",
-                KnowledgeNode.external_id == assoc.course_id,
+        course_node = course_nodes.get(assoc.course_id)
+        comp_node = comp_nodes.get(assoc.competency_id)
+        if course_node and comp_node and (course_node.id, comp_node.id) not in existing_edges:
+            edge = KnowledgeEdge(
+                source_id=course_node.id,
+                target_id=comp_node.id,
+                relationship_type="teaches",
             )
-            .first()
-        )
-        comp_node = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "competency",
-                KnowledgeNode.external_id == assoc.competency_id,
-            )
-            .first()
-        )
-        if course_node and comp_node:
-            existing = (
-                db.query(KnowledgeEdge)
-                .filter(
-                    KnowledgeEdge.source_id == course_node.id,
-                    KnowledgeEdge.target_id == comp_node.id,
-                    KnowledgeEdge.relationship_type == "teaches",
-                )
-                .first()
-            )
-            if not existing:
-                edge = KnowledgeEdge(
-                    source_id=course_node.id,
-                    target_id=comp_node.id,
-                    relationship_type="teaches",
-                )
-                db.add(edge)
+            db.add(edge)
     db.commit()
 
 
@@ -199,31 +185,57 @@ def get_student_knowledge_graph(db: Session, student: User) -> dict:
 
 
 def get_course_recommendations_from_graph(db: Session, weaknesses: list[str]) -> list[dict]:
-    recommendations = []
-    for weakness in weaknesses:
-        weak_nodes = (
-            db.query(KnowledgeNode)
-            .filter(
-                KnowledgeNode.node_type == "competency",
-                KnowledgeNode.label.ilike(f"%{weakness}%"),
-            )
-            .all()
+    if not weaknesses:
+        return []
+
+    filters = [
+        KnowledgeNode.node_type == "competency",
+    ]
+    if len(weaknesses) == 1:
+        like_clause = KnowledgeNode.label.ilike(f"%{weaknesses[0]}%")
+        filters.append(like_clause)
+    else:
+        from sqlalchemy import or_
+        like_clauses = [KnowledgeNode.label.ilike(f"%{w}%") for w in weaknesses]
+        filters.append(or_(*like_clauses))
+
+    weak_nodes = db.query(KnowledgeNode).filter(*filters).all()
+
+    if not weak_nodes:
+        return []
+
+    weak_node_ids = [n.id for n in weak_nodes]
+    weak_node_map = {n.id: n for n in weak_nodes}
+
+    teaching_edges = (
+        db.query(KnowledgeEdge)
+        .filter(
+            KnowledgeEdge.target_id.in_(weak_node_ids),
+            KnowledgeEdge.relationship_type == "teaches",
         )
-        for node in weak_nodes:
-            teaching_edges = (
-                db.query(KnowledgeEdge)
-                .filter(
-                    KnowledgeEdge.target_id == node.id,
-                    KnowledgeEdge.relationship_type == "teaches",
-                )
-                .all()
-            )
-            for edge in teaching_edges:
-                course_node = db.query(KnowledgeNode).filter(KnowledgeNode.id == edge.source_id).first()
-                if course_node:
-                    recommendations.append({
-                        "course": course_node.label,
-                        "competency": node.label,
-                        "reason": f"Refuerza {node.label} a través de {course_node.label}",
-                    })
+        .all()
+    )
+
+    if not teaching_edges:
+        return []
+
+    source_ids = list({e.source_id for e in teaching_edges})
+    source_nodes = {
+        n.id: n.label
+        for n in db.query(KnowledgeNode).filter(KnowledgeNode.id.in_(source_ids)).all()
+    }
+
+    recommendations = []
+    for edge in teaching_edges:
+        course_label = source_nodes.get(edge.source_id)
+        if not course_label:
+            continue
+        node = weak_node_map.get(edge.target_id)
+        if not node:
+            continue
+        recommendations.append({
+            "course": course_label,
+            "competency": node.label,
+            "reason": f"Refuerza {node.label} a través de {course_label}",
+        })
     return recommendations

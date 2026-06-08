@@ -4,6 +4,7 @@ import { GraduationCap, ArrowRight, Loader2, Sparkles, BookOpen, Cpu } from 'luc
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/authStore'
+
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useToast } from '@/hooks/use-toast'
 import api from '@/lib/api'
@@ -57,9 +58,10 @@ export default function Onboarding() {
       const resp = await api.patch('/api/students/onboarding/cycle', { cycle })
       return resp.data
     },
-    onSuccess: () => {
-      if (user) {
-        setUser({ ...user, current_cycle: selectedCycle! })
+    onSuccess: (_data, cycle) => {
+      const currentUser = useAuthStore.getState().user
+      if (currentUser) {
+        setUser({ ...currentUser, current_cycle: cycle })
       }
       toast({ title: '¡Ciclo asignado exitosamente!' })
       navigate('/estudiante')

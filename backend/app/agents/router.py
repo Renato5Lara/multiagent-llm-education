@@ -15,7 +15,7 @@ from app.agents.graph import run_agents
 from app.agents.schemas import DiagnosticAnswers
 from app.schemas.diagnostic import DiagnosticProfile
 from app.services import student_service, evaluation_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 from app.services.course_service import get_course_by_id
 
 logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ def generate_plan(
 
     result = run_agents(state)
 
-    log_action(db, current_user.id, "generar_plan_agentes", "agent", course_id)
+    log_action_sync(db, current_user.id, "generar_plan_agentes", "agent", course_id)
 
     return {
         "learning_profile": result.get("learning_profile"),
@@ -121,6 +121,6 @@ def generate_evaluation(
 
     result = run_agents(state)
 
-    log_action(db, current_user.id, "generar_evaluacion_agentes", "agent", course_id)
+    log_action_sync(db, current_user.id, "generar_evaluacion_agentes", "agent", course_id)
 
     return {"evaluation_plan": result.get("evaluation_plan", [])}

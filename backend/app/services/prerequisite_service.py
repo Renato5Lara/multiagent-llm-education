@@ -205,39 +205,74 @@ def is_student_enrolled_in_course(db: Session, student_id: str, course_id: str) 
 
 def check_course_access(db: Session, student: User, course: Course) -> dict:
     prereq_inst_courses = get_institutional_prerequisites(db, course)
+    if not prereq_inst_courses:
+        return {
+            "course_id": course.id,
+            "course_code": course.code,
+            "course_name": course.name,
+            "is_unlocked": True,
+            "prerequisites_met": True,
+            "missing_prerequisites": [],
+            "completed_prerequisites": [],
+            "reason": None,
+        }
+
+    prereq_inst_ids = [p.id for p in prereq_inst_courses]
+    prereq_inst_map = {p.id: p for p in prereq_inst_courses}
+
+    prereq_courses = (
+        db.query(Course)
+        .filter(Course.institutional_course_id.in_(prereq_inst_ids))
+        .all()
+    )
+    best_course_map: dict[str, Course] = {}
+    for pc in prereq_courses:
+        if pc.institutional_course_id:
+            existing = best_course_map.get(pc.institutional_course_id)
+            if not existing or (pc.year == course.year and existing.year != course.year):
+                best_course_map[pc.institutional_course_id] = pc
+
+    prereq_course_ids = [pc.id for pc in best_course_map.values()]
+    enrollment_map = {}
+    if prereq_course_ids:
+        enrollments = (
+            db.query(Enrollment)
+            .filter(
+                Enrollment.student_id == student.id,
+                Enrollment.course_id.in_(prereq_course_ids),
+            )
+            .all()
+        )
+        enrollment_map = {e.course_id: e for e in enrollments}
+
     missing = []
     completed = []
 
-    for prereq in prereq_inst_courses:
-        prereq_course = (
-            db.query(Course)
-            .filter(
-                Course.institutional_course_id == prereq.id,
-                Course.year == course.year,
-            )
-            .first()
-        )
-        if not prereq_course:
-            prereq_course = (
-                db.query(Course).filter(Course.institutional_course_id == prereq.id).first()
-            )
+    for inst_course in prereq_inst_courses:
+        course_for_prereq = best_course_map.get(inst_course.id)
+        if not course_for_prereq:
+            missing.append({
+                "course_id": None,
+                "code": inst_course.code,
+                "name": inst_course.name,
+                "status": "not_started",
+            })
+            continue
 
-        if prereq_course:
-            is_completed = has_student_completed_course(db, student.id, prereq_course.id)
-            if is_completed:
-                completed.append({
-                    "course_id": prereq_course.id,
-                    "code": prereq.code,
-                    "name": prereq.name,
-                })
-            else:
-                is_enrolled = is_student_enrolled_in_course(db, student.id, prereq_course.id)
-                missing.append({
-                    "course_id": prereq_course.id,
-                    "code": prereq.code,
-                    "name": prereq.name,
-                    "status": "enrolled" if is_enrolled else "not_started",
-                })
+        enrollment = enrollment_map.get(course_for_prereq.id)
+        if enrollment and enrollment.status == EnrollmentStatus.COMPLETADO:
+            completed.append({
+                "course_id": course_for_prereq.id,
+                "code": inst_course.code,
+                "name": inst_course.name,
+            })
+        else:
+            missing.append({
+                "course_id": course_for_prereq.id,
+                "code": inst_course.code,
+                "name": inst_course.name,
+                "status": "enrolled" if enrollment else "not_started",
+            })
 
     is_unlocked = len(missing) == 0
     reason = None
@@ -471,10 +506,17 @@ def get_next_recommended_course(db: Session, student: User) -> Optional[dict]:
         .filter(Course.cycle == next_cycle, Course.status != "archivado")
         .all()
     )
+    if not next_courses:
+        return None
+
+    course_ids = [c.id for c in next_courses]
+    prereq_map = _load_prerequisite_map(db, course_ids)
+    enrollment_map = _load_enrollment_map(db, student.id, course_ids)
+    access_map = _batch_check_course_access(db, student.id, course_ids, prereq_map, enrollment_map)
 
     for course in next_courses:
-        access = check_course_access(db, student, course)
-        if access["is_unlocked"]:
+        access = access_map.get(course.id, {})
+        if access.get("is_unlocked"):
             return {
                 "course_id": course.id,
                 "course_code": course.code,

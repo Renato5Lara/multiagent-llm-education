@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -15,6 +16,8 @@ from app.db.uow import UnitOfWork
 from app.observability.tracing import TraceContext, TracingSpan
 from app.observability.consensus_metrics import metrics
 from app.observability.swarm_diagnostics import diagnostics
+from app.observability.metrics_exporter import exporter
+from app.observability.stream import stream
 from app.models.course import Course, CourseStatus
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.student_memory import StudentMemory
@@ -42,6 +45,138 @@ def _batch_store_memory(
         )
         results.append(mem)
     return results
+
+
+async def _publish_consensus_memory(
+    votes_data: list[dict],
+    student_id: str,
+    module_id: str,
+    consensus_decision: str,
+    consensus_confidence: float,
+) -> None:
+    """Post-commit background task: publish consensus votes to shared memory.
+
+    Uses a dedicated AsyncUnitOfWork independent of the progression transaction.
+    Called via FastAPI BackgroundTasks after complete_module commits — safe because
+    BackgroundTasks only run when a response is successfully returned (no rollback).
+    Best-effort: failures are logged and swallowed, never raised to the caller.
+    """
+    from app.db.session import AsyncSessionLocal
+    from app.db.uow import AsyncUnitOfWork
+    from app.memory.shared_memory import SharedMemoryStore
+
+    uow = AsyncUnitOfWork(AsyncSessionLocal)
+    try:
+        store = SharedMemoryStore(uow)
+        for v in votes_data:
+            await store.publish_observation(
+                voter_name=v["voter_name"],
+                key=f"vote:{v['voter_name']}:{module_id[:12]}",
+                value={
+                    "decision": v["decision"],
+                    "confidence": v["confidence"],
+                    "reason": v.get("reason", ""),
+                    "evidence": v.get("evidence", {}),
+                },
+                confidence=v["confidence"],
+                student_id=student_id,
+                module_id=module_id,
+                memory_type="observation",
+                metadata_json={
+                    "consensus_decision": consensus_decision,
+                    "consensus_confidence": consensus_confidence,
+                },
+            )
+        await store.publish_observation(
+            voter_name="_engine",
+            key=f"consensus:{module_id[:12]}",
+            value={
+                "decision": consensus_decision,
+                "confidence": consensus_confidence,
+                "num_votes": len(votes_data),
+                "unanimous": all(v["decision"] == "approve" for v in votes_data),
+            },
+            confidence=consensus_confidence,
+            student_id=student_id,
+            module_id=module_id,
+            memory_type="inference",
+            ttl_seconds=86400 * 14,
+            metadata_json={
+                "voter_names": [v["voter_name"] for v in votes_data],
+                "voter_decisions": [v["decision"] for v in votes_data],
+            },
+        )
+        await uow.commit()
+    except Exception:
+        logger.warning(
+            "Consensus memory publication failed (non-fatal): module=%s student=%s",
+            module_id[:12],
+            student_id[:8],
+            exc_info=True,
+        )
+        if uow.is_active:
+            await uow.rollback()
+    finally:
+        await uow.close()
+
+
+async def _run_consensus_async(
+    eng: ConsensusEngine,
+    ctx: VoteContext,
+    trace_ctx: Any,
+    trust_system: Any,
+    specialization_tracker: Any,
+) -> Any:
+    """Run async consensus with full shared memory from a sync caller.
+
+    Two isolated UnitOfWork instances are created:
+    - mem_uow (AsyncUnitOfWork): handles all shared memory read/write.
+    - voter_uow (UnitOfWork): provides voter DB queries; kept separate from
+      the caller's progression transaction so the progression Session is never
+      passed to asyncio.to_thread threadpool threads.
+
+    Safe to call via asyncio.run() from FastAPI sync routes, which run in
+    a threadpool thread with no running event loop.
+    """
+    from app.db.session import AsyncSessionLocal, SessionLocal
+    from app.db.uow import AsyncUnitOfWork, UnitOfWork as SyncUnitOfWork
+    from app.memory.shared_memory import SharedMemoryStore
+
+    mem_uow = AsyncUnitOfWork(AsyncSessionLocal)
+    voter_uow = SyncUnitOfWork(SessionLocal)
+    try:
+        store = SharedMemoryStore(mem_uow)
+
+        voter_ctx = VoteContext(
+            uow=voter_uow,
+            student_id=ctx.student_id,
+            module_id=ctx.module_id,
+            path_id=ctx.path_id,
+            course_id=ctx.course_id,
+            score=ctx.score,
+            module=ctx.module,
+            path=ctx.path,
+            evidence=ctx.evidence,
+        )
+
+        result = await eng.async_run(
+            voter_ctx,
+            trace_ctx=trace_ctx,
+            trust_system=trust_system,
+            specialization_tracker=specialization_tracker,
+            shared_memory_store=store,
+        )
+        await mem_uow.commit()
+        return result
+    except Exception:
+        if mem_uow.is_active:
+            await mem_uow.rollback()
+        raise
+    finally:
+        await mem_uow.close()
+        if voter_uow.is_active:
+            voter_uow.rollback()
+        voter_uow.close()
 
 
 def evaluate_module_completion(
@@ -103,12 +238,8 @@ def evaluate_module_completion(
             # Pass trace context and adaptive trust/specialization systems
             trust = get_trust_system()
             spec = get_specialization_tracker()
-            consensus = eng.run(
-                ctx,
-                trace_ctx=trace_ctx,
-                trust_system=trust,
-                specialization_tracker=spec,
-                shared_memory_store=shared_memory_store,
+            consensus = asyncio.run(
+                _run_consensus_async(eng, ctx, trace_ctx, trust, spec)
             )
 
             # Emit event with full trace + trust metadata in payload
@@ -140,6 +271,25 @@ def evaluate_module_completion(
                 "trace_id": trace_ctx.trace_id,
             })
             metrics.record_run(consensus, root_span.duration_ms or 0.0)
+
+            # Export metrics to Prometheus/SSE
+            exporter.inc_counter("consensus_total")
+            exporter.set_gauge("consensus_confidence", consensus.confidence)
+            for timing in consensus.voter_timings:
+                exporter.observe_histogram("voter_latency", timing.get("duration_ms", 0))
+
+            # SSE notification: best-effort, fire-and-forget.
+            # push_sync() is the correct API for sync callers — it uses
+            # run_coroutine_threadsafe when an event loop is available, and
+            # logs at DEBUG level when the event must be dropped (no loop).
+            stream.push_sync("consensus", {
+                "module_id": module_id,
+                "decision": consensus.decision.value,
+                "confidence": consensus.confidence,
+                "unanimous": consensus.unanimous,
+                "duration_ms": root_span.duration_ms or 0.0,
+                "voters": len(consensus.votes),
+            })
 
             # ── Decision and state mutation (inside advisory lock) ──────
 

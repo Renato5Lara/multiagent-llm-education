@@ -1,0 +1,25 @@
+# Dockerfile.sandbox — hardened minimal Python 3.12 sandbox for untrusted code execution
+# Build: docker build -f backend/Dockerfile.sandbox -t upao-mas-edu-sandbox:latest .
+# Runtime: No network, read-only root, tmpfs for /tmp, all capabilities dropped
+
+FROM python:3.12-alpine AS base
+
+RUN adduser -D -u 1000 -g 1000 sandbox \
+    && mkdir -p /tmp /run \
+    && chmod 1777 /tmp /run
+
+RUN python3 -c "import sys; sys.setrecursionlimit(100)"
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONHASHSEED=0 \
+    PYTHONIOENCODING=UTF-8 \
+    PIP_NO_INSTALL=1 \
+    PIP_NO_DOWNLOAD=1
+
+COPY --chown=sandbox:sandbox --chmod=444 /dev/null /tmp/script.py
+
+USER sandbox
+WORKDIR /tmp
+
+CMD ["python3", "-u", "/tmp/script.py"]

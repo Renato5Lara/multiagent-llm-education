@@ -11,7 +11,7 @@ from app.models.learning_objective import LearningObjective
 from app.models.user import User
 from app.schemas.objective import ObjectiveCreate, ObjectiveResponse, ObjectiveUpdate
 from app.services import course_service
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 
 router = APIRouter(tags=["Objetivos de Aprendizaje"])
 
@@ -56,7 +56,7 @@ def create_objective(
     db.add(objective)
     db.commit()
     db.refresh(objective)
-    log_action(db, current_user.id, "crear_objetivo", "objective", objective.id)
+    log_action_sync(db, current_user.id, "crear_objetivo", "objective", objective.id)
     return objective
 
 
@@ -81,7 +81,7 @@ def update_objective(
 
     db.commit()
     db.refresh(objective)
-    log_action(db, current_user.id, "actualizar_objetivo", "objective", objective_id)
+    log_action_sync(db, current_user.id, "actualizar_objetivo", "objective", objective_id)
     return objective
 
 
@@ -101,4 +101,4 @@ def delete_objective(
 
     db.delete(objective)
     db.commit()
-    log_action(db, current_user.id, "eliminar_objetivo", "objective", objective_id)
+    log_action_sync(db, current_user.id, "eliminar_objetivo", "objective", objective_id)

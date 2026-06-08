@@ -7,6 +7,9 @@ from app.models.institutional_course import InstitutionalCourse, InstitutionalCo
 from app.models.teacher_assignment import TeacherAssignment
 from app.models.user import User
 from app.models.course import Course, CourseStatus
+from app.models.enrollment import Enrollment, EnrollmentStatus
+from app.services.course_service import resolve_or_create_course
+from app.events.types import emit_event, EventType
 
 
 def get_prerequisite_codes(db: Session, course_id: str) -> list[str]:
@@ -16,12 +19,13 @@ def get_prerequisite_codes(db: Session, course_id: str) -> list[str]:
         .filter(InstitutionalCoursePrerequisite.course_id == course_id)
         .all()
     ]
-    codes = []
-    for pid in prereq_ids:
-        pc = db.query(InstitutionalCourse).filter(InstitutionalCourse.id == pid).first()
-        if pc:
-            codes.append(pc.code)
-    return codes
+    if not prereq_ids:
+        return []
+    pc_map = {
+        ic.id: ic.code
+        for ic in db.query(InstitutionalCourse).filter(InstitutionalCourse.id.in_(prereq_ids)).all()
+    }
+    return [pc_map[pid] for pid in prereq_ids if pid in pc_map]
 
 
 def course_to_dict(db: Session, c: InstitutionalCourse) -> dict:
@@ -112,34 +116,31 @@ def create_course_from_institutional(
 ) -> Optional[Course]:
     if year is None:
         year = datetime.now(timezone.utc).year
+
     inst = get_institutional_course_by_id(db, institutional_course_id)
     if not inst:
         return None
 
-    existing = (
-        db.query(Course)
-        .filter(
-            Course.institutional_course_id == institutional_course_id,
-            Course.teacher_id == teacher_id,
-            Course.year == year,
-        )
-        .first()
-    )
-    if existing:
-        return existing
-
-    course = Course(
-        code=inst.code,
-        name=inst.name,
-        description=inst.competencies,
-        cycle=inst.cycle,
+    course = resolve_or_create_course(
+        db,
+        institutional_course_id=institutional_course_id,
         year=year,
         teacher_id=teacher_id,
-        institutional_course_id=inst.id,
-        is_institutional=True,
         status=CourseStatus.BORRADOR,
     )
-    db.add(course)
+
+    if course.teacher_id is None:
+        course.teacher_id = teacher_id
+        db.flush()
+
     db.commit()
     db.refresh(course)
+
+    _activate_pending_enrollments(db, course.id)
+
     return course
+
+
+def _activate_pending_enrollments(db: Session, course_id: str) -> int:
+    from app.services.activation_service import activate_enrollments_for_course_sync
+    return activate_enrollments_for_course_sync(db, course_id)

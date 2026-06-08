@@ -1,11 +1,11 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { FileText, Film, ImageIcon, File, ArrowLeft, Download, Headphones, Gamepad2, Puzzle, CheckCircle } from 'lucide-react'
+import { FileText, Film, ImageIcon, File, ArrowLeft, Download, Headphones, Gamepad2, Puzzle, CheckCircle, BookOpen } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import PageHeader from '@/components/common/PageHeader'
 import api from '@/lib/api'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useUpdateProgress } from '@/hooks/useStudent'
 import { useToast } from '@/hooks/use-toast'
 import type { Resource } from '@/types/resource'
@@ -25,10 +25,14 @@ export default function ContentViewer() {
     const { resourceId } = useParams<{ resourceId: string }>()
     const [searchParams] = useSearchParams()
     const courseId = searchParams.get('courseId') || undefined
+    const sessionId = searchParams.get('sessionId') || undefined
     const navigate = useNavigate()
     const { toast } = useToast()
+    const queryClient = useQueryClient()
     const { data: resource, isLoading } = useResourceMeta(resourceId)
     const updateProgress = useUpdateProgress()
+
+    const isNoResource = resourceId === 'no-resource' || !resourceId
 
     const getIcon = (type?: string) => {
         switch (type) {
@@ -47,12 +51,17 @@ export default function ContentViewer() {
         window.open(`/api/resources/${resourceId}/download`, '_blank')
     }
 
-    const handleMarkComplete = () => {
+    const handleMarkComplete = async () => {
         if (!courseId) return
         updateProgress.mutate(
             { courseId, resourceId: resourceId || undefined, progressPercentage: 100 },
             {
                 onSuccess: () => {
+                    if (sessionId) {
+                        api.post(`/api/sessions/${sessionId}/end`).catch(() => {})
+                    }
+                    queryClient.invalidateQueries({ queryKey: ['learning-path', courseId] })
+                    queryClient.invalidateQueries({ queryKey: ['my-courses'] })
                     toast({ title: 'Recurso marcado como completado' })
                 },
             }
@@ -68,7 +77,29 @@ export default function ContentViewer() {
         )
     }
 
-    if (!resource) {
+    if (!resource && !isLoading) {
+        if (isNoResource) {
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <PageHeader title="Contenido del Módulo" description="Preparando contenido adaptativo..." />
+                    <Card>
+                        <CardContent className="p-12 text-center">
+                            <BookOpen className="h-16 w-16 text-primary mx-auto mb-4 opacity-60" />
+                            <h3 className="text-lg font-semibold mb-2">Módulo listo para estudiar</h3>
+                            <p className="text-muted-foreground mb-6">
+                                El contenido adaptativo se está generando para este módulo.
+                                El enjambre de agentes educativos está personalizando los materiales para tu estilo de aprendizaje.
+                            </p>
+                            <div className="flex gap-3 justify-center">
+                                <Button onClick={() => navigate(`/estudiante/path/${courseId}`)}>
+                                    Volver a la ruta
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )
+        }
         return (
             <div className="max-w-4xl mx-auto">
                 <PageHeader title="Visor de Contenido" description="Material educativo del módulo" />
@@ -82,6 +113,8 @@ export default function ContentViewer() {
             </div>
         )
     }
+
+    if (!resource) return null
 
     return (
         <div className="max-w-4xl mx-auto">

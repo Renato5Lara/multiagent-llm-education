@@ -134,3 +134,6 @@ docker-compose.override.yml
 *.pyi
 
 outputs/pptx-audit/
+# ===== LOCAL TOOLING =====
+.claude/settings.local.json
+.codegraph/daemon.pid

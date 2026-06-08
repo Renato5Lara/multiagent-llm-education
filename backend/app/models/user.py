@@ -33,6 +33,7 @@ class User(Base):
     institutional_code = Column(String(50), nullable=True)
     area = Column(String(100), nullable=True)
     current_cycle = Column(Integer, nullable=True)
+    token_version = Column(Integer, default=1, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
@@ -44,11 +45,11 @@ class User(Base):
         nullable=False,
     )
 
-    courses_taught = relationship("Course", back_populates="teacher", lazy="selectin")
-    enrollments = relationship("Enrollment", back_populates="student", lazy="selectin")
-    audit_logs = relationship("AuditLog", back_populates="user", lazy="selectin")
-    student_profile = relationship("StudentProfile", back_populates="student", uselist=False, lazy="selectin")
-    teacher_assignments = relationship("TeacherAssignment", back_populates="teacher", lazy="selectin")
+    courses_taught = relationship("Course", back_populates="teacher", lazy="select")
+    enrollments = relationship("Enrollment", back_populates="student", lazy="select", foreign_keys="Enrollment.student_id")
+    audit_logs = relationship("AuditLog", back_populates="user", lazy="select")
+    student_profile = relationship("StudentProfile", back_populates="student", uselist=False, lazy="select")
+    teacher_assignments = relationship("TeacherAssignment", back_populates="teacher", lazy="select")
 
     def __repr__(self) -> str:
         return f"<User {self.email} ({self.role.value})>"

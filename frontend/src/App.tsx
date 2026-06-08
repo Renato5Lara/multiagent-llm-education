@@ -21,6 +21,7 @@ const DocenteDashboard = lazy(() => import('@/pages/docente/Dashboard'))
 const DocenteCourses = lazy(() => import('@/pages/docente/Courses'))
 const CourseDetail = lazy(() => import('@/pages/docente/CourseDetail'))
 const DocenteAnalytics = lazy(() => import('@/pages/docente/Analytics'))
+const SwarmComparison = lazy(() => import('@/pages/docente/SwarmComparison'))
 
 const EstudianteDashboard = lazy(() => import('@/pages/estudiante/Dashboard'))
 const EstudianteOnboarding = lazy(() => import('@/pages/estudiante/Onboarding'))
@@ -63,6 +64,7 @@ export default function App() {
                         <Route path="/docente/courses" element={<DocenteCourses />} />
                         <Route path="/docente/courses/:id" element={<CourseDetail />} />
                         <Route path="/docente/analytics" element={<DocenteAnalytics />} />
+                        <Route path="/docente/swarm-comparison" element={<SwarmComparison />} />
                     </Route>
                 </Route>
 
