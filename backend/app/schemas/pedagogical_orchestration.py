@@ -80,6 +80,10 @@ class AdaptationPlan(BaseModel):
     explanation_depth: str = Field(default="standard", description="basic/standard/detailed")
     concept_sequence: list[str] = Field(default_factory=list)
     reinforcement_frequency: str = Field(default="normal", description="low/normal/high")
+    adaptation_rationale: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Explicaciones de cada decisión de adaptación con señales del perfil",
+    )
 
 
 # ── Planificación multimodal ──────────────────────────────────────
@@ -91,6 +95,15 @@ class ModalityDecision(BaseModel):
     generate_prompt: bool = Field(default=True, description="¿Generar prompt especializado?")
     reason: str = Field(default="", description="Razón pedagógica de la decisión")
     prompt_type: str | None = Field(default=None, description="Tipo de prompt si aplica")
+    bloom_level: int = Field(default=2, ge=1, le=6, description="Nivel Bloom de la sección")
+    learner_signals: list[str] = Field(
+        default_factory=list,
+        description="Señales del perfil del aprendiz que influyeron en la selección de modalidad",
+    )
+    adaptation_trace: str = Field(
+        default="",
+        description="Explicación de por qué esta modalidad para este aprendiz y esta sección",
+    )
 
 
 class MultimodalPlan(BaseModel):
@@ -98,6 +111,14 @@ class MultimodalPlan(BaseModel):
     text_sections: list[str] = Field(default_factory=list, description="Secciones que se generan como texto directo")
     prompt_sections: dict[str, str] = Field(default_factory=dict, description="Sección -> tipo de prompt")
     efficiency_ratio: float = Field(default=0.0, description="Ratio de eficiencia (prompts vs directo)")
+    adaptation_summary: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Resumen de cómo el perfil del aprendiz moldeó el plan multimodal",
+    )
+    orchestration_metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Agentes que participaron, condiciones y decisiones de orquestación",
+    )
 
 
 # ── Prompts generados ─────────────────────────────────────────────
@@ -105,9 +126,31 @@ class MultimodalPlan(BaseModel):
 class GeneratedPrompt(BaseModel):
     prompt_type: str = Field(..., description="Tipo: cinematic, visual, narrative, audio, pedagogical")
     target_section: str = Field(..., description="Sección objetivo")
-    content: str = Field(..., description="Prompt detallado")
+    content: str = Field(..., description="Prompt detallado con instrucciones especializadas")
     parameters: dict[str, Any] = Field(default_factory=dict)
     model_recommendation: str = Field(default="", description="Modelo recomendado para este prompt")
+    bloom_level: int = Field(default=2, ge=1, le=6, description="Nivel Bloom de la sección objetivo")
+    bloom_verb: str = Field(default="comprender", description="Verbo Bloom principal que guía la generación")
+    difficulty_calibration: str = Field(
+        default="intermediate",
+        description="Calibración de dificultad: beginner/intermediate/advanced",
+    )
+    modality_rationale: str = Field(
+        default="",
+        description="Justificación pedagógica de la selección de modalidad para este aprendiz",
+    )
+    learner_context: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Señales del perfil del aprendiz inyectadas en este prompt",
+    )
+    pedagogical_metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Alineación con objetivos, taxonomía Bloom, instrucciones de generación",
+    )
+    orchestration_trace: list[str] = Field(
+        default_factory=list,
+        description="Decisiones del enjambre de agentes que influyeron en este prompt",
+    )
 
 
 class PromptEngineeringResult(BaseModel):
@@ -115,6 +158,14 @@ class PromptEngineeringResult(BaseModel):
     narrative_thread: str = Field(default="", description="Hilo narrativo transversal")
     visual_continuity: str = Field(default="", description="Notas de continuidad visual")
     audio_atmosphere: str | None = Field(default=None, description="Atmósfera de audio sugerida")
+    orchestration_trace: list[str] = Field(
+        default_factory=list,
+        description="Decisiones clave del enjambre que configuraron los prompts generados",
+    )
+    adaptation_metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Metadatos de adaptación: perfil del aprendiz, bloom range, profundidad",
+    )
 
 
 # ── Verificación de consistencia ──────────────────────────────────
