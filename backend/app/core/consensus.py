@@ -9,7 +9,7 @@ Architecture:
         MasteryVoter  — Based on evaluation score vs mastery threshold
         PrereqVoter   — Checks prerequisite module completion
         SequenceVoter — Ensures sequential ordering
-        TimeVoter     — Minimum engagement time check (V1: heuristic)
+        TimeVoter     — Minimum engagement time (V2: DB-backed, bloom-adaptive)
 
     Deterministic: same inputs → same outputs (no LLMs, no randomness).
     Async-safe: uses UnitOfWork, advisory locks, no shared mutable state.
@@ -408,26 +408,206 @@ class SequenceVoter(BaseVoter):
 
 
 class TimeVoter(BaseVoter):
-    """Votes based on minimum engagement time.
+    """Votes based on real engagement time from DB records.
 
-    V1: heuristic — always approve with moderate confidence.
-    Future: check actual time spent via engagement events.
+    Queries EvaluationAttempt (completed_at - attempted_at) and
+    LearningSession (duration_minutes) to check whether the student spent
+    meaningful time on the module before requesting progression.
+
+    Thresholds are calibrated by Bloom level so higher-order tasks
+    (evaluation, creation) require proportionally longer engagement.
+
+    Decision:
+        APPROVE  — engagement meets or exceeds the bloom-adjusted minimum
+        ABSTAIN  — borderline engagement (50-100% of min) or no history
+        REJECT   — evidence of rushed completion (< 50% of minimum)
+
+    Deterministic: same DB state → same vote. No randomness.
     """
+
+    # Base seconds + per-bloom increment + max difficulty bonus
+    _BASE_MIN_S: float = 60.0          # Bloom 1 baseline: 1 min
+    _BLOOM_INCREMENT_S: float = 30.0   # +30s per Bloom level above 1
+    _MAX_DIFFICULTY_S: float = 60.0    # up to +60s for difficulty=1.0
+
+    _APPROVE_RATIO: float = 1.0        # ≥ threshold → APPROVE
+    _ABSTAIN_RATIO: float = 0.5        # ≥ 50% threshold → ABSTAIN
 
     @property
     def voter_name(self) -> str:
         return "time"
 
     def vote(self, ctx: VoteContext) -> ConsensusVote:
+        from app.models.evaluation_attempt import EvaluationAttempt
+        from app.models.learning_session import LearningSession
+
+        db = ctx.uow.db
+
+        # Resolve bloom_level (may be int or stringified int from scenario builders)
+        raw_bloom = getattr(ctx.module, "bloom_level", None)
+        try:
+            bloom_level = max(1, min(6, int(raw_bloom))) if raw_bloom is not None else 2
+        except (TypeError, ValueError):
+            bloom_level = 2
+
+        difficulty = float(getattr(ctx.module, "difficulty", 0.5) or 0.5)
+        difficulty = max(0.0, min(1.0, difficulty))
+
+        min_seconds = (
+            self._BASE_MIN_S
+            + (bloom_level - 1) * self._BLOOM_INCREMENT_S
+            + difficulty * self._MAX_DIFFICULTY_S
+        )
+
+        # ── Query engagement records ──────────────────────────────────────
+        attempts = (
+            db.query(EvaluationAttempt)
+            .filter(
+                EvaluationAttempt.student_id == ctx.student_id,
+                EvaluationAttempt.module_id == ctx.module_id,
+            )
+            .order_by(EvaluationAttempt.attempted_at)
+            .all()
+        )
+
+        session = (
+            db.query(LearningSession)
+            .filter(
+                LearningSession.student_id == ctx.student_id,
+                LearningSession.module_id == ctx.module_id,
+                LearningSession.status == "completed",
+                LearningSession.duration_minutes.isnot(None),
+            )
+            .order_by(LearningSession.duration_minutes.desc())
+            .first()
+        )
+
+        n_attempts = len(attempts)
+        session_duration_min: float | None = (
+            float(session.duration_minutes) if session else None
+        )
+
+        # No engagement records at all → ABSTAIN (not APPROVE as in v1)
+        if n_attempts == 0 and session is None:
+            return ConsensusVote(
+                voter_name=self.voter_name,
+                decision=VoteDecision.ABSTAIN,
+                confidence=0.5,
+                reason=(
+                    "No engagement history found (0 attempts, 0 sessions). "
+                    "Deferring to other voters."
+                ),
+                evidence={
+                    "n_attempts": 0,
+                    "min_threshold_s": round(min_seconds, 1),
+                    "bloom_level": bloom_level,
+                    "difficulty": round(difficulty, 2),
+                    "engagement_signal": "none",
+                    "voter_version": "v2_engagement",
+                },
+            )
+
+        # ── Derive best engagement duration ───────────────────────────────
+        best_duration_s = 0.0
+        engagement_signal = "none"
+
+        for attempt in attempts:
+            if attempt.completed_at and attempt.attempted_at:
+                delta = (attempt.completed_at - attempt.attempted_at).total_seconds()
+                if delta > 0:
+                    best_duration_s = max(best_duration_s, delta)
+                    engagement_signal = "duration"
+
+        # Fall back to session duration if no attempt timing is available
+        if best_duration_s == 0.0 and session_duration_min is not None:
+            best_duration_s = session_duration_min * 60.0
+            engagement_signal = "session"
+
+        # Records exist but contain no usable timestamps → ABSTAIN
+        if best_duration_s == 0.0:
+            return ConsensusVote(
+                voter_name=self.voter_name,
+                decision=VoteDecision.ABSTAIN,
+                confidence=0.45,
+                reason=(
+                    f"{n_attempts} attempt(s) found but no usable duration data. "
+                    "Deferring to other voters."
+                ),
+                evidence={
+                    "n_attempts": n_attempts,
+                    "min_threshold_s": round(min_seconds, 1),
+                    "bloom_level": bloom_level,
+                    "difficulty": round(difficulty, 2),
+                    "engagement_signal": "none",
+                    "voter_version": "v2_engagement",
+                },
+            )
+
+        ratio = best_duration_s / min_seconds
+
+        # Extra-attempt bonus: each additional attempt beyond 1 shows persistence
+        attempt_bonus = min(0.10, (n_attempts - 1) * 0.05)
+        # Session bonus: confirmed session data corroborates engagement
+        session_bonus = 0.05 if session_duration_min and session_duration_min >= 2.0 else 0.0
+
+        evidence = {
+            "best_attempt_duration_s": round(best_duration_s, 1),
+            "min_threshold_s": round(min_seconds, 1),
+            "engagement_ratio": round(ratio, 3),
+            "n_attempts": n_attempts,
+            "bloom_level": bloom_level,
+            "difficulty": round(difficulty, 2),
+            "session_duration_min": round(session_duration_min, 2) if session_duration_min is not None else None,
+            "engagement_signal": engagement_signal,
+            "voter_version": "v2_engagement",
+        }
+
+        # ── Decision thresholds ───────────────────────────────────────────
+        if ratio >= self._APPROVE_RATIO:
+            # Met or exceeded minimum — confidence scales with how far above threshold
+            raw = 0.55 + min(ratio - 1.0, 1.0) * 0.35
+            confidence = round(min(0.95, raw + attempt_bonus + session_bonus), 3)
+            return ConsensusVote(
+                voter_name=self.voter_name,
+                decision=VoteDecision.APPROVE,
+                confidence=confidence,
+                reason=(
+                    f"Engagement {best_duration_s:.0f}s meets "
+                    f"Bloom-{bloom_level} threshold {min_seconds:.0f}s "
+                    f"(ratio={ratio:.2f}, attempts={n_attempts})"
+                ),
+                evidence=evidence,
+            )
+
+        if ratio >= self._ABSTAIN_RATIO:
+            # Borderline — between 50% and 100% of threshold
+            raw = 0.40 + ratio * 0.20
+            confidence = round(min(0.65, raw + attempt_bonus), 3)
+            return ConsensusVote(
+                voter_name=self.voter_name,
+                decision=VoteDecision.ABSTAIN,
+                confidence=confidence,
+                reason=(
+                    f"Engagement {best_duration_s:.0f}s is below "
+                    f"Bloom-{bloom_level} threshold {min_seconds:.0f}s "
+                    f"(ratio={ratio:.2f}). Deferring to other voters."
+                ),
+                evidence=evidence,
+            )
+
+        # Below 50% of threshold — evidence of rushed/skipped engagement
+        raw = 0.50 + (self._ABSTAIN_RATIO - ratio) * 0.60
+        confidence = round(min(0.85, raw), 3)
         return ConsensusVote(
             voter_name=self.voter_name,
-            decision=VoteDecision.APPROVE,
-            confidence=0.6,
+            decision=VoteDecision.REJECT,
+            confidence=confidence,
             reason=(
-                "V1 time heuristic: minimum engagement assumed "
-                "(no real-time tracking yet)"
+                f"Engagement {best_duration_s:.0f}s far below "
+                f"Bloom-{bloom_level} threshold {min_seconds:.0f}s "
+                f"(ratio={ratio:.2f}). Insufficient engagement detected."
             ),
-            evidence={"voter_version": "v1_heuristic"},
+            evidence=evidence,
         )
 
 
