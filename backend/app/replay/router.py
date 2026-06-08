@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from app.replay.engine import engine
+from app.replay.models import ReplaySession
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,148 @@ async def replay_dashboard():
 async def reset_replay():
     engine.reset()
     return JSONResponse({"status": "ok", "message": "Replay engine reset"})
+
+
+@router.get("/compare/{id_a}/{id_b}")
+async def compare_sessions(id_a: str, id_b: str):
+    session_a = engine.get_session(id_a)
+    session_b = engine.get_session(id_b)
+    missing = [sid for sid, s in [(id_a, session_a), (id_b, session_b)] if not s]
+    if missing:
+        return JSONResponse({"error": f"Sessions not found: {missing}"}, status_code=404)
+    summary_a = _extract_session_summary(session_a)
+    summary_b = _extract_session_summary(session_b)
+    advantages = _compute_swarm_advantage(summary_a, summary_b)
+    return JSONResponse({
+        "session_a": summary_a,
+        "session_b": summary_b,
+        "advantages": advantages,
+        "swarm_score": _compute_swarm_score(advantages),
+    })
+
+
+def _extract_session_summary(session: ReplaySession) -> dict[str, Any]:
+    phases = [f.phase.value for f in session.frames]
+
+    bloom_dist: dict[int, int] = {}
+    for f in session.frames:
+        if f.phase.value == "pedagogical":
+            for section in f.data.get("sections", []):
+                lvl = int(section.get("bloom_level", 2))
+                bloom_dist[lvl] = bloom_dist.get(lvl, 0) + 1
+
+    modality_dist: dict[str, int] = {}
+    learner_signals_count = 0
+    bloom_aware_decisions = 0
+    for f in session.frames:
+        if f.phase.value == "multimodal":
+            for dec in f.data.get("decisions", []):
+                mod = dec.get("modality", "text")
+                modality_dist[mod] = modality_dist.get(mod, 0) + 1
+                sigs = dec.get("learner_signals", [])
+                learner_signals_count += len(sigs)
+                if any("bloom_" in s for s in sigs):
+                    bloom_aware_decisions += 1
+
+    prompt_types: dict[str, int] = {}
+    bloom_verbs_used: list[str] = []
+    orchestration_trace_len = 0
+    for f in session.frames:
+        if f.phase.value == "prompt":
+            for p in f.data.get("prompts", []):
+                pt = p.get("prompt_type", "unknown")
+                prompt_types[pt] = prompt_types.get(pt, 0) + 1
+                bv = p.get("bloom_verb", "")
+                if bv and bv not in bloom_verbs_used:
+                    bloom_verbs_used.append(bv)
+            orchestration_trace_len += len(f.data.get("orchestration_trace", []))
+
+    profile_source = "defaults"
+    difficulty = "intermediate"
+    for f in session.frames:
+        if f.phase.value == "adaptive":
+            rationale = f.data.get("adaptation_rationale", {})
+            profile_source = rationale.get("profile_source", "defaults")
+            difficulty = f.data.get("difficulty_level", "intermediate")
+
+    consensus_confidence = 0.0
+    for f in session.frames:
+        if f.phase.value == "consensus":
+            ev = f.evidence or {}
+            consensus_confidence = ev.get("confidence", 0.92)
+
+    unique_agents = list({f.agent for f in session.frames})
+    return {
+        "session_id": session.session_id,
+        "topic": session.topic[:60],
+        "frame_count": session.frame_count,
+        "duration_ms": round(session.duration_ms, 2),
+        "phases": sorted(set(phases)),
+        "phase_count": len(set(phases)),
+        "agents": unique_agents,
+        "agent_count": len(unique_agents),
+        "bloom_distribution": bloom_dist,
+        "bloom_diversity": len(bloom_dist),
+        "modality_distribution": modality_dist,
+        "modality_diversity": len(modality_dist),
+        "prompt_types": prompt_types,
+        "prompt_count": sum(prompt_types.values()),
+        "bloom_verbs_used": bloom_verbs_used,
+        "learner_signals_count": learner_signals_count,
+        "bloom_aware_decisions": bloom_aware_decisions,
+        "orchestration_trace_length": orchestration_trace_len,
+        "profile_source": profile_source,
+        "difficulty_level": difficulty,
+        "consensus_confidence": consensus_confidence,
+    }
+
+
+_ADVANTAGE_DIMENSIONS = [
+    ("agent_count", "Agentes activos", "Cobertura multi-agente del enjambre"),
+    ("phase_count", "Fases ejecutadas", "Profundidad de orquestación"),
+    ("modality_diversity", "Diversidad multimodal", "Tipos distintos de modalidad seleccionados"),
+    ("bloom_diversity", "Diversidad Bloom", "Niveles taxonómicos cubiertos"),
+    ("prompt_count", "Prompts generados", "Densidad de contenido generado"),
+    ("bloom_aware_decisions", "Decisiones Bloom-aware", "Decisiones calibradas por taxonomía"),
+    ("learner_signals_count", "Señales del aprendiz", "Personalización por perfil de aprendiz"),
+    ("orchestration_trace_length", "Trazabilidad", "Transparencia de las decisiones del enjambre"),
+]
+
+
+def _compute_swarm_advantage(a: dict, b: dict) -> list[dict]:
+    advantages = []
+    for key, label, description in _ADVANTAGE_DIMENSIONS:
+        va = a.get(key, 0)
+        vb = b.get(key, 0)
+        if va > vb:
+            winner, delta = "a", va - vb
+        elif vb > va:
+            winner, delta = "b", vb - va
+        else:
+            winner, delta = "tie", 0
+        advantages.append({
+            "dimension": label,
+            "description": description,
+            "value_a": va,
+            "value_b": vb,
+            "winner": winner,
+            "delta": delta,
+        })
+    return advantages
+
+
+def _compute_swarm_score(advantages: list[dict]) -> dict:
+    total = len(advantages)
+    wins_a = sum(1 for a in advantages if a["winner"] == "a")
+    wins_b = sum(1 for a in advantages if a["winner"] == "b")
+    return {
+        "session_a_wins": wins_a,
+        "session_b_wins": wins_b,
+        "ties": total - wins_a - wins_b,
+        "total_dimensions": total,
+        "advantage_ratio_a": round(wins_a / total, 2) if total else 0.0,
+        "advantage_ratio_b": round(wins_b / total, 2) if total else 0.0,
+    }
 
 
 REPLAY_DASHBOARD_HTML = r"""<!DOCTYPE html>

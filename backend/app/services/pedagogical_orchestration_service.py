@@ -169,12 +169,18 @@ class PedagogicalOrchestrationService:
                 phase_timings["adaptive"] = (time.monotonic() - p3) * 1000
                 difficulty = adaptive_result.get("difficulty_level", "intermediate")
                 pace = adaptive_result.get("pace_adjustment")
+                _rationale = adaptive_result.get("adaptation_rationale", {})
                 replay_engine.record_frame(
                     ReplayPhase.ADAPTIVE, "AdaptiveLearningAgent", adaptive_result,
                     reasoning=f"Nivel {difficulty}, ajuste de pacing: {pace or 'estándar'}",
                     signal="Perfil de aprendizaje del estudiante",
                     agent_decision=f"Dificultad: {difficulty}",
-                    evidence={"student_id": student_id, "previous_adaptations": len(replay_engine.cognitive.snapshot().get("pacing_changes", {}).get("history", []))},
+                    evidence={
+                        "student_id": student_id,
+                        "profile_source": _rationale.get("profile_source", "defaults"),
+                        "difficulty_signals": _rationale.get("difficulty_decision", {}),
+                        "modality_decision": _rationale.get("modality_decision", {}),
+                    },
                 )
                 replay_engine.cognitive.push_pacing(3, pace, difficulty)
                 replay_engine.record_adaptation(
@@ -199,12 +205,20 @@ class PedagogicalOrchestrationService:
             state["multimodal_plan"] = mm_result
             phase_timings["multimodal_planning"] = (time.monotonic() - p4) * 1000
             decisions = mm_result.get("decisions", [])
+            _mm_summary = mm_result.get("adaptation_summary", {})
+            _mm_meta = mm_result.get("orchestration_metadata", {})
             replay_engine.record_frame(
                 ReplayPhase.MULTIMODAL, "MultimodalPlanningAgent", mm_result,
                 reasoning=f"Planificó {len(decisions)} decisiones multimodales",
                 signal="Adaptación al estilo de aprendizaje",
                 agent_decision=f"{len(decisions)} modos seleccionados",
-                evidence={"student_id": student_id},
+                evidence={
+                    "student_id": student_id,
+                    "modality_distribution": _mm_summary.get("modality_distribution", {}),
+                    "bloom_aware_decisions": _mm_summary.get("bloom_aware_decisions", 0),
+                    "learner_prefs_applied": _mm_meta.get("learner_prefs_applied", False),
+                    "n_sections": _mm_meta.get("n_sections", len(decisions)),
+                },
             )
             replay_engine.cognitive.push_multimodal(4, decisions)
             logger.info("Orchestration[%s]: multimodal planning completed (%.0fms)", session_id, phase_timings["multimodal_planning"])
@@ -222,12 +236,26 @@ class PedagogicalOrchestrationService:
             phase_timings["prompt_engineering"] = (time.monotonic() - p5) * 1000
             prompts = prompt_result.get("prompts", [])
             narrative = prompt_result.get("narrative_thread", "")
+            _prompt_types: dict[str, int] = {}
+            _bloom_verbs: list[str] = []
+            for _p in prompts:
+                if isinstance(_p, dict):
+                    _pt = _p.get("prompt_type", "unknown")
+                    _prompt_types[_pt] = _prompt_types.get(_pt, 0) + 1
+                    _bv = _p.get("bloom_verb", "")
+                    if _bv and _bv not in _bloom_verbs:
+                        _bloom_verbs.append(_bv)
             replay_engine.record_frame(
                 ReplayPhase.PROMPT, "PromptEngineeringAgent", prompt_result,
                 reasoning=f"Generó {len(prompts)} prompts, hilo narrativo: {narrative[:60] or 'ninguno'}",
                 signal="Estructura pedagógica + plan multimodal",
                 agent_decision=f"{len(prompts)} prompts generados",
-                evidence={"student_id": student_id},
+                evidence={
+                    "student_id": student_id,
+                    "prompt_types": _prompt_types,
+                    "bloom_verbs_used": _bloom_verbs,
+                    "orchestration_trace_length": len(prompt_result.get("orchestration_trace", [])),
+                },
             )
             replay_engine.cognitive.push_prompts(5, prompts)
             replay_engine.cognitive.push_narrative(5, narrative)
