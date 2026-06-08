@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { GitCompare, RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { GitCompare, RefreshCw, TrendingUp, Minus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
