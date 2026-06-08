@@ -1,1 +1,1 @@
-"""Integraciones externas: Tavily Search API, etc."""
+"""External integration adapters."""

@@ -31,7 +31,11 @@ from app.schemas.auth import MessageResponse, CycleUpdateRequest, TutorRequest
 from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service
-from app.services.audit_service import log_action_sync
+from app.services.academic_activation_service import academic_activation_pipeline
+from app.services.audit_service import log_action
+from app.services.module_orchestration_service import module_orchestration_service
+from app.models.student_progress import PathModule, LearningPath
+from app.schemas.progress import ModuleOrchestrationResponse
 
 logger = logging.getLogger(__name__)
 
@@ -44,17 +48,23 @@ def set_cycle(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    current_user.current_cycle = data.cycle
+    activation = academic_activation_pipeline.activate_student(db, current_user, data.cycle)
     db.commit()
-
-    # Auto-enroll in curriculum courses for the selected cycle
-    try:
-        student_service.auto_enroll_from_curriculum(db, current_user)
-    except Exception as e:
-        logger.warning(f"Auto-enrollment from curriculum failed: {e}")
-
     db.refresh(current_user)
-    log_action_sync(db, current_user.id, "set_cycle", "user", current_user.id)
+    log_action(
+        db,
+        current_user.id,
+        "set_cycle",
+        "user",
+        current_user.id,
+        {
+            "cycle": data.cycle,
+            "enrollments_created": activation.enrollments_created,
+            "learning_paths_created": activation.learning_paths_created,
+            "modules_created": activation.modules_created,
+            "orchestration_events_created": activation.orchestration_events_created,
+        },
+    )
     return MessageResponse(message=f"Ciclo {data.cycle} asignado exitosamente")
 
 
@@ -97,7 +107,7 @@ def create_or_update_profile(
     profile = student_service.save_student_profile(
         db, student_id=current_user.id, data=data
     )
-    log_action_sync(db, current_user.id, "actualizar_perfil", "student_profile", profile.id)
+    log_action(db, current_user.id, "actualizar_perfil", "student_profile", profile.id)
     return profile
 
 
@@ -165,7 +175,7 @@ def submit_diagnostic(
     except Exception as e:
         logger.warning(f"AI analysis failed for diagnostic {result.id}: {e}")
 
-    log_action_sync(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
+    log_action(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
     return result
 
 
@@ -200,7 +210,7 @@ def generate_learning_path(
     path = student_service.generate_learning_path_adaptive(
         db, student_id=current_user.id, course_id=course_id, diagnostic=diagnostic
     )
-    log_action_sync(db, current_user.id, "generar_ruta", "learning_path", path.id)
+    log_action(db, current_user.id, "generar_ruta", "learning_path", path.id)
     return path
 
 
@@ -251,7 +261,7 @@ def update_progress(
         resource_id=data.resource_id,
         progress_percentage=data.progress_percentage,
     )
-    log_action_sync(db, current_user.id, "actualizar_progreso", "student_progress", progress.id)
+    log_action(db, current_user.id, "actualizar_progreso", "student_progress", progress.id)
     return progress
 
 
@@ -263,6 +273,49 @@ def get_course_progress(
 ):
     progress = student_service.get_course_progress(db, current_user.id, course_id)
     return progress
+
+
+@router.post("/module/{module_id}/orchestrate", response_model=ModuleOrchestrationResponse)
+async def orchestrate_module(
+    module_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    module = db.query(PathModule).filter(PathModule.id == module_id).first()
+    if not module:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo no encontrado")
+
+    path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
+    if not path or path.student_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes acceso a este módulo",
+        )
+
+    from app.memory.shared_memory import memory_store_from_session
+    from app.services.course_service import get_course_by_id as get_course
+    course = get_course(db, path.course_id)
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Curso no encontrado")
+
+    store = memory_store_from_session(db)
+    result = await module_orchestration_service.orchestrate_module(
+        db=db,
+        student=current_user,
+        course=course,
+        module=module,
+        memory_store=store,
+    )
+
+    log_action(
+        db,
+        current_user.id,
+        "orquestar_modulo",
+        "path_module",
+        module_id,
+        {"course_id": path.course_id, "module_title": module.title},
+    )
+    return result
 
 
 @router.post("/evaluation/{course_id}/start")
@@ -281,7 +334,7 @@ def start_evaluation(
         )
 
     questions_clean = evaluation_service.strip_correct_answers(attempt.questions)
-    log_action_sync(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
+    log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
     return {
         "attempt_id": attempt.id,
         "module_id": attempt.module_id,
@@ -306,7 +359,7 @@ def submit_evaluation(
             detail="Intento de evaluación no encontrado",
         )
 
-    log_action_sync(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+    log_action(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,

@@ -14,6 +14,18 @@ import { MODALITY_LABELS, MODALITY_COLORS } from '@/lib/constants'
 import CurriculumRoadmap from '@/components/curriculum/CurriculumRoadmap'
 import RiskCard from '@/components/curriculum/RiskCard'
 import StrengthsCard from '@/components/curriculum/StrengthsCard'
+import type { CourseProgress } from '@/types/student'
+
+interface AcademicSummary {
+  current_cycle: number | null
+  total_courses: number
+  completed_diagnostics: number
+  total_modules: number
+  completed_modules: number
+  progress_percentage: number
+  dominant_modality: string | null
+  has_onboarded: boolean
+}
 
 function GreetingSection({ name, cycle }: { name: string; cycle: number }) {
   const hour = new Date().getHours()
@@ -68,13 +80,13 @@ function GreetingSection({ name, cycle }: { name: string; cycle: number }) {
   )
 }
 
-function AIInsightsCard({ summary, courses }: { summary: any; courses: any[] | undefined }) {
+function AIInsightsCard({ summary, courses }: { summary: AcademicSummary | undefined; courses: CourseProgress[] | undefined }) {
   if (!courses?.length) return null
 
   const coursesWithoutDiag = courses.filter(c => !c.has_diagnostic)
   const coursesWithoutPath = courses.filter(c => c.has_diagnostic && !c.has_learning_path)
   const avgProgress = courses.length > 0
-    ? Math.round(courses.reduce((s: number, c: any) => s + c.progress_percentage, 0) / courses.length)
+    ? Math.round(courses.reduce((s, c) => s + c.progress_percentage, 0) / courses.length)
     : 0
 
   return (

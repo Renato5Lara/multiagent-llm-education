@@ -1,0 +1,1 @@
+"{\"status\":\"degraded\",\"database\":\"ok\",\"tavily\":\"missing\",\"openai\":\"missing\",\"modalities\":[\"deterministic_fallback\"],\"timestamp\":\"2026-06-05T04:55:41.652418+00:00\",\"version\":\"1.0.0\",\"env\":\"development\"}"

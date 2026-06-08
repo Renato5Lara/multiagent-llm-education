@@ -9,6 +9,7 @@ class PathModuleResponse(BaseModel):
     title: str
     description: Optional[str] = None
     order: int
+    week_number: Optional[int] = None
     status: str
     bloom_level: Optional[int] = None
     resource_id: Optional[str] = None
@@ -84,3 +85,45 @@ class LearningPathDetailResponse(BaseModel):
     dominant_modality: Optional[str] = None
     preferred_modalities: list[str] = []
     items: list[LearningPathItem]
+
+
+class PedagogicalStage(BaseModel):
+    phase: str
+    focus: str
+    bloom_level: int
+    content: str
+    examples: list[str] = []
+
+
+class MisconceptionItem(BaseModel):
+    misconception: str
+    correction: str
+    severity: str = "medium"
+
+
+class MultimodalPrompt(BaseModel):
+    modality: str
+    prompt: str
+    enabled: bool = True
+
+
+class ModuleOrchestrationResponse(BaseModel):
+    module_id: str
+    module_title: str
+    course_id: str
+    course_name: str
+    orchestration_status: str
+    introduction: str
+    pedagogical_explanation: str
+    misconceptions: list[MisconceptionItem]
+    examples: list[str]
+    real_applications: list[str]
+    guided_practice: str
+    pedagogical_stages: list[PedagogicalStage]
+    multimodal_prompts: list[MultimodalPrompt]
+    storyboard: str
+    continuity_notes: str
+    bloom_progression: list[dict]
+    retrieval_evidence: dict
+    confidence: float
+    generated_at: str

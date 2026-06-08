@@ -1,67 +1,139 @@
-# Python
+# ──────────────────────────────────────────────
+# UPAO-MAS-EDU — .gitignore profesional
+# ──────────────────────────────────────────────
+# GENERATED FOR: Python FastAPI + React Vite + Docker
+# ──────────────────────────────────────────────
+
+# ===== PYTHON =====
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
 *.egg-info/
+*.egg
 dist/
 build/
 .eggs/
-*.egg
+*.manifest
+*.spec
 .Python
-env/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.whl
+
+# ===== VIRTUAL ENVIRONMENTS =====
 venv/
 .venv/
+env/
+envs/
+.envs/
 
-# Node
+# ===== NODE =====
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Environment
+# ===== FRONTEND BUILD =====
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+frontend/*.local
+
+# ===== VITE =====
+.vite/
+frontend/.vite/
+frontend/tsconfig.app.tsbuildinfo
+frontend/vite-demo*.log
+
+# ===== SHADCN/UI =====
+frontend/@/
+
+# ===== ENVIRONMENT =====
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/.env
 
-# IDEs
+# ===== IDE =====
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# ===== OS =====
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.lnk
 
-# Uploads
+# ===== UPLOADS =====
 uploads/
+backend/uploads/*
 
-# Coverage
+# ===== COVERAGE =====
 htmlcov/
 .coverage
 .coverage.*
 coverage.xml
 *.cover
+.coverage/
 
-# Testing
+# ===== TESTING =====
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 
-# Build
-dist/
-build/
+# ===== RUNTIME ARTIFACTS =====
+*.sqlite3
+backend/demo_sessions.sqlite3
+*.db
+*.sqlite
 
-# Generated docs
-*.md~
-*.swp
+# ===== LOGS =====
+*.log
+logs/
+log/
 
-# Claude local settings
+# ===== TEMP / CACHE =====
+*.tmp
+*.temp
+.tmp/
+temp/
+tmp/
+
+# ===== TEMP PROJECT FILES =====
+temp_vite_project/
+temp_ddl.sql
+
+# ===== OUTPUTS: IGNORE PNG (keep JSON/CSV/MD) =====
+outputs/pptx-audit/png/
+outputs/**/*.png
+outputs/**/*.PNG
+outputs/**/*.jpg
+outputs/**/*.jpeg
+
+# ===== DOCKER =====
+.docker/
+docker-compose.override.yml
+
+# ===== NOTEBOOKS (if any) =====
+*.ipynb_checkpoints/
+
+# ===== PYTHON COMPILED =====
+*.pyc
+*.pyo
+
+# ===== TYPING =====
+*.pyi
+
+outputs/pptx-audit/
+# ===== LOCAL TOOLING =====
 .claude/settings.local.json
-
-# CodeGraph runtime
 .codegraph/daemon.pid
-
-# TypeScript build cache
-*.tsbuildinfo

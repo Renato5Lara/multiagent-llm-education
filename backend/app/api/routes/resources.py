@@ -27,7 +27,12 @@ async def upload_resource(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_docente),
 ):
-    """Sube un recurso educativo. Max 50MB. Tipos: pdf, mp4, jpg, png, txt, docx."""
+    """Endpoint legacy desactivado: el docente ya no sube contenido manual."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="La subida manual de recursos fue reemplazada por Pedagogical Swarm Orchestration.",
+    )
+
     course = course_service.get_course_by_id(db, course_id)
     if not course:
         raise HTTPException(status_code=404, detail="Curso no encontrado")
@@ -85,6 +90,11 @@ def download_resource(resource_id: str, db: Session = Depends(get_db), current_u
 @router.delete("/api/resources/{resource_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_resource(resource_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_docente)):
     """Elimina un recurso del curso y del disco."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="La gestion manual de recursos fue reemplazada por Pedagogical Swarm Orchestration.",
+    )
+
     resource = resource_service.get_resource_by_id(db, resource_id)
     if not resource:
         raise HTTPException(status_code=404, detail="Recurso no encontrado")
@@ -98,6 +108,11 @@ def delete_resource(resource_id: str, db: Session = Depends(get_db), current_use
 @router.post("/api/resources/{resource_id}/objectives")
 def associate_objectives(resource_id: str, data: ResourceObjectiveAssociation, db: Session = Depends(get_db), current_user: User = Depends(get_current_docente)):
     """Asocia un recurso con objetivos de aprendizaje."""
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="La asociacion manual de recursos fue reemplazada por planes pedagogicos semanales.",
+    )
+
     resource = resource_service.get_resource_by_id(db, resource_id)
     if not resource:
         raise HTTPException(status_code=404, detail="Recurso no encontrado")

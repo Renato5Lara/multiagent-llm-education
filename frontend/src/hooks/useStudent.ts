@@ -120,12 +120,15 @@ export function useUpdateModule() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ moduleId, status, score }: { moduleId: string; status: string; score?: number }) => {
-      const resp = await api.patch<PathModule>(`/api/estudiante/module/${moduleId}`, { status, score })
+    mutationFn: async ({ moduleId, status, score }: { moduleId: string; status: string; score?: number; courseId?: string }) => {
+      const resp = await api.patch<PathModule>(`/api/students/module/${moduleId}`, { status, score })
       return resp.data
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['my-courses'] })
+      if (variables.courseId) {
+        queryClient.invalidateQueries({ queryKey: ['learning-path', variables.courseId] })
+      }
     },
   })
 }
@@ -199,6 +202,20 @@ export function useAcademicSummary() {
         dominant_modality: string | null
         has_onboarded: boolean
       }
+    },
+  })
+}
+
+export function useModuleOrchestration() {
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (moduleId: string) => {
+      const resp = await api.post(`/api/students/module/${moduleId}/orchestrate`)
+      return resp.data
+    },
+    onError: (error) => {
+      toast({ variant: 'destructive', title: 'Error al orquestar módulo', description: getErrorMessage(error) })
     },
   })
 }

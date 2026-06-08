@@ -27,19 +27,19 @@ from app.api.routes import (
     competencies,
     students,
     curriculum,
+    pedagogy,
     tutor,
     swarm,
-    sessions,
+    swarm_demo,
+    sandbox,
     idempotency,
-    debug_bug_reports,
-    observability,
-    orchestration,
+    replay,
 )
-from app.replay import router as replay_router
+from app.weekly_learning.routes import router as weekly_learning_router
 
 from app.agents.router import router as agents_router
 from app.core.config import settings
-from app.db.session import engine, async_engine
+from app.db.session import engine
 
 
 _old_log_record_factory = logging.getLogRecordFactory()
@@ -94,70 +94,22 @@ async def lifespan(app: FastAPI):
 
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-    logger.info("Conexion a base de datos verificada (sync)")
+    logger.info("Conexion a base de datos verificada")
 
-    try:
-        async with async_engine.connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        logger.info("Conexion a base de datos verificada (async)")
-    except Exception:
-        logger.warning("Async engine connection failed (asyncpg may not be installed)")
-
-    # Wire BugDiagnosticsBridge into swarm diagnostics pipeline
-    try:
-        from app.swarm_diagnostics import diagnostics_engine
-        from app.bug_reports import BugDiagnosticsBridge
-
-        bridge = BugDiagnosticsBridge()
-        diagnostics_engine.register_post_anomaly_hook(
-            bridge.process_anomalies_batch
-        )
-        logger.info("BugDiagnosticsBridge hooked into diagnostics pipeline")
-    except Exception:
-        logger.info("BugDiagnosticsBridge not available (diagnostics may be absent)")
-
-    # Wire Python REPL Sandbox
-    try:
-        from app.sandbox import SandboxExecutor
-        from app.observability.metrics_exporter import exporter as metrics_exporter
-
-        sandbox = SandboxExecutor()
-        app.state.sandbox = sandbox
-
-        def collect_sandbox_metrics():
-            return {
-                "total": sandbox._stats["total"],
-                "docker": sandbox._stats["docker"],
-                "fallback": sandbox._stats["fallback"],
-                "violations": sandbox._stats["violations"],
-                "timeouts": sandbox._stats["timeouts"],
-                "errors": sandbox._stats["errors"],
-                "violation_types": dict(sandbox._stats.get("violation_types", {})),
-                "avg_exec_ms": round(
-                    sum(sandbox._stats["exec_times_ms"][-100:]) / max(len(sandbox._stats["exec_times_ms"][-100:]), 1), 2
-                ),
-            }
-        metrics_exporter.register_sandbox(collect_sandbox_metrics)
-        logger.info("Sandbox executor initialized and metrics wired")
-    except Exception as e:
-        logger.warning("Sandbox not available: %s", e)
-        app.state.sandbox = None
+    # ── API key validation ──────────────────────────────────────────
+    secrets = settings.secrets_summary()
+    logger.info("API keys: tavily=%s openai=%s", secrets["tavily"], secrets["openai"])
+    for warning in settings.validate_api_keys():
+        logger.warning(warning)
+    if settings.has_tavily:
+        logger.info("Tavily web search available")
+    if settings.has_openai:
+        logger.info("OpenAI LLM generation available")
+    # ────────────────────────────────────────────────────────────────
 
     yield
 
-    # Shutdown sandbox cleanup
-    try:
-        sandbox = getattr(app.state, "sandbox", None)
-        if sandbox:
-            await sandbox.shutdown()
-    except Exception:
-        pass
-
     logger.info("Apagando UPAO-MAS-EDU API")
-    try:
-        await async_engine.dispose()
-    except Exception:
-        pass
 
 
 tags_metadata = [
@@ -176,6 +128,10 @@ tags_metadata = [
     {
         "name": "Recursos",
         "description": "Subida y gestión de material educativo",
+    },
+    {
+        "name": "Pedagogical Orchestration",
+        "description": "Planificacion semanal, retrieval y generacion pedagogica por swarm",
     },
     {
         "name": "Objetivos de Aprendizaje",
@@ -200,10 +156,6 @@ tags_metadata = [
     {
         "name": "Sistema",
         "description": "Health check y estado",
-    },
-    {
-        "name": "Orquestación Pedagógica",
-        "description": "Orquestación pedagógica multimodal inteligente — investigación, estructuración, adaptación, planificación multimodal, generación de prompts y validación de consistencia",
     },
 ]
 
@@ -239,16 +191,6 @@ app.middleware("http")(make_tracing_middleware(correlation_engine))
 # automatic Idempotency-Key extraction, acquisition, and replay.
 from app.events.middleware import make_idempotency_middleware
 app.middleware("http")(make_idempotency_middleware())
-
-
-# Auth rate limiting — IP-based sliding window for /api/auth/login
-from app.middleware.rate_limit import make_auth_rate_limit_middleware
-app.middleware("http")(make_auth_rate_limit_middleware(app))
-
-
-# Query tracing — per-request SQL query count + N+1 detection
-from app.api.middleware.query_tracing import QueryTracingMiddleware
-app.add_middleware(QueryTracingMiddleware)
 
 
 @app.middleware("http")
@@ -325,16 +267,16 @@ app.include_router(estudiantes.router)
 app.include_router(students.router)
 app.include_router(competencies.router)
 app.include_router(curriculum.router)
+app.include_router(pedagogy.router)
 app.include_router(analytics.router)
 app.include_router(tutor.router)
 app.include_router(agents_router)
 app.include_router(swarm.router)
-app.include_router(sessions.router)
+app.include_router(swarm_demo.router)
+app.include_router(sandbox.router)
 app.include_router(idempotency.router)
-app.include_router(debug_bug_reports.router)
-app.include_router(observability.router)
-app.include_router(orchestration.router)
-app.include_router(replay_router)
+app.include_router(replay.router)
+app.include_router(weekly_learning_router)
 
 
 @app.get("/", tags=["Sistema"])
@@ -358,9 +300,16 @@ def health_check():
         db_status = f"error: {str(e)}"
         logger.error("Health check — DB connection failed: %s", e)
 
+    service_status = "ok" if db_status == "ok" else "degraded"
+    if db_status == "ok" and not (settings.has_tavily and settings.has_openai):
+        service_status = "degraded"
+
     return {
-        "status": "ok" if db_status == "ok" else "degraded",
+        "status": service_status,
         "database": db_status,
+        "tavily": "available" if settings.has_tavily else "missing",
+        "openai": "available" if settings.has_openai else "missing",
+        "modalities": settings.available_modalities,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "version": settings.APP_VERSION,
         "env": settings.ENV,

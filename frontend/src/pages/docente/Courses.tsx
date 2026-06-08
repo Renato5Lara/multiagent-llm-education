@@ -26,7 +26,7 @@ export default function CoursesPage() {
 
     return (
         <div>
-            <PageHeader title="Mis Cursos" description="Gestiona tus cursos y contenido educativo">
+            <PageHeader title="Mis Cursos" description="Diseña intención pedagógica y orquesta aprendizaje con IA">
                 <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                     <DialogTrigger asChild>
                         <Button size="sm"><Plus className="mr-2 h-4 w-4" />Nuevo Curso</Button>

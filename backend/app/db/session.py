@@ -8,6 +8,7 @@ Provee tanto engine síncrono como asíncrono para migración progresiva.
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
 from app.db.query_counter import install_query_counter
@@ -16,7 +17,14 @@ from app.db.query_counter import install_query_counter
 
 connect_args = {}
 
-if settings.is_production:
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+elif settings.is_production:
     connect_args["sslmode"] = "require"
     engine = create_engine(
         settings.DATABASE_URL,

@@ -1,22 +1,22 @@
 import json
 import logging
-import os
 from typing import Optional
 
 from app.agents.prompts import (
-    DIAGNOSTIC_SYSTEM_PROMPT,
-    TUTOR_SYSTEM_PROMPT,
     DIAGNOSTIC_ANALYSIS_PROMPT,
+    DIAGNOSTIC_SYSTEM_PROMPT,
     TUTOR_CHAT_PROMPT,
+    TUTOR_SYSTEM_PROMPT,
 )
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 class AIService:
     def __init__(self):
-        self.api_key = os.getenv("OPENAI_API_KEY", "")
-        self.use_openai = bool(self.api_key)
+        self.api_key = settings.OPENAI_API_KEY
+        self.use_openai = settings.has_openai
         self.client = None
         if self.use_openai:
             try:
@@ -24,8 +24,13 @@ class AIService:
                 self.client = OpenAI(api_key=self.api_key)
                 logger.info("OpenAI client initialized successfully")
             except Exception as e:
-                logger.warning(f"Failed to initialize OpenAI: {e}")
+                logger.warning("Failed to initialize OpenAI: %s", e)
                 self.use_openai = False
+
+    @property
+    def degraded(self) -> bool:
+        """True when the service is running without real LLM capabilities."""
+        return not self.use_openai
 
     def _call_openai(self, system_prompt: str, user_prompt: str, temperature: float = 0.3) -> Optional[str]:
         if not self.use_openai or not self.client:

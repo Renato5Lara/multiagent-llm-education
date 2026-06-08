@@ -90,8 +90,13 @@ def get_courses(
             )
         )
     elif user.role == UserRole.ESTUDIANTE:
-        if user.current_cycle:
-            query = query.filter(Course.cycle == user.current_cycle)
+        query = (
+            query.join(Enrollment, Enrollment.course_id == Course.id)
+            .filter(
+                Enrollment.student_id == user.id,
+                Enrollment.status == EnrollmentStatus.ACTIVO,
+            )
+        )
 
     query = query.filter(Course.status != CourseStatus.ARCHIVADO)
     total = query.count()

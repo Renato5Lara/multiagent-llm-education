@@ -11,14 +11,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import PageHeader from '@/components/common/PageHeader'
-import FileUploader from '@/components/common/FileUploader'
+import WeeklyStructureCreator from '@/components/docente/WeeklyStructureCreator'
 import { useCourse, usePublishCourse, useEnrollStudents, useEnrolledStudents } from '@/hooks/useCourses'
 import { useObjectives, useCreateObjective, useDeleteObjective } from '@/hooks/useObjectives'
-import { useResources, useUploadResource, useDeleteResource } from '@/hooks/useResources'
 import { useUsers } from '@/hooks/useUsers'
 import { useInstitutionalCompetencies, useCareerCompetencies, useCourseCompetencies, useAssignCompetencies } from '@/hooks/useCompetencies'
 import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS, BLOOM_LEVELS } from '@/lib/constants'
-import { formatFileSize } from '@/lib/utils'
 import { useState } from 'react'
 
 export default function CourseDetail() {
@@ -26,14 +24,11 @@ export default function CourseDetail() {
     const navigate = useNavigate()
     const { data: course, isLoading } = useCourse(id)
     const { data: objectives } = useObjectives(id)
-    const { data: resources } = useResources(id)
     const { data: courseCompetencies } = useCourseCompetencies(id)
     const { data: instCompetencies } = useInstitutionalCompetencies()
     const { data: careerCompetencies } = useCareerCompetencies()
     const assignComp = useAssignCompetencies()
     const publish = usePublishCourse()
-    const upload = useUploadResource()
-    const deleteRes = useDeleteResource()
     const createObj = useCreateObjective()
     const deleteObj = useDeleteObjective()
     const { data: studentsData } = useUsers({ page: 1, size: 100, role: 'estudiante' })
@@ -70,14 +65,14 @@ export default function CourseDetail() {
             </PageHeader>
 
             <Tabs defaultValue="info" className="space-y-6">
-                <TabsList><TabsTrigger value="info">Información</TabsTrigger><TabsTrigger value="competencies">Competencias</TabsTrigger><TabsTrigger value="objectives">Objetivos</TabsTrigger><TabsTrigger value="resources">Recursos</TabsTrigger><TabsTrigger value="students">Estudiantes</TabsTrigger></TabsList>
+                <TabsList><TabsTrigger value="info">Información</TabsTrigger><TabsTrigger value="planner">Plan semanal</TabsTrigger><TabsTrigger value="competencies">Competencias</TabsTrigger><TabsTrigger value="objectives">Objetivos</TabsTrigger><TabsTrigger value="students">Estudiantes</TabsTrigger></TabsList>
 
                 <TabsContent value="info">
                     <Card><CardContent className="p-6 space-y-3">
                         <div><span className="text-sm text-muted-foreground">Descripción:</span><p className="mt-1">{course.description || 'Sin descripción'}</p></div>
                         <div className="grid grid-cols-3 gap-4">
                             <div><span className="text-sm text-muted-foreground">Objetivos</span><p className="font-semibold text-lg">{objectives?.length ?? 0}</p></div>
-                            <div><span className="text-sm text-muted-foreground">Recursos</span><p className="font-semibold text-lg">{resources?.length ?? 0}</p></div>
+                            <div><span className="text-sm text-muted-foreground">Orquestación</span><p className="font-semibold text-lg">AI-first</p></div>
                             <div><span className="text-sm text-muted-foreground">Competencias</span><p className="font-semibold text-lg">{courseCompetencies?.length ?? 0}</p></div>
                         </div>
                     </CardContent></Card>
@@ -212,17 +207,8 @@ export default function CourseDetail() {
                     </CardContent></Card>
                 </TabsContent>
 
-                <TabsContent value="resources">
-                    <Card><CardHeader><CardTitle className="text-lg">Recursos Educativos</CardTitle></CardHeader><CardContent className="space-y-6">
-                        <FileUploader onUpload={(file) => upload.mutate({ courseId: id!, file })} isUploading={upload.isPending} />
-                        {resources?.length ? (
-                            <Table><TableHeader><TableRow><TableHead>Archivo</TableHead><TableHead>Tipo</TableHead><TableHead>Tamaño</TableHead><TableHead className="w-10" /></TableRow></TableHeader>
-                                <TableBody>{resources.map(r => (
-                                    <TableRow key={r.id}><TableCell className="font-medium">{r.original_filename}</TableCell><TableCell><Badge variant="outline">{r.resource_type}</Badge></TableCell><TableCell>{formatFileSize(r.size_bytes)}</TableCell>
-                                        <TableCell><Button variant="ghost" size="sm" onClick={() => { if (confirm('¿Eliminar?')) deleteRes.mutate(r.id) }}><Trash2 className="h-4 w-4 text-red-500" /></Button></TableCell></TableRow>
-                                ))}</TableBody></Table>
-                        ) : <p className="text-muted-foreground text-center py-4">Sin recursos aún</p>}
-                    </CardContent></Card>
+                <TabsContent value="planner">
+                    <WeeklyStructureCreator courseId={id!} />
                 </TabsContent>
 
                 <TabsContent value="students">

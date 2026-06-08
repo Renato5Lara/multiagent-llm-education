@@ -44,6 +44,7 @@ class PathModule(Base):
     title = Column(String(255), nullable=False)
     description = Column(String(500), nullable=True)
     order = Column(Integer, nullable=False, default=0)
+    week_number = Column(Integer, nullable=True, index=True)
     status = Column(String(20), default="locked")
     bloom_level = Column(Integer, nullable=True)
     resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
