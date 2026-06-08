@@ -56,6 +56,7 @@ class PedagogicalOrchestrationService:
         student_id: str | None = None,
         course_id: str | None = None,
         multimodal_config: dict[str, Any] | None = None,
+        condition_flags: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Ejecuta el pipeline completo de orquestación pedagógica."""
         session_id = str(uuid.uuid4())[:12]
@@ -95,7 +96,7 @@ class PedagogicalOrchestrationService:
             "student_id": student_id,
             "course_id": course_id,
             "context_key": context_key,
-            # Benchmark condition flags (set by real benchmark executor)
+            # Runtime defaults — overridden by condition_flags from real benchmark executor
             "_retrieval_enabled": True,
             "_reviewer_enabled": True,
             "_adaptive_pedagogy": True,
@@ -103,6 +104,11 @@ class PedagogicalOrchestrationService:
             "_sandbox_enabled": self._sandbox is not None,
             "_condition_name": "full",
         }
+
+        # Apply benchmark condition flags so ablation conditions work correctly
+        if condition_flags:
+            for k, v in condition_flags.items():
+                state[k] = v
 
         phase_timings = {}
 
@@ -320,35 +326,53 @@ class PedagogicalOrchestrationService:
             logger.info("Orchestration[%s]: sandbox not available, skipping code validation", session_id)
 
         # Fase 8: Consensus Mediator (final consolidation)
-        try:
-            p8 = time.monotonic()
-            state["sandbox_validated"] = sandbox_validated
-            state["sandbox_results"] = sandbox_results
-            mediator = self._agent_factory.create_consensus_mediator()
-            final_result = await mediator.run(state)
-            phase_timings["consensus_mediator"] = (time.monotonic() - p8) * 1000
-            agents_in_consensus = 7 + (1 if self._sandbox else 0)
-            replay_engine.record_frame(
-                ReplayPhase.CONSENSUS, "ConsensusMediator", final_result,
-                reasoning=f"Consolidó {agents_in_consensus} agentes en resultado final coherente",
-                signal="Consenso post-validación de consistencia y sandbox",
-                agent_decision="Resultado consolidado",
-                evidence={"agent_count": agents_in_consensus, "phases_completed": len(phase_timings), "sandbox_validated": sandbox_validated},
-            )
-            replay_engine.cognitive.push_consensus(7, "approved", 0.92, 7, True)
-            replay_engine.record_consensus("approved", 0.92, {
-                "research": "approved", "pedagogical": "approved",
-                "adaptive": "approved", "multimodal": "approved",
-                "prompt": "approved", "consistency": "approved",
-                "mediator": "approved",
-            }, unanimous=True)
-            logger.info("Orchestration[%s]: consensus mediator completed (%.0fms)", session_id, phase_timings["consensus_mediator"])
-        except Exception as e:
-            logger.error("Orchestration[%s]: consensus mediator failed: %s", session_id, e)
+        # Skipped for single-agent conditions where consensus_enabled=False
+        state["sandbox_validated"] = sandbox_validated
+        state["sandbox_results"] = sandbox_results
+        if state.get("_consensus_enabled", True):
+            try:
+                p8 = time.monotonic()
+                mediator = self._agent_factory.create_consensus_mediator()
+                final_result = await mediator.run(state)
+                phase_timings["consensus_mediator"] = (time.monotonic() - p8) * 1000
+                agents_in_consensus = 7 + (1 if self._sandbox else 0)
+                replay_engine.record_frame(
+                    ReplayPhase.CONSENSUS, "ConsensusMediator", final_result,
+                    reasoning=f"Consolidó {agents_in_consensus} agentes en resultado final coherente",
+                    signal="Consenso post-validación de consistencia y sandbox",
+                    agent_decision="Resultado consolidado",
+                    evidence={"agent_count": agents_in_consensus, "phases_completed": len(phase_timings), "sandbox_validated": sandbox_validated},
+                )
+                replay_engine.cognitive.push_consensus(7, "approved", 0.92, 7, True)
+                replay_engine.record_consensus("approved", 0.92, {
+                    "research": "approved", "pedagogical": "approved",
+                    "adaptive": "approved", "multimodal": "approved",
+                    "prompt": "approved", "consistency": "approved",
+                    "mediator": "approved",
+                }, unanimous=True)
+                logger.info("Orchestration[%s]: consensus mediator completed (%.0fms)", session_id, phase_timings["consensus_mediator"])
+            except Exception as e:
+                logger.error("Orchestration[%s]: consensus mediator failed: %s", session_id, e)
+                final_result = {
+                    "topic": topic,
+                    "warnings": [f"Consolidation failed: {e}"],
+                    "execution_summary": {"agent_steps_completed": 0},
+                }
+        else:
+            # Single-agent condition: return output directly from prompt engineering
+            logger.info("Orchestration[%s]: consensus mediator skipped (single-agent condition)", session_id)
             final_result = {
                 "topic": topic,
-                "warnings": [f"Consolidation failed: {e}"],
-                "execution_summary": {"agent_steps_completed": 0},
+                "pedagogical_structure": state.get("pedagogical_structure", {}),
+                "adaptation_plan": state.get("adaptation_plan", {}),
+                "multimodal_plan": state.get("multimodal_plan", {}),
+                "prompts": state.get("prompts", []),
+                "consistency_result": state.get("consistency_result", {}),
+                "research_result": state.get("research_result", {}),
+                "sandbox_validated": sandbox_validated,
+                "sandbox_results": sandbox_results,
+                "warnings": [],
+                "execution_summary": {"agent_steps_completed": len(phase_timings)},
             }
 
         total_time = (time.monotonic() - start_time) * 1000

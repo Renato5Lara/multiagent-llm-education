@@ -72,6 +72,12 @@ async def execute_condition_pipeline(
                 sandbox=sandbox,
             )
 
+            condition_name = (
+                condition.name.value
+                if hasattr(condition.name, "value")
+                else str(condition.name)
+            )
+
             result = await service.orchestrate(
                 topic=topic,
                 learning_objectives=objectives,
@@ -91,19 +97,23 @@ async def execute_condition_pipeline(
                     "generate_video_prompt": False,
                     "section_modalities": {},
                 },
+                # Condition flags flow into orchestrate() so ablation conditions
+                # actually skip the correct agents at runtime
+                condition_flags={
+                    "_retrieval_enabled": condition.retrieval_enabled,
+                    "_reviewer_enabled": condition.reviewer_enabled,
+                    "_adaptive_pedagogy": condition.adaptive_pedagogy,
+                    "_consensus_enabled": condition.consensus_enabled,
+                    "_condition_name": condition_name,
+                    "_benchmark_seed": seed,
+                },
             )
 
-            result["_condition_name"] = condition.name
-            result["_benchmark_seed"] = seed
             result["_student_profile"] = profile
             result["_misconceptions"] = scenario.misconceptions
             result["_ground_truth"] = scenario.ground_truth
             result["_scenario_id"] = scenario.scenario_id
-            result["_retrieval_enabled"] = condition.retrieval_enabled
             result["_memory_enabled"] = condition.memory_enabled
-            result["_reviewer_enabled"] = condition.reviewer_enabled
-            result["_adaptive_pedagogy"] = condition.adaptive_pedagogy
-            result["_consensus_enabled"] = condition.consensus_enabled
             result["_sandbox_enabled"] = sandbox is not None
 
             return result
