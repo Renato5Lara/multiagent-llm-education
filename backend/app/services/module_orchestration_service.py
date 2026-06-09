@@ -410,7 +410,7 @@ class ModuleOrchestrationService:
                     f"Analiza sus propiedades fundamentales: declaración, inicialización, acceso, "
                     f"y operaciones básicas. Compara distintas formas de implementación."
                 ),
-                "examples": [str(c) for c in concepts[:3]] if concepts else [
+                "examples": self._concepts_to_strings(concepts[:3]) or [
                     f"Concepto clave 1 de {topic.lower()}",
                     f"Concepto clave 2 de {topic.lower()}",
                 ],
@@ -446,7 +446,8 @@ class ModuleOrchestrationService:
         ]
 
     def _generate_introduction(self, topic: str, concepts: list[str]) -> str:
-        concept_list = ", ".join(str(c) for c in concepts[:3]) if concepts else topic.lower()
+        concept_list = ", ".join(self._concepts_to_strings(concepts[:3])) if concepts else topic.lower()
+        concept_list = concept_list or topic.lower()
         return (
             f"Bienvenido al módulo de **{topic}**. Este tema es fundamental en la programación "
             f"porque te permite organizar y manipular datos de manera eficiente. "
@@ -456,10 +457,31 @@ class ModuleOrchestrationService:
             f"Prepárate para construir una base sólida que te acompañará en tu desarrollo profesional."
         )
 
+    def _concepts_to_strings(self, raw: list) -> list[str]:
+        """Extract a plain string from each concept item, whether str or dict."""
+        result = []
+        for item in raw:
+            if isinstance(item, str) and item:
+                result.append(item)
+            elif isinstance(item, dict):
+                text = (
+                    item.get("concept")
+                    or item.get("content_preview")
+                    or item.get("title")
+                    or item.get("name")
+                    or item.get("example")
+                    or item.get("text")
+                    or ""
+                )
+                if text:
+                    result.append(str(text))
+        return result
+
     def _generate_explanation(self, topic: str, concepts: list[str], bloom_target: int) -> str:
+        concept_strings = self._concepts_to_strings(concepts[:4]) if concepts else []
         concept_detail = ". ".join(
-            f"{c}: aspecto clave para dominar {topic.lower()}" for c in concepts[:4]
-        ) if concepts else (
+            f"{c}: aspecto clave para dominar {topic.lower()}" for c in concept_strings
+        ) if concept_strings else (
             f"{topic} son una estructura de datos que permite almacenar "
             f"múltiples valores relacionados bajo un mismo nombre."
         )
@@ -505,7 +527,7 @@ class ModuleOrchestrationService:
         ]
 
     def _build_examples(self, raw: list, topic: str, bloom_target: int) -> list[str]:
-        safe = [str(r) for r in raw if isinstance(r, str) and r]
+        safe = self._concepts_to_strings(raw)
         if safe and len(safe) >= 2:
             return safe[:5]
         return [
@@ -517,7 +539,7 @@ class ModuleOrchestrationService:
         ]
 
     def _build_real_applications(self, raw: list, topic: str) -> list[str]:
-        safe = [str(r) for r in raw if isinstance(r, str) and r]
+        safe = self._concepts_to_strings(raw)
         if safe and len(safe) >= 2:
             return safe[:4]
         return [

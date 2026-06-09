@@ -124,14 +124,20 @@ class UnitOfWork:
             )
         nested = self._savepoint_stack.pop()
         try:
-            nested.__exit__(None, None, None)
+            # Use .rollback() to issue ROLLBACK TO SAVEPOINT.
+            # Calling nested.__exit__(None, None, None) would attempt a commit,
+            # which raises InvalidRequestError if flush() already failed and
+            # SQLAlchemy auto-rolled back the nested transaction.
+            nested.rollback()
         except Exception as exc:
-            logger.error(
-                "UoW[%s]: Savepoint rollback failed: %s",
-                self._id, exc, exc_info=True,
+            logger.warning(
+                "UoW[%s]: Savepoint rollback failed (session may already have "
+                "auto-rolled-back to savepoint): %s",
+                self._id, exc,
             )
-            self._rolled_back = True
-            raise
+            # Do NOT set _rolled_back = True here: SQLAlchemy 2.x auto-rolls
+            # back the nested transaction on flush() failure and restores the
+            # outer session to pre-savepoint state.  The session is usable.
         logger.debug("UoW[%s]: Savepoint rolled back (depth=%d)", self._id, len(self._savepoint_stack))
 
     # -- Event Outbox Pattern --

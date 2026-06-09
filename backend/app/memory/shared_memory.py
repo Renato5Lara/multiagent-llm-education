@@ -360,17 +360,21 @@ class SharedMemoryStore:
             ttl_seconds=actual_ttl,
             metadata_json={},
         )
+        # Use the context-manager form of begin_nested() directly.  This is safer
+        # than the UoW savepoint stack because:
+        #  - On flush() success → the context manager commits (RELEASE SAVEPOINT)
+        #  - On flush() failure → SQLAlchemy auto-issues ROLLBACK TO SAVEPOINT,
+        #    restoring the outer session to its pre-savepoint state without marking
+        #    the entire session as rolled-back.
+        db = self._uow.db
         try:
-            self._uow.begin_savepoint()
-            try:
-                self._uow.db.add(record)
-                self._uow.flush()
-            except Exception:
-                self._uow.savepoint_rollback()
-                raise
+            with db.begin_nested():
+                db.add(record)
+                db.flush()
         except Exception:
             logger.debug(
-                "publish_observation_sync: write skipped voter=%s key=%s",
+                "publish_observation_sync: write skipped voter=%s key=%s "
+                "(constraint or session error — outer tx intact)",
                 voter_name, key,
             )
             return ""
