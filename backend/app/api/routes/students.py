@@ -5,7 +5,7 @@ Flujo completo: onboarding, perfil, diagnóstico, ruta adaptativa, progreso, eva
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_estudiante, get_current_user, get_db
@@ -277,10 +277,13 @@ def get_course_progress(
 
 @router.post("/module/{module_id}/orchestrate", response_model=ModuleOrchestrationResponse)
 async def orchestrate_module(
+    request: Request,
     module_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
+    request_id = getattr(request.state, "request_id", None) or module_id[:8]
+
     module = db.query(PathModule).filter(PathModule.id == module_id).first()
     if not module:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo no encontrado")
@@ -298,6 +301,11 @@ async def orchestrate_module(
     if not course:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Curso no encontrado")
 
+    logger.info(
+        "orchestrate_route[%s]: student=%s module=%s title=%r",
+        request_id, current_user.id[:8], module_id[:8], module.title[:40],
+    )
+
     store = memory_store_from_session(db)
     result = await module_orchestration_service.orchestrate_module(
         db=db,
@@ -305,6 +313,12 @@ async def orchestrate_module(
         course=course,
         module=module,
         memory_store=store,
+        request_id=request_id,
+    )
+
+    logger.info(
+        "orchestrate_route[%s]: done status=%s confidence=%.3f",
+        request_id, result.get("orchestration_status"), result.get("confidence", 0),
     )
 
     log_action(

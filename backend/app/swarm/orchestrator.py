@@ -284,14 +284,17 @@ class SwarmOrchestrator:
         exporter.inc_counter("activation_completed")
         exporter.set_gauge("activation_phase_count", len(self._phase_results))
         try:
-            import asyncio
-            asyncio.ensure_future(stream.push("activation", {
+            _t = asyncio.create_task(stream.push("activation", {
                 "context_key": self.context_key,
                 "student_id": self.student_id,
                 "status": "completed",
                 "phase_count": len(self._phase_results),
                 "anomaly_count": len(all_anomalies),
             }))
+            _t.add_done_callback(
+                lambda t: logger.warning("stream.push('activation') failed: %s", t.exception())
+                if not t.cancelled() and t.exception() is not None else None
+            )
         except Exception:
             pass
 
@@ -713,14 +716,17 @@ class SwarmOrchestrator:
         exporter.set_gauge("consensus_confidence", result.confidence)
         exporter.observe_histogram("consensus_voter_count", len(result.votes))
         try:
-            import asyncio
-            asyncio.ensure_future(stream.push("consensus_votes", {
+            _t = asyncio.create_task(stream.push("consensus_votes", {
                 "context_key": self.context_key,
                 "decision": result.decision.value,
                 "confidence": result.confidence,
                 "unanimous": result.unanimous,
                 "voters": len(result.votes),
             }))
+            _t.add_done_callback(
+                lambda t: logger.warning("stream.push('consensus_votes') failed: %s", t.exception())
+                if not t.cancelled() and t.exception() is not None else None
+            )
         except Exception:
             pass
 

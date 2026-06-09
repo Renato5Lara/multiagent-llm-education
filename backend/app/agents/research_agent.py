@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from app.integrations.tavily.retrieval import PedagogicalRetrievalStrategy
 from app.integrations.tavily.schemas import AggregatedResearch, RetrievalContext
+
+logger = logging.getLogger(__name__)
 
 
 class ResearchAgent:
