@@ -321,6 +321,22 @@ async def orchestrate_module(
         request_id, result.get("orchestration_status"), result.get("confidence", 0),
     )
 
+    # Pre-flight: validate the dict against the response schema BEFORE FastAPI does.
+    # If it fails here we can log the exact offending fields and return a safe
+    # degraded result instead of letting ResponseValidationError bubble up as a 500.
+    try:
+        from app.schemas.progress import ModuleOrchestrationResponse as _Schema
+        _Schema.model_validate(result)
+    except Exception as _val_exc:
+        logger.error(
+            "orchestrate_route[%s]: response pre-validation failed — "
+            "returning degraded. error=%r  result_keys=%s",
+            request_id, _val_exc, sorted(result.keys()), exc_info=True,
+        )
+        result = module_orchestration_service._degraded_result(
+            module, course, request_id, reason="validation_failed"
+        )
+
     try:
         log_action_sync(
             db,

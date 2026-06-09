@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import ResponseValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -242,6 +243,27 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "detail": exc.detail,
             "status_code": exc.status_code,
         },
+        headers=_cors_headers(request),
+    )
+
+
+@app.exception_handler(ResponseValidationError)
+async def response_validation_exception_handler(request: Request, exc: ResponseValidationError):
+    # ResponseValidationError is raised when the route handler's return value fails
+    # response_model validation.  Registering it as a *specific* handler (not under
+    # the generic Exception key) ensures Starlette routes it through ExceptionMiddleware,
+    # so the response flows through CORSMiddleware.send and gets CORS headers injected
+    # by the middleware rather than relying only on the manual _cors_headers() dict.
+    logger.error(
+        "ResponseValidationError [%s %s]: %s",
+        request.method,
+        request.url.path,
+        exc,
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Error interno del servidor", "status_code": 500},
         headers=_cors_headers(request),
     )
 
