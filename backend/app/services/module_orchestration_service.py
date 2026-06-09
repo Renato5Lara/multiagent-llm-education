@@ -55,11 +55,14 @@ class ModuleOrchestrationService:
 
         if memory_store is not None:
             self.research_agent.shared_memory_store = memory_store
-            narrative = query_narrative_persona(
-                memory_store,
-                student_id=student.id,
-                course_id=course.id,
-            )
+            try:
+                narrative = query_narrative_persona(
+                    memory_store,
+                    student_id=student.id,
+                    course_id=course.id,
+                )
+            except Exception:
+                narrative = {}
         else:
             narrative = {}
 
@@ -103,15 +106,18 @@ class ModuleOrchestrationService:
 
         if memory_store is not None:
             bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
-            publish_narrative_persona(
-                memory_store,
-                persona=f"Módulo {module.title} — Bloom {bloom_target} ({bloom_label}) — Curso {course.name}",
-                tone="educativo",
-                bloom_progress=f"Nivel Bloom {bloom_target} trabajado en módulo {module.title}",
-                student_id=student.id,
-                module_id=module.id,
-                confidence=min(confidence + 0.1, 1.0),
-            )
+            try:
+                publish_narrative_persona(
+                    memory_store,
+                    persona=f"Módulo {module.title} — Bloom {bloom_target} ({bloom_label}) — Curso {course.name}",
+                    tone="educativo",
+                    bloom_progress=f"Nivel Bloom {bloom_target} trabajado en módulo {module.title}",
+                    student_id=student.id,
+                    module_id=module.id,
+                    confidence=min(confidence + 0.1, 1.0),
+                )
+            except Exception:
+                pass
 
         return {
             "module_id": module.id,

@@ -87,16 +87,22 @@ class ResearchAgent:
                 if k in ("learning_style", "preferred_analogies", "preferred_modality", "pacing", "cognitive_load_trend")
             }
         for key, value in payloads.items():
-            record_id = self.shared_memory_store.publish_observation(
-                voter_name="research_agent",
-                key=key,
-                value=value,
-                confidence=research.confidence_score,
-                student_id=state.get("student_id"),
-                module_id=state.get("module_id"),
-                memory_type="research",
-            )
-            ids.append(record_id)
+            try:
+                record_id = self.shared_memory_store.publish_observation_sync(
+                    voter_name="research_agent",
+                    key=key,
+                    value=value,
+                    confidence=research.confidence_score,
+                    student_id=state.get("student_id"),
+                    module_id=state.get("module_id"),
+                    memory_type="research",
+                )
+                if record_id:
+                    ids.append(record_id)
+            except AttributeError:
+                pass
+            except Exception as exc:
+                logger.warning("_publish_memory: write failed key=%s: %s", key, exc)
         return ids
 
     def _build_consensus_payload(self, research: AggregatedResearch, validation: dict[str, Any]) -> dict[str, Any]:
