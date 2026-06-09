@@ -217,6 +217,23 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+def _cors_headers(request: Request) -> dict[str, str]:
+    """Return CORS headers for the request origin if it is an allowed origin.
+
+    FastAPI exception handlers bypass CORSMiddleware, so responses built inside
+    them never receive the CORS headers that Starlette would normally inject.
+    We add them manually so the browser can read error bodies cross-origin.
+    """
+    origin = request.headers.get("origin", "")
+    if origin and origin in settings.cors_origins:
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+            "Vary": "Origin",
+        }
+    return {}
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
@@ -225,13 +242,16 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "detail": exc.detail,
             "status_code": exc.status_code,
         },
+        headers=_cors_headers(request),
     )
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     logger.error(
-        "Error no manejado: %s",
+        "Unhandled error [%s %s]: %s",
+        request.method,
+        request.url.path,
         exc,
         exc_info=True,
     )
@@ -247,6 +267,7 @@ async def general_exception_handler(request: Request, exc: Exception):
             "detail": detail,
             "status_code": 500,
         },
+        headers=_cors_headers(request),
     )
 
 

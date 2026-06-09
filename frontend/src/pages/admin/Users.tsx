@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Upload, Search, MoreHorizontal, UserX, Pencil } from 'lucide-react'
+import { Plus, Upload, Search, MoreHorizontal, UserX, Pencil, UserCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import PageHeader from '@/components/common/PageHeader'
 import UserForm from './UserForm'
-import { useUsers, useDeleteUser, useBulkUploadUsers } from '@/hooks/useUsers'
+import { useUsers, useDeleteUser, useActivateUser, useBulkUploadUsers } from '@/hooks/useUsers'
 import { getRoleLabel, getRoleBadgeColor, formatDate } from '@/lib/utils'
 import type { UserRole } from '@/types/auth'
 import type { User } from '@/types/user'
@@ -27,6 +27,7 @@ export default function UsersPage() {
     const [page, setPage] = useState(1)
     const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
     const [search, setSearch] = useState('')
+    const [showInactive, setShowInactive] = useState(false)
     const [createOpen, setCreateOpen] = useState(false)
     const [editUser, setEditUser] = useState<User | null>(null)
     const [bulkOpen, setBulkOpen] = useState(false)
@@ -35,8 +36,10 @@ export default function UsersPage() {
         page,
         size: 20,
         role: roleFilter === 'all' ? null : roleFilter,
+        include_inactive: showInactive,
     })
     const deleteUser = useDeleteUser()
+    const activateUser = useActivateUser()
     const bulkUpload = useBulkUploadUsers()
 
     const filteredUsers = data?.users?.filter(u => {
@@ -126,6 +129,13 @@ export default function UsersPage() {
                         <SelectItem value="investigador">Investigador</SelectItem>
                     </SelectContent>
                 </Select>
+                <Button
+                    variant={showInactive ? 'secondary' : 'outline'}
+                    size="sm"
+                    onClick={() => { setShowInactive(v => !v); setPage(1) }}
+                >
+                    {showInactive ? 'Ocultar inactivos' : 'Mostrar inactivos'}
+                </Button>
             </div>
 
             {/* Table */}
@@ -193,13 +203,23 @@ export default function UsersPage() {
                                                     <Pencil className="mr-2 h-4 w-4" />
                                                     Editar
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    className="text-red-600"
-                                                    onClick={() => { if (confirm('¿Desactivar este usuario?')) deleteUser.mutate(user.id) }}
-                                                >
-                                                    <UserX className="mr-2 h-4 w-4" />
-                                                    Desactivar
-                                                </DropdownMenuItem>
+                                                {user.is_active ? (
+                                                    <DropdownMenuItem
+                                                        className="text-red-600"
+                                                        onClick={() => { if (confirm('¿Desactivar este usuario?')) deleteUser.mutate(user.id) }}
+                                                    >
+                                                        <UserX className="mr-2 h-4 w-4" />
+                                                        Desactivar
+                                                    </DropdownMenuItem>
+                                                ) : (
+                                                    <DropdownMenuItem
+                                                        className="text-green-600"
+                                                        onClick={() => { if (confirm('¿Reactivar este usuario?')) activateUser.mutate(user.id) }}
+                                                    >
+                                                        <UserCheck className="mr-2 h-4 w-4" />
+                                                        Reactivar
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>

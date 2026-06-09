@@ -22,8 +22,11 @@ def get_users(
     page: int = 1,
     size: int = 20,
     role: Optional[UserRole] = None,
+    include_inactive: bool = False,
 ) -> tuple[list[User], int]:
     query = db.query(User)
+    if not include_inactive:
+        query = query.filter(User.is_active == True)  # noqa: E712
     if role:
         query = query.filter(User.role == role)
 
@@ -107,6 +110,13 @@ def update_user(
 
 def soft_delete_user(db: Session, user: User) -> User:
     user.is_active = False
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def reactivate_user(db: Session, user: User) -> User:
+    user.is_active = True
     db.commit()
     db.refresh(user)
     return user
