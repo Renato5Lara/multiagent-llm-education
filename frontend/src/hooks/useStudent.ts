@@ -207,12 +207,24 @@ export function useAcademicSummary() {
 }
 
 export function useModuleOrchestration() {
+  const queryClient = useQueryClient()
   const { toast } = useToast()
 
   return useMutation({
     mutationFn: async (moduleId: string) => {
-      const resp = await api.post(`/api/students/module/${moduleId}/orchestrate`)
+      // LLM orchestration can take 60-120s; use a dedicated timeout instead of
+      // the global 30s so the UI doesn't abort a legitimate long-running request.
+      const resp = await api.post(`/api/students/module/${moduleId}/orchestrate`, undefined, {
+        timeout: 120_000,
+      })
       return resp.data
+    },
+    onSuccess: (_data, moduleId) => {
+      queryClient.invalidateQueries({ queryKey: ['student-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
+      queryClient.invalidateQueries({ queryKey: ['learning-path'] })
+      queryClient.invalidateQueries({ queryKey: ['module', moduleId] })
+      toast({ title: 'Módulo orquestado correctamente' })
     },
     onError: (error) => {
       toast({ variant: 'destructive', title: 'Error al orquestar módulo', description: getErrorMessage(error) })

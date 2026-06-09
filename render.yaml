@@ -9,6 +9,8 @@ services:
 
     startCommand: alembic upgrade head && python seed.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
 
+    healthCheckPath: /health
+
     envVars:
       - key: ENV
         value: production
@@ -25,7 +27,7 @@ services:
         generateValue: true
 
       - key: FRONTEND_URL
-        value: https://upao-mas-edu.vercel.app
+        value: https://multiagent-llm-education.vercel.app
 
       - key: BACKEND_URL
         value: https://upao-mas-edu-api.onrender.com

@@ -35,6 +35,7 @@ FLOW:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import threading
 import time
@@ -336,20 +337,8 @@ class SwarmOrchestrator:
             return
 
         try:
-            result = await handler()
+            result = await asyncio.wait_for(handler(), timeout=timeout_ms / 1000)
             elapsed_ms = (time.monotonic() - start_ts) * 1000
-
-            if elapsed_ms > timeout_ms:
-                self.lifecycle.timeout_phase(phase, elapsed_ms)
-                if completed_ev:
-                    swarm_event_bus.publish(
-                        SwarmEventType.PHASE_TIMEOUT,
-                        self.context_key, self.student_id, self.course_id,
-                        phase.value,
-                        payload={"elapsed_ms": elapsed_ms, "timeout_ms": timeout_ms},
-                        causation_id=self._last_event_id(),
-                    )
-                return
 
             bottleneck_detector.record_duration(phase.value, elapsed_ms)
 
@@ -377,6 +366,31 @@ class SwarmOrchestrator:
             }
 
             await self._publish_phase_observation(phase, result, elapsed_ms)
+
+        except asyncio.TimeoutError:
+            elapsed_ms = (time.monotonic() - start_ts) * 1000
+            logger.error(
+                "Phase %s timed out after %.0fms (limit=%.0fms)",
+                phase.value, elapsed_ms, timeout_ms,
+            )
+            swarm_metrics.record_phase(phase.value, elapsed_ms, "timeout")
+            exporter.inc_counter(f"phase_timeout_{phase.value}")
+            exporter.inc_counter("phase_timeouts_total")
+            self.lifecycle.timeout_phase(phase, elapsed_ms)
+
+            swarm_event_bus.publish(
+                SwarmEventType.PHASE_TIMEOUT,
+                self.context_key, self.student_id, self.course_id,
+                phase.value,
+                payload={"elapsed_ms": elapsed_ms, "timeout_ms": timeout_ms},
+                causation_id=self._last_event_id(),
+            )
+
+            self._phase_results[phase.value] = {
+                "status": "timeout",
+                "elapsed_ms": elapsed_ms,
+                "error": f"Phase timed out after {timeout_ms:.0f}ms",
+            }
 
         except Exception as e:
             elapsed_ms = (time.monotonic() - start_ts) * 1000

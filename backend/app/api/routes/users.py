@@ -27,10 +27,13 @@ def list_users(
     page: int = Query(1, ge=1, description="Página"),
     size: int = Query(20, ge=1, le=100, description="Tamaño de página"),
     role: UserRole | None = Query(None, description="Filtrar por rol"),
+    include_inactive: bool = Query(False, description="Incluir usuarios desactivados"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
-    users, total = user_service.get_users(db, page=page, size=size, role=role)
+    users, total = user_service.get_users(
+        db, page=page, size=size, role=role, include_inactive=include_inactive
+    )
     return UserListResponse(
         users=[UserResponse.model_validate(u) for u in users],
         total=total,
@@ -185,6 +188,30 @@ def delete_user(
     deleted = user_service.soft_delete_user(db, user)
     log_action_sync(db, current_user.id, "desactivar_usuario", "user", user_id)
     return deleted
+
+
+@router.patch("/{user_id}/activate", response_model=UserResponse)
+def activate_user(
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    user = user_service.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado",
+        )
+
+    if user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El usuario ya está activo",
+        )
+
+    reactivated = user_service.reactivate_user(db, user)
+    log_action_sync(db, current_user.id, "reactivar_usuario", "user", user_id)
+    return reactivated
 
 
 @router.patch("/{user_id}/role", response_model=UserResponse)

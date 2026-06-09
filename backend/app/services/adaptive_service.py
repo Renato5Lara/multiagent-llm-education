@@ -238,6 +238,24 @@ def evaluate_module_completion(
             # Pass trace context and adaptive trust/specialization systems
             trust = get_trust_system()
             spec = get_specialization_tracker()
+
+            # This function is called from a SYNC FastAPI route running in a
+            # threadpool thread where no event loop is active, so asyncio.run()
+            # is safe. Guard against accidental calls from async contexts (which
+            # would raise "This event loop is already running").
+            _active_loop: asyncio.AbstractEventLoop | None = None
+            try:
+                _active_loop = asyncio.get_running_loop()
+            except RuntimeError:
+                pass  # No running loop — expected from a sync route threadpool thread
+
+            if _active_loop is not None:
+                raise RuntimeError(
+                    "evaluate_module_completion must be called from a sync FastAPI "
+                    "route. An active event loop was detected, which means asyncio.run() "
+                    "would deadlock. Convert the caller to async and use 'await' instead."
+                )
+
             consensus = asyncio.run(
                 _run_consensus_async(eng, ctx, trace_ctx, trust, spec)
             )

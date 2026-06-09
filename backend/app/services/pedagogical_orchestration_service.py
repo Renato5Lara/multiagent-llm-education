@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
@@ -12,6 +13,10 @@ from app.db.uow import AsyncUnitOfWork, UnitOfWork
 from app.memory.shared_memory import SharedMemoryStore
 from app.replay import engine as replay_engine
 from app.replay.models import ReplayPhase
+
+# Serialises concurrent orchestrations so they don't corrupt the shared
+# replay_engine singleton (_active_session, _step_counter, cognitive tracks).
+_orchestration_lock = asyncio.Lock()
 from app.services.multimodal_generation_config import (
     MultimodalGenerationConfig,
     DEFAULT_MULTIMODAL_CONFIG,
@@ -59,6 +64,39 @@ class PedagogicalOrchestrationService:
         condition_flags: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Ejecuta el pipeline completo de orquestación pedagógica."""
+        # The replay_engine singleton is shared across all requests; acquire the
+        # lock before touching it so concurrent orchestrations don't corrupt
+        # each other's _active_session / cognitive tracks.
+        await _orchestration_lock.acquire()
+        try:
+            return await self._orchestrate_impl(
+                topic=topic,
+                learning_objectives=learning_objectives,
+                pedagogical_intention=pedagogical_intention,
+                thematic_structure=thematic_structure,
+                syllabus=syllabus,
+                weekly_line=weekly_line,
+                student_id=student_id,
+                course_id=course_id,
+                multimodal_config=multimodal_config,
+                condition_flags=condition_flags,
+            )
+        finally:
+            _orchestration_lock.release()
+
+    async def _orchestrate_impl(
+        self,
+        topic: str,
+        learning_objectives: list[str],
+        pedagogical_intention: str = "",
+        thematic_structure: list[str] | None = None,
+        syllabus: str = "",
+        weekly_line: str = "",
+        student_id: str | None = None,
+        course_id: str | None = None,
+        multimodal_config: dict[str, Any] | None = None,
+        condition_flags: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         session_id = str(uuid.uuid4())[:12]
         start_time = time.monotonic()
         student_id = student_id or f"anonymous_{session_id}"

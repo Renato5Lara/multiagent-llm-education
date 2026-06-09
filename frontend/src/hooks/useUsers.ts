@@ -10,14 +10,16 @@ interface UseUsersParams {
     size?: number
     role?: UserRole | null
     search?: string
+    include_inactive?: boolean
 }
 
-export function useUsers({ page = 1, size = 20, role = null }: UseUsersParams = {}) {
+export function useUsers({ page = 1, size = 20, role = null, include_inactive = false }: UseUsersParams = {}) {
     return useQuery({
-        queryKey: ['users', { page, size, role }],
+        queryKey: ['users', { page, size, role, include_inactive }],
         queryFn: async () => {
-            const params: Record<string, string | number> = { page, size }
+            const params: Record<string, string | number | boolean> = { page, size }
             if (role) params.role = role
+            if (include_inactive) params.include_inactive = true
             const resp = await api.get<UserListResponse>('/api/users', { params })
             return resp.data
         },
@@ -88,6 +90,25 @@ export function useDeleteUser() {
         },
         onError: (error) => {
             toast({ variant: 'destructive', title: 'Error al desactivar', description: getErrorMessage(error) })
+        },
+    })
+}
+
+export function useActivateUser() {
+    const queryClient = useQueryClient()
+    const { toast } = useToast()
+
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const resp = await api.patch<User>(`/api/users/${id}/activate`)
+            return resp.data
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] })
+            toast({ title: 'Usuario reactivado exitosamente' })
+        },
+        onError: (error) => {
+            toast({ variant: 'destructive', title: 'Error al reactivar', description: getErrorMessage(error) })
         },
     })
 }
