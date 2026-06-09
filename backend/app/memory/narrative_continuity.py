@@ -47,13 +47,17 @@ def query_narrative_persona(
     search_ids = [cid for cid in (module_id, course_id) if cid]
 
     for sid in search_ids:
-        records = store.query(
-            student_id=student_id,
-            module_id=sid,
-            memory_type=NARRATIVE_MEMORY_TYPE,
-            limit=5,
-            include_stale=False,
-        )
+        try:
+            records = store.query_sync(
+                student_id=student_id,
+                module_id=sid,
+                memory_type=NARRATIVE_MEMORY_TYPE,
+                limit=5,
+                include_stale=False,
+            )
+        except Exception as exc:
+            logger.warning("query_narrative_persona: memory query failed: %s", exc)
+            continue
         for r in records:
             key = r.key.removeprefix("narrative:")
             result[key] = r.value
@@ -103,16 +107,20 @@ def publish_narrative_persona(
         payloads["narrative:bloom_progress"] = {"note": bloom_progress}
 
     for key, value in payloads.items():
-        record_id = store.publish_observation(
-            voter_name="narrative_continuity",
-            key=key,
-            value=value,
-            confidence=confidence,
-            student_id=student_id,
-            module_id=module_id,
-            memory_type=NARRATIVE_MEMORY_TYPE,
-        )
-        ids.append(record_id)
+        try:
+            record_id = store.publish_observation_sync(
+                voter_name="narrative_continuity",
+                key=key,
+                value=value,
+                confidence=confidence,
+                student_id=student_id,
+                module_id=module_id,
+                memory_type=NARRATIVE_MEMORY_TYPE,
+            )
+            if record_id:
+                ids.append(record_id)
+        except Exception as exc:
+            logger.warning("publish_narrative_persona: write failed key=%s: %s", key, exc)
 
     logger.info("Published %d narrative continuity records", len(ids))
     return ids

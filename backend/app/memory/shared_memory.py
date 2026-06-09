@@ -273,6 +273,117 @@ class SharedMemoryStore:
 
             return record.id
 
+    # ── Sync Query / Publish (for sync SQLAlchemy Session via UnitOfWork) ───
+
+    def query_sync(
+        self,
+        *,
+        student_id: str | None = None,
+        module_id: str | None = None,
+        memory_type: str | None = None,
+        key: str | None = None,
+        voter_name: str | None = None,
+        limit: int = 50,
+        include_stale: bool = False,
+        order_desc: bool = True,
+    ) -> list:
+        """Synchronous query for use with UnitOfWork (sync Session).
+
+        Use this instead of `query()` when the store was created via
+        `memory_store_from_session()` (sync route handlers).  Calling the
+        async `query()` without await in a sync context returns a bare
+        coroutine that cannot be iterated.
+        """
+        if isinstance(self._uow, AsyncUnitOfWork):
+            raise TypeError(
+                "query_sync requires a synchronous UnitOfWork; "
+                "use query() for AsyncUnitOfWork"
+            )
+        stmt = select(SharedMemoryRecord)
+        filters = []
+        if student_id is not None:
+            filters.append(SharedMemoryRecord.student_id == student_id)
+        if module_id is not None:
+            filters.append(SharedMemoryRecord.module_id == module_id)
+        if memory_type is not None:
+            filters.append(SharedMemoryRecord.memory_type == memory_type)
+        if key is not None:
+            filters.append(SharedMemoryRecord.key == key)
+        if voter_name is not None:
+            filters.append(SharedMemoryRecord.voter_name == voter_name)
+        if filters:
+            stmt = stmt.where(and_(*filters))
+        order_col = (
+            SharedMemoryRecord.created_at.desc()
+            if order_desc
+            else SharedMemoryRecord.created_at.asc()
+        )
+        stmt = stmt.order_by(order_col).limit(limit)
+        result = self._uow.db.execute(stmt)
+        records = list(result.scalars().all())
+        if not include_stale:
+            records = [r for r in records if not is_stale(r)]
+        return records
+
+    def publish_observation_sync(
+        self,
+        voter_name: str,
+        key: str,
+        value: dict[str, Any],
+        *,
+        confidence: float = 1.0,
+        student_id: str | None = None,
+        module_id: str | None = None,
+        memory_type: str = "observation",
+        ttl_seconds: int | None = None,
+    ) -> str:
+        """Synchronous publish for use with UnitOfWork (sync Session).
+
+        Mirrors the sync branch of `publish_observation()` without the
+        async overhead.  Use when the store was created via
+        `memory_store_from_session()`.
+        """
+        if isinstance(self._uow, AsyncUnitOfWork):
+            raise TypeError(
+                "publish_observation_sync requires a synchronous UnitOfWork; "
+                "use publish_observation() for AsyncUnitOfWork"
+            )
+        actual_ttl = ttl_seconds if ttl_seconds is not None else compute_ttl(memory_type, confidence)
+        record = SharedMemoryRecord(
+            voter_name=voter_name,
+            student_id=student_id,
+            module_id=module_id,
+            memory_type=memory_type,
+            key=key,
+            value=value or {},
+            confidence=max(0.0, min(1.0, confidence)),
+            ttl_seconds=actual_ttl,
+            metadata_json={},
+        )
+        # Use the context-manager form of begin_nested() directly.  This is safer
+        # than the UoW savepoint stack because:
+        #  - On flush() success → the context manager commits (RELEASE SAVEPOINT)
+        #  - On flush() failure → SQLAlchemy auto-issues ROLLBACK TO SAVEPOINT,
+        #    restoring the outer session to its pre-savepoint state without marking
+        #    the entire session as rolled-back.
+        db = self._uow.db
+        try:
+            with db.begin_nested():
+                db.add(record)
+                db.flush()
+        except Exception:
+            logger.debug(
+                "publish_observation_sync: write skipped voter=%s key=%s "
+                "(constraint or session error — outer tx intact)",
+                voter_name, key,
+            )
+            return ""
+        logger.debug(
+            "Memory published (sync): voter=%s type=%s key=%s student=%s",
+            voter_name, memory_type, key, student_id,
+        )
+        return record.id
+
     # ── Query ────────────────────────────────────────────────────
 
     async def query(

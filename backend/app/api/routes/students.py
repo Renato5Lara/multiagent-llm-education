@@ -5,7 +5,7 @@ Flujo completo: onboarding, perfil, diagnóstico, ruta adaptativa, progreso, eva
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_estudiante, get_current_user, get_db
@@ -32,7 +32,7 @@ from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service
 from app.services.academic_activation_service import academic_activation_pipeline
-from app.services.audit_service import log_action
+from app.services.audit_service import log_action_sync
 from app.services.module_orchestration_service import module_orchestration_service
 from app.models.student_progress import PathModule, LearningPath
 from app.schemas.progress import ModuleOrchestrationResponse
@@ -51,7 +51,7 @@ def set_cycle(
     activation = academic_activation_pipeline.activate_student(db, current_user, data.cycle)
     db.commit()
     db.refresh(current_user)
-    log_action(
+    log_action_sync(
         db,
         current_user.id,
         "set_cycle",
@@ -107,7 +107,7 @@ def create_or_update_profile(
     profile = student_service.save_student_profile(
         db, student_id=current_user.id, data=data
     )
-    log_action(db, current_user.id, "actualizar_perfil", "student_profile", profile.id)
+    log_action_sync(db, current_user.id, "actualizar_perfil", "student_profile", profile.id)
     return profile
 
 
@@ -175,7 +175,7 @@ def submit_diagnostic(
     except Exception as e:
         logger.warning(f"AI analysis failed for diagnostic {result.id}: {e}")
 
-    log_action(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
+    log_action_sync(db, current_user.id, "completar_diagnostico", "diagnostic", result.id)
     return result
 
 
@@ -210,7 +210,7 @@ def generate_learning_path(
     path = student_service.generate_learning_path_adaptive(
         db, student_id=current_user.id, course_id=course_id, diagnostic=diagnostic
     )
-    log_action(db, current_user.id, "generar_ruta", "learning_path", path.id)
+    log_action_sync(db, current_user.id, "generar_ruta", "learning_path", path.id)
     return path
 
 
@@ -261,7 +261,7 @@ def update_progress(
         resource_id=data.resource_id,
         progress_percentage=data.progress_percentage,
     )
-    log_action(db, current_user.id, "actualizar_progreso", "student_progress", progress.id)
+    log_action_sync(db, current_user.id, "actualizar_progreso", "student_progress", progress.id)
     return progress
 
 
@@ -277,10 +277,13 @@ def get_course_progress(
 
 @router.post("/module/{module_id}/orchestrate", response_model=ModuleOrchestrationResponse)
 async def orchestrate_module(
+    request: Request,
     module_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
+    request_id = getattr(request.state, "request_id", None) or module_id[:8]
+
     module = db.query(PathModule).filter(PathModule.id == module_id).first()
     if not module:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo no encontrado")
@@ -298,6 +301,11 @@ async def orchestrate_module(
     if not course:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Curso no encontrado")
 
+    logger.info(
+        "orchestrate_route[%s]: student=%s module=%s title=%r",
+        request_id, current_user.id[:8], module_id[:8], module.title[:40],
+    )
+
     store = memory_store_from_session(db)
     result = await module_orchestration_service.orchestrate_module(
         db=db,
@@ -305,16 +313,30 @@ async def orchestrate_module(
         course=course,
         module=module,
         memory_store=store,
+        request_id=request_id,
     )
 
-    log_action(
-        db,
-        current_user.id,
-        "orquestar_modulo",
-        "path_module",
-        module_id,
-        {"course_id": path.course_id, "module_title": module.title},
+    logger.info(
+        "orchestrate_route[%s]: done status=%s confidence=%.3f",
+        request_id, result.get("orchestration_status"), result.get("confidence", 0),
     )
+
+    try:
+        log_action_sync(
+            db,
+            current_user.id,
+            "orquestar_modulo",
+            "path_module",
+            module_id,
+            {"course_id": path.course_id, "module_title": module.title},
+        )
+    except Exception as exc:
+        # The session may be in a degraded state after failed memory writes;
+        # audit failure must never prevent the orchestration response.
+        logger.warning(
+            "orchestrate_route[%s]: audit log failed (non-critical): %s",
+            request_id, exc,
+        )
     return result
 
 
@@ -334,7 +356,7 @@ def start_evaluation(
         )
 
     questions_clean = evaluation_service.strip_correct_answers(attempt.questions)
-    log_action(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
+    log_action_sync(db, current_user.id, "iniciar_evaluacion", "evaluation", attempt.id)
     return {
         "attempt_id": attempt.id,
         "module_id": attempt.module_id,
@@ -359,7 +381,7 @@ def submit_evaluation(
             detail="Intento de evaluación no encontrado",
         )
 
-    log_action(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+    log_action_sync(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,
