@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.replay.models import ReplaySession
+from app.replay.models import LegacyReplaySession as ReplaySession
 from app.replay.timeline import ReplayTimelineBuilder
 
 
