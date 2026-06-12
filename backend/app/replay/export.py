@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.replay.models import ReplaySession
+from app.replay.models import LegacyReplaySession as ReplaySession
 from app.replay.serializer import ReplaySerializer
 
 

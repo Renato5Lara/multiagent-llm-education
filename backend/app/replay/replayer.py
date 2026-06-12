@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator
 
-from app.replay.models import ReplayEvent, ReplayMode, ReplaySession
+from app.replay.models import ReplayEvent, ReplayMode, LegacyReplaySession as ReplaySession
 
 
 class CognitiveReplayer:

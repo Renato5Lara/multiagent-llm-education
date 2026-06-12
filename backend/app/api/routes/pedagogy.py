@@ -8,7 +8,10 @@ from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate, WeeklyPedagogicalP
 from app.services import course_service
 from app.memory.shared_memory import memory_store_from_session
 from app.services.audit_service import log_action
-from app.services.pedagogical_orchestration_service import pedagogical_orchestration_service
+# The legacy weekly-plan orchestration service was restored as
+# weekly_pedagogy_service after merge 918306c replaced this module path
+# with the /orchestrate-pipeline service (incompatible API).
+from app.services.weekly_pedagogy_service import pedagogical_orchestration_service
 
 router = APIRouter(prefix="/api/pedagogy", tags=["Pedagogical Orchestration"])
 
