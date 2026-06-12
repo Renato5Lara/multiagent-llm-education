@@ -22,6 +22,7 @@ from typing import Any
 from sqlalchemy import and_, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.db.uow import AsyncUnitOfWork, UnitOfWork
 from app.memory.memory_rules import (

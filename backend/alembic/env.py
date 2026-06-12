@@ -26,6 +26,10 @@ from app.models.event_outbox import EventOutbox
 from app.models.idempotency_key import IdempotencyKey
 from app.models.student_memory import StudentMemory, ConversationMessage, WeaknessRecord, StrengthRecord
 from app.models.course_prerequisite import CoursePrerequisite
+from app.models.educational_context import EducationalContext
+from app.models.programming_metrics import ProgrammingMetrics
+from app.models.programming_prerequisite import ConceptPrerequisite
+from app.models.resource_programming_tag import ResourceProgrammingTag
 from app.models.institutional_course import InstitutionalCourse, InstitutionalCoursePrerequisite
 from app.models.knowledge_graph import KnowledgeNode, KnowledgeEdge
 from app.models.shared_memory_record import SharedMemoryRecord

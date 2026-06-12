@@ -24,10 +24,6 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-# PostgreSQL ALTER TYPE ... ADD VALUE cannot run inside a transaction block.
-# We use op.execute() with a raw SQL statement.
-# Each ADD VALUE is a separate, auto-committed statement.
-
 NEW_VALUES = [
     "initializing",
     "degraded",
@@ -36,25 +32,46 @@ NEW_VALUES = [
     "recovering",
 ]
 
+# Full value set of EducationalContextStatus in app/models/educational_context.py.
+ALL_VALUES = [
+    "pending",
+    "initializing",
+    "active",
+    "degraded",
+    "failed",
+    "partial",
+    "recovering",
+    "suspended",
+    "archived",
+]
+
 
 def upgrade() -> None:
-    conn = op.get_bind()
-    # Check which values already exist (safe for re-run)
-    existing = set(
-        row[0]
-        for row in conn.execute(
-            sa.text(
-                "SELECT unnest(enum_range(NULL::educationalcontextstatus))::text"
-            )
-        ).fetchall()
+    # The enum was historically created by Base.metadata.create_all() at app
+    # startup (removed in 99e98b4), never by a migration. Fresh databases
+    # built purely via Alembic therefore don't have it — create it here with
+    # the full current value set before touching it.
+    quoted = ", ".join(f"'{v}'" for v in ALL_VALUES)
+    op.execute(
+        sa.text(
+            f"""
+            DO $$ BEGIN
+                CREATE TYPE educationalcontextstatus AS ENUM ({quoted});
+            EXCEPTION WHEN duplicate_object THEN NULL;
+            END $$;
+            """
+        )
     )
+    # Databases where create_all already created the enum (old value set) only
+    # need the new values appended. IF NOT EXISTS makes each statement a no-op
+    # when the value is already present. Requires PostgreSQL >= 12 to run
+    # inside Alembic's transaction.
     for val in NEW_VALUES:
-        if val not in existing:
-            op.execute(
-                sa.text(
-                    f"ALTER TYPE educationalcontextstatus ADD VALUE '{val}'"
-                )
+        op.execute(
+            sa.text(
+                f"ALTER TYPE educationalcontextstatus ADD VALUE IF NOT EXISTS '{val}'"
             )
+        )
 
 
 def downgrade() -> None:

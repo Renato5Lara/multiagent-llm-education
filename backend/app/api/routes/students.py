@@ -39,6 +39,101 @@ from app.schemas.progress import ModuleOrchestrationResponse
 
 logger = logging.getLogger(__name__)
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEMPORARY runtime instrumentation for POST /module/{module_id}/orchestrate.
+# Goal: capture the EXACT exception, SQLAlchemy session state and connection
+# liveness at each stage so the production HTTP 500 can be diagnosed from the
+# Render logs.  This block is purely observability — no behaviour change except
+# that model_validate() now re-raises instead of silently degrading (see below).
+# Remove once the root cause is confirmed in production logs.
+# ─────────────────────────────────────────────────────────────────────────────
+import time as _time
+from datetime import datetime as _dt, timezone as _tz
+
+from sqlalchemy.exc import (
+    SQLAlchemyError,
+    OperationalError,
+    PendingRollbackError,
+    InvalidRequestError,
+    TimeoutError as SAQueuePoolTimeout,
+)
+
+# Specific DB exception families requested for explicit capture.  Ordered most-
+# specific first; all are subclasses of SQLAlchemyError, which is the catch-all.
+_ORCH_DB_ERRORS = (
+    OperationalError,
+    SAQueuePoolTimeout,
+    PendingRollbackError,
+    InvalidRequestError,
+    SQLAlchemyError,
+)
+
+
+def _orch_session_state(db) -> dict:
+    """Best-effort snapshot of the SQLAlchemy session + connection state.
+
+    Every probe is individually guarded so the snapshot itself can never raise
+    and mask the original exception we are trying to capture.
+    """
+    state: dict = {}
+    try:
+        state["is_active"] = db.is_active
+    except Exception as e:  # noqa: BLE001
+        state["is_active_err"] = repr(e)
+    try:
+        state["in_transaction"] = db.in_transaction()
+    except Exception as e:  # noqa: BLE001
+        state["in_transaction_err"] = repr(e)
+    try:
+        state["in_nested_transaction"] = db.in_nested_transaction()
+    except Exception as e:  # noqa: BLE001
+        state["in_nested_err"] = repr(e)
+    try:
+        # QueuePool status string: "Pool size: N Connections in pool: N ..."
+        state["pool_status"] = db.get_bind().pool.status()
+    except Exception as e:  # noqa: BLE001
+        state["pool_status_err"] = repr(e)
+    # Connection liveness — only probe when a transaction is already bound so we
+    # do NOT lazily open a new connection as a side effect of diagnostics.
+    try:
+        if db.in_transaction():
+            raw = db.connection()
+            state["conn_closed"] = bool(getattr(raw, "closed", "unknown"))
+        else:
+            state["conn_closed"] = "no-active-tx"
+    except Exception as e:  # noqa: BLE001
+        state["conn_probe_err"] = repr(e)
+    return state
+
+
+def _orch_stage(stage, request_id, module_id, student_id, t0, **extra) -> None:
+    """Structured BEFORE/AFTER trace line for a single orchestrate stage."""
+    logger.info(
+        "orchestrate_trace[%s]: stage=%s module=%s student=%s elapsed_ms=%d ts=%s%s",
+        request_id, stage, (module_id or "?")[:8], (student_id or "?")[:8],
+        int((_time.monotonic() - t0) * 1000),
+        _dt.now(_tz.utc).isoformat(),
+        "".join(f" {k}={v!r}" for k, v in extra.items()),
+    )
+
+
+def _orch_capture(stage, request_id, module_id, student_id, t0, db, exc) -> None:
+    """Full diagnostic dump for an exception that produced (or will produce) a 500.
+
+    Uses logger.exception() so the complete stacktrace is emitted, and appends
+    the exact exception type/message plus the live session + connection state.
+    """
+    logger.exception(
+        "orchestrate_500[%s]: EXCEPTION stage=%s exc_type=%s exc_msg=%s "
+        "module=%s student=%s elapsed_ms=%d ts=%s session_state=%s",
+        request_id, stage, type(exc).__name__, str(exc),
+        (module_id or "?")[:8], (student_id or "?")[:8],
+        int((_time.monotonic() - t0) * 1000),
+        _dt.now(_tz.utc).isoformat(),
+        _orch_session_state(db),
+    )
+
 router = APIRouter(prefix="/api/students", tags=["Estudiantes"])
 
 
@@ -283,12 +378,35 @@ async def orchestrate_module(
     current_user: User = Depends(get_current_estudiante),
 ):
     request_id = getattr(request.state, "request_id", None) or module_id[:8]
+    student_id = getattr(current_user, "id", None)
+    _t0 = _time.monotonic()
+    _orch_stage("request.received", request_id, module_id, student_id, _t0)
 
-    module = db.query(PathModule).filter(PathModule.id == module_id).first()
+    # ── PathModule query ──────────────────────────────────────────────
+    _orch_stage("pathmodule_query.before", request_id, module_id, student_id, _t0)
+    try:
+        module = db.query(PathModule).filter(PathModule.id == module_id).first()
+    except _ORCH_DB_ERRORS as exc:
+        _orch_capture("pathmodule_query", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    except Exception as exc:  # noqa: BLE001
+        _orch_capture("pathmodule_query.unexpected", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    _orch_stage("pathmodule_query.after", request_id, module_id, student_id, _t0, found=module is not None)
     if not module:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo no encontrado")
 
-    path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
+    # ── LearningPath query ────────────────────────────────────────────
+    _orch_stage("learningpath_query.before", request_id, module_id, student_id, _t0)
+    try:
+        path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
+    except _ORCH_DB_ERRORS as exc:
+        _orch_capture("learningpath_query", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    except Exception as exc:  # noqa: BLE001
+        _orch_capture("learningpath_query.unexpected", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    _orch_stage("learningpath_query.after", request_id, module_id, student_id, _t0, found=path is not None)
     if not path or path.student_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -297,30 +415,100 @@ async def orchestrate_module(
 
     from app.memory.shared_memory import memory_store_from_session
     from app.services.course_service import get_course_by_id as get_course
-    course = get_course(db, path.course_id)
+
+    # ── get_course ────────────────────────────────────────────────────
+    _orch_stage("get_course.before", request_id, module_id, student_id, _t0)
+    try:
+        course = get_course(db, path.course_id)
+    except _ORCH_DB_ERRORS as exc:
+        _orch_capture("get_course", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    except Exception as exc:  # noqa: BLE001
+        _orch_capture("get_course.unexpected", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    _orch_stage("get_course.after", request_id, module_id, student_id, _t0, found=course is not None)
     if not course:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Curso no encontrado")
 
     logger.info(
         "orchestrate_route[%s]: student=%s module=%s title=%r",
-        request_id, current_user.id[:8], module_id[:8], module.title[:40],
+        request_id, current_user.id[:8], module_id[:8],
+        (module.title[:40] if module.title else "<none>"),
     )
 
-    store = memory_store_from_session(db)
-    result = await module_orchestration_service.orchestrate_module(
-        db=db,
-        student=current_user,
-        course=course,
-        module=module,
-        memory_store=store,
-        request_id=request_id,
+    # ── memory_store_from_session ─────────────────────────────────────
+    _orch_stage("memory_store.before", request_id, module_id, student_id, _t0)
+    try:
+        store = memory_store_from_session(db)
+    except Exception as exc:  # noqa: BLE001
+        _orch_capture("memory_store_from_session", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    _orch_stage("memory_store.after", request_id, module_id, student_id, _t0)
+
+    # ── orchestrate_module (service — internally swallows & degrades) ──
+    _orch_stage(
+        "orchestrate_service.before", request_id, module_id, student_id, _t0,
+        session_state=_orch_session_state(db),
     )
+    try:
+        result = await module_orchestration_service.orchestrate_module(
+            db=db,
+            student=current_user,
+            course=course,
+            module=module,
+            memory_store=store,
+            request_id=request_id,
+        )
+    except _ORCH_DB_ERRORS as exc:
+        _orch_capture("orchestrate_service.db", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    except Exception as exc:  # noqa: BLE001
+        _orch_capture("orchestrate_service.unexpected", request_id, module_id, student_id, _t0, db, exc)
+        raise
+    _status = result.get("orchestration_status") if isinstance(result, dict) else "<not-a-dict>"
+    _orch_stage(
+        "orchestrate_service.after", request_id, module_id, student_id, _t0,
+        status=_status, degraded=(_status == "degraded"),
+        session_state=_orch_session_state(db),
+    )
+    if _status == "degraded":
+        # The service caught an exception internally and returned a safe dict.
+        # The real stacktrace was emitted by module_orchestration_service itself
+        # (its 'unhandled exception' / 'overall timeout' log line) — point to it.
+        logger.warning(
+            "orchestrate_500[%s]: service returned DEGRADED — an exception was "
+            "swallowed INSIDE module_orchestration_service; inspect the matching "
+            "'orchestrate[%s]: unhandled exception' or 'overall timeout' line above.",
+            request_id, request_id,
+        )
 
     logger.info(
         "orchestrate_route[%s]: done status=%s confidence=%.3f",
         request_id, result.get("orchestration_status"), result.get("confidence", 0),
     )
 
+    # ── model_validate (response schema pre-flight) ───────────────────
+    # TEMPORARY behaviour change: previously a validation failure degraded
+    # silently.  Per the runtime investigation we now log the full diagnostic
+    # and RE-RAISE so the exact ValidationError surfaces as the 500 instead of
+    # being hidden behind a degraded_result.
+    _orch_stage("model_validate.before", request_id, module_id, student_id, _t0)
+    try:
+        from app.schemas.progress import ModuleOrchestrationResponse as _Schema
+        _Schema.model_validate(result)
+    except Exception as _val_exc:  # noqa: BLE001
+        logger.exception(
+            "orchestrate_500[%s]: model_validate FAILED stage=model_validate "
+            "exc_type=%s exc_msg=%s result_keys=%s session_state=%s",
+            request_id, type(_val_exc).__name__, str(_val_exc),
+            sorted(result.keys()) if isinstance(result, dict) else type(result).__name__,
+            _orch_session_state(db),
+        )
+        raise
+    _orch_stage("model_validate.after", request_id, module_id, student_id, _t0)
+
+    # ── log_action_sync (audit — non-critical, must NOT cause a 500) ──
+    _orch_stage("log_action.before", request_id, module_id, student_id, _t0)
     try:
         log_action_sync(
             db,
@@ -330,13 +518,28 @@ async def orchestrate_module(
             module_id,
             {"course_id": path.course_id, "module_title": module.title},
         )
-    except Exception as exc:
-        # The session may be in a degraded state after failed memory writes;
-        # audit failure must never prevent the orchestration response.
-        logger.warning(
-            "orchestrate_route[%s]: audit log failed (non-critical): %s",
-            request_id, exc,
+    except _ORCH_DB_ERRORS as exc:
+        # Captured exhaustively but intentionally NOT re-raised: a poisoned
+        # session here is itself a strong signal, logged with full state.
+        logger.exception(
+            "orchestrate_500[%s]: log_action_sync DB error (non-fatal) "
+            "exc_type=%s exc_msg=%s session_state=%s",
+            request_id, type(exc).__name__, str(exc), _orch_session_state(db),
         )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception(
+            "orchestrate_500[%s]: log_action_sync unexpected error (non-fatal) "
+            "exc_type=%s exc_msg=%s session_state=%s",
+            request_id, type(exc).__name__, str(exc), _orch_session_state(db),
+        )
+    _orch_stage("log_action.after", request_id, module_id, student_id, _t0)
+
+    # ── return ────────────────────────────────────────────────────────
+    _orch_stage(
+        "return.before", request_id, module_id, student_id, _t0,
+        status=result.get("orchestration_status") if isinstance(result, dict) else None,
+        session_state=_orch_session_state(db),
+    )
     return result
 
 

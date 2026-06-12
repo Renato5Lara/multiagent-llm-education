@@ -120,42 +120,69 @@ class ModuleOrchestrationService:
         bloom_target = module.bloom_level or 3
         t0 = time.monotonic()
 
+        def _elapsed() -> int:
+            return int((time.monotonic() - t0) * 1000)
+
+        def _db_state() -> str:
+            try:
+                return "active" if db.is_active else "closed"
+            except Exception:
+                return "unknown"
+
         logger.info(
             "orchestrate[%s]: start — module=%s topic=%r bloom=%d student=%s course=%s",
-            orch_id, module.id[:8], topic[:40], bloom_target,
+            orch_id, module.id[:8], topic[:40] if topic else "<none>", bloom_target,
             student.id[:8], course.id[:8],
         )
 
         # ── Phase 1: Narrative query (reads prior session context) ───────
+        logger.debug("orchestrate[%s]: phase=narrative_query elapsed_ms=0 db=%s", orch_id, _db_state())
         narrative = self._phase_narrative_query(orch_id, memory_store, student, course)
+        logger.debug("orchestrate[%s]: phase=narrative_query elapsed_ms=%d keys=%d", orch_id, _elapsed(), len(narrative))
 
         # ── Phase 2: Research (Tavily retrieval, degraded if no API key) ─
+        logger.debug("orchestrate[%s]: phase=research start elapsed_ms=%d db=%s", orch_id, _elapsed(), _db_state())
         research_state = await self._phase_research(
             orch_id, topic, bloom_target, student, module, narrative,
             memory_store=memory_store,
         )
+        logger.info(
+            "orchestrate[%s]: phase=research done elapsed_ms=%d degraded=%s sources=%d db=%s",
+            orch_id, _elapsed(),
+            research_state.get("research", {}).get("degraded", True),
+            research_state.get("research", {}).get("total_sources", 0),
+            _db_state(),
+        )
 
         # ── Phase 3: Content generation (CPU-only, no I/O) ───────────────
-        t_content = time.monotonic()
-        result = self._build_orchestration_result(
-            research_state, student, course, module, bloom_target, orch_id,
-        )
+        logger.debug("orchestrate[%s]: phase=content_build start elapsed_ms=%d", orch_id, _elapsed())
+        try:
+            result = self._build_orchestration_result(
+                research_state, student, course, module, bloom_target, orch_id,
+            )
+        except Exception as build_exc:
+            logger.error(
+                "orchestrate[%s]: phase=content_build FAILED elapsed_ms=%d error=%r",
+                orch_id, _elapsed(), build_exc, exc_info=True,
+            )
+            raise
         logger.debug(
-            "orchestrate[%s]: content_build done (%.0fms)",
-            orch_id, (time.monotonic() - t_content) * 1000,
+            "orchestrate[%s]: phase=content_build done elapsed_ms=%d status=%s",
+            orch_id, _elapsed(), result.get("orchestration_status"),
         )
 
         # ── Phase 4: Narrative publish (writes session context for future) ─
+        logger.debug("orchestrate[%s]: phase=narrative_publish start elapsed_ms=%d db=%s", orch_id, _elapsed(), _db_state())
         self._phase_narrative_publish(orch_id, memory_store, student, module, course, result)
 
-        elapsed_ms = (time.monotonic() - t0) * 1000
+        elapsed_ms = _elapsed()
         logger.info(
-            "orchestrate[%s]: complete in %.0fms — "
-            "status=%s confidence=%.3f module=%s",
+            "orchestrate[%s]: complete elapsed_ms=%d status=%s confidence=%.3f module=%s db=%s",
             orch_id, elapsed_ms,
             result.get("orchestration_status", "?"),
             result.get("confidence", 0.0),
             module.id[:8],
+            _db_state(),
         )
         return result
 

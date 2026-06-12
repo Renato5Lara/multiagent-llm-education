@@ -111,12 +111,18 @@ def make_idempotency_middleware(
                 },
             )
         except Exception as exc:
-            logger.error("Idempotency middleware error: %s", exc)
+            logger.error("Idempotency middleware error: %s", exc, exc_info=True)
             try:
                 idem.fail(db, key, reason=f"middleware_error:{exc}")
             except Exception:
                 pass
-            return await call_next(request)
+            # Do NOT call call_next again — it has already been consumed or the
+            # error occurred before the inner handler ran.  Return a generic 500
+            # so the middleware does not raise unhandled.
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Error interno del servidor", "status_code": 500},
+            )
         finally:
             db.close()
 
@@ -132,7 +138,7 @@ def _extract_key(request: Request) -> str | None:
     # Generate from request body hash for mutating requests
     if request.method in IDEMPOTENCY_METHODS:
         try:
-            body = request.state.get("body")
+            body = getattr(request.state, "body", None)  # State has no .get()
             if body is not None:
                 raw = json.dumps(
                     {"method": request.method, "path": request.url.path, "body": body},
