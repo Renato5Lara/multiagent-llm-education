@@ -35,6 +35,7 @@ from app.api.routes import (
     sandbox,
     idempotency,
     replay,
+    traces,
 )
 from app.weekly_learning.routes import router as weekly_learning_router
 
@@ -319,6 +320,7 @@ app.include_router(swarm_demo.router)
 app.include_router(sandbox.router)
 app.include_router(idempotency.router)
 app.include_router(replay.router)
+app.include_router(traces.router)
 app.include_router(weekly_learning_router)
 
 
