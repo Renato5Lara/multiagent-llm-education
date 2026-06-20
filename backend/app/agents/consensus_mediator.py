@@ -143,12 +143,68 @@ class ConsensusMediator(BaseAgent):
 
         output = result.model_dump()
 
+        _steps_completed = sum(
+            1 for key in [
+                "research_result", "pedagogical_structure", "adaptation_plan",
+                "evaluation_result", "multimodal_plan", "prompts", "consistency_result",
+            ]
+            if state.get(key)
+        )
+        _consistency_passed = consistency_obj.passed if consistency_obj else None
+        _warning_count = len(warnings)
+
+        self._trace_evidence(
+            source="state",
+            key="pipeline_outputs",
+            value={
+                "has_research": bool(state.get("research_result")),
+                "has_pedagogical": bool(state.get("pedagogical_structure")),
+                "has_adaptation": bool(state.get("adaptation_plan")),
+                "has_evaluation": bool(state.get("evaluation_result")),
+                "has_multimodal": bool(state.get("multimodal_plan")),
+                "has_prompts": bool(state.get("prompts")),
+                "has_consistency": bool(state.get("consistency_result")),
+            },
+            confidence=0.9 if _steps_completed >= 5 else 0.6,
+        )
+        self._trace_dimension(
+            dimension="pipeline_completeness",
+            result=f"{_steps_completed}/7 pipeline steps completed",
+            signal=f"research={bool(state.get('research_result'))}, pedagogical={bool(state.get('pedagogical_structure'))}, evaluation={bool(state.get('evaluation_result'))}, adaptation={bool(state.get('adaptation_plan'))}, multimodal={bool(state.get('multimodal_plan'))}, prompts={bool(state.get('prompts'))}, consistency={bool(state.get('consistency_result'))}",
+            rule="consolidate all steps with non-empty state output; 7/7=fully grounded pipeline, <7=partial execution",
+            confidence=0.9 if _steps_completed >= 5 else 0.6,
+            evidence={"steps_completed": _steps_completed, "total_steps": 7},
+        )
+        self._trace_dimension(
+            dimension="consistency_gate",
+            result=f"consistency={'passed' if _consistency_passed else 'failed' if _consistency_passed is False else 'not_run'}",
+            signal=f"consistency_obj.passed={_consistency_passed}, parse_failure_warnings={_warning_count}",
+            rule="consistency_obj.passed=False → error-severity issues logged as warnings; does not block final consolidation",
+            confidence=0.90,
+            evidence={"consistency_passed": _consistency_passed, "parse_warnings": _warning_count},
+        )
+        self._trace_dimension(
+            dimension="consolidation_quality",
+            result=f"warnings={_warning_count}, steps_completed={_steps_completed}/7",
+            signal=f"each failed schema parse (pedagogical, multimodal, adaptation, prompts, consistency) adds a warning",
+            rule="warning_count=0 AND steps>=5 → high quality consolidation; each warning reduces confidence",
+            confidence=0.90 if _warning_count == 0 else 0.70,
+            evidence={"warning_count": _warning_count, "steps_completed": _steps_completed},
+        )
+
         await self.publish_observation(
             f"{self.context_key}:orchestration:result",
             output,
             memory_type="inference",
             confidence=0.95,
         )
+
+        output["_decision_summary"] = (
+            f"Consolidated pipeline: {_steps_completed}/7 steps, "
+            f"consistency={'passed' if _consistency_passed else 'failed' if _consistency_passed is False else 'not_run'}, "
+            f"warnings={_warning_count}"
+        )
+        output["_confidence"] = 0.90 if (_steps_completed >= 5 and _warning_count == 0) else 0.70
 
         return output
 
@@ -158,14 +214,15 @@ class ConsensusMediator(BaseAgent):
             "has_research": bool(state.get("research_result")),
             "has_pedagogical_structure": bool(state.get("pedagogical_structure")),
             "has_adaptation": bool(state.get("adaptation_plan")),
+            "has_evaluation": bool(state.get("evaluation_result")),
             "has_multimodal_plan": bool(state.get("multimodal_plan")),
             "has_prompts": bool(state.get("prompts")),
             "has_consistency_check": bool(state.get("consistency_result")),
             "agent_steps_completed": sum(
                 1 for key in [
                     "research_result", "pedagogical_structure", "adaptation_plan",
-                    "multimodal_plan", "prompts", "consistency_result",
+                    "evaluation_result", "multimodal_plan", "prompts", "consistency_result",
                 ] if state.get(key)
             ),
-            "total_agent_steps": 7,
+            "total_agent_steps": 8,
         }

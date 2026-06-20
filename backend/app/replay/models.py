@@ -12,6 +12,7 @@ class ReplayPhase(str, Enum):
     RESEARCH = "research"
     PEDAGOGICAL = "pedagogical"
     ADAPTIVE = "adaptive"
+    EVALUATION = "evaluation"
     MULTIMODAL = "multimodal"
     PROMPT = "prompt"
     CONSISTENCY = "consistency"

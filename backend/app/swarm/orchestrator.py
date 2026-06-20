@@ -144,6 +144,15 @@ class SwarmOrchestrator:
         self._cancelled = False
         self._cancellation_lock = threading.Lock()
 
+        # Decision trace context — correlation_id shared across all agents in this run;
+        # causation_id and sequence updated after each agent invocation.
+        self._trace_context: dict[str, Any] = {
+            "correlation_id": str(uuid.uuid4()),
+            "causation_id": None,
+            "sequence": 0,
+            "session_id": getattr(context, "session_id", None),
+        }
+
         # Real agent instances, created on first use
         self._agents: dict[str, Any] = {}
         self._agent_factory = AgentFactory(
@@ -418,6 +427,18 @@ class SwarmOrchestrator:
                 "error": str(e),
             }
 
+    # ── Trace context helpers ─────────────────────────────────────
+
+    def _build_trace_state(self, base_state: dict[str, Any]) -> dict[str, Any]:
+        """Inject current trace context into agent state dict (non-destructive)."""
+        base_state["_trace_context"] = dict(self._trace_context)
+        return base_state
+
+    def _update_trace_from_result(self, result: dict[str, Any]) -> None:
+        """Advance trace context from an agent's run() result."""
+        if "_trace_context" in result:
+            self._trace_context.update(result["_trace_context"])
+
     # ═══════════════════════════════════════════════════════════════
     # PHASE HANDLERS
     # ═══════════════════════════════════════════════════════════════
@@ -565,13 +586,14 @@ class SwarmOrchestrator:
         causation_id = self._last_event_id()
 
         result = await agent.run(
-            state={
+            state=self._build_trace_state({
                 "is_programming_course": True,
                 "student_id": self.student_id,
                 "course_id": self.course_id,
-            },
+            }),
             causation_id=causation_id,
         )
+        self._update_trace_from_result(result)
 
         swarm_metrics.record_agent(
             agent.agent_name, result["_agent"]["elapsed_ms"], success=True,
@@ -594,9 +616,10 @@ class SwarmOrchestrator:
         causation_id = self._last_event_id()
 
         result = await agent.run(
-            state={"is_programming_course": True},
+            state=self._build_trace_state({"is_programming_course": True}),
             causation_id=causation_id,
         )
+        self._update_trace_from_result(result)
 
         swarm_metrics.record_agent(
             agent.agent_name, result["_agent"]["elapsed_ms"], success=True,
@@ -613,12 +636,13 @@ class SwarmOrchestrator:
         causation_id = self._last_event_id()
 
         result = await agent.run(
-            state={
+            state=self._build_trace_state({
                 "is_programming_course": self.lifecycle.metadata.get("is_programming_course", False),
                 "cognitive_stage": self.lifecycle.metadata.get("cognitive_stage", "unknown"),
-            },
+            }),
             causation_id=causation_id,
         )
+        self._update_trace_from_result(result)
 
         swarm_metrics.record_agent(
             agent.agent_name, result["_agent"]["elapsed_ms"], success=True,
@@ -925,12 +949,13 @@ class SwarmOrchestrator:
 
         concept_sequence = self.lifecycle.metadata.get("concept_sequence", [])
         result = await agent.run(
-            state={
+            state=self._build_trace_state({
                 "is_programming_course": True,
                 "concept_sequence": concept_sequence,
-            },
+            }),
             causation_id=causation_id,
         )
+        self._update_trace_from_result(result)
 
         swarm_metrics.record_agent(
             agent.agent_name, result["_agent"]["elapsed_ms"], success=True,

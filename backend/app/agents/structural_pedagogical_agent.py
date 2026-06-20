@@ -43,6 +43,18 @@ class StructuralPedagogicalAgent(BaseAgent):
         findings = research.get("findings", []) if isinstance(research, dict) else []
         examples = research.get("examples", []) if isinstance(research, dict) else []
 
+        self._trace_evidence(
+            source="state",
+            key="research_result",
+            value={
+                "findings_count": len(findings),
+                "examples_count": len(examples),
+                "objectives_count": len(objectives),
+                "topic": topic,
+            },
+            confidence=0.9 if (findings or examples) else 0.5,
+        )
+
         sections = self._build_pedagogical_sections(topic, objectives, findings, examples)
         structure = PedagogicalStructure(
             topic=topic,
@@ -53,6 +65,24 @@ class StructuralPedagogicalAgent(BaseAgent):
         )
 
         result = structure.model_dump()
+
+        _bloom_seq = [s.bloom_level for s in sections]
+        self._trace_dimension(
+            dimension="section_structure",
+            result=f"{len(sections)} sections, Bloom progression {_bloom_seq}",
+            signal=f"topic='{topic}', objectives={len(objectives)}, findings={len(findings)}, examples={len(examples)}",
+            rule="fixed 6-section Bloom taxonomy progression: introduction(1)→explanation(2)→example(3)→practice(3)→real_case(4)→evaluation(4)",
+            confidence=0.90,
+            evidence={"total_duration_min": structure.total_duration_minutes, "bloom_sequence": _bloom_seq, "section_count": len(sections)},
+        )
+        self._trace_dimension(
+            dimension="research_grounding",
+            result=f"findings={len(findings)}, examples={len(examples)}",
+            signal=f"research_result provided {len(findings)} findings and {len(examples)} examples for content grounding",
+            rule="content quality increases with more findings and examples; section structure remains fixed regardless",
+            confidence=0.85 if (findings or examples) else 0.50,
+            evidence={"findings_count": len(findings), "examples_count": len(examples), "objectives_count": len(objectives)},
+        )
 
         await self.publish_observation(
             f"{self.context_key}:pedagogical:structure",
@@ -68,6 +98,13 @@ class StructuralPedagogicalAgent(BaseAgent):
                 memory_type="observation",
                 confidence=0.85,
             )
+
+        result["_decision_summary"] = (
+            f"Structured {len(sections)} pedagogical sections (Bloom: {_bloom_seq}), "
+            f"total_duration={structure.total_duration_minutes}min, "
+            f"grounded in {len(findings)} findings + {len(examples)} examples"
+        )
+        result["_confidence"] = 0.85 if (findings or examples) else 0.55
 
         return result
 

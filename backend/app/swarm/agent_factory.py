@@ -122,6 +122,19 @@ class AgentFactory:
             shared_memory=self.shared_memory,
         )
 
+    def create_adaptive_learning_evaluation_agent(self):
+        from app.agents.adaptive_learning_evaluation_agent import (
+            AdaptiveLearningEvaluationAgent,
+        )
+        return AdaptiveLearningEvaluationAgent(
+            agent_name="adaptive_learning_evaluation_agent",
+            uow=self.uow,
+            student_id=self.student_id,
+            course_id=self.course_id,
+            context_key=self.context_key,
+            shared_memory=self.shared_memory,
+        )
+
     def create_multimodal_planning_agent(self):
         from app.agents.multimodal_planning_agent import MultimodalPlanningAgent
         return MultimodalPlanningAgent(
@@ -167,11 +180,12 @@ class AgentFactory:
         )
 
     def create_all_orchestration_agents(self) -> dict[str, Any]:
-        """Create all seven orchestration agents for the pedagogical pipeline."""
+        """Create all eight orchestration agents for the pedagogical pipeline."""
         return {
             "structural_pedagogical": self.create_structural_pedagogical_agent(),
             "research": self.create_research_agent(),
             "adaptive_learning": self.create_adaptive_learning_agent(),
+            "adaptive_evaluation": self.create_adaptive_learning_evaluation_agent(),
             "multimodal_planning": self.create_multimodal_planning_agent(),
             "prompt_engineering": self.create_prompt_engineering_agent(),
             "consistency": self.create_consistency_agent(),

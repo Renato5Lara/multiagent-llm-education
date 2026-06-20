@@ -64,6 +64,19 @@ class ConsistencyAgent(BaseAgent):
         issues.extend(self._check_retrieval_quality(research))
 
         narrative_memory = await self._load_or_init_narrative_memory()
+        _memory_was_loaded = bool(
+            narrative_memory.get("characters") or narrative_memory.get("narrative_threads")
+        )
+        self._trace_evidence(
+            source="shared_memory",
+            key=f"{self.context_key}:narrative:memory",
+            value={
+                "memory_loaded": _memory_was_loaded,
+                "previous_threads": len(narrative_memory.get("narrative_threads", [])),
+            },
+            confidence=0.9 if _memory_was_loaded else 0.5,
+            memory_type="inference",
+        )
         narrative_memory = self._update_narrative_memory(narrative_memory, state, prompts)
 
         passed = len([i for i in issues if i.severity == "error"]) == 0
@@ -91,6 +104,33 @@ class ConsistencyAgent(BaseAgent):
             "passed": passed,
         }
 
+        _errors = sum(1 for i in issues if i.severity == "error")
+        _warnings_count = sum(1 for i in issues if i.severity == "warning")
+        self._trace_dimension(
+            dimension="consistency_verdict",
+            result=f"passed={passed}, issues={len(issues)} (errors={_errors}, warnings={_warnings_count})",
+            signal=f"{len(issues)} issues found across 8 checks: narrative coherence, Bloom progression, multimodal, redundancy, character continuity, tone, retrieval contradictions, retrieval quality",
+            rule="passed=True only if zero error-severity issues; warnings and info-severity issues do not block pipeline",
+            confidence=0.90,
+            evidence={"passed": passed, "errors": _errors, "warnings": _warnings_count, "total_issues": len(issues)},
+        )
+        self._trace_dimension(
+            dimension="pedagogical_progression_score",
+            result=f"{report.pedagogical_progression_score:.2f}",
+            signal=f"sections={len(sections)}, Bloom levels checked for monotonic non-decreasing progression",
+            rule="score=0.5 + (increasing_transitions / total_transitions) * 0.5; max=1.0 if all transitions increase",
+            confidence=0.85,
+            evidence={"score": round(report.pedagogical_progression_score, 3), "sections_count": len(sections)},
+        )
+        self._trace_dimension(
+            dimension="narrative_coherence_score",
+            result=f"{report.narrative_coherence_score:.2f}",
+            signal=f"penalty accumulation from issues: error=-0.3, warning=-0.1, info=-0.02",
+            rule="score=max(0, 1.0 - sum_of_penalties); lower score = more or more severe issues",
+            confidence=0.85,
+            evidence={"score": round(report.narrative_coherence_score, 3), "total_issues": len(issues)},
+        )
+
         await self.publish_observation(
             f"{self.context_key}:consistency:report",
             result,
@@ -104,6 +144,14 @@ class ConsistencyAgent(BaseAgent):
             memory_type="inference",
             confidence=0.85,
         )
+
+        result["_decision_summary"] = (
+            f"Consistency check: {'PASSED' if passed else 'FAILED'}, "
+            f"issues={len(issues)} (errors={_errors}, warnings={_warnings_count}), "
+            f"coherence={report.narrative_coherence_score:.2f}, "
+            f"progression={report.pedagogical_progression_score:.2f}"
+        )
+        result["_confidence"] = 0.90
 
         return result
 

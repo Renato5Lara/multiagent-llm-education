@@ -70,6 +70,18 @@ class MultimodalPlanningAgent(BaseAgent):
         difficulty_level = adaptation.get("difficulty_level", "intermediate")
         explanation_depth = adaptation.get("explanation_depth", "standard")
 
+        self._trace_evidence(
+            source="state",
+            key="adaptation_plan",
+            value={
+                "modality_prefs": modality_prefs,
+                "difficulty_level": difficulty_level,
+                "explanation_depth": explanation_depth,
+                "sections_count": len(sections),
+            },
+            confidence=0.9 if modality_prefs else 0.5,
+        )
+
         decisions = []
         text_sections = []
         prompt_sections = {}
@@ -104,6 +116,33 @@ class MultimodalPlanningAgent(BaseAgent):
             decisions=decisions,
         )
 
+        _profile_influenced = adaptation_summary.get("profile_influenced_decisions", 0)
+        _bloom_aware = adaptation_summary.get("bloom_aware_decisions", 0)
+        self._trace_dimension(
+            dimension="profile_adaptation",
+            result=f"{_profile_influenced}/{total_decisions} sections adapted to learner preferences",
+            signal=f"modality_prefs={modality_prefs}, difficulty={difficulty_level}",
+            rule="for each section: if any learner_pref appears in section Bloom-calibrated priority list → select it; else → first in priority list",
+            confidence=0.90 if modality_prefs else 0.50,
+            evidence={"profile_influenced": _profile_influenced, "total_sections": total_decisions, "prefs": modality_prefs},
+        )
+        self._trace_dimension(
+            dimension="bloom_calibration",
+            result=f"{_bloom_aware}/{total_decisions} sections with Bloom-boosted modality priorities",
+            signal=f"sections with bloom_level>=4 trigger BLOOM_HIGH_MODALITY_BOOST priority override",
+            rule="section.bloom_level>=4 AND section_type in BLOOM_HIGH_MODALITY_BOOST → use boosted priority list instead of default MODALITY_PRIORITIES",
+            confidence=0.85,
+            evidence={"bloom_aware_decisions": _bloom_aware, "boost_applied": _bloom_aware > 0},
+        )
+        self._trace_dimension(
+            dimension="prompt_efficiency",
+            result=f"efficiency_ratio={efficiency_ratio:.2f} ({prompt_count}/{total_decisions} sections need specialized prompts)",
+            signal=f"text+generate_text_directly=True → direct; video/image/audio/interactive → specialized prompt",
+            rule="modality=='text' AND config.generate_text_directly → direct generation; all other modalities → specialized prompt required",
+            confidence=0.90,
+            evidence={"prompt_count": prompt_count, "direct_count": total_decisions - prompt_count, "efficiency_ratio": round(efficiency_ratio, 2)},
+        )
+
         plan = MultimodalPlan(
             decisions=decisions,
             text_sections=text_sections,
@@ -127,6 +166,14 @@ class MultimodalPlanningAgent(BaseAgent):
             memory_type="inference",
             confidence=0.9,
         )
+
+        result["_decision_summary"] = (
+            f"Planned {total_decisions} section modalities: "
+            f"{_profile_influenced} profile-driven, {_bloom_aware} Bloom-boosted, "
+            f"efficiency={efficiency_ratio:.2f} "
+            f"[difficulty={difficulty_level}, prefs={modality_prefs or 'default'}]"
+        )
+        result["_confidence"] = 0.85 if modality_prefs else 0.65
 
         return result
 

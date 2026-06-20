@@ -124,6 +124,30 @@ class PromptEngineeringAgent(BaseAgent):
         sources = research.get("sources", []) if isinstance(research, dict) else []
         learning_objectives = state.get("learning_objectives", [])
 
+        self._trace_evidence(
+            source="state",
+            key="adaptation_plan",
+            value={
+                "difficulty_level": difficulty_level,
+                "explanation_depth": explanation_depth,
+                "bloom_range": bloom_range,
+                "reinforcement": reinforcement,
+                "modality_prefs": modality_prefs,
+            },
+            confidence=0.9,
+        )
+        self._trace_evidence(
+            source="state",
+            key="research_result",
+            value={
+                "examples_count": len(examples),
+                "analogies_count": len(analogies),
+                "concepts_count": len(concepts),
+                "misconceptions_count": len(misconceptions),
+            },
+            confidence=0.9 if (examples or analogies) else 0.4,
+        )
+
         topic = state.get("topic", "")
 
         orchestration_trace: list[str] = [
@@ -224,12 +248,45 @@ class PromptEngineeringAgent(BaseAgent):
             "adaptation_metadata": adaptation_metadata,
         }
 
+        self._trace_dimension(
+            dimension="difficulty_calibration",
+            result=f"difficulty={difficulty_level}, depth={explanation_depth}, bloom_range={bloom_range}",
+            signal=f"adaptation_plan: difficulty={difficulty_level}, depth={explanation_depth}, bloom={bloom_range}, reinforcement={reinforcement}",
+            rule="all prompts use _DIFFICULTY_VOCAB[difficulty] for vocabulary, tone, length_multiplier, and accessibility_notes",
+            confidence=0.90,
+            evidence={"difficulty_level": difficulty_level, "explanation_depth": explanation_depth, "bloom_range": bloom_range, "reinforcement": reinforcement},
+        )
+        self._trace_dimension(
+            dimension="research_grounding",
+            result=f"research_injected={bool(examples or analogies)} (examples={len(examples)}, analogies={len(analogies)})",
+            signal=f"research_result: {len(examples)} examples, {len(analogies)} analogies, {len(concepts)} concepts available",
+            rule="examples and analogies from research_result injected into prompt content when available; falls back to generic topic reference if absent",
+            confidence=0.85 if (examples or analogies) else 0.50,
+            evidence={"examples_count": len(examples), "analogies_count": len(analogies), "concepts_count": len(concepts)},
+        )
+        self._trace_dimension(
+            dimension="prompt_generation_outcome",
+            result=f"{len(prompts)} prompts generated for {len(sections)} sections",
+            signal=f"multimodal_plan.prompt_sections={list(prompt_sections.keys())} ({len(prompt_sections)} sections with prompt_type)",
+            rule="generate prompt only for sections in multimodal_plan.prompt_sections with non-None prompt_type",
+            confidence=0.90,
+            evidence={"prompts_generated": len(prompts), "sections_total": len(sections), "sections_with_prompt": len(prompt_sections)},
+        )
+
         await self.publish_observation(
             f"{self.context_key}:prompts:generated",
             result,
             memory_type="inference",
             confidence=0.85,
         )
+
+        result["_decision_summary"] = (
+            f"Generated {len(prompts)} prompts for {len(sections)} sections: "
+            f"difficulty={difficulty_level}, depth={explanation_depth}, bloom={bloom_range}, "
+            f"research_grounded={bool(examples or analogies)} "
+            f"(examples={len(examples)}, analogies={len(analogies)})"
+        )
+        result["_confidence"] = 0.85 if (examples or analogies) else 0.65
 
         return result
 

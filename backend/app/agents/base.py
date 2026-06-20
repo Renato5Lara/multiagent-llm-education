@@ -13,6 +13,12 @@ from app.db.uow import UnitOfWork
 from app.memory.shared_memory import SharedMemoryStore
 from app.observability.metrics_exporter import exporter
 
+try:
+    from app.agents.trace_builder import TraceBuilder
+    _HAS_TRACE_BUILDER = True
+except ImportError:
+    _HAS_TRACE_BUILDER = False
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -70,6 +76,9 @@ class BaseAgent(abc.ABC):
             "failures": 0,
             "last_duration_ms": 0.0,
         }
+        # Decision trace builder — populated during analyze() via _trace_* helpers.
+        # Set to None between invocations; created fresh in each run() call.
+        self._current_trace_builder: "TraceBuilder | None" = None
 
     @property
     @abc.abstractmethod
@@ -91,6 +100,28 @@ class BaseAgent(abc.ABC):
         trace_ctx = self._start_trace(causation_id)
         propagate_start = time.monotonic()
 
+        # Extract trace context from state dict (injected by orchestrators)
+        _trace_context = state.get("_trace_context", {})
+        correlation_id: str | None = _trace_context.get("correlation_id")
+        parent_trace_id: str | None = _trace_context.get("causation_id") or causation_id
+        sequence: int = int(_trace_context.get("sequence", 0))
+        session_id: str | None = state.get("session_id") or _trace_context.get("session_id")
+
+        # Initialize trace builder for this invocation
+        if _HAS_TRACE_BUILDER:
+            self._current_trace_builder = TraceBuilder(
+                agent_id=self.agent_id,
+                agent_name=self.agent_name,
+                agent_type=self.agent_type,
+                context_key=self.context_key,
+                student_id=self.student_id,
+                course_id=self.course_id,
+                correlation_id=correlation_id,
+                causation_id=parent_trace_id,
+                sequence=sequence,
+                session_id=session_id,
+            )
+
         try:
             result = await self.analyze(state)
             elapsed_ms = (time.monotonic_ns() - start_ns) / 1_000_000
@@ -111,6 +142,21 @@ class BaseAgent(abc.ABC):
                 "agent_name": self.agent_name,
                 "elapsed_ms": elapsed_ms,
             }
+
+            # Finalize and attach decision trace
+            decision_trace = self._finalize_trace(state, result, success=True)
+            if decision_trace is not None:
+                result["_decision_trace"] = decision_trace
+                # Update _trace_context so the next agent receives this trace_id as causation_id
+                result["_trace_context"] = {
+                    "correlation_id": correlation_id,
+                    "causation_id": decision_trace.trace_id,
+                    "sequence": sequence + 1,
+                    "session_id": session_id,
+                }
+                # Persist asynchronously (fire and ignore failures)
+                await self._persist_trace(decision_trace)
+
             return result
 
         except Exception as e:
@@ -125,7 +171,15 @@ class BaseAgent(abc.ABC):
             self._end_trace(trace_ctx, error=str(e))
 
             exporter.inc_counter(f"agent_{self.agent_name}_failure")
+
+            # Still finalize and persist the failure trace (useful for debugging)
+            failure_trace = self._finalize_trace(state, {}, success=False, error=str(e))
+            if failure_trace is not None:
+                await self._persist_trace(failure_trace)
+
             raise
+        finally:
+            self._current_trace_builder = None
 
     async def publish_observation(
         self,
@@ -253,3 +307,124 @@ class BaseAgent(abc.ABC):
     @staticmethod
     def _summarize(result: dict) -> dict:
         return {k: v for k, v in result.items() if not k.startswith("_")}
+
+    # ── Decision Trace helpers ────────────────────────────────────
+    # Agents call these during analyze() to build their trace.
+    # All methods are no-ops if _current_trace_builder is None.
+
+    def _trace_evidence(
+        self,
+        source: str,
+        key: str,
+        value: Any,
+        confidence: float = 1.0,
+        memory_type: str | None = None,
+        record_id: str | None = None,
+    ) -> None:
+        """Register one piece of evidence read by the agent."""
+        if self._current_trace_builder is not None:
+            self._current_trace_builder.add_evidence(
+                source=source,
+                key=key,
+                value=value,
+                confidence=confidence,
+                memory_type=memory_type,
+                record_id=record_id,
+            )
+
+    def _trace_memory_batch(self, records: list[Any]) -> None:
+        """Register a batch of SharedMemoryRecord objects as evidence."""
+        if self._current_trace_builder is not None:
+            self._current_trace_builder.add_memory_batch(records)
+
+    def _trace_step(
+        self,
+        step_type: str,
+        description: str,
+        inputs: dict[str, Any] | None = None,
+        outputs: dict[str, Any] | None = None,
+        elapsed_ms: float | None = None,
+        notes: str | None = None,
+    ) -> None:
+        """Register one intermediate reasoning step."""
+        if self._current_trace_builder is not None:
+            self._current_trace_builder.add_step(
+                step_type=step_type,
+                description=description,
+                inputs=inputs,
+                outputs=outputs,
+                elapsed_ms=elapsed_ms,
+                notes=notes,
+            )
+
+    def _trace_dimension(
+        self,
+        dimension: str,
+        result: str,
+        signal: str,
+        rule: str,
+        confidence: float,
+        evidence: dict[str, Any] | None = None,
+        alternative_considered: str | None = None,
+        alternative_reason: str | None = None,
+    ) -> None:
+        """Register one axis of the agent's multi-dimensional decision."""
+        if self._current_trace_builder is not None:
+            self._current_trace_builder.add_dimension(
+                dimension=dimension,
+                result=result,
+                signal=signal,
+                rule=rule,
+                confidence=confidence,
+                evidence=evidence,
+                alternative_considered=alternative_considered,
+                alternative_reason=alternative_reason,
+            )
+
+    def _trace_rationale(self, rationale: dict[str, Any]) -> None:
+        """Import existing AdaptiveLearningAgent-style rationale dict into trace."""
+        if self._current_trace_builder is not None:
+            self._current_trace_builder.add_dimensions_from_rationale(rationale)
+
+    def _finalize_trace(
+        self,
+        state: dict[str, Any],
+        result: dict[str, Any],
+        success: bool,
+        error: str | None = None,
+    ) -> "Any | None":
+        """Build the final AgentDecisionTrace from the builder. Called by run()."""
+        if not _HAS_TRACE_BUILDER or self._current_trace_builder is None:
+            return None
+        try:
+            # Derive decision summary from result if agent didn't set one explicitly
+            summary = result.get("_decision_summary", "")
+            if not summary:
+                output_keys = [k for k in result if not k.startswith("_")]
+                summary = f"Produced {len(output_keys)} outputs: {', '.join(output_keys[:5])}"
+                if error:
+                    summary = f"Failed: {error[:120]}"
+
+            confidence = float(result.get("_confidence", 0.7))
+            output_keys = [k for k in result if not k.startswith("_")]
+
+            return self._current_trace_builder.build(
+                state_inputs=state,
+                decision_summary=summary,
+                confidence=confidence,
+                output_keys=output_keys,
+                success=success,
+                error=error,
+            )
+        except Exception as e:
+            logger.debug("BaseAgent._finalize_trace failed: %s", e)
+            return None
+
+    async def _persist_trace(self, trace: Any) -> None:
+        """Persist trace to DB via TraceStore (isolated session, never raises)."""
+        try:
+            from app.observability.trace_store import get_trace_store
+            store = get_trace_store()
+            await store.persist(trace)
+        except Exception as e:
+            logger.debug("BaseAgent._persist_trace failed: %s", e)

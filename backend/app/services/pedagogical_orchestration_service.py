@@ -27,12 +27,13 @@ logger = logging.getLogger(__name__)
 
 
 class PedagogicalOrchestrationService:
-    """Orquesta el flujo completo de 7 agentes para la generación de contenido pedagógico.
+    """Orquesta el flujo completo de 8 agentes para la generación de contenido pedagógico.
 
     Flujo:
     1. Research → investiga contenido
     2. Pedagogical → estructura pedagógica
     3. AdaptiveLearning → adapta al estudiante
+    3.5. AdaptiveLearningEvaluation → evalúa estado de aprendizaje real del estudiante
     4. MultimodalPlanning → planifica modalidad
     5. PromptEngineering → genera prompts
     6. Consistency → valida coherencia
@@ -134,6 +135,7 @@ class PedagogicalOrchestrationService:
             "student_id": student_id,
             "course_id": course_id,
             "context_key": context_key,
+            "session_id": session_id,
             # Runtime defaults — overridden by condition_flags from real benchmark executor
             "_retrieval_enabled": True,
             "_reviewer_enabled": True,
@@ -141,6 +143,13 @@ class PedagogicalOrchestrationService:
             "_consensus_enabled": True,
             "_sandbox_enabled": self._sandbox is not None,
             "_condition_name": "full",
+            # Decision trace context — shared correlation_id for this orchestration run
+            "_trace_context": {
+                "correlation_id": str(uuid.uuid4()),
+                "causation_id": None,
+                "sequence": 0,
+                "session_id": session_id,
+            },
         }
 
         # Apply benchmark condition flags so ablation conditions work correctly
@@ -157,6 +166,8 @@ class PedagogicalOrchestrationService:
                 research_agent = self._agent_factory.create_research_agent()
                 research_result = await research_agent.run(state)
                 state["research_result"] = research_result
+                if "_trace_context" in research_result:
+                    state["_trace_context"] = research_result["_trace_context"]
                 phase_timings["research"] = (time.monotonic() - p1) * 1000
                 findings = research_result.get("findings", [])
                 summary = research_result.get("summary", "")
@@ -182,6 +193,8 @@ class PedagogicalOrchestrationService:
             ped_agent = self._agent_factory.create_structural_pedagogical_agent()
             ped_result = await ped_agent.run(state)
             state["pedagogical_structure"] = ped_result
+            if "_trace_context" in ped_result:
+                state["_trace_context"] = ped_result["_trace_context"]
             phase_timings["pedagogical"] = (time.monotonic() - p2) * 1000
             sections = ped_result.get("sections", [])
             replay_engine.record_frame(
@@ -204,6 +217,8 @@ class PedagogicalOrchestrationService:
                 adaptive_agent = self._agent_factory.create_adaptive_learning_agent()
                 adaptive_result = await adaptive_agent.run(state)
                 state["adaptation_plan"] = adaptive_result
+                if "_trace_context" in adaptive_result:
+                    state["_trace_context"] = adaptive_result["_trace_context"]
                 phase_timings["adaptive"] = (time.monotonic() - p3) * 1000
                 difficulty = adaptive_result.get("difficulty_level", "intermediate")
                 pace = adaptive_result.get("pace_adjustment")
@@ -235,12 +250,66 @@ class PedagogicalOrchestrationService:
             state["adaptation_plan"] = {"difficulty_level": "intermediate"}
             phase_timings["adaptive"] = 0.0
 
+        # Fase 3.5: Adaptive Learning Evaluation
+        if state.get("_adaptive_pedagogy", True):
+            try:
+                p3_5 = time.monotonic()
+                eval_agent = self._agent_factory.create_adaptive_learning_evaluation_agent()
+                evaluation_result = await eval_agent.run(state)
+                state["evaluation_result"] = evaluation_result
+                if "_trace_context" in evaluation_result:
+                    state["_trace_context"] = evaluation_result["_trace_context"]
+                phase_timings["evaluation"] = (time.monotonic() - p3_5) * 1000
+                difficulty_override = evaluation_result.get("difficulty_override")
+                if difficulty_override:
+                    original_difficulty = state["adaptation_plan"].get("difficulty_level", "intermediate")
+                    state["adaptation_plan"]["difficulty_level"] = difficulty_override
+                    state["debate_context"] = {
+                        "adaptive_difficulty": original_difficulty,
+                        "evaluation_override": difficulty_override,
+                        "conflict": original_difficulty != difficulty_override,
+                        "recommendation": evaluation_result.get("recommendation"),
+                    }
+                if replay_engine:
+                    replay_engine.record_frame(
+                        ReplayPhase.EVALUATION, "AdaptiveLearningEvaluationAgent", evaluation_result,
+                        reasoning=(
+                            f"Evaluó estado de aprendizaje: recommendation={evaluation_result.get('recommendation')}, "
+                            f"learning_score={evaluation_result.get('learning_score')}, "
+                            f"bloom_readiness={evaluation_result.get('bloom_readiness_level')}"
+                        ),
+                        signal="Historial DB (EvaluationAttempt) + SharedMemory cross-session",
+                        agent_decision=(
+                            f"recommendation={evaluation_result.get('recommendation')}, "
+                            f"difficulty_override={difficulty_override or 'none'}"
+                        ),
+                        evidence={
+                            "student_id": student_id,
+                            "cold_start": evaluation_result.get("cold_start"),
+                            "session_count": evaluation_result.get("session_count"),
+                            "confidence": evaluation_result.get("confidence"),
+                            "conflict": state.get("debate_context", {}).get("conflict", False),
+                        },
+                    )
+                logger.info(
+                    "Orchestration[%s]: adaptive evaluation completed (%.0fms)",
+                    session_id, phase_timings["evaluation"],
+                )
+            except Exception as e:
+                logger.error("Orchestration[%s]: adaptive evaluation failed: %s", session_id, e)
+                state["evaluation_result"] = {}
+        else:
+            state["evaluation_result"] = {}
+            phase_timings["evaluation"] = 0.0
+
         # Fase 4: Multimodal Planning
         try:
             p4 = time.monotonic()
             mm_agent = self._agent_factory.create_multimodal_planning_agent()
             mm_result = await mm_agent.run(state)
             state["multimodal_plan"] = mm_result
+            if "_trace_context" in mm_result:
+                state["_trace_context"] = mm_result["_trace_context"]
             phase_timings["multimodal_planning"] = (time.monotonic() - p4) * 1000
             decisions = mm_result.get("decisions", [])
             _mm_summary = mm_result.get("adaptation_summary", {})
@@ -271,6 +340,8 @@ class PedagogicalOrchestrationService:
             prompt_result = await prompt_agent.run(state)
             state["prompts"] = prompt_result.get("prompts", [])
             state["narrative_thread"] = prompt_result.get("narrative_thread", "")
+            if "_trace_context" in prompt_result:
+                state["_trace_context"] = prompt_result["_trace_context"]
             phase_timings["prompt_engineering"] = (time.monotonic() - p5) * 1000
             prompts = prompt_result.get("prompts", [])
             narrative = prompt_result.get("narrative_thread", "")
@@ -310,6 +381,8 @@ class PedagogicalOrchestrationService:
                 consistency_result = await consistency_agent.run(state)
                 state["consistency_result"] = consistency_result
                 state["narrative_memory"] = consistency_result.get("narrative_memory", {})
+                if "_trace_context" in consistency_result:
+                    state["_trace_context"] = consistency_result["_trace_context"]
                 phase_timings["consistency"] = (time.monotonic() - p6) * 1000
                 report = consistency_result.get("report", {})
                 coherence = consistency_result.get("narrative_coherence_score")
@@ -400,8 +473,18 @@ class PedagogicalOrchestrationService:
                 p8 = time.monotonic()
                 mediator = self._agent_factory.create_consensus_mediator()
                 final_result = await mediator.run(state)
+                if "_trace_context" in final_result:
+                    state["_trace_context"] = final_result["_trace_context"]
                 phase_timings["consensus_mediator"] = (time.monotonic() - p8) * 1000
-                agents_in_consensus = 7 + (1 if self._sandbox else 0)
+                agents_in_consensus = sum([
+                    bool(state.get("research_result")),
+                    bool(state.get("pedagogical_structure")),
+                    bool(state.get("adaptation_plan")),
+                    bool(state.get("evaluation_result")),
+                    bool(state.get("multimodal_plan")),
+                    bool(state.get("prompts")),
+                    bool(state.get("consistency_result")),
+                ]) + 1  # ConsensusMediator siempre corre en este bloque
                 replay_engine.record_frame(
                     ReplayPhase.CONSENSUS, "ConsensusMediator", final_result,
                     reasoning=f"Consolidó {agents_in_consensus} agentes en resultado final coherente",
