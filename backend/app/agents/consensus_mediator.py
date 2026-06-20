@@ -38,6 +38,9 @@ class ConsensusMediator(BaseAgent):
     - consistency:report
     - narrative:memory
 
+    Lee de state (inter-agent):
+    - debate_context (conflicto AdaptiveLearning vs EvaluationAgent)
+
     Escribe en shared memory:
     - orchestration:result
     """
@@ -57,6 +60,7 @@ class ConsensusMediator(BaseAgent):
         prompts_data = state.get("prompts", [])
         consistency_data = state.get("consistency_result", {})
         narrative_memory = state.get("narrative_memory", {})
+        debate_context = state.get("debate_context")
 
         pedagogical_obj = None
         if isinstance(pedagogical_structure, dict) and pedagogical_structure.get("sections"):
@@ -153,6 +157,37 @@ class ConsensusMediator(BaseAgent):
         _consistency_passed = consistency_obj.passed if consistency_obj else None
         _warning_count = len(warnings)
 
+        # Inter-agent debate resolution
+        has_conflict = bool(debate_context and debate_context.get("conflict"))
+        resolved_difficulty = (
+            adaptation_obj.difficulty_level
+            if adaptation_obj is not None
+            else state.get("adaptation_plan", {}).get("difficulty_level", "intermediate")
+        )
+        if debate_context:
+            agent_debate = {
+                "has_debate_context": True,
+                "conflict": has_conflict,
+                "adaptive_difficulty": debate_context.get("adaptive_difficulty", "unknown"),
+                "evaluation_override": debate_context.get("evaluation_override", "none"),
+                "resolved_difficulty": resolved_difficulty,
+                "recommendation": debate_context.get("recommendation", ""),
+                "resolution_reason": self._build_resolution_reason(debate_context),
+            }
+        else:
+            agent_debate = {
+                "has_debate_context": False,
+                "conflict": False,
+                "adaptive_difficulty": resolved_difficulty,
+                "evaluation_override": "none",
+                "resolved_difficulty": resolved_difficulty,
+                "recommendation": None,
+                "resolution_reason": (
+                    "No inter-agent conflict: EvaluationAgent did not override "
+                    "AdaptiveLearning proposal."
+                ),
+            }
+
         self._trace_evidence(
             source="state",
             key="pipeline_outputs",
@@ -166,6 +201,18 @@ class ConsensusMediator(BaseAgent):
                 "has_consistency": bool(state.get("consistency_result")),
             },
             confidence=0.9 if _steps_completed >= 5 else 0.6,
+        )
+        self._trace_evidence(
+            source="state",
+            key="debate_context",
+            value={
+                "has_debate_context": agent_debate["has_debate_context"],
+                "conflict": has_conflict,
+                "adaptive_difficulty": agent_debate["adaptive_difficulty"],
+                "evaluation_override": agent_debate["evaluation_override"],
+                "recommendation": agent_debate["recommendation"],
+            },
+            confidence=0.90 if debate_context else 0.50,
         )
         self._trace_dimension(
             dimension="pipeline_completeness",
@@ -191,6 +238,29 @@ class ConsensusMediator(BaseAgent):
             confidence=0.90 if _warning_count == 0 else 0.70,
             evidence={"warning_count": _warning_count, "steps_completed": _steps_completed},
         )
+        self._trace_dimension(
+            dimension="debate_resolution",
+            result=f"conflict={has_conflict}, resolved_difficulty='{resolved_difficulty}'",
+            signal=(
+                f"adaptive_difficulty='{agent_debate['adaptive_difficulty']}', "
+                f"evaluation_override='{agent_debate['evaluation_override']}', "
+                f"recommendation='{agent_debate['recommendation']}'"
+            ),
+            rule=(
+                "if debate_context.conflict=True: EvaluationAgent override wins; "
+                "resolved_difficulty = adaptation_plan.difficulty_level post-override; "
+                "if no debate_context: no conflict, AdaptiveLearning proposal preserved"
+            ),
+            confidence=0.95 if debate_context else 0.80,
+            evidence={
+                "has_debate_context": agent_debate["has_debate_context"],
+                "conflict": has_conflict,
+                "resolved_difficulty": resolved_difficulty,
+                "recommendation": agent_debate["recommendation"],
+            },
+        )
+
+        output["agent_debate"] = agent_debate
 
         await self.publish_observation(
             f"{self.context_key}:orchestration:result",
@@ -199,10 +269,18 @@ class ConsensusMediator(BaseAgent):
             confidence=0.95,
         )
 
+        _debate_suffix = ""
+        if has_conflict:
+            _debate_suffix = (
+                f" | AdaptiveLearning proposed '{agent_debate['adaptive_difficulty']}' but "
+                f"EvaluationAgent recommended '{agent_debate['evaluation_override']}' "
+                f"({agent_debate['recommendation']}). Resolved: '{agent_debate['resolved_difficulty']}'."
+            )
         output["_decision_summary"] = (
             f"Consolidated pipeline: {_steps_completed}/7 steps, "
             f"consistency={'passed' if _consistency_passed else 'failed' if _consistency_passed is False else 'not_run'}, "
             f"warnings={_warning_count}"
+            + _debate_suffix
         )
         output["_confidence"] = 0.90 if (_steps_completed >= 5 and _warning_count == 0) else 0.70
 
@@ -226,3 +304,47 @@ class ConsensusMediator(BaseAgent):
             ),
             "total_agent_steps": 8,
         }
+
+    def _build_resolution_reason(self, debate_context: dict[str, Any]) -> str:
+        """Human-readable explanation of how the inter-agent conflict was resolved."""
+        recommendation = debate_context.get("recommendation", "")
+        adaptive = debate_context.get("adaptive_difficulty", "unknown")
+        override = debate_context.get("evaluation_override", "unknown")
+        conflict = debate_context.get("conflict", False)
+
+        if not conflict:
+            return (
+                f"Both agents agreed: AdaptiveLearning and EvaluationAgent "
+                f"both proposed '{adaptive}'."
+            )
+
+        _reasons: dict[str, str] = {
+            "retroceder": (
+                f"EvaluationAgent detected insufficient mastery (learning_score < 0.40) "
+                f"and overrode AdaptiveLearning proposal '{adaptive}' → '{override}' "
+                f"to support remediation before advancing."
+            ),
+            "simplificar": (
+                f"EvaluationAgent detected cognitive overload and overrode AdaptiveLearning "
+                f"proposal '{adaptive}' → '{override}' to prevent ceiling effect."
+            ),
+            "cambiar_modalidad": (
+                f"EvaluationAgent detected sustained low engagement and overrode "
+                f"AdaptiveLearning proposal '{adaptive}' → '{override}' "
+                f"to trigger modality change."
+            ),
+            "reforzar": (
+                f"EvaluationAgent detected partial mastery (score in [0.40, 0.65)) "
+                f"and overrode AdaptiveLearning proposal '{adaptive}' → '{override}' "
+                f"for reinforcement phase."
+            ),
+            "continuar": (
+                f"EvaluationAgent confirmed that the proposed difficulty '{override}' "
+                f"is appropriate and recommended continuing without remediation."
+            ),
+        }
+        return _reasons.get(
+            recommendation,
+            f"EvaluationAgent overrode AdaptiveLearning proposal '{adaptive}' → '{override}' "
+            f"(recommendation='{recommendation}').",
+        )
