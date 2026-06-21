@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 # ── Mapa de tipos prioritarios por perfil de aprendizaje ────────────────────
 
 PRIORITY_MAP: dict[str, list[str]] = {
-    "visual":      ["did_you_know", "real_news", "detonating_question", "short_challenge", "mini_quiz"],
-    "auditory":    ["did_you_know", "detonating_question", "real_news", "mini_quiz", "short_challenge"],
-    "kinesthetic": ["short_challenge", "mini_quiz", "did_you_know", "detonating_question", "real_news"],
-    "reading":     ["did_you_know", "detonating_question", "real_news", "mini_quiz", "short_challenge"],
+    "visual":      ["did_you_know", "prior_knowledge", "real_news", "detonating_question", "short_challenge", "mini_quiz"],
+    "auditory":    ["did_you_know", "prior_knowledge", "detonating_question", "real_news", "mini_quiz", "short_challenge"],
+    "kinesthetic": ["did_you_know", "prior_knowledge", "short_challenge", "mini_quiz", "detonating_question", "real_news"],
+    "reading":     ["did_you_know", "prior_knowledge", "detonating_question", "real_news", "mini_quiz", "short_challenge"],
 }
 
 DEFAULT_PRIORITY = PRIORITY_MAP["reading"]
@@ -76,11 +76,22 @@ JSON schema requerido:
       "resource_metadata": {{}}
     }},
     {{
+      "resource_type": "prior_knowledge",
+      "title": "¿Qué tanto conocías este tema antes de hoy?",
+      "content": "<una frase breve y motivadora sobre el punto de partida de cada estudiante en relación a {module_title}>",
+      "is_interactive": true,
+      "resource_metadata": {{}}
+    }},
+    {{
       "resource_type": "detonating_question",
       "title": "Antes de comenzar...",
-      "content": "<pregunta que NO tiene respuesta obvia, genera debate interno>",
+      "content": "<pregunta que NO tiene respuesta obvia, genera debate interno — nivel intermedio>",
       "is_interactive": false,
-      "resource_metadata": {{}}
+      "resource_metadata": {{
+        "beginner_question":     "<misma pregunta en versión simple para quien nunca ha visto el tema>",
+        "intermediate_question": "<la pregunta original — nivel intermedio>",
+        "advanced_question":     "<versión técnica y profunda para quien ya tiene experiencia>"
+      }}
     }},
     {{
       "resource_type": "real_news",
@@ -241,6 +252,16 @@ class EngagementGeneratorAgent:
                 "resource_metadata": {},
             },
             {
+                "resource_type":   "prior_knowledge",
+                "title":           "¿Qué tanto conocías este tema antes de hoy?",
+                "content":         (
+                    f"Antes de explorar {module_title}, cuéntanos cuál es tu punto de partida. "
+                    f"No hay respuestas correctas — solo queremos adaptar mejor tu experiencia."
+                ),
+                "is_interactive":  True,
+                "resource_metadata": {},
+            },
+            {
                 "resource_type":   "detonating_question",
                 "title":           "Antes de comenzar...",
                 "content":         (
@@ -248,7 +269,11 @@ class EngagementGeneratorAgent:
                     f"programación, ¿por dónde empezarías? ¿Usarías una analogía del mundo real?"
                 ),
                 "is_interactive":  False,
-                "resource_metadata": {},
+                "resource_metadata": {
+                    "beginner_question":      f"¿Qué crees que podría ser {module_title}?",
+                    "intermediate_question":  f"¿Cómo le explicarías a alguien qué es {module_title}?",
+                    "advanced_question":      f"¿Qué aspectos técnicos del funcionamiento de {module_title} destacarías en una explicación profunda?",
+                },
             },
             {
                 "resource_type":   "real_news",

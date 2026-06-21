@@ -21,14 +21,33 @@ interface Props {
   sessionId: string
 }
 
+// Map knowledge_level → metadata key for adaptive question variant
+function resolveAdaptiveQuestion(
+  resource: EngagementResource,
+  sessionId: string,
+): string {
+  const level = sessionStorage.getItem(`engage:knowledge_level:${sessionId}`)
+  const meta  = resource.resource_metadata as Record<string, string>
+
+  if (!level || !meta) return resource.title
+
+  const key =
+    level === 'never_seen' || level === 'heard_about_it' ? 'beginner_question' :
+    level === 'know_a_bit'                               ? 'intermediate_question' :
+    level === 'know_well'                                ? 'advanced_question' :
+    null
+
+  return (key && meta[key]) ? meta[key] : resource.title
+}
+
 /**
- * DetonatingQuestionCard — Sprint C2 (+ confidence level)
+ * DetonatingQuestionCard — Sprint C2 (+ confidence level + adaptive question H1.2)
  *
  * Two-state card: question → submitted.
+ * Reads engage:knowledge_level:{sessionId} from sessionStorage (set by PriorKnowledgeCard)
+ * to select the appropriate question variant from resource_metadata.
  * Stores hypothesis + confidence in engagement_interactions.response_data:
  *   { hypothesis: "...", confidence: 1|2|3 }
- *
- * Higher confidence number = more certain student (useful for learning analytics).
  */
 export function DetonatingQuestionCard({ resource, sessionId }: Props) {
   const [cardState, setCardState]     = useState<CardState>('question')
@@ -147,10 +166,10 @@ export function DetonatingQuestionCard({ resource, sessionId }: Props) {
         </div>
       </div>
 
-      {/* Question */}
+      {/* Question — variante adaptativa según knowledge_level previo */}
       <div className="relative space-y-2">
         <p className="text-lg sm:text-xl font-semibold leading-snug text-gray-800 dark:text-gray-100">
-          {resource.title}
+          {resolveAdaptiveQuestion(resource, sessionId)}
         </p>
         {resource.content && resource.content !== resource.title && (
           <p className="text-sm text-indigo-700/70 dark:text-indigo-300/60 leading-relaxed">

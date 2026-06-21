@@ -1,5 +1,6 @@
 export type EngagementResourceType =
   | 'did_you_know'
+  | 'prior_knowledge'
   | 'detonating_question'
   | 'real_news'
   | 'mini_quiz'

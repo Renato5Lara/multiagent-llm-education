@@ -5,15 +5,17 @@
  * Types without a dedicated card fall back to GenericCard.
  *
  * Sprint progress:
- *   C1 ✓ did_you_know        → DidYouKnowCard
- *   C2 ✓ detonating_question → DetonatingQuestionCard
- *   C3 ✓ real_news            → RealNewsCard
- *   C4 ✓ mini_quiz            → MiniQuizCard
- *   C5 ✓ short_challenge      → ShortChallengeCard
+ *   C1  ✓ did_you_know        → DidYouKnowCard
+ *   H1  ✓ prior_knowledge     → PriorKnowledgeCard
+ *   C2  ✓ detonating_question → DetonatingQuestionCard
+ *   C3  ✓ real_news           → RealNewsCard
+ *   C4  ✓ mini_quiz           → MiniQuizCard
+ *   C5  ✓ short_challenge     → ShortChallengeCard
  */
 
 import type { EngagementResource } from '@/types/engagement'
 import { DidYouKnowCard } from './cards/DidYouKnowCard'
+import { PriorKnowledgeCard } from './cards/PriorKnowledgeCard'
 import { DetonatingQuestionCard } from './cards/DetonatingQuestionCard'
 import { RealNewsCard } from './cards/RealNewsCard'
 import { MiniQuizCard } from './cards/MiniQuizCard'
@@ -33,15 +35,18 @@ function GenericCard({ resource }: { resource: EngagementResource }) {
 // ── Router ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  resource: EngagementResource
-  /** Session ID forwarded to interactive cards that call engage endpoints. */
+  resource:  EngagementResource
   sessionId: string
+  /** Fired when an interactive card records a user answer (used to gate navigation). */
+  onAnswer?: () => void
 }
 
-export function ResourceCard({ resource, sessionId }: Props) {
+export function ResourceCard({ resource, sessionId, onAnswer }: Props) {
   switch (resource.resource_type) {
     case 'did_you_know':
       return <DidYouKnowCard resource={resource} />
+    case 'prior_knowledge':
+      return <PriorKnowledgeCard resource={resource} sessionId={sessionId} onAnswer={onAnswer} />
     case 'detonating_question':
       return <DetonatingQuestionCard resource={resource} sessionId={sessionId} />
     case 'real_news':

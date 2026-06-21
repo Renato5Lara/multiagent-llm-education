@@ -170,8 +170,56 @@ class EngagementService:
             course_name=course_name,
             bloom_level=module.bloom_level or 3,
             modality=modality,
-            count=5,
+            count=6,
         )
+
+        # ── Validar y normalizar recursos generados ──────────────────────────
+        # 1. Deduplicar: conservar solo la primera aparición de cada resource_type
+        seen_types: set[str] = set()
+        deduped: list[dict] = []
+        for r in raw_resources:
+            rt = r.get("resource_type", "")
+            if rt and rt not in seen_types:
+                seen_types.add(rt)
+                deduped.append(r)
+        if len(deduped) < len(raw_resources):
+            logger.warning(
+                "engagement.start: removed %d duplicate resource(s)",
+                len(raw_resources) - len(deduped),
+            )
+        raw_resources = deduped
+
+        # 2. Inyectar tipos faltantes en su posición canónica
+        _CANONICAL_ORDER = [
+            "did_you_know", "prior_knowledge", "detonating_question",
+            "real_news", "mini_quiz", "short_challenge",
+        ]
+        fallback_pool = {
+            r["resource_type"]: r
+            for r in engagement_generator_agent._fallback_resources(module.title, modality, 6)
+        }
+        present_types = {r.get("resource_type") for r in raw_resources}
+        for canonical_idx, rtype in enumerate(_CANONICAL_ORDER):
+            if rtype not in present_types:
+                fallback = fallback_pool.get(rtype, {
+                    "resource_type":     rtype,
+                    "title":             rtype.replace("_", " ").title(),
+                    "content":           "",
+                    "is_interactive":    False,
+                    "resource_metadata": {},
+                })
+                predecessor = _CANONICAL_ORDER[canonical_idx - 1] if canonical_idx > 0 else None
+                if predecessor:
+                    pred_idx = next(
+                        (j for j, r in enumerate(raw_resources) if r.get("resource_type") == predecessor),
+                        -1,
+                    )
+                    insert_at = pred_idx + 1 if pred_idx >= 0 else len(raw_resources)
+                else:
+                    insert_at = 0
+                raw_resources.insert(insert_at, fallback)
+                present_types.add(rtype)
+                logger.info("engagement.start: injected missing resource_type=%s at position=%d", rtype, insert_at)
 
         # ── Persistir sesión ─────────────────────────────────────────────────
         from app.models.engagement import _uuid

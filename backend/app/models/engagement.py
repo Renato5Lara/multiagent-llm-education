@@ -59,9 +59,9 @@ class EngagementResource(Base):
     Un recurso de engagement dentro de una sesión.
 
     resource_type controla qué card React se renderiza:
-      did_you_know | curiosity | real_news | industry_case |
-      detonating_question | mini_quiz | short_challenge |
-      video_suggestion | image_explanation | article
+      did_you_know | prior_knowledge | detonating_question |
+      real_news | mini_quiz | short_challenge |
+      curiosity | industry_case | video_suggestion | image_explanation | article
 
     resource_metadata almacena la carga específica de cada tipo:
       mini_quiz        → {"question": "...", "options": [...], "correct_index": 2, "explanation": "..."}

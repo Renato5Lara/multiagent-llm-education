@@ -23,6 +23,7 @@ import { EngageCompletionCelebration } from '@/components/gamification/EngageCom
 // Narrative label shown in the badge — reinforces the "pista" frame
 const RESOURCE_LABELS: Record<string, string> = {
   did_you_know:        '💡 Evidencia',
+  prior_knowledge:     '🧭 Punto de partida',
   detonating_question: '🔎 Pista',
   real_news:           '📰 Noticia',
   mini_quiz:           '🧩 Desafío',
@@ -32,6 +33,7 @@ const RESOURCE_LABELS: Record<string, string> = {
 // Contextual tagline shown above each card to prime curiosity
 const RESOURCE_TAGLINES: Record<string, string> = {
   did_you_know:        'Esta evidencia podría cambiar la forma en que entiendes este tema.',
+  prior_knowledge:     'Sin respuestas correctas — tu punto de partida es valioso para personalizar tu experiencia.',
   detonating_question: 'Una pregunta que pocos se atreven a hacerse. Tómate un momento para reflexionar.',
   real_news:           'Algo que está pasando en el mundo real y que conecta directamente con lo que vas a aprender.',
   mini_quiz:           'Pon a prueba lo que ya sabes. Sin presión — cada intento suma experiencia.',
@@ -156,7 +158,8 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
   const [newBadgeSlug, setNewBadgeSlug]       = useState<string | null>(null)
   const [completionResult, setCompletionResult] = useState<CompleteResponse | null>(null)
   // Tracks viewed IDs for dot rendering (state so re-render fires)
-  const [viewedIds, setViewedIds]      = useState<Set<string>>(new Set())
+  const [viewedIds, setViewedIds]       = useState<Set<string>>(new Set())
+  const [priorAnswered, setPriorAnswered] = useState(false)
   const viewedResources = useRef(new Set<string>())
   const xpTimer         = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const discoveryTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -349,7 +352,11 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
       <div className={cn('transition-opacity duration-150', cardVisible ? 'opacity-100' : 'opacity-0')}>
         {resource && (
           <ResourceFrame resource={resource} index={currentIndex} total={total}>
-            <ResourceCard resource={resource} sessionId={session.session_id} />
+            <ResourceCard
+              resource={resource}
+              sessionId={session.session_id}
+              onAnswer={() => setPriorAnswered(true)}
+            />
           </ResourceFrame>
         )}
       </div>
@@ -388,7 +395,15 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
             <Button
               size="sm"
               onClick={goNext}
-              disabled={isCompleting}
+              disabled={
+                isCompleting ||
+                (resource?.resource_type === 'prior_knowledge' && !priorAnswered)
+              }
+              title={
+                resource?.resource_type === 'prior_knowledge' && !priorAnswered
+                  ? 'Responde la pregunta para continuar'
+                  : undefined
+              }
               className="gap-1.5"
             >
               Descubrir otra pista
