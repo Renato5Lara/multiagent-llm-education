@@ -4,30 +4,19 @@ import {
   ChevronRight,
   SkipForward,
   Unlock,
-  Lightbulb,
-  HelpCircle,
-  Newspaper,
-  Brain,
-  Zap,
   Loader2,
   Check,
   Star,
+  Target,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useInteractEngagement, useCompleteEngagement } from '@/hooks/useEngagement'
 import type { EngagementSession, EngagementResource } from '@/types/engagement'
+import { ResourceCard } from './ResourceCard'
 
-// ── Resource metadata ────────────────────────────────────────────────────────
-
-const RESOURCE_ICONS: Record<string, React.ElementType> = {
-  did_you_know:        Lightbulb,
-  detonating_question: HelpCircle,
-  real_news:           Newspaper,
-  mini_quiz:           Brain,
-  short_challenge:     Zap,
-}
+// ── Resource framing metadata ────────────────────────────────────────────────
 
 // Narrative label shown in the badge — reinforces the "pista" frame
 const RESOURCE_LABELS: Record<string, string> = {
@@ -47,10 +36,14 @@ const RESOURCE_TAGLINES: Record<string, string> = {
   short_challenge:     'Llegaste al reto principal de esta misión. Demuestra lo que descubriste.',
 }
 
-function getMissionSubtitle(resources: { resource_type: string; title: string }[]): string {
+// Derive the mission objective from resources:
+// prefer a detonating_question (it IS a question worth investigating);
+// otherwise fall back to the first resource title.
+function getMissionObjective(resources: EngagementResource[]): string {
+  const question = resources.find(r => r.resource_type === 'detonating_question')
+  if (question) return question.title.replace(/[?]+$/, '') + '?'
   const first = resources[0]
   if (!first) return ''
-  // Derive subtitle from first resource title — strip trailing punctuation for flow
   return first.title.replace(/[.!?]+$/, '') + '.'
 }
 
@@ -107,74 +100,35 @@ function ResourceBadge({ type }: { type: string }) {
   )
 }
 
-// ── Placeholder renderer (replaced by real cards in Sprint C) ────────────────
+// ── Resource frame (badge + pista count + tagline) ───────────────────────────
+// Wraps any card with consistent framing. The card itself handles only content.
 
-function ResourceRenderer({ resource, index, total }: { resource: EngagementResource; index: number; total: number }) {
-  const meta    = resource.resource_metadata as Record<string, unknown>
+function ResourceFrame({
+  resource,
+  index,
+  total,
+  children,
+}: {
+  resource: EngagementResource
+  index: number
+  total: number
+  children: React.ReactNode
+}) {
   const tagline = RESOURCE_TAGLINES[resource.resource_type]
-
   return (
-    <div className="space-y-4">
-      {/* Pista number + type badge */}
+    <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <ResourceBadge type={resource.resource_type} />
         <span className="text-xs text-muted-foreground">
           Pista {index + 1} de {total}
         </span>
       </div>
-
-      {/* Contextual tagline */}
       {tagline && (
         <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
           {tagline}
         </p>
       )}
-
-      <h2 className="text-xl font-semibold leading-snug">{resource.title}</h2>
-
-      <p className="text-muted-foreground leading-relaxed">{resource.content}</p>
-
-      {resource.resource_type === 'mini_quiz' && meta.options && (
-        <div className="space-y-2 mt-4">
-          <p className="text-sm font-medium text-muted-foreground">
-            {String(meta.question ?? 'Selecciona la respuesta correcta:')}
-          </p>
-          {(meta.options as string[]).map((opt, i) => (
-            <div
-              key={i}
-              className="text-sm px-4 py-2.5 rounded-lg border border-border bg-muted/40 hover:bg-muted transition-colors cursor-pointer"
-            >
-              <span className="font-medium mr-2">{String.fromCharCode(65 + i)}.</span>
-              {opt}
-            </div>
-          ))}
-          <p className="text-xs text-muted-foreground italic mt-2">
-            (Interacción completa disponible en Sprint C)
-          </p>
-        </div>
-      )}
-
-      {resource.resource_type === 'short_challenge' && meta.prompt && (
-        <div className="mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5">
-          <p className="text-sm font-semibold mb-1.5">Tu desafío:</p>
-          <p className="text-sm">{String(meta.prompt)}</p>
-          {meta.hint && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Pista: {String(meta.hint)}
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground italic mt-3">
-            (Área de respuesta disponible en Sprint C)
-          </p>
-        </div>
-      )}
-
-      {resource.resource_type === 'real_news' && meta.source_hint && (
-        <p className="text-xs text-muted-foreground border-l-2 border-border pl-3 italic">
-          Fuente: {String(meta.source_hint)}
-          {meta.year ? ` · ${meta.year}` : ''}
-        </p>
-      )}
+      {children}
     </div>
   )
 }
@@ -306,21 +260,12 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
     <div className="max-w-2xl mx-auto py-6 px-4 space-y-6 animate-in fade-in duration-500">
 
       {/* ── Mission header ──────────────────────────────────────────────── */}
-      <div className="space-y-1">
+      <div className="space-y-3">
+        {/* Row 1: label + XP counter */}
         <div className="flex items-start justify-between gap-3">
-          <div className="space-y-1">
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-              🚀 Misión de descubrimiento
-            </p>
-            {/* Dynamic subtitle from first resource — sets the mission frame */}
-            {resources[0] && (
-              <p className="text-sm text-muted-foreground leading-snug max-w-md">
-                {getMissionSubtitle(resources)}
-              </p>
-            )}
-          </div>
-
-          {/* XP counter */}
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+            🚀 Misión de descubrimiento
+          </p>
           <div className="flex flex-col items-end shrink-0">
             <div className="flex items-center gap-1 text-amber-500">
               <Star className="h-3.5 w-3.5 fill-amber-400" />
@@ -331,6 +276,21 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
             </div>
           </div>
         </div>
+
+        {/* Row 2: mission objective box */}
+        {resources.length > 0 && (
+          <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+            <Target className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-0.5">
+                Objetivo de la misión
+              </p>
+              <p className="text-sm text-foreground leading-snug">
+                {getMissionObjective(resources)}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Investigation progress ───────────────────────────────────────── */}
@@ -365,13 +325,12 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
       </div>
 
       {/* ── Resource card ────────────────────────────────────────────────── */}
-      <div
-        className={cn(
-          'rounded-xl border border-border bg-card p-6 min-h-[280px] transition-opacity duration-150',
-          cardVisible ? 'opacity-100' : 'opacity-0',
+      <div className={cn('transition-opacity duration-150', cardVisible ? 'opacity-100' : 'opacity-0')}>
+        {resource && (
+          <ResourceFrame resource={resource} index={currentIndex} total={total}>
+            <ResourceCard resource={resource} />
+          </ResourceFrame>
         )}
-      >
-        {resource ? <ResourceRenderer resource={resource} index={currentIndex} total={total} /> : null}
       </div>
 
       {/* ── Navigation ───────────────────────────────────────────────────── */}
