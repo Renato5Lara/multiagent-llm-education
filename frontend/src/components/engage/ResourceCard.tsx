@@ -7,7 +7,7 @@
  * Sprint progress:
  *   C1 ✓ did_you_know        → DidYouKnowCard
  *   C2 ✓ detonating_question → DetonatingQuestionCard
- *   C3   real_news            → RealNewsCard (pending)
+ *   C3 ✓ real_news            → RealNewsCard
  *   C4   mini_quiz            → MiniQuizCard (pending)
  *   C5   short_challenge      → ShortChallengeCard (pending)
  */
@@ -15,6 +15,7 @@
 import type { EngagementResource } from '@/types/engagement'
 import { DidYouKnowCard } from './cards/DidYouKnowCard'
 import { DetonatingQuestionCard } from './cards/DetonatingQuestionCard'
+import { RealNewsCard } from './cards/RealNewsCard'
 
 // ── Generic fallback (removed one by one as real cards land) ────────────────
 
@@ -62,12 +63,7 @@ function GenericCard({ resource }: { resource: EngagementResource }) {
         </div>
       )}
 
-      {/* real_news source */}
-      {resource.resource_type === 'real_news' && meta.source_hint && (
-        <p className="text-xs text-muted-foreground border-l-2 border-border pl-3 italic">
-          Fuente: {String(meta.source_hint)}{meta.year ? ` · ${meta.year}` : ''}
-        </p>
-      )}
+
     </div>
   )
 }
@@ -86,6 +82,8 @@ export function ResourceCard({ resource, sessionId }: Props) {
       return <DidYouKnowCard resource={resource} />
     case 'detonating_question':
       return <DetonatingQuestionCard resource={resource} sessionId={sessionId} />
+    case 'real_news':
+      return <RealNewsCard resource={resource} />
     default:
       return <GenericCard resource={resource} />
   }
