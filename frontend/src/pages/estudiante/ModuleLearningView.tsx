@@ -10,24 +10,16 @@ import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLear
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
 import { EngageGateway } from '@/components/engage/EngageGateway'
 import { SurpriseModal, readEngageBridge } from '@/components/engage/SurpriseModal'
+import { AgentThoughtStream } from '@/components/observability/AgentThoughtStream'
+import { LOADING_PHASES } from '@/constants/agentPipeline'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useState, useEffect, useCallback } from 'react'
 
 type AppPhase = 'engaging' | 'waiting_content' | 'content'
 
-// Agent name + thought mapped to each orchestration phase
-const ORCHESTRATION_PHASES = [
-  { agent: 'ResearchAgent',             thought: 'Recuperando conocimientos previos del repositorio...' },
-  { agent: 'ResearchAgent',             thought: 'Analizando conceptos clave y errores comunes...' },
-  { agent: 'EvaluationAgent',           thought: 'Evaluando nivel Bloom y perfil de aprendizaje...' },
-  { agent: 'StructuralPedagogicalAgent',thought: 'Estructurando la secuencia pedagógica óptima...' },
-  { agent: 'PedagogicalAgent',          thought: 'Generando contenido educativo personalizado...' },
-  { agent: 'PromptEngineeringAgent',    thought: 'Creando prompts multimodales adaptativos...' },
-  { agent: 'ConsistencyAgent',          thought: 'Validando coherencia pedagógica del plan...' },
-  { agent: 'ConsensusMediador',         thought: 'Guardando en memoria compartida del sistema...' },
-  { agent: 'Orchestrator',              thought: 'Preparando experiencia de aprendizaje final...' },
-]
+// Loading-screen phases — now sourced from constants/agentPipeline.ts
+const ORCHESTRATION_PHASES = LOADING_PHASES
 
 export default function ModuleLearningView() {
   const { moduleId } = useParams<{ moduleId: string }>()
@@ -259,6 +251,15 @@ export default function ModuleLearningView() {
         onBack={handleBack}
         onComplete={handleComplete}
       />
+
+      {/* Sprint E — AgentThoughtStream: student-facing + technical toggle */}
+      <div className="mt-6">
+        <AgentThoughtStream
+          sessionId={sessionId}
+          onOpenTechnical={sessionId ? () => setTraceDialogOpen(true) : undefined}
+        />
+      </div>
+
       <SurpriseModal
         open={surpriseOpen}
         hypothesis={engageBridge?.hypothesis ?? null}
