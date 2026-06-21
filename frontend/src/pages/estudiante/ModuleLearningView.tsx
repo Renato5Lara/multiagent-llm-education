@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain } from 'lucide-react'
+import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,16 +15,17 @@ import { useState, useEffect, useCallback } from 'react'
 
 type AppPhase = 'engaging' | 'waiting_content' | 'content'
 
+// Agent name + thought mapped to each orchestration phase
 const ORCHESTRATION_PHASES = [
-  'Iniciando orquestación...',
-  'Ejecutando recuperación pedagógica...',
-  'Analizando conceptos y errores comunes...',
-  'Estructurando secuencia pedagógica...',
-  'Generando contenido educativo...',
-  'Creando prompts multimodales...',
-  'Validando consistencia pedagógica...',
-  'Guardando en memoria compartida...',
-  'Preparando experiencia de aprendizaje...',
+  { agent: 'ResearchAgent',             thought: 'Recuperando conocimientos previos del repositorio...' },
+  { agent: 'ResearchAgent',             thought: 'Analizando conceptos clave y errores comunes...' },
+  { agent: 'EvaluationAgent',           thought: 'Evaluando nivel Bloom y perfil de aprendizaje...' },
+  { agent: 'StructuralPedagogicalAgent',thought: 'Estructurando la secuencia pedagógica óptima...' },
+  { agent: 'PedagogicalAgent',          thought: 'Generando contenido educativo personalizado...' },
+  { agent: 'PromptEngineeringAgent',    thought: 'Creando prompts multimodales adaptativos...' },
+  { agent: 'ConsistencyAgent',          thought: 'Validando coherencia pedagógica del plan...' },
+  { agent: 'ConsensusMediador',         thought: 'Guardando en memoria compartida del sistema...' },
+  { agent: 'Orchestrator',              thought: 'Preparando experiencia de aprendizaje final...' },
 ]
 
 export default function ModuleLearningView() {
@@ -42,6 +43,7 @@ export default function ModuleLearningView() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [traceDialogOpen, setTraceDialogOpen] = useState(false)
   const [appPhase, setAppPhase] = useState<AppPhase>('engaging')
+  const [showAgentLog, setShowAgentLog] = useState(false)
 
   // Orchestration runs in background while Engage is shown.
   // onSuccess stores data but never advances phase — that's Engage's job.
@@ -113,50 +115,75 @@ export default function ModuleLearningView() {
 
   // ── GATE 2: Engage done but orchestration still running ────────────────────
   if ((appPhase === 'waiting_content' || isOrchestrating) && !orchestrationFailed) {
+    const currentPhase = ORCHESTRATION_PHASES[phaseIndex]
+    const completedPhases = ORCHESTRATION_PHASES.slice(0, phaseIndex)
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
+        <div className="flex items-center gap-2 mb-6">
           <Button variant="ghost" size="sm" disabled>
             <ArrowLeft className="h-4 w-4 mr-1" />Volver
           </Button>
         </div>
-        <Card className="p-12">
-          <div className="flex flex-col items-center text-center">
-            <div className="relative mb-6">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-3 w-3 rounded-full bg-primary" />
+        <Card className="overflow-hidden">
+          {/* Header */}
+          <div className="px-8 pt-8 pb-6 text-center border-b border-border">
+            <div className="relative w-14 h-14 mx-auto mb-5">
+              <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping opacity-30" />
+              <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <Brain className="h-7 w-7 text-primary" />
               </div>
             </div>
-            <h3 className="text-lg font-semibold mb-2">Preparando tu experiencia de aprendizaje</h3>
-            <p className="text-muted-foreground mb-6 max-w-md">
-              El sistema multiagente está orquestando el contenido pedagógico para este módulo.
+            <h3 className="text-base font-semibold mb-1">
+              El sistema multiagente está construyendo tu módulo
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Generado exclusivamente para tu perfil de aprendizaje · 20–60 segundos
             </p>
-            <div className="space-y-2 w-full max-w-sm">
-              {ORCHESTRATION_PHASES.map((phase, i) => (
-                <div key={i} className={`flex items-center gap-2 text-sm transition-all duration-300 ${
-                  i < phaseIndex ? 'text-green-600' :
-                  i === phaseIndex ? 'text-primary font-medium' :
-                  'text-gray-300'
-                }`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    i < phaseIndex ? 'bg-green-100' :
-                    i === phaseIndex ? 'bg-primary/10' :
-                    'bg-gray-100'
-                  }`}>
-                    {i < phaseIndex ? (
-                      <span className="text-green-600 text-xs">✓</span>
-                    ) : i === phaseIndex ? (
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    ) : (
-                      <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                    )}
-                  </div>
-                  <span>{phase}</span>
-                </div>
-              ))}
+          </div>
+
+          {/* Active thought */}
+          <div className="px-8 py-5">
+            <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300" key={phaseIndex}>
+              <div className="mt-0.5 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Loader2 className="h-3 w-3 text-primary animate-spin" />
+              </div>
+              <div>
+                <p className="text-xs font-mono text-primary mb-0.5">{currentPhase?.agent}</p>
+                <p className="text-sm text-foreground">{currentPhase?.thought}</p>
+              </div>
             </div>
           </div>
+
+          {/* Expandable agent log */}
+          {completedPhases.length > 0 && (
+            <div className="border-t border-border">
+              <button
+                className="w-full flex items-center justify-between px-8 py-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setShowAgentLog(v => !v)}
+              >
+                <span>{completedPhases.length} paso{completedPhases.length !== 1 ? 's' : ''} completado{completedPhases.length !== 1 ? 's' : ''}</span>
+                {showAgentLog
+                  ? <ChevronUp className="h-3.5 w-3.5" />
+                  : <ChevronDown className="h-3.5 w-3.5" />
+                }
+              </button>
+              {showAgentLog && (
+                <div className="px-8 pb-5 space-y-2.5 animate-in fade-in duration-200">
+                  {completedPhases.map((phase, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="mt-0.5 w-5 h-5 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                        <Check className="h-3 w-3 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-mono text-muted-foreground mb-0.5">{phase.agent}</p>
+                        <p className="text-xs text-muted-foreground">{phase.thought}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </Card>
       </div>
     )
