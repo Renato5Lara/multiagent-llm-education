@@ -8,9 +8,12 @@ import { useModuleOrchestration } from '@/hooks/useStudent'
 import { useUpdateModule } from '@/hooks/useStudent'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
+import { EngageGateway } from '@/components/engage/EngageGateway'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+
+type AppPhase = 'engaging' | 'waiting_content' | 'content'
 
 const ORCHESTRATION_PHASES = [
   'Iniciando orquestación...',
@@ -38,7 +41,10 @@ export default function ModuleLearningView() {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [traceDialogOpen, setTraceDialogOpen] = useState(false)
+  const [appPhase, setAppPhase] = useState<AppPhase>('engaging')
 
+  // Orchestration runs in background while Engage is shown.
+  // onSuccess stores data but never advances phase — that's Engage's job.
   useEffect(() => {
     if (!moduleId) return
 
@@ -46,10 +52,16 @@ export default function ModuleLearningView() {
       onSuccess: (result) => {
         setData(result)
         setSessionId(result.session_id)
+        setAppPhase(prev => prev === 'waiting_content' ? 'content' : prev)
         toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
       },
     })
   }, [moduleId, orchestrateModule, toast])
+
+  // Called when Engage completes or is skipped
+  const handleEngageDone = useCallback(() => {
+    setAppPhase(data ? 'content' : 'waiting_content')
+  }, [data])
 
   useEffect(() => {
     if (isOrchestrating) {
@@ -81,7 +93,26 @@ export default function ModuleLearningView() {
     )
   }
 
-  if (isOrchestrating) {
+  // ── GATE 1: Engage phase (runs in parallel with orchestration) ────────────
+  if (appPhase === 'engaging' && moduleId) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-2 mb-4">
+          <Button variant="ghost" size="sm" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-1" />Volver
+          </Button>
+        </div>
+        <EngageGateway
+          moduleId={moduleId}
+          onComplete={handleEngageDone}
+          onSkip={handleEngageDone}
+        />
+      </div>
+    )
+  }
+
+  // ── GATE 2: Engage done but orchestration still running ────────────────────
+  if ((appPhase === 'waiting_content' || isOrchestrating) && !orchestrationFailed) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2 mb-4">
