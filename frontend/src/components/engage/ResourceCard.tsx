@@ -8,7 +8,7 @@
  *   C1 ✓ did_you_know        → DidYouKnowCard
  *   C2 ✓ detonating_question → DetonatingQuestionCard
  *   C3 ✓ real_news            → RealNewsCard
- *   C4   mini_quiz            → MiniQuizCard (pending)
+ *   C4 ✓ mini_quiz            → MiniQuizCard
  *   C5   short_challenge      → ShortChallengeCard (pending)
  */
 
@@ -16,6 +16,7 @@ import type { EngagementResource } from '@/types/engagement'
 import { DidYouKnowCard } from './cards/DidYouKnowCard'
 import { DetonatingQuestionCard } from './cards/DetonatingQuestionCard'
 import { RealNewsCard } from './cards/RealNewsCard'
+import { MiniQuizCard } from './cards/MiniQuizCard'
 
 // ── Generic fallback (removed one by one as real cards land) ────────────────
 
@@ -83,7 +84,9 @@ export function ResourceCard({ resource, sessionId }: Props) {
     case 'detonating_question':
       return <DetonatingQuestionCard resource={resource} sessionId={sessionId} />
     case 'real_news':
-      return <RealNewsCard resource={resource} />
+      return <RealNewsCard resource={resource} sessionId={sessionId} />
+    case 'mini_quiz':
+      return <MiniQuizCard resource={resource} sessionId={sessionId} />
     default:
       return <GenericCard resource={resource} />
   }
