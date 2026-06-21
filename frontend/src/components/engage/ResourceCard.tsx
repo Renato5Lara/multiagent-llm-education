@@ -5,15 +5,16 @@
  * Types without a dedicated card fall back to GenericCard.
  *
  * Sprint progress:
- *   C1 ✓ did_you_know      → DidYouKnowCard
- *   C2   detonating_question → DetonatingQuestionCard (pending)
- *   C3   real_news           → RealNewsCard (pending)
- *   C4   mini_quiz           → MiniQuizCard (pending)
- *   C5   short_challenge     → ShortChallengeCard (pending)
+ *   C1 ✓ did_you_know        → DidYouKnowCard
+ *   C2 ✓ detonating_question → DetonatingQuestionCard
+ *   C3   real_news            → RealNewsCard (pending)
+ *   C4   mini_quiz            → MiniQuizCard (pending)
+ *   C5   short_challenge      → ShortChallengeCard (pending)
  */
 
 import type { EngagementResource } from '@/types/engagement'
 import { DidYouKnowCard } from './cards/DidYouKnowCard'
+import { DetonatingQuestionCard } from './cards/DetonatingQuestionCard'
 
 // ── Generic fallback (removed one by one as real cards land) ────────────────
 
@@ -75,12 +76,16 @@ function GenericCard({ resource }: { resource: EngagementResource }) {
 
 interface Props {
   resource: EngagementResource
+  /** Session ID forwarded to interactive cards that call engage endpoints. */
+  sessionId: string
 }
 
-export function ResourceCard({ resource }: Props) {
+export function ResourceCard({ resource, sessionId }: Props) {
   switch (resource.resource_type) {
     case 'did_you_know':
       return <DidYouKnowCard resource={resource} />
+    case 'detonating_question':
+      return <DetonatingQuestionCard resource={resource} sessionId={sessionId} />
     default:
       return <GenericCard resource={resource} />
   }

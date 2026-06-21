@@ -328,7 +328,7 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
       <div className={cn('transition-opacity duration-150', cardVisible ? 'opacity-100' : 'opacity-0')}>
         {resource && (
           <ResourceFrame resource={resource} index={currentIndex} total={total}>
-            <ResourceCard resource={resource} />
+            <ResourceCard resource={resource} sessionId={session.session_id} />
           </ResourceFrame>
         )}
       </div>
