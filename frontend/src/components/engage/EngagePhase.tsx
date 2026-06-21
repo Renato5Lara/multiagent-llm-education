@@ -6,15 +6,17 @@ import {
   Unlock,
   Loader2,
   Check,
-  Star,
   Target,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useInteractEngagement, useCompleteEngagement } from '@/hooks/useEngagement'
-import type { EngagementSession, EngagementResource } from '@/types/engagement'
+import type { EngagementSession, EngagementResource, EngagementBadge, CompleteResponse } from '@/types/engagement'
 import { ResourceCard } from './ResourceCard'
+import { XpLevelBar } from '@/components/gamification/XpLevelBar'
+import { BadgeShelf } from '@/components/gamification/BadgeShelf'
+import { EngageCompletionCelebration } from '@/components/gamification/EngageCompletionCelebration'
 
 // ── Resource framing metadata ────────────────────────────────────────────────
 
@@ -148,11 +150,14 @@ interface Props {
 
 export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [engageState, setEngageState] = useState<EngageState>('active')
-  const [currentXp, setCurrentXp]     = useState(session.xp_earned)
-  const [xpDelta, setXpDelta]         = useState<number | null>(null)
+  const [engageState, setEngageState]   = useState<EngageState>('active')
+  const [currentXp, setCurrentXp]       = useState(session.xp_earned)
+  const [xpDelta, setXpDelta]           = useState<number | null>(null)
   const [discoveryMsg, setDiscoveryMsg] = useState<string | null>(null)
-  const [cardVisible, setCardVisible]  = useState(true)
+  const [cardVisible, setCardVisible]   = useState(true)
+  const [sessionBadges, setSessionBadges]     = useState<EngagementBadge[]>(session.earned_badges)
+  const [newBadgeSlug, setNewBadgeSlug]       = useState<string | null>(null)
+  const [completionResult, setCompletionResult] = useState<CompleteResponse | null>(null)
   // Tracks viewed IDs for dot rendering (state so re-render fires)
   const [viewedIds, setViewedIds]      = useState<Set<string>>(new Set())
   const viewedResources = useRef(new Set<string>())
@@ -206,6 +211,13 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
             clearTimeout(xpTimer.current)
             xpTimer.current = setTimeout(() => setXpDelta(null), 2200)
           }
+          if (result.badge) {
+            setSessionBadges(prev =>
+              prev.find(b => b.slug === result.badge!.slug) ? prev : [...prev, result.badge!],
+            )
+            setNewBadgeSlug(result.badge.slug)
+            setTimeout(() => setNewBadgeSlug(null), 3000)
+          }
         },
       },
     )
@@ -239,8 +251,8 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
       { session_id: session.session_id, skipped: false },
       {
         onSuccess: (result) => {
-          setCurrentXp(result.xp_earned)
-          onComplete()
+          // Show celebration overlay; onComplete fires after student dismisses it
+          setCompletionResult(result)
         },
         onError: () => {
           setEngageState('error')
@@ -264,27 +276,37 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
+    <>
+    {completionResult && (
+      <EngageCompletionCelebration
+        result={completionResult}
+        initialXp={session.xp_earned}
+        onContinue={onComplete}
+      />
+    )}
     <div className="max-w-2xl mx-auto py-6 px-4 space-y-6 animate-in fade-in duration-500">
 
       {/* ── Mission header ──────────────────────────────────────────────── */}
       <div className="space-y-3">
-        {/* Row 1: label + XP counter */}
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
+        {/* Row 1: label + XP level bar */}
+        <div className="flex items-start justify-between gap-4">
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest pt-0.5 shrink-0">
             🚀 Misión de descubrimiento
           </p>
-          <div className="flex flex-col items-end shrink-0">
-            <div className="flex items-center gap-1 text-amber-500">
-              <Star className="h-3.5 w-3.5 fill-amber-400" />
-              <span className="text-sm font-semibold tabular-nums">{currentXp} XP</span>
-            </div>
-            <div className="h-4">
+          <div className="flex-1 max-w-[200px] space-y-0.5">
+            <XpLevelBar xp={currentXp} />
+            <div className="h-4 text-right">
               {xpDelta !== null && <XpFlash delta={xpDelta} />}
             </div>
           </div>
         </div>
 
-        {/* Row 2: mission objective box */}
+        {/* Row 2: badges earned so far */}
+        {sessionBadges.length > 0 && (
+          <BadgeShelf badges={sessionBadges} newBadgeSlug={newBadgeSlug} />
+        )}
+
+        {/* Row 3: mission objective box */}
         {resources.length > 0 && (
           <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
             <Target className="h-4 w-4 text-primary shrink-0 mt-0.5" />
@@ -395,5 +417,6 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
         </div>
       </div>
     </div>
+    </>
   )
 }

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Check, Swords } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,12 +11,45 @@ import { TraceExplorer } from '@/components/observability/TraceExplorer'
 import { EngageGateway } from '@/components/engage/EngageGateway'
 import { SurpriseModal, readEngageBridge } from '@/components/engage/SurpriseModal'
 import { AgentThoughtStream } from '@/components/observability/AgentThoughtStream'
+import { AgentDebateBubbles } from '@/components/observability/AgentDebateBubbles'
 import { LOADING_PHASES } from '@/constants/agentPipeline'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useState, useEffect, useCallback } from 'react'
 
 type AppPhase = 'engaging' | 'waiting_content' | 'content'
+
+// ── Debate panel (collapsible, local to this page) ────────────────────────────
+function DebatePanel({ sessionId }: { sessionId: string | null }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors text-left"
+      >
+        <Swords className="h-4 w-4 text-primary/70 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground/80">Debate entre agentes</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Cómo los agentes negociaron la estrategia de aprendizaje para este módulo
+          </p>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
+               : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+      </button>
+      {open && (
+        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="h-px bg-border/60 mx-4" />
+          <div className="px-4 py-4">
+            <AgentDebateBubbles sessionId={sessionId} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 // Loading-screen phases — now sourced from constants/agentPipeline.ts
 const ORCHESTRATION_PHASES = LOADING_PHASES
@@ -253,11 +286,14 @@ export default function ModuleLearningView() {
       />
 
       {/* Sprint E — AgentThoughtStream: student-facing + technical toggle */}
-      <div className="mt-6">
+      <div className="mt-6 space-y-3">
         <AgentThoughtStream
           sessionId={sessionId}
           onOpenTechnical={sessionId ? () => setTraceDialogOpen(true) : undefined}
         />
+
+        {/* Sprint G — Debate visible entre agentes */}
+        <DebatePanel sessionId={sessionId} />
       </div>
 
       <SurpriseModal
