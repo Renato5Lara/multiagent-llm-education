@@ -62,12 +62,15 @@ export function DetonatingQuestionCard({ resource, sessionId }: Props) {
           setSaved(trimmed)
           setSavedC(confidence)
           setCardState('submitted')
+          // Bridge: SurpriseModal reads this key at module completion
+          sessionStorage.setItem(`engage:hypothesis:${sessionId}`, trimmed)
         },
         onError: () => {
           // Never block the student — show confirmation even on network error
           setSaved(trimmed)
           setSavedC(confidence)
           setCardState('submitted')
+          sessionStorage.setItem(`engage:hypothesis:${sessionId}`, trimmed)
         },
       },
     )

@@ -9,6 +9,7 @@ import { useUpdateModule } from '@/hooks/useStudent'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
 import { EngageGateway } from '@/components/engage/EngageGateway'
+import { SurpriseModal, readEngageBridge } from '@/components/engage/SurpriseModal'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useState, useEffect, useCallback } from 'react'
@@ -41,9 +42,11 @@ export default function ModuleLearningView() {
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
   const [phaseIndex, setPhaseIndex] = useState(0)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [traceDialogOpen, setTraceDialogOpen] = useState(false)
-  const [appPhase, setAppPhase] = useState<AppPhase>('engaging')
-  const [showAgentLog, setShowAgentLog] = useState(false)
+  const [traceDialogOpen, setTraceDialogOpen]   = useState(false)
+  const [appPhase, setAppPhase]                 = useState<AppPhase>('engaging')
+  const [showAgentLog, setShowAgentLog]         = useState(false)
+  const [surpriseOpen, setSurpriseOpen]         = useState(false)
+  const [engageBridge, setEngageBridge]         = useState<ReturnType<typeof readEngageBridge> | null>(null)
 
   // Orchestration runs in background while Engage is shown.
   // onSuccess stores data but never advances phase — that's Engage's job.
@@ -74,15 +77,15 @@ export default function ModuleLearningView() {
     }
   }, [isOrchestrating])
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (courseId) {
       navigate(`/estudiante/path/${courseId}`)
     } else {
       navigate(-1)
     }
-  }
+  }, [courseId, navigate])
 
-  const handleComplete = () => {
+  const doComplete = useCallback(() => {
     if (!moduleId) return
     updateModule.mutate(
       { moduleId, status: 'completed' },
@@ -91,9 +94,21 @@ export default function ModuleLearningView() {
           toast({ title: 'Módulo completado', description: 'Tu progreso ha sido actualizado' })
           handleBack()
         },
-      }
+      },
     )
-  }
+  }, [moduleId, updateModule, toast, handleBack])
+
+  const handleComplete = useCallback(() => {
+    if (!moduleId) return
+    const bridge = readEngageBridge(moduleId)
+    if (bridge.hypothesis) {
+      // Student wrote a hypothesis — show the cognitive closure modal
+      setEngageBridge(bridge)
+      setSurpriseOpen(true)
+    } else {
+      doComplete()
+    }
+  }, [moduleId, doComplete])
 
   // ── GATE 1: Engage phase (runs in parallel with orchestration) ────────────
   if (appPhase === 'engaging' && moduleId) {
@@ -243,6 +258,14 @@ export default function ModuleLearningView() {
         data={data}
         onBack={handleBack}
         onComplete={handleComplete}
+      />
+      <SurpriseModal
+        open={surpriseOpen}
+        hypothesis={engageBridge?.hypothesis ?? null}
+        sessionId={engageBridge?.sessionId ?? null}
+        dqResourceId={engageBridge?.dqResourceId ?? null}
+        onConfirm={() => { setSurpriseOpen(false); doComplete() }}
+        onSkip={() => { setSurpriseOpen(false); doComplete() }}
       />
       <Dialog open={traceDialogOpen} onOpenChange={setTraceDialogOpen}>
         <DialogContent className="max-w-7xl w-[95vw] h-[90vh] overflow-hidden p-0 flex flex-col gap-0">

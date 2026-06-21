@@ -13,6 +13,13 @@ interface Props {
 export function EngageGateway({ moduleId, onComplete, onSkip, onProgress }: Props) {
   const { data: session, isLoading, isError } = useStartEngagement(moduleId)
 
+  // Store session mapping so SurpriseModal can find hypothesis at module completion
+  useEffect(() => {
+    if (session?.session_id && moduleId) {
+      sessionStorage.setItem(`engage:session:${moduleId}`, session.session_id)
+    }
+  }, [session?.session_id, moduleId])
+
   // Backend error → bypass silently so the module is never blocked
   useEffect(() => {
     if (isError) onComplete()

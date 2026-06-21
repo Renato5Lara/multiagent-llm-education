@@ -167,6 +167,13 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
   const resource  = resources[currentIndex]
   const isLast    = currentIndex === total - 1
 
+  // Store detonating_question resource ID so SurpriseModal can post reflection
+  useEffect(() => {
+    const dq = resources.find(r => r.resource_type === 'detonating_question')
+    if (dq) sessionStorage.setItem(`engage:dq-resource:${session.session_id}`, dq.id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // ── Card fade transition ──────────────────────────────────────────────────
 
   const changeResource = useCallback((nextIndex: number) => {
