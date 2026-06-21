@@ -31,13 +31,13 @@ export function MiniQuizCard({ resource, sessionId }: Props) {
     : null
 
   const [quizState, setQuizState]   = useState<QuizState>('idle')
-  const [selectedIdx, setSelected]  = useState<number | null>(null)
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
   const [pendingIdx, setPending]     = useState<number | null>(null)
   const [isCorrect, setIsCorrect]   = useState<boolean | null>(null)
   const [xpDelta, setXpDelta]       = useState<number | null>(null)
   const [showXp, setShowXp]         = useState(false)
   const startTimeRef                = useRef(Date.now())
-  const xpTimer                     = useRef<ReturnType<typeof setTimeout>>()
+  const xpTimer                     = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const { mutate: interactMutate } = useInteractEngagement()
 
@@ -233,7 +233,7 @@ export function MiniQuizCard({ resource, sessionId }: Props) {
             </div>
 
             {/* Separator + fun fact field (if present in metadata) */}
-            {(resource.resource_metadata as Record<string, unknown>).fun_fact && (
+            {!!(resource.resource_metadata as Record<string, unknown>).fun_fact && (
               <>
                 <div className="h-px bg-border" />
                 <div className="space-y-0.5">

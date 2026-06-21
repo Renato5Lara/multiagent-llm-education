@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { levelFromXp } from './XpLevelBar'
-import type { EngagementBadge, CompleteResponse } from '@/types/engagement'
+import type { CompleteResponse } from '@/types/engagement'
 
 interface Props {
   result: CompleteResponse
@@ -23,7 +23,7 @@ interface Props {
  * Auto-advances so the student is never blocked, even if distracted.
  */
 export function EngageCompletionCelebration({ result, initialXp, onContinue }: Props) {
-  const autoTimer = useRef<ReturnType<typeof setTimeout>>()
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     autoTimer.current = setTimeout(onContinue, 4200)

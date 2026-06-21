@@ -137,8 +137,6 @@ function ResourceFrame({
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type EngageState = 'active' | 'completing' | 'error'
-
 interface Props {
   session: EngagementSession
   onComplete: () => void
@@ -150,7 +148,6 @@ interface Props {
 
 export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [engageState, setEngageState]   = useState<EngageState>('active')
   const [currentXp, setCurrentXp]       = useState(session.xp_earned)
   const [xpDelta, setXpDelta]           = useState<number | null>(null)
   const [discoveryMsg, setDiscoveryMsg] = useState<string | null>(null)
@@ -161,8 +158,8 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
   // Tracks viewed IDs for dot rendering (state so re-render fires)
   const [viewedIds, setViewedIds]      = useState<Set<string>>(new Set())
   const viewedResources = useRef(new Set<string>())
-  const xpTimer         = useRef<ReturnType<typeof setTimeout>>()
-  const discoveryTimer  = useRef<ReturnType<typeof setTimeout>>()
+  const xpTimer         = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const discoveryTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const { mutate: interactMutate } = useInteractEngagement()
   const { mutate: completeMutate, isPending: isCompleting } = useCompleteEngagement()
@@ -246,7 +243,6 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
   // ── Complete / Skip ───────────────────────────────────────────────────────
 
   const handleComplete = useCallback(() => {
-    setEngageState('completing')
     completeMutate(
       { session_id: session.session_id, skipped: false },
       {
@@ -254,16 +250,12 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
           // Show celebration overlay; onComplete fires after student dismisses it
           setCompletionResult(result)
         },
-        onError: () => {
-          setEngageState('error')
-          onComplete()
-        },
+        onError: () => onComplete(),
       },
     )
   }, [session.session_id, completeMutate, onComplete])
 
   const handleSkip = useCallback(() => {
-    setEngageState('completing')
     completeMutate(
       { session_id: session.session_id, skipped: true },
       {

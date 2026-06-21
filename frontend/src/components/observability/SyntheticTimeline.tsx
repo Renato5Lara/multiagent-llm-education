@@ -1,4 +1,3 @@
-import { cn } from '@/lib/utils'
 import { PIPELINE_STEPS, TOTAL_ESTIMATED_MS } from '@/constants/agentPipeline'
 
 interface Props {

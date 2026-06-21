@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { getStepMeta } from '@/constants/agentPipeline'
 import { formatElapsedMs } from '@/types/trace'
 import type { AgentDecisionTrace, TraceChainResponse } from '@/types/trace'
@@ -110,7 +109,7 @@ function DebateBlock({ data }: { data: TraceChainResponse }) {
       <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
         ⚡ Debate entre agentes detectado
       </p>
-      {deb['adaptive_difficulty'] && deb['evaluation_override'] && (
+      {!!deb['adaptive_difficulty'] && !!deb['evaluation_override'] && (
         <p className="text-xs text-amber-700/70 dark:text-amber-400/70 leading-relaxed">
           <span className="font-medium">AdaptiveLearning</span> propuso{' '}
           <span className="italic">"{String(deb['adaptive_difficulty'])}"</span> ·{' '}
@@ -118,7 +117,7 @@ function DebateBlock({ data }: { data: TraceChainResponse }) {
           <span className="italic">"{String(deb['evaluation_override'])}"</span>
         </p>
       )}
-      {deb['recommendation'] && (
+      {!!deb['recommendation'] && (
         <p className="text-xs text-amber-600/60 dark:text-amber-400/50">
           Recomendación: {String(deb['recommendation'])}
         </p>
@@ -149,7 +148,7 @@ export function RealTraceTimeline({ data, techMode }: Props) {
 
   return (
     <div className="space-y-0.5">
-      {chain.map((trace, i) => (
+      {chain.map((trace) => (
         <div key={trace.trace_id}>
           {/* Inject debate block before ConsensusMediador */}
           {(trace.agent_name === 'consensus_mediator' || trace.agent_type === 'consensus_mediator') && (

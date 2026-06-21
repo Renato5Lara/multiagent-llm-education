@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Lightbulb, Send, Loader2 } from 'lucide-react'
+import { Lightbulb, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useInteractEngagement } from '@/hooks/useEngagement'
@@ -61,7 +61,7 @@ export function ShortChallengeCard({ resource, sessionId }: Props) {
   const [score, setScore]           = useState(0)
   const [savedAnswer, setSaved]     = useState('')
   const startTimeRef                = useRef(Date.now())
-  const xpTimer                     = useRef<ReturnType<typeof setTimeout>>()
+  const xpTimer                     = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const { mutate: interactMutate } = useInteractEngagement()
 
@@ -111,8 +111,7 @@ export function ShortChallengeCard({ resource, sessionId }: Props) {
   // ── Submitted state ──────────────────────────────────────────────────────
 
   if (state === 'submitted' || state === 'submitting') {
-    const tier      = getTier(score)
-    const missedKws = keywords.filter(kw => !foundKws.has(kw))
+    const tier = getTier(score)
 
     return (
       <div className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/30 dark:via-yellow-950/20 dark:to-orange-950/20 p-6 space-y-4 animate-in fade-in duration-500">
