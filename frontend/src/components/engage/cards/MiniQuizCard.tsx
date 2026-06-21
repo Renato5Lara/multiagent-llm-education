@@ -209,17 +209,43 @@ export function MiniQuizCard({ resource, sessionId }: Props) {
       ) : (
         meta.explanation && (
           <div className={cn(
-            'relative rounded-xl border px-4 py-3.5 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-400',
+            'relative rounded-xl border px-5 py-4 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-400',
             isCorrect
               ? 'border-emerald-200 dark:border-emerald-700 bg-white/70 dark:bg-emerald-950/20'
               : 'border-amber-200 dark:border-amber-700 bg-white/70 dark:bg-amber-950/20',
           )}>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              💡 {isCorrect ? 'Explicación' : '¿Por qué?'}
+            {/* Conversational lead */}
+            <p className={cn(
+              'text-sm font-semibold',
+              isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400',
+            )}>
+              {isCorrect ? '🎉 ¡Exacto!' : '🤔 Casi...'}
             </p>
-            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {meta.explanation}
-            </p>
+
+            {/* Explanation */}
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                {isCorrect ? 'Porque...' : '¿Por qué?'}
+              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {meta.explanation}
+              </p>
+            </div>
+
+            {/* Separator + fun fact field (if present in metadata) */}
+            {(resource.resource_metadata as Record<string, unknown>).fun_fact && (
+              <>
+                <div className="h-px bg-border" />
+                <div className="space-y-0.5">
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                    ¿Sabías que...?
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {String((resource.resource_metadata as Record<string, unknown>).fun_fact)}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         )
       )}
