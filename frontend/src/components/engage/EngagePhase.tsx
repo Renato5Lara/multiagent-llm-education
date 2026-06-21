@@ -29,12 +29,29 @@ const RESOURCE_ICONS: Record<string, React.ElementType> = {
   short_challenge:     Zap,
 }
 
+// Narrative label shown in the badge — reinforces the "pista" frame
 const RESOURCE_LABELS: Record<string, string> = {
-  did_you_know:        '¿Sabías que...?',
-  detonating_question: 'Pregunta detonante',
-  real_news:           'Noticia real',
-  mini_quiz:           'Mini quiz',
-  short_challenge:     'Desafío corto',
+  did_you_know:        '💡 Evidencia',
+  detonating_question: '🔎 Pista',
+  real_news:           '📰 Noticia',
+  mini_quiz:           '🧩 Desafío',
+  short_challenge:     '🎯 Reto final',
+}
+
+// Contextual tagline shown above each card to prime curiosity
+const RESOURCE_TAGLINES: Record<string, string> = {
+  did_you_know:        'Esta evidencia podría cambiar la forma en que entiendes este tema.',
+  detonating_question: 'Una pregunta que pocos se atreven a hacerse. Tómate un momento para reflexionar.',
+  real_news:           'Algo que está pasando en el mundo real y que conecta directamente con lo que vas a aprender.',
+  mini_quiz:           'Pon a prueba lo que ya sabes. Sin presión — cada intento suma experiencia.',
+  short_challenge:     'Llegaste al reto principal de esta misión. Demuestra lo que descubriste.',
+}
+
+function getMissionSubtitle(resources: { resource_type: string; title: string }[]): string {
+  const first = resources[0]
+  if (!first) return ''
+  // Derive subtitle from first resource title — strip trailing punctuation for flow
+  return first.title.replace(/[.!?]+$/, '') + '.'
 }
 
 // ── Investigation dot ────────────────────────────────────────────────────────
@@ -74,8 +91,8 @@ function InvestigationDot({
 
 function XpFlash({ delta }: { delta: number }) {
   return (
-    <span className="inline-flex items-center gap-0.5 text-amber-500 font-semibold text-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-      +{delta} XP
+    <span className="inline-flex items-center gap-0.5 text-amber-500 font-semibold text-sm animate-bounce">
+      ✨ +{delta} XP
     </span>
   )
 }
@@ -83,10 +100,8 @@ function XpFlash({ delta }: { delta: number }) {
 // ── Resource badge ───────────────────────────────────────────────────────────
 
 function ResourceBadge({ type }: { type: string }) {
-  const Icon = RESOURCE_ICONS[type] ?? Lightbulb
   return (
-    <Badge variant="secondary" className="gap-1.5 text-xs px-2.5 py-1">
-      <Icon className="h-3 w-3" />
+    <Badge variant="secondary" className="text-xs px-2.5 py-1 font-medium">
       {RESOURCE_LABELS[type] ?? type}
     </Badge>
   )
@@ -94,19 +109,26 @@ function ResourceBadge({ type }: { type: string }) {
 
 // ── Placeholder renderer (replaced by real cards in Sprint C) ────────────────
 
-function ResourceRenderer({ resource }: { resource: EngagementResource }) {
-  const meta = resource.resource_metadata as Record<string, unknown>
+function ResourceRenderer({ resource, index, total }: { resource: EngagementResource; index: number; total: number }) {
+  const meta    = resource.resource_metadata as Record<string, unknown>
+  const tagline = RESOURCE_TAGLINES[resource.resource_type]
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Pista number + type badge */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <ResourceBadge type={resource.resource_type} />
-        {resource.is_interactive && (
-          <Badge variant="outline" className="text-xs text-primary border-primary/40">
-            Interactivo
-          </Badge>
-        )}
+        <span className="text-xs text-muted-foreground">
+          Pista {index + 1} de {total}
+        </span>
       </div>
+
+      {/* Contextual tagline */}
+      {tagline && (
+        <p className="text-xs text-muted-foreground italic border-l-2 border-primary/30 pl-3">
+          {tagline}
+        </p>
+      )}
 
       <h2 className="text-xl font-semibold leading-snug">{resource.title}</h2>
 
@@ -166,13 +188,11 @@ interface Props {
   onComplete: () => void
   onSkip: () => void
   onProgress?: (index: number) => void
-  /** Optional context title shown as mission subtitle. */
-  missionTitle?: string
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function EngagePhase({ session, onComplete, onSkip, onProgress, missionTitle }: Props) {
+export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [engageState, setEngageState] = useState<EngageState>('active')
   const [currentXp, setCurrentXp]     = useState(session.xp_earned)
@@ -288,13 +308,14 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress, missionTi
       {/* ── Mission header ──────────────────────────────────────────────── */}
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-3">
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-              Misión de descubrimiento
+              🚀 Misión de descubrimiento
             </p>
-            {missionTitle && (
+            {/* Dynamic subtitle from first resource — sets the mission frame */}
+            {resources[0] && (
               <p className="text-sm text-muted-foreground leading-snug max-w-md">
-                {missionTitle}
+                {getMissionSubtitle(resources)}
               </p>
             )}
           </div>
@@ -319,7 +340,7 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress, missionTi
             Investigación {currentIndex + 1}/{total}
           </span>
           {discoveryMsg && (
-            <span className="text-xs text-green-600 font-medium animate-in fade-in slide-in-from-right-2 duration-300">
+            <span className="text-xs text-green-600 font-semibold animate-in fade-in slide-in-from-right-2 duration-300">
               {discoveryMsg}
             </span>
           )}
@@ -350,7 +371,7 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress, missionTi
           cardVisible ? 'opacity-100' : 'opacity-0',
         )}
       >
-        {resource ? <ResourceRenderer resource={resource} /> : null}
+        {resource ? <ResourceRenderer resource={resource} index={currentIndex} total={total} /> : null}
       </div>
 
       {/* ── Navigation ───────────────────────────────────────────────────── */}
