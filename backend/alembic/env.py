@@ -39,6 +39,7 @@ from app.models.agent_decision_trace import AgentDecisionTraceRecord
 
 # New weekly learning architecture (replaces the old per-week plan)
 from app.weekly_learning.models import WeeklyPlan, CourseWeek, WeekContent
+from app.models.engagement import EngagementSession, EngagementResource, EngagementEvent, EngagementInteraction
 
 config = context.config
 
