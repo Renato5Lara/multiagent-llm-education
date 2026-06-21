@@ -11,6 +11,7 @@ import type {
   CourseProgress,
   StudentProgressEntry,
 } from '@/types/student'
+import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useToast } from '@/hooks/use-toast'
 
 export function useSubmitDiagnostic() {
@@ -206,6 +207,10 @@ export function useAcademicSummary() {
   })
 }
 
+export type ModuleOrchestrationResult = ModuleOrchestrationResponse & {
+  session_id: string | null
+}
+
 export function useModuleOrchestration() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -214,7 +219,7 @@ export function useModuleOrchestration() {
     mutationFn: async (moduleId: string) => {
       // LLM orchestration can take 60-120s; use a dedicated timeout instead of
       // the global 30s so the UI doesn't abort a legitimate long-running request.
-      const resp = await api.post(`/api/students/module/${moduleId}/orchestrate`, undefined, {
+      const resp = await api.post<ModuleOrchestrationResult>(`/api/students/module/${moduleId}/orchestrate`, undefined, {
         timeout: 120_000,
       })
       return resp.data

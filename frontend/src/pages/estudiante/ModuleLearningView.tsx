@@ -1,11 +1,13 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useModuleOrchestration } from '@/hooks/useStudent'
 import { useUpdateModule } from '@/hooks/useStudent'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
+import { TraceExplorer } from '@/components/observability/TraceExplorer'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useState, useEffect } from 'react'
@@ -34,6 +36,8 @@ export default function ModuleLearningView() {
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
   const [phaseIndex, setPhaseIndex] = useState(0)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [traceDialogOpen, setTraceDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!moduleId) return
@@ -41,6 +45,7 @@ export default function ModuleLearningView() {
     orchestrateModule(moduleId, {
       onSuccess: (result) => {
         setData(result)
+        setSessionId(result.session_id)
         toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
       },
     })
@@ -160,16 +165,40 @@ export default function ModuleLearningView() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center justify-between gap-2 mb-4">
         <Button variant="ghost" size="sm" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 mr-1" />Volver
         </Button>
+        {sessionId && data && !isOrchestrating && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => setTraceDialogOpen(true)}
+          >
+            <Brain className="h-4 w-4" />
+            Ver razonamiento de agentes
+          </Button>
+        )}
       </div>
       <StudentWeeklyLearningView
         data={data}
         onBack={handleBack}
         onComplete={handleComplete}
       />
+      <Dialog open={traceDialogOpen} onOpenChange={setTraceDialogOpen}>
+        <DialogContent className="max-w-7xl w-[95vw] h-[90vh] overflow-hidden p-0 flex flex-col gap-0">
+          <DialogHeader className="shrink-0 border-b px-6 py-4">
+            <DialogTitle className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              Razonamiento del sistema multiagente
+            </DialogTitle>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <TraceExplorer sessionId={sessionId ?? undefined} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

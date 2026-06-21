@@ -127,3 +127,4 @@ class ModuleOrchestrationResponse(BaseModel):
     retrieval_evidence: dict
     confidence: float
     generated_at: str
+    session_id: Optional[str] = None

@@ -118,6 +118,7 @@ class ModuleOrchestrationService:
     ) -> dict[str, Any]:
         topic = module.title
         bloom_target = module.bloom_level or 3
+        session_id = uuid.uuid4().hex[:12]
         t0 = time.monotonic()
 
         def _elapsed() -> int:
@@ -145,6 +146,7 @@ class ModuleOrchestrationService:
         research_state = await self._phase_research(
             orch_id, topic, bloom_target, student, module, narrative,
             memory_store=memory_store,
+            session_id=session_id,
         )
         logger.info(
             "orchestrate[%s]: phase=research done elapsed_ms=%d degraded=%s sources=%d db=%s",
@@ -159,6 +161,7 @@ class ModuleOrchestrationService:
         try:
             result = self._build_orchestration_result(
                 research_state, student, course, module, bloom_target, orch_id,
+                session_id=session_id,
             )
         except Exception as build_exc:
             logger.error(
@@ -227,6 +230,7 @@ class ModuleOrchestrationService:
         module: PathModule,
         narrative: dict[str, Any],
         memory_store: SharedMemoryStore | None,
+        session_id: str | None = None,
     ) -> dict[str, Any]:
         # Create a fresh ResearchAgent per call — never reuse the singleton's
         # agent so concurrent requests cannot overwrite each other's
@@ -244,6 +248,12 @@ class ModuleOrchestrationService:
                     "student_id": student.id,
                     "module_id": module.id,
                     "narrative_continuity": narrative,
+                    "session_id": session_id,
+                    "_trace_context": {
+                        "session_id": session_id,
+                        "correlation_id": session_id,
+                        "sequence": 0,
+                    },
                 }),
                 timeout=_RESEARCH_TIMEOUT_S,
             )
@@ -316,6 +326,7 @@ class ModuleOrchestrationService:
         module: PathModule,
         bloom_target: int,
         orch_id: str,
+        session_id: str | None = None,
     ) -> dict[str, Any]:
         research = research_state.get("research", {})
         research_metrics = research_state.get("research_metrics", {})
@@ -371,6 +382,7 @@ class ModuleOrchestrationService:
             "retrieval_evidence": retrieval_evidence,
             "confidence": round(confidence, 4),
             "generated_at": datetime.now(timezone.utc).isoformat(),
+            "session_id": session_id,
         }
 
     def _degraded_result(
@@ -403,6 +415,7 @@ class ModuleOrchestrationService:
             "retrieval_evidence": {"sources_count": 0, "confidence": 0.0, "degraded": True, "sources": []},
             "confidence": 0.0,
             "generated_at": datetime.now(timezone.utc).isoformat(),
+            "session_id": None,
         }
 
     # ------------------------------------------------------------------
