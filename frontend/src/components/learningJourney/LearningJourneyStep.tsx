@@ -12,6 +12,7 @@ import { PredictionCard }           from '@/components/module/PredictionCard'
 import { CuriosityCard }            from '@/components/module/CuriosityCard'
 import { AnalogyCard }              from '@/components/module/AnalogyCard'
 import { MiniActivityCard }         from '@/components/module/MiniActivityCard'
+import { MediaPromptCard }          from '@/components/module/MediaPromptCard'
 import { STEP_LABELS, STEP_COLORS } from './journeyStepConfig'
 import type {
   LearningJourneyStep  as StepData,
@@ -22,6 +23,7 @@ import type {
   CuriosityMeta,
   AnalogyMeta,
   MiniActivityMeta,
+  MediaPromptMeta,
 } from '@/types/learningJourney'
 
 // ── Shared sub-renderer props ─────────────────────────────────────────────────
@@ -604,9 +606,21 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
       )
     }
 
-    // ── Sprint L6 — still placeholder ─────────────────────────────────────
-    case 'media_prompt':
-      return <CardPlaceholder step={step} onComplete={handleComplete} />
+    // ── Sprint L6 ─────────────────────────────────────────────────────────
+    case 'media_prompt': {
+      const meta = step.metadata as MediaPromptMeta | undefined
+      if (!meta?.prompt) return <CardPlaceholder step={step} onComplete={handleComplete} />
+      return (
+        <MediaPromptCard
+          type={meta.type}
+          title={meta.title ?? step.title ?? ''}
+          prompt={meta.prompt}
+          learning_goal={meta.learning_goal ?? step.content ?? ''}
+          duration_seconds={meta.duration_seconds}
+          onComplete={handleComplete}
+        />
+      )
+    }
 
     default:
       return null
