@@ -58,7 +58,8 @@ _ORCHESTRATE_TIMEOUT_S = 60.0
 # Timeout for the research-agent phase alone (Tavily + async gather).
 _RESEARCH_TIMEOUT_S = 28.0
 # Sprint M1: LLM timeout per concept block and max blocks to generate.
-_CONCEPT_LLM_TIMEOUT_S = 30.0
+# 3 blocks × 15 s max = 45 s worst case (still within _ORCHESTRATE_TIMEOUT_S=60).
+_CONCEPT_LLM_TIMEOUT_S = 15.0
 MAX_CONCEPT_BLOCKS: int = 3
 
 # ── Sprint M1: LLM-based concept block enrichment ─────────────────────────────
@@ -1092,9 +1093,22 @@ class ModuleOrchestrationService:
             logger.debug("orchestrate[%s]: _build_concept_blocks: no concepts — returning []", orch_id)
             return []
 
-        examples       = self._concepts_to_strings(examples_raw)
+        examples         = self._concepts_to_strings(examples_raw)
         context_snippets = _build_context_snippets(concept_strings, examples_raw, misconceptions_raw)
         blocks: list[dict[str, Any]] = []
+
+        # Create LLMService once for all blocks — avoids 3 httpx.AsyncClient instances.
+        llm_svc: LLMService | None = None
+        if settings.has_openai:
+            llm_svc = LLMService(default_config=LLMConfig(
+                model="gpt-4o-mini",
+                api_key=settings.OPENAI_API_KEY or "",
+                temperature=0.4,
+                max_tokens=1500,
+                timeout_seconds=12.0,
+                max_retries=1,
+                budget_tokens_per_day=300_000,
+            ))
 
         for i, concept_text in enumerate(concept_strings):
             block_id    = f"block-{i}"
@@ -1109,10 +1123,11 @@ class ModuleOrchestrationService:
 
             # ── Sprint M1: try LLM enrichment ────────────────────────────────
             llm_data: dict[str, Any] | None = None
-            if settings.has_openai:
+            if llm_svc:
                 try:
                     llm_data = await asyncio.wait_for(
                         self._generate_concept_block_with_llm(
+                            llm_svc=llm_svc,
                             topic=topic,
                             bloom_target=bloom_target,
                             bloom_label=bloom_label,
@@ -1202,6 +1217,7 @@ class ModuleOrchestrationService:
     async def _generate_concept_block_with_llm(
         self,
         *,
+        llm_svc: LLMService,
         topic: str,
         bloom_target: int,
         bloom_label: str,
@@ -1212,20 +1228,13 @@ class ModuleOrchestrationService:
     ) -> dict[str, Any] | None:
         """Call LLMService to generate a rich ConceptBlock.
 
+        Receives the shared LLMService instance (created once per
+        _build_concept_blocks call) to avoid re-creating httpx.AsyncClient
+        for every block.
+
         Returns the parsed dict on success, None on any failure.
         The caller is responsible for the fallback.
         """
-        cfg = LLMConfig(
-            model="gpt-4o-mini",
-            api_key=settings.OPENAI_API_KEY or "",
-            temperature=0.4,
-            max_tokens=1500,
-            timeout_seconds=25.0,
-            max_retries=1,
-            budget_tokens_per_day=300_000,
-        )
-        llm = LLMService(default_config=cfg)
-
         user_prompt = (
             f"TEMA DEL MÓDULO: {topic}\n"
             f"NIVEL BLOOM: {bloom_target}/6 — {bloom_label}\n\n"
@@ -1255,7 +1264,7 @@ class ModuleOrchestrationService:
         )
 
         t = time.monotonic()
-        response = await llm.generate(
+        response = await llm_svc.generate(
             messages=[
                 {"role": "system", "content": _CONCEPT_BUILDER_SYSTEM_PROMPT},
                 {"role": "user",   "content": user_prompt},
