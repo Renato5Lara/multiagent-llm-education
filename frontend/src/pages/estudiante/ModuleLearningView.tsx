@@ -16,6 +16,11 @@ import { LOADING_PHASES } from '@/constants/agentPipeline'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useState, useEffect, useCallback } from 'react'
+import { useStartEngagement } from '@/hooks/useEngagement'
+import { LearningJourney } from '@/components/learningJourney/LearningJourney'
+import { buildJourneyFromLegacy } from '@/lib/learningJourneyBuilder'
+
+const USE_LEARNING_JOURNEY = true
 
 type AppPhase = 'engaging' | 'waiting_content' | 'content'
 
@@ -63,6 +68,7 @@ export default function ModuleLearningView() {
 
   const { mutate: orchestrateModule, isPending: isOrchestrating, isError: orchestrationFailed } = useModuleOrchestration()
   const updateModule = useUpdateModule()
+  const { data: engageSession } = useStartEngagement(moduleId)
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
   const [phaseIndex, setPhaseIndex] = useState(0)
@@ -279,11 +285,18 @@ export default function ModuleLearningView() {
           </Button>
         )}
       </div>
-      <StudentWeeklyLearningView
-        data={data}
-        onBack={handleBack}
-        onComplete={handleComplete}
-      />
+      {USE_LEARNING_JOURNEY && engageSession ? (
+        <LearningJourney
+          journey={buildJourneyFromLegacy(engageSession, data)}
+          onComplete={handleComplete}
+        />
+      ) : (
+        <StudentWeeklyLearningView
+          data={data}
+          onBack={handleBack}
+          onComplete={handleComplete}
+        />
+      )}
 
       {/* Sprint E — AgentThoughtStream: student-facing + technical toggle */}
       <div className="mt-6 space-y-3">
