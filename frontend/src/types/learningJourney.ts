@@ -12,6 +12,7 @@
 // ── Step types ────────────────────────────────────────────────────────────────
 
 export type LearningJourneyStepType =
+  // ── Existing ──────────────────────────────────────────────────────────────
   | 'did_you_know'       // curiosidad inmediata, pasiva
   | 'prior_knowledge'    // autoevaluación de conocimiento previo
   | 'concept'            // párrafo conceptual expandible
@@ -21,6 +22,13 @@ export type LearningJourneyStepType =
   | 'application'        // aplicaciones reales bookmarkeables
   | 'reflection'         // checkpoint metacognitivo
   | 'evaluation'         // quiz de opción múltiple
+  // ── Sprint L3 ─────────────────────────────────────────────────────────────
+  | 'micro_question'     // pregunta rápida 1 frase, 2-3 botones de respuesta
+  | 'prediction'         // el estudiante predice antes de ver la respuesta
+  | 'mini_activity'      // actividad 2-3 pasos con checkboxes
+  | 'curiosity'          // dato curioso visual, pasivo
+  | 'analogy'            // analogía estructurada "X es como Y porque Z"
+  | 'media_prompt'       // prompts para imagen / video / audio (sin API externa)
 
 // ── Step interface ────────────────────────────────────────────────────────────
 
@@ -49,8 +57,9 @@ export interface LearningJourney {
   sessionId?:   string
 }
 
-// ── Metadata shapes (tipado de conveniencia para los renderers) ───────────────
+// ── Metadata shapes ───────────────────────────────────────────────────────────
 
+// Existing
 export interface EvaluationMeta {
   options:       string[]
   correct_index: number
@@ -66,7 +75,47 @@ export interface ApplicationMeta {
   items: string[]
 }
 
-// ── Builder stub (Sprint J2 lo implementará completamente) ────────────────────
+// Sprint L3
+export interface MicroQuestionMeta {
+  question:  string
+  options:   string[]          // 2-3 botones de respuesta corta
+  correct?:  number            // índice de la opción correcta (si aplica)
+  feedback?: string            // texto breve post-respuesta
+}
+
+export interface PredictionMeta {
+  question:   string           // pregunta que el estudiante responde antes de ver
+  reveal:     string           // respuesta / contenido revelado al hacer clic
+  hint?:      string           // pista opcional antes del reveal
+}
+
+export interface MiniActivityMeta {
+  instructions: string         // enunciado general de la actividad
+  steps:        string[]       // 2-3 pasos que el estudiante marca como completados
+}
+
+export interface CuriosityMeta {
+  fact:    string              // el dato curioso en sí
+  source?: string              // fuente / contexto opcional
+  stat?:   string              // número o stat destacable (ej. "el 73% de…")
+}
+
+export interface AnalogyMeta {
+  source:      string          // "X" — lo que el estudiante ya conoce
+  target:      string          // "Y" — el concepto nuevo
+  explanation: string          // "porque Z" — el puente
+  image_hint?: string          // descripción de imagen mental sugerida
+}
+
+export interface MediaPromptMeta {
+  type:             'image' | 'video' | 'audio'
+  title:            string
+  prompt:           string     // prompt listo para copiar
+  learning_goal:    string
+  duration_seconds?: number   // solo para video/audio
+}
+
+// ── Builder stub ──────────────────────────────────────────────────────────────
 
 export interface JourneyBuildResult {
   journey: LearningJourney

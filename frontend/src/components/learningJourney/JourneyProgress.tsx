@@ -2,7 +2,8 @@ import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import type { LearningJourneyStepType } from '@/types/learningJourney'
 
-const STEP_LABELS: Record<LearningJourneyStepType, string> = {
+export const STEP_LABELS: Record<LearningJourneyStepType, string> = {
+  // Existing
   did_you_know:    '💡 Curiosidad',
   prior_knowledge: '🧭 Punto de partida',
   concept:         '📖 Concepto',
@@ -12,6 +13,34 @@ const STEP_LABELS: Record<LearningJourneyStepType, string> = {
   application:     '🚀 Aplicación',
   reflection:      '🧘 Reflexión',
   evaluation:      '📋 Evaluación',
+  // Sprint L3
+  micro_question:  '❓ Pregunta rápida',
+  prediction:      '🔮 Predicción',
+  mini_activity:   '✏️ Mini actividad',
+  curiosity:       '✨ Curiosidad',
+  analogy:         '🌀 Analogía',
+  media_prompt:    '🎨 Recurso multimedia',
+}
+
+// Color accent per step type — used by cards and progress indicator
+export const STEP_COLORS: Record<LearningJourneyStepType, string> = {
+  // Existing
+  did_you_know:    'amber',
+  prior_knowledge: 'sky',
+  concept:         'indigo',
+  question:        'violet',
+  example:         'blue',
+  challenge:       'orange',
+  application:     'emerald',
+  reflection:      'gray',
+  evaluation:      'purple',
+  // Sprint L3
+  micro_question:  'cyan',
+  prediction:      'fuchsia',
+  mini_activity:   'teal',
+  curiosity:       'yellow',
+  analogy:         'green',
+  media_prompt:    'rose',
 }
 
 interface Props {

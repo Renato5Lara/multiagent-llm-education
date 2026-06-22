@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Send, Check } from 'lucide-react'
+import { Send, Check, Construction } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ConceptCard }              from '@/components/module/ConceptCard'
@@ -7,10 +7,12 @@ import { DidYouKnowInlineCard }     from '@/components/module/DidYouKnowInlineCa
 import { ExampleCard }              from '@/components/module/ExampleCard'
 import { PracticalApplicationCard } from '@/components/module/PracticalApplicationCard'
 import { ReflectionCheckpoint }     from '@/components/module/ReflectionCheckpoint'
+import { STEP_LABELS, STEP_COLORS } from './JourneyProgress'
 import type {
   LearningJourneyStep  as StepData,
   EvaluationMeta,
   ChallengeMeta,
+  LearningJourneyStepType,
 } from '@/types/learningJourney'
 
 // ── Shared sub-renderer props ─────────────────────────────────────────────────
@@ -18,6 +20,87 @@ import type {
 interface SubProps {
   step:       StepData
   onComplete: () => void
+}
+
+// ── CardPlaceholder — Sprint L3 temporary renderer ────────────────────────────
+// Replaced by real cards in Sprint L5. Lets the builder and dispatcher compile
+// and run without requiring all card implementations up front.
+
+const COLOR_BORDER: Record<string, string> = {
+  cyan:    'border-cyan-200 dark:border-cyan-800',
+  fuchsia: 'border-fuchsia-200 dark:border-fuchsia-800',
+  teal:    'border-teal-200 dark:border-teal-800',
+  yellow:  'border-yellow-200 dark:border-yellow-800',
+  green:   'border-green-200 dark:border-green-800',
+  rose:    'border-rose-200 dark:border-rose-800',
+}
+const COLOR_BG: Record<string, string> = {
+  cyan:    'bg-cyan-50/60 dark:bg-cyan-950/20',
+  fuchsia: 'bg-fuchsia-50/60 dark:bg-fuchsia-950/20',
+  teal:    'bg-teal-50/60 dark:bg-teal-950/20',
+  yellow:  'bg-yellow-50/60 dark:bg-yellow-950/20',
+  green:   'bg-green-50/60 dark:bg-green-950/20',
+  rose:    'bg-rose-50/60 dark:bg-rose-950/20',
+}
+const COLOR_LABEL: Record<string, string> = {
+  cyan:    'text-cyan-600 dark:text-cyan-400',
+  fuchsia: 'text-fuchsia-600 dark:text-fuchsia-400',
+  teal:    'text-teal-600 dark:text-teal-400',
+  yellow:  'text-yellow-600 dark:text-yellow-400',
+  green:   'text-green-600 dark:text-green-400',
+  rose:    'text-rose-600 dark:text-rose-400',
+}
+
+function CardPlaceholder({ step, onComplete }: SubProps) {
+  const [done, setDone] = useState(false)
+  const color  = STEP_COLORS[step.type] ?? 'cyan'
+  const label  = STEP_LABELS[step.type] ?? step.type
+
+  return (
+    <div className={cn(
+      'rounded-xl border p-6 space-y-4',
+      COLOR_BORDER[color] ?? 'border-gray-200',
+      COLOR_BG[color]     ?? 'bg-gray-50',
+    )}>
+      <div className="flex items-center gap-3">
+        <Construction className={cn('h-5 w-5 shrink-0', COLOR_LABEL[color] ?? 'text-gray-500')} />
+        <div>
+          <p className={cn('text-xs font-mono font-bold tracking-widest uppercase', COLOR_LABEL[color])}>
+            {label}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Componente pendiente de Sprint L5
+          </p>
+        </div>
+      </div>
+
+      {(step.title || step.content) && (
+        <div className="rounded-lg border border-dashed border-current/20 bg-white/60 dark:bg-black/10 px-4 py-3">
+          {step.title && (
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-1">
+              {step.title}
+            </p>
+          )}
+          {step.content && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              {step.content}
+            </p>
+          )}
+        </div>
+      )}
+
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={done}
+        onClick={() => { setDone(true); onComplete() }}
+        className="gap-2"
+      >
+        {done ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : null}
+        {done ? 'Completado' : 'Marcar como completado'}
+      </Button>
+    </div>
+  )
 }
 
 // ── prior_knowledge ───────────────────────────────────────────────────────────
@@ -449,6 +532,15 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
 
     case 'evaluation':
       return <EvaluationStep step={step} onComplete={handleComplete} />
+
+    // ── Sprint L3 — placeholders (real cards arrive in L5) ─────────────────
+    case 'micro_question':
+    case 'prediction':
+    case 'mini_activity':
+    case 'curiosity':
+    case 'analogy':
+    case 'media_prompt':
+      return <CardPlaceholder step={step} onComplete={handleComplete} />
 
     default:
       return null
