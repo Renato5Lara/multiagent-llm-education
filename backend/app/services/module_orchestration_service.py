@@ -716,9 +716,18 @@ class ModuleOrchestrationService:
             f"- Consulta con tu docente si algún concepto no queda claro antes de avanzar."
         )
 
-    # Tokens that only make sense in a data-structures / programming context.
-    # We check for these when the topic does NOT look like a programming course.
-    _PROGRAMMING_TOPIC_SIGNALS = frozenset(["arreglo", "array", "lista", "pila", "cola", "árbol", "grafo", "hash", "struct", "clase", "objeto", "algoritmo", "programaci"])
+    # Courses where CS-domain terms ("estructura de datos", "índice", etc.) are valid.
+    _CS_COURSE_SIGNALS = frozenset([
+        "arreglo", "array", "lista", "pila", "cola", "árbol", "grafo", "hash",
+        "struct", "clase", "objeto", "algoritmo", "programaci",
+        "base de datos", "database", "sql",
+        "sistema operativo",
+        "ingenieria", "ingenier",
+        "software",
+        "computaci",
+        "desarrollo",
+        "estructura",
+    ])
     _FORBIDDEN_IN_NON_CS = [
         "estructura de datos",
         "búsqueda binaria",
@@ -729,32 +738,45 @@ class ModuleOrchestrationService:
         "arreglo",
         "indice es la posición",
     ]
+    # Noise words skipped when checking topic presence in generated text.
+    _TOPIC_STOPWORDS = frozenset(["de", "del", "la", "el", "los", "las", "y", "e", "i", "ii", "iii", "iv", "semana"])
+
+    @staticmethod
+    def _topic_keywords(topic: str) -> list[str]:
+        """Return meaningful words from a topic title (len > 3, not stopwords)."""
+        normalized = topic.lower().replace(":", " ").replace("-", " ")
+        return [
+            w for w in normalized.split()
+            if len(w) > 3 and w not in ModuleOrchestrationService._TOPIC_STOPWORDS
+        ]
 
     def _validate_generated_content(
         self, topic: str, introduction: str, explanation: str, orch_id: str
     ) -> bool:
         topic_lower = topic.lower()
-        is_programming_topic = any(sig in topic_lower for sig in self._PROGRAMMING_TOPIC_SIGNALS)
+        is_cs_topic = any(sig in topic_lower for sig in self._CS_COURSE_SIGNALS)
 
         intro_lower = introduction.lower()
         expl_lower  = explanation.lower()
 
-        # 1. topic must appear in both texts
-        if topic_lower[:15] not in intro_lower:
-            logger.warning(
-                "orchestrate[%s]: semantic_validation FAIL — topic %r absent from introduction",
-                orch_id, topic[:40],
-            )
-            return False
-        if topic_lower[:15] not in expl_lower:
-            logger.warning(
-                "orchestrate[%s]: semantic_validation FAIL — topic %r absent from explanation",
-                orch_id, topic[:40],
-            )
-            return False
+        # 1. At least one meaningful keyword from the topic must appear in each text.
+        keywords = self._topic_keywords(topic)
+        if keywords:
+            if not any(kw in intro_lower for kw in keywords):
+                logger.warning(
+                    "orchestrate[%s]: semantic_validation FAIL — no topic keyword %r found in introduction",
+                    orch_id, keywords,
+                )
+                return False
+            if not any(kw in expl_lower for kw in keywords):
+                logger.warning(
+                    "orchestrate[%s]: semantic_validation FAIL — no topic keyword %r found in explanation",
+                    orch_id, keywords,
+                )
+                return False
 
-        # 2. for non-CS topics, forbidden CS tokens must not appear
-        if not is_programming_topic:
+        # 2. For non-CS courses, forbidden CS tokens must not appear.
+        if not is_cs_topic:
             for token in self._FORBIDDEN_IN_NON_CS:
                 if token in intro_lower or token in expl_lower:
                     logger.warning(

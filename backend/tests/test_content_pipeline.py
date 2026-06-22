@@ -192,13 +192,33 @@ class TestSemanticValidation:
     def setup_method(self):
         self.svc = ModuleOrchestrationService()
 
+    # ── Keyword extraction ────────────────────────────────────────────────────
+
+    def test_keyword_extraction_strips_noise_words(self):
+        kws = ModuleOrchestrationService._topic_keywords("Semana 1: Estadística I")
+        # "semana", "estadística" — "semana" is a stopword, "i" too short; only "estadística" survives
+        assert "estadística" in kws
+        assert "semana" not in kws
+
+    def test_keyword_extraction_communicacion(self):
+        kws = ModuleOrchestrationService._topic_keywords("Comunicación I")
+        assert "comunicación" in kws
+
+    # ── Topic presence checks ─────────────────────────────────────────────────
+
     def test_valid_content_passes(self):
         intro = "Este módulo introduce Estadística I y sus conceptos fundamentales."
         expl  = "Estadística I abarca principios de probabilidad y análisis de datos."
         assert self.svc._validate_generated_content("Estadística I", intro, expl, "test-id") is True
 
+    def test_semana_prefix_topic_passes_when_keyword_present(self):
+        """'Semana 1: Estadística I' — content references 'estadística', not 'semana 1:'."""
+        intro = "En este módulo aprenderás Estadística I desde sus fundamentos."
+        expl  = "El estudio de Estadística I permite analizar datos con rigor."
+        assert self.svc._validate_generated_content("Semana 1: Estadística I", intro, expl, "test-id") is True
+
     def test_topic_absent_from_intro_fails(self):
-        intro = "Bienvenido al módulo de estructuras de datos."
+        intro = "Bienvenido al módulo. Este tema es muy importante en el curso."
         expl  = "Estadística I abarca principios de análisis de datos."
         assert self.svc._validate_generated_content("Estadística I", intro, expl, "test-id") is False
 
@@ -207,20 +227,40 @@ class TestSemanticValidation:
         expl  = "Los arreglos son estructuras de datos que almacenan elementos."
         assert self.svc._validate_generated_content("Estadística I", intro, expl, "test-id") is False
 
-    def test_cs_contamination_in_non_cs_topic_fails(self):
+    # ── CS contamination ──────────────────────────────────────────────────────
+
+    def test_cs_contamination_in_comunicacion_fails(self):
+        """'Comunicación I' is not a CS course — 'estructura de datos' must be rejected."""
+        intro = "Comunicación I es un tema importante del curso."
+        expl  = "Comunicación I es una estructura de datos fundamental."
+        assert self.svc._validate_generated_content("Comunicación I", intro, expl, "test-id") is False
+
+    def test_cs_contamination_in_estadistica_fails(self):
         intro = "Estadística I es un tema importante del curso."
         expl  = "Estadística I es una estructura de datos fundamental."
         assert self.svc._validate_generated_content("Estadística I", intro, expl, "test-id") is False
 
-    def test_cs_contamination_allowed_for_cs_topic(self):
+    def test_cs_contamination_allowed_for_arreglos(self):
         intro = "Arreglos son estructuras de datos del curso."
         expl  = "Los arreglos permiten almacenar múltiples elementos."
-        # "arreglo" topic → is_programming_topic = True → no forbidden check
         assert self.svc._validate_generated_content("Arreglos", intro, expl, "test-id") is True
+
+    def test_base_de_datos_allows_estructura_de_datos(self):
+        """'Base de Datos' is a CS course — 'estructura de datos' is valid there."""
+        intro = "Base de Datos cubre el diseño de estructuras de datos relacionales."
+        expl  = "En Base de Datos aprenderás sobre tablas, índices y relaciones."
+        assert self.svc._validate_generated_content("Base de Datos", intro, expl, "test-id") is True
+
+    def test_sistemas_operativos_allows_cs_terms(self):
+        intro = "Sistemas Operativos estudia la gestión de procesos y memoria."
+        expl  = "En Sistemas Operativos se abordan algoritmos de planificación y estructuras del kernel."
+        assert self.svc._validate_generated_content("Sistemas Operativos", intro, expl, "test-id") is True
+
+    # ── End-to-end: fallbacks must pass for every non-CS topic ────────────────
 
     @pytest.mark.parametrize("topic", NON_CS_TOPICS)
     def test_clean_fallbacks_pass_validation(self, topic):
-        """The corrected fallback templates must pass semantic validation."""
+        """Corrected fallback templates must pass semantic validation."""
         intro = self.svc._generate_introduction(topic, [])
         expl  = self.svc._generate_explanation(topic, [], bloom_target=2)
         result = self.svc._validate_generated_content(topic, intro, expl, "test-id")
