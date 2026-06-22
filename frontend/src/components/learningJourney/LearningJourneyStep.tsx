@@ -9,9 +9,10 @@ import { PracticalApplicationCard } from '@/components/module/PracticalApplicati
 import { ReflectionCheckpoint }     from '@/components/module/ReflectionCheckpoint'
 import { MicroQuestionCard }        from '@/components/module/MicroQuestionCard'
 import { PredictionCard }           from '@/components/module/PredictionCard'
-import { CuriosityCard }            from '@/components/module/CuriosityCard'
+import { VisualFactCard }           from '@/components/module/VisualFactCard'
 import { AnalogyCard }              from '@/components/module/AnalogyCard'
 import { MiniActivityCard }         from '@/components/module/MiniActivityCard'
+import { DiagramCard }              from '@/components/module/DiagramCard'
 import { MediaPromptCard }          from '@/components/module/MediaPromptCard'
 import { STEP_LABELS, STEP_COLORS } from './journeyStepConfig'
 import type {
@@ -498,14 +499,29 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
     case 'prior_knowledge':
       return <PriorKnowledgeStep step={step} onComplete={handleComplete} />
 
-    case 'concept':
+    case 'concept': {
+      const conceptContent = step.content ?? ''
+      // Use DiagramCard when content is a numbered/bulleted list (procedural concepts).
+      const listLines = conceptContent.split('\n').filter(l => /^\s*[\d\-*•]/.test(l))
+      if (listLines.length >= 3) {
+        return (
+          <DiagramCard
+            title={step.title ?? 'Proceso'}
+            description={conceptContent.split('\n').find(l => !/^\s*[\d\-*•]/.test(l) && l.trim())}
+            steps={listLines.map(l => l.replace(/^\s*[\d\-*•.]+\s*/, ''))}
+            onComplete={handleComplete}
+          />
+        )
+      }
       return (
         <ConceptCard
           index={1}
-          content={step.content ?? ''}
+          title={step.title}
+          content={conceptContent}
           onRead={handleComplete}
         />
       )
+    }
 
     case 'question':
       return <QuestionStep step={step} onComplete={handleComplete} />
@@ -573,7 +589,7 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
     case 'curiosity': {
       const meta = step.metadata as CuriosityMeta | undefined
       return (
-        <CuriosityCard
+        <VisualFactCard
           fact={meta?.fact ?? step.content ?? step.title ?? ''}
           source={meta?.source}
           stat={meta?.stat}

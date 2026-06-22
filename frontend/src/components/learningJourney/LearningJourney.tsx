@@ -12,6 +12,13 @@ interface Props {
   onTotalXpChange?:  (xp: number) => void
 }
 
+// Milestone definitions — triggered when crossing a % threshold.
+const MILESTONES = [
+  { threshold: 0.25, message: '🎉 ¡Has completado el primer bloque!' },
+  { threshold: 0.50, message: '🚀 Ya puedes aplicar lo aprendido.' },
+  { threshold: 0.75, message: '🧠 Entrando a la parte avanzada.' },
+] as const
+
 /**
  * LearningJourney — Sprint J1
  *
@@ -33,7 +40,10 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
   const [totalXp,         setTotalXp]         = useState(0)
   const [xpFlash,         setXpFlash]         = useState<number | null>(null)
   const [cardVisible,     setCardVisible]     = useState(true)
-  const xpTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [milestone,       setMilestone]       = useState<string | null>(null)
+  const xpTimer         = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const milestoneTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const shownMilestones = useRef<Set<number>>(new Set())
 
   const steps  = journey.steps
   const total  = steps.length
@@ -58,9 +68,20 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
     if (isLast) {
       onComplete?.()
     } else {
-      changeStep(currentIndex + 1)
+      const nextIndex = currentIndex + 1
+      const pct = (nextIndex + 1) / total
+      for (const m of MILESTONES) {
+        if (!shownMilestones.current.has(m.threshold) && pct >= m.threshold) {
+          shownMilestones.current.add(m.threshold)
+          setMilestone(m.message)
+          clearTimeout(milestoneTimer.current)
+          milestoneTimer.current = setTimeout(() => setMilestone(null), 3200)
+          break
+        }
+      }
+      changeStep(nextIndex)
     }
-  }, [canAdvance, isLast, currentIndex, changeStep, onComplete])
+  }, [canAdvance, isLast, currentIndex, total, changeStep, onComplete])
 
   const goPrev = useCallback(() => {
     if (currentIndex > 0) changeStep(currentIndex - 1)
@@ -108,6 +129,20 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
           xpFlash={xpFlash}
         />
       </div>
+
+      {/* Milestone overlay */}
+      {milestone && (
+        <div className={cn(
+          'rounded-xl border border-emerald-200 dark:border-emerald-800',
+          'bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/40 dark:via-teal-950/30',
+          'px-5 py-4 text-center',
+          'animate-in fade-in zoom-in-95 duration-400',
+        )}>
+          <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
+            {milestone}
+          </p>
+        </div>
+      )}
 
       {/* Step card with fade transition */}
       <div className={cn(
