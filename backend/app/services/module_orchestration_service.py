@@ -346,6 +346,11 @@ class ModuleOrchestrationService:
         applications_raw = research.get("real_applications", [])
 
         pedagogical_stages = self._build_pedagogical_stages(module.title, bloom_target, concepts)
+        logger.debug(
+            "orchestrate[%s]: research results — concepts=%d misconceptions=%d examples=%d applications=%d",
+            orch_id, len(concepts), len(misconceptions_raw), len(examples_raw), len(applications_raw),
+        )
+
         introduction = self._generate_introduction(module.title, concepts)
         explanation = self._generate_explanation(module.title, concepts, bloom_target)
         misconceptions = self._build_misconceptions(misconceptions_raw, module.title)
@@ -360,7 +365,11 @@ class ModuleOrchestrationService:
 
         confidence = float(research_metrics.get("pedagogical_confidence", 0.0) or 0.0)
         valid = consistency.get("valid", False)
-        orchestration_status = "approved" if valid and confidence >= 0.5 else "generated_with_warnings"
+        semantic_ok = self._validate_generated_content(module.title, introduction, explanation, orch_id)
+        if not semantic_ok:
+            orchestration_status = "generated_with_warnings"
+        else:
+            orchestration_status = "approved" if valid and confidence >= 0.5 else "generated_with_warnings"
 
         return {
             "module_id": str(module.id),
@@ -432,23 +441,23 @@ class ModuleOrchestrationService:
                 "bloom_level": 1,
                 "content": (
                     f"Antes de abordar {topic.lower()}, reflexiona sobre lo que ya sabes. "
-                    f"¿Has usado estructuras similares en otros contextos? "
-                    f"Identifica qué conceptos previos (variables, tipos de datos, sintaxis básica) "
-                    f"son necesarios para construir nuevo conocimiento."
+                    f"¿Has tenido contacto con este tema antes? "
+                    f"Identifica qué conceptos previos del curso son necesarios "
+                    f"para construir nuevo conocimiento sobre este tema."
                 ),
                 "examples": [
-                    f"Pregunta guía: ¿Qué problemas cotidianos podrían resolverse organizando datos en {topic.lower()}?",
-                    "Relaciona con conceptos previos de tu experiencia de programación básica.",
+                    f"Pregunta guía: ¿Qué problemas o situaciones reales se relacionan con {topic.lower()}?",
+                    "Relaciona con los temas previos del curso que ya has estudiado.",
                 ],
             },
             {
                 "phase": "exploracion",
-                "focus": f"Explorar {topic.lower()} desde múltiples fuentes",
+                "focus": f"Explorar {topic.lower()} desde múltiples perspectivas",
                 "bloom_level": 2,
                 "content": (
                     f"Explora cómo se define y utiliza {topic.lower()} en diferentes contextos. "
-                    f"Analiza sus propiedades fundamentales: declaración, inicialización, acceso, "
-                    f"y operaciones básicas. Compara distintas formas de implementación."
+                    f"Analiza sus principios fundamentales y cómo se aplican. "
+                    f"Compara distintas formas de entender y utilizar este tema."
                 ),
                 "examples": self._concepts_to_strings(concepts[:3]) or [
                     f"Concepto clave 1 de {topic.lower()}",
@@ -457,16 +466,16 @@ class ModuleOrchestrationService:
             },
             {
                 "phase": "construccion",
-                "focus": f"Construir soluciones usando {topic.lower()}",
+                "focus": f"Construir comprensión profunda de {topic.lower()}",
                 "bloom_level": min(bloom_target, 4),
                 "content": (
-                    f"Construye programas que utilicen {topic.lower()} para resolver problemas "
-                    f"específicos. Aplica las operaciones de recorrido, búsqueda y modificación. "
-                    f"Implementa algoritmos que aprovechen las ventajas de esta estructura."
+                    f"Desarrolla tu comprensión de {topic.lower()} aplicando sus principios "
+                    f"a casos concretos. Practica con ejercicios que requieran análisis "
+                    f"y toma de decisiones basada en lo aprendido."
                 ),
                 "examples": [
-                    f"Ejercicio guiado: Crea un programa que use {topic.lower()} para almacenar y procesar datos.",
-                    "Prueba diferentes enfoques y observa los resultados.",
+                    f"Ejercicio guiado: analiza un caso real donde se aplique {topic.lower()}.",
+                    "Prueba diferentes enfoques y justifica cuál es más adecuado.",
                 ],
             },
             {
@@ -474,27 +483,32 @@ class ModuleOrchestrationService:
                 "focus": f"Aplicar {topic.lower()} en contextos reales",
                 "bloom_level": min(bloom_target + 1, 6),
                 "content": (
-                    f"Aplica {topic.lower()} para resolver problemas del mundo real. "
-                    f"Integra este conocimiento con otras estructuras de datos y patrones "
-                    f"de diseño. Evalúa cuándo es la mejor opción y por qué."
+                    f"Aplica {topic.lower()} para resolver problemas del ámbito del curso. "
+                    f"Integra este conocimiento con otros temas ya estudiados. "
+                    f"Evalúa cuándo y por qué es relevante aplicar lo aprendido."
                 ),
                 "examples": [
-                    "Proyecto práctico: Implementa una solución completa usando esta estructura.",
-                    "Reflexiona sobre las decisiones de diseño y su impacto en el rendimiento.",
+                    f"Proyecto integrador: diseña una solución que use los conceptos de {topic.lower()}.",
+                    "Reflexiona sobre lo aprendido y cómo conecta con el resto del curso.",
                 ],
             },
         ]
 
     def _generate_introduction(self, topic: str, concepts: list[str]) -> str:
-        concept_list = ", ".join(self._concepts_to_strings(concepts[:3])) if concepts else topic.lower()
-        concept_list = concept_list or topic.lower()
+        concept_list = ", ".join(self._concepts_to_strings(concepts[:3])) if concepts else ""
+        if concept_list:
+            return (
+                f"Bienvenido al módulo de **{topic}**. "
+                f"A lo largo de este módulo explorarás conceptos como {concept_list}, "
+                f"desarrollarás habilidades prácticas y comprenderás cómo aplicar este conocimiento "
+                f"en situaciones reales. Prepárate para construir una base sólida en este tema."
+            )
         return (
-            f"Bienvenido al módulo de **{topic}**. Este tema es fundamental en la programación "
-            f"porque te permite organizar y manipular datos de manera eficiente. "
-            f"A lo largo de este módulo, explorarás conceptos como {concept_list}, "
-            f"desarrollarás habilidades prácticas para implementar soluciones, "
-            f"y comprenderás cómo aplicar estos conocimientos en problemas reales de ingeniería. "
-            f"Prepárate para construir una base sólida que te acompañará en tu desarrollo profesional."
+            f"Bienvenido al módulo de **{topic}**. "
+            f"Este módulo te introduce a los conceptos fundamentales de {topic.lower()}, "
+            f"con el objetivo de que puedas comprenderlos, aplicarlos y analizarlos "
+            f"en contextos académicos y profesionales. "
+            f"Sigue el recorrido paso a paso para consolidar tu aprendizaje."
         )
 
     def _concepts_to_strings(self, raw: list) -> list[str]:
@@ -519,93 +533,102 @@ class ModuleOrchestrationService:
 
     def _generate_explanation(self, topic: str, concepts: list[str], bloom_target: int) -> str:
         concept_strings = self._concepts_to_strings(concepts[:4]) if concepts else []
-        concept_detail = ". ".join(
-            f"{c}: aspecto clave para dominar {topic.lower()}" for c in concept_strings
-        ) if concept_strings else (
-            f"{topic} son una estructura de datos que permite almacenar "
-            f"múltiples valores relacionados bajo un mismo nombre."
-        )
+        bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
+        if concept_strings:
+            concept_detail = ". ".join(
+                f"{c}: aspecto clave de {topic.lower()}" for c in concept_strings
+            )
+            return (
+                f"**{topic}** abarca un conjunto de conceptos y principios fundamentales "
+                f"dentro de esta área de estudio. {concept_detail}. "
+                f"A nivel Bloom {bloom_target} ({bloom_label}), "
+                f"podrás no solo comprender sino también aplicar y analizar "
+                f"estos conceptos en situaciones concretas."
+            )
         return (
-            f"**{topic}** son una estructura de datos fundamental que permite almacenar "
-            f"múltiples elementos del mismo tipo en posiciones contiguas de memoria. "
-            f"{concept_detail}. "
-            f"Dominarás la declaración, inicialización, recorrido, y operaciones comunes. "
-            f"A nivel Bloom {bloom_target} ({BLOOM_LABELS.get(bloom_target, 'Aplicar')}), "
-            f"podrás no solo comprender sino también aplicar y analizar "
-            f"soluciones que utilicen esta estructura de manera óptima."
+            f"**{topic}** es un tema central dentro de este curso. "
+            f"Comprender {topic.lower()} implica conocer sus principios fundamentales, "
+            f"identificar sus usos en la práctica y ser capaz de aplicarlos con criterio. "
+            f"A nivel Bloom {bloom_target} ({bloom_label}), "
+            f"el objetivo es que puedas no solo reconocer los conceptos "
+            f"sino también utilizarlos para resolver problemas reales."
         )
 
     def _build_misconceptions(
         self, raw: list[dict[str, Any]], topic: str
     ) -> list[dict[str, str]]:
-        if raw and len(raw) >= 2:
-            return [
+        if raw:
+            built = [
                 {
                     "misconception": str(item.get("misconception") or f"Error conceptual sobre {topic.lower()}"),
-                    "correction": str(item.get("correction") or "La forma correcta de entenderlo es..."),
+                    "correction": str(item.get("correction") or "La comprensión correcta requiere revisar las fuentes del módulo."),
                     "severity": str(item.get("severity") or "medium"),
                 }
                 for item in raw[:4]
                 if isinstance(item, dict)
             ]
+            if built:
+                logger.debug("_build_misconceptions: %d items from research for topic=%r", len(built), topic[:40])
+                return built
+        logger.debug("_build_misconceptions: using generic fallback for topic=%r", topic[:40])
         return [
             {
-                "misconception": f"Creer que {topic.lower()} solo sirve para datos simples",
-                "correction": f"{topic} pueden almacenar cualquier tipo de dato y son la base de estructuras más complejas",
-                "severity": "high",
+                "misconception": f"Creer que {topic.lower()} no tiene aplicaciones prácticas relevantes",
+                "correction": f"{topic} tiene aplicaciones en múltiples contextos académicos y profesionales que vale la pena explorar.",
+                "severity": "medium",
             },
             {
-                "misconception": f"Confundir el índice con el valor almacenado",
-                "correction": "El índice es la posición (0-based), el valor es el dato en esa posición",
-                "severity": "high",
-            },
-            {
-                "misconception": "Pensar que el tamaño es dinámico sin costo",
-                "correction": "En muchos lenguajes, los arreglos tienen tamaño fijo; para dinamismo se usan listas",
+                "misconception": f"Pensar que dominar {topic.lower()} requiere memorizarlo todo",
+                "correction": "La comprensión profunda viene de relacionar conceptos y aplicarlos, no de memorizar definiciones.",
                 "severity": "medium",
             },
         ]
 
     def _build_examples(self, raw: list, topic: str, bloom_target: int) -> list[str]:
         safe = self._concepts_to_strings(raw)
-        if safe and len(safe) >= 2:
+        if safe:
+            logger.debug("_build_examples: %d items from research for topic=%r", len(safe), topic[:40])
             return safe[:5]
+        logger.debug("_build_examples: using generic fallback for topic=%r", topic[:40])
         return [
-            f"Ejemplo 1 (Recordar): Declara un {topic.lower()} de 5 enteros e imprime cada elemento.",
-            f"Ejemplo 2 (Comprender): Explica qué hace el siguiente código que recorre un {topic.lower()}.",
-            f"Ejemplo 3 (Aplicar): Escribe una función que busque el valor máximo en un {topic.lower()}.",
-            f"Ejemplo 4 (Analizar): Compara el rendimiento de búsqueda en {topic.lower()} ordenado vs no ordenado.",
-            f"Ejemplo 5 (Evaluar): Dado un problema, determina si {topic.lower()} es la estructura adecuada.",
+            f"Ejemplo introductorio: identifica los conceptos básicos de {topic.lower()} en un caso concreto.",
+            f"Ejemplo de comprensión: explica con tus palabras cómo se relacionan los elementos de {topic.lower()}.",
+            f"Ejemplo de aplicación: resuelve un problema sencillo usando los principios de {topic.lower()}.",
+            f"Ejemplo de análisis: compara dos enfoques diferentes para abordar {topic.lower()} y justifica cuál es mejor.",
+            f"Ejemplo de evaluación: dado un escenario real, determina cómo aplicar {topic.lower()} de manera óptima.",
         ]
 
     def _build_real_applications(self, raw: list, topic: str) -> list[str]:
         safe = self._concepts_to_strings(raw)
-        if safe and len(safe) >= 2:
+        if safe:
+            logger.debug("_build_real_applications: %d items from research for topic=%r", len(safe), topic[:40])
             return safe[:4]
+        logger.debug("_build_real_applications: using generic fallback for topic=%r", topic[:40])
         return [
-            f"Procesamiento de imágenes: las imágenes digitales son {topic.lower()} bidimensionales de píxeles",
-            f"Sistemas de notas: almacenar calificaciones de estudiantes en un {topic.lower()} para calcular promedios",
-            f"Colas de procesos: el sistema operativo usa {topic.lower()} para gestionar procesos en memoria",
-            f"Gráficos por computadora: las coordenadas de vértices se almacenan en {topic.lower()} para renderizado",
+            f"{topic} se aplica en entornos profesionales para resolver problemas concretos del área.",
+            f"En investigación y academia, {topic.lower()} es base de múltiples metodologías de análisis.",
+            f"El conocimiento de {topic.lower()} facilita la toma de decisiones informadas en proyectos reales.",
+            f"Profesionales de diversas industrias utilizan {topic.lower()} como herramienta de trabajo cotidiana.",
         ]
 
     def _generate_guided_practice(self, topic: str, bloom_target: int) -> str:
+        bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
         return (
             f"**Práctica guiada: Explorando {topic}**\n\n"
-            f"**Objetivo:** Aplicar los conceptos de {topic.lower()} en un ejercicio práctico.\n\n"
+            f"**Objetivo:** Consolidar la comprensión de {topic.lower()} mediante un ejercicio práctico "
+            f"orientado al nivel Bloom {bloom_target} ({bloom_label}).\n\n"
             f"**Instrucciones:**\n"
-            f"1. Declara un {topic.lower()} con 10 elementos del tipo de tu elección.\n"
-            f"2. Inicializa los elementos con valores de entrada del usuario.\n"
-            f"3. Implementa una función que recorra el {topic.lower()} y calcule:\n"
-            f"   a) La suma total de elementos\n"
-            f"   b) El valor promedio\n"
-            f"   c) El valor máximo y mínimo\n"
-            f"4. Modifica el programa para que ordene el {topic.lower()} usando un algoritmo simple.\n"
-            f"5. **Desafío:** Implementa una búsqueda binaria si el {topic.lower()} está ordenado.\n\n"
+            f"1. Revisa los conceptos clave de {topic.lower()} vistos en el módulo.\n"
+            f"2. Identifica al menos dos situaciones reales donde aplicarías lo aprendido.\n"
+            f"3. Resuelve el siguiente ejercicio: dado un escenario del área de {topic.lower()}, "
+            f"analiza el problema, propón una solución y justifica tu razonamiento.\n"
+            f"4. Compara tu solución con un enfoque alternativo y señala ventajas y limitaciones.\n"
+            f"5. **Desafío:** Diseña un mini-proyecto que integre los conceptos de {topic.lower()} "
+            f"con otros temas del curso.\n\n"
             f"**Preguntas de reflexión:**\n"
-            f"- ¿Qué complejidad temporal tiene cada operación?\n"
-            f"- ¿Cómo cambiaría tu solución si el {topic.lower()} fuera de tamaño dinámico?\n"
-            f"- ¿Qué ventajas tiene {topic.lower()} frente a otras estructuras de datos?"
+            f"- ¿Qué aspectos de {topic.lower()} te resultaron más difíciles de comprender?\n"
+            f"- ¿Cómo conectas lo aprendido sobre {topic.lower()} con otros temas del curso?\n"
+            f"- ¿En qué situaciones cotidianas o profesionales podrías encontrar {topic.lower()}?"
         )
 
     def _build_multimodal_prompts(
@@ -681,27 +704,77 @@ class ModuleOrchestrationService:
         return (
             f"**Notas de continuidad pedagógica**\n\n"
             f"Este módulo de **{topic}** forma parte del curso **{course.name}**. "
-            f"Se conecta con módulos anteriores al requerir conceptos de variables y tipos de datos, "
-            f"y sienta las bases para módulos posteriores sobre estructuras de datos más complejas "
-            f"(listas enlazadas, pilas, colas, árboles).\n\n"
-            f"**Prerrequisitos:**\n"
-            f"- Variables y tipos de datos básicos\n"
-            f"- Estructuras de control (if, for, while)\n"
-            f"- Funciones básicas\n\n"
-            f"**Conexión futura:**\n"
-            f"- Los {topic.lower()} son la base para comprender la gestión de memoria\n"
-            f"- Preparan el terreno para estructuras dinámicas y TADs\n"
-            f"- Son esenciales para algoritmos de ordenamiento y búsqueda avanzados"
+            f"Se conecta con los módulos anteriores del curso y sienta las bases "
+            f"para los temas que se abordarán más adelante.\n\n"
+            f"**Para aprovechar mejor este módulo:**\n"
+            f"- Repasa los conceptos fundamentales vistos en módulos previos del curso.\n"
+            f"- Identifica cómo {topic.lower()} se relaciona con lo que ya has aprendido.\n"
+            f"- Toma nota de los términos nuevos para consultarlos durante el módulo.\n\n"
+            f"**Conexión con módulos futuros:**\n"
+            f"- Los conceptos de {topic.lower()} serán base para temas más avanzados del curso.\n"
+            f"- Mantén tus apuntes organizados; los necesitarás en actividades integradoras.\n"
+            f"- Consulta con tu docente si algún concepto no queda claro antes de avanzar."
         )
+
+    # Tokens that only make sense in a data-structures / programming context.
+    # We check for these when the topic does NOT look like a programming course.
+    _PROGRAMMING_TOPIC_SIGNALS = frozenset(["arreglo", "array", "lista", "pila", "cola", "árbol", "grafo", "hash", "struct", "clase", "objeto", "algoritmo", "programaci"])
+    _FORBIDDEN_IN_NON_CS = [
+        "estructura de datos",
+        "búsqueda binaria",
+        "busqueda binaria",
+        "lista enlazada",
+        "posición de memoria",
+        "posicion de memoria",
+        "arreglo",
+        "indice es la posición",
+    ]
+
+    def _validate_generated_content(
+        self, topic: str, introduction: str, explanation: str, orch_id: str
+    ) -> bool:
+        topic_lower = topic.lower()
+        is_programming_topic = any(sig in topic_lower for sig in self._PROGRAMMING_TOPIC_SIGNALS)
+
+        intro_lower = introduction.lower()
+        expl_lower  = explanation.lower()
+
+        # 1. topic must appear in both texts
+        if topic_lower[:15] not in intro_lower:
+            logger.warning(
+                "orchestrate[%s]: semantic_validation FAIL — topic %r absent from introduction",
+                orch_id, topic[:40],
+            )
+            return False
+        if topic_lower[:15] not in expl_lower:
+            logger.warning(
+                "orchestrate[%s]: semantic_validation FAIL — topic %r absent from explanation",
+                orch_id, topic[:40],
+            )
+            return False
+
+        # 2. for non-CS topics, forbidden CS tokens must not appear
+        if not is_programming_topic:
+            for token in self._FORBIDDEN_IN_NON_CS:
+                if token in intro_lower or token in expl_lower:
+                    logger.warning(
+                        "orchestrate[%s]: semantic_validation FAIL — forbidden token %r found "
+                        "in content for non-CS topic %r",
+                        orch_id, token, topic[:40],
+                    )
+                    return False
+
+        logger.debug("orchestrate[%s]: semantic_validation OK for topic=%r", orch_id, topic[:40])
+        return True
 
     def _build_bloom_progression(self, topic: str) -> list[dict[str, Any]]:
         return [
             {"level": 1, "label": "Recordar", "description": f"Identificar y definir {topic.lower()}", "mastered": False},
-            {"level": 2, "label": "Comprender", "description": f"Explicar cómo funcionan {topic.lower()}", "mastered": False},
-            {"level": 3, "label": "Aplicar", "description": f"Implementar programas que usen {topic.lower()}", "mastered": False},
-            {"level": 4, "label": "Analizar", "description": f"Comparar eficiencia y casos de uso de {topic.lower()}", "mastered": False},
-            {"level": 5, "label": "Evaluar", "description": "Seleccionar la mejor estructura para un problema dado", "mastered": False},
-            {"level": 6, "label": "Crear", "description": f"Diseñar soluciones novedosas usando {topic.lower()}", "mastered": False},
+            {"level": 2, "label": "Comprender", "description": f"Explicar los principios de {topic.lower()}", "mastered": False},
+            {"level": 3, "label": "Aplicar", "description": f"Usar {topic.lower()} para resolver casos concretos", "mastered": False},
+            {"level": 4, "label": "Analizar", "description": f"Comparar enfoques y analizar implicaciones de {topic.lower()}", "mastered": False},
+            {"level": 5, "label": "Evaluar", "description": f"Evaluar soluciones basadas en {topic.lower()} con criterio fundamentado", "mastered": False},
+            {"level": 6, "label": "Crear", "description": f"Diseñar propuestas originales integrando {topic.lower()}", "mastered": False},
         ]
 
     def _build_retrieval_evidence(self, research: dict[str, Any]) -> dict[str, Any]:
