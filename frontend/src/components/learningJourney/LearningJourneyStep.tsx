@@ -7,12 +7,21 @@ import { DidYouKnowInlineCard }     from '@/components/module/DidYouKnowInlineCa
 import { ExampleCard }              from '@/components/module/ExampleCard'
 import { PracticalApplicationCard } from '@/components/module/PracticalApplicationCard'
 import { ReflectionCheckpoint }     from '@/components/module/ReflectionCheckpoint'
-import { STEP_LABELS, STEP_COLORS } from './JourneyProgress'
+import { MicroQuestionCard }        from '@/components/module/MicroQuestionCard'
+import { PredictionCard }           from '@/components/module/PredictionCard'
+import { CuriosityCard }            from '@/components/module/CuriosityCard'
+import { AnalogyCard }              from '@/components/module/AnalogyCard'
+import { MiniActivityCard }         from '@/components/module/MiniActivityCard'
+import { STEP_LABELS, STEP_COLORS } from './journeyStepConfig'
 import type {
   LearningJourneyStep  as StepData,
   EvaluationMeta,
   ChallengeMeta,
-  LearningJourneyStepType,
+  MicroQuestionMeta,
+  PredictionMeta,
+  CuriosityMeta,
+  AnalogyMeta,
+  MiniActivityMeta,
 } from '@/types/learningJourney'
 
 // ── Shared sub-renderer props ─────────────────────────────────────────────────
@@ -533,12 +542,69 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
     case 'evaluation':
       return <EvaluationStep step={step} onComplete={handleComplete} />
 
-    // ── Sprint L3 — placeholders (real cards arrive in L5) ─────────────────
-    case 'micro_question':
-    case 'prediction':
-    case 'mini_activity':
-    case 'curiosity':
-    case 'analogy':
+    // ── Sprint L5 — real interactive cards ────────────────────────────────
+    case 'micro_question': {
+      const meta = step.metadata as MicroQuestionMeta | undefined
+      return (
+        <MicroQuestionCard
+          question={meta?.question ?? step.title ?? step.content ?? '¿Tienes alguna pregunta sobre esto?'}
+          options={meta?.options ?? ['Sí', 'No', 'A medias']}
+          correct={meta?.correct}
+          feedback={meta?.feedback}
+          onComplete={handleComplete}
+        />
+      )
+    }
+
+    case 'prediction': {
+      const meta = step.metadata as PredictionMeta | undefined
+      return (
+        <PredictionCard
+          question={meta?.question ?? step.title ?? '¿Qué crees que sucede?'}
+          reveal={meta?.reveal ?? step.content ?? ''}
+          hint={meta?.hint}
+          onComplete={handleComplete}
+        />
+      )
+    }
+
+    case 'curiosity': {
+      const meta = step.metadata as CuriosityMeta | undefined
+      return (
+        <CuriosityCard
+          fact={meta?.fact ?? step.content ?? step.title ?? ''}
+          source={meta?.source}
+          stat={meta?.stat}
+          onComplete={handleComplete}
+        />
+      )
+    }
+
+    case 'analogy': {
+      const meta = step.metadata as AnalogyMeta | undefined
+      return (
+        <AnalogyCard
+          source={meta?.source ?? ''}
+          target={meta?.target ?? step.title ?? ''}
+          explanation={meta?.explanation ?? step.content ?? ''}
+          image_hint={meta?.image_hint}
+          onComplete={handleComplete}
+        />
+      )
+    }
+
+    case 'mini_activity': {
+      const meta = step.metadata as MiniActivityMeta | undefined
+      return (
+        <MiniActivityCard
+          instructions={meta?.instructions ?? step.content ?? step.title ?? ''}
+          steps={meta?.steps ?? []}
+          onComplete={handleComplete}
+        />
+      )
+    }
+
+    // ── Sprint L6 — still placeholder ─────────────────────────────────────
     case 'media_prompt':
       return <CardPlaceholder step={step} onComplete={handleComplete} />
 
