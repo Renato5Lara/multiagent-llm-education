@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 from app.integrations.tavily.cache import TavilyCache
 from app.integrations.tavily.client import TavilyClient
