@@ -11,6 +11,14 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import type { ModuleOrchestrationResponse, PedagogicalStage, MisconceptionItem, MultimodalPrompt } from '@/types/pedagogy'
+import { ConceptCard }             from '@/components/module/ConceptCard'
+import { DidYouKnowInlineCard }    from '@/components/module/DidYouKnowInlineCard'
+import { CommonMistakeCard }       from '@/components/module/CommonMistakeCard'
+import { ExampleCard }             from '@/components/module/ExampleCard'
+import { PracticalApplicationCard } from '@/components/module/PracticalApplicationCard'
+import { AgentTipCard }            from '@/components/module/AgentTipCard'
+import { ReflectionCheckpoint }    from '@/components/module/ReflectionCheckpoint'
+import { LearningActivityXP }      from '@/components/module/LearningActivityXP'
 
 interface Props {
   data: ModuleOrchestrationResponse
@@ -293,7 +301,20 @@ function RetrievalEvidencePanel({ evidence }: { evidence: ModuleOrchestrationRes
   )
 }
 
+function splitParagraphs(text: string): string[] {
+  return text.split(/\n\n+/).map(p => p.trim()).filter(Boolean)
+}
+
 export default function StudentWeeklyLearningView({ data, onBack, onComplete }: Props) {
+  const [moduleXp, setModuleXp] = useState(0)
+  const [xpFlash, setXpFlash]  = useState<{ amount: number; key: number } | null>(null)
+
+  function addXp(amount: number) {
+    setModuleXp(prev => prev + amount)
+    setXpFlash({ amount, key: Date.now() })
+    setTimeout(() => setXpFlash(null), 2200)
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -316,115 +337,149 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
         </TabsList>
 
         <TabsContent value="contenido" className="mt-4 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BookOpen className="h-5 w-5 text-primary" /> Introducción
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {data.introduction}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Sprint I3 — XP del módulo (aparece al primer +XP) */}
+          <LearningActivityXP total={moduleXp} flash={xpFlash} />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Lightbulb className="h-5 w-5 text-amber-500" /> Explicación Pedagógica
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {data.pedagogical_explanation}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Introducción */}
+          <section className="space-y-2">
+            <div className="flex items-center gap-2 pb-1">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Introducción</h2>
+            </div>
+            <div className="space-y-2">
+              {splitParagraphs(data.introduction).map((paragraph, i) => (
+                <ConceptCard
+                  key={i}
+                  index={i + 1}
+                  content={paragraph}
+                  onRead={() => addXp(2)}
+                />
+              ))}
+            </div>
+          </section>
 
+          {/* Checkpoint 1 */}
+          <ReflectionCheckpoint
+            question="¿La introducción te dio el contexto que necesitabas?"
+            onResponse={(level) => { if (level === 'clear') addXp(5) }}
+          />
+
+          {/* Conceptos clave */}
+          <section className="space-y-2">
+            <div className="flex items-center gap-2 pb-1">
+              <Lightbulb className="h-5 w-5 text-amber-500" />
+              <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Conceptos Clave</h2>
+            </div>
+            <div className="space-y-2">
+              {splitParagraphs(data.pedagogical_explanation).flatMap((paragraph, i) => {
+                const cards = [
+                  <ConceptCard
+                    key={`concept-${i}`}
+                    index={i + 1}
+                    content={paragraph}
+                    onRead={() => addXp(2)}
+                  />,
+                ]
+                if (i === 1 && data.real_applications.length > 0) {
+                  cards.push(
+                    <DidYouKnowInlineCard
+                      key="diyk"
+                      content={data.real_applications[0]}
+                    />,
+                  )
+                }
+                return cards
+              })}
+            </div>
+          </section>
+
+          {/* Errores comunes */}
           {data.misconceptions.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <AlertTriangle className="h-5 w-5 text-amber-500" /> Errores Comunes
-                </CardTitle>
-                <CardDescription>Conceptos erróneos frecuentes y su corrección pedagógica</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <MisconceptionCards items={data.misconceptions} />
-              </CardContent>
-            </Card>
+            <section className="space-y-2">
+              <div className="flex items-center gap-2 pb-1">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Errores Comunes</h2>
+                <span className="text-xs text-muted-foreground">— descúbrelos antes de caer en ellos</span>
+              </div>
+              <div className="space-y-3">
+                {data.misconceptions.map((item, i) => (
+                  <CommonMistakeCard
+                    key={i}
+                    index={i + 1}
+                    misconception={item.misconception}
+                    correction={item.correction}
+                    severity={item.severity}
+                    onReveal={() => addXp(2)}
+                  />
+                ))}
+              </div>
+            </section>
           )}
 
+          {/* Ejemplos progresivos */}
           {data.examples.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Target className="h-5 w-5 text-blue-500" /> Ejemplos Progresivos
-                </CardTitle>
-                <CardDescription>De menor a mayor complejidad según taxonomía Bloom</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {data.examples.map((ex, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">
-                        {i + 1}
-                      </div>
-                      <p className="text-sm text-gray-700 leading-relaxed">{ex}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <section className="space-y-2">
+              <div className="flex items-center gap-2 pb-1">
+                <Target className="h-5 w-5 text-blue-500" />
+                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Ejemplos Progresivos</h2>
+                <span className="text-xs text-muted-foreground">— de menor a mayor complejidad</span>
+              </div>
+              <div className="space-y-2">
+                {data.examples.map((ex, i) => (
+                  <ExampleCard
+                    key={i}
+                    index={i}
+                    content={ex}
+                    onExplore={() => addXp(3)}
+                  />
+                ))}
+              </div>
+            </section>
           )}
 
+          {/* Checkpoint 2 */}
+          <ReflectionCheckpoint
+            question="¿Los ejemplos te ayudaron a entender el concepto?"
+            onResponse={(level) => { if (level === 'clear') addXp(5) }}
+          />
+
+          {/* Aplicaciones reales */}
           {data.real_applications.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Share2 className="h-5 w-5 text-green-500" /> Aplicaciones Reales
-                </CardTitle>
-                <CardDescription>Conexión del contenido con problemas del mundo real</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {data.real_applications.map((app, i) => (
-                    <div key={i} className="flex items-start gap-2 p-3 bg-green-50 rounded-lg border border-green-100">
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-gray-700">{app}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <section className="space-y-2">
+              <div className="flex items-center gap-2 pb-1">
+                <Share2 className="h-5 w-5 text-emerald-500" />
+                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">¿Dónde se usa esto?</h2>
+              </div>
+              <PracticalApplicationCard
+                items={data.real_applications}
+                onSave={() => addXp(2)}
+              />
+            </section>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Brain className="h-5 w-5 text-purple-500" /> Práctica Guiada
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {data.guided_practice}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Práctica guiada */}
+          <AgentTipCard
+            icon="🧠"
+            title="Práctica Guiada"
+            content={data.guided_practice}
+            variant="guide"
+          />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <BookMarked className="h-5 w-5 text-indigo-500" /> Notas de Continuidad
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
-                {data.continuity_notes}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Checkpoint 3 */}
+          <ReflectionCheckpoint
+            question="¿Estás listo para avanzar al siguiente módulo?"
+            onResponse={(level) => { if (level === 'clear') addXp(5) }}
+          />
+
+          {/* Notas de continuidad */}
+          {data.continuity_notes && (
+            <AgentTipCard
+              icon="🔗"
+              title="Para la próxima sesión"
+              content={data.continuity_notes}
+              variant="continuity"
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="etapas" className="mt-4 space-y-4">
