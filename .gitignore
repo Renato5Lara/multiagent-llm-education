@@ -16,8 +16,8 @@ build/
 *.manifest
 *.spec
 .Python
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
