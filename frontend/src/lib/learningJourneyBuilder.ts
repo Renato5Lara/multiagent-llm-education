@@ -8,32 +8,65 @@ import type {
 } from '@/types/engagement'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 
+// ── Knowledge level (written by PriorKnowledgeCard during Engage) ─────────────
+
+type KnowledgeLevel = 'never_seen' | 'heard_about_it' | 'know_a_bit' | 'know_well'
+
+function readKnowledgeLevel(sessionId: string): KnowledgeLevel | null {
+  try {
+    const v = sessionStorage.getItem(`engage:knowledge_level:${sessionId}`)
+    if (v === 'never_seen' || v === 'heard_about_it' || v === 'know_a_bit' || v === 'know_well') return v
+    return null
+  } catch {
+    return null
+  }
+}
+
+// ── Depth configuration — how much content to include per level ───────────────
+
+interface DepthConfig {
+  maxIntroParagraphs:       number  // Infinity = all
+  maxExplanationParagraphs: number  // Infinity = all
+  maxExamples:              number  // Infinity = all
+  maxMisconceptions:        number  // Infinity = all
+  earlyChallenge:           boolean // true = challenge appears before full explanation
+}
+
+function getDepthConfig(level: KnowledgeLevel | null): DepthConfig {
+  switch (level) {
+    case 'never_seen':
+    case 'heard_about_it':
+      // Beginners: full depth, challenge after explanation
+      return { maxIntroParagraphs: Infinity, maxExplanationParagraphs: Infinity, maxExamples: Infinity, maxMisconceptions: Infinity, earlyChallenge: false }
+    case 'know_a_bit':
+      // Intermediate: trim intro, keep full explanation + examples
+      return { maxIntroParagraphs: 1, maxExplanationParagraphs: 4, maxExamples: Infinity, maxMisconceptions: 2, earlyChallenge: false }
+    case 'know_well':
+      // Advanced: concise intro + explanation, challenge surfaced early
+      return { maxIntroParagraphs: 1, maxExplanationParagraphs: 2, maxExamples: Infinity, maxMisconceptions: 1, earlyChallenge: true }
+    default:
+      return { maxIntroParagraphs: 2, maxExplanationParagraphs: Infinity, maxExamples: Infinity, maxMisconceptions: Infinity, earlyChallenge: false }
+  }
+}
+
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 function splitParagraphs(text: string): string[] {
   return text.split(/\n\n+/).map(p => p.trim()).filter(Boolean)
 }
 
+function cap<T>(arr: T[], max: number): T[] {
+  return max === Infinity ? arr : arr.slice(0, max)
+}
+
 function engageToStep(resource: EngagementResource): LearningJourneyStep {
   const base = {
     id:      resource.id,
-    title:   resource.title || undefined,
+    title:   resource.title   || undefined,
     content: resource.content || undefined,
   }
 
   switch (resource.resource_type) {
-    case 'did_you_know':
-      return { ...base, type: 'did_you_know', xpReward: 2 }
-
-    case 'prior_knowledge':
-      return { ...base, type: 'prior_knowledge', requiresAnswer: true, xpReward: 3 }
-
-    case 'detonating_question':
-      return { ...base, type: 'question', requiresAnswer: true, xpReward: 5 }
-
-    case 'real_news':
-      return { ...base, type: 'application', xpReward: 2, metadata: { items: [resource.content] } }
-
     case 'short_challenge': {
       const meta = resource.resource_metadata as ShortChallengeMetadata
       return {
@@ -41,13 +74,9 @@ function engageToStep(resource: EngagementResource): LearningJourneyStep {
         type:           'challenge',
         requiresAnswer: true,
         xpReward:       8,
-        metadata: {
-          prompt: meta?.prompt ?? resource.content,
-          hint:   meta?.hint,
-        },
+        metadata: { prompt: meta?.prompt ?? resource.content, hint: meta?.hint },
       }
     }
-
     case 'mini_quiz': {
       const meta = resource.resource_metadata as MiniQuizMetadata
       return {
@@ -62,7 +91,8 @@ function engageToStep(resource: EngagementResource): LearningJourneyStep {
         },
       }
     }
-
+    // did_you_know / prior_knowledge / detonating_question / real_news:
+    // never called — these types are not re-rendered in the journey.
     default:
       return { ...base, type: 'did_you_know' }
   }
@@ -71,22 +101,29 @@ function engageToStep(resource: EngagementResource): LearningJourneyStep {
 // ── Main builder ──────────────────────────────────────────────────────────────
 
 /**
- * Combines an EngagementSession and ModuleOrchestrationResponse into a single
- * interleaved LearningJourney. No backend changes required — pure frontend adapter.
+ * Builds a module-only LearningJourney from engagement session context and
+ * module content. Engage resources that already ran (did_you_know,
+ * prior_knowledge, detonating_question) are NOT included — only the
+ * post-engage module experience.
  *
- * Interleaving strategy (J2.5):
- *   1. Hook            — did_you_know, prior_knowledge
- *   2. Anchor concept  — intro[0] (seed for the detonating question)
- *   3. Question        — placed right after first concept, not after all content
- *   4. Content weave   — zip(remaining intro + explanation, examples): concept, example, concept, example…
- *   5. Challenge       — mid-journey application after explanation
- *   6. Mid-reflection  — first misconception (reality check before application)
- *   7. Application     — real_news (engage) + real_applications (module)
- *   8. End reflections — remaining misconceptions
- *   9. Evaluation      — mini_quiz
+ * Only two engage resources survive into the journey:
+ *   - short_challenge → challenge   (applied practice, spaced from engage)
+ *   - mini_quiz       → evaluation  (culminating assessment after module)
  *
- * This prevents the "6 engage cards → 20 concept cards" block feeling by keeping
- * engage anchors distributed throughout the sequence.
+ * Personalization uses the knowledge_level stored in sessionStorage by
+ * PriorKnowledgeCard during the Engage phase:
+ *   never_seen / heard_about_it → full depth, challenge after explanation
+ *   know_a_bit                  → trimmed intro, challenge after explanation
+ *   know_well                   → concise, challenge surfaced early
+ *
+ * Step order:
+ *   [early challenge — advanced only]
+ *   zip(concepts, examples)
+ *   challenge — beginners/intermediate
+ *   mid-reflection (first misconception)
+ *   application
+ *   end reflections (remaining misconceptions)
+ *   evaluation
  */
 export function buildJourneyFromLegacy(
   engagementSession: EngagementSession,
@@ -94,49 +131,47 @@ export function buildJourneyFromLegacy(
 ): LearningJourney {
   const steps: LearningJourneyStep[] = []
 
-  // Index engage resources by type (first occurrence wins, sorted by display_order)
+  // ── Engage resource index ──────────────────────────────────────────────────
   const sorted = [...engagementSession.resources].sort((a, b) => a.display_order - b.display_order)
   const byType = new Map<EngagementResourceType, EngagementResource>()
   for (const r of sorted) {
     if (!byType.has(r.resource_type)) byType.set(r.resource_type, r)
   }
 
-  const push = (step: LearningJourneyStep | null | undefined) => {
-    if (step) steps.push(step)
-  }
+  const push = (step: LearningJourneyStep | null | undefined) => { if (step) steps.push(step) }
 
   const fromEngage = (type: EngagementResourceType): LearningJourneyStep | null => {
     const r = byType.get(type)
     return r ? engageToStep(r) : null
   }
 
-  // ── 1. Hook ───────────────────────────────────────────────────────────────
-  push(fromEngage('did_you_know'))
-  push(fromEngage('prior_knowledge'))
+  // ── Personalization ────────────────────────────────────────────────────────
+  const knowledgeLevel = readKnowledgeLevel(engagementSession.session_id)
+  const cfg            = getDepthConfig(knowledgeLevel)
 
-  // ── 2. Anchor concept (first intro paragraph seeds the question) ──────────
-  const introParagraphs       = splitParagraphs(moduleContent.introduction)
-  const explanationParagraphs = splitParagraphs(moduleContent.pedagogical_explanation)
+  // ── Content pools ──────────────────────────────────────────────────────────
+  const introParagraphs       = cap(splitParagraphs(moduleContent.introduction),          cfg.maxIntroParagraphs)
+  const explanationParagraphs = cap(splitParagraphs(moduleContent.pedagogical_explanation), cfg.maxExplanationParagraphs)
+  const examples              = cap(moduleContent.examples, cfg.maxExamples)
 
-  if (introParagraphs.length > 0) {
-    steps.push({ id: 'intro-concept-0', type: 'concept', content: introParagraphs[0], xpReward: 2 })
+  // Concept pool: all intro + all explanation paragraphs, in order
+  const conceptPool: Array<{ id: string; text: string }> = [
+    ...introParagraphs.map((text, i)       => ({ id: `intro-concept-${i}`, text })),
+    ...explanationParagraphs.map((text, i) => ({ id: `concept-${i}`,       text })),
+  ]
+
+  // ── Phase 1: Early challenge (advanced students — try before theory) ───────
+  if (cfg.earlyChallenge && conceptPool.length > 0) {
+    const first = conceptPool.shift()!
+    steps.push({ id: first.id, type: 'concept', content: first.text, xpReward: 2 })
+    push(fromEngage('short_challenge'))
   }
 
-  // ── 3. Detonating question (anchored right after first concept) ───────────
-  push(fromEngage('detonating_question'))
-
-  // ── 4. Content weave — zip remaining concepts with examples ───────────────
-  // Pool: remaining intro paragraphs + all explanation paragraphs
-  const remainingConcepts = [
-    ...introParagraphs.slice(1).map((text, i) => ({ id: `intro-concept-${i + 1}`, text })),
-    ...explanationParagraphs.map((text, i)  => ({ id: `concept-${i}`,             text })),
-  ]
-  const examples   = moduleContent.examples
-  const phaseLen   = Math.max(remainingConcepts.length, examples.length)
-
+  // ── Phase 2: Zip remaining concepts with examples ─────────────────────────
+  const phaseLen = Math.max(conceptPool.length, examples.length)
   for (let i = 0; i < phaseLen; i++) {
-    if (i < remainingConcepts.length) {
-      const { id, text } = remainingConcepts[i]
+    if (i < conceptPool.length) {
+      const { id, text } = conceptPool[i]
       steps.push({ id, type: 'concept', content: text, xpReward: 2 })
     }
     if (i < examples.length) {
@@ -144,15 +179,15 @@ export function buildJourneyFromLegacy(
     }
   }
 
-  // ── 5. Challenge (mid-journey: apply before seeing applications) ──────────
-  push(fromEngage('short_challenge'))
+  // ── Phase 3: Challenge — beginner/intermediate path ────────────────────────
+  if (!cfg.earlyChallenge) {
+    push(fromEngage('short_challenge'))
+  }
 
-  // ── 6. Mid-reflection (first misconception as a reality check) ────────────
-  // Only inserted as a mid-step when there are 2+ misconceptions; otherwise
-  // the single misconception goes to end reflections together with evaluation.
-  const misconceptions = moduleContent.misconceptions
-  const midMisconception   = misconceptions.length > 1 ? misconceptions[0]    : null
-  const endMisconceptions  = midMisconception            ? misconceptions.slice(1) : misconceptions
+  // ── Phase 4: Mid-reflection (first misconception — reality check) ──────────
+  const misconceptions    = cap(moduleContent.misconceptions, cfg.maxMisconceptions)
+  const midMisconception  = misconceptions.length > 1 ? misconceptions[0]       : null
+  const endMisconceptions = midMisconception           ? misconceptions.slice(1) : misconceptions
 
   if (midMisconception) {
     steps.push({
@@ -165,7 +200,7 @@ export function buildJourneyFromLegacy(
     })
   }
 
-  // ── 7. Application — merge real_news (engage) + real_applications (module) ─
+  // ── Phase 5: Application — real_news (engage context) + module applications ─
   const realNewsResource = byType.get('real_news')
   const applicationItems: string[] = [
     ...(realNewsResource ? [realNewsResource.content] : []),
@@ -180,7 +215,7 @@ export function buildJourneyFromLegacy(
     })
   }
 
-  // ── 8. End reflections (remaining misconceptions) ─────────────────────────
+  // ── Phase 6: End reflections (remaining misconceptions) ───────────────────
   endMisconceptions.forEach((item, i) => {
     steps.push({
       id:       `reflection-${i}`,
@@ -192,7 +227,7 @@ export function buildJourneyFromLegacy(
     })
   })
 
-  // ── 9. Evaluation ─────────────────────────────────────────────────────────
+  // ── Phase 7: Evaluation — spaced from engage, now after full module ────────
   push(fromEngage('mini_quiz'))
 
   return {

@@ -68,7 +68,7 @@ export default function ModuleLearningView() {
 
   const { mutate: orchestrateModule, isPending: isOrchestrating, isError: orchestrationFailed } = useModuleOrchestration()
   const updateModule = useUpdateModule()
-  const { data: engageSession } = useStartEngagement(moduleId)
+  const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(moduleId)
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
   const [phaseIndex, setPhaseIndex] = useState(0)
@@ -285,7 +285,11 @@ export default function ModuleLearningView() {
           </Button>
         )}
       </div>
-      {USE_LEARNING_JOURNEY && engageSession ? (
+      {/* Post-engage module journey: engage cards (did_you_know / prior_knowledge /
+          detonating_question) are NOT repeated here — they ran in EngageGateway above.
+          Falls back to legacy view only while the session query is still in flight
+          (rare: session is cached by the time orchestration completes). */}
+      {USE_LEARNING_JOURNEY && !isLoadingSession && engageSession ? (
         <LearningJourney
           journey={buildJourneyFromLegacy(engageSession, data)}
           onComplete={handleComplete}
