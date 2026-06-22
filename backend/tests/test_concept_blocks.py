@@ -119,16 +119,21 @@ class TestConceptBlockCount:
 class TestConceptBlockFields:
 
     def setup_method(self):
-        svc         = _make_service()
-        self.blocks = _run_blocks(
-            svc,
-            topic="Base de Datos",
-            concepts=CONCEPTS_BD,
-            examples_raw=["Ejemplo de tabla Clientes con id, nombre, email."],
-            misconceptions_raw=[],
-            bloom_target=3,
-            orch_id="test",
-        )
+        svc = _make_service()
+        # Force template path — these tests verify template field shapes,
+        # not LLM output.  Without the patch, a real OPENAI_API_KEY triggers
+        # the LLM path and assertion values change unpredictably.
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+            self.blocks = _run_blocks(
+                svc,
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD,
+                examples_raw=["Ejemplo de tabla Clientes con id, nombre, email."],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test",
+            )
 
     def test_all_blocks_have_id(self):
         for block in self.blocks:
@@ -234,16 +239,19 @@ class TestAnalogyDomainMatching:
         assert data is None
 
     def test_blocks_use_domain_analogy(self):
-        svc    = _make_service()
-        blocks = _run_blocks(
-            svc,
-            topic="Base de Datos",
-            concepts=CONCEPTS_BD,
-            examples_raw=[],
-            misconceptions_raw=[],
-            bloom_target=3,
-            orch_id="test",
-        )
+        # Template path must use _ANALOGY_DOMAINS table for "Base de Datos"
+        svc = _make_service()
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+            blocks = _run_blocks(
+                svc,
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD,
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test",
+            )
         for block in blocks:
             assert "biblioteca" in block["analogy"]["source"]
 
@@ -310,30 +318,34 @@ class TestMediaPromptKeywords:
         assert terms == ""
 
     def test_media_prompt_contains_concept_keywords(self):
-        svc    = _make_service()
-        blocks = _run_blocks(
-            svc,
-            topic="Base de Datos",
-            concepts=["El modelo relacional organiza tablas con índices primarios para búsquedas eficientes."],
-            examples_raw=[],
-            misconceptions_raw=[],
-            bloom_target=3,
-            orch_id="test",
-        )
+        svc = _make_service()
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+            blocks = _run_blocks(
+                svc,
+                topic="Base de Datos",
+                concepts=["El modelo relacional organiza tablas con índices primarios para búsquedas eficientes."],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test",
+            )
         prompt_text = blocks[0]["media_prompt"]["prompt"]
         assert any(kw in prompt_text for kw in ["modelo", "relacional", "tablas", "indices", "busquedas"])
 
     def test_media_prompt_type_rotates(self):
-        svc    = _make_service()
-        blocks = _run_blocks(
-            svc,
-            topic="Redes",
-            concepts=[f"Concepto {i} sobre protocolos de red y enrutamiento de paquetes." for i in range(3)],
-            examples_raw=[],
-            misconceptions_raw=[],
-            bloom_target=2,
-            orch_id="test",
-        )
+        svc = _make_service()
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+            blocks = _run_blocks(
+                svc,
+                topic="Redes",
+                concepts=[f"Concepto {i} sobre protocolos de red y enrutamiento de paquetes." for i in range(3)],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=2,
+                orch_id="test",
+            )
         types = {b["media_prompt"]["type"] for b in blocks}
         assert "image" in types
 
@@ -350,30 +362,34 @@ class TestGracefulDegradation:
         assert result["concept_blocks"] == []
 
     def test_single_concept_generates_one_block(self):
-        svc    = _make_service()
-        blocks = _run_blocks(
-            svc,
-            topic="Cálculo",
-            concepts=["La derivada mide la tasa de cambio instantáneo de una función."],
-            examples_raw=[],
-            misconceptions_raw=[],
-            bloom_target=3,
-            orch_id="test",
-        )
+        svc = _make_service()
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+            blocks = _run_blocks(
+                svc,
+                topic="Cálculo",
+                concepts=["La derivada mide la tasa de cambio instantáneo de una función."],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test",
+            )
         assert len(blocks) == 1
         assert blocks[0]["analogy"] is not None
 
     def test_no_crash_with_malformed_examples(self):
-        svc    = _make_service()
-        blocks = _run_blocks(
-            svc,
-            topic="Estadística",
-            concepts=CONCEPTS_BD[:2],
-            examples_raw=[None, {}, 42],
-            misconceptions_raw=[],
-            bloom_target=2,
-            orch_id="test",
-        )
+        svc = _make_service()
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+            blocks = _run_blocks(
+                svc,
+                topic="Estadística",
+                concepts=CONCEPTS_BD[:2],
+                examples_raw=[None, {}, 42],
+                misconceptions_raw=[],
+                bloom_target=2,
+                orch_id="test",
+            )
         assert len(blocks) == 2
 
 

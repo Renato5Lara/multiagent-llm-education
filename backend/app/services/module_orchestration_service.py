@@ -57,9 +57,11 @@ BLOOM_LABELS = {
 _ORCHESTRATE_TIMEOUT_S = 60.0
 # Timeout for the research-agent phase alone (Tavily + async gather).
 _RESEARCH_TIMEOUT_S = 28.0
-# Sprint M1: LLM timeout per concept block and max blocks to generate.
-# 3 blocks × 15 s max = 45 s worst case (still within _ORCHESTRATE_TIMEOUT_S=60).
-_CONCEPT_LLM_TIMEOUT_S = 15.0
+# Sprint M1: LLM timeout per block and max blocks.
+# Blocks are generated CONCURRENTLY (asyncio.gather), so total time ≈ single
+# block time (~8-10 s measured).  Outer asyncio.wait_for must exceed LLMConfig
+# timeout_seconds (30 s) to let the httpx error surface cleanly.
+_CONCEPT_LLM_TIMEOUT_S = 35.0
 MAX_CONCEPT_BLOCKS: int = 3
 
 # ── Sprint M1: LLM-based concept block enrichment ─────────────────────────────
@@ -1105,49 +1107,56 @@ class ModuleOrchestrationService:
                 api_key=settings.OPENAI_API_KEY or "",
                 temperature=0.4,
                 max_tokens=1500,
-                timeout_seconds=12.0,
+                timeout_seconds=30.0,  # Measured ~8s; 30s gives safe margin
                 max_retries=1,
                 budget_tokens_per_day=300_000,
             ))
 
+        title_low   = topic.lower()
+        bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
+
+        # ── Sprint M1: fire all LLM calls CONCURRENTLY ───────────────────────
+        # asyncio.gather makes 3 concurrent calls instead of sequential,
+        # reducing total LLM time from ~3×8s to ~8s.
+        # return_exceptions=True prevents one block failure from cancelling others.
+        if llm_svc:
+            llm_tasks = [
+                asyncio.wait_for(
+                    self._generate_concept_block_with_llm(
+                        llm_svc=llm_svc,
+                        topic=topic,
+                        bloom_target=bloom_target,
+                        bloom_label=bloom_label,
+                        concept_text=ct,
+                        context_snippets=context_snippets,
+                        block_idx=idx,
+                        orch_id=orch_id,
+                    ),
+                    timeout=_CONCEPT_LLM_TIMEOUT_S,
+                )
+                for idx, ct in enumerate(concept_strings)
+            ]
+            raw_results: list = await asyncio.gather(*llm_tasks, return_exceptions=True)
+        else:
+            raw_results = [None] * len(concept_strings)
+
         for i, concept_text in enumerate(concept_strings):
-            block_id    = f"block-{i}"
-            title       = self._concept_title(concept_text, topic, i)
-            title_low   = topic.lower()
-            bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
+            block_id = f"block-{i}"
+            title    = self._concept_title(concept_text, topic, i)
             learning_objective = (
                 f"Al finalizar este bloque podrás {bloom_label.lower()} "
                 f"los conceptos de {title_low} a nivel Bloom {bloom_target}."
             )
-            example = examples[i] if i < len(examples) else None
+            example  = examples[i] if i < len(examples) else None
 
-            # ── Sprint M1: try LLM enrichment ────────────────────────────────
-            llm_data: dict[str, Any] | None = None
-            if llm_svc:
-                try:
-                    llm_data = await asyncio.wait_for(
-                        self._generate_concept_block_with_llm(
-                            llm_svc=llm_svc,
-                            topic=topic,
-                            bloom_target=bloom_target,
-                            bloom_label=bloom_label,
-                            concept_text=concept_text,
-                            context_snippets=context_snippets,
-                            block_idx=i,
-                            orch_id=orch_id,
-                        ),
-                        timeout=_CONCEPT_LLM_TIMEOUT_S,
-                    )
-                except asyncio.TimeoutError:
-                    logger.warning(
-                        "orchestrate[%s]: LLM concept_block_%d timed out — template fallback",
-                        orch_id, i,
-                    )
-                except Exception as exc:
-                    logger.warning(
-                        "orchestrate[%s]: LLM concept_block_%d failed: %s — template fallback",
-                        orch_id, i, exc,
-                    )
+            raw = raw_results[i]
+            if isinstance(raw, Exception):
+                logger.warning(
+                    "orchestrate[%s]: LLM concept_block_%d failed: %s — template fallback",
+                    orch_id, i, raw,
+                )
+                raw = None
+            llm_data: dict[str, Any] | None = raw if isinstance(raw, dict) else None
 
             if llm_data:
                 # ── LLM path: use generated content, fill missing fields ──────
@@ -1198,8 +1207,8 @@ class ModuleOrchestrationService:
                     "curiosity":           curiosity,
                     "media_prompt":        self._template_media_prompt(topic, concept_text, i),
                     "mini_activity":       self._template_mini_activity(title, topic),
-                    "prediction_question": None,   # LLM-only field
-                    "reflection_question": None,   # LLM-only field
+                    "prediction_question": None,
+                    "reflection_question": None,
                     "reflection":          None,
                     "knowledge_check":     None,
                 }
