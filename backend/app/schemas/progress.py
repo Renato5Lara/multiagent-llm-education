@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from app.schemas.concept_block import ConceptBlock  # Sprint L1
+
 
 class PathModuleResponse(BaseModel):
     id: str
@@ -128,3 +130,5 @@ class ModuleOrchestrationResponse(BaseModel):
     confidence: float
     generated_at: str
     session_id: Optional[str] = None
+    # Sprint L1 — enriched per-concept blocks; empty list on legacy/degraded responses
+    concept_blocks: list[ConceptBlock] = []

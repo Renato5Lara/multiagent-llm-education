@@ -12,7 +12,7 @@ import type {
   EngagementSession,
   EngagementResourceType,
 } from '@/types/engagement'
-import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
+import type { ModuleOrchestrationResponse, ConceptBlock } from '@/types/pedagogy'
 
 // ── Knowledge level (written by PriorKnowledgeCard during Engage) ─────────────
 
@@ -420,24 +420,203 @@ function makeCuriosity(moduleTitle: string, curiosityIdx: number): LearningJourn
 // Prevents bloat in long modules without penalizing short ones.
 const MAX_INTERACTIVE_STEPS = 8
 
+// ── Sprint L1: ConceptBlock → LearningJourney ─────────────────────────────────
+
+/**
+ * Builds a LearningJourney from backend-generated ConceptBlocks.
+ * Each block contains pre-computed enrichment (analogy, curiosity, media_prompt,
+ * mini_activity) so this builder is a pure mapper — no domain heuristics here.
+ *
+ * The interactive step budget (MAX_INTERACTIVE_STEPS) still applies so that
+ * large modules don't produce overwhelming journeys.
+ */
+function buildJourneyFromConceptBlocks(
+  engagementSession: EngagementSession,
+  moduleContent:     ModuleOrchestrationResponse,
+): LearningJourney {
+  const steps: LearningJourneyStep[] = []
+  const { concept_blocks, module_title, module_id, course_id } = moduleContent
+  let interactiveUsed = 0
+
+  const tryPush = (step: LearningJourneyStep): void => {
+    if (interactiveUsed >= MAX_INTERACTIVE_STEPS) return
+    steps.push(step)
+    interactiveUsed++
+  }
+
+  // ── Phase 1: Concept blocks ───────────────────────────────────────────────
+  concept_blocks.forEach((block: ConceptBlock, i: number) => {
+    // Core concept step
+    steps.push({
+      id:       block.id,
+      type:     'concept',
+      title:    block.title,
+      content:  block.explanation,
+      xpReward: 2,
+    })
+
+    // Curiosity — passive, before positional step (every 2 blocks)
+    if ((i + 1) % 2 === 0 && block.curiosity) {
+      const meta: CuriosityMeta = {
+        fact:   block.curiosity.fact,
+        stat:   block.curiosity.stat,
+        source: block.curiosity.source,
+      }
+      tryPush({
+        id:       `cb-curiosity-${i}`,
+        type:     'curiosity',
+        xpReward: 2,
+        metadata: meta as unknown as Record<string, unknown>,
+      })
+    }
+
+    // Positional interactive step — round-robin per block index
+    switch (i % 3) {
+      case 0: {
+        // micro_question — generic reflection pause
+        const meta: MicroQuestionMeta = {
+          question: '¿Te imaginabas esto?',
+          options:  ['Sí, lo imaginaba', 'No, fue una sorpresa', 'Un poco'],
+          feedback: 'Reflexionar sobre lo que sabías antes de leer ayuda a consolidar el aprendizaje.',
+        }
+        tryPush({
+          id:             `cb-mq-${i}`,
+          type:           'micro_question',
+          title:          '¿Te imaginabas esto?',
+          xpReward:       2,
+          requiresAnswer: true,
+          metadata:       meta as unknown as Record<string, unknown>,
+        })
+        break
+      }
+      case 1: {
+        if (!block.analogy) break
+        const meta: AnalogyMeta = {
+          target:      module_title,
+          source:      block.analogy.source,
+          explanation: block.analogy.explanation,
+          image_hint:  block.analogy.image_hint,
+        }
+        tryPush({
+          id:       `cb-analogy-${i}`,
+          type:     'analogy',
+          xpReward: 2,
+          metadata: meta as unknown as Record<string, unknown>,
+        })
+        break
+      }
+      case 2: {
+        if (!block.media_prompt) break
+        const meta: MediaPromptMeta = {
+          type:             block.media_prompt.type,
+          title:            block.media_prompt.title,
+          prompt:           block.media_prompt.prompt,
+          learning_goal:    block.media_prompt.learning_goal,
+          duration_seconds: block.media_prompt.duration_seconds,
+        }
+        tryPush({
+          id:       `cb-media-${i}`,
+          type:     'media_prompt',
+          xpReward: 2,
+          metadata: meta as unknown as Record<string, unknown>,
+        })
+        break
+      }
+    }
+
+    // Example from block (if any)
+    if (block.example) {
+      steps.push({
+        id:       `cb-example-${i}`,
+        type:     'example',
+        content:  block.example,
+        xpReward: 3,
+      })
+      // Mini activity after each example
+      if (block.mini_activity) {
+        const meta: MiniActivityMeta = {
+          instructions: block.mini_activity.instructions,
+          steps:        block.mini_activity.steps,
+        }
+        tryPush({
+          id:             `cb-mini-${i}`,
+          type:           'mini_activity',
+          xpReward:       3,
+          requiresAnswer: true,
+          metadata:       meta as unknown as Record<string, unknown>,
+        })
+      }
+    }
+  })
+
+  // ── Phase 2: Application (with prediction gate) ───────────────────────────
+  const realNewsResource = engagementSession.resources
+    .find(r => r.resource_type === ('real_news' as EngagementResourceType))
+  const applicationItems: string[] = [
+    ...(realNewsResource ? [realNewsResource.content] : []),
+    ...moduleContent.real_applications,
+  ]
+  if (applicationItems.length > 0) {
+    const predMeta: PredictionMeta = {
+      question: `¿Qué crees que ocurrirá cuando ${module_title.toLowerCase()} se aplique en la práctica?`,
+      reveal:   applicationItems[0],
+      hint:     'Piensa en situaciones cotidianas donde esta idea podría marcar la diferencia.',
+    }
+    steps.push({
+      id:             'cb-prediction',
+      type:           'prediction',
+      xpReward:       3,
+      requiresAnswer: true,
+      metadata:       predMeta as unknown as Record<string, unknown>,
+    })
+    steps.push({
+      id:       'cb-application',
+      type:     'application',
+      xpReward: 2,
+      metadata: { items: applicationItems },
+    })
+  }
+
+  // ── Phase 3: Reflections ──────────────────────────────────────────────────
+  moduleContent.misconceptions.forEach((item, i) => {
+    steps.push({
+      id:       `cb-reflection-${i}`,
+      type:     'reflection',
+      title:    item.misconception,
+      content:  item.correction,
+      xpReward: 5,
+      metadata: { severity: item.severity },
+    })
+  })
+
+  return {
+    id:          `journey-${module_id}`,
+    moduleTitle: module_title,
+    courseId:    course_id,
+    steps,
+    sessionId:   engagementSession.session_id,
+  }
+}
+
+// ── Public entry point ────────────────────────────────────────────────────────
+
 /**
  * Builds a module-only LearningJourney. The Engage phase already ran and is
  * NOT repeated here. No engage resource types appear as steps.
  *
- * Sprint L4.5 enrichment (domain-aware inserts, capped at MAX_INTERACTIVE_STEPS):
- *   concept[i % 3 === 0] → micro_question  (requiresAnswer)
- *   concept[i % 3 === 1] → analogy         (passive, domain-matched)
- *   concept[i % 3 === 2] → media_prompt    (passive, uses concept keywords)
- *   every 2 concepts     → curiosity       (passive, domain-matched, before positional)
- *   every example        → mini_activity   (requiresAnswer)
- *   before application   → prediction      (requiresAnswer)
- *
- * Existing phase order and personalization by KnowledgeLevel are preserved.
+ * Sprint L1: if concept_blocks are present, delegates to
+ * buildJourneyFromConceptBlocks (backend intelligence). Otherwise falls back
+ * to the heuristic L4.5 legacy builder (frontend intelligence).
  */
 export function buildJourneyFromLegacy(
   engagementSession: EngagementSession,
   moduleContent:     ModuleOrchestrationResponse,
 ): LearningJourney {
+  // Sprint L1: use enriched backend builder when concept_blocks are populated
+  if (moduleContent.concept_blocks && moduleContent.concept_blocks.length > 0) {
+    return buildJourneyFromConceptBlocks(engagementSession, moduleContent)
+  }
+
   const steps: LearningJourneyStep[] = []
 
   // ── Personalization ────────────────────────────────────────────────────────

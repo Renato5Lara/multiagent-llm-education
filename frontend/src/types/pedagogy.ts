@@ -40,6 +40,52 @@ export interface WeeklyPedagogicalPlan {
   validated_at: string | null
 }
 
+// ── Sprint L1: ConceptBlock — mirrors backend/app/schemas/concept_block.py ─────
+
+export interface ConceptBlockAnalogy {
+  source:      string
+  explanation: string
+  image_hint?: string
+}
+
+export interface ConceptBlockCuriosity {
+  fact:   string
+  stat?:  string
+  source?: string
+}
+
+export interface ConceptBlockMediaPrompt {
+  type:             'image' | 'video' | 'audio'
+  title:            string
+  prompt:           string
+  learning_goal:    string
+  duration_seconds?: number
+}
+
+export interface ConceptBlockMiniActivity {
+  instructions: string
+  steps:        string[]
+}
+
+export interface ConceptBlockReflection {
+  misconception: string
+  correction:    string
+  severity:      string
+}
+
+export interface ConceptBlock {
+  id:                  string
+  title:               string
+  explanation:         string
+  learning_objective?: string
+  example?:            string
+  analogy?:            ConceptBlockAnalogy
+  curiosity?:          ConceptBlockCuriosity
+  media_prompt?:       ConceptBlockMediaPrompt
+  mini_activity?:      ConceptBlockMiniActivity
+  reflection?:         ConceptBlockReflection
+}
+
 export interface PedagogicalStage {
   phase: string
   focus: string
@@ -85,4 +131,6 @@ export interface ModuleOrchestrationResponse {
   }
   confidence: number
   generated_at: string
+  // Sprint L1 — empty array on legacy/degraded responses
+  concept_blocks: ConceptBlock[]
 }

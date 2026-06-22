@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -51,6 +53,231 @@ BLOOM_LABELS = {
 _ORCHESTRATE_TIMEOUT_S = 60.0
 # Timeout for the research-agent phase alone (Tavily + async gather).
 _RESEARCH_TIMEOUT_S = 28.0
+
+# ── Sprint L1: Domain tables for concept-block enrichment ─────────────────────
+# These live in the backend so the frontend needs no domain intelligence.
+
+def _norm(text: str) -> str:
+    """Lowercase + strip accents for accent-insensitive keyword matching."""
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text.lower())
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+# (keywords, analogy_data) — first match wins
+_ANALOGY_DOMAINS: list[tuple[list[str], dict[str, str]]] = [
+    (
+        ["base de datos", "database", "sql", "relacional", "nosql"],
+        {
+            "source":      "una biblioteca",
+            "explanation": "Así como una biblioteca organiza libros en estantes y catálogos para que los encuentres rápidamente, una base de datos organiza información en tablas e índices para recuperarla en milisegundos.",
+            "image_hint":  "Una biblioteca con estantes etiquetados (tablas), libros (registros) y un catálogo central (índice). Flechas indican el camino desde una búsqueda hasta el registro correcto.",
+        },
+    ),
+    (
+        ["sistema operativo", "operativo", "linux", "windows", "kernel", "proceso", "planificacion"],
+        {
+            "source":      "un director de orquesta",
+            "explanation": "Así como el director coordina cada sección de la orquesta para que suenen en armonía sin interferirse, el sistema operativo coordina CPU, memoria y procesos para que convivan sin conflictos.",
+            "image_hint":  "Un director señalando secciones de una orquesta: percusión (CPU), cuerdas (memoria), viento (procesos de E/S).",
+        },
+    ),
+    (
+        ["red", "redes", "protocolo", "internet", "tcp", "ip", "enrutamiento", "topologia"],
+        {
+            "source":      "un sistema de carreteras",
+            "explanation": "Así como las carreteras conectan ciudades y los semáforos regulan el tráfico, las redes conectan computadoras y los protocolos regulan cómo fluye la información entre ellas.",
+            "image_hint":  "Un mapa de carreteras: ciudades (computadoras), autopistas (banda ancha), cruces (routers), semáforos (protocolos de control).",
+        },
+    ),
+    (
+        ["programacion", "algoritmo", "codigo", "funcion", "variable", "bucle"],
+        {
+            "source":      "una receta de cocina",
+            "explanation": "Así como una receta indica ingredientes exactos y pasos en orden para obtener un plato, un programa define datos y instrucciones secuenciales para resolver un problema.",
+            "image_hint":  "Una receta con ingredientes (variables) y pasos numerados (instrucciones) al lado del código equivalente.",
+        },
+    ),
+    (
+        ["estadistica", "probabilidad", "regresion", "muestra", "distribucion", "hipotesis"],
+        {
+            "source":      "una lupa científica",
+            "explanation": "Así como una lupa revela detalles que el ojo no percibe, la estadística revela patrones y verdades ocultas dentro de grandes conjuntos de datos.",
+            "image_hint":  "Una lupa apuntando a puntos dispersos que, vistos a través de ella, revelan una tendencia clara y una línea de regresión.",
+        },
+    ),
+    (
+        ["inteligencia artificial", "machine learning", "aprendizaje automatico", "red neuronal", "entrenamiento"],
+        {
+            "source":      "un niño aprendiendo a hablar",
+            "explanation": "Así como un niño aprende a hablar escuchando miles de ejemplos y corrigiendo sus errores, un modelo de ML aprende analizando datos y ajustando parámetros hasta acertar.",
+            "image_hint":  "Un niño escuchando palabras (datos de entrenamiento) y un robot a su lado realizando el mismo proceso con neuronas artificiales.",
+        },
+    ),
+    (
+        ["seguridad", "ciberseguridad", "cifrado", "autenticacion", "criptografia", "vulnerabilidad"],
+        {
+            "source":      "una caja fuerte bancaria",
+            "explanation": "Así como un banco usa candados, cámaras y controles en capas para proteger el dinero, la ciberseguridad usa cifrado, autenticación y firewalls en capas para proteger la información.",
+            "image_hint":  "Una caja fuerte con capas visibles: llave (contraseña), combinación (cifrado), guardia (firewall), cámara (monitoreo).",
+        },
+    ),
+    (
+        ["ingenieria de software", "metodologia", "agile", "scrum", "patron", "arquitectura de software"],
+        {
+            "source":      "los planos de un arquitecto",
+            "explanation": "Así como un arquitecto dibuja planos antes de construir para evitar errores costosos, la ingeniería de software diseña la estructura antes de escribir código.",
+            "image_hint":  "Planos de un edificio transformándose en código: cada piso es un módulo, las puertas son interfaces, los pilares son dependencias críticas.",
+        },
+    ),
+    (
+        ["arquitectura", "hardware", "procesador", "microprocesador", "circuito", "transistor"],
+        {
+            "source":      "una ciudad bien planificada",
+            "explanation": "Así como una ciudad tiene calles (buses de datos), edificios (unidades de procesamiento) e infraestructura (energía), la arquitectura de computadoras organiza componentes interdependientes.",
+            "image_hint":  "Una ciudad: el ayuntamiento es la CPU, los barrios son la RAM, los almacenes el disco, las autopistas los buses de datos.",
+        },
+    ),
+    (
+        ["calculo", "derivada", "integral", "limite", "diferencial", "matematica"],
+        {
+            "source":      "un velocímetro",
+            "explanation": "Así como el velocímetro mide el cambio de posición en cada instante del viaje, el cálculo diferencial mide cómo cambia cualquier cantidad en cada instante de un proceso.",
+            "image_hint":  "Un velocímetro con aguja moviéndose: la velocidad instantánea representa la derivada, el área bajo la curva representa la integral.",
+        },
+    ),
+]
+
+# (keywords, curiosity_data)
+_CURIOSITY_DOMAINS: list[tuple[list[str], dict[str, str]]] = [
+    (
+        ["base de datos", "database", "sql", "relacional", "nosql"],
+        {
+            "fact":   "Netflix almacena más de 700 petabytes de datos y procesa millones de consultas por segundo. Cada recomendación que ves es el resultado de una base de datos bien diseñada.",
+            "stat":   "700 PB",
+            "source": "Netflix Tech Blog, 2023",
+        },
+    ),
+    (
+        ["sistema operativo", "operativo", "linux", "windows", "kernel", "proceso"],
+        {
+            "fact":   "Android, el sistema operativo más usado del mundo, está basado en el kernel Linux. Más del 70% de los supercomputadores del mundo también ejecutan Linux.",
+            "stat":   "70%",
+            "source": "Top500 & StatCounter, 2024",
+        },
+    ),
+    (
+        ["red", "redes", "protocolo", "internet", "tcp", "ip", "enrutamiento"],
+        {
+            "fact":   "Google opera más de 100,000 km de cables de fibra óptica submarinos y transporta cerca del 25% de todo el tráfico de Internet mundial.",
+            "stat":   "25%",
+            "source": "Google Network Infrastructure, 2023",
+        },
+    ),
+    (
+        ["programacion", "algoritmo", "codigo", "funcion"],
+        {
+            "fact":   "El algoritmo PageRank de Google nació como un proyecto universitario. Hoy procesa más de 8,500 millones de búsquedas diarias.",
+            "stat":   "8.5B/día",
+            "source": "Google Search Statistics, 2024",
+        },
+    ),
+    (
+        ["estadistica", "probabilidad", "regresion", "muestra", "distribucion"],
+        {
+            "fact":   "Los modelos estadísticos meteorológicos procesan más de 200 millones de observaciones diarias. Un pronóstico de 7 días hoy es más preciso que uno de 1 día hace 30 años.",
+            "stat":   "200M obs/día",
+            "source": "NOAA & ECMWF, 2023",
+        },
+    ),
+    (
+        ["inteligencia artificial", "machine learning", "aprendizaje automatico", "red neuronal"],
+        {
+            "fact":   "GPT-4 fue entrenado con aproximadamente 1 trillón de tokens de texto. El consumo energético equivale al de un hogar durante más de 1,000 años.",
+            "stat":   "1T tokens",
+            "source": "OpenAI & AI Energy Research, 2023",
+        },
+    ),
+    (
+        ["seguridad", "ciberseguridad", "cifrado", "autenticacion", "criptografia"],
+        {
+            "fact":   "El costo global del cibercrimen superó los 8 trillones de dólares en 2023. Una empresa es víctima de ransomware cada 11 segundos.",
+            "stat":   "$8T",
+            "source": "Cybersecurity Ventures, 2023",
+        },
+    ),
+    (
+        ["ingenieria de software", "metodologia", "agile", "scrum"],
+        {
+            "fact":   "Un bug en el software del cohete Ariane 5 causó la pérdida de $500 millones en 1996. La causa: reutilizar código de Ariane 4 sin verificar su compatibilidad.",
+            "stat":   "$500M",
+            "source": "ESA Post-Flight Investigation, 1996",
+        },
+    ),
+    (
+        ["arquitectura", "hardware", "procesador", "microprocesador", "transistor"],
+        {
+            "fact":   "El Intel 4004 (1971) tenía 2,300 transistores. Los procesadores modernos superan los 50,000 millones. Un crecimiento de 20 millones de veces en 50 años.",
+            "stat":   "50B",
+            "source": "Intel Architecture History, 2023",
+        },
+    ),
+    (
+        ["calculo", "derivada", "integral", "limite", "diferencial"],
+        {
+            "fact":   "Las ecuaciones diferenciales del cálculo describen el movimiento de planetas, la propagación de epidemias y el comportamiento de los mercados financieros.",
+            "stat":   "350+ años",
+            "source": "Historia de la Matemática, 2023",
+        },
+    ),
+]
+
+_MEDIA_STOPWORDS = frozenset([
+    "que", "una", "los", "las", "del", "con", "para", "por", "son",
+    "como", "este", "esta", "estos", "estas", "cuando", "puede", "pero",
+    "mas", "entre", "tiene", "dentro", "traves", "siendo", "donde",
+])
+
+
+def _match_domain(title: str, domains: list[tuple[list[str], dict[str, str]]]) -> dict[str, str] | None:
+    """Return the data dict of the first domain whose keywords appear in title.
+
+    Matching rules:
+    - Multi-word keyword: exact phrase substring match.
+    - Single-word keyword: prefix match against each title word — handles
+      plurals (sistema→sistemas, red→redes) and prevents substring false
+      positives ("ip" inside "descriptiva" would NOT match because
+      "descriptiva" does not start with "ip").
+    """
+    title_norm = _norm(title)
+    title_words = title_norm.split()
+    for keywords, data in domains:
+        for kw in keywords:
+            kw_norm = _norm(kw)
+            if " " in kw_norm:
+                # Multi-word: phrase must appear verbatim
+                if kw_norm in title_norm:
+                    return data
+            else:
+                # Single-word: any title word must start with the keyword
+                if any(w.startswith(kw_norm) for w in title_words):
+                    return data
+    return None
+
+
+def _extract_concept_terms(text: str, count: int = 5) -> str:
+    """Extract up to `count` unique meaningful words from concept text."""
+    clean = "".join(c if c.isalpha() or c.isspace() else " " for c in _norm(text))
+    seen: set[str] = set()
+    result: list[str] = []
+    for word in clean.split():
+        if len(word) >= 5 and word not in _MEDIA_STOPWORDS and word not in seen:
+            seen.add(word)
+            result.append(word)
+        if len(result) >= count:
+            break
+    return ", ".join(result)
 
 
 class ModuleOrchestrationService:
@@ -358,6 +585,14 @@ class ModuleOrchestrationService:
         applications = self._build_real_applications(applications_raw, module.title)
         guided_practice = self._generate_guided_practice(module.title, bloom_target)
         multimodal_prompts = self._build_multimodal_prompts(multimodal_prompts_raw, module.title)
+        concept_blocks = self._build_concept_blocks(
+            topic=module.title,
+            concepts=concepts,
+            examples_raw=examples_raw,
+            misconceptions_raw=misconceptions_raw,
+            bloom_target=bloom_target,
+            orch_id=orch_id,
+        )
         storyboard = self._generate_storyboard(module.title, pedagogical_stages)
         continuity = self._generate_continuity_notes(module.title, module, course)
         bloom_progression = self._build_bloom_progression(module.title)
@@ -392,6 +627,7 @@ class ModuleOrchestrationService:
             "confidence": round(confidence, 4),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "session_id": session_id,
+            "concept_blocks": concept_blocks,
         }
 
     def _degraded_result(
@@ -425,6 +661,7 @@ class ModuleOrchestrationService:
             "confidence": 0.0,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "session_id": None,
+            "concept_blocks": [],  # degraded — no blocks
         }
 
     # ------------------------------------------------------------------
@@ -788,6 +1025,169 @@ class ModuleOrchestrationService:
 
         logger.debug("orchestrate[%s]: semantic_validation OK for topic=%r", orch_id, topic[:40])
         return True
+
+    # ------------------------------------------------------------------
+    # Sprint L1: ConceptBlock generation
+    # ------------------------------------------------------------------
+
+    def _build_concept_blocks(
+        self,
+        topic: str,
+        concepts: list[str],
+        examples_raw: list,
+        misconceptions_raw: list[dict[str, Any]],
+        bloom_target: int,
+        orch_id: str,
+    ) -> list[dict[str, Any]]:
+        """Generate up to 6 ConceptBlocks from research data.
+
+        Each block enriches one concept paragraph with a contextual
+        analogy, curiosity, media_prompt, and mini_activity so the
+        frontend can render a complete micro-learning experience without
+        any domain-specific heuristics on the React side.
+
+        Returns an empty list when `concepts` is empty (caller falls back
+        to the legacy builder).
+        """
+        concept_strings = self._concepts_to_strings(concepts[:6])
+        if not concept_strings:
+            logger.debug("orchestrate[%s]: _build_concept_blocks: no concepts — returning []", orch_id)
+            return []
+
+        examples      = self._concepts_to_strings(examples_raw)
+        misconceptions = [m for m in misconceptions_raw if isinstance(m, dict)]
+        blocks: list[dict[str, Any]] = []
+
+        for i, concept_text in enumerate(concept_strings):
+            block_id = f"block-{i}"
+            title    = self._concept_title(concept_text, topic, i)
+
+            # ── Analogy ──────────────────────────────────────────────────────
+            analogy_domain = _match_domain(topic, _ANALOGY_DOMAINS)
+            if analogy_domain:
+                analogy: dict[str, Any] | None = {
+                    "source":      analogy_domain["source"],
+                    "explanation": analogy_domain["explanation"],
+                    "image_hint":  analogy_domain.get("image_hint"),
+                }
+            else:
+                title_low = topic.lower()
+                analogy = {
+                    "source":      "una guía de viaje",
+                    "explanation": (
+                        f"Así como una guía de viaje te orienta con mapas y consejos prácticos, "
+                        f"{title_low} te proporciona los fundamentos para orientarte en su campo."
+                    ),
+                    "image_hint": None,
+                }
+
+            # ── Curiosity ─────────────────────────────────────────────────────
+            curiosity_domain = _match_domain(topic, _CURIOSITY_DOMAINS)
+            if curiosity_domain:
+                curiosity: dict[str, Any] | None = dict(curiosity_domain)
+            else:
+                curiosity = {
+                    "fact": (
+                        f"Profesionales de todo el mundo aplican los principios de "
+                        f"{topic.lower()} en industrias tan diversas como medicina, finanzas y tecnología."
+                    ),
+                    "stat":   None,
+                    "source": "Tendencias profesionales, 2024",
+                }
+
+            # ── Media prompt — specific to this concept's keywords ─────────────
+            key_terms  = _extract_concept_terms(concept_text, 5)
+            title_low  = topic.lower()
+            media_type: str = "image" if (i % 3) != 1 else "video"
+            if media_type == "image":
+                mp_prompt = (
+                    f"Crea una infografía educativa sobre \"{topic}\" que visualice: {key_terms}. "
+                    f"Usa íconos, flechas y colores para mostrar relaciones. Fondo blanco, estilo profesional."
+                ) if key_terms else (
+                    f"Crea una infografía educativa que explique \"{topic}\" con ejemplos cotidianos. "
+                    f"Incluye íconos y flechas. Fondo blanco, estilo profesional."
+                )
+                media_prompt: dict[str, Any] = {
+                    "type":          "image",
+                    "title":         f"Visualiza: {topic}",
+                    "prompt":        mp_prompt,
+                    "learning_goal": (
+                        f"Construir una imagen mental refuerza la memoria a largo plazo y facilita "
+                        f"la comprensión de ideas abstractas en {title_low}."
+                    ),
+                    "duration_seconds": None,
+                }
+            else:
+                mp_prompt = (
+                    f"Escribe el guion de un video animado de 90 segundos sobre \"{topic}\" "
+                    f"enfocándose en: {key_terms}. Usa metáforas cotidianas, narración clara "
+                    f"y al menos un ejemplo del mundo real."
+                ) if key_terms else (
+                    f"Escribe el guion de un video animado de 90 segundos que explique \"{topic}\" "
+                    f"con una metáfora cotidiana al inicio y una aplicación práctica al final."
+                )
+                media_prompt = {
+                    "type":             "video",
+                    "title":            f"Explora en video: {topic}",
+                    "prompt":           mp_prompt,
+                    "learning_goal":    (
+                        f"Los videos activan múltiples canales sensoriales, incrementando la retención de "
+                        f"{title_low} hasta un 65%."
+                    ),
+                    "duration_seconds": 90,
+                }
+
+            # ── Mini activity ────────────────────────────────────────────────────
+            mini_activity: dict[str, Any] = {
+                "instructions": f"Refuerza la idea principal del concepto sobre {title_low}.",
+                "steps": [
+                    f"Lee nuevamente la explicación de '{title}'.",
+                    "Identifica el concepto clave que se presenta.",
+                    "Escribe mentalmente una frase que lo resuma con tus propias palabras.",
+                ],
+            }
+
+            # ── Example (from research, if available) ────────────────────────
+            example = examples[i] if i < len(examples) else None
+
+            # ── Learning objective (Bloom-aware) ────────────────────────────
+            bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
+            learning_objective = (
+                f"Al finalizar este bloque podrás {bloom_label.lower()} "
+                f"los conceptos de {title_low} a nivel Bloom {bloom_target}."
+            )
+
+            block: dict[str, Any] = {
+                "id":                 block_id,
+                "title":              title,
+                "explanation":        concept_text,
+                "learning_objective": learning_objective,
+                "example":            example,
+                "analogy":            analogy,
+                "curiosity":          curiosity,
+                "media_prompt":       media_prompt,
+                "mini_activity":      mini_activity,
+                "reflection":         None,       # Phase 2
+                "knowledge_check":    None,       # Phase 2
+            }
+            blocks.append(block)
+
+        logger.debug(
+            "orchestrate[%s]: _build_concept_blocks generated %d blocks for topic=%r",
+            orch_id, len(blocks), topic[:40],
+        )
+        return blocks
+
+    @staticmethod
+    def _concept_title(text: str, topic: str, idx: int) -> str:
+        """Derive a short title from the concept text."""
+        bold = re.match(r"\*\*(.+?)\*\*", text)
+        if bold:
+            return bold.group(1)[:80]
+        first = re.split(r"[.,;]", text.strip())[0]
+        words = first.split()[:8]
+        title = " ".join(words)
+        return title[:80] if title else f"Concepto {idx + 1} sobre {topic}"
 
     def _build_bloom_progression(self, topic: str) -> list[dict[str, Any]]:
         return [
