@@ -50,22 +50,24 @@ class PedagogicalRetrievalStrategy:
 
     def _generate_queries(self, context: RetrievalContext) -> list[tuple[str, QueryCategory]]:
         topic = context.topic.strip()
-        objectives = ", ".join(context.objectives) if context.objectives else "recorrido, busqueda e insercion"
+        objectives = ", ".join(context.objectives) if context.objectives else topic
 
         ls = (context.learning_style or "").strip().lower()
         analogies = context.preferred_analogies or []
         vis = " diagramas graficos visuales" if ls == "visual" else " explicacion textual" if ls == "reading" else ""
         analogy_tag = f" {analogies[0]}" if analogies else ""
 
+        logger.debug("retrieval._generate_queries: topic=%r bloom=%d", topic[:60], context.bloom_target)
+
         return [
-            (f"{topic} explicacion introductoria para principiantes programacion{vis}", QueryCategory.INTRODUCTION),
-            (f"{topic} conceptos fundamentales{vis} recorrido busqueda insercion", QueryCategory.CONCEPTUAL),
-            (f"{topic} ejemplos codigo{analogy_tag} recorrido busqueda insercion", QueryCategory.PRACTICAL),
-            (f"{topic} errores comunes misconceptions estudiantes programacion", QueryCategory.MISCONCEPTION),
-            (f"{topic} aplicaciones reales{analogy_tag} software estructuras de datos", QueryCategory.REAL_APPLICATION),
-            (f"{topic} actividades Bloom nivel {context.bloom_target} objetivos {objectives}", QueryCategory.BLOOM_LEVEL),
-            (f"{topic} ejercicios practica guiada{vis} recorrido busqueda insercion", QueryCategory.EXERCISE),
-            (f"{topic} prompts multimodales{vis} diagramas simulacion visual codigo", QueryCategory.MULTIMODAL),
+            (f"{topic} explicacion introductoria{vis}", QueryCategory.INTRODUCTION),
+            (f"{topic} conceptos fundamentales{vis}", QueryCategory.CONCEPTUAL),
+            (f"{topic} ejemplos practicos{analogy_tag}", QueryCategory.PRACTICAL),
+            (f"{topic} errores comunes conceptos erroneos estudiantes", QueryCategory.MISCONCEPTION),
+            (f"{topic} aplicaciones reales contexto profesional{analogy_tag}", QueryCategory.REAL_APPLICATION),
+            (f"{topic} actividades aprendizaje Bloom nivel {context.bloom_target} objetivos {objectives}", QueryCategory.BLOOM_LEVEL),
+            (f"{topic} ejercicios practica guiada{vis}", QueryCategory.EXERCISE),
+            (f"{topic} recursos multimodales{vis}", QueryCategory.MULTIMODAL),
         ]
 
     async def _execute_query(
