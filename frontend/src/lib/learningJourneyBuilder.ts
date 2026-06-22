@@ -72,12 +72,21 @@ function engageToStep(resource: EngagementResource): LearningJourneyStep {
 
 /**
  * Combines an EngagementSession and ModuleOrchestrationResponse into a single
- * linear LearningJourney. No backend changes required — pure frontend adapter.
+ * interleaved LearningJourney. No backend changes required — pure frontend adapter.
  *
- * Step order:
- *   DidYouKnow → PriorKnowledge → Concept (intro) → Question →
- *   Concept (explanation) → Example → Challenge →
- *   Application → Reflection (misconceptions) → Evaluation
+ * Interleaving strategy (J2.5):
+ *   1. Hook            — did_you_know, prior_knowledge
+ *   2. Anchor concept  — intro[0] (seed for the detonating question)
+ *   3. Question        — placed right after first concept, not after all content
+ *   4. Content weave   — zip(remaining intro + explanation, examples): concept, example, concept, example…
+ *   5. Challenge       — mid-journey application after explanation
+ *   6. Mid-reflection  — first misconception (reality check before application)
+ *   7. Application     — real_news (engage) + real_applications (module)
+ *   8. End reflections — remaining misconceptions
+ *   9. Evaluation      — mini_quiz
+ *
+ * This prevents the "6 engage cards → 20 concept cards" block feeling by keeping
+ * engage anchors distributed throughout the sequence.
  */
 export function buildJourneyFromLegacy(
   engagementSession: EngagementSession,
@@ -101,34 +110,62 @@ export function buildJourneyFromLegacy(
     return r ? engageToStep(r) : null
   }
 
-  // 1. DidYouKnow (engage)
+  // ── 1. Hook ───────────────────────────────────────────────────────────────
   push(fromEngage('did_you_know'))
-
-  // 2. PriorKnowledge (engage)
   push(fromEngage('prior_knowledge'))
 
-  // 3. Introduction → Concept
-  splitParagraphs(moduleContent.introduction).forEach((text, i) => {
-    steps.push({ id: `intro-concept-${i}`, type: 'concept', content: text, xpReward: 2 })
-  })
+  // ── 2. Anchor concept (first intro paragraph seeds the question) ──────────
+  const introParagraphs       = splitParagraphs(moduleContent.introduction)
+  const explanationParagraphs = splitParagraphs(moduleContent.pedagogical_explanation)
 
-  // 4. DetonatingQuestion → Question (engage)
+  if (introParagraphs.length > 0) {
+    steps.push({ id: 'intro-concept-0', type: 'concept', content: introParagraphs[0], xpReward: 2 })
+  }
+
+  // ── 3. Detonating question (anchored right after first concept) ───────────
   push(fromEngage('detonating_question'))
 
-  // 5. PedagogicalExplanation → Concept
-  splitParagraphs(moduleContent.pedagogical_explanation).forEach((text, i) => {
-    steps.push({ id: `concept-${i}`, type: 'concept', content: text, xpReward: 2 })
-  })
+  // ── 4. Content weave — zip remaining concepts with examples ───────────────
+  // Pool: remaining intro paragraphs + all explanation paragraphs
+  const remainingConcepts = [
+    ...introParagraphs.slice(1).map((text, i) => ({ id: `intro-concept-${i + 1}`, text })),
+    ...explanationParagraphs.map((text, i)  => ({ id: `concept-${i}`,             text })),
+  ]
+  const examples   = moduleContent.examples
+  const phaseLen   = Math.max(remainingConcepts.length, examples.length)
 
-  // 6. Examples → Example
-  moduleContent.examples.forEach((ex, i) => {
-    steps.push({ id: `example-${i}`, type: 'example', content: ex, xpReward: 3 })
-  })
+  for (let i = 0; i < phaseLen; i++) {
+    if (i < remainingConcepts.length) {
+      const { id, text } = remainingConcepts[i]
+      steps.push({ id, type: 'concept', content: text, xpReward: 2 })
+    }
+    if (i < examples.length) {
+      steps.push({ id: `example-${i}`, type: 'example', content: examples[i], xpReward: 3 })
+    }
+  }
 
-  // 7. Challenge (engage)
+  // ── 5. Challenge (mid-journey: apply before seeing applications) ──────────
   push(fromEngage('short_challenge'))
 
-  // 8. Application — merge real_news (engage) + real_applications (module) into one step
+  // ── 6. Mid-reflection (first misconception as a reality check) ────────────
+  // Only inserted as a mid-step when there are 2+ misconceptions; otherwise
+  // the single misconception goes to end reflections together with evaluation.
+  const misconceptions = moduleContent.misconceptions
+  const midMisconception   = misconceptions.length > 1 ? misconceptions[0]    : null
+  const endMisconceptions  = midMisconception            ? misconceptions.slice(1) : misconceptions
+
+  if (midMisconception) {
+    steps.push({
+      id:       'reflection-mid',
+      type:     'reflection',
+      title:    midMisconception.misconception,
+      content:  midMisconception.correction,
+      xpReward: 5,
+      metadata: { severity: midMisconception.severity },
+    })
+  }
+
+  // ── 7. Application — merge real_news (engage) + real_applications (module) ─
   const realNewsResource = byType.get('real_news')
   const applicationItems: string[] = [
     ...(realNewsResource ? [realNewsResource.content] : []),
@@ -143,8 +180,8 @@ export function buildJourneyFromLegacy(
     })
   }
 
-  // 9. Reflection — one step per misconception
-  moduleContent.misconceptions.forEach((item, i) => {
+  // ── 8. End reflections (remaining misconceptions) ─────────────────────────
+  endMisconceptions.forEach((item, i) => {
     steps.push({
       id:       `reflection-${i}`,
       type:     'reflection',
@@ -155,11 +192,11 @@ export function buildJourneyFromLegacy(
     })
   })
 
-  // 10. Evaluation (engage mini_quiz)
+  // ── 9. Evaluation ─────────────────────────────────────────────────────────
   push(fromEngage('mini_quiz'))
 
   return {
-    id:         `journey-${moduleContent.module_id}`,
+    id:          `journey-${moduleContent.module_id}`,
     moduleTitle: moduleContent.module_title,
     courseId:    moduleContent.course_id,
     steps,
