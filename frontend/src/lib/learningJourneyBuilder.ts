@@ -446,6 +446,22 @@ function buildJourneyFromConceptBlocks(
 
   // ── Phase 1: Concept blocks ───────────────────────────────────────────────
   concept_blocks.forEach((block: ConceptBlock, i: number) => {
+    // Sprint M1: prediction gate BEFORE concept (LLM-only, never null on template path)
+    if (block.prediction_question) {
+      const predMeta: PredictionMeta = {
+        question: block.prediction_question,
+        reveal:   '¡Sigue leyendo para descubrir si tu predicción fue correcta!',
+        hint:     'Reflexiona un momento antes de continuar.',
+      }
+      tryPush({
+        id:             `cb-predict-${i}`,
+        type:           'prediction',
+        xpReward:       1,
+        requiresAnswer: true,
+        metadata:       predMeta as unknown as Record<string, unknown>,
+      })
+    }
+
     // Core concept step
     steps.push({
       id:       block.id,
@@ -532,18 +548,36 @@ function buildJourneyFromConceptBlocks(
         content:  block.example,
         xpReward: 3,
       })
-      // Mini activity after each example
-      if (block.mini_activity) {
-        const meta: MiniActivityMeta = {
-          instructions: block.mini_activity.instructions,
-          steps:        block.mini_activity.steps,
+    }
+
+    // Mini activity — LLM always generates one, so push independent of example
+    if (block.mini_activity) {
+      const miniMeta: MiniActivityMeta = {
+        instructions: block.mini_activity.instructions,
+        steps:        block.mini_activity.steps,
+      }
+      tryPush({
+        id:             `cb-mini-${i}`,
+        type:           'mini_activity',
+        xpReward:       3,
+        requiresAnswer: true,
+        metadata:       miniMeta as unknown as Record<string, unknown>,
+      })
+
+      // Sprint M1: reflection checkpoint AFTER mini_activity (LLM-only)
+      if (block.reflection_question) {
+        const refMeta: MicroQuestionMeta = {
+          question: block.reflection_question,
+          options:  ['Puedo explicarlo', 'Lo entiendo parcialmente', 'Necesito repasarlo'],
+          feedback: '¡La reflexión metacognitiva fortalece el aprendizaje a largo plazo!',
         }
         tryPush({
-          id:             `cb-mini-${i}`,
-          type:           'mini_activity',
-          xpReward:       3,
+          id:             `cb-reflect-${i}`,
+          type:           'micro_question',
+          title:          block.reflection_question,
+          xpReward:       2,
           requiresAnswer: true,
-          metadata:       meta as unknown as Record<string, unknown>,
+          metadata:       refMeta as unknown as Record<string, unknown>,
         })
       }
     }

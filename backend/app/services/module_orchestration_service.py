@@ -23,9 +23,13 @@ import time
 import unicodedata
 import uuid
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.llm.config import LLMConfig
+from app.llm.service import LLMService
 
 from app.agents.research_agent import ResearchAgent
 from app.memory.narrative_continuity import (
@@ -53,6 +57,44 @@ BLOOM_LABELS = {
 _ORCHESTRATE_TIMEOUT_S = 60.0
 # Timeout for the research-agent phase alone (Tavily + async gather).
 _RESEARCH_TIMEOUT_S = 28.0
+# Sprint M1: LLM timeout per concept block and max blocks to generate.
+_CONCEPT_LLM_TIMEOUT_S = 30.0
+MAX_CONCEPT_BLOCKS: int = 3
+
+# ── Sprint M1: LLM-based concept block enrichment ─────────────────────────────
+
+_CONCEPT_BUILDER_SYSTEM_PROMPT = (
+    "Eres un pedagogo universitario experto en diseño instruccional. "
+    "Tu misión es transformar fragmentos de investigación en experiencias de aprendizaje "
+    "ricas, narrativas y emocionalmente resonantes en español. "
+    "Usa un lenguaje accesible, metáforas cotidianas y preguntas que activen la curiosidad. "
+    "Devuelve ÚNICAMENTE el JSON solicitado, sin texto adicional, sin markdown."
+)
+
+
+def _build_context_snippets(
+    concept_strings: list[str],
+    examples_raw: list,
+    misconceptions_raw: list,
+) -> str:
+    """Condense Tavily research into a short context string for the LLM."""
+    lines: list[str] = []
+    for c in concept_strings[:5]:
+        if c:
+            lines.append(f"- {c[:200]}")
+    for item in examples_raw[:2]:
+        if isinstance(item, dict):
+            ex = item.get("example") or item.get("content_preview") or ""
+            if ex:
+                lines.append(f"  Ejemplo: {str(ex)[:150]}")
+        elif isinstance(item, str) and item:
+            lines.append(f"  Ejemplo: {item[:150]}")
+    for item in misconceptions_raw[:1]:
+        if isinstance(item, dict):
+            mc = item.get("misconception") or item.get("content_preview") or ""
+            if mc:
+                lines.append(f"  Error común: {str(mc)[:100]}")
+    return "\n".join(lines)
 
 # ── Sprint L1: Domain tables for concept-block enrichment ─────────────────────
 # These live in the backend so the frontend needs no domain intelligence.
@@ -383,10 +425,10 @@ class ModuleOrchestrationService:
             _db_state(),
         )
 
-        # ── Phase 3: Content generation (CPU-only, no I/O) ───────────────
+        # ── Phase 3: Content generation + LLM enrichment ────────────────
         logger.debug("orchestrate[%s]: phase=content_build start elapsed_ms=%d", orch_id, _elapsed())
         try:
-            result = self._build_orchestration_result(
+            result = await self._build_orchestration_result(
                 research_state, student, course, module, bloom_target, orch_id,
                 session_id=session_id,
             )
@@ -545,7 +587,7 @@ class ModuleOrchestrationService:
     # Content builders (pure functions — no I/O, no shared state)
     # ------------------------------------------------------------------
 
-    def _build_orchestration_result(
+    async def _build_orchestration_result(
         self,
         research_state: dict[str, Any],
         student: User,
@@ -585,7 +627,7 @@ class ModuleOrchestrationService:
         applications = self._build_real_applications(applications_raw, module.title)
         guided_practice = self._generate_guided_practice(module.title, bloom_target)
         multimodal_prompts = self._build_multimodal_prompts(multimodal_prompts_raw, module.title)
-        concept_blocks = self._build_concept_blocks(
+        concept_blocks = await self._build_concept_blocks(
             topic=module.title,
             concepts=concepts,
             examples_raw=examples_raw,
@@ -1030,7 +1072,7 @@ class ModuleOrchestrationService:
     # Sprint L1: ConceptBlock generation
     # ------------------------------------------------------------------
 
-    def _build_concept_blocks(
+    async def _build_concept_blocks(
         self,
         topic: str,
         concepts: list[str],
@@ -1039,144 +1081,280 @@ class ModuleOrchestrationService:
         bloom_target: int,
         orch_id: str,
     ) -> list[dict[str, Any]]:
-        """Generate up to 6 ConceptBlocks from research data.
+        """Generate up to MAX_CONCEPT_BLOCKS enriched ConceptBlocks.
 
-        Each block enriches one concept paragraph with a contextual
-        analogy, curiosity, media_prompt, and mini_activity so the
-        frontend can render a complete micro-learning experience without
-        any domain-specific heuristics on the React side.
-
-        Returns an empty list when `concepts` is empty (caller falls back
-        to the legacy builder).
+        Sprint M1: LLM-first generation (gpt-4o-mini via LLMService), with
+        domain-table / template fallback per block when the LLM is
+        unavailable or fails.  Returns [] when concepts is empty.
         """
-        concept_strings = self._concepts_to_strings(concepts[:6])
+        concept_strings = self._concepts_to_strings(concepts[:MAX_CONCEPT_BLOCKS])
         if not concept_strings:
             logger.debug("orchestrate[%s]: _build_concept_blocks: no concepts — returning []", orch_id)
             return []
 
-        examples      = self._concepts_to_strings(examples_raw)
-        misconceptions = [m for m in misconceptions_raw if isinstance(m, dict)]
+        examples       = self._concepts_to_strings(examples_raw)
+        context_snippets = _build_context_snippets(concept_strings, examples_raw, misconceptions_raw)
         blocks: list[dict[str, Any]] = []
 
         for i, concept_text in enumerate(concept_strings):
-            block_id = f"block-{i}"
-            title    = self._concept_title(concept_text, topic, i)
-
-            # ── Analogy ──────────────────────────────────────────────────────
-            analogy_domain = _match_domain(topic, _ANALOGY_DOMAINS)
-            if analogy_domain:
-                analogy: dict[str, Any] | None = {
-                    "source":      analogy_domain["source"],
-                    "explanation": analogy_domain["explanation"],
-                    "image_hint":  analogy_domain.get("image_hint"),
-                }
-            else:
-                title_low = topic.lower()
-                analogy = {
-                    "source":      "una guía de viaje",
-                    "explanation": (
-                        f"Así como una guía de viaje te orienta con mapas y consejos prácticos, "
-                        f"{title_low} te proporciona los fundamentos para orientarte en su campo."
-                    ),
-                    "image_hint": None,
-                }
-
-            # ── Curiosity ─────────────────────────────────────────────────────
-            curiosity_domain = _match_domain(topic, _CURIOSITY_DOMAINS)
-            if curiosity_domain:
-                curiosity: dict[str, Any] | None = dict(curiosity_domain)
-            else:
-                curiosity = {
-                    "fact": (
-                        f"Profesionales de todo el mundo aplican los principios de "
-                        f"{topic.lower()} en industrias tan diversas como medicina, finanzas y tecnología."
-                    ),
-                    "stat":   None,
-                    "source": "Tendencias profesionales, 2024",
-                }
-
-            # ── Media prompt — specific to this concept's keywords ─────────────
-            key_terms  = _extract_concept_terms(concept_text, 5)
-            title_low  = topic.lower()
-            media_type: str = "image" if (i % 3) != 1 else "video"
-            if media_type == "image":
-                mp_prompt = (
-                    f"Crea una infografía educativa sobre \"{topic}\" que visualice: {key_terms}. "
-                    f"Usa íconos, flechas y colores para mostrar relaciones. Fondo blanco, estilo profesional."
-                ) if key_terms else (
-                    f"Crea una infografía educativa que explique \"{topic}\" con ejemplos cotidianos. "
-                    f"Incluye íconos y flechas. Fondo blanco, estilo profesional."
-                )
-                media_prompt: dict[str, Any] = {
-                    "type":          "image",
-                    "title":         f"Visualiza: {topic}",
-                    "prompt":        mp_prompt,
-                    "learning_goal": (
-                        f"Construir una imagen mental refuerza la memoria a largo plazo y facilita "
-                        f"la comprensión de ideas abstractas en {title_low}."
-                    ),
-                    "duration_seconds": None,
-                }
-            else:
-                mp_prompt = (
-                    f"Escribe el guion de un video animado de 90 segundos sobre \"{topic}\" "
-                    f"enfocándose en: {key_terms}. Usa metáforas cotidianas, narración clara "
-                    f"y al menos un ejemplo del mundo real."
-                ) if key_terms else (
-                    f"Escribe el guion de un video animado de 90 segundos que explique \"{topic}\" "
-                    f"con una metáfora cotidiana al inicio y una aplicación práctica al final."
-                )
-                media_prompt = {
-                    "type":             "video",
-                    "title":            f"Explora en video: {topic}",
-                    "prompt":           mp_prompt,
-                    "learning_goal":    (
-                        f"Los videos activan múltiples canales sensoriales, incrementando la retención de "
-                        f"{title_low} hasta un 65%."
-                    ),
-                    "duration_seconds": 90,
-                }
-
-            # ── Mini activity ────────────────────────────────────────────────────
-            mini_activity: dict[str, Any] = {
-                "instructions": f"Refuerza la idea principal del concepto sobre {title_low}.",
-                "steps": [
-                    f"Lee nuevamente la explicación de '{title}'.",
-                    "Identifica el concepto clave que se presenta.",
-                    "Escribe mentalmente una frase que lo resuma con tus propias palabras.",
-                ],
-            }
-
-            # ── Example (from research, if available) ────────────────────────
-            example = examples[i] if i < len(examples) else None
-
-            # ── Learning objective (Bloom-aware) ────────────────────────────
+            block_id    = f"block-{i}"
+            title       = self._concept_title(concept_text, topic, i)
+            title_low   = topic.lower()
             bloom_label = BLOOM_LABELS.get(bloom_target, "Aplicar")
             learning_objective = (
                 f"Al finalizar este bloque podrás {bloom_label.lower()} "
                 f"los conceptos de {title_low} a nivel Bloom {bloom_target}."
             )
+            example = examples[i] if i < len(examples) else None
 
-            block: dict[str, Any] = {
-                "id":                 block_id,
-                "title":              title,
-                "explanation":        concept_text,
-                "learning_objective": learning_objective,
-                "example":            example,
-                "analogy":            analogy,
-                "curiosity":          curiosity,
-                "media_prompt":       media_prompt,
-                "mini_activity":      mini_activity,
-                "reflection":         None,       # Phase 2
-                "knowledge_check":    None,       # Phase 2
-            }
+            # ── Sprint M1: try LLM enrichment ────────────────────────────────
+            llm_data: dict[str, Any] | None = None
+            if settings.has_openai:
+                try:
+                    llm_data = await asyncio.wait_for(
+                        self._generate_concept_block_with_llm(
+                            topic=topic,
+                            bloom_target=bloom_target,
+                            bloom_label=bloom_label,
+                            concept_text=concept_text,
+                            context_snippets=context_snippets,
+                            block_idx=i,
+                            orch_id=orch_id,
+                        ),
+                        timeout=_CONCEPT_LLM_TIMEOUT_S,
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "orchestrate[%s]: LLM concept_block_%d timed out — template fallback",
+                        orch_id, i,
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "orchestrate[%s]: LLM concept_block_%d failed: %s — template fallback",
+                        orch_id, i, exc,
+                    )
+
+            if llm_data:
+                # ── LLM path: use generated content, fill missing fields ──────
+                block: dict[str, Any] = {
+                    "id":                  block_id,
+                    "title":               title,
+                    "explanation":         llm_data.get("explanation") or concept_text,
+                    "learning_objective":  learning_objective,
+                    "example":             example,
+                    "analogy":             llm_data.get("analogy") or self._template_analogy(topic),
+                    "curiosity":           llm_data.get("curiosity") or self._template_curiosity(topic),
+                    "media_prompt":        llm_data.get("media_prompt") or self._template_media_prompt(topic, concept_text, i),
+                    "mini_activity":       llm_data.get("mini_activity") or self._template_mini_activity(title, topic),
+                    "prediction_question": llm_data.get("prediction_question") or None,
+                    "reflection_question": llm_data.get("reflection_question") or None,
+                    "reflection":          None,
+                    "knowledge_check":     None,
+                }
+                logger.debug(
+                    "orchestrate[%s]: block-%d enriched via LLM (topic=%r)",
+                    orch_id, i, topic[:40],
+                )
+            else:
+                # ── Template fallback: domain tables + generic templates ───────
+                analogy_domain = _match_domain(topic, _ANALOGY_DOMAINS)
+                if analogy_domain:
+                    analogy: dict[str, Any] | None = {
+                        "source":      analogy_domain["source"],
+                        "explanation": analogy_domain["explanation"],
+                        "image_hint":  analogy_domain.get("image_hint"),
+                    }
+                else:
+                    analogy = self._template_analogy(topic)
+
+                curiosity_domain = _match_domain(topic, _CURIOSITY_DOMAINS)
+                curiosity: dict[str, Any] | None = (
+                    dict(curiosity_domain) if curiosity_domain
+                    else self._template_curiosity(topic)
+                )
+
+                block = {
+                    "id":                  block_id,
+                    "title":               title,
+                    "explanation":         concept_text,
+                    "learning_objective":  learning_objective,
+                    "example":             example,
+                    "analogy":             analogy,
+                    "curiosity":           curiosity,
+                    "media_prompt":        self._template_media_prompt(topic, concept_text, i),
+                    "mini_activity":       self._template_mini_activity(title, topic),
+                    "prediction_question": None,   # LLM-only field
+                    "reflection_question": None,   # LLM-only field
+                    "reflection":          None,
+                    "knowledge_check":     None,
+                }
+
             blocks.append(block)
 
-        logger.debug(
-            "orchestrate[%s]: _build_concept_blocks generated %d blocks for topic=%r",
-            orch_id, len(blocks), topic[:40],
+        logger.info(
+            "orchestrate[%s]: _build_concept_blocks: %d blocks, llm_path=%s, topic=%r",
+            orch_id, len(blocks),
+            all(b.get("prediction_question") is not None for b in blocks),
+            topic[:40],
         )
         return blocks
+
+    async def _generate_concept_block_with_llm(
+        self,
+        *,
+        topic: str,
+        bloom_target: int,
+        bloom_label: str,
+        concept_text: str,
+        context_snippets: str,
+        block_idx: int,
+        orch_id: str,
+    ) -> dict[str, Any] | None:
+        """Call LLMService to generate a rich ConceptBlock.
+
+        Returns the parsed dict on success, None on any failure.
+        The caller is responsible for the fallback.
+        """
+        cfg = LLMConfig(
+            model="gpt-4o-mini",
+            api_key=settings.OPENAI_API_KEY or "",
+            temperature=0.4,
+            max_tokens=1500,
+            timeout_seconds=25.0,
+            max_retries=1,
+            budget_tokens_per_day=300_000,
+        )
+        llm = LLMService(default_config=cfg)
+
+        user_prompt = (
+            f"TEMA DEL MÓDULO: {topic}\n"
+            f"NIVEL BLOOM: {bloom_target}/6 — {bloom_label}\n\n"
+            f"CONTEXTO DE INVESTIGACIÓN (fragmentos recuperados de la web):\n"
+            f"{context_snippets or '(sin contexto adicional)'}\n\n"
+            f"CONCEPTO A ENRIQUECER:\n\"{concept_text}\"\n\n"
+            f"Genera el bloque pedagógico en JSON con EXACTAMENTE estos campos:\n"
+            f"{{\n"
+            f"  \"explanation\": \"párrafo narrativo 4-6 oraciones. "
+            f"OBLIGATORIO comenzar con Imagina que... o ¿Alguna vez te has preguntado...? o Piensa en... "
+            f"Usa lenguaje accesible y una metáfora cotidiana concreta.\",\n"
+            f"  \"analogy\": {{\"source\": \"elemento cotidiano del dominio {topic}\", "
+            f"\"explanation\": \"por qué el concepto se parece a ese elemento, con detalles específicos\"}},\n"
+            f"  \"curiosity\": {{\"fact\": \"dato sorprendente y real sobre {topic} (verificable)\", "
+            f"\"stat\": \"cifra o porcentaje destacable, o null\", \"source\": \"fuente real con año\"}},\n"
+            f"  \"mini_activity\": {{\"instructions\": \"descripción clara de una micro-actividad de 2 min\", "
+            f"\"steps\": [\"paso concreto 1\", \"paso concreto 2\", \"paso concreto 3\"]}},\n"
+            f"  \"prediction_question\": \"pregunta que el estudiante reflexiona ANTES de leer el concepto "
+            f"(ej: ¿Qué crees que significa...? o ¿Cómo imaginas que funciona...?)\",\n"
+            f"  \"reflection_question\": \"pregunta reflexión nivel Bloom {bloom_label}: "
+            f"¿De qué manera podrías...? o ¿Cómo aplicarías esto en...?\",\n"
+            f"  \"media_prompt\": {{\"type\": \"image\" o \"video\", "
+            f"\"title\": \"título descriptivo de la actividad\", "
+            f"\"prompt\": \"prompt detallado de 40-80 palabras para crear el recurso\", "
+            f"\"learning_goal\": \"objetivo pedagógico en 1 oración\"}}\n"
+            f"}}"
+        )
+
+        t = time.monotonic()
+        response = await llm.generate(
+            messages=[
+                {"role": "system", "content": _CONCEPT_BUILDER_SYSTEM_PROMPT},
+                {"role": "user",   "content": user_prompt},
+            ],
+            voter_name="concept_builder",
+            response_format="json",
+        )
+        elapsed_ms = int((time.monotonic() - t) * 1000)
+
+        if not response.success or not response.parsed:
+            logger.warning(
+                "orchestrate[%s]: _generate_concept_block_with_llm block_%d: "
+                "success=%s parsed=%s error=%s elapsed_ms=%d",
+                orch_id, block_idx,
+                response.success, bool(response.parsed), response.error, elapsed_ms,
+            )
+            return None
+
+        logger.debug(
+            "orchestrate[%s]: _generate_concept_block_with_llm block_%d OK "
+            "tokens=%d elapsed_ms=%d",
+            orch_id, block_idx, response.tokens_total, elapsed_ms,
+        )
+        return response.parsed
+
+    # ── Template helpers used by both LLM-fallback and pure-template paths ────
+
+    def _template_analogy(self, topic: str) -> dict[str, Any]:
+        title_low = topic.lower()
+        return {
+            "source":      "una guía de viaje",
+            "explanation": (
+                f"Así como una guía de viaje te orienta con mapas y consejos prácticos, "
+                f"{title_low} te proporciona los fundamentos para orientarte en su campo."
+            ),
+            "image_hint": None,
+        }
+
+    def _template_curiosity(self, topic: str) -> dict[str, Any]:
+        return {
+            "fact": (
+                f"Profesionales de todo el mundo aplican los principios de "
+                f"{topic.lower()} en industrias tan diversas como medicina, "
+                f"finanzas y tecnología."
+            ),
+            "stat":   None,
+            "source": "Tendencias profesionales, 2024",
+        }
+
+    def _template_media_prompt(
+        self, topic: str, concept_text: str, block_idx: int
+    ) -> dict[str, Any]:
+        key_terms = _extract_concept_terms(concept_text, 5)
+        title_low = topic.lower()
+        if (block_idx % 3) != 1:
+            prompt = (
+                f"Crea una infografía educativa sobre \"{topic}\" que visualice: {key_terms}. "
+                f"Usa íconos, flechas y colores para mostrar relaciones. Fondo blanco, estilo profesional."
+            ) if key_terms else (
+                f"Crea una infografía educativa que explique \"{topic}\" con ejemplos cotidianos. "
+                f"Incluye íconos y flechas. Fondo blanco, estilo profesional."
+            )
+            return {
+                "type":             "image",
+                "title":            f"Visualiza: {topic}",
+                "prompt":           prompt,
+                "learning_goal":    (
+                    f"Construir una imagen mental refuerza la memoria a largo plazo y facilita "
+                    f"la comprensión de ideas abstractas en {title_low}."
+                ),
+                "duration_seconds": None,
+            }
+        prompt = (
+            f"Escribe el guion de un video animado de 90 segundos sobre \"{topic}\" "
+            f"enfocándose en: {key_terms}. Usa metáforas cotidianas y un ejemplo real."
+        ) if key_terms else (
+            f"Escribe el guion de un video animado de 90 segundos que explique \"{topic}\" "
+            f"con una metáfora cotidiana al inicio y una aplicación práctica al final."
+        )
+        return {
+            "type":             "video",
+            "title":            f"Explora en video: {topic}",
+            "prompt":           prompt,
+            "learning_goal":    (
+                f"Los videos activan múltiples canales sensoriales, incrementando la retención "
+                f"de {title_low} hasta un 65%."
+            ),
+            "duration_seconds": 90,
+        }
+
+    def _template_mini_activity(self, title: str, topic: str) -> dict[str, Any]:
+        return {
+            "instructions": f"Refuerza la idea principal del concepto sobre {topic.lower()}.",
+            "steps": [
+                f"Lee nuevamente la explicación de '{title}'.",
+                "Identifica el concepto clave que se presenta.",
+                "Escribe mentalmente una frase que lo resuma con tus propias palabras.",
+            ],
+        }
 
     @staticmethod
     def _concept_title(text: str, topic: str, idx: int) -> str:

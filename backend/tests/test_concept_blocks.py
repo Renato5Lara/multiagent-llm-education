@@ -1,8 +1,8 @@
 """
-Tests for Sprint L1 — ConceptBlock generation.
+Tests for Sprint L1 + Sprint M1 — ConceptBlock generation.
 
 Verifies:
-1. _build_concept_blocks generates correct number of blocks
+1. _build_concept_blocks generates correct number of blocks (capped at MAX_CONCEPT_BLOCKS)
 2. Each block has all Phase-1 required fields
 3. Analogy domain matching (e.g., "Base de Datos" → biblioteca)
 4. Curiosity domain matching with real data
@@ -11,14 +11,19 @@ Verifies:
 7. _degraded_result includes concept_blocks: []
 8. Schema validation via ConceptBlock Pydantic model
 9. Integration: build_orchestration_result includes concept_blocks
+10. Sprint M1: LLM enrichment path sets prediction_question / reflection_question
+11. Sprint M1: Template fallback when LLM unavailable or fails
 """
 
+import asyncio
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.schemas.concept_block import ConceptBlock
 from app.services.module_orchestration_service import (
+    MAX_CONCEPT_BLOCKS,
     ModuleOrchestrationService,
+    _build_context_snippets,
     _match_domain,
     _extract_concept_terms,
     _ANALOGY_DOMAINS,
@@ -34,8 +39,8 @@ def _make_service() -> ModuleOrchestrationService:
 
 def _make_module(title: str = "Base de Datos", bloom: int = 3) -> MagicMock:
     m = MagicMock()
-    m.id    = "module-test-001"
-    m.title = title
+    m.id          = "module-test-001"
+    m.title       = title
     m.bloom_level = bloom
     return m
 
@@ -45,6 +50,11 @@ def _make_course(name: str = "Ingeniería de Sistemas") -> MagicMock:
     c.id   = "course-001"
     c.name = name
     return c
+
+
+def _run_blocks(svc: ModuleOrchestrationService, **kwargs) -> list:
+    """Synchronous wrapper for the async _build_concept_blocks method."""
+    return asyncio.run(svc._build_concept_blocks(**kwargs))
 
 
 CONCEPTS_BD = [
@@ -64,8 +74,9 @@ CONCEPTS_SO = [
 class TestConceptBlockCount:
 
     def test_returns_one_block_per_concept(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Base de Datos",
             concepts=CONCEPTS_BD,
             examples_raw=[],
@@ -73,12 +84,13 @@ class TestConceptBlockCount:
             bloom_target=3,
             orch_id="test",
         )
-        assert len(blocks) == 3
+        assert len(blocks) == len(CONCEPTS_BD)
 
-    def test_caps_at_six_blocks(self):
-        svc = _make_service()
+    def test_caps_at_max_concept_blocks(self):
+        svc           = _make_service()
         many_concepts = [f"Concepto {i} sobre el tema." for i in range(10)]
-        blocks = svc._build_concept_blocks(
+        blocks        = _run_blocks(
+            svc,
             topic="Redes",
             concepts=many_concepts,
             examples_raw=[],
@@ -86,11 +98,12 @@ class TestConceptBlockCount:
             bloom_target=2,
             orch_id="test",
         )
-        assert len(blocks) <= 6
+        assert len(blocks) <= MAX_CONCEPT_BLOCKS
 
     def test_empty_concepts_returns_empty_list(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Estadística",
             concepts=[],
             examples_raw=[],
@@ -106,8 +119,9 @@ class TestConceptBlockCount:
 class TestConceptBlockFields:
 
     def setup_method(self):
-        self.svc    = _make_service()
-        self.blocks = self.svc._build_concept_blocks(
+        svc         = _make_service()
+        self.blocks = _run_blocks(
+            svc,
             topic="Base de Datos",
             concepts=CONCEPTS_BD,
             examples_raw=["Ejemplo de tabla Clientes con id, nombre, email."],
@@ -146,7 +160,6 @@ class TestConceptBlockFields:
             assert len(block["mini_activity"]["steps"]) >= 2
 
     def test_first_block_example_from_research(self):
-        # Block 0 should receive the first research example
         assert self.blocks[0]["example"] is not None
         assert "Clientes" in self.blocks[0]["example"]
 
@@ -161,6 +174,12 @@ class TestConceptBlockFields:
     def test_knowledge_check_is_none_in_phase1(self):
         for block in self.blocks:
             assert block.get("knowledge_check") is None
+
+    def test_template_path_has_no_prediction_question(self):
+        # Template fallback (no LLM) → M1 fields are None
+        for block in self.blocks:
+            assert block.get("prediction_question") is None
+            assert block.get("reflection_question") is None
 
     def test_blocks_pass_pydantic_validation(self):
         for block in self.blocks:
@@ -207,7 +226,6 @@ class TestAnalogyDomainMatching:
         assert "niño" in data["source"]
 
     def test_accent_insensitive_matching(self):
-        # "Estadística" vs "estadistica" in domain keywords
         data = self._get_analogy("Estadistica y Probabilidad")
         assert data is not None
 
@@ -216,8 +234,9 @@ class TestAnalogyDomainMatching:
         assert data is None
 
     def test_blocks_use_domain_analogy(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Base de Datos",
             concepts=CONCEPTS_BD,
             examples_raw=[],
@@ -225,7 +244,6 @@ class TestAnalogyDomainMatching:
             bloom_target=3,
             orch_id="test",
         )
-        # All blocks in same module share the domain analogy
         for block in blocks:
             assert "biblioteca" in block["analogy"]["source"]
 
@@ -279,7 +297,7 @@ class TestMediaPromptKeywords:
     def test_extract_concept_terms_returns_words(self):
         text  = "El modelo relacional organiza datos en tablas con filas y columnas."
         terms = _extract_concept_terms(text, 5)
-        assert terms  # not empty
+        assert terms
         assert "modelo" in terms or "relacional" in terms or "tablas" in terms
 
     def test_extract_concept_terms_deduplicates(self):
@@ -292,8 +310,9 @@ class TestMediaPromptKeywords:
         assert terms == ""
 
     def test_media_prompt_contains_concept_keywords(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Base de Datos",
             concepts=["El modelo relacional organiza tablas con índices primarios para búsquedas eficientes."],
             examples_raw=[],
@@ -302,12 +321,12 @@ class TestMediaPromptKeywords:
             orch_id="test",
         )
         prompt_text = blocks[0]["media_prompt"]["prompt"]
-        # At least one concept keyword should appear in the prompt
         assert any(kw in prompt_text for kw in ["modelo", "relacional", "tablas", "indices", "busquedas"])
 
     def test_media_prompt_type_rotates(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Redes",
             concepts=[f"Concepto {i} sobre protocolos de red y enrutamiento de paquetes." for i in range(3)],
             examples_raw=[],
@@ -316,7 +335,6 @@ class TestMediaPromptKeywords:
             orch_id="test",
         )
         types = {b["media_prompt"]["type"] for b in blocks}
-        # Should have at least image; may have video too if 3 blocks
         assert "image" in types
 
 
@@ -332,8 +350,9 @@ class TestGracefulDegradation:
         assert result["concept_blocks"] == []
 
     def test_single_concept_generates_one_block(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Cálculo",
             concepts=["La derivada mide la tasa de cambio instantáneo de una función."],
             examples_raw=[],
@@ -345,16 +364,16 @@ class TestGracefulDegradation:
         assert blocks[0]["analogy"] is not None
 
     def test_no_crash_with_malformed_examples(self):
-        svc = _make_service()
-        blocks = svc._build_concept_blocks(
+        svc    = _make_service()
+        blocks = _run_blocks(
+            svc,
             topic="Estadística",
             concepts=CONCEPTS_BD[:2],
-            examples_raw=[None, {}, 42],   # malformed
+            examples_raw=[None, {}, 42],
             misconceptions_raw=[],
             bloom_target=2,
             orch_id="test",
         )
-        # Should not raise; may or may not attach example
         assert len(blocks) == 2
 
 
@@ -363,25 +382,27 @@ class TestGracefulDegradation:
 class TestOrchestrationResultIntegration:
 
     def _build_result(self, topic: str, concepts: list[str]) -> dict:
-        svc = _make_service()
+        svc            = _make_service()
         research_state = {
             "research": {
-                "concepts": [{"concept": c} for c in concepts],
-                "examples": ["Ejemplo práctico."],
-                "misconceptions": [],
+                "concepts":          [{"concept": c} for c in concepts],
+                "examples":          ["Ejemplo práctico."],
+                "misconceptions":    [],
                 "real_applications": [],
                 "multimodal_prompts": [],
-                "sources": [],
-                "degraded": False,
-                "confidence_score": 0.8,
+                "sources":           [],
+                "degraded":          False,
+                "confidence_score":  0.8,
             },
-            "research_metrics": {"pedagogical_confidence": 0.8},
+            "research_metrics":       {"pedagogical_confidence": 0.8},
             "consistency_validation": {"valid": True},
         }
         module = _make_module(topic)
         course = _make_course()
-        return svc._build_orchestration_result(
-            research_state, MagicMock(), course, module, 3, "test-orch"
+        return asyncio.run(
+            svc._build_orchestration_result(
+                research_state, MagicMock(), course, module, 3, "test-orch"
+            )
         )
 
     def test_result_has_concept_blocks_field(self):
@@ -392,8 +413,9 @@ class TestOrchestrationResultIntegration:
         result = self._build_result("Base de Datos", CONCEPTS_BD)
         assert isinstance(result["concept_blocks"], list)
 
-    def test_concept_blocks_count_matches_concepts(self):
+    def test_concept_blocks_count_within_max(self):
         result = self._build_result("Redes", CONCEPTS_SO)
+        # CONCEPTS_SO has 2 items < MAX_CONCEPT_BLOCKS, so all are included
         assert len(result["concept_blocks"]) == len(CONCEPTS_SO)
 
     def test_result_with_no_concepts_has_empty_blocks(self):
@@ -406,3 +428,226 @@ class TestOrchestrationResultIntegration:
         schema = ModuleOrchestrationResponse.model_validate(result)
         assert len(schema.concept_blocks) == len(CONCEPTS_BD)
         assert schema.concept_blocks[0].analogy is not None
+
+
+# ── 8. Sprint M1: _build_context_snippets ─────────────────────────────────────
+
+class TestBuildContextSnippets:
+
+    def test_returns_string(self):
+        snippets = _build_context_snippets(["Base de datos", "Índices"], [], [])
+        assert isinstance(snippets, str)
+
+    def test_includes_concept_strings(self):
+        snippets = _build_context_snippets(["modelo relacional"], [], [])
+        assert "modelo relacional" in snippets
+
+    def test_includes_example_preview(self):
+        snippets = _build_context_snippets(
+            [],
+            [{"example": "Tabla Clientes"}],
+            [],
+        )
+        assert "Clientes" in snippets
+
+    def test_includes_misconception(self):
+        snippets = _build_context_snippets(
+            [],
+            [],
+            [{"misconception": "SQL es lento"}],
+        )
+        assert "SQL es lento" in snippets
+
+    def test_empty_inputs_returns_empty_string(self):
+        snippets = _build_context_snippets([], [], [])
+        assert snippets == ""
+
+
+# ── 9. Sprint M1: LLM enrichment path ────────────────────────────────────────
+
+class TestLLMEnrichmentPath:
+
+    def _make_llm_response(self) -> object:
+        from app.llm.service import LLMResponse
+        payload = {
+            "explanation":         "Imagina que los datos son libros en una biblioteca perfectamente organizada...",
+            "analogy":             {"source": "biblioteca", "explanation": "Cada tabla es un estante temático."},
+            "curiosity":           {"fact": "Netflix gestiona 125M usuarios con BD distribuidas.", "stat": "125M", "source": "Netflix Tech Blog, 2023"},
+            "mini_activity":       {"instructions": "Identifica una tabla en tu vida diaria.", "steps": ["Piensa en un objeto cotidiano", "Describe sus atributos como columnas", "Imagina varios registros"]},
+            "prediction_question": "¿Qué crees que es una tabla en una base de datos?",
+            "reflection_question": "¿Cómo aplicarías el modelo relacional en un proyecto real?",
+            "media_prompt":        {"type": "image", "title": "Visualiza una BD", "prompt": "Crea una infografía...", "learning_goal": "Reforzar la memoria visual."},
+        }
+        return LLMResponse(
+            content=str(payload),
+            parsed=payload,
+            model="gpt-4o-mini",
+            provider="openai",
+            tokens_prompt=100,
+            tokens_completion=300,
+            tokens_total=400,
+            confidence_raw=0.9,
+            duration_ms=800.0,
+            success=True,
+        )
+
+    def test_llm_path_sets_prediction_question(self):
+        svc          = _make_service()
+        mock_resp    = self._make_llm_response()
+
+        with (
+            patch("app.services.module_orchestration_service.settings") as mock_settings,
+            patch("app.services.module_orchestration_service.LLMService") as MockLLMService,
+        ):
+            mock_settings.has_openai     = True
+            mock_settings.OPENAI_API_KEY = "sk-test"
+            MockLLMService.return_value.generate = AsyncMock(return_value=mock_resp)
+
+            blocks = asyncio.run(svc._build_concept_blocks(
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD[:1],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test-llm",
+            ))
+
+        assert len(blocks) == 1
+        assert blocks[0]["prediction_question"] == "¿Qué crees que es una tabla en una base de datos?"
+        assert blocks[0]["reflection_question"] == "¿Cómo aplicarías el modelo relacional en un proyecto real?"
+
+    def test_llm_path_uses_narrative_explanation(self):
+        svc       = _make_service()
+        mock_resp = self._make_llm_response()
+
+        with (
+            patch("app.services.module_orchestration_service.settings") as mock_settings,
+            patch("app.services.module_orchestration_service.LLMService") as MockLLMService,
+        ):
+            mock_settings.has_openai     = True
+            mock_settings.OPENAI_API_KEY = "sk-test"
+            MockLLMService.return_value.generate = AsyncMock(return_value=mock_resp)
+
+            blocks = asyncio.run(svc._build_concept_blocks(
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD[:1],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test-llm",
+            ))
+
+        assert "Imagina que" in blocks[0]["explanation"]
+
+    def test_llm_path_passes_pydantic_validation(self):
+        svc       = _make_service()
+        mock_resp = self._make_llm_response()
+
+        with (
+            patch("app.services.module_orchestration_service.settings") as mock_settings,
+            patch("app.services.module_orchestration_service.LLMService") as MockLLMService,
+        ):
+            mock_settings.has_openai     = True
+            mock_settings.OPENAI_API_KEY = "sk-test"
+            MockLLMService.return_value.generate = AsyncMock(return_value=mock_resp)
+
+            blocks = asyncio.run(svc._build_concept_blocks(
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD[:1],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test-llm",
+            ))
+
+        validated = ConceptBlock.model_validate(blocks[0])
+        assert validated.prediction_question is not None
+        assert validated.reflection_question is not None
+
+
+# ── 10. Sprint M1: Template fallback ─────────────────────────────────────────
+
+class TestTemplateFallback:
+
+    def test_llm_exception_falls_back_to_template(self):
+        """RuntimeError during LLM call → template path, M1 fields are None."""
+        svc = _make_service()
+
+        with (
+            patch("app.services.module_orchestration_service.settings") as mock_settings,
+            patch("app.services.module_orchestration_service.LLMService") as MockLLMService,
+        ):
+            mock_settings.has_openai     = True
+            mock_settings.OPENAI_API_KEY = "sk-test"
+            MockLLMService.return_value.generate = AsyncMock(side_effect=RuntimeError("network error"))
+
+            blocks = asyncio.run(svc._build_concept_blocks(
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD[:1],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test-fallback",
+            ))
+
+        assert len(blocks) == 1
+        assert blocks[0]["prediction_question"] is None
+        assert blocks[0]["reflection_question"] is None
+        assert blocks[0]["analogy"] is not None
+
+    def test_no_openai_key_uses_template(self):
+        """settings.has_openai=False → no LLM call, template path."""
+        svc = _make_service()
+
+        with patch("app.services.module_orchestration_service.settings") as mock_settings:
+            mock_settings.has_openai = False
+
+            blocks = asyncio.run(svc._build_concept_blocks(
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD[:1],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test-no-key",
+            ))
+
+        assert blocks[0]["prediction_question"] is None
+        assert blocks[0]["analogy"] is not None
+
+    def test_llm_returns_no_parsed_falls_back(self):
+        """LLM success=False or parsed=None → template path."""
+        from app.llm.service import LLMResponse
+        svc          = _make_service()
+        bad_response = LLMResponse(
+            content="",
+            parsed=None,
+            model="gpt-4o-mini",
+            provider="openai",
+            tokens_prompt=0,
+            tokens_completion=0,
+            tokens_total=0,
+            confidence_raw=0.0,
+            duration_ms=100.0,
+            success=False,
+            error="rate_limit",
+        )
+
+        with (
+            patch("app.services.module_orchestration_service.settings") as mock_settings,
+            patch("app.services.module_orchestration_service.LLMService") as MockLLMService,
+        ):
+            mock_settings.has_openai     = True
+            mock_settings.OPENAI_API_KEY = "sk-test"
+            MockLLMService.return_value.generate = AsyncMock(return_value=bad_response)
+
+            blocks = asyncio.run(svc._build_concept_blocks(
+                topic="Base de Datos",
+                concepts=CONCEPTS_BD[:1],
+                examples_raw=[],
+                misconceptions_raw=[],
+                bloom_target=3,
+                orch_id="test-bad-resp",
+            ))
+
+        assert blocks[0]["prediction_question"] is None
+        assert blocks[0]["analogy"] is not None

@@ -74,16 +74,19 @@ export interface ConceptBlockReflection {
 }
 
 export interface ConceptBlock {
-  id:                  string
-  title:               string
-  explanation:         string
-  learning_objective?: string
-  example?:            string
-  analogy?:            ConceptBlockAnalogy
-  curiosity?:          ConceptBlockCuriosity
-  media_prompt?:       ConceptBlockMediaPrompt
-  mini_activity?:      ConceptBlockMiniActivity
-  reflection?:         ConceptBlockReflection
+  id:                   string
+  title:                string
+  explanation:          string
+  learning_objective?:  string
+  example?:             string
+  analogy?:             ConceptBlockAnalogy
+  curiosity?:           ConceptBlockCuriosity
+  media_prompt?:        ConceptBlockMediaPrompt
+  mini_activity?:       ConceptBlockMiniActivity
+  // Sprint M1 — present only when backend used LLM enrichment
+  prediction_question?: string
+  reflection_question?: string
+  reflection?:          ConceptBlockReflection
 }
 
 export interface PedagogicalStage {

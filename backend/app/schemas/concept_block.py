@@ -54,19 +54,24 @@ class ConceptBlockKnowledgeCheck(BaseModel):
 class ConceptBlock(BaseModel):
     """A self-contained learning unit: concept + all enrichment layers.
 
-    Phase 1 fields (always generated): id, title, explanation, example,
-    analogy, curiosity, media_prompt, mini_activity.
-
-    Phase 2 fields (None in Phase 1): reflection, knowledge_check.
+    Phase 1 (always generated): id, title, explanation, example,
+      analogy, curiosity, media_prompt, mini_activity.
+    Sprint M1 (LLM-generated, None on template fallback):
+      prediction_question, reflection_question.
+    Phase 2 (deferred): reflection, knowledge_check.
     """
-    id:                  str
-    title:               str
-    explanation:         str
-    learning_objective:  Optional[str] = None
-    example:             Optional[str] = None
-    analogy:             Optional[ConceptBlockAnalogy]     = None
-    curiosity:           Optional[ConceptBlockCuriosity]   = None
-    media_prompt:        Optional[ConceptBlockMediaPrompt] = None
-    mini_activity:       Optional[ConceptBlockMiniActivity]    = None
-    reflection:          Optional[ConceptBlockReflection]  = None
-    knowledge_check:     Optional[ConceptBlockKnowledgeCheck]  = None
+    id:                   str
+    title:                str
+    explanation:          str
+    learning_objective:   Optional[str] = None
+    example:              Optional[str] = None
+    analogy:              Optional[ConceptBlockAnalogy]      = None
+    curiosity:            Optional[ConceptBlockCuriosity]    = None
+    media_prompt:         Optional[ConceptBlockMediaPrompt]  = None
+    mini_activity:        Optional[ConceptBlockMiniActivity] = None
+    # Sprint M1 — populated by LLM; None when template fallback is used
+    prediction_question:  Optional[str] = None
+    reflection_question:  Optional[str] = None
+    # Phase 2 — always None in Phase 1
+    reflection:           Optional[ConceptBlockReflection]   = None
+    knowledge_check:      Optional[ConceptBlockKnowledgeCheck] = None
