@@ -60,21 +60,21 @@ export default function LearningPath() {
         return (
             <div className="max-w-2xl mx-auto">
                 <PageHeader title="Mi Ruta de Aprendizaje" description="Personaliza tu experiencia de aprendizaje" />
-                <Card className="p-12 text-center">
-                    <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">Ruta no encontrada</h3>
-                    <p className="text-muted-foreground mb-6">Completa el diagnóstico primero para generar tu ruta de aprendizaje personalizada.</p>
+                <div className="glass-panel rounded-xl p-12 text-center">
+                    <BookOpen className="h-12 w-12 text-neural-glow/40 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-neural-text mb-2">Ruta no encontrada</h3>
+                    <p className="text-sm text-neural-muted mb-6">Genera tu ruta de aprendizaje personalizada o realiza el diagnóstico primero.</p>
                     <div className="flex gap-3 justify-center">
                         <Button variant="outline" onClick={() => navigate(`/estudiante/diagnostic/${courseId}`)}>
                             Ir al diagnóstico
                         </Button>
                         {courseId && (
                             <Button onClick={() => generatePath.mutate(courseId)} disabled={generatePath.isPending}>
-                                {generatePath.isPending ? 'Generando...' : 'Generar ruta'}
+                                {generatePath.isPending ? 'Generando...' : 'Generar ruta adaptativa'}
                             </Button>
                         )}
                     </div>
-                </Card>
+                </div>
             </div>
         )
     }
