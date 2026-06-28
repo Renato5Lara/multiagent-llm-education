@@ -1,5 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+
+// Inicializa el tema antes del primer render para evitar flash.
+// 'neural' = dark (por defecto) | 'academic' = light UPAO
+;(function initTheme() {
+  const stored = localStorage.getItem('upao-theme') as 'neural' | 'academic' | null
+  const theme = stored ?? 'neural'
+  document.documentElement.classList.toggle('dark', theme === 'neural')
+})()
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'

@@ -102,6 +102,19 @@
   50%       { box-shadow: 0 0 22px rgba(0, 219, 231, 0.5); }
 }
 
+/* Respeta preferencia del sistema — desactiva animaciones continuas */
+@media (prefers-reduced-motion: reduce) {
+  .scanline-effect::after,
+  .glow-active,
+  .pulse-indicator::before {
+    animation: none;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ── Neural Swarm utilities ────────────────────────────────────────────────── */
 @layer utilities {
   /* Glassmorphism panels */
