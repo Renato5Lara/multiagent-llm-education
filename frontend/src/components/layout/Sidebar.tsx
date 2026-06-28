@@ -12,54 +12,73 @@ export interface SidebarItem {
 interface SidebarProps {
   items: SidebarItem[]
   title?: string
+  subtitle?: string
 }
 
-export default function Sidebar({ items, title = 'UPAO-MAS-EDU' }: SidebarProps) {
+export default function Sidebar({
+  items,
+  title = 'UPAO-MAS-EDU',
+  subtitle = 'Swarm Intelligence Platform',
+}: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
   return (
     <>
+      {/* Mobile toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#002550] text-white shadow-lg hover:bg-[#003D7A] transition-colors"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg glass-panel text-neural-glow shadow-lg transition-colors"
         aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
       >
         {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
 
+      {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
+      {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 bg-[#002550] text-white flex flex-col shadow-xl transition-transform duration-300',
+          'fixed inset-y-0 left-0 z-40 w-64 flex flex-col transition-transform duration-300',
+          'bg-neural-lowest border-r border-white/[0.06]',
           'lg:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center font-bold text-sm text-white">
-              U
+        {/* Hex pattern overlay */}
+        <div className="absolute inset-0 hex-bg opacity-40 pointer-events-none" />
+
+        {/* Brand header */}
+        <div className="relative z-10 h-16 flex items-center px-5 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-neural-glow/10 border border-neural-glow/30 flex items-center justify-center flex-shrink-0 neural-glow-sm">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-neural-glow fill-current">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
+              </svg>
             </div>
-            <span className="font-bold text-lg tracking-tight">{title}</span>
+            <div className="min-w-0">
+              <p className="text-neural-text font-semibold text-sm leading-tight tracking-tight truncate">
+                {title}
+              </p>
+              <p className="text-neural-glow/60 text-[9px] leading-tight tracking-[0.12em] uppercase font-mono truncate">
+                {subtitle}
+              </p>
+            </div>
           </div>
         </div>
 
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-thin">
+        {/* Nav */}
+        <nav className="relative z-10 flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
           {items.map((item) => (
             <NavLink
               key={item.href}
@@ -68,21 +87,35 @@ export default function Sidebar({ items, title = 'UPAO-MAS-EDU' }: SidebarProps)
               onClick={() => setIsOpen(false)}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                  'border-l-2',
                   isActive
-                    ? 'bg-white/15 text-white shadow-sm'
-                    : 'text-white/70 hover:text-white hover:bg-white/10',
+                    ? 'bg-neural-glow/[0.08] text-neural-glow border-neural-glow neural-glow-sm'
+                    : 'text-neural-muted hover:text-neural-text hover:bg-white/[0.04] border-transparent',
                 )
               }
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {item.label}
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={cn(
+                      'h-4 w-4 flex-shrink-0 transition-colors duration-200',
+                      isActive ? 'text-neural-glow' : 'text-neural-muted group-hover:text-neural-text',
+                    )}
+                  />
+                  <span className="truncate">{item.label}</span>
+                  {isActive && (
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-neural-glow flex-shrink-0 glow-active" />
+                  )}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
-          <p className="text-[11px] text-white/40 text-center">
+        {/* Footer */}
+        <div className="relative z-10 p-4 border-t border-white/[0.06]">
+          <p className="text-[10px] text-neural-muted/40 text-center tracking-widest font-mono uppercase">
             © 2026 UPAO · v1.0.0
           </p>
         </div>

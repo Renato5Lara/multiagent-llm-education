@@ -1,4 +1,4 @@
-import { LogOut, User, Settings } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -22,30 +22,37 @@ export default function UserDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-3 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition-colors">
-        <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
-          <AvatarFallback className="bg-primary text-white text-xs font-semibold">
+      <DropdownMenuTrigger className="flex items-center gap-2.5 hover:bg-white/[0.05] rounded-lg px-2 py-1.5 transition-colors outline-none">
+        <Avatar className="h-7 w-7 border border-neural-glow/30">
+          <AvatarFallback className="bg-neural-glow/10 text-neural-glow text-xs font-semibold">
             {getInitials(user.first_name, user.last_name)}
           </AvatarFallback>
         </Avatar>
         <div className="text-left hidden sm:block">
-          <p className="text-sm font-medium leading-none">{user.first_name} {user.last_name}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{user.email}</p>
+          <p className="text-xs font-medium leading-none text-neural-text">
+            {user.first_name} {user.last_name}
+          </p>
+          <p className="text-[10px] text-neural-muted mt-0.5 font-mono">{user.email}</p>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Mi cuenta</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem disabled>
+
+      <DropdownMenuContent align="end" className="w-56 glass-panel border-white/[0.08]">
+        <DropdownMenuLabel className="text-neural-muted text-xs font-mono tracking-widest uppercase">
+          Mi cuenta
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-white/[0.06]" />
+        <DropdownMenuItem
+          disabled
+          className="text-neural-muted focus:text-neural-text focus:bg-white/[0.05]"
+        >
           <User className="mr-2 h-4 w-4" />
           Perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/admin/settings')} disabled>
-          <Settings className="mr-2 h-4 w-4" />
-          Configuración
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => logout()} className="text-red-600 focus:text-red-600 hover:text-red-700 hover:bg-red-50">
+        <DropdownMenuSeparator className="bg-white/[0.06]" />
+        <DropdownMenuItem
+          onClick={() => { logout(); navigate('/login') }}
+          className="text-red-400 focus:text-red-300 focus:bg-red-500/[0.08] cursor-pointer"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           Cerrar sesión
         </DropdownMenuItem>

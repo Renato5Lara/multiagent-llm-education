@@ -35,7 +35,7 @@ export default function EstudianteLayout() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neural-surface">
       <Sidebar items={estudianteItems} />
       <div className="lg:ml-64">
         <Header />

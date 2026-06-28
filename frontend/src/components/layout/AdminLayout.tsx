@@ -11,7 +11,7 @@ const adminItems: SidebarItem[] = [
 
 export default function AdminLayout() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neural-surface">
       <Sidebar items={adminItems} />
       <div className="lg:ml-64">
         <Header />

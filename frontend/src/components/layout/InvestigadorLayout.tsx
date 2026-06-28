@@ -11,7 +11,7 @@ const investigadorItems: SidebarItem[] = [
 
 export default function InvestigadorLayout() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neural-surface">
       <Sidebar items={investigadorItems} title="UPAO-MAS-EDU · Demo" />
       <div className="lg:ml-64">
         <Header />
