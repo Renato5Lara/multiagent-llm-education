@@ -1,7 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Check, Swords } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useModuleOrchestration } from '@/hooks/useStudent'
@@ -28,25 +27,26 @@ type AppPhase = 'engaging' | 'waiting_content' | 'content'
 function DebatePanel({ sessionId }: { sessionId: string | null }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+    <div className="glass-panel rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/30 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors text-left"
       >
-        <Swords className="h-4 w-4 text-primary/70 shrink-0" />
+        <Swords className="h-4 w-4 text-neural-violet/70 shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground/80">Debate entre agentes</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-sm font-medium text-neural-text/80">Debate entre agentes</p>
+          <p className="text-xs text-neural-muted mt-0.5">
             Cómo los agentes negociaron la estrategia de aprendizaje para este módulo
           </p>
         </div>
-        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" />
-               : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+        {open
+          ? <ChevronUp className="h-4 w-4 text-neural-muted shrink-0" />
+          : <ChevronDown className="h-4 w-4 text-neural-muted shrink-0" />}
       </button>
       {open && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="h-px bg-border/60 mx-4" />
+          <div className="h-px bg-white/[0.06] mx-4" />
           <div className="px-4 py-4">
             <AgentDebateBubbles sessionId={sessionId} />
           </div>
@@ -56,7 +56,82 @@ function DebatePanel({ sessionId }: { sessionId: string | null }) {
   )
 }
 
-// Loading-screen phases — now sourced from constants/agentPipeline.ts
+// ── Swarm adaptation header (content phase only) ──────────────────────────────
+function SwarmAdaptationHeader({ data }: { data: ModuleOrchestrationResponse }) {
+  const [whyOpen, setWhyOpen] = useState(false)
+
+  const currentBloom =
+    data.bloom_progression?.find(b => !b.mastered) ??
+    data.bloom_progression?.[data.bloom_progression.length - 1]
+
+  return (
+    <div className="glass-panel rounded-xl p-4 mb-5 space-y-3">
+      {/* Title row */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-mono text-neural-muted/50 tracking-widest uppercase truncate">
+            {data.course_name}
+          </p>
+          <h2 className="text-base font-semibold text-neural-text mt-0.5 leading-snug">
+            {data.module_title}
+          </h2>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {currentBloom && (
+            <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-neural-violet/10 text-neural-violet border border-neural-violet/20">
+              Bloom · {currentBloom.label}
+            </span>
+          )}
+          {data.confidence > 0 && (
+            <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-neural-glow/10 text-neural-glow border border-neural-glow/20">
+              {Math.round(data.confidence * 100)}% conf.
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Swarm badge + why toggle */}
+      <div className="flex items-center gap-2 pt-2.5 border-t border-white/[0.05]">
+        <span className="w-1.5 h-1.5 rounded-full bg-neural-pulse animate-pulse shrink-0" />
+        <span className="text-xs text-neural-muted">Adaptación personalizada generada por el Swarm</span>
+        <button
+          type="button"
+          onClick={() => setWhyOpen(v => !v)}
+          className="ml-auto text-[10px] font-mono text-neural-glow/60 hover:text-neural-glow transition-colors flex items-center gap-1 shrink-0"
+        >
+          ¿Por qué veo esto?
+          {whyOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        </button>
+      </div>
+
+      {/* Collapsible evidence */}
+      {whyOpen && data.retrieval_evidence && (
+        <div className="animate-in fade-in slide-in-from-top-1 duration-200 bg-neural-lowest/60 rounded-lg p-3 space-y-1.5">
+          <p className="text-xs text-neural-muted leading-relaxed">
+            El sistema encontró{' '}
+            <span className="text-neural-glow font-medium">{data.retrieval_evidence.sources_count}</span>{' '}
+            fuentes relevantes con una confianza de{' '}
+            <span className="text-neural-glow font-medium">
+              {Math.round(data.retrieval_evidence.confidence * 100)}%
+            </span>.
+            {data.retrieval_evidence.degraded && (
+              <span className="text-amber-400"> (Modo degradado — algunos agentes no respondieron)</span>
+            )}
+          </p>
+          {data.retrieval_evidence.sources?.slice(0, 3).map((src, i) => (
+            <div key={i} className="flex items-center gap-2 text-[10px] font-mono text-neural-muted/60">
+              <span className="text-neural-glow/40 shrink-0">·</span>
+              <span className="truncate">{src.title}</span>
+              <span className="shrink-0 text-neural-pulse/60">{Math.round(src.relevance * 100)}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Loading-screen phases — sourced from constants/agentPipeline.ts
 const ORCHESTRATION_PHASES = LOADING_PHASES
 
 export default function ModuleLearningView() {
@@ -170,59 +245,64 @@ export default function ModuleLearningView() {
             <ArrowLeft className="h-4 w-4 mr-1" />Volver
           </Button>
         </div>
-        <Card className="overflow-hidden">
+
+        <div className="glass-panel rounded-xl overflow-hidden">
           {/* Header */}
-          <div className="px-8 pt-8 pb-6 text-center border-b border-border">
+          <div className="px-8 pt-8 pb-6 text-center border-b border-white/[0.06]">
             <div className="relative w-14 h-14 mx-auto mb-5">
-              <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping opacity-30" />
-              <div className="relative w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <Brain className="h-7 w-7 text-primary" />
+              <div className="absolute inset-0 rounded-full bg-neural-glow/10 animate-ping opacity-30" />
+              <div className="relative w-14 h-14 rounded-full bg-neural-glow/10 border border-neural-glow/20 flex items-center justify-center">
+                <Brain className="h-7 w-7 text-neural-glow" />
               </div>
             </div>
-            <h3 className="text-base font-semibold mb-1">
+            <h3 className="text-base font-semibold text-neural-text mb-1">
               El sistema multiagente está construyendo tu módulo
             </h3>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-neural-muted">
               Generado exclusivamente para tu perfil de aprendizaje · 20–60 segundos
             </p>
           </div>
 
           {/* Active thought */}
           <div className="px-8 py-5">
-            <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300" key={phaseIndex}>
-              <div className="mt-0.5 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Loader2 className="h-3 w-3 text-primary animate-spin" />
+            <div
+              className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300"
+              key={phaseIndex}
+            >
+              <div className="mt-0.5 w-5 h-5 rounded-full bg-neural-glow/10 border border-neural-glow/20 flex items-center justify-center shrink-0">
+                <Loader2 className="h-3 w-3 text-neural-glow animate-spin" />
               </div>
               <div>
-                <p className="text-xs font-mono text-primary mb-0.5">{currentPhase?.agent}</p>
-                <p className="text-sm text-foreground">{currentPhase?.thought}</p>
+                <p className="text-xs font-mono text-neural-glow mb-0.5">{currentPhase?.agent}</p>
+                <p className="text-sm text-neural-text/80">{currentPhase?.thought}</p>
               </div>
             </div>
           </div>
 
           {/* Expandable agent log */}
           {completedPhases.length > 0 && (
-            <div className="border-t border-border">
+            <div className="border-t border-white/[0.06]">
               <button
-                className="w-full flex items-center justify-between px-8 py-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="w-full flex items-center justify-between px-8 py-3 text-xs text-neural-muted/60 hover:text-neural-muted transition-colors"
                 onClick={() => setShowAgentLog(v => !v)}
               >
-                <span>{completedPhases.length} paso{completedPhases.length !== 1 ? 's' : ''} completado{completedPhases.length !== 1 ? 's' : ''}</span>
+                <span>
+                  {completedPhases.length} paso{completedPhases.length !== 1 ? 's' : ''} completado{completedPhases.length !== 1 ? 's' : ''}
+                </span>
                 {showAgentLog
                   ? <ChevronUp className="h-3.5 w-3.5" />
-                  : <ChevronDown className="h-3.5 w-3.5" />
-                }
+                  : <ChevronDown className="h-3.5 w-3.5" />}
               </button>
               {showAgentLog && (
                 <div className="px-8 pb-5 space-y-2.5 animate-in fade-in duration-200">
                   {completedPhases.map((phase, i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <div className="mt-0.5 w-5 h-5 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-                        <Check className="h-3 w-3 text-green-600" />
+                      <div className="mt-0.5 w-5 h-5 rounded-full bg-neural-pulse/10 border border-neural-pulse/20 flex items-center justify-center shrink-0">
+                        <Check className="h-3 w-3 text-neural-pulse" />
                       </div>
                       <div>
-                        <p className="text-xs font-mono text-muted-foreground mb-0.5">{phase.agent}</p>
-                        <p className="text-xs text-muted-foreground">{phase.thought}</p>
+                        <p className="text-xs font-mono text-neural-muted/60 mb-0.5">{phase.agent}</p>
+                        <p className="text-xs text-neural-muted/50">{phase.thought}</p>
                       </div>
                     </div>
                   ))}
@@ -230,7 +310,7 @@ export default function ModuleLearningView() {
               )}
             </div>
           )}
-        </Card>
+        </div>
       </div>
     )
   }
@@ -243,17 +323,17 @@ export default function ModuleLearningView() {
             <ArrowLeft className="h-4 w-4 mr-1" />Volver
           </Button>
         </div>
-        <Card className="p-12 text-center">
-          <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4 opacity-70" />
-          <h3 className="text-lg font-semibold mb-2">Error al preparar el módulo</h3>
-          <p className="text-muted-foreground mb-6">No se pudo orquestar el contenido pedagógico.</p>
+        <div className="glass-panel rounded-xl p-12 text-center">
+          <AlertCircle className="h-14 w-14 text-destructive mx-auto mb-4 opacity-60" />
+          <h3 className="text-lg font-semibold text-neural-text mb-2">Error al preparar el módulo</h3>
+          <p className="text-sm text-neural-muted mb-6">No se pudo orquestar el contenido pedagógico.</p>
           <div className="flex gap-3 justify-center">
             <Button variant="outline" onClick={handleBack}>Volver</Button>
             <Button onClick={() => moduleId && orchestrateModule(moduleId)} className="gap-2">
               <RefreshCw className="h-4 w-4" /> Reintentar
             </Button>
           </div>
-        </Card>
+        </div>
       </div>
     )
   }
@@ -269,22 +349,27 @@ export default function ModuleLearningView() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between gap-2 mb-4">
+      {/* Top nav row */}
+      <div className="flex items-center justify-between gap-2 mb-5">
         <Button variant="ghost" size="sm" onClick={handleBack}>
           <ArrowLeft className="h-4 w-4 mr-1" />Volver
         </Button>
         {sessionId && data && !isOrchestrating && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="gap-2"
+            className="gap-2 text-neural-muted/60 hover:text-neural-muted"
             onClick={() => setTraceDialogOpen(true)}
           >
-            <Brain className="h-4 w-4" />
-            Ver razonamiento de agentes
+            <Brain className="h-3.5 w-3.5" />
+            <span className="text-xs font-mono">Ver razonamiento de agentes</span>
           </Button>
         )}
       </div>
+
+      {/* Swarm adaptation header — discrete, student-friendly */}
+      <SwarmAdaptationHeader data={data} />
+
       {/* Post-engage module journey: engage cards (did_you_know / prior_knowledge /
           detonating_question) are NOT repeated here — they ran in EngageGateway above.
           Falls back to legacy view only while the session query is still in flight
@@ -302,14 +387,12 @@ export default function ModuleLearningView() {
         />
       )}
 
-      {/* Sprint E — AgentThoughtStream: student-facing + technical toggle */}
+      {/* Observability section */}
       <div className="mt-6 space-y-3">
         <AgentThoughtStream
           sessionId={sessionId}
           onOpenTechnical={sessionId ? () => setTraceDialogOpen(true) : undefined}
         />
-
-        {/* Sprint G — Debate visible entre agentes */}
         <DebatePanel sessionId={sessionId} />
       </div>
 
@@ -323,9 +406,9 @@ export default function ModuleLearningView() {
       />
       <Dialog open={traceDialogOpen} onOpenChange={setTraceDialogOpen}>
         <DialogContent className="max-w-7xl w-[95vw] h-[90vh] overflow-hidden p-0 flex flex-col gap-0">
-          <DialogHeader className="shrink-0 border-b px-6 py-4">
-            <DialogTitle className="flex items-center gap-2">
-              <Brain className="h-4 w-4" />
+          <DialogHeader className="shrink-0 border-b border-white/[0.06] px-6 py-4">
+            <DialogTitle className="flex items-center gap-2 text-neural-text">
+              <Brain className="h-4 w-4 text-neural-glow" />
               Razonamiento del sistema multiagente
             </DialogTitle>
           </DialogHeader>
