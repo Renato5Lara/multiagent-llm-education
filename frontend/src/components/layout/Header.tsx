@@ -8,7 +8,7 @@ const ROLE_COLORS: Record<string, string> = {
   admin:         'border-neural-glow/40 text-neural-glow bg-neural-glow/[0.06]',
   docente:       'border-neural-violet/40 text-neural-violet bg-neural-violet/[0.06]',
   estudiante:    'border-neural-pulse/40 text-neural-pulse bg-neural-pulse/[0.06]',
-  investigador:  'border-neural-glow-bright/40 text-neural-glow-bright bg-neural-glow-bright/[0.06]',
+  investigador:  'border-neural-glow/40 text-neural-glow bg-neural-glow/[0.06]',
 }
 
 export default function Header() {
