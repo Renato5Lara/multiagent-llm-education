@@ -269,6 +269,16 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
 
     course_map = {c.id: c for c in db.query(Course).filter(Course.id.in_(all_course_ids)).all()}
 
+    # Two seed sections (MALLA_CURRICULAR + ISIA_2025_CYCLES) create courses with the same
+    # name but different IDs (e.g. BD301 and SIS202 are both "Base de Datos I"). Keep only
+    # the first enrollment per course name to avoid duplicate cards in the dashboard.
+    seen_names: set[str] = set()
+    all_course_ids = [
+        cid for cid in all_course_ids
+        if course_map.get(cid) and course_map[cid].name not in seen_names
+        and not seen_names.add(course_map[cid].name)  # type: ignore[func-returns-value]
+    ]
+
     results = []
     for course_id in all_course_ids:
         course = course_map.get(course_id)

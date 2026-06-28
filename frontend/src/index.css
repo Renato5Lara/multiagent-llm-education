@@ -46,7 +46,7 @@
 
     /* Muted / borders */
     --muted: 220 13% 18%;              /* #272a31 */
-    --muted-foreground: 182 12% 76%;   /* #b9cacb */
+    --muted-foreground: 182 10% 83%;   /* #ccd8d9 — brighter for dark mode contrast */
     --accent: 183 100% 45%;
     --accent-foreground: 228 24% 8%;
 
