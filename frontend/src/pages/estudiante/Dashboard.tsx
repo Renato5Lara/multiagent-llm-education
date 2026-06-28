@@ -35,9 +35,9 @@ function CompactGreeting({ name, cycle }: { name: string; cycle: number }) {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches'
   return (
-    <div className="glass-panel rounded-xl p-5 mb-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-80 h-36 bg-neural-glow/8 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-6 left-0 w-56 h-28 bg-neural-violet/8 blur-3xl pointer-events-none" />
+    <div className="glass-panel rounded-xl p-4 mb-4 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-28 bg-neural-glow/8 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-4 left-0 w-48 h-20 bg-neural-violet/8 blur-3xl pointer-events-none" />
       <div className="relative z-10 flex items-center justify-between">
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-neural-text">{greeting}, {name}</h1>
@@ -65,13 +65,13 @@ const STAT_COLORS: Record<StatColor, { icon: string; value: string; bg: string }
 function StatChip({ icon: Icon, value, label, color }: { icon: LucideIcon; value: string | number; label: string; color: StatColor }) {
   const c = STAT_COLORS[color]
   return (
-    <div className="glass-panel rounded-lg p-3 flex items-center gap-3">
-      <div className={`p-1.5 rounded-lg ${c.bg}`}>
-        <Icon className={`h-4 w-4 ${c.icon}`} />
+    <div className="glass-panel rounded-lg p-2.5 flex items-center gap-2.5">
+      <div className={`p-1 rounded-md ${c.bg}`}>
+        <Icon className={`h-3.5 w-3.5 ${c.icon}`} />
       </div>
       <div className="min-w-0">
-        <p className={`text-lg font-bold leading-none ${c.value}`}>{value}</p>
-        <p className="text-xs text-neural-muted mt-0.5 truncate">{label}</p>
+        <p className={`text-base font-bold leading-none ${c.value}`}>{value}</p>
+        <p className="text-[11px] text-neural-muted mt-0.5 truncate">{label}</p>
       </div>
     </div>
   )
@@ -87,20 +87,20 @@ function ProfileCard({
 }) {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'
   return (
-    <div className="glass-panel rounded-xl p-5">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-11 h-11 rounded-full bg-neural-glow/15 border border-neural-glow/30 flex items-center justify-center flex-shrink-0">
-          <span className="text-neural-glow font-bold text-base">{initials}</span>
+    <div className="glass-panel rounded-xl p-4">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-10 h-10 rounded-full bg-neural-glow/15 border border-neural-glow/30 flex items-center justify-center flex-shrink-0">
+          <span className="text-neural-glow font-bold text-sm">{initials}</span>
         </div>
         <div className="min-w-0">
-          <p className="text-neural-text font-semibold truncate">
+          <p className="text-neural-text font-semibold truncate text-sm">
             {user?.first_name} {user?.last_name}
           </p>
           <p className="text-neural-muted text-xs">Ciclo {user?.current_cycle} · Estudiante</p>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         <div>
           <div className="flex justify-between text-xs mb-1.5">
             <span className="text-neural-muted">Progreso global</span>
@@ -147,10 +147,10 @@ function AIInsightsCard({ summary, courses }: { summary: AcademicSummary | undef
   if (!coursesWithoutDiag.length && !coursesWithoutPath.length && !summary?.dominant_modality) return null
 
   return (
-    <div className="glass-panel rounded-xl p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Lightbulb className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold text-neural-text">Recomendaciones IA</h3>
+    <div className="glass-panel rounded-xl p-3.5">
+      <div className="flex items-center gap-2 mb-2.5">
+        <Lightbulb className="h-3.5 w-3.5 text-primary" />
+        <h3 className="text-xs font-semibold text-neural-text uppercase tracking-wide">Recomendaciones IA</h3>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {coursesWithoutDiag.length > 0 && (
@@ -195,50 +195,50 @@ function AIInsightsCard({ summary, courses }: { summary: AcademicSummary | undef
 function CourseCard({ course, navigate }: { course: CourseProgress; navigate: ReturnType<typeof useNavigate> }) {
   return (
     <Card className="border hover:shadow-md transition-shadow group">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <span className="text-xs font-mono text-neural-muted">{course.course_code}</span>
+      <CardHeader className="pb-2 pt-3 px-3">
+        <div className="flex justify-between items-center">
+          <span className="text-[11px] font-mono text-neural-muted">{course.course_code}</span>
           {course.dominant_modality && (
-            <Badge variant="outline" className={`text-xs ${MODALITY_COLORS[course.dominant_modality] || ''}`}>
+            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${MODALITY_COLORS[course.dominant_modality] || ''}`}>
               {MODALITY_LABELS[course.dominant_modality] || course.dominant_modality}
             </Badge>
           )}
         </div>
-        <CardTitle className="text-sm mt-2 leading-snug">{course.course_name}</CardTitle>
-        <p className="text-xs text-neural-muted">Ciclo {course.cycle}</p>
+        <CardTitle className="text-sm mt-1 leading-snug">{course.course_name}</CardTitle>
+        <p className="text-[11px] text-neural-muted">Ciclo {course.cycle}</p>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
+      <CardContent className="pt-0 space-y-2 px-3 pb-3">
         <div>
-          <div className="flex justify-between text-xs mb-1">
+          <div className="flex justify-between text-[11px] mb-1">
             <span className="text-neural-muted">Progreso</span>
-            <span className="font-medium font-mono text-neural-text">{course.progress_percentage}%</span>
+            <span className="font-mono text-neural-text">{course.progress_percentage}%</span>
           </div>
-          <Progress value={course.progress_percentage} className="h-1.5" />
+          <Progress value={course.progress_percentage} className="h-1" />
         </div>
         <div className="flex gap-2">
           {!course.has_diagnostic ? (
-            <Button size="sm" className="w-full gap-1 text-xs h-7" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
+            <Button size="sm" className="w-full gap-1 text-xs h-6" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
               <Brain className="h-3 w-3" /> Diagnóstico
             </Button>
           ) : !course.has_learning_path ? (
-            <Button size="sm" className="w-full gap-1 text-xs h-7" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
+            <Button size="sm" className="w-full gap-1 text-xs h-6" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
               <Sparkles className="h-3 w-3" /> Ver ruta
             </Button>
           ) : (
-            <Button size="sm" className="w-full gap-1 text-xs h-7" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
+            <Button size="sm" className="w-full gap-1 text-xs h-6" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
               <TrendingUp className="h-3 w-3" /> Continuar
             </Button>
           )}
         </div>
         {course.has_learning_path && (
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" className="text-xs gap-1 text-neural-muted hover:text-primary h-6 px-2"
+          <div className="flex items-center justify-between border-t border-white/[0.05] pt-1.5">
+            <Button variant="ghost" size="sm" className="text-[11px] gap-1 text-neural-muted hover:text-primary h-5 px-1"
               onClick={() => navigate(`/estudiante/evaluation/${course.course_id}`)}>
-              <FileText className="h-3 w-3" /> Evaluación
+              <FileText className="h-2.5 w-2.5" /> Evaluación
             </Button>
-            <Button variant="ghost" size="sm" className="text-xs gap-1 text-neural-muted hover:text-primary h-6 px-2"
+            <Button variant="ghost" size="sm" className="text-[11px] gap-1 text-neural-muted hover:text-primary h-5 px-1"
               onClick={() => window.dispatchEvent(new CustomEvent('open-tutor', { detail: { courseId: course.course_id, courseName: course.course_name } }))}>
-              <MessageCircle className="h-3 w-3" /> Tutor IA
+              <MessageCircle className="h-2.5 w-2.5" /> Tutor IA
             </Button>
           </div>
         )}
@@ -285,22 +285,22 @@ export default function EstudianteDashboard() {
     <div>
       <CompactGreeting name={user?.first_name || 'Estudiante'} cycle={currentCycle} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
 
         {/* ── Left column ─────────────────────────────── */}
-        <div className="space-y-5">
+        <div className="space-y-4">
 
           {/* Stats chips */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <StatChip icon={GraduationCap} value={currentCycle} label="Ciclo actual" color="primary" />
-            <StatChip icon={BookOpen} value={totalCourses} label="cursos activos" color="glow" />
+            <StatChip icon={BookOpen} value={totalCourses} label="Cursos" color="glow" />
             <StatChip icon={Brain} value={`${coursesWithDiag}/${totalCourses}`} label="Diagnósticos" color="violet" />
             <StatChip icon={TrendingUp} value={`${avgProgress}%`} label="Progreso" color="pulse" />
           </div>
 
           {/* Courses section */}
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-neural-text flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-neural-glow" />
                 Mis Cursos
@@ -318,7 +318,7 @@ export default function EstudianteDashboard() {
             </div>
 
             {totalCourses === 0 ? (
-              <div className="glass-panel rounded-xl p-10 text-center">
+              <div className="glass-panel rounded-xl p-8 text-center">
                 <BookOpen className="h-10 w-10 text-neural-muted/30 mx-auto mb-3" />
                 <p className="text-neural-text font-medium">No tienes cursos asignados</p>
                 <p className="text-neural-muted text-sm mt-1">
@@ -344,7 +344,7 @@ export default function EstudianteDashboard() {
         </div>
 
         {/* ── Right column ────────────────────────────── */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <ProfileCard
             user={user}
             modality={summary?.dominant_modality || null}

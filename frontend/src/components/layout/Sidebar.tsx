@@ -7,6 +7,8 @@ export interface SidebarItem {
   label: string
   href: string
   icon: LucideIcon
+  disabled?: boolean
+  sectionBefore?: boolean
 }
 
 interface SidebarProps {
@@ -80,36 +82,52 @@ export default function Sidebar({
         {/* Nav */}
         <nav className="relative z-10 flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
           {items.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              end={item.href.split('/').length <= 2}
-              onClick={() => setIsOpen(false)}
-              className={({ isActive }) =>
-                cn(
-                  'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
-                  'border-l-2',
-                  isActive
-                    ? 'bg-neural-glow/[0.08] text-neural-glow border-neural-glow neural-glow-sm'
-                    : 'text-neural-muted hover:text-neural-text hover:bg-white/[0.04] border-transparent',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <item.icon
-                    className={cn(
-                      'h-4 w-4 flex-shrink-0 transition-colors duration-200',
-                      isActive ? 'text-neural-glow' : 'text-neural-muted group-hover:text-neural-text',
-                    )}
-                  />
-                  <span className="truncate">{item.label}</span>
-                  {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-neural-glow flex-shrink-0 glow-active" />
-                  )}
-                </>
+            <div key={item.label}>
+              {item.sectionBefore && (
+                <div className="mx-3 my-2 border-t border-white/[0.06]" />
               )}
-            </NavLink>
+              {item.disabled ? (
+                <div className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium',
+                  'border-l-2 border-transparent',
+                  'text-neural-muted/40 cursor-not-allowed select-none',
+                )}>
+                  <item.icon className="h-4 w-4 flex-shrink-0 text-neural-muted/30" />
+                  <span className="truncate">{item.label}</span>
+                  <span className="ml-auto text-[9px] font-mono text-neural-muted/30 tracking-wider">PRONTO</span>
+                </div>
+              ) : (
+                <NavLink
+                  to={item.href}
+                  end={item.href.split('/').length <= 2}
+                  onClick={() => setIsOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      'border-l-2',
+                      isActive
+                        ? 'bg-neural-glow/[0.08] text-neural-glow border-neural-glow neural-glow-sm'
+                        : 'text-neural-muted hover:text-neural-text hover:bg-white/[0.04] border-transparent',
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <item.icon
+                        className={cn(
+                          'h-4 w-4 flex-shrink-0 transition-colors duration-200',
+                          isActive ? 'text-neural-glow' : 'text-neural-muted group-hover:text-neural-text',
+                        )}
+                      />
+                      <span className="truncate">{item.label}</span>
+                      {isActive && (
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-neural-glow flex-shrink-0 glow-active" />
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              )}
+            </div>
           ))}
         </nav>
 

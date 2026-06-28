@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Code2, Activity, Settings } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 import TutorWidget from '@/components/ai/TutorWidget'
 
 const estudianteItems: SidebarItem[] = [
-  { label: 'Dashboard', href: '/estudiante', icon: LayoutDashboard },
+  { label: 'Dashboard',      href: '/estudiante', icon: LayoutDashboard },
+  { label: 'Learning Path',  href: '#',           icon: BookOpen,        disabled: true },
+  { label: 'Code Lab',       href: '#',           icon: Code2,           disabled: true },
+  { label: 'Swarm Monitor',  href: '#',           icon: Activity,        disabled: true },
+  { label: 'Settings',       href: '#',           icon: Settings,        disabled: true, sectionBefore: true },
 ]
 
 interface OpenTutorDetail {
