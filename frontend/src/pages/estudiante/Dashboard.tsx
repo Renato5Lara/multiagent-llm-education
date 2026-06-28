@@ -32,47 +32,51 @@ function GreetingSection({ name, cycle }: { name: string; cycle: number }) {
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches'
 
   return (
-    <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground mb-6">
-      <div className="flex items-start justify-between">
+    <div className="glass-panel rounded-xl p-6 md:p-8 mb-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-80 h-40 bg-neural-glow/8 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-8 left-0 w-64 h-32 bg-neural-violet/8 blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
-            {greeting}, {name} 👋
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-neural-text">
+            {greeting}, {name}
           </h1>
-          <p className="text-primary-foreground/80 text-sm md:text-base">
+          <p className="text-neural-muted text-sm md:text-base">
             Ciclo {cycle} · Ingeniería de Sistemas e Inteligencia Artificial
           </p>
         </div>
-        <div className="hidden md:flex items-center gap-2 bg-white/10 rounded-lg px-4 py-2">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-sm font-medium">Copiloto académico activo</span>
+        <div className="hidden md:flex items-center gap-2 bg-neural-glow/10 border border-neural-glow/20 rounded-lg px-4 py-2">
+          <Sparkles className="h-4 w-4 text-neural-glow" />
+          <span className="text-sm font-medium text-neural-glow">Copiloto académico activo</span>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
-        <div className="bg-white/10 rounded-lg p-3 flex items-center gap-3">
-          <div className="p-1.5 bg-white/20 rounded-lg">
-            <Brain className="h-4 w-4" />
+
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+        <div className="bg-neural-lowest/60 rounded-lg p-3 flex items-center gap-3">
+          <div className="p-1.5 bg-neural-glow/10 rounded-lg">
+            <Brain className="h-4 w-4 text-neural-glow" />
           </div>
           <div>
-            <p className="text-xs opacity-80">Análisis IA</p>
-            <p className="text-sm font-semibold">Perfil adaptativo activo</p>
+            <p className="text-xs text-neural-muted">Análisis IA</p>
+            <p className="text-sm font-semibold text-neural-text">Perfil adaptativo activo</p>
           </div>
         </div>
-        <div className="bg-white/10 rounded-lg p-3 flex items-center gap-3">
-          <div className="p-1.5 bg-white/20 rounded-lg">
-            <Target className="h-4 w-4" />
+        <div className="bg-neural-lowest/60 rounded-lg p-3 flex items-center gap-3">
+          <div className="p-1.5 bg-neural-violet/10 rounded-lg">
+            <Target className="h-4 w-4 text-neural-violet" />
           </div>
           <div>
-            <p className="text-xs opacity-80">Ruta de aprendizaje</p>
-            <p className="text-sm font-semibold">Personalizada para ti</p>
+            <p className="text-xs text-neural-muted">Ruta de aprendizaje</p>
+            <p className="text-sm font-semibold text-neural-text">Personalizada para ti</p>
           </div>
         </div>
-        <div className="bg-white/10 rounded-lg p-3 flex items-center gap-3">
-          <div className="p-1.5 bg-white/20 rounded-lg">
-            <Zap className="h-4 w-4" />
+        <div className="bg-neural-lowest/60 rounded-lg p-3 flex items-center gap-3">
+          <div className="p-1.5 bg-neural-pulse/10 rounded-lg">
+            <Zap className="h-4 w-4 text-neural-pulse" />
           </div>
           <div>
-            <p className="text-xs opacity-80">Tutor IA disponible</p>
-            <p className="text-sm font-semibold">Pregunta lo que necesites</p>
+            <p className="text-xs text-neural-muted">Tutor IA disponible</p>
+            <p className="text-sm font-semibold text-neural-text">Pregunta lo que necesites</p>
           </div>
         </div>
       </div>
@@ -98,34 +102,34 @@ function AIInsightsCard({ summary, courses }: { summary: AcademicSummary | undef
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {coursesWithoutDiag.length > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-amber-700 mb-1">
+            <div className="bg-amber-400/10 border border-amber-400/20 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-amber-400 mb-1">
                 <AlertCircle className="h-4 w-4" />
                 <span className="text-sm font-medium">Diagnóstico pendiente</span>
               </div>
-              <p className="text-xs text-amber-600">
+              <p className="text-xs text-amber-400/70">
                 {coursesWithoutDiag.length} curso{coursesWithoutDiag.length > 1 ? 's' : ''} sin diagnosticar.
               </p>
             </div>
           )}
           {coursesWithoutPath.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-blue-700 mb-1">
+            <div className="bg-neural-glow/10 border border-neural-glow/20 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-neural-glow mb-1">
                 <Brain className="h-4 w-4" />
                 <span className="text-sm font-medium">Ruta por generar</span>
               </div>
-              <p className="text-xs text-blue-600">
+              <p className="text-xs text-neural-glow/60">
                 {coursesWithoutPath.length} curso{coursesWithoutPath.length > 1 ? 's' : ''} diagnosticados.
               </p>
             </div>
           )}
           {summary?.dominant_modality && (
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-              <div className="flex items-center gap-2 text-purple-700 mb-1">
+            <div className="bg-neural-violet/10 border border-neural-violet/20 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-neural-violet mb-1">
                 <BarChart3 className="h-4 w-4" />
                 <span className="text-sm font-medium">Tu perfil de aprendizaje</span>
               </div>
-              <p className="text-xs text-purple-600">
+              <p className="text-xs text-neural-violet/60">
                 Estilo: {MODALITY_LABELS[summary.dominant_modality] || summary.dominant_modality}
                 {avgProgress > 0 && ` · ${avgProgress}% progreso`}
               </p>
@@ -183,8 +187,8 @@ export default function EstudianteDashboard() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <BookOpen className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-neural-glow/10 rounded-lg">
+              <BookOpen className="h-5 w-5 text-neural-glow" />
             </div>
             <div>
               <p className="text-2xl font-bold">{iaData?.stats.total || totalCourses}</p>
@@ -194,8 +198,8 @@ export default function EstudianteDashboard() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Brain className="h-5 w-5 text-purple-600" />
+            <div className="p-2 bg-neural-violet/10 rounded-lg">
+              <Brain className="h-5 w-5 text-neural-violet" />
             </div>
             <div>
               <p className="text-2xl font-bold">{coursesWithDiag}/{totalCourses}</p>
@@ -205,8 +209,8 @@ export default function EstudianteDashboard() {
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-green-600" />
+            <div className="p-2 bg-neural-pulse/10 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-neural-pulse" />
             </div>
             <div>
               <p className="text-2xl font-bold">{avgProgress}%</p>

@@ -48,16 +48,16 @@ const MODALITY_ICONS: Record<string, typeof FileText> = {
 }
 
 const MODALITY_COLORS: Record<string, string> = {
-  text: 'bg-blue-50 border-blue-200 text-blue-700',
-  image: 'bg-green-50 border-green-200 text-green-700',
-  video: 'bg-purple-50 border-purple-200 text-purple-700',
-  audio: 'bg-amber-50 border-amber-200 text-amber-700',
+  text:  'bg-neural-glow/10 border-neural-glow/20 text-neural-glow',
+  image: 'bg-neural-pulse/10 border-neural-pulse/20 text-neural-pulse',
+  video: 'bg-neural-violet/10 border-neural-violet/20 text-neural-violet',
+  audio: 'bg-amber-400/10 border-amber-400/20 text-amber-400',
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  high: 'bg-red-50 border-red-200',
-  medium: 'bg-amber-50 border-amber-200',
-  low: 'bg-yellow-50 border-yellow-200',
+  high:   'bg-red-400/[0.05] border-red-400/20',
+  medium: 'bg-amber-400/[0.05] border-amber-400/20',
+  low:    'bg-amber-400/[0.03] border-amber-400/15',
 }
 
 const SEVERITY_ICONS: Record<string, typeof AlertTriangle> = {
@@ -88,7 +88,7 @@ function CopyButton({ text, label }: { text: string; label?: string }) {
 
   return (
     <Button variant="ghost" size="sm" onClick={handleCopy} className="gap-1.5 text-xs">
-      {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+      {copied ? <Check className="h-3.5 w-3.5 text-neural-pulse" /> : <Copy className="h-3.5 w-3.5" />}
       {copied ? 'Copiado' : (label || 'Copiar')}
     </Button>
   )
@@ -103,14 +103,14 @@ function PedagogicalStagesSection({ stages }: { stages: PedagogicalStage[] }) {
         const Icon = PHASE_ICONS[stage.phase] || BookOpen
         const isOpen = expanded === i
         return (
-          <Card key={i} className={`border-l-4 ${isOpen ? 'border-l-primary' : 'border-l-gray-200'} transition-all`}>
+          <Card key={i} className={`transition-all ${isOpen ? 'ring-1 ring-primary/30' : ''}`}>
             <button
               className="w-full text-left p-4 flex items-start justify-between gap-3"
               onClick={() => setExpanded(isOpen ? null : i)}
             >
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${isOpen ? 'bg-primary/10' : 'bg-gray-100'}`}>
-                  <Icon className={`h-5 w-5 ${isOpen ? 'text-primary' : 'text-gray-500'}`} />
+                <div className={`p-2 rounded-lg ${isOpen ? 'bg-primary/10' : 'bg-neural-lowest/60'}`}>
+                  <Icon className={`h-5 w-5 ${isOpen ? 'text-primary' : 'text-neural-muted/60'}`} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -123,15 +123,15 @@ function PedagogicalStagesSection({ stages }: { stages: PedagogicalStage[] }) {
               {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground mt-2" /> : <ChevronDown className="h-4 w-4 text-muted-foreground mt-2" />}
             </button>
             {isOpen && (
-              <div className="px-4 pb-4 pt-0 border-t border-gray-100">
-                <div className="mt-3 prose prose-sm max-w-none text-gray-700">
+              <div className="px-4 pb-4 pt-0 border-t border-white/[0.06]">
+                <div className="mt-3 text-sm text-neural-muted leading-relaxed">
                   {stage.content}
                 </div>
                 {stage.examples.length > 0 && (
                   <div className="mt-3 space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ejemplos</p>
                     {stage.examples.map((ex, j) => (
-                      <div key={j} className="bg-gray-50 rounded-md p-2.5 text-sm text-gray-600">{ex}</div>
+                      <div key={j} className="bg-neural-lowest/60 rounded-md p-2.5 text-sm text-neural-muted">{ex}</div>
                     ))}
                   </div>
                 )}
@@ -151,24 +151,24 @@ function MisconceptionCards({ items }: { items: MisconceptionItem[] }) {
       {items.map((item, i) => {
         const SeverityIcon = SEVERITY_ICONS[item.severity] || AlertTriangle
         return (
-          <Card key={i} className={`${SEVERITY_COLORS[item.severity] || 'bg-gray-50 border-gray-200'}`}>
+          <Card key={i} className={`${SEVERITY_COLORS[item.severity] || 'bg-neural-lowest/40 border-white/[0.06]'}`}>
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <SeverityIcon className={`h-5 w-5 mt-0.5 ${
-                  item.severity === 'high' ? 'text-red-500' :
-                  item.severity === 'medium' ? 'text-amber-500' : 'text-yellow-500'
+                  item.severity === 'high' ? 'text-red-400' :
+                  item.severity === 'medium' ? 'text-amber-400' : 'text-amber-400/70'
                 }`} />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-gray-800">Error común</span>
+                    <span className="text-sm font-semibold text-neural-text">Error común</span>
                     <Badge variant={item.severity === 'high' ? 'destructive' : 'warning'} className="text-xs">
                       {item.severity === 'high' ? 'Crítico' : item.severity === 'medium' ? 'Importante' : 'Leve'}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">{item.misconception}</p>
-                  <div className="flex items-start gap-2 bg-white/60 rounded-md p-2.5">
-                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-green-700">{item.correction}</p>
+                  <p className="text-sm text-neural-muted mb-2">{item.misconception}</p>
+                  <div className="flex items-start gap-2 bg-neural-pulse/[0.05] border border-neural-pulse/10 rounded-md p-2.5">
+                    <CheckCircle className="h-4 w-4 text-neural-pulse mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-neural-pulse/80">{item.correction}</p>
                   </div>
                 </div>
               </div>
@@ -191,7 +191,7 @@ function MultimodalPromptPanel({ prompts }: { prompts: MultimodalPrompt[] }) {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className={`p-1.5 rounded-md ${MODALITY_COLORS[prompt.modality] || 'bg-gray-100'}`}>
+                  <div className={`p-1.5 rounded-md border ${MODALITY_COLORS[prompt.modality] || 'bg-neural-lowest/60'}`}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <CardTitle className="text-sm capitalize">{prompt.modality}</CardTitle>
@@ -205,7 +205,7 @@ function MultimodalPromptPanel({ prompts }: { prompts: MultimodalPrompt[] }) {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{prompt.prompt}</p>
+              <p className="text-sm text-neural-muted whitespace-pre-wrap leading-relaxed">{prompt.prompt}</p>
             </CardContent>
           </Card>
         )
@@ -220,17 +220,21 @@ function BloomProgressionBar({ items }: { items: Array<{ level: number; label: s
     <div className="space-y-2">
       {items.map((item) => (
         <div key={item.level} className={`flex items-center gap-3 p-2.5 rounded-lg border transition-colors ${
-          item.mastered ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+          item.mastered
+            ? 'bg-neural-pulse/[0.05] border-neural-pulse/20'
+            : 'bg-neural-lowest/40 border-white/[0.06]'
         }`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-            item.mastered ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600'
+            item.mastered
+              ? 'bg-neural-pulse text-neural-surface'
+              : 'bg-neural-elevated text-neural-muted'
           }`}>
             {item.level}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">{item.label}</span>
-              {item.mastered && <CheckCircle className="h-3.5 w-3.5 text-green-500" />}
+              {item.mastered && <CheckCircle className="h-3.5 w-3.5 text-neural-pulse" />}
             </div>
             <p className="text-xs text-muted-foreground">{item.description}</p>
           </div>
@@ -242,7 +246,7 @@ function BloomProgressionBar({ items }: { items: Array<{ level: number; label: s
 
 function OrchestrationStatus({ data }: { data: ModuleOrchestrationResponse }) {
   return (
-    <Card className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-dashed">
+    <Card className="border-dashed">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -257,7 +261,7 @@ function OrchestrationStatus({ data }: { data: ModuleOrchestrationResponse }) {
           {['Research', 'Retrieval', 'Misconceptions', 'Structure', 'Prompts', 'Consistency', 'Memory'].map((step, i) => (
             <div key={step} className="flex flex-col items-center gap-1">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                i < 5 ? 'bg-primary text-white' : 'bg-gray-300 text-gray-500'
+                i < 5 ? 'bg-primary text-primary-foreground' : 'bg-neural-elevated text-neural-muted'
               }`}>
                 <Check className={`h-3 w-3 ${i < 5 ? '' : 'opacity-0'}`} />
               </div>
@@ -268,7 +272,7 @@ function OrchestrationStatus({ data }: { data: ModuleOrchestrationResponse }) {
         <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
           <BarChart3 className="h-3 w-3" />
           <span>Confianza: {(data.confidence * 100).toFixed(0)}%</span>
-          <span className="text-gray-300">|</span>
+          <span className="text-neural-muted/30">|</span>
           <BookMarked className="h-3 w-3" />
           <span>Fuentes: {data.retrieval_evidence?.sources_count || 0}</span>
         </div>
@@ -287,7 +291,7 @@ function RetrievalEvidencePanel({ evidence }: { evidence: ModuleOrchestrationRes
         {evidence.degraded && <Badge variant="warning" className="text-xs">Degradado</Badge>}
       </div>
       {evidence.sources.map((src, i) => (
-        <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-md text-sm">
+        <div key={i} className="flex items-center justify-between p-2 bg-neural-lowest/60 rounded-md text-sm">
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium truncate">{src.title || 'Fuente'}</p>
             <p className="text-xs text-muted-foreground truncate">{src.domain}</p>
@@ -322,7 +326,7 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
           <GraduationCap className="h-4 w-4" />
           <span>{data.course_name}</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{data.module_title}</h1>
+        <h1 className="text-2xl font-bold text-neural-text">{data.module_title}</h1>
       </div>
 
       <OrchestrationStatus data={data} />
@@ -337,68 +341,48 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
         </TabsList>
 
         <TabsContent value="contenido" className="mt-4 space-y-6">
-          {/* Sprint I3 — XP del módulo (aparece al primer +XP) */}
           <LearningActivityXP total={moduleXp} flash={xpFlash} />
 
-          {/* Introducción */}
           <section className="space-y-2">
             <div className="flex items-center gap-2 pb-1">
               <BookOpen className="h-5 w-5 text-primary" />
-              <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Introducción</h2>
+              <h2 className="text-base font-semibold text-neural-text">Introducción</h2>
             </div>
             <div className="space-y-2">
               {splitParagraphs(data.introduction).map((paragraph, i) => (
-                <ConceptCard
-                  key={i}
-                  index={i + 1}
-                  content={paragraph}
-                  onRead={() => addXp(2)}
-                />
+                <ConceptCard key={i} index={i + 1} content={paragraph} onRead={() => addXp(2)} />
               ))}
             </div>
           </section>
 
-          {/* Checkpoint 1 */}
           <ReflectionCheckpoint
             question="¿La introducción te dio el contexto que necesitabas?"
             onResponse={(level) => { if (level === 'clear') addXp(5) }}
           />
 
-          {/* Conceptos clave */}
           <section className="space-y-2">
             <div className="flex items-center gap-2 pb-1">
-              <Lightbulb className="h-5 w-5 text-amber-500" />
-              <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Conceptos Clave</h2>
+              <Lightbulb className="h-5 w-5 text-amber-400" />
+              <h2 className="text-base font-semibold text-neural-text">Conceptos Clave</h2>
             </div>
             <div className="space-y-2">
               {splitParagraphs(data.pedagogical_explanation).flatMap((paragraph, i) => {
                 const cards = [
-                  <ConceptCard
-                    key={`concept-${i}`}
-                    index={i + 1}
-                    content={paragraph}
-                    onRead={() => addXp(2)}
-                  />,
+                  <ConceptCard key={`concept-${i}`} index={i + 1} content={paragraph} onRead={() => addXp(2)} />,
                 ]
                 if (i === 1 && data.real_applications.length > 0) {
-                  cards.push(
-                    <DidYouKnowInlineCard
-                      key="diyk"
-                      content={data.real_applications[0]}
-                    />,
-                  )
+                  cards.push(<DidYouKnowInlineCard key="diyk" content={data.real_applications[0]} />)
                 }
                 return cards
               })}
             </div>
           </section>
 
-          {/* Errores comunes */}
           {data.misconceptions.length > 0 && (
             <section className="space-y-2">
               <div className="flex items-center gap-2 pb-1">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
-                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Errores Comunes</h2>
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+                <h2 className="text-base font-semibold text-neural-text">Errores Comunes</h2>
                 <span className="text-xs text-muted-foreground">— descúbrelos antes de caer en ellos</span>
               </div>
               <div className="space-y-3">
@@ -416,69 +400,45 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
             </section>
           )}
 
-          {/* Ejemplos progresivos */}
           {data.examples.length > 0 && (
             <section className="space-y-2">
               <div className="flex items-center gap-2 pb-1">
-                <Target className="h-5 w-5 text-blue-500" />
-                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Ejemplos Progresivos</h2>
+                <Target className="h-5 w-5 text-neural-glow" />
+                <h2 className="text-base font-semibold text-neural-text">Ejemplos Progresivos</h2>
                 <span className="text-xs text-muted-foreground">— de menor a mayor complejidad</span>
               </div>
               <div className="space-y-2">
                 {data.examples.map((ex, i) => (
-                  <ExampleCard
-                    key={i}
-                    index={i}
-                    content={ex}
-                    onExplore={() => addXp(3)}
-                  />
+                  <ExampleCard key={i} index={i} content={ex} onExplore={() => addXp(3)} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Checkpoint 2 */}
           <ReflectionCheckpoint
             question="¿Los ejemplos te ayudaron a entender el concepto?"
             onResponse={(level) => { if (level === 'clear') addXp(5) }}
           />
 
-          {/* Aplicaciones reales */}
           {data.real_applications.length > 0 && (
             <section className="space-y-2">
               <div className="flex items-center gap-2 pb-1">
-                <Share2 className="h-5 w-5 text-emerald-500" />
-                <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">¿Dónde se usa esto?</h2>
+                <Share2 className="h-5 w-5 text-neural-pulse" />
+                <h2 className="text-base font-semibold text-neural-text">¿Dónde se usa esto?</h2>
               </div>
-              <PracticalApplicationCard
-                items={data.real_applications}
-                onSave={() => addXp(2)}
-              />
+              <PracticalApplicationCard items={data.real_applications} onSave={() => addXp(2)} />
             </section>
           )}
 
-          {/* Práctica guiada */}
-          <AgentTipCard
-            icon="🧠"
-            title="Práctica Guiada"
-            content={data.guided_practice}
-            variant="guide"
-          />
+          <AgentTipCard icon="🧠" title="Práctica Guiada" content={data.guided_practice} variant="guide" />
 
-          {/* Checkpoint 3 */}
           <ReflectionCheckpoint
             question="¿Estás listo para avanzar al siguiente módulo?"
             onResponse={(level) => { if (level === 'clear') addXp(5) }}
           />
 
-          {/* Notas de continuidad */}
           {data.continuity_notes && (
-            <AgentTipCard
-              icon="🔗"
-              title="Para la próxima sesión"
-              content={data.continuity_notes}
-              variant="continuity"
-            />
+            <AgentTipCard icon="🔗" title="Para la próxima sesión" content={data.continuity_notes} variant="continuity" />
           )}
         </TabsContent>
 
@@ -488,11 +448,11 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <BookMarked className="h-5 w-5 text-indigo-500" /> Storyboard Pedagógico
+                <BookMarked className="h-5 w-5 text-neural-glow" /> Storyboard Pedagógico
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
+              <div className="text-sm text-neural-muted leading-relaxed whitespace-pre-wrap">
                 {data.storyboard}
               </div>
             </CardContent>
@@ -500,15 +460,15 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
         </TabsContent>
 
         <TabsContent value="multimodal" className="mt-4 space-y-4">
-          <Card className="bg-amber-50 border-amber-200">
+          <Card className="bg-amber-400/10 border-amber-400/20">
             <CardContent className="p-4 flex items-start gap-3">
-              <Lightbulb className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+              <Lightbulb className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-amber-800">Configuración multimodal</p>
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-sm font-medium text-amber-400">Configuración multimodal</p>
+                <p className="text-xs text-amber-400/70 mt-1">
                   [x] texto directo · [ ] video directo · [ ] imagen directa · [ ] audio directo
                 </p>
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-xs text-amber-400/60 mt-1">
                   Las modalidades no marcadas generan un prompt detallado en lugar de contenido directo.
                 </p>
               </div>
@@ -569,7 +529,7 @@ export default function StudentWeeklyLearningView({ data, onBack, onComplete }: 
         </TabsContent>
       </Tabs>
 
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex items-center justify-between pt-4 border-t border-white/[0.06]">
         <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowRight className="h-4 w-4 rotate-180" /> Volver a la ruta
         </Button>

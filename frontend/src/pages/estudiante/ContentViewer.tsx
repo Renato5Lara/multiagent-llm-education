@@ -187,7 +187,7 @@ export default function ContentViewer() {
                         </div>
                     )}
                     {(resource.resource_type === 'text' || resource.resource_type === 'document') && (
-                        <div className="bg-gray-50 rounded-lg p-6 whitespace-pre-wrap max-h-96 overflow-auto">
+                        <div className="bg-neural-lowest/60 rounded-lg p-6 whitespace-pre-wrap max-h-96 overflow-auto scrollbar-thin">
                             <p className="text-sm">Contenido del documento cargado para visualización.</p>
                         </div>
                     )}

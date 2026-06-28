@@ -8,12 +8,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useWeeklyPlan } from '@/hooks/useWeeklyLearning'
 
 const BLOOM_COLORS: Record<number, string> = {
-  1: 'bg-blue-100 text-blue-700 border-blue-200',
-  2: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-  3: 'bg-green-100 text-green-700 border-green-200',
-  4: 'bg-amber-100 text-amber-700 border-amber-200',
-  5: 'bg-orange-100 text-orange-700 border-orange-200',
-  6: 'bg-purple-100 text-purple-700 border-purple-200',
+  1: 'bg-neural-glow/10 text-neural-glow border-neural-glow/20',
+  2: 'bg-neural-glow/15 text-neural-glow border-neural-glow/25',
+  3: 'bg-neural-pulse/10 text-neural-pulse border-neural-pulse/20',
+  4: 'bg-amber-400/10 text-amber-400 border-amber-400/20',
+  5: 'bg-neural-violet/10 text-neural-violet border-neural-violet/20',
+  6: 'bg-neural-violet/15 text-neural-violet border-neural-violet/25',
 }
 
 interface Props {
@@ -50,7 +50,7 @@ export default function WeekLearningPath({ courseId, courseName }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{courseName || 'Mi Ruta Semanal'}</h1>
+        <h1 className="text-2xl font-bold text-neural-text">{courseName || 'Mi Ruta Semanal'}</h1>
         <p className="text-muted-foreground mt-1">{plan.thematic_line}</p>
       </div>
 
@@ -69,10 +69,10 @@ export default function WeekLearningPath({ courseId, courseName }: Props) {
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             {plan.bloom_progression.map((level, i) => (
               <span key={i} className="flex items-center gap-1">
-                <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold text-white ${
-                  level <= 2 ? 'bg-blue-500' : level <= 4 ? 'bg-green-500' : 'bg-purple-500'
+                <span className={`w-4 h-4 rounded-full inline-flex items-center justify-center text-[9px] font-bold text-neural-surface ${
+                  level <= 2 ? 'bg-neural-glow' : level <= 4 ? 'bg-neural-pulse' : 'bg-neural-violet'
                 }`}>{level}</span>
-                {i < plan.bloom_progression.length - 1 && <ArrowRight className="h-3 w-3 text-gray-300" />}
+                {i < plan.bloom_progression.length - 1 && <ArrowRight className="h-3 w-3 text-neural-muted/30" />}
               </span>
             ))}
           </div>
@@ -80,20 +80,24 @@ export default function WeekLearningPath({ courseId, courseName }: Props) {
       </Card>
 
       <div className="relative">
-        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-white/[0.08]" />
         <div className="space-y-4">
           {plan.weeks.map((week, i) => {
             const isAvailable = i === 0 || plan.weeks[i - 1]?.orchestration_status === 'completed' || plan.weeks[i - 1]?.orchestration_status === 'completed_with_warnings'
             const isCompleted = week.orchestration_status === 'completed' || week.orchestration_status === 'completed_with_warnings'
             const isExpanded = expandedWeek === week.week_number
             const StatusIcon = isCompleted ? CheckCircle : isAvailable ? Circle : Lock
-            const statusColor = isCompleted ? 'text-green-500' : isAvailable ? 'text-blue-500' : 'text-gray-400'
-            const borderColor = isCompleted ? 'border-green-500' : isAvailable ? 'border-blue-500' : 'border-gray-300'
-            const bgColor = isCompleted ? 'bg-green-50 border-green-200' : isAvailable ? 'bg-white' : 'bg-gray-50 opacity-60'
+            const statusColor = isCompleted ? 'text-neural-pulse' : isAvailable ? 'text-neural-glow' : 'text-neural-muted/40'
+            const borderColor = isCompleted ? 'border-neural-pulse/60' : isAvailable ? 'border-neural-glow/60' : 'border-white/10'
+            const bgColor = isCompleted
+              ? 'bg-neural-pulse/[0.05] border-neural-pulse/20'
+              : isAvailable
+              ? ''
+              : 'opacity-60'
 
             return (
               <div key={week.id} className="relative flex items-start gap-4 pl-2">
-                <div className={`z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white ${borderColor}`}>
+                <div className={`z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-neural-lowest ${borderColor}`}>
                   <StatusIcon className={`h-5 w-5 ${statusColor}`} />
                 </div>
 
@@ -126,12 +130,12 @@ export default function WeekLearningPath({ courseId, courseName }: Props) {
                   </button>
 
                   {isExpanded && (
-                    <CardContent className="pt-0 border-t border-gray-100">
+                    <CardContent className="pt-0 border-t border-white/[0.06]">
                       <div className="mt-3 space-y-3">
                         <div className="space-y-1">
                           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Objetivos</p>
                           {week.objectives.slice(0, 3).map((obj, j) => (
-                            <p key={j} className="text-sm text-gray-600 flex items-start gap-2">
+                            <p key={j} className="text-sm text-neural-muted flex items-start gap-2">
                               <span className="text-primary mt-1">•</span> {obj}
                             </p>
                           ))}

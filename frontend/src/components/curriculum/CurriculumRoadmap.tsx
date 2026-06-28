@@ -38,9 +38,9 @@ function CycleSection({ cycle, courses }: { cycle: number; courses: CurriculumCo
                                 !course.is_unlocked && !course.is_completed
                                     ? 'opacity-50 border-dashed'
                                     : course.is_completed
-                                    ? 'border-green-200 bg-green-50/30'
+                                    ? 'border-neural-pulse/20 bg-neural-pulse/[0.05]'
                                     : course.is_enrolled
-                                    ? 'border-blue-200 bg-blue-50/30'
+                                    ? 'border-neural-glow/20 bg-neural-glow/[0.05]'
                                     : 'hover:shadow-sm'
                             }`}
                         >
@@ -48,9 +48,9 @@ function CycleSection({ cycle, courses }: { cycle: number; courses: CurriculumCo
                                 <div className="flex items-start justify-between mb-1">
                                     <div className="flex items-center gap-1.5">
                                         {course.is_completed ? (
-                                            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                                            <CheckCircle2 className="h-4 w-4 text-neural-pulse shrink-0" />
                                         ) : course.is_enrolled ? (
-                                            <BookOpen className="h-4 w-4 text-blue-500 shrink-0" />
+                                            <BookOpen className="h-4 w-4 text-neural-glow shrink-0" />
                                         ) : course.is_unlocked ? (
                                             <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
                                         ) : (
@@ -149,8 +149,8 @@ export default function CurriculumRoadmap({ data }: Props) {
             </CardHeader>
             <CardContent>
                 <div className="flex items-center gap-4 mb-6 text-xs text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> Completado</span>
-                    <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-blue-500" /> En curso</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-neural-pulse" /> Completado</span>
+                    <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-neural-glow" /> En curso</span>
                     <span className="flex items-center gap-1"><Circle className="h-3.5 w-3.5" /> Disponible</span>
                     <span className="flex items-center gap-1"><Lock className="h-3.5 w-3.5 text-amber-500" /> Bloqueado</span>
                 </div>

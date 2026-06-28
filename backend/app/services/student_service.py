@@ -225,7 +225,7 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
         .all()
     )
 
-    all_course_ids = [e.course_id for e in enrollments]
+    all_course_ids = list(dict.fromkeys(e.course_id for e in enrollments))
 
     resource_counts = dict(
         db.query(Resource.course_id, func.count(Resource.id))

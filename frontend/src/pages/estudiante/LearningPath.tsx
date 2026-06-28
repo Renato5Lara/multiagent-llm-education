@@ -11,9 +11,9 @@ import type { LearningPathItem } from '@/types/student'
 import TutorWidget from '@/components/ai/TutorWidget'
 
 const statusConfig = {
-    completed: { icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50 border-green-200', label: 'Completado' },
-    available: { icon: Circle, color: 'text-blue-500', bg: 'bg-blue-50 border-blue-200', label: 'Disponible' },
-    locked: { icon: Lock, color: 'text-gray-400', bg: 'bg-gray-50 border-gray-200', label: 'Bloqueado' },
+    completed: { icon: CheckCircle, color: 'text-neural-pulse', bg: 'bg-neural-pulse/[0.05] border-neural-pulse/20', label: 'Completado' },
+    available: { icon: Circle, color: 'text-neural-glow', bg: 'bg-neural-glow/[0.05] border-neural-glow/20', label: 'Disponible' },
+    locked: { icon: Lock, color: 'text-neural-muted/40', bg: 'bg-neural-elevated/30 border-white/[0.06]', label: 'Bloqueado' },
 }
 
 const resourceIcons: Record<string, typeof FileText> = {
@@ -28,17 +28,17 @@ const resourceIcons: Record<string, typeof FileText> = {
 
 function ResourceIcon({ type }: { type?: string }) {
     const Icon = type ? resourceIcons[type] : undefined
-    if (!Icon) return <BookOpen className="h-4 w-4 text-gray-400" />
+    if (!Icon) return <BookOpen className="h-4 w-4 text-neural-muted/50" />
     const colors: Record<string, string> = {
-        pdf: 'text-red-500',
-        video: 'text-blue-500',
-        image: 'text-green-500',
-        text: 'text-gray-500',
-        audio: 'text-purple-500',
-        game: 'text-orange-500',
-        interactive: 'text-teal-500',
+        pdf: 'text-red-400',
+        video: 'text-neural-glow',
+        image: 'text-neural-pulse',
+        text: 'text-neural-muted/60',
+        audio: 'text-neural-violet',
+        game: 'text-amber-400',
+        interactive: 'text-neural-glow',
     }
-    return <Icon className={`h-4 w-4 ${colors[type ?? ''] || 'text-gray-400'}`} />
+    return <Icon className={`h-4 w-4 ${colors[type ?? ''] || 'text-neural-muted/50'}`} />
 }
 
 export default function LearningPath() {
@@ -107,25 +107,25 @@ export default function LearningPath() {
             )}
 
             <div className="mb-6">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="w-full bg-white/[0.06] rounded-full h-2">
                     <div
-                        className="bg-primary h-2.5 rounded-full transition-all duration-500"
+                        className="bg-neural-glow h-2 rounded-full transition-all duration-500 neural-glow-sm"
                         style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
                     />
                 </div>
             </div>
 
             <div className="relative">
-                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-white/[0.08]" />
                 <div className="space-y-4">
                     {items.map((item: LearningPathItem, i: number) => {
                         const cfg = statusConfig[item.status as keyof typeof statusConfig] || statusConfig.locked
                         const Icon = cfg.icon
                         return (
                             <div key={item.id} className="relative flex items-start gap-4 pl-2">
-                                <div className={`z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white ${
-                                    item.status === 'completed' ? 'border-green-500' :
-                                    item.status === 'available' ? 'border-blue-500' : 'border-gray-300'
+                                <div className={`z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-neural-lowest ${
+                                    item.status === 'completed' ? 'border-neural-pulse/60' :
+                                    item.status === 'available' ? 'border-neural-glow/60' : 'border-white/10'
                                 }`}>
                                     <Icon className={`h-5 w-5 ${cfg.color}`} />
                                 </div>
@@ -164,10 +164,10 @@ export default function LearningPath() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${
-                                                item.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                item.status === 'available' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-gray-100 text-gray-500'
+                                            <span className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap font-mono ${
+                                                item.status === 'completed' ? 'bg-neural-pulse/10 text-neural-pulse' :
+                                                item.status === 'available' ? 'bg-neural-glow/10 text-neural-glow' :
+                                                'bg-neural-elevated/60 text-neural-muted/60'
                                             }`}>
                                                 {cfg.label}
                                             </span>
@@ -197,11 +197,11 @@ export default function LearningPath() {
             </div>
 
             {completedCount === totalCount && totalCount > 0 && (
-                <Card className="mt-6 border-green-200 bg-green-50">
+                <Card className="mt-6 border-neural-pulse/20 bg-neural-pulse/[0.05]">
                     <CardContent className="p-6 text-center">
-                        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                        <h3 className="text-lg font-semibold text-green-800">¡Curso completado!</h3>
-                        <p className="text-green-700 text-sm mt-1">Has completado todos los módulos de esta ruta de aprendizaje.</p>
+                        <CheckCircle className="h-12 w-12 text-neural-pulse mx-auto mb-3" />
+                        <h3 className="text-lg font-semibold text-neural-text">¡Curso completado!</h3>
+                        <p className="text-neural-pulse/70 text-sm mt-1">Has completado todos los módulos de esta ruta de aprendizaje.</p>
                     </CardContent>
                 </Card>
             )}
