@@ -579,8 +579,8 @@ def seed_institutional_courses(db):
             ("MAT201", "Cálculo Integral", 4, 2, 2, 0),
             ("SIS201", "Programación II", 4, 2, 2, 2),
             ("EST201", "Estadística I", 3, 2, 2, 0),
-            ("SIS202", "Base de Datos I", 4, 2, 2, 2),
-            ("SIS203", "Sistemas Operativos", 3, 2, 2, 0),
+            ("SIS202", "Bases de Datos I", 4, 2, 2, 2),
+            ("SIS203", "Sistemas Operativos y Redes", 3, 2, 2, 0),
         ],
         4: [
             ("MAT301", "Ecuaciones Diferenciales", 4, 2, 2, 0),
