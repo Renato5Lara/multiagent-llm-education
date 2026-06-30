@@ -7,7 +7,10 @@ import type {
   CuriosityMeta,
   AnalogyMeta,
   MediaPromptMeta,
+  InteractivePracticeMeta,
+  Phase5E,
 } from '@/types/learningJourney'
+import type { LearningModality } from '@/types/modality'
 import type {
   EngagementSession,
   EngagementResourceType,
@@ -363,6 +366,114 @@ function makeMediaPrompt(
   }
 }
 
+// ── D6.3: Code Lab module detection ──────────────────────────────────────────
+
+const CODE_LAB_MAP: ReadonlyArray<{ kw: string; slug: string }> = [
+  { kw: 'variable',    slug: 'variables'    },
+  { kw: 'condicional', slug: 'conditionals' },
+  { kw: 'bucle',       slug: 'loops'        },
+  { kw: 'funcion',     slug: 'functions'    },
+  { kw: 'arreglo',     slug: 'arrays'       },
+]
+
+function getCodeLabSlug(moduleTitle: string): string | null {
+  const n = normalize(moduleTitle)
+  for (const { kw, slug } of CODE_LAB_MAP) {
+    if (n.includes(kw)) return slug
+  }
+  return null
+}
+
+// ── D6.3: Forced-type media prompt (for visual/audio modality selection) ──────
+
+function makeMediaPromptForced(
+  moduleTitle: string,
+  conceptText: string,
+  conceptIdx:  number,
+  type:        'image' | 'video',
+): LearningJourneyStep {
+  const keyTerms = extractKeyTerms(conceptText, 5)
+  const titleLow = moduleTitle.toLowerCase()
+  let meta: MediaPromptMeta
+  if (type === 'image') {
+    meta = {
+      type:          'image',
+      title:         `Visualiza: ${moduleTitle}`,
+      prompt:        keyTerms
+        ? `Crea una infografía educativa sobre "${moduleTitle}" que visualice: ${keyTerms}. Usa íconos, flechas y colores. Fondo blanco, estilo limpio.`
+        : `Crea una infografía educativa que explique "${moduleTitle}" con íconos y flechas que muestren sus conceptos principales.`,
+      learning_goal: `Construir una imagen mental del concepto refuerza la memoria a largo plazo en ${titleLow}.`,
+    }
+  } else {
+    meta = {
+      type:             'video',
+      title:            `Explora en video: ${moduleTitle}`,
+      prompt:           keyTerms
+        ? `Guion animado de 90 segundos sobre "${moduleTitle}" enfocado en: ${keyTerms}. Usa metáforas cotidianas.`
+        : `Guion animado de 90 segundos sobre "${moduleTitle}" con una metáfora cotidiana al inicio.`,
+      learning_goal:    `Los videos activan múltiples canales sensoriales, incrementando la retención en ${titleLow} hasta un 65%.`,
+      duration_seconds: 90,
+    }
+  }
+  return {
+    id:       `media-${conceptIdx}`,
+    type:     'media_prompt',
+    xpReward: 2,
+    metadata: meta as unknown as Record<string, unknown>,
+  }
+}
+
+// ── D6.3: Kinesthetic prediction (mid-journey, not pre-application) ───────────
+
+function makeKinestheticPrediction(moduleTitle: string, conceptIdx: number): LearningJourneyStep {
+  const meta: PredictionMeta = {
+    question: `Antes de continuar: ¿cómo crees que se comporta ${moduleTitle.toLowerCase()} en el siguiente caso?`,
+    reveal:   'A medida que avances, descubrirás el comportamiento real.',
+    hint:     'No hay respuesta incorrecta — es solo una predicción.',
+  }
+  return {
+    id:             `kin-pred-${conceptIdx}`,
+    type:           'prediction',
+    xpReward:       3,
+    requiresAnswer: true,
+    metadata:       meta as unknown as Record<string, unknown>,
+  }
+}
+
+// ── D6.3: Modality-based interactive step picker ──────────────────────────────
+
+function pickInteractiveStep(
+  modality:    LearningModality | undefined,
+  idx:         number,
+  moduleTitle: string,
+  conceptText: string,
+): LearningJourneyStep {
+  switch (modality) {
+    case 'visual':
+      return idx % 2 === 0
+        ? makeMediaPromptForced(moduleTitle, conceptText, idx, 'image')
+        : makeAnalogy(moduleTitle, idx)
+    case 'reading':
+      return idx % 2 === 0
+        ? makeMicroQuestion(idx)
+        : makeAnalogy(moduleTitle, idx)
+    case 'audio':
+      return idx % 2 === 0
+        ? makeMediaPromptForced(moduleTitle, conceptText, idx, 'video')
+        : makeCuriosity(moduleTitle, idx)
+    case 'kinesthetic':
+      return idx % 2 === 0
+        ? makeKinestheticPrediction(moduleTitle, idx)
+        : makeMiniActivity(idx)
+    default:
+      switch (idx % 3) {
+        case 0:  return makeMicroQuestion(idx)
+        case 1:  return makeAnalogy(moduleTitle, idx)
+        default: return makeMediaPrompt(moduleTitle, conceptText, idx)
+      }
+  }
+}
+
 function makeMiniActivity(exampleIdx: number): LearningJourneyStep {
   const meta: MiniActivityMeta = {
     instructions: 'Refuerza la idea principal del ejemplo que acabas de leer.',
@@ -433,19 +544,25 @@ const MAX_INTERACTIVE_STEPS = 8
 function buildJourneyFromConceptBlocks(
   engagementSession: EngagementSession,
   moduleContent:     ModuleOrchestrationResponse,
+  dominantModality?: LearningModality,
 ): LearningJourney {
   const steps: LearningJourneyStep[] = []
   const { concept_blocks, module_title, module_id, course_id } = moduleContent
   let interactiveUsed = 0
+  // Track current pedagogical phase for step tagging
+  let currentPhase: Phase5E = 'explore'
 
   const tryPush = (step: LearningJourneyStep): void => {
     if (interactiveUsed >= MAX_INTERACTIVE_STEPS) return
-    steps.push(step)
+    steps.push({ ...step, phase: currentPhase })
     interactiveUsed++
   }
 
   // ── Phase 1: Concept blocks ───────────────────────────────────────────────
+  const halfLen = Math.ceil(concept_blocks.length / 2)
   concept_blocks.forEach((block: ConceptBlock, i: number) => {
+    // First half of blocks = explore; second half = explain
+    currentPhase = i < halfLen ? 'explore' : 'explain'
     // Sprint M1: prediction gate BEFORE concept (LLM-only, never null on template path)
     if (block.prediction_question) {
       const predMeta: PredictionMeta = {
@@ -469,6 +586,7 @@ function buildJourneyFromConceptBlocks(
       title:    block.title,
       content:  block.explanation,
       xpReward: 2,
+      phase:    currentPhase,
     })
 
     // Curiosity — passive, before positional step (every 2 blocks)
@@ -547,6 +665,7 @@ function buildJourneyFromConceptBlocks(
         type:     'example',
         content:  block.example,
         xpReward: 3,
+        phase:    'explain',
       })
     }
 
@@ -583,7 +702,8 @@ function buildJourneyFromConceptBlocks(
     }
   })
 
-  // ── Phase 2: Application (with prediction gate) ───────────────────────────
+  // ── Phase 2: Application (Elaborate) ─────────────────────────────────────
+  currentPhase = 'elaborate'
   const realNewsResource = engagementSession.resources
     .find(r => r.resource_type === ('real_news' as EngagementResourceType))
   const applicationItems: string[] = [
@@ -601,17 +721,39 @@ function buildJourneyFromConceptBlocks(
       type:           'prediction',
       xpReward:       3,
       requiresAnswer: true,
+      phase:          'elaborate',
       metadata:       predMeta as unknown as Record<string, unknown>,
     })
     steps.push({
       id:       'cb-application',
       type:     'application',
       xpReward: 2,
+      phase:    'elaborate',
       metadata: { items: applicationItems },
     })
   }
 
-  // ── Phase 3: Reflections ──────────────────────────────────────────────────
+  // D6.5: Code Lab for kinesthetic + qualifying modules (Elaborate phase)
+  if (dominantModality === 'kinesthetic') {
+    const slug = getCodeLabSlug(module_title)
+    if (slug) {
+      const ipMeta: InteractivePracticeMeta = {
+        interactiveType: 'code_lab',
+        topicSlug:       slug,
+        description:     `Practica ${module_title} directamente en el editor interactivo.`,
+      }
+      steps.push({
+        id:       'cb-code-lab',
+        type:     'interactive_practice',
+        title:    `Práctica en Code Lab: ${module_title}`,
+        xpReward: 10,
+        phase:    'elaborate',
+        metadata: ipMeta as unknown as Record<string, unknown>,
+      })
+    }
+  }
+
+  // ── Phase 3: Reflections (Evaluate) ──────────────────────────────────────
   moduleContent.misconceptions.forEach((item, i) => {
     steps.push({
       id:       `cb-reflection-${i}`,
@@ -619,16 +761,18 @@ function buildJourneyFromConceptBlocks(
       title:    item.misconception,
       content:  item.correction,
       xpReward: 5,
+      phase:    'evaluate',
       metadata: { severity: item.severity },
     })
   })
 
   return {
-    id:          `journey-${module_id}`,
-    moduleTitle: module_title,
-    courseId:    course_id,
+    id:               `journey-${module_id}`,
+    moduleTitle:      module_title,
+    courseId:         course_id,
     steps,
-    sessionId:   engagementSession.session_id,
+    sessionId:        engagementSession.session_id,
+    dominantModality: dominantModality ?? undefined,
   }
 }
 
@@ -641,14 +785,19 @@ function buildJourneyFromConceptBlocks(
  * Sprint L1: if concept_blocks are present, delegates to
  * buildJourneyFromConceptBlocks (backend intelligence). Otherwise falls back
  * to the heuristic L4.5 legacy builder (frontend intelligence).
+ *
+ * D6.3: accepts dominantModality to drive modality-based step selection.
  */
 export function buildJourneyFromLegacy(
   engagementSession: EngagementSession,
   moduleContent:     ModuleOrchestrationResponse,
+  options?:          { dominantModality?: LearningModality },
 ): LearningJourney {
+  const dominantModality = options?.dominantModality
+
   // Sprint L1: use enriched backend builder when concept_blocks are populated
   if (moduleContent.concept_blocks && moduleContent.concept_blocks.length > 0) {
-    return buildJourneyFromConceptBlocks(engagementSession, moduleContent)
+    return buildJourneyFromConceptBlocks(engagementSession, moduleContent, dominantModality)
   }
 
   const steps: LearningJourneyStep[] = []
@@ -670,45 +819,48 @@ export function buildJourneyFromLegacy(
   const moduleTitle     = moduleContent.module_title
   let   curiosityCount  = 0
   let   interactiveUsed = 0
+  let   legacyPhase: Phase5E = 'explore'
 
-  // Helper: push a step only while budget allows
+  // Helper: push a step only while budget allows, tagging phase
   const tryPush = (step: LearningJourneyStep): void => {
     if (interactiveUsed >= MAX_INTERACTIVE_STEPS) return
-    steps.push(step)
+    steps.push({ ...step, phase: legacyPhase })
     interactiveUsed++
   }
 
   // ── Phase 1: Zip concepts (+ inserts) with examples (+ mini_activity) ─────
+  const halfConceptLen = Math.ceil(conceptPool.length / 2)
   const phaseLen = Math.max(conceptPool.length, examples.length)
   for (let i = 0; i < phaseLen; i++) {
 
     // ── Concept block ─────────────────────────────────────────────────────────
     if (i < conceptPool.length) {
+      // First half = explore; second half = explain
+      legacyPhase = i < halfConceptLen ? 'explore' : 'explain'
       const { id, text } = conceptPool[i]
-      steps.push({ id, type: 'concept', content: text, xpReward: 2 })
+      steps.push({ id, type: 'concept', content: text, xpReward: 2, phase: legacyPhase })
 
       // Rule 6: curiosity every 2 concepts, before positional step
-      if ((i + 1) % 2 === 0) {
+      // (skip for kinesthetic — curiosity is less aligned with its pattern)
+      if ((i + 1) % 2 === 0 && dominantModality !== 'kinesthetic') {
         tryPush(makeCuriosity(moduleTitle, curiosityCount++))
       }
 
-      // Rules 1/2/3: positional step by concept index mod 3
-      switch (i % 3) {
-        case 0: tryPush(makeMicroQuestion(i));                         break
-        case 1: tryPush(makeAnalogy(moduleTitle, i));                  break
-        case 2: tryPush(makeMediaPrompt(moduleTitle, text, i));        break
-      }
+      // D6.3: modality-based interactive step (replaces fixed mod-3 rotation)
+      tryPush(pickInteractiveStep(dominantModality, i, moduleTitle, text))
     }
 
     // ── Example block ─────────────────────────────────────────────────────────
     if (i < examples.length) {
-      steps.push({ id: `example-${i}`, type: 'example', content: examples[i], xpReward: 3 })
-      // Rule 4: mini_activity after every example
+      legacyPhase = 'explain'
+      steps.push({ id: `example-${i}`, type: 'example', content: examples[i], xpReward: 3, phase: 'explain' })
+      // Rule 4: mini_activity after every example (all modalities)
       tryPush(makeMiniActivity(i))
     }
   }
 
-  // ── Phase 2: Application (with prediction gate) ────────────────────────────
+  // ── Phase 2: Application with prediction gate (Elaborate) ─────────────────
+  legacyPhase = 'elaborate'
   const realNewsResource = engagementSession.resources
     .find(r => r.resource_type === ('real_news' as EngagementResourceType))
   const applicationItems: string[] = [
@@ -716,18 +868,38 @@ export function buildJourneyFromLegacy(
     ...moduleContent.real_applications,
   ]
   if (applicationItems.length > 0) {
-    // Rule 5: prediction before application (not subject to interactive budget —
-    // it's the culmination of the learning arc and should always appear)
-    steps.push(makePrediction(moduleTitle, applicationItems[0]))
+    // prediction before application always appears (not subject to interactive budget)
+    steps.push({ ...makePrediction(moduleTitle, applicationItems[0]), phase: 'elaborate' })
     steps.push({
       id:       'application-combined',
       type:     'application',
       xpReward: 2,
+      phase:    'elaborate',
       metadata: { items: applicationItems },
     })
   }
 
-  // ── Phase 3: Reflections (misconceptions as checkpoints) ──────────────────
+  // D6.5: Code Lab for kinesthetic + qualifying modules
+  if (dominantModality === 'kinesthetic') {
+    const slug = getCodeLabSlug(moduleTitle)
+    if (slug) {
+      const ipMeta: InteractivePracticeMeta = {
+        interactiveType: 'code_lab',
+        topicSlug:       slug,
+        description:     `Practica ${moduleTitle} directamente en el editor interactivo.`,
+      }
+      steps.push({
+        id:       'legacy-code-lab',
+        type:     'interactive_practice',
+        title:    `Práctica en Code Lab: ${moduleTitle}`,
+        xpReward: 10,
+        phase:    'elaborate',
+        metadata: ipMeta as unknown as Record<string, unknown>,
+      })
+    }
+  }
+
+  // ── Phase 3: Reflections (Evaluate) ───────────────────────────────────────
   cap(moduleContent.misconceptions, cfg.maxMisconceptions).forEach((item, i) => {
     steps.push({
       id:       `reflection-${i}`,
@@ -735,15 +907,17 @@ export function buildJourneyFromLegacy(
       title:    item.misconception,
       content:  item.correction,
       xpReward: 5,
+      phase:    'evaluate',
       metadata: { severity: item.severity },
     })
   })
 
   return {
-    id:          `journey-${moduleContent.module_id}`,
-    moduleTitle: moduleContent.module_title,
-    courseId:    moduleContent.course_id,
+    id:               `journey-${moduleContent.module_id}`,
+    moduleTitle:      moduleContent.module_title,
+    courseId:         moduleContent.course_id,
     steps,
-    sessionId:   engagementSession.session_id,
+    sessionId:        engagementSession.session_id,
+    dominantModality: dominantModality ?? undefined,
   }
 }

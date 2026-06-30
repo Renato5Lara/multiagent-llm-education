@@ -19,6 +19,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useStartEngagement } from '@/hooks/useEngagement'
 import { LearningJourney } from '@/components/learningJourney/LearningJourney'
 import { buildJourneyFromLegacy } from '@/lib/learningJourneyBuilder'
+import { TutorPresence } from '@/components/tutor/TutorPresence'
+import type { LearningModality } from '@/types/modality'
 
 const USE_LEARNING_JOURNEY = true
 
@@ -310,13 +312,18 @@ export default function ModuleLearningView() {
       {/* Swarm adaptation header — discrete, student-friendly */}
       <SwarmAdaptationHeader data={data} />
 
+      {/* TutorPresence — persistent AI panel, collapsible (D6.6) */}
+      <TutorPresence data={data} />
+
       {/* Post-engage module journey: engage cards (did_you_know / prior_knowledge /
           detonating_question) are NOT repeated here — they ran in EngageGateway above.
           Falls back to legacy view only while the session query is still in flight
           (rare: session is cached by the time orchestration completes). */}
       {USE_LEARNING_JOURNEY && !isLoadingSession && engageSession ? (
         <LearningJourney
-          journey={buildJourneyFromLegacy(engageSession, data)}
+          journey={buildJourneyFromLegacy(engageSession, data, {
+            dominantModality: data.multimodal_prompts?.find(p => p.enabled)?.modality as LearningModality | undefined,
+          })}
           onComplete={handleComplete}
         />
       ) : (

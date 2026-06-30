@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import type { ModuleOrchestrationResponse, PedagogicalStage, MisconceptionItem, MultimodalPrompt } from '@/types/pedagogy'
+import type { ModuleOrchestrationResponse, PedagogicalStage, MultimodalPrompt } from '@/types/pedagogy'
 import { ConceptCard }             from '@/components/module/ConceptCard'
 import { DidYouKnowInlineCard }    from '@/components/module/DidYouKnowInlineCard'
 import { CommonMistakeCard }       from '@/components/module/CommonMistakeCard'
@@ -54,17 +54,6 @@ const MODALITY_COLORS: Record<string, string> = {
   audio: 'bg-amber-400/10 border-amber-400/20 text-amber-400',
 }
 
-const SEVERITY_COLORS: Record<string, string> = {
-  high:   'bg-red-400/[0.05] border-red-400/20',
-  medium: 'bg-amber-400/[0.05] border-amber-400/20',
-  low:    'bg-amber-400/[0.03] border-amber-400/15',
-}
-
-const SEVERITY_ICONS: Record<string, typeof AlertTriangle> = {
-  high: AlertTriangle,
-  medium: AlertTriangle,
-  low: Lightbulb,
-}
 
 function CopyButton({ text, label }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false)

@@ -3,8 +3,9 @@ import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { JourneyProgress }      from './JourneyProgress'
-import { LearningJourneyStep }  from './LearningJourneyStep'
+import { MultimodalRenderer }  from './MultimodalRenderer'
 import type { LearningJourney as JourneyData } from '@/types/learningJourney'
+import type { LearningModality } from '@/types/modality'
 
 interface Props {
   journey:           JourneyData
@@ -149,8 +150,9 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
         'transition-opacity duration-150',
         cardVisible ? 'opacity-100' : 'opacity-0',
       )}>
-        <LearningJourneyStep
+        <MultimodalRenderer
           step={step}
+          modality={journey.dominantModality as LearningModality | undefined}
           onComplete={handleComplete}
           onXp={handleXp}
         />

@@ -36,6 +36,13 @@ const TOPIC_LABELS: Record<string, string> = {
   functions:   'Funciones',
 }
 
+const MODALITY_THEME: Record<string, { label: string; color: string; bg: string }> = {
+  visual:      { label: 'Visual',       color: 'text-purple-300', bg: 'border-purple-400/30 bg-purple-500/5'  },
+  reading:     { label: 'Lectora',      color: 'text-green-300',  bg: 'border-green-400/30 bg-green-500/5'    },
+  audio:       { label: 'Auditivo',     color: 'text-orange-300', bg: 'border-orange-400/30 bg-orange-500/5'  },
+  kinesthetic: { label: 'Kinestésico',  color: 'text-red-300',    bg: 'border-red-400/30 bg-red-500/5'        },
+}
+
 // ── Helper functions ───────────────────────────────────────────────────────────
 
 function computeLocalProfile(answers: Record<number, number>): LocalProfile {

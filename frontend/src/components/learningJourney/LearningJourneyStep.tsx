@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Send, Check, Construction } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Send, Check, Construction, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ConceptCard }              from '@/components/module/ConceptCard'
@@ -25,6 +26,7 @@ import type {
   AnalogyMeta,
   MiniActivityMeta,
   MediaPromptMeta,
+  InteractivePracticeMeta,
 } from '@/types/learningJourney'
 
 // ── Shared sub-renderer props ─────────────────────────────────────────────────
@@ -469,6 +471,61 @@ function EvaluationStep({ step, onComplete }: SubProps) {
   )
 }
 
+// ── interactive_practice (Code Lab) ──────────────────────────────────────────
+
+function InteractivePracticeCard({
+  step, meta, onComplete,
+}: {
+  step: StepData
+  meta: InteractivePracticeMeta | undefined
+  onComplete: () => void
+}) {
+  const navigate   = useNavigate()
+  const [done, setDone] = useState(false)
+
+  const handleLaunch = () => {
+    setDone(true)
+    onComplete()
+    if (meta?.topicSlug) navigate(`/estudiante/codelab/${meta.topicSlug}`)
+  }
+
+  return (
+    <div className="rounded-xl border border-red-200 dark:border-red-800 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/20 p-6 space-y-5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-700 flex items-center justify-center shrink-0">
+          <Terminal className="h-5 w-5 text-red-600 dark:text-red-400" />
+        </div>
+        <div>
+          <p className="text-xs font-mono font-bold tracking-widest text-red-600 dark:text-red-400 uppercase">
+            Práctica interactiva
+          </p>
+          <p className="text-xs text-red-700 dark:text-red-300 mt-0.5">Code Lab · Kinestésico</p>
+        </div>
+      </div>
+
+      <p className="text-base font-semibold text-gray-800 dark:text-gray-100">
+        {step.title ?? 'Practica directamente en el editor'}
+      </p>
+
+      <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">
+        El sistema detectó que aprendes mejor con práctica directa. En el Code Lab
+        puedes experimentar con código real y construir el concepto desde la experiencia.
+      </p>
+
+      <Button
+        onClick={handleLaunch}
+        disabled={done}
+        className="w-full gap-2 bg-red-500 hover:bg-red-600 dark:bg-red-700 dark:hover:bg-red-600 text-white"
+      >
+        {done
+          ? <><Check className="h-4 w-4" /> Code Lab abierto</>
+          : <><Terminal className="h-4 w-4" /> Abrir Code Lab</>
+        }
+      </Button>
+    </div>
+  )
+}
+
 // ── Main dispatcher ───────────────────────────────────────────────────────────
 
 interface Props {
@@ -620,6 +677,12 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
           onComplete={handleComplete}
         />
       )
+    }
+
+    // ── Sprint D6 — interactive practice (Code Lab) ───────────────────────
+    case 'interactive_practice': {
+      const meta = step.metadata as InteractivePracticeMeta | undefined
+      return <InteractivePracticeCard step={step} meta={meta} onComplete={handleComplete} />
     }
 
     // ── Sprint L6 ─────────────────────────────────────────────────────────

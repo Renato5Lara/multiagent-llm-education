@@ -9,26 +9,32 @@
  * el journey combinando EngagementSession + ModuleOrchestrationResponse.
  */
 
+// ── 5E pedagogical phase ─────────────────────────────────────────────────────
+
+export type Phase5E = 'engage' | 'explore' | 'explain' | 'elaborate' | 'evaluate'
+
 // ── Step types ────────────────────────────────────────────────────────────────
 
 export type LearningJourneyStepType =
   // ── Existing ──────────────────────────────────────────────────────────────
-  | 'did_you_know'       // curiosidad inmediata, pasiva
-  | 'prior_knowledge'    // autoevaluación de conocimiento previo
-  | 'concept'            // párrafo conceptual expandible
-  | 'question'           // pregunta de investigación + hipótesis
-  | 'example'            // ejemplo práctico expandible
-  | 'challenge'          // reto corto con respuesta libre
-  | 'application'        // aplicaciones reales bookmarkeables
-  | 'reflection'         // checkpoint metacognitivo
-  | 'evaluation'         // quiz de opción múltiple
+  | 'did_you_know'          // curiosidad inmediata, pasiva
+  | 'prior_knowledge'       // autoevaluación de conocimiento previo
+  | 'concept'               // párrafo conceptual expandible
+  | 'question'              // pregunta de investigación + hipótesis
+  | 'example'               // ejemplo práctico expandible
+  | 'challenge'             // reto corto con respuesta libre
+  | 'application'           // aplicaciones reales bookmarkeables
+  | 'reflection'            // checkpoint metacognitivo
+  | 'evaluation'            // quiz de opción múltiple
   // ── Sprint L3 ─────────────────────────────────────────────────────────────
-  | 'micro_question'     // pregunta rápida 1 frase, 2-3 botones de respuesta
-  | 'prediction'         // el estudiante predice antes de ver la respuesta
-  | 'mini_activity'      // actividad 2-3 pasos con checkboxes
-  | 'curiosity'          // dato curioso visual, pasivo
-  | 'analogy'            // analogía estructurada "X es como Y porque Z"
-  | 'media_prompt'       // prompts para imagen / video / audio (sin API externa)
+  | 'micro_question'        // pregunta rápida 1 frase, 2-3 botones de respuesta
+  | 'prediction'            // el estudiante predice antes de ver la respuesta
+  | 'mini_activity'         // actividad 2-3 pasos con checkboxes
+  | 'curiosity'             // dato curioso visual, pasivo
+  | 'analogy'               // analogía estructurada "X es como Y porque Z"
+  | 'media_prompt'          // prompts para imagen / video / audio (sin API externa)
+  // ── Sprint D6 ─────────────────────────────────────────────────────────────
+  | 'interactive_practice'  // práctica interactiva (Code Lab) solo en 5 módulos
 
 // ── Step interface ────────────────────────────────────────────────────────────
 
@@ -38,6 +44,9 @@ export interface LearningJourneyStep {
   title?:   string
   content?: string
   metadata?: Record<string, unknown>
+
+  // 5E phase this step belongs to — set by the builder (D6.1)
+  phase?: Phase5E
 
   // Si true, LearningJourney bloquea "Siguiente" hasta que onComplete() se llame
   requiresAnswer?: boolean
@@ -49,12 +58,14 @@ export interface LearningJourneyStep {
 // ── Journey container ─────────────────────────────────────────────────────────
 
 export interface LearningJourney {
-  id:           string
-  moduleTitle:  string
-  courseId:     string
-  steps:        LearningJourneyStep[]
+  id:               string
+  moduleTitle:      string
+  courseId:         string
+  steps:            LearningJourneyStep[]
   // Presente cuando el journey inicia con una sesión de engage activa
-  sessionId?:   string
+  sessionId?:       string
+  // Modalidad dominante del estudiante — propagada por el builder (D6.3)
+  dominantModality?: string
 }
 
 // ── Metadata shapes ───────────────────────────────────────────────────────────
@@ -113,6 +124,14 @@ export interface MediaPromptMeta {
   prompt:           string     // prompt listo para copiar
   learning_goal:    string
   duration_seconds?: number   // solo para video/audio
+}
+
+// ── Sprint D6.5 — interactive_practice ───────────────────────────────────────
+
+export interface InteractivePracticeMeta {
+  interactiveType: 'code_lab'
+  topicSlug:       string      // e.g. 'variables', 'conditionals', 'loops'
+  description?:    string
 }
 
 // ── Builder stub ──────────────────────────────────────────────────────────────
