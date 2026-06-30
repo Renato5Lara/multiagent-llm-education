@@ -153,9 +153,16 @@ def save_diagnostic(
                 "dominant_modality": dominant,
                 "secondary_modality": secondary,
                 "confidence": confidence,
+                "known_topics": known_topics,
             },
             "modality_scores": modality_scores,
             "recommended_learning_strategy": RECOMMENDED_STRATEGIES.get(dominant, []),
+            "consensus_summary": {
+                "dominant_modality": dominant,
+                "prior_level": prior_knowledge_level,
+                "strategy": RECOMMENDED_STRATEGIES.get(dominant, []),
+                "known_topics": known_topics,
+            },
         }
 
         if existing:

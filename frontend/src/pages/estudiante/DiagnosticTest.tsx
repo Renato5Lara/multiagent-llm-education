@@ -67,11 +67,11 @@ const MODALITY_LABEL: Record<string, string> = {
 
 // Swarm agent definitions — names aligned with thesis architecture
 const AGENT_DEFINITIONS = [
-  { id: 'diagnostic',  name: 'Agente Diagnóstico',  startDelay: 0,    duration: 1400, msgDelay: 1550 },
-  { id: 'profile',     name: 'Agente Perfil',        startDelay: 1400, duration: 1300, msgDelay: 2800 },
-  { id: 'adaptation',  name: 'Agente Adaptación',    startDelay: 2700, duration: 1600, msgDelay: 4400 },
-  { id: 'tutor',       name: 'Agente Tutor',         startDelay: 4300, duration: 1300, msgDelay: 5700 },
-  { id: 'consensus',   name: 'Motor de Consenso',    startDelay: 5600, duration: 1500, msgDelay: 7200 },
+  { id: 'diagnostic',  name: 'Agente Diagnóstico',  startDelay: 0,    duration: 800,  msgDelay: 850  },
+  { id: 'profile',     name: 'Agente Perfil',        startDelay: 800,  duration: 750,  msgDelay: 1600 },
+  { id: 'adaptation',  name: 'Agente Adaptación',    startDelay: 1550, duration: 900,  msgDelay: 2500 },
+  { id: 'tutor',       name: 'Agente Tutor',         startDelay: 2450, duration: 750,  msgDelay: 3250 },
+  { id: 'consensus',   name: 'Motor de Consenso',    startDelay: 3200, duration: 850,  msgDelay: 4100 },
 ] as const
 
 // ── Helper functions ───────────────────────────────────────────────────────────
@@ -261,13 +261,13 @@ function SwarmThinkingScreen({
     }))
   )
   const [visibleMsgs, setVisibleMsgs] = useState(0)
+  const [showSummary, setShowSummary] = useState(false)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
   const onCompleteRef = useRef(onAnimationComplete)
   useEffect(() => { onCompleteRef.current = onAnimationComplete }, [onAnimationComplete])
 
   useEffect(() => {
     AGENT_DEFINITIONS.forEach((def, idx) => {
-      // Start running
       timersRef.current.push(
         setTimeout(() => {
           setAgents(prev => prev.map((a, i) =>
@@ -275,7 +275,6 @@ function SwarmThinkingScreen({
           ))
         }, def.startDelay)
       )
-      // Mark done
       timersRef.current.push(
         setTimeout(() => {
           setAgents(prev => prev.map((a, i) =>
@@ -283,7 +282,6 @@ function SwarmThinkingScreen({
           ))
         }, def.startDelay + def.duration)
       )
-      // Show message
       timersRef.current.push(
         setTimeout(() => {
           setVisibleMsgs(prev => prev + 1)
@@ -292,9 +290,8 @@ function SwarmThinkingScreen({
     })
 
     const lastMsg = AGENT_DEFINITIONS[AGENT_DEFINITIONS.length - 1].msgDelay
-    timersRef.current.push(
-      setTimeout(() => { onCompleteRef.current() }, lastMsg + 600)
-    )
+    timersRef.current.push(setTimeout(() => setShowSummary(true), lastMsg + 300))
+    timersRef.current.push(setTimeout(() => { onCompleteRef.current() }, lastMsg + 900))
 
     return () => { timersRef.current.forEach(clearTimeout) }
   }, []) // run once on mount
@@ -380,6 +377,31 @@ function SwarmThinkingScreen({
                 <p className="text-sm text-neural-muted leading-snug">
                   {msg.text}
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Consensus decision panel */}
+      {showSummary && (
+        <div className="glass-panel rounded-2xl p-5 mt-4 border border-neural-pulse/20 animate-in fade-in duration-500">
+          <p className="text-[9px] font-mono text-neural-pulse/60 tracking-[0.2em] uppercase mb-3">
+            Decisión del swarm
+          </p>
+          <div className="space-y-2.5">
+            {[
+              'Perfil de aprendizaje identificado',
+              'Ruta adaptativa aprobada',
+              'Contenido multimodal generado',
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300"
+                style={{ animationDelay: `${idx * 120}ms` }}
+              >
+                <CheckCircle2 className="h-4 w-4 text-neural-pulse flex-shrink-0" />
+                <span className="text-sm text-neural-text">{item}</span>
               </div>
             ))}
           </div>
