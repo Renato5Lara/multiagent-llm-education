@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, Code2, Activity, Settings } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Activity, MessageCircle, FlaskConical } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 import TutorWidget from '@/components/ai/TutorWidget'
+import { useMyCourses } from '@/hooks/useStudent'
 
-const estudianteItems: SidebarItem[] = [
-  { label: 'Dashboard',      href: '/estudiante', icon: LayoutDashboard },
-  { label: 'Learning Path',  href: '#',           icon: BookOpen,        disabled: true },
-  { label: 'Code Lab',       href: '#',           icon: Code2,           disabled: true },
-  { label: 'Swarm Monitor',  href: '#',           icon: Activity,        disabled: true },
-  { label: 'Settings',       href: '#',           icon: Settings,        disabled: true, sectionBefore: true },
-]
+function findFdPId(courses: { course_id: string; course_code: string; course_name: string }[] | undefined) {
+  return courses?.find(c =>
+    c.course_code === 'IS301' ||
+    c.course_name.toLowerCase().includes('fundamentos de programaci')
+  )?.course_id
+}
 
 interface OpenTutorDetail {
   courseId?: string
@@ -21,6 +21,9 @@ interface OpenTutorDetail {
 }
 
 export default function EstudianteLayout() {
+  const { data: courses } = useMyCourses()
+  const fdpId = findFdPId(courses)
+
   const [tutorConfig, setTutorConfig] = useState<{
     courseId: string
     courseName?: string
@@ -38,9 +41,17 @@ export default function EstudianteLayout() {
     return () => window.removeEventListener('open-tutor', handler)
   }, [])
 
+  const sidebarItems: SidebarItem[] = [
+    { label: 'Dashboard',       href: '/estudiante',                                      icon: LayoutDashboard },
+    { label: 'Ruta de Aprendizaje', href: fdpId ? `/estudiante/path/${fdpId}` : '#',     icon: BookOpen,      disabled: !fdpId },
+    { label: 'Tutor IA',        href: '#',                                                icon: MessageCircle, disabled: true },
+    { label: 'Swarm Monitor',   href: '#',                                                icon: Activity,      disabled: true, sectionBefore: true },
+    { label: 'Agent Lab',       href: '#',                                                icon: FlaskConical,  disabled: true },
+  ]
+
   return (
     <div className="min-h-screen bg-neural-surface">
-      <Sidebar items={estudianteItems} />
+      <Sidebar items={sidebarItems} />
       <div className="lg:ml-64">
         <Header />
         <main className="p-4 md:p-6 pt-16 lg:pt-6">

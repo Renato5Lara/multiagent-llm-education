@@ -1,366 +1,431 @@
-import { useState } from 'react'
 import {
-  BookOpen, GraduationCap, TrendingUp, Brain, Sparkles, Target, AlertCircle,
-  Lightbulb, FileText, MessageCircle, Zap, Map, ChevronDown, ChevronUp, type LucideIcon
+  Brain, Zap, Lock, CheckCircle, Circle, ArrowRight,
+  Activity, BookOpen, ChevronRight, Sparkles,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { useMyCourses, useAcademicSummary } from '@/hooks/useStudent'
-import { useIADashboard } from '@/hooks/useAnalytics'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useMyCourses, useLearningPath, useStudentProfile } from '@/hooks/useStudent'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
-import { MODALITY_LABELS, MODALITY_COLORS } from '@/lib/constants'
-import CurriculumRoadmap from '@/components/curriculum/CurriculumRoadmap'
-import RiskCard from '@/components/curriculum/RiskCard'
-import StrengthsCard from '@/components/curriculum/StrengthsCard'
-import type { CourseProgress } from '@/types/student'
+import { MODALITY_LABELS } from '@/lib/constants'
+import type { CourseProgress, LearningPathItem } from '@/types/student'
 
-interface AcademicSummary {
-  current_cycle: number | null
-  total_courses: number
-  completed_diagnostics: number
-  total_modules: number
-  completed_modules: number
-  progress_percentage: number
-  dominant_modality: string | null
-  has_onboarded: boolean
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+const MODALITY_DARK: Record<string, string> = {
+  visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
+  video:       'border-blue-400/40 text-blue-300 bg-blue-400/10',
+  audio:       'border-orange-400/40 text-orange-300 bg-orange-400/10',
+  reading:     'border-green-400/40 text-green-300 bg-green-400/10',
+  kinesthetic: 'border-red-400/40 text-red-300 bg-red-400/10',
+  game:        'border-amber-400/40 text-amber-300 bg-amber-400/10',
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
+const BLOOM_LABELS: Record<number, string> = {
+  1: 'Recordar', 2: 'Comprender', 3: 'Aplicar',
+  4: 'Analizar', 5: 'Evaluar', 6: 'Crear',
+}
 
-function CompactGreeting({ name, cycle }: { name: string; cycle: number }) {
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches'
+function findFdP(courses: CourseProgress[] | undefined) {
+  return courses?.find(c =>
+    c.course_code === 'IS301' ||
+    c.course_name.toLowerCase().includes('fundamentos de programaci')
+  )
+}
+
+function getGreeting() {
+  const h = new Date().getHours()
+  return h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches'
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function Greeting({ name }: { name: string }) {
   return (
-    <div className="glass-panel rounded-xl p-4 mb-4 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-28 bg-neural-glow/8 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-4 left-0 w-48 h-20 bg-neural-violet/8 blur-3xl pointer-events-none" />
-      <div className="relative z-10 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-neural-text">{greeting}, {name}</h1>
-          <p className="text-neural-muted text-sm mt-0.5">
-            Ciclo {cycle} · Ingeniería de Sistemas e Inteligencia Artificial
-          </p>
+    <div className="mb-8">
+      <p className="text-neural-muted text-sm font-mono tracking-wider uppercase mb-1">
+        {getGreeting()}
+      </p>
+      <h1 className="text-2xl font-bold text-neural-text">{name}</h1>
+      <p className="text-neural-muted text-sm mt-0.5">Tu tutor IA está listo para adaptarse a ti</p>
+    </div>
+  )
+}
+
+function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: ReturnType<typeof useNavigate> }) {
+  const modColor = course.dominant_modality ? MODALITY_DARK[course.dominant_modality] : ''
+
+  return (
+    <div className="glass-panel rounded-2xl p-6 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-neural-glow/6 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-neural-violet/6 blur-3xl pointer-events-none" />
+
+      <div className="relative z-10">
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-mono text-neural-glow tracking-[0.15em] uppercase bg-neural-glow/10 border border-neural-glow/20 rounded px-2 py-0.5">
+                {course.course_code}
+              </span>
+              {course.dominant_modality && (
+                <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${modColor}`}>
+                  Perfil {MODALITY_LABELS[course.dominant_modality] || course.dominant_modality}
+                </Badge>
+              )}
+            </div>
+            <h2 className="text-lg font-bold text-neural-text leading-tight">{course.course_name}</h2>
+          </div>
+
+          {/* Big progress number */}
+          <div className="text-right flex-shrink-0 ml-4">
+            <p className="text-4xl font-bold font-mono text-neural-glow leading-none">
+              {course.progress_percentage}
+            </p>
+            <p className="text-[10px] text-neural-muted/60 font-mono mt-0.5">% completado</p>
+          </div>
         </div>
-        <div className="hidden md:flex items-center gap-2 bg-neural-glow/10 border border-neural-glow/20 rounded-lg px-3 py-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-neural-glow animate-pulse" />
-          <span className="text-xs font-medium text-neural-glow font-mono tracking-wider">COPILOTO ACTIVO</span>
+
+        {/* Progress bar */}
+        <div className="w-full bg-white/[0.06] rounded-full h-2 mb-5">
+          <div
+            className="bg-neural-glow h-2 rounded-full neural-glow-sm transition-all duration-700"
+            style={{ width: `${Math.max(course.progress_percentage, 2)}%` }}
+          />
         </div>
+
+        {/* Status indicators */}
+        <div className="flex items-center gap-4 mb-5">
+          <div className={`flex items-center gap-1.5 text-xs ${course.has_diagnostic ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
+            {course.has_diagnostic
+              ? <CheckCircle className="h-3.5 w-3.5" />
+              : <Circle className="h-3.5 w-3.5" />}
+            Diagnóstico
+          </div>
+          <div className={`flex items-center gap-1.5 text-xs ${course.has_learning_path ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
+            {course.has_learning_path
+              ? <CheckCircle className="h-3.5 w-3.5" />
+              : <Circle className="h-3.5 w-3.5" />}
+            Ruta generada
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-neural-violet">
+            <Activity className="h-3.5 w-3.5" />
+            4 agentes activos
+          </div>
+        </div>
+
+        {/* CTA */}
+        {!course.has_diagnostic ? (
+          <Button className="gap-2" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
+            <Brain className="h-4 w-4" />
+            Comenzar diagnóstico
+          </Button>
+        ) : !course.has_learning_path ? (
+          <Button className="gap-2" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
+            <Zap className="h-4 w-4" />
+            Ver ruta adaptativa
+          </Button>
+        ) : (
+          <Button className="gap-2" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
+            <ArrowRight className="h-4 w-4" />
+            Continuar aprendizaje
+          </Button>
+        )}
       </div>
     </div>
   )
 }
 
-type StatColor = 'primary' | 'glow' | 'violet' | 'pulse'
-const STAT_COLORS: Record<StatColor, { icon: string; value: string; bg: string }> = {
-  primary: { icon: 'text-primary', value: 'text-neural-text', bg: 'bg-primary/10' },
-  glow:    { icon: 'text-neural-glow', value: 'text-neural-glow', bg: 'bg-neural-glow/10' },
-  violet:  { icon: 'text-neural-violet', value: 'text-neural-text', bg: 'bg-neural-violet/10' },
-  pulse:   { icon: 'text-neural-pulse', value: 'text-neural-pulse', bg: 'bg-neural-pulse/10' },
-}
+const MODULE_STATUS = {
+  completed: { icon: CheckCircle, color: 'text-neural-pulse', ring: 'border-neural-pulse/30 bg-neural-pulse/5' },
+  available: { icon: Circle,       color: 'text-neural-glow',  ring: 'border-neural-glow/30 bg-neural-glow/5' },
+  locked:    { icon: Lock,         color: 'text-neural-muted/30', ring: 'border-white/[0.06] bg-white/[0.02]' },
+} as const
 
-function StatChip({ icon: Icon, value, label, color }: { icon: LucideIcon; value: string | number; label: string; color: StatColor }) {
-  const c = STAT_COLORS[color]
+function ModuleTimeline({
+  items, courseId, navigate,
+}: { items: LearningPathItem[]; courseId: string; navigate: ReturnType<typeof useNavigate> }) {
+  const currentIdx = items.findIndex(i => i.status === 'available')
+  const start = Math.max(0, (currentIdx === -1 ? items.length - 1 : currentIdx) - 1)
+  const visible = items.slice(start, start + 5)
+
   return (
-    <div className="glass-panel rounded-lg p-2.5 flex items-center gap-2.5">
-      <div className={`p-1 rounded-md ${c.bg}`}>
-        <Icon className={`h-3.5 w-3.5 ${c.icon}`} />
+    <div className="glass-panel rounded-2xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-semibold text-neural-text flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-neural-glow" />
+          Ruta de aprendizaje
+        </h3>
+        <button
+          onClick={() => navigate(`/estudiante/path/${courseId}`)}
+          className="text-xs text-neural-muted hover:text-neural-glow flex items-center gap-1 transition-colors font-mono"
+        >
+          Ver completa <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
-      <div className="min-w-0">
-        <p className={`text-base font-bold leading-none ${c.value}`}>{value}</p>
-        <p className="text-[11px] text-neural-muted mt-0.5 truncate">{label}</p>
+
+      <div className="space-y-2">
+        {visible.map((item, idx) => {
+          const cfg = MODULE_STATUS[item.status as keyof typeof MODULE_STATUS] ?? MODULE_STATUS.locked
+          const Icon = cfg.icon
+          const isActive = item.status === 'available'
+
+          return (
+            <button
+              key={item.id}
+              disabled={item.status === 'locked'}
+              onClick={() => item.resource_id && navigate(`/estudiante/content/${item.resource_id}`)}
+              className={[
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200 text-left',
+                cfg.ring,
+                item.status === 'locked' ? 'cursor-not-allowed opacity-50' : 'hover:border-neural-glow/30 cursor-pointer',
+                isActive ? 'ring-1 ring-neural-glow/20' : '',
+              ].join(' ')}
+            >
+              <Icon className={`h-4 w-4 flex-shrink-0 ${cfg.color}`} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-medium truncate ${item.status === 'locked' ? 'text-neural-muted/40' : 'text-neural-text'}`}>
+                  {item.title}
+                </p>
+                {item.resource_type && (
+                  <p className="text-[10px] text-neural-muted/50 font-mono uppercase tracking-wider mt-0.5">
+                    {item.resource_type}
+                  </p>
+                )}
+              </div>
+              <span className="text-[10px] font-mono text-neural-muted/40 flex-shrink-0">
+                {start + idx + 1}/{items.length}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
 }
 
-function ProfileCard({
-  user, modality, avgProgress, totalCourses,
+function AdaptiveProfileCard({
+  name, initials, modality, bloomLevel, progress, totalItems, completedItems,
 }: {
-  user: { first_name?: string; last_name?: string; current_cycle?: number | null } | null
-  modality: string | null
-  avgProgress: number
-  totalCourses: number
+  name: string; initials: string; modality: string | null; bloomLevel?: number
+  progress: number; totalItems: number; completedItems: number
 }) {
-  const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'
+  const modColor = modality ? MODALITY_DARK[modality] : ''
+
   return (
-    <div className="glass-panel rounded-xl p-4">
-      <div className="flex items-center gap-2.5 mb-4">
+    <div className="glass-panel rounded-2xl p-5">
+      <div className="flex items-center gap-3 mb-5">
         <div className="w-10 h-10 rounded-full bg-neural-glow/15 border border-neural-glow/30 flex items-center justify-center flex-shrink-0">
           <span className="text-neural-glow font-bold text-sm">{initials}</span>
         </div>
-        <div className="min-w-0">
-          <p className="text-neural-text font-semibold truncate text-sm">
-            {user?.first_name} {user?.last_name}
-          </p>
-          <p className="text-neural-muted text-xs">Ciclo {user?.current_cycle} · Estudiante</p>
+        <div>
+          <p className="text-neural-text font-semibold text-sm">{name}</p>
+          <p className="text-neural-muted text-xs">Perfil adaptativo</p>
         </div>
       </div>
 
-      <div className="space-y-2.5">
-        <div>
-          <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-neural-muted">Progreso global</span>
-            <span className="text-neural-glow font-mono font-bold">{avgProgress}%</span>
+      <div className="space-y-3">
+        {/* Progress */}
+        <div className="bg-neural-lowest/60 rounded-xl px-3 py-2.5">
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-neural-muted">Progreso del curso</span>
+            <span className="text-neural-glow font-mono font-bold">{progress}%</span>
           </div>
           <div className="w-full bg-white/[0.06] rounded-full h-1.5">
             <div
-              className="bg-neural-glow h-1.5 rounded-full transition-all duration-500 neural-glow-sm"
-              style={{ width: `${avgProgress}%` }}
+              className="bg-neural-glow h-1.5 rounded-full neural-glow-sm transition-all duration-500"
+              style={{ width: `${Math.max(progress, 2)}%` }}
             />
           </div>
+          <p className="text-[10px] text-neural-muted/50 mt-1.5">
+            {completedItems} de {totalItems} módulos
+          </p>
         </div>
 
+        {/* Modality */}
         {modality && (
-          <div className="flex items-center justify-between bg-neural-lowest/60 rounded-lg px-3 py-2">
-            <span className="text-xs text-neural-muted">Estilo aprendizaje</span>
-            <Badge variant="outline" className={`text-xs ${MODALITY_COLORS[modality] || ''}`}>
+          <div className="flex items-center justify-between bg-neural-lowest/60 rounded-xl px-3 py-2.5">
+            <span className="text-xs text-neural-muted">Estilo de aprendizaje</span>
+            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${modColor}`}>
               {MODALITY_LABELS[modality] || modality}
             </Badge>
           </div>
         )}
 
-        <div className="flex items-center justify-between bg-neural-lowest/60 rounded-lg px-3 py-2">
-          <span className="text-xs text-neural-muted">Cursos activos</span>
-          <span className="text-xs font-mono font-bold text-neural-glow">{totalCourses}</span>
-        </div>
+        {/* Bloom */}
+        {bloomLevel && (
+          <div className="flex items-center justify-between bg-neural-lowest/60 rounded-xl px-3 py-2.5">
+            <span className="text-xs text-neural-muted">Nivel cognitivo</span>
+            <span className="text-xs font-mono text-neural-violet">
+              L{bloomLevel} · {BLOOM_LABELS[bloomLevel] || ''}
+            </span>
+          </div>
+        )}
 
-        <div className="flex items-center gap-2 bg-neural-pulse/[0.05] border border-neural-pulse/15 rounded-lg px-3 py-2">
-          <Target className="h-3.5 w-3.5 text-neural-pulse flex-shrink-0" />
-          <span className="text-xs text-neural-pulse">Ruta personalizada activa</span>
+        {/* Agent swarm */}
+        <div className="bg-neural-violet/[0.06] border border-neural-violet/20 rounded-xl px-3 py-2.5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-violet opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-violet" />
+            </span>
+            <span className="text-xs text-neural-violet font-medium">Swarm activo</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            {['Diagnóstico', 'Contenido', 'Evaluación', 'Tutor'].map(a => (
+              <div key={a} className="flex items-center gap-1.5 text-[10px] text-neural-muted/60">
+                <div className="w-1 h-1 rounded-full bg-neural-glow/60" />
+                {a}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-function AIInsightsCard({ summary, courses }: { summary: AcademicSummary | undefined; courses: CourseProgress[] | undefined }) {
-  if (!courses?.length) return null
-  const coursesWithoutDiag = courses.filter(c => !c.has_diagnostic)
-  const coursesWithoutPath = courses.filter(c => c.has_diagnostic && !c.has_learning_path)
-  const avgProgress = courses.length > 0
-    ? Math.round(courses.reduce((s, c) => s + c.progress_percentage, 0) / courses.length)
-    : 0
-  if (!coursesWithoutDiag.length && !coursesWithoutPath.length && !summary?.dominant_modality) return null
-
-  return (
-    <div className="glass-panel rounded-xl p-3.5">
-      <div className="flex items-center gap-2 mb-2.5">
-        <Lightbulb className="h-3.5 w-3.5 text-primary" />
-        <h3 className="text-xs font-semibold text-neural-text uppercase tracking-wide">Recomendaciones IA</h3>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {coursesWithoutDiag.length > 0 && (
-          <div className="bg-amber-400/10 border border-amber-400/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-amber-400 mb-1">
-              <AlertCircle className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">Diagnóstico pendiente</span>
-            </div>
-            <p className="text-xs text-amber-400/70">
-              {coursesWithoutDiag.length} curso{coursesWithoutDiag.length > 1 ? 's' : ''} sin diagnosticar.
-            </p>
-          </div>
-        )}
-        {coursesWithoutPath.length > 0 && (
-          <div className="bg-neural-glow/10 border border-neural-glow/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-neural-glow mb-1">
-              <Brain className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">Ruta por generar</span>
-            </div>
-            <p className="text-xs text-neural-glow/60">
-              {coursesWithoutPath.length} curso{coursesWithoutPath.length > 1 ? 's' : ''} diagnosticados.
-            </p>
-          </div>
-        )}
-        {summary?.dominant_modality && (
-          <div className="bg-neural-violet/10 border border-neural-violet/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 text-neural-violet mb-1">
-              <Zap className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">Perfil de aprendizaje</span>
-            </div>
-            <p className="text-xs text-neural-violet/60">
-              {MODALITY_LABELS[summary.dominant_modality] || summary.dominant_modality}
-              {avgProgress > 0 && ` · ${avgProgress}% global`}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function CourseCard({ course, navigate }: { course: CourseProgress; navigate: ReturnType<typeof useNavigate> }) {
-  return (
-    <Card className="border hover:shadow-md transition-shadow group">
-      <CardHeader className="pb-2 pt-3 px-3">
-        <div className="flex justify-between items-center">
-          <span className="text-[11px] font-mono text-neural-muted">{course.course_code}</span>
-          {course.dominant_modality && (
-            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${MODALITY_COLORS[course.dominant_modality] || ''}`}>
-              {MODALITY_LABELS[course.dominant_modality] || course.dominant_modality}
-            </Badge>
-          )}
+function AIInsightCard({ course }: { course: CourseProgress }) {
+  if (course.has_learning_path) return (
+    <div className="glass-panel rounded-2xl p-4 border border-neural-glow/10">
+      <div className="flex items-start gap-3">
+        <div className="p-1.5 rounded-lg bg-neural-glow/10 mt-0.5 flex-shrink-0">
+          <Sparkles className="h-3.5 w-3.5 text-neural-glow" />
         </div>
-        <CardTitle className="text-sm mt-1 leading-snug">{course.course_name}</CardTitle>
-        <p className="text-[11px] text-neural-muted">Ciclo {course.cycle}</p>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-2 px-3 pb-3">
         <div>
-          <div className="flex justify-between text-[11px] mb-1">
-            <span className="text-neural-muted">Progreso</span>
-            <span className="font-mono text-neural-text">{course.progress_percentage}%</span>
-          </div>
-          <Progress value={course.progress_percentage} className="h-1" />
+          <p className="text-xs font-semibold text-neural-text mb-0.5">Tutor IA activo</p>
+          <p className="text-xs text-neural-muted/70 leading-relaxed">
+            Los agentes ajustan el contenido en tiempo real según tu progreso y perfil de aprendizaje.
+          </p>
         </div>
-        <div className="flex gap-2">
-          {!course.has_diagnostic ? (
-            <Button size="sm" className="w-full gap-1 text-xs h-6" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
-              <Brain className="h-3 w-3" /> Diagnóstico
-            </Button>
-          ) : !course.has_learning_path ? (
-            <Button size="sm" className="w-full gap-1 text-xs h-6" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
-              <Sparkles className="h-3 w-3" /> Ver ruta
-            </Button>
-          ) : (
-            <Button size="sm" className="w-full gap-1 text-xs h-6" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
-              <TrendingUp className="h-3 w-3" /> Continuar
-            </Button>
-          )}
+      </div>
+    </div>
+  )
+
+  if (course.has_diagnostic) return (
+    <div className="glass-panel rounded-2xl p-4 border border-neural-violet/20">
+      <div className="flex items-start gap-3">
+        <div className="p-1.5 rounded-lg bg-neural-violet/10 mt-0.5 flex-shrink-0">
+          <Zap className="h-3.5 w-3.5 text-neural-violet" />
         </div>
-        {course.has_learning_path && (
-          <div className="flex items-center justify-between border-t border-white/[0.05] pt-1.5">
-            <Button variant="ghost" size="sm" className="text-[11px] gap-1 text-neural-muted hover:text-primary h-5 px-1"
-              onClick={() => navigate(`/estudiante/evaluation/${course.course_id}`)}>
-              <FileText className="h-2.5 w-2.5" /> Evaluación
-            </Button>
-            <Button variant="ghost" size="sm" className="text-[11px] gap-1 text-neural-muted hover:text-primary h-5 px-1"
-              onClick={() => window.dispatchEvent(new CustomEvent('open-tutor', { detail: { courseId: course.course_id, courseName: course.course_name } }))}>
-              <MessageCircle className="h-2.5 w-2.5" /> Tutor IA
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        <div>
+          <p className="text-xs font-semibold text-neural-text mb-0.5">Ruta por generar</p>
+          <p className="text-xs text-neural-muted/70 leading-relaxed">
+            El swarm generará tu ruta personalizada a partir del perfil del diagnóstico.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="glass-panel rounded-2xl p-4 border border-amber-400/20">
+      <div className="flex items-start gap-3">
+        <div className="p-1.5 rounded-lg bg-amber-400/10 mt-0.5 flex-shrink-0">
+          <Brain className="h-3.5 w-3.5 text-amber-400" />
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-neural-text mb-0.5">Diagnóstico pendiente</p>
+          <p className="text-xs text-neural-muted/70 leading-relaxed">
+            Completa el diagnóstico para que el swarm construya tu perfil de aprendizaje adaptativo.
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
-// ─── Main ──────────────────────────────────────────────────────────────────────
+function NoCourseState() {
+  return (
+    <div className="glass-panel rounded-2xl p-12 text-center">
+      <BookOpen className="h-12 w-12 text-neural-muted/20 mx-auto mb-4" />
+      <p className="text-neural-text font-semibold mb-1">Sin curso asignado</p>
+      <p className="text-neural-muted text-sm max-w-sm mx-auto">
+        Fundamentos de la Programación (IS301) aparecerá aquí cuando el docente te asigne al grupo.
+      </p>
+    </div>
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <div>
+      <div className="mb-8">
+        <Skeleton className="h-4 w-24 mb-2" />
+        <Skeleton className="h-7 w-48 mb-1" />
+        <Skeleton className="h-4 w-56" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        <div className="space-y-5">
+          <Skeleton className="h-56 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-20 rounded-2xl" />
+        </div>
+        <div>
+          <Skeleton className="h-72 rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────────
 
 export default function EstudianteDashboard() {
-  const { data: courses, isLoading: coursesLoading } = useMyCourses()
-  const { data: summary, isLoading: summaryLoading } = useAcademicSummary()
-  const { data: iaData, isLoading: iaLoading } = useIADashboard()
   const { user } = useAuthStore()
   const navigate = useNavigate()
-  const [showCurriculum, setShowCurriculum] = useState(false)
 
-  if (coursesLoading || summaryLoading || iaLoading) {
-    return (
-      <div>
-        <Skeleton className="h-20 rounded-xl mb-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-          <div className="space-y-6">
-            <div className="grid grid-cols-4 gap-3">
-              {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
-            </div>
-            <Skeleton className="h-64 rounded-xl" />
-          </div>
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
-      </div>
-    )
-  }
+  const { data: courses, isLoading: coursesLoading } = useMyCourses()
+  const { data: profile } = useStudentProfile()
 
-  const currentCycle = user?.current_cycle || summary?.current_cycle || 0
-  const totalCourses = courses?.length || 0
-  const coursesWithDiag = courses?.filter(c => c.has_diagnostic).length || 0
-  const avgProgress = totalCourses > 0
-    ? Math.round((courses ?? []).reduce((sum, c) => sum + c.progress_percentage, 0) / totalCourses)
-    : 0
+  const fdp = findFdP(courses)
+  const { data: path, isLoading: pathLoading } = useLearningPath(fdp?.course_id)
+
+  if (coursesLoading || (fdp?.has_learning_path && pathLoading)) return <DashboardSkeleton />
+
+  const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Estudiante'
+  const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'
+
+  const modality = fdp?.dominant_modality ?? profile?.dominant_style ?? null
+  const totalItems = path?.items.length ?? 0
+  const completedItems = path?.items.filter(i => i.status === 'completed').length ?? 0
+  const bloomLevel = completedItems > 0 ? Math.min(completedItems + 1, 6) : undefined
 
   return (
     <div>
-      <CompactGreeting name={user?.first_name || 'Estudiante'} cycle={currentCycle} />
+      <Greeting name={name} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
+      {!fdp ? (
+        <NoCourseState />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
 
-        {/* ── Left column ─────────────────────────────── */}
-        <div className="space-y-4">
+          {/* ── Left column ──────────────────────────────── */}
+          <div className="space-y-5">
+            <FdPHeroCard course={fdp} navigate={navigate} />
 
-          {/* Stats chips */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatChip icon={GraduationCap} value={currentCycle} label="Ciclo actual" color="primary" />
-            <StatChip icon={BookOpen} value={totalCourses} label="Cursos" color="glow" />
-            <StatChip icon={Brain} value={`${coursesWithDiag}/${totalCourses}`} label="Diagnósticos" color="violet" />
-            <StatChip icon={TrendingUp} value={`${avgProgress}%`} label="Progreso" color="pulse" />
+            {fdp.has_learning_path && path?.items.length ? (
+              <ModuleTimeline items={path.items} courseId={fdp.course_id} navigate={navigate} />
+            ) : null}
+
+            <AIInsightCard course={fdp} />
           </div>
 
-          {/* Courses section */}
+          {/* ── Right column ─────────────────────────────── */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-neural-text flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-neural-glow" />
-                Mis Cursos
-              </h2>
-              {iaData?.curriculum_status && (
-                <button
-                  onClick={() => setShowCurriculum(v => !v)}
-                  className="text-xs text-neural-muted hover:text-neural-glow flex items-center gap-1 font-mono transition-colors"
-                >
-                  <Map className="h-3.5 w-3.5" />
-                  {showCurriculum ? 'Ocultar malla' : 'Ver malla curricular'}
-                  {showCurriculum ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-              )}
-            </div>
-
-            {totalCourses === 0 ? (
-              <div className="glass-panel rounded-xl p-8 text-center">
-                <BookOpen className="h-10 w-10 text-neural-muted/30 mx-auto mb-3" />
-                <p className="text-neural-text font-medium">No tienes cursos asignados</p>
-                <p className="text-neural-muted text-sm mt-1">
-                  Los cursos de tu ciclo aparecerán aquí cuando estén disponibles.
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {courses?.map(course => (
-                  <CourseCard key={course.course_id} course={course} navigate={navigate} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* AI Insights */}
-          <AIInsightsCard summary={summary} courses={courses} />
-
-          {/* Collapsible curriculum map */}
-          {showCurriculum && iaData?.curriculum_status && (
-            <CurriculumRoadmap data={iaData.curriculum_status} />
-          )}
-        </div>
-
-        {/* ── Right column ────────────────────────────── */}
-        <div className="space-y-3">
-          <ProfileCard
-            user={user}
-            modality={summary?.dominant_modality || null}
-            avgProgress={avgProgress}
-            totalCourses={totalCourses}
-          />
-          {iaData?.student_risk && <RiskCard risk={iaData.student_risk} />}
-          {iaData && (
-            <StrengthsCard
-              strengths={iaData.strengths}
-              warnings={iaData.warnings}
-              nextCourse={iaData.next_recommended_course}
+            <AdaptiveProfileCard
+              name={name}
+              initials={initials}
+              modality={modality}
+              bloomLevel={bloomLevel}
+              progress={fdp.progress_percentage}
+              totalItems={totalItems}
+              completedItems={completedItems}
             />
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
