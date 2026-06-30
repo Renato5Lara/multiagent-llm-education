@@ -29,13 +29,12 @@ import type {
 } from '@/types/engagement'
 import type { ModuleOrchestrationResponse, ConceptBlock } from '@/types/pedagogy'
 
-import { createStep }          from './builders/stepFactory'
-import { getCodeLabSlug }      from './builders/codeLabSelector'
+import { createStep }                  from './builders/stepFactory'
+import { getCodeLabSlug }              from './builders/codeLabSelector'
+import { buildExploreExplainSteps }    from './builders/modalityStrategyBuilder'
 import {
-  makeMiniActivity,
   makePrediction,
-  makeCuriosity,
-  pickInteractiveStep,
+  makeKinestheticPrediction,
 } from './builders/interactiveStepFactory'
 
 // Re-export for consumers that imported from this module in D6
@@ -73,6 +72,29 @@ function getDepthConfig(level: KnowledgeLevel | null): DepthConfig {
       return { maxIntroParagraphs: 1, maxExplanationParagraphs: 2, maxExamples: Infinity, maxMisconceptions: 1 }
     default:
       return { maxIntroParagraphs: 2, maxExplanationParagraphs: Infinity, maxExamples: Infinity, maxMisconceptions: Infinity }
+  }
+}
+
+// ── ConceptBlock modality config ──────────────────────────────────────────────
+
+interface ConceptBlockConfig {
+  maxBlocks:        number   // how many LLM concept_blocks to show
+  forcePrediction:  boolean  // add kinesthetic prediction before each block
+  maxMisconceptions: number  // how many misconceptions in Evaluate
+}
+
+function getConceptBlockConfig(modality: LearningModality | undefined): ConceptBlockConfig {
+  switch (modality) {
+    case 'visual':
+      return { maxBlocks: 4,       forcePrediction: false, maxMisconceptions: 1 }
+    case 'reading':
+      return { maxBlocks: Infinity, forcePrediction: false, maxMisconceptions: Infinity }
+    case 'audio':
+      return { maxBlocks: 4,       forcePrediction: false, maxMisconceptions: 1 }
+    case 'kinesthetic':
+      return { maxBlocks: Infinity, forcePrediction: true,  maxMisconceptions: 2 }
+    default:
+      return { maxBlocks: Infinity, forcePrediction: false, maxMisconceptions: Infinity }
   }
 }
 
@@ -115,7 +137,12 @@ function buildJourneyFromConceptBlocks(
   dominantModality?: LearningModality,
 ): LearningJourney {
   const steps: LearningJourneyStep[] = []
-  const { concept_blocks, module_title, module_id, course_id } = moduleContent
+  const { module_title, module_id, course_id } = moduleContent
+  const cbConfig    = getConceptBlockConfig(dominantModality)
+  const activeBlocks = cbConfig.maxBlocks === Infinity
+    ? moduleContent.concept_blocks
+    : moduleContent.concept_blocks.slice(0, cbConfig.maxBlocks)
+
   let interactiveUsed = 0
   let currentPhase: Phase5E = 'explore'
 
@@ -125,12 +152,17 @@ function buildJourneyFromConceptBlocks(
     interactiveUsed++
   }
 
-  const halfLen = Math.ceil(concept_blocks.length / 2)
+  const halfLen = Math.ceil(activeBlocks.length / 2)
 
-  concept_blocks.forEach((block: ConceptBlock, i: number) => {
+  activeBlocks.forEach((block: ConceptBlock, i: number) => {
     currentPhase = i < halfLen ? 'explore' : 'explain'
 
-    if (block.prediction_question) {
+    // Kinesthetic: prediction BEFORE the concept block (learn by doing)
+    if (cbConfig.forcePrediction) {
+      tryPush(makeKinestheticPrediction(module_title, i))
+    }
+
+    if (block.prediction_question && !cbConfig.forcePrediction) {
       const predMeta: PredictionMeta = {
         question: block.prediction_question,
         reveal:   '¡Sigue leyendo para descubrir si tu predicción fue correcta!',
@@ -250,7 +282,11 @@ function buildJourneyFromConceptBlocks(
   }
 
   // ── Evaluate phase ────────────────────────────────────────────────────────
-  moduleContent.misconceptions.forEach((item, i) => {
+  const shownMisconceptions = cbConfig.maxMisconceptions === Infinity
+    ? moduleContent.misconceptions
+    : moduleContent.misconceptions.slice(0, cbConfig.maxMisconceptions)
+
+  shownMisconceptions.forEach((item, i) => {
     steps.push(createStep(`cb-reflection-${i}`, 'reflection', 'evaluate', {
       title: item.misconception, content: item.correction,
       xpReward: 5, metadata: { severity: item.severity },
@@ -300,44 +336,15 @@ export function buildJourneyFromLegacy(
     ...explanationParagraphs.map((text, i) => ({ id: `concept-${i}`,       text })),
   ]
 
-  const moduleTitle     = moduleContent.module_title
-  let   curiosityCount  = 0
-  let   interactiveUsed = 0
-  let   legacyPhase: Phase5E = 'explore'
+  const moduleTitle = moduleContent.module_title
 
-  const tryPush = (step: LearningJourneyStep): void => {
-    if (interactiveUsed >= MAX_INTERACTIVE_STEPS) return
-    steps.push({ ...step, phase: legacyPhase })
-    interactiveUsed++
-  }
-
-  // ── Explore + Explain phase ───────────────────────────────────────────────
-  const halfConceptLen = Math.ceil(conceptPool.length / 2)
-  const phaseLen       = Math.max(conceptPool.length, examples.length)
-
-  for (let i = 0; i < phaseLen; i++) {
-    if (i < conceptPool.length) {
-      legacyPhase = i < halfConceptLen ? 'explore' : 'explain'
-      const { id, text } = conceptPool[i]
-      steps.push(createStep(id, 'concept', legacyPhase, { content: text, xpReward: 2 }))
-
-      if ((i + 1) % 2 === 0 && dominantModality !== 'kinesthetic') {
-        tryPush(makeCuriosity(moduleTitle, curiosityCount++))
-      }
-      tryPush(pickInteractiveStep(dominantModality, i, moduleTitle, text))
-    }
-
-    if (i < examples.length) {
-      legacyPhase = 'explain'
-      steps.push(createStep(`example-${i}`, 'example', 'explain', {
-        content: examples[i], xpReward: 3,
-      }))
-      tryPush(makeMiniActivity(i))
-    }
-  }
+  // ── Explore + Explain via Modality-Depth Matrix (D6.5.1) ──────────────────
+  const exploreExplainSteps = buildExploreExplainSteps(
+    dominantModality, conceptPool, examples, moduleTitle,
+  )
+  steps.push(...exploreExplainSteps)
 
   // ── Elaborate phase ───────────────────────────────────────────────────────
-  legacyPhase = 'elaborate'
   const realNews = engagementSession.resources
     .find(r => r.resource_type === ('real_news' as EngagementResourceType))
   const applicationItems: string[] = [
