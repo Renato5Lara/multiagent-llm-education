@@ -6,7 +6,7 @@ Almacena las respuestas del test diagnóstico de un estudiante por curso.
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, String
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -22,6 +22,10 @@ class DiagnosticResult(Base):
     profile = Column(JSON, nullable=True)
     modality_scores = Column(JSON, nullable=True)
     dominant_modality = Column(String(50), nullable=True)
+    secondary_modality = Column(String(50), nullable=True)
+    prior_knowledge_level = Column(String(50), nullable=True)
+    known_topics = Column(JSON, nullable=True)
+    confidence = Column(Float, nullable=True)
     version = Column(Integer, default=1, nullable=False)
     completed_at = Column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
