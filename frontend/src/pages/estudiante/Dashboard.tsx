@@ -1,6 +1,6 @@
 import {
   Brain, Zap, Lock, CheckCircle, Circle, ArrowRight,
-  Activity, BookOpen, ChevronRight, Sparkles,
+  BookOpen, ChevronRight, Sparkles,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -20,11 +20,6 @@ const MODALITY_DARK: Record<string, string> = {
   reading:     'border-green-400/40 text-green-300 bg-green-400/10',
   kinesthetic: 'border-red-400/40 text-red-300 bg-red-400/10',
   game:        'border-amber-400/40 text-amber-300 bg-amber-400/10',
-}
-
-const BLOOM_LABELS: Record<number, string> = {
-  1: 'Recordar', 2: 'Comprender', 3: 'Aplicar',
-  4: 'Analizar', 5: 'Evaluar', 6: 'Crear',
 }
 
 function findFdP(courses: CourseProgress[] | undefined) {
@@ -108,10 +103,6 @@ function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: R
               ? <CheckCircle className="h-3.5 w-3.5" />
               : <Circle className="h-3.5 w-3.5" />}
             Ruta generada
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-neural-violet">
-            <Activity className="h-3.5 w-3.5" />
-            4 agentes activos
           </div>
         </div>
 
@@ -206,10 +197,11 @@ function ModuleTimeline({
 }
 
 function AdaptiveProfileCard({
-  name, initials, modality, bloomLevel, progress, totalItems, completedItems,
+  name, initials, modality, progress, totalItems, completedItems, currentModuleTitle,
 }: {
-  name: string; initials: string; modality: string | null; bloomLevel?: number
+  name: string; initials: string; modality: string | null
   progress: number; totalItems: number; completedItems: number
+  currentModuleTitle?: string
 }) {
   const modColor = modality ? MODALITY_DARK[modality] : ''
 
@@ -229,7 +221,7 @@ function AdaptiveProfileCard({
         {/* Progress */}
         <div className="bg-neural-lowest/60 rounded-xl px-3 py-2.5">
           <div className="flex justify-between text-xs mb-2">
-            <span className="text-neural-muted">Progreso del curso</span>
+            <span className="text-neural-muted">Progreso</span>
             <span className="text-neural-glow font-mono font-bold">{progress}%</span>
           </div>
           <div className="w-full bg-white/[0.06] rounded-full h-1.5">
@@ -243,44 +235,25 @@ function AdaptiveProfileCard({
           </p>
         </div>
 
-        {/* Modality */}
+        {/* Modality — solo si viene de datos reales */}
         {modality && (
           <div className="flex items-center justify-between bg-neural-lowest/60 rounded-xl px-3 py-2.5">
-            <span className="text-xs text-neural-muted">Estilo de aprendizaje</span>
+            <span className="text-xs text-neural-muted">Perfil</span>
             <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${modColor}`}>
               {MODALITY_LABELS[modality] || modality}
             </Badge>
           </div>
         )}
 
-        {/* Bloom */}
-        {bloomLevel && (
-          <div className="flex items-center justify-between bg-neural-lowest/60 rounded-xl px-3 py-2.5">
-            <span className="text-xs text-neural-muted">Nivel cognitivo</span>
-            <span className="text-xs font-mono text-neural-violet">
-              L{bloomLevel} · {BLOOM_LABELS[bloomLevel] || ''}
-            </span>
+        {/* Recomendación — módulo actual real */}
+        {currentModuleTitle && (
+          <div className="bg-neural-lowest/60 rounded-xl px-3 py-2.5">
+            <p className="text-[10px] text-neural-muted mb-1">Recomendación</p>
+            <p className="text-xs text-neural-text leading-snug">
+              Continuar con <span className="text-neural-glow font-medium">{currentModuleTitle}</span>
+            </p>
           </div>
         )}
-
-        {/* Agent swarm */}
-        <div className="bg-neural-violet/[0.06] border border-neural-violet/20 rounded-xl px-3 py-2.5">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-violet opacity-75" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-violet" />
-            </span>
-            <span className="text-xs text-neural-violet font-medium">Swarm activo</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1">
-            {['Diagnóstico', 'Contenido', 'Evaluación', 'Tutor'].map(a => (
-              <div key={a} className="flex items-center gap-1.5 text-[10px] text-neural-muted/60">
-                <div className="w-1 h-1 rounded-full bg-neural-glow/60" />
-                {a}
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )
@@ -390,7 +363,7 @@ export default function EstudianteDashboard() {
   const modality = fdp?.dominant_modality ?? profile?.dominant_style ?? null
   const totalItems = path?.items.length ?? 0
   const completedItems = path?.items.filter(i => i.status === 'completed').length ?? 0
-  const bloomLevel = completedItems > 0 ? Math.min(completedItems + 1, 6) : undefined
+  const currentModuleTitle = path?.items.find(i => i.status === 'available')?.title
 
   return (
     <div>
@@ -418,10 +391,10 @@ export default function EstudianteDashboard() {
               name={name}
               initials={initials}
               modality={modality}
-              bloomLevel={bloomLevel}
               progress={fdp.progress_percentage}
               totalItems={totalItems}
               completedItems={completedItems}
+              currentModuleTitle={currentModuleTitle}
             />
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, Activity, MessageCircle, FlaskConical } from 'lucide-react'
+import { LayoutDashboard, BookOpen } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 import TutorWidget from '@/components/ai/TutorWidget'
@@ -42,11 +42,8 @@ export default function EstudianteLayout() {
   }, [])
 
   const sidebarItems: SidebarItem[] = [
-    { label: 'Dashboard',       href: '/estudiante',                                      icon: LayoutDashboard },
-    { label: 'Ruta de Aprendizaje', href: fdpId ? `/estudiante/path/${fdpId}` : '#',     icon: BookOpen,      disabled: !fdpId },
-    { label: 'Tutor IA',        href: '#',                                                icon: MessageCircle, disabled: true },
-    { label: 'Swarm Monitor',   href: '#',                                                icon: Activity,      disabled: true, sectionBefore: true },
-    { label: 'Agent Lab',       href: '#',                                                icon: FlaskConical,  disabled: true },
+    { label: 'Dashboard',           href: '/estudiante',                                  icon: LayoutDashboard },
+    { label: 'Ruta de Aprendizaje', href: fdpId ? `/estudiante/path/${fdpId}` : '#',     icon: BookOpen, disabled: !fdpId },
   ]
 
   return (
