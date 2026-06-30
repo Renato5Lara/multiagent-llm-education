@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button'
 import { DIAGNOSTIC_QUESTIONS, LIKERT_OPTIONS } from '@/lib/constants'
 import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
 import { useToast } from '@/hooks/use-toast'
+import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Phase = 'section_a' | 'transition' | 'section_b' | 'swarm_thinking' | 'done' | 'error'
-type AgentStatus = 'waiting' | 'running' | 'done'
 
 interface LocalProfile {
   dominant: string
@@ -17,14 +17,6 @@ interface LocalProfile {
   confidence: number
   priorLevel: string
   knownCount: number
-}
-
-interface AgentState {
-  id: string
-  name: string
-  status: AgentStatus
-  progress: number
-  duration: number
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -43,36 +35,6 @@ const TOPIC_LABELS: Record<string, string> = {
   arrays:      'Arreglos',
   functions:   'Funciones',
 }
-
-const MODALITY_THEME: Record<string, { label: string; color: string; bg: string }> = {
-  visual:      { label: 'Visual',      color: 'text-purple-300', bg: 'bg-purple-500/10 border-purple-400/30' },
-  reading:     { label: 'Lectura',     color: 'text-green-300',  bg: 'bg-green-500/10 border-green-400/30'   },
-  audio:       { label: 'Auditivo',    color: 'text-orange-300', bg: 'bg-orange-500/10 border-orange-400/30' },
-  kinesthetic: { label: 'Kinestésico', color: 'text-red-300',    bg: 'bg-red-500/10 border-red-400/30'       },
-}
-
-const LEVEL_LABEL: Record<string, string> = {
-  beginner:     'principiante',
-  basic:        'básico',
-  intermediate: 'intermedio',
-  advanced:     'avanzado',
-}
-
-const MODALITY_LABEL: Record<string, string> = {
-  visual:      'visual',
-  reading:     'lector',
-  audio:       'auditivo',
-  kinesthetic: 'kinestésico',
-}
-
-// Swarm agent definitions — names aligned with thesis architecture
-const AGENT_DEFINITIONS = [
-  { id: 'diagnostic',  name: 'Agente Diagnóstico',  startDelay: 0,    duration: 800,  msgDelay: 850  },
-  { id: 'profile',     name: 'Agente Perfil',        startDelay: 800,  duration: 750,  msgDelay: 1600 },
-  { id: 'adaptation',  name: 'Agente Adaptación',    startDelay: 1550, duration: 900,  msgDelay: 2500 },
-  { id: 'tutor',       name: 'Agente Tutor',         startDelay: 2450, duration: 750,  msgDelay: 3250 },
-  { id: 'consensus',   name: 'Motor de Consenso',    startDelay: 3200, duration: 850,  msgDelay: 4100 },
-] as const
 
 // ── Helper functions ───────────────────────────────────────────────────────────
 
@@ -107,49 +69,6 @@ function computeLocalProfile(answers: Record<number, number>): LocalProfile {
   const priorLevel = knownCount <= 1 ? 'beginner' : knownCount <= 4 ? 'basic' : knownCount <= 6 ? 'intermediate' : 'advanced'
 
   return { dominant, secondary, confidence, priorLevel, knownCount }
-}
-
-function generateSwarmMessages(p: LocalProfile): { agent: string; text: string }[] {
-  const level = LEVEL_LABEL[p.priorLevel] || p.priorLevel
-  const style = MODALITY_LABEL[p.dominant] || p.dominant
-  const confPct = Math.round(p.confidence * 100)
-
-  const strategyMsg: Record<string, string> = {
-    visual:      'Priorizar diagramas, mapas conceptuales y representaciones gráficas.',
-    reading:     'Priorizar documentación clara, código comentado y ejemplos escritos.',
-    audio:       'Priorizar explicaciones narradas y descripción verbal de conceptos.',
-    kinesthetic: 'Priorizar ejercicios interactivos, live coding y actividades drag-and-drop.',
-  }
-
-  const tutorMsg: Record<string, string> = {
-    visual:      'Estructurar con soporte gráfico en cada bloque. Limitar texto denso.',
-    reading:     'Incluir ejemplos paso a paso. Maximizar anotaciones en código.',
-    audio:       'Reducir lectura silenciosa. Incorporar explicaciones tipo narración.',
-    kinesthetic: 'Reducir teoría inicial. Maximizar práctica antes de conceptos formales.',
-  }
-
-  return [
-    {
-      agent: 'Agente Diagnóstico',
-      text: `Diagnóstico completado. ${p.knownCount}/8 temas dominados. Nivel previo: ${level}.`,
-    },
-    {
-      agent: 'Agente Perfil',
-      text: `Perfil ${style} detectado (conf. ${confPct}%)${p.secondary ? `. Modalidad secundaria: ${p.secondary}` : ''}.`,
-    },
-    {
-      agent: 'Agente Adaptación',
-      text: strategyMsg[p.dominant] || 'Seleccionando estrategia de contenido adaptativo.',
-    },
-    {
-      agent: 'Agente Tutor',
-      text: tutorMsg[p.dominant] || 'Ajustando parámetros del tutor IA.',
-    },
-    {
-      agent: 'Motor de Consenso',
-      text: 'Consenso alcanzado. Ruta multimodal aprobada. Iniciando generación de contenido adaptativo.',
-    },
-  ]
 }
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
@@ -242,174 +161,6 @@ function TransitionScreen({ onContinue }: { onContinue: () => void }) {
   )
 }
 
-function SwarmThinkingScreen({
-  profile,
-  onAnimationComplete,
-}: {
-  profile: LocalProfile
-  onAnimationComplete: () => void
-}) {
-  const messages = generateSwarmMessages(profile)
-
-  const [agents, setAgents] = useState<AgentState[]>(
-    AGENT_DEFINITIONS.map(d => ({
-      id: d.id,
-      name: d.name,
-      status: 'waiting' as AgentStatus,
-      progress: 0,
-      duration: d.duration,
-    }))
-  )
-  const [visibleMsgs, setVisibleMsgs] = useState(0)
-  const [showSummary, setShowSummary] = useState(false)
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([])
-  const onCompleteRef = useRef(onAnimationComplete)
-  useEffect(() => { onCompleteRef.current = onAnimationComplete }, [onAnimationComplete])
-
-  useEffect(() => {
-    AGENT_DEFINITIONS.forEach((def, idx) => {
-      timersRef.current.push(
-        setTimeout(() => {
-          setAgents(prev => prev.map((a, i) =>
-            i === idx ? { ...a, status: 'running', progress: 100 } : a
-          ))
-        }, def.startDelay)
-      )
-      timersRef.current.push(
-        setTimeout(() => {
-          setAgents(prev => prev.map((a, i) =>
-            i === idx ? { ...a, status: 'done' } : a
-          ))
-        }, def.startDelay + def.duration)
-      )
-      timersRef.current.push(
-        setTimeout(() => {
-          setVisibleMsgs(prev => prev + 1)
-        }, def.msgDelay)
-      )
-    })
-
-    const lastMsg = AGENT_DEFINITIONS[AGENT_DEFINITIONS.length - 1].msgDelay
-    timersRef.current.push(setTimeout(() => setShowSummary(true), lastMsg + 300))
-    timersRef.current.push(setTimeout(() => { onCompleteRef.current() }, lastMsg + 900))
-
-    return () => { timersRef.current.forEach(clearTimeout) }
-  }, []) // run once on mount
-
-  return (
-    <div className="max-w-2xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 bg-neural-glow/10 border border-neural-glow/20 rounded-full px-4 py-1.5 mb-4">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-glow" />
-          </span>
-          <span className="text-[10px] font-mono text-neural-glow tracking-[0.2em] uppercase">Swarm activo</span>
-        </div>
-        <h2 className="text-xl font-bold text-neural-text">Analizando tu perfil de aprendizaje</h2>
-        <p className="text-neural-muted/70 text-sm mt-1">Los agentes están procesando tu diagnóstico</p>
-      </div>
-
-      {/* Agent progress bars */}
-      <div className="glass-panel rounded-2xl p-6 mb-4">
-        <div className="space-y-5">
-          {agents.map(agent => (
-            <div key={agent.id}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="relative flex h-2 w-2 flex-shrink-0">
-                    {agent.status === 'running' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
-                    )}
-                    <span className={`relative inline-flex rounded-full h-2 w-2 transition-colors duration-300 ${
-                      agent.status === 'done'    ? 'bg-neural-pulse' :
-                      agent.status === 'running' ? 'bg-neural-glow' :
-                      'bg-white/15'
-                    }`} />
-                  </span>
-                  <span className={`text-sm font-medium transition-colors duration-300 ${
-                    agent.status === 'waiting' ? 'text-neural-muted/40' : 'text-neural-text'
-                  }`}>
-                    {agent.name}
-                  </span>
-                </div>
-                <span className={`text-xs font-mono tabular-nums transition-colors duration-300 ${
-                  agent.status === 'done'    ? 'text-neural-pulse' :
-                  agent.status === 'running' ? 'text-neural-glow' :
-                  'text-neural-muted/25'
-                }`}>
-                  {agent.status === 'done' ? '100%' : agent.status === 'running' ? '···' : '—'}
-                </span>
-              </div>
-
-              <div className="w-full bg-white/[0.05] rounded-full h-1 overflow-hidden">
-                <div
-                  className={`h-1 w-full rounded-full origin-left transition-colors duration-300 ${
-                    agent.status === 'done' ? 'bg-neural-pulse' : 'bg-neural-glow'
-                  }`}
-                  style={{
-                    transform: `scaleX(${agent.progress / 100})`,
-                    transition: `transform ${agent.duration}ms ease-out, background-color 300ms ease`,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Message feed */}
-      {visibleMsgs > 0 && (
-        <div className="glass-panel rounded-2xl p-5">
-          <p className="text-[9px] font-mono text-neural-muted/40 tracking-[0.2em] uppercase mb-4">
-            Comunicación entre agentes
-          </p>
-          <div className="space-y-4">
-            {messages.slice(0, visibleMsgs).map((msg, idx) => (
-              <div
-                key={idx}
-                className="animate-in fade-in slide-in-from-bottom-1 duration-400"
-              >
-                <p className="text-[10px] font-mono text-neural-glow/60 uppercase tracking-wider mb-0.5">
-                  {msg.agent}
-                </p>
-                <p className="text-sm text-neural-muted leading-snug">
-                  {msg.text}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Consensus decision panel */}
-      {showSummary && (
-        <div className="glass-panel rounded-2xl p-5 mt-4 border border-neural-pulse/20 animate-in fade-in duration-500">
-          <p className="text-[9px] font-mono text-neural-pulse/60 tracking-[0.2em] uppercase mb-3">
-            Decisión del swarm
-          </p>
-          <div className="space-y-2.5">
-            {[
-              'Perfil de aprendizaje identificado',
-              'Ruta adaptativa aprobada',
-              'Contenido multimodal generado',
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300"
-                style={{ animationDelay: `${idx * 120}ms` }}
-              >
-                <CheckCircle2 className="h-4 w-4 text-neural-pulse flex-shrink-0" />
-                <span className="text-sm text-neural-text">{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 function DoneScreen({ courseId, navigate }: { courseId: string; navigate: ReturnType<typeof useNavigate> }) {
   return (
@@ -471,6 +222,7 @@ export default function DiagnosticTest() {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [swarmProfile, setSwarmProfile] = useState<LocalProfile | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const [apiReady, setApiReady] = useState(false)
 
   // Refs for values that are needed in effects without stale closures
   const answersRef = useRef<Record<number, number>>({})
@@ -486,6 +238,7 @@ export default function DiagnosticTest() {
     if (phase !== 'swarm_thinking' || !courseId) return
 
     apiResultRef.current = null
+    setApiReady(false)
 
     const run = async () => {
       try {
@@ -498,28 +251,23 @@ export default function DiagnosticTest() {
         const msg = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
         apiResultRef.current = { success: false, error: msg }
       }
+      setApiReady(true)
     }
     run()
   }, [phase, courseId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Called by SwarmThinkingScreen when animation finishes
-  const handleAnimationComplete = useCallback(() => {
-    const poll = () => {
-      const result = apiResultRef.current
-      if (!result) {
-        setTimeout(poll, 300)
-        return
-      }
-      if (result.success) {
-        setPhase('done')
-      } else {
-        const msg = result.error || 'Error al procesar el diagnóstico'
-        setErrorMsg(msg)
-        setPhase('error')
-        toast({ variant: 'destructive', title: 'Error', description: msg })
-      }
+  // Called by AgentActivityPanel after summary card fades out
+  const handleSwarmComplete = useCallback(() => {
+    const result = apiResultRef.current
+    if (!result) return
+    if (result.success) {
+      setPhase('done')
+    } else {
+      const msg = result.error || 'Error al procesar el diagnóstico'
+      setErrorMsg(msg)
+      setPhase('error')
+      toast({ variant: 'destructive', title: 'Error', description: msg })
     }
-    poll()
   }, [toast])
 
   const answeredCount = Object.keys(answers).length
@@ -567,10 +315,14 @@ export default function DiagnosticTest() {
 
   if (phase === 'swarm_thinking' && swarmProfile) {
     return (
-      <SwarmThinkingScreen
-        profile={swarmProfile}
-        onAnimationComplete={handleAnimationComplete}
-      />
+      <div className="max-w-2xl mx-auto pt-4 pb-16 animate-in fade-in duration-500">
+        <AgentActivityPanel
+          mode="diagnostic"
+          diagnosticProfile={swarmProfile}
+          isBackendReady={apiReady}
+          onComplete={handleSwarmComplete}
+        />
+      </div>
     )
   }
 

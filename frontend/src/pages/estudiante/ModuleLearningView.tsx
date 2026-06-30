@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Check, Swords } from 'lucide-react'
+import { ArrowLeft, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Swords } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -11,7 +11,8 @@ import { EngageGateway } from '@/components/engage/EngageGateway'
 import { SurpriseModal, readEngageBridge } from '@/components/engage/SurpriseModal'
 import { AgentThoughtStream } from '@/components/observability/AgentThoughtStream'
 import { AgentDebateBubbles } from '@/components/observability/AgentDebateBubbles'
-import { LOADING_PHASES } from '@/constants/agentPipeline'
+import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
+import type { ModuleContext } from '@/components/swarm/AgentActivityPanel'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useState, useEffect, useCallback } from 'react'
@@ -131,8 +132,12 @@ function SwarmAdaptationHeader({ data }: { data: ModuleOrchestrationResponse }) 
   )
 }
 
-// Loading-screen phases — sourced from constants/agentPipeline.ts
-const ORCHESTRATION_PHASES = LOADING_PHASES
+const MODALITY_DEFAULT_STRATEGIES: Record<string, string[]> = {
+  visual:      ['Diagrama', 'Mapa conceptual', 'Animación'],
+  reading:     ['Texto', 'Código anotado', 'Ejemplo'],
+  audio:       ['Narración', 'Explicación verbal'],
+  kinesthetic: ['Juego', 'Simulación', 'Ejercicio', 'Drag & drop'],
+}
 
 export default function ModuleLearningView() {
   const { moduleId } = useParams<{ moduleId: string }>()
@@ -146,16 +151,14 @@ export default function ModuleLearningView() {
   const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(moduleId)
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
-  const [phaseIndex, setPhaseIndex] = useState(0)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [traceDialogOpen, setTraceDialogOpen]   = useState(false)
-  const [appPhase, setAppPhase]                 = useState<AppPhase>('engaging')
-  const [showAgentLog, setShowAgentLog]         = useState(false)
-  const [surpriseOpen, setSurpriseOpen]         = useState(false)
-  const [engageBridge, setEngageBridge]         = useState<ReturnType<typeof readEngageBridge> | null>(null)
+  const [traceDialogOpen, setTraceDialogOpen] = useState(false)
+  const [appPhase, setAppPhase]               = useState<AppPhase>('engaging')
+  const [surpriseOpen, setSurpriseOpen]       = useState(false)
+  const [engageBridge, setEngageBridge]       = useState<ReturnType<typeof readEngageBridge> | null>(null)
 
   // Orchestration runs in background while Engage is shown.
-  // onSuccess stores data but never advances phase — that's Engage's job.
+  // Phase transition is handled by AgentActivityPanel.onComplete — not here.
   useEffect(() => {
     if (!moduleId) return
 
@@ -163,25 +166,15 @@ export default function ModuleLearningView() {
       onSuccess: (result) => {
         setData(result)
         setSessionId(result.session_id)
-        setAppPhase(prev => prev === 'waiting_content' ? 'content' : prev)
         toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
       },
     })
   }, [moduleId, orchestrateModule, toast])
 
-  // Called when Engage completes or is skipped
+  // Always go through the swarm panel after engage completes
   const handleEngageDone = useCallback(() => {
-    setAppPhase(data ? 'content' : 'waiting_content')
-  }, [data])
-
-  useEffect(() => {
-    if (isOrchestrating) {
-      const interval = setInterval(() => {
-        setPhaseIndex((prev) => (prev < ORCHESTRATION_PHASES.length - 1 ? prev + 1 : prev))
-      }, 2000)
-      return () => clearInterval(interval)
-    }
-  }, [isOrchestrating])
+    setAppPhase('waiting_content')
+  }, [])
 
   const handleBack = useCallback(() => {
     if (courseId) {
@@ -234,10 +227,17 @@ export default function ModuleLearningView() {
     )
   }
 
-  // ── GATE 2: Engage done but orchestration still running ────────────────────
+  // ── GATE 2: Engage done — swarm panel transitions into content ─────────────
   if ((appPhase === 'waiting_content' || isOrchestrating) && !orchestrationFailed) {
-    const currentPhase = ORCHESTRATION_PHASES[phaseIndex]
-    const completedPhases = ORCHESTRATION_PHASES.slice(0, phaseIndex)
+    const dominantModality = data?.multimodal_prompts.find(p => p.enabled)?.modality
+    const moduleContext: ModuleContext = {
+      moduleName:       data?.module_title,
+      dominantModality,
+      strategies:       dominantModality ? MODALITY_DEFAULT_STRATEGIES[dominantModality] : undefined,
+      topic:            data?.module_title,
+      confidence:       data?.confidence,
+    }
+
     return (
       <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
         <div className="flex items-center gap-2 mb-6">
@@ -245,72 +245,12 @@ export default function ModuleLearningView() {
             <ArrowLeft className="h-4 w-4 mr-1" />Volver
           </Button>
         </div>
-
-        <div className="glass-panel rounded-xl overflow-hidden">
-          {/* Header */}
-          <div className="px-8 pt-8 pb-6 text-center border-b border-white/[0.06]">
-            <div className="relative w-14 h-14 mx-auto mb-5">
-              <div className="absolute inset-0 rounded-full bg-neural-glow/10 animate-ping opacity-30" />
-              <div className="relative w-14 h-14 rounded-full bg-neural-glow/10 border border-neural-glow/20 flex items-center justify-center">
-                <Brain className="h-7 w-7 text-neural-glow" />
-              </div>
-            </div>
-            <h3 className="text-base font-semibold text-neural-text mb-1">
-              El sistema multiagente está construyendo tu módulo
-            </h3>
-            <p className="text-xs text-neural-muted">
-              Generado exclusivamente para tu perfil de aprendizaje · 20–60 segundos
-            </p>
-          </div>
-
-          {/* Active thought */}
-          <div className="px-8 py-5">
-            <div
-              className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-300"
-              key={phaseIndex}
-            >
-              <div className="mt-0.5 w-5 h-5 rounded-full bg-neural-glow/10 border border-neural-glow/20 flex items-center justify-center shrink-0">
-                <Loader2 className="h-3 w-3 text-neural-glow animate-spin" />
-              </div>
-              <div>
-                <p className="text-xs font-mono text-neural-glow mb-0.5">{currentPhase?.agent}</p>
-                <p className="text-sm text-neural-text/80">{currentPhase?.thought}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Expandable agent log */}
-          {completedPhases.length > 0 && (
-            <div className="border-t border-white/[0.06]">
-              <button
-                className="w-full flex items-center justify-between px-8 py-3 text-xs text-neural-muted/60 hover:text-neural-muted transition-colors"
-                onClick={() => setShowAgentLog(v => !v)}
-              >
-                <span>
-                  {completedPhases.length} paso{completedPhases.length !== 1 ? 's' : ''} completado{completedPhases.length !== 1 ? 's' : ''}
-                </span>
-                {showAgentLog
-                  ? <ChevronUp className="h-3.5 w-3.5" />
-                  : <ChevronDown className="h-3.5 w-3.5" />}
-              </button>
-              {showAgentLog && (
-                <div className="px-8 pb-5 space-y-2.5 animate-in fade-in duration-200">
-                  {completedPhases.map((phase, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="mt-0.5 w-5 h-5 rounded-full bg-neural-pulse/10 border border-neural-pulse/20 flex items-center justify-center shrink-0">
-                        <Check className="h-3 w-3 text-neural-pulse" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-mono text-neural-muted/60 mb-0.5">{phase.agent}</p>
-                        <p className="text-xs text-neural-muted/50">{phase.thought}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <AgentActivityPanel
+          mode="module"
+          moduleContext={data ? moduleContext : undefined}
+          isBackendReady={!!data}
+          onComplete={() => setAppPhase('content')}
+        />
       </div>
     )
   }
