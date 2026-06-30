@@ -1,5 +1,5 @@
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Code2, Dumbbell, Gamepad2, Cpu, Clock, Lock } from 'lucide-react'
+import { ArrowLeft, BookOpen, Code2, Dumbbell, Gamepad2, Cpu, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAdaptiveContent } from '@/hooks/useStudent'
@@ -119,21 +119,46 @@ function inlineParse(text: string): React.ReactNode {
   })
 }
 
+// ── CodeLabLink ───────────────────────────────────────────────────────────────
+
+function CodeLabLink({ topicSlug, courseId }: { topicSlug?: string; courseId?: string }) {
+  const navigate = useNavigate()
+  const url = `/estudiante/codelab/${topicSlug ?? ''}${courseId ? `?courseId=${courseId}` : ''}`
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="mt-3 h-8 text-xs gap-1.5"
+      onClick={() => navigate(url)}
+    >
+      <Gamepad2 className="h-3.5 w-3.5" />
+      Abrir Code Lab
+    </Button>
+  )
+}
+
 // ── ContentBlock card ─────────────────────────────────────────────────────────
 
-function ContentCard({ block, index }: { block: ContentBlockItem; index: number }) {
+function ContentCard({
+  block,
+  index,
+  topicSlug,
+  courseId,
+}: {
+  block: ContentBlockItem
+  index: number
+  topicSlug?: string
+  courseId?: string
+}) {
   const colors = BLOCK_COLORS[block.type] ?? BLOCK_COLORS['theory']
   const Icon = BLOCK_ICONS[block.type] ?? BookOpen
 
   return (
-    <div className={`glass-panel rounded-2xl p-6 border ${colors.border} ${block.is_placeholder ? 'opacity-60' : ''}`}>
+    <div className={`glass-panel rounded-2xl p-6 border ${colors.border}`}>
       {/* Header row */}
       <div className="flex items-start gap-3 mb-4">
         <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
-          {block.is_placeholder
-            ? <Lock className="h-4 w-4 text-neural-muted/30" />
-            : <Icon className={`h-4 w-4 ${colors.icon}`} />
-          }
+          <Icon className={`h-4 w-4 ${colors.icon}`} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
@@ -171,14 +196,9 @@ function ContentCard({ block, index }: { block: ContentBlockItem; index: number 
         </div>
       )}
 
-      {/* Placeholder notice */}
-      {block.is_placeholder && block.placeholder_sprint && (
-        <div className="mt-2 flex items-center gap-2 bg-white/[0.02] border border-white/[0.04] rounded-lg px-3 py-2">
-          <Lock className="h-3 w-3 text-neural-muted/30 flex-shrink-0" />
-          <p className="text-[11px] text-neural-muted/40">
-            Próximamente en <span className="font-mono">{block.placeholder_sprint}</span>
-          </p>
-        </div>
+      {/* Code Lab link for game / simulation blocks */}
+      {block.is_placeholder && (
+        <CodeLabLink topicSlug={topicSlug} courseId={courseId} />
       )}
     </div>
   )
@@ -249,19 +269,25 @@ export default function AdaptiveLearnView() {
       {/* Available blocks */}
       <div className="space-y-4 mb-6">
         {available.map((block, idx) => (
-          <ContentCard key={block.type} block={block} index={idx} />
+          <ContentCard key={block.type} block={block} index={idx} topicSlug={topicSlug} courseId={courseId} />
         ))}
       </div>
 
-      {/* Placeholder blocks (D4.3) */}
+      {/* Code Lab blocks */}
       {placeholder.length > 0 && (
         <>
           <p className="text-[9px] font-mono text-neural-muted/30 tracking-[0.2em] uppercase mb-3">
-            Próximamente · Code Lab D4.3
+            Code Lab · interactivo
           </p>
           <div className="space-y-3">
             {placeholder.map((block, idx) => (
-              <ContentCard key={block.type} block={block} index={available.length + idx} />
+              <ContentCard
+                key={block.type}
+                block={block}
+                index={available.length + idx}
+                topicSlug={topicSlug}
+                courseId={courseId}
+              />
             ))}
           </div>
         </>
