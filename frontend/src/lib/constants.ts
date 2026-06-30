@@ -50,25 +50,51 @@ export const MODALITY_COLORS: Record<string, string> = {
     game: 'bg-yellow-100 text-yellow-700 border-yellow-200',
 }
 
-export const DIAGNOSTIC_QUESTIONS = [
-    { id: 1, text: 'Prefiero aprender leyendo textos escritos y documentación detallada.', modality: 'reading' },
-    { id: 2, text: 'Me resulta más fácil comprender conceptos mediante videos o explicaciones visuales.', modality: 'visual' },
-    { id: 3, text: 'Aprendo mejor cuando puedo practicar con ejercicios inmediatamente.', modality: 'kinesthetic' },
-    { id: 4, text: 'Me motiva superar desafíos difíciles aunque tome más tiempo.', modality: 'kinesthetic' },
-    { id: 5, text: 'Prefiero avanzar a mi propio ritmo sin seguir un horario fijo.', modality: 'reading' },
-    { id: 6, text: 'Me ayuda revisar el material varias veces antes de sentirme seguro.', modality: 'reading' },
-    { id: 7, text: 'Me ayuda escuchar explicaciones o narraciones para comprender mejor.', modality: 'audio' },
-    { id: 8, text: 'Prefiero ver videos explicativos antes que leer documentación extensa.', modality: 'video' },
-    { id: 9, text: 'Me resulta útil que el contenido esté organizado por niveles de dificultad.', modality: 'reading' },
-    { id: 10, text: 'Prefiero sesiones cortas e intensas de estudio sobre sesiones largas.', modality: 'video' },
-    { id: 11, text: 'Me motiva recibir retroalimentación inmediata después de cada ejercicio o quiz.', modality: 'game' },
-    { id: 12, text: 'Puedo estudiar con concentración aunque haya distracciones a mi alrededor.', modality: 'reading' },
+// ── Diagnóstico — Sección A: Conocimiento Previo (ids 1-5) ────────────────────
+// Escala Likert de auto-evaluación: ¿Cuánto conoces este tema?
+// Backend usa ids 1-5 → PRIOR_KNOWLEDGE_TOPIC_MAP (no afecta modality_scores)
+
+export type DiagnosticSection = 'prior_knowledge' | 'modality'
+
+export interface DiagnosticQuestion {
+    id: number
+    text: string
+    section: DiagnosticSection
+    topic?: string      // solo para prior_knowledge
+    modality?: string   // solo para modality
+}
+
+export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
+    // Sección A — Conocimiento previo
+    { id: 1,  section: 'prior_knowledge', topic: 'variables',    text: 'Sé qué es una variable y puedo declararla en código.' },
+    { id: 2,  section: 'prior_knowledge', topic: 'data_types',   text: 'Conozco los tipos de datos básicos: número, texto y booleano.' },
+    { id: 3,  section: 'prior_knowledge', topic: 'conditionals', text: 'Puedo escribir una estructura if-else por mi cuenta.' },
+    { id: 4,  section: 'prior_knowledge', topic: 'loops',        text: 'Entiendo cómo funciona un bucle for o while.' },
+    { id: 5,  section: 'prior_knowledge', topic: 'functions',    text: 'He definido o utilizado funciones en algún lenguaje de programación.' },
+
+    // Sección B — Modalidad de aprendizaje (ids 6-15)
+    { id: 6,  section: 'modality', modality: 'visual',      text: 'Aprendo mejor con diagramas, esquemas o representaciones visuales.' },
+    { id: 7,  section: 'modality', modality: 'visual',      text: 'Los colores y las imágenes me ayudan a recordar conceptos nuevos.' },
+    { id: 8,  section: 'modality', modality: 'reading',     text: 'Prefiero leer una explicación detallada antes de practicar.' },
+    { id: 9,  section: 'modality', modality: 'reading',     text: 'Me resulta muy útil tener el código comentado paso a paso.' },
+    { id: 10, section: 'modality', modality: 'reading',     text: 'Prefiero leer ejemplos escritos antes de ver un video.' },
+    { id: 11, section: 'modality', modality: 'audio',       text: 'Aprendo mejor cuando alguien me explica verbalmente un concepto.' },
+    { id: 12, section: 'modality', modality: 'audio',       text: 'Escuchar narraciones o podcasts me ayuda a comprender mejor.' },
+    { id: 13, section: 'modality', modality: 'kinesthetic', text: 'Prefiero aprender haciendo ejercicios directamente, sin mucha teoría.' },
+    { id: 14, section: 'modality', modality: 'kinesthetic', text: 'Aprendo mejor cuando puedo probar, equivocarme y corregir libremente.' },
+    { id: 15, section: 'modality', modality: 'kinesthetic', text: 'Me gustan los retos y actividades interactivas para aprender.' },
 ]
 
+export const SECTION_A_IDS = [1, 2, 3, 4, 5]
+export const SECTION_B_IDS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+// Escala Likert — aplica a ambas secciones
+// Sección A: ¿Cuánto conoces este tema?
+// Sección B: ¿Cuánto te identifica esta afirmación?
 export const LIKERT_OPTIONS = [
-    { value: 1, label: 'Totalmente en desacuerdo' },
-    { value: 2, label: 'En desacuerdo' },
-    { value: 3, label: 'Neutral' },
-    { value: 4, label: 'De acuerdo' },
-    { value: 5, label: 'Totalmente de acuerdo' },
+    { value: 1, label: 'Nada',     emoji: '😕' },
+    { value: 2, label: 'Poco',     emoji: '😐' },
+    { value: 3, label: 'Algo',     emoji: '🙂' },
+    { value: 4, label: 'Bastante', emoji: '😊' },
+    { value: 5, label: 'Mucho',    emoji: '🎯' },
 ]
