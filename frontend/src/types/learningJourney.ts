@@ -129,8 +129,9 @@ export interface MediaPromptMeta {
 // ── Sprint D6.5 — interactive_practice ───────────────────────────────────────
 
 export interface InteractivePracticeMeta {
-  interactiveType: 'code_lab'
-  topicSlug:       string      // e.g. 'variables', 'conditionals', 'loops'
+  interactiveType: 'code_lab' | string  // extensible: FlowLab, DebugLab, MemoryGame…
+  topicSlug:       string               // e.g. 'variables', 'conditionals', 'loops'
+  labUrl?:         string               // override routing for non-codelab types
   description?:    string
 }
 

@@ -88,7 +88,7 @@ function InvestigationDot({
 
 function XpFlash({ delta }: { delta: number }) {
   return (
-    <span className="inline-flex items-center gap-0.5 text-amber-500 font-semibold text-sm animate-bounce">
+    <span className="inline-flex items-center gap-0.5 text-amber-500 font-semibold text-sm animate-in slide-in-from-bottom-2 fade-in duration-300 ease-out">
       ✨ +{delta} XP
     </span>
   )
@@ -167,7 +167,16 @@ export function EngagePhase({ session, onComplete, onSkip, onProgress }: Props) 
   const { mutate: interactMutate } = useInteractEngagement()
   const { mutate: completeMutate, isPending: isCompleting } = useCompleteEngagement()
 
-  const resources = session.resources
+  // Canonical order: ¿Sabías que? always first, then pedagogical sequence.
+  // display_order is the primary sort; resource_type is the tiebreaker.
+  const CANONICAL_ORDER: Record<string, number> = {
+    did_you_know: 0, prior_knowledge: 1, detonating_question: 2,
+    real_news: 3, mini_quiz: 4, short_challenge: 5,
+  }
+  const resources = [...session.resources].sort((a, b) => {
+    const byOrder = a.display_order - b.display_order
+    return byOrder !== 0 ? byOrder : (CANONICAL_ORDER[a.resource_type] ?? 99) - (CANONICAL_ORDER[b.resource_type] ?? 99)
+  })
   const total     = resources.length
   const resource  = resources[currentIndex]
   const isLast    = currentIndex === total - 1

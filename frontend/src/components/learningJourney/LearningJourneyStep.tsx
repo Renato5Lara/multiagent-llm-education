@@ -471,22 +471,23 @@ function EvaluationStep({ step, onComplete }: SubProps) {
   )
 }
 
-// ── interactive_practice (Code Lab) ──────────────────────────────────────────
+// ── interactive_practice — sub-renderers ─────────────────────────────────────
 
-function InteractivePracticeCard({
+function CodeLabLauncher({
   step, meta, onComplete,
 }: {
-  step: StepData
-  meta: InteractivePracticeMeta | undefined
+  step:       StepData
+  meta:       InteractivePracticeMeta | undefined
   onComplete: () => void
 }) {
-  const navigate   = useNavigate()
+  const navigate        = useNavigate()
   const [done, setDone] = useState(false)
 
   const handleLaunch = () => {
     setDone(true)
     onComplete()
-    if (meta?.topicSlug) navigate(`/estudiante/codelab/${meta.topicSlug}`)
+    if (meta?.labUrl)    navigate(meta.labUrl)
+    else if (meta?.topicSlug) navigate(`/estudiante/codelab/${meta.topicSlug}`)
   }
 
   return (
@@ -508,8 +509,7 @@ function InteractivePracticeCard({
       </p>
 
       <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">
-        El sistema detectó que aprendes mejor con práctica directa. En el Code Lab
-        puedes experimentar con código real y construir el concepto desde la experiencia.
+        {meta?.description ?? 'El sistema detectó que aprendes mejor con práctica directa. En el Code Lab puedes experimentar con código real y construir el concepto desde la experiencia.'}
       </p>
 
       <Button
@@ -524,6 +524,21 @@ function InteractivePracticeCard({
       </Button>
     </div>
   )
+}
+
+// Dispatcher — routes by interactiveType; new lab types only need a new case here
+function InteractivePracticeCard({
+  step, meta, onComplete,
+}: {
+  step:       StepData
+  meta:       InteractivePracticeMeta | undefined
+  onComplete: () => void
+}) {
+  switch (meta?.interactiveType) {
+    case 'code_lab':
+    default:
+      return <CodeLabLauncher step={step} meta={meta} onComplete={onComplete} />
+  }
 }
 
 // ── Main dispatcher ───────────────────────────────────────────────────────────
