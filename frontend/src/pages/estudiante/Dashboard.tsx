@@ -1,6 +1,6 @@
 import {
   Brain, Zap, Lock, CheckCircle, Circle, ArrowRight,
-  BookOpen, ChevronRight, Sparkles,
+  BookOpen, ChevronRight, MessageCircle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -93,16 +93,16 @@ function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: R
         {/* Status indicators */}
         <div className="flex items-center gap-4 mb-5">
           <div className={`flex items-center gap-1.5 text-xs ${course.has_diagnostic ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
-            {course.has_diagnostic
-              ? <CheckCircle className="h-3.5 w-3.5" />
-              : <Circle className="h-3.5 w-3.5" />}
+            {course.has_diagnostic ? <CheckCircle className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
             Diagnóstico
           </div>
           <div className={`flex items-center gap-1.5 text-xs ${course.has_learning_path ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
-            {course.has_learning_path
-              ? <CheckCircle className="h-3.5 w-3.5" />
-              : <Circle className="h-3.5 w-3.5" />}
-            Ruta generada
+            {course.has_learning_path ? <CheckCircle className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+            Ruta personalizada
+          </div>
+          <div className={`flex items-center gap-1.5 text-xs ${course.has_learning_path ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
+            {course.has_learning_path ? <MessageCircle className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+            Tutor IA
           </div>
         </div>
 
@@ -259,56 +259,6 @@ function AdaptiveProfileCard({
   )
 }
 
-function AIInsightCard({ course }: { course: CourseProgress }) {
-  if (course.has_learning_path) return (
-    <div className="glass-panel rounded-2xl p-4 border border-neural-glow/10">
-      <div className="flex items-start gap-3">
-        <div className="p-1.5 rounded-lg bg-neural-glow/10 mt-0.5 flex-shrink-0">
-          <Sparkles className="h-3.5 w-3.5 text-neural-glow" />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-neural-text mb-0.5">Tutor IA activo</p>
-          <p className="text-xs text-neural-muted/70 leading-relaxed">
-            Los agentes ajustan el contenido en tiempo real según tu progreso y perfil de aprendizaje.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-
-  if (course.has_diagnostic) return (
-    <div className="glass-panel rounded-2xl p-4 border border-neural-violet/20">
-      <div className="flex items-start gap-3">
-        <div className="p-1.5 rounded-lg bg-neural-violet/10 mt-0.5 flex-shrink-0">
-          <Zap className="h-3.5 w-3.5 text-neural-violet" />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-neural-text mb-0.5">Ruta por generar</p>
-          <p className="text-xs text-neural-muted/70 leading-relaxed">
-            El swarm generará tu ruta personalizada a partir del perfil del diagnóstico.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-
-  return (
-    <div className="glass-panel rounded-2xl p-4 border border-amber-400/20">
-      <div className="flex items-start gap-3">
-        <div className="p-1.5 rounded-lg bg-amber-400/10 mt-0.5 flex-shrink-0">
-          <Brain className="h-3.5 w-3.5 text-amber-400" />
-        </div>
-        <div>
-          <p className="text-xs font-semibold text-neural-text mb-0.5">Diagnóstico pendiente</p>
-          <p className="text-xs text-neural-muted/70 leading-relaxed">
-            Completa el diagnóstico para que el swarm construya tu perfil de aprendizaje adaptativo.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function NoCourseState() {
   return (
     <div className="glass-panel rounded-2xl p-12 text-center">
@@ -333,7 +283,6 @@ function DashboardSkeleton() {
         <div className="space-y-5">
           <Skeleton className="h-56 rounded-2xl" />
           <Skeleton className="h-64 rounded-2xl" />
-          <Skeleton className="h-20 rounded-2xl" />
         </div>
         <div>
           <Skeleton className="h-72 rounded-2xl" />
@@ -381,8 +330,6 @@ export default function EstudianteDashboard() {
             {fdp.has_learning_path && path?.items.length ? (
               <ModuleTimeline items={path.items} courseId={fdp.course_id} navigate={navigate} />
             ) : null}
-
-            <AIInsightCard course={fdp} />
           </div>
 
           {/* ── Right column ─────────────────────────────── */}
