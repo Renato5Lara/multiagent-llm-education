@@ -1,184 +1,321 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle2, Loader2, Brain, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, Loader2, Brain, AlertTriangle, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
 import { DIAGNOSTIC_QUESTIONS, LIKERT_OPTIONS, MODALITY_LABELS } from '@/lib/constants'
 import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
 import { useToast } from '@/hooks/use-toast'
 
-export default function DiagnosticTest() {
-    const { courseId } = useParams<{ courseId: string }>()
-    const navigate = useNavigate()
-    const [current, setCurrent] = useState(0)
-    const [answers, setAnswers] = useState<Record<number, number>>({})
-    const [completed, setCompleted] = useState(false)
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
-    const submitDiagnostic = useSubmitDiagnostic()
-    const generatePath = useGeneratePath()
-    const { toast } = useToast()
-    const [error, setError] = useState<string | null>(null)
+const SECTION_A_QUESTIONS = DIAGNOSTIC_QUESTIONS.filter(q => q.section === 'prior_knowledge')
+const SECTION_B_QUESTIONS = DIAGNOSTIC_QUESTIONS.filter(q => q.section === 'modality')
+const TOTAL = DIAGNOSTIC_QUESTIONS.length
 
-    const question = DIAGNOSTIC_QUESTIONS[current]
-    const progress = Object.keys(answers).length > 0
-        ? (Object.keys(answers).length / DIAGNOSTIC_QUESTIONS.length) * 100
-        : 0
+const TOPIC_LABELS: Record<string, string> = {
+  variables:    'Variables',
+  data_types:   'Tipos de datos',
+  conditionals: 'Condicionales',
+  loops:        'Bucles',
+  functions:    'Funciones',
+}
 
-    const handleAnswer = (value: number) => {
-        setAnswers(prev => ({ ...prev, [question.id]: value }))
-    }
+const MODALITY_THEME: Record<string, { label: string; color: string; bg: string }> = {
+  visual:      { label: 'Visual',      color: 'text-purple-300', bg: 'bg-purple-500/10 border-purple-400/30' },
+  reading:     { label: 'Lectura',     color: 'text-green-300',  bg: 'bg-green-500/10  border-green-400/30'  },
+  audio:       { label: 'Auditivo',    color: 'text-orange-300', bg: 'bg-orange-500/10 border-orange-400/30' },
+  kinesthetic: { label: 'Kinestésico', color: 'text-red-300',    bg: 'bg-red-500/10    border-red-400/30'    },
+}
 
-    const submitResults = async () => {
-        if (!courseId) return
-        setError(null)
-        try {
-            const answersFormatted: Record<string, number> = {}
-            Object.entries(answers).forEach(([key, value]) => {
-                answersFormatted[key] = value
-            })
-            await submitDiagnostic.mutateAsync({ courseId, answers: answersFormatted })
-            await generatePath.mutateAsync(courseId)
-            setCompleted(true)
-        } catch (err) {
-            const message = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
-            setError(message)
-            toast({
-                variant: 'destructive',
-                title: 'Error al guardar diagnóstico',
-                description: message,
-            })
-        }
-    }
+// ── States ─────────────────────────────────────────────────────────────────────
 
-    const handleNext = async () => {
-        if (current < DIAGNOSTIC_QUESTIONS.length - 1) {
-            setCurrent(c => c + 1)
-        } else if (!courseId) {
-            setError('ID del curso no encontrado')
-        } else {
-            await submitResults()
-        }
-    }
+type Phase = 'section_a' | 'transition' | 'section_b' | 'submitting' | 'done' | 'error'
 
-    if (error) {
-        return (
-            <div className="min-h-[60vh] flex items-center justify-center">
-                <Card className="max-w-md w-full text-center">
-                    <CardContent className="p-8">
-                        <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
-                        <h2 className="text-xl font-bold mb-2">Error al procesar</h2>
-                        <p className="text-muted-foreground mb-6">{error}</p>
-                        <div className="flex gap-3 justify-center">
-                            <Button variant="outline" onClick={() => navigate('/estudiante')}>
-                                Volver al dashboard
-                            </Button>
-                            <Button onClick={() => { submitResults() }}>
-                                Reintentar
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
-    if (completed) {
-        const isLoading = submitDiagnostic.isPending || generatePath.isPending
-        return (
-            <div className="min-h-[60vh] flex items-center justify-center">
-                <Card className="max-w-md w-full text-center">
-                    <CardContent className="p-8">
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
-                                <h2 className="text-xl font-bold mb-2">Procesando tu perfil...</h2>
-                                <p className="text-muted-foreground">El sistema está analizando tus preferencias de aprendizaje y generando tu ruta personalizada.</p>
-                            </>
-                        ) : (
-                            <>
-                                <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                                <h2 className="text-xl font-bold mb-2">¡Test completado!</h2>
-                                <p className="text-muted-foreground mb-6">Tu perfil de aprendizaje ha sido registrado y tu ruta personalizada ha sido generada.</p>
-                                <Button onClick={() => navigate(`/estudiante/path/${courseId}`)}>Ver mi ruta de aprendizaje</Button>
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-        )
-    }
+function ProgressBar({ answered, total }: { answered: number; total: number }) {
+  const pct = total > 0 ? Math.round((answered / total) * 100) : 0
+  return (
+    <div className="mb-8">
+      <div className="flex justify-between text-xs text-neural-muted font-mono mb-2">
+        <span>Pregunta {Math.min(answered + 1, total)} de {total}</span>
+        <span>{pct}%</span>
+      </div>
+      <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+        <div
+          className="bg-neural-glow h-1.5 rounded-full neural-glow-sm transition-all duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  )
+}
 
-    if (!question) return null
+function SectionBadge({ label, className }: { label: string; className?: string }) {
+  return (
+    <span className={`text-[10px] font-mono tracking-[0.15em] uppercase px-2.5 py-1 rounded-full border ${className}`}>
+      {label}
+    </span>
+  )
+}
 
-    return (
-        <div className="max-w-2xl mx-auto">
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-primary" />
-                        Test de Perfil de Aprendizaje
-                    </CardTitle>
-                </CardHeader>
-            </Card>
+function LikertCard({
+  question, value, onSelect, sectionLabel, chipClass,
+}: {
+  question: string
+  value: number | undefined
+  onSelect: (v: number) => void
+  sectionLabel: string
+  chipClass: string
+}) {
+  return (
+    <div className="glass-panel rounded-2xl p-6 md:p-8">
+      <div className="mb-6">
+        <SectionBadge label={sectionLabel} className={chipClass} />
+      </div>
+      <p className="text-xl md:text-2xl font-semibold text-neural-text leading-snug mb-10">
+        {question}
+      </p>
+      <div className="grid grid-cols-5 gap-2 md:gap-3">
+        {LIKERT_OPTIONS.map(opt => {
+          const selected = value === opt.value
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onSelect(opt.value)}
+              className={[
+                'flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-2 transition-all duration-150 cursor-pointer',
+                selected
+                  ? 'border-neural-glow bg-neural-glow/10 scale-[1.04]'
+                  : 'border-white/[0.08] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]',
+              ].join(' ')}
+            >
+              <span className="text-2xl">{opt.emoji}</span>
+              <span className={`text-[11px] font-medium leading-tight text-center ${selected ? 'text-neural-glow' : 'text-neural-muted'}`}>
+                {opt.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
-            <div className="mb-8">
-                <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                    <span>Pregunta {current + 1} de {DIAGNOSTIC_QUESTIONS.length}</span>
-                    <span>{Math.round(progress)}%</span>
-                </div>
-                <Progress value={progress} className="h-2" />
-            </div>
-
-            <Card className="mb-6">
-                <CardContent className="p-8">
-                    <div className="mb-4">
-                        {question.modality && (
-                            <Badge variant="outline" className="mb-3">
-                                {MODALITY_LABELS[question.modality] || question.modality}
-                            </Badge>
-                        )}
-                    </div>
-                    <p className="text-lg font-medium mb-8">{question.text}</p>
-                    <div className="space-y-3">
-                        {LIKERT_OPTIONS.map(opt => (
-                            <label
-                                key={opt.value}
-                                className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                                    answers[question.id] === opt.value
-                                        ? 'border-primary bg-primary/5'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                            >
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                                    answers[question.id] === opt.value ? 'border-primary' : 'border-gray-300'
-                                }`}>
-                                    {answers[question.id] === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                                </div>
-                                <input
-                                    type="radio"
-                                    className="hidden"
-                                    name={`q-${question.id}`}
-                                    value={opt.value}
-                                    checked={answers[question.id] === opt.value}
-                                    onChange={() => handleAnswer(opt.value)}
-                                />
-                                <span className="text-sm font-medium">{opt.label}</span>
-                            </label>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}>
-                    Anterior
-                </Button>
-                <Button onClick={handleNext} disabled={!answers[question.id]}>
-                    {current === DIAGNOSTIC_QUESTIONS.length - 1 ? 'Finalizar' : 'Siguiente'}
-                </Button>
-            </div>
+function TransitionScreen({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+      <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
+        <div className="w-16 h-16 rounded-2xl bg-neural-violet/10 border border-neural-violet/30 flex items-center justify-center mx-auto mb-6">
+          <Brain className="h-8 w-8 text-neural-violet" />
         </div>
+        <h2 className="text-xl font-bold text-neural-text mb-2">Parte 1 completada</h2>
+        <p className="text-neural-muted text-sm mb-6 leading-relaxed">
+          Ahora el sistema evaluará cómo aprendes mejor. Responde según tu forma natural de estudiar, no hay respuestas correctas o incorrectas.
+        </p>
+        <Button className="w-full gap-2" onClick={onContinue}>
+          Continuar →
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function SubmittingScreen() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
+        <div className="relative w-16 h-16 mx-auto mb-6">
+          <Loader2 className="h-16 w-16 text-neural-glow animate-spin" />
+          <div className="absolute inset-0 bg-neural-glow/10 rounded-full blur-xl" />
+        </div>
+        <h2 className="text-xl font-bold text-neural-text mb-2">Analizando tu perfil…</h2>
+        <p className="text-neural-muted text-sm leading-relaxed">
+          El swarm está generando tu perfil de aprendizaje y construyendo tu ruta personalizada.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function DoneScreen({ courseId, navigate }: { courseId: string; navigate: ReturnType<typeof useNavigate> }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
+        <div className="relative w-16 h-16 mx-auto mb-6">
+          <CheckCircle2 className="h-16 w-16 text-neural-pulse" />
+          <div className="absolute inset-0 bg-neural-pulse/10 rounded-full blur-xl" />
+        </div>
+        <h2 className="text-xl font-bold text-neural-text mb-2">Diagnóstico completado</h2>
+        <p className="text-neural-muted text-sm mb-6 leading-relaxed">
+          Tu perfil de aprendizaje está listo. El sistema adaptará el contenido a tu estilo.
+        </p>
+        <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/path/${courseId}`)}>
+          Ver mi ruta de aprendizaje →
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ErrorScreen({ message, onRetry, navigate }: { message: string; onRetry: () => void; navigate: ReturnType<typeof useNavigate> }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
+        <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+        <h2 className="text-lg font-bold text-neural-text mb-2">Error al procesar</h2>
+        <p className="text-neural-muted/70 text-sm mb-6">{message}</p>
+        <div className="flex gap-3">
+          <Button variant="outline" className="flex-1" onClick={() => navigate('/estudiante')}>
+            Volver
+          </Button>
+          <Button className="flex-1" onClick={onRetry}>
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────────
+
+export default function DiagnosticTest() {
+  const { courseId } = useParams<{ courseId: string }>()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const submitDiagnostic = useSubmitDiagnostic()
+  const generatePath = useGeneratePath()
+
+  const [phase, setPhase] = useState<Phase>('section_a')
+  const [sectionAIdx, setSectionAIdx] = useState(0)
+  const [sectionBIdx, setSectionBIdx] = useState(0)
+  const [answers, setAnswers] = useState<Record<number, number>>({})
+  const [errorMsg, setErrorMsg] = useState('')
+  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer) }, [autoAdvanceTimer])
+
+  const answeredCount = Object.keys(answers).length
+
+  const handleAnswer = (questionId: number, value: number, onAdvance: () => void) => {
+    setAnswers(prev => ({ ...prev, [questionId]: value }))
+    const t = setTimeout(onAdvance, 350)
+    setAutoAdvanceTimer(t)
+  }
+
+  const advanceSectionA = () => {
+    if (sectionAIdx < SECTION_A_QUESTIONS.length - 1) {
+      setSectionAIdx(i => i + 1)
+    } else {
+      setPhase('transition')
+    }
+  }
+
+  const advanceSectionB = () => {
+    if (sectionBIdx < SECTION_B_QUESTIONS.length - 1) {
+      setSectionBIdx(i => i + 1)
+    } else {
+      submitResults()
+    }
+  }
+
+  const submitResults = async () => {
+    if (!courseId) { setErrorMsg('ID del curso no encontrado'); setPhase('error'); return }
+    setPhase('submitting')
+    setErrorMsg('')
+    try {
+      const formatted: Record<string, number> = {}
+      Object.entries(answers).forEach(([k, v]) => { formatted[k] = v })
+      await submitDiagnostic.mutateAsync({ courseId, answers: formatted })
+      await generatePath.mutateAsync(courseId)
+      setPhase('done')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
+      setErrorMsg(msg)
+      setPhase('error')
+      toast({ variant: 'destructive', title: 'Error', description: msg })
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  if (phase === 'transition') return <TransitionScreen onContinue={() => setPhase('section_b')} />
+  if (phase === 'submitting') return <SubmittingScreen />
+  if (phase === 'done') return <DoneScreen courseId={courseId!} navigate={navigate} />
+  if (phase === 'error') return <ErrorScreen message={errorMsg} onRetry={submitResults} navigate={navigate} />
+
+  if (phase === 'section_a') {
+    const q = SECTION_A_QUESTIONS[sectionAIdx]
+    const canGoBack = sectionAIdx > 0
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            disabled={!canGoBack}
+            onClick={() => setSectionAIdx(i => i - 1)}
+            className="p-2 rounded-lg glass-panel text-neural-muted hover:text-neural-text disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="flex-1">
+            <p className="text-xs font-mono text-neural-glow tracking-widest uppercase mb-1">
+              Parte 1 · Conocimiento previo
+            </p>
+            <ProgressBar answered={answeredCount} total={TOTAL} />
+          </div>
+        </div>
+
+        <LikertCard
+          question={q.text}
+          value={answers[q.id]}
+          sectionLabel={TOPIC_LABELS[q.topic!] || q.topic!}
+          chipClass="border-neural-glow/30 text-neural-glow bg-neural-glow/5"
+          onSelect={v => handleAnswer(q.id, v, advanceSectionA)}
+        />
+
+        <p className="text-center text-xs text-neural-muted/50 mt-5">
+          ¿Cuánto conoces este tema?
+        </p>
+      </div>
     )
+  }
+
+  // phase === 'section_b'
+  const q = SECTION_B_QUESTIONS[sectionBIdx]
+  const theme = q.modality ? MODALITY_THEME[q.modality] : { label: 'Aprendizaje', color: 'text-neural-muted', bg: 'border-white/10 bg-white/5' }
+  const canGoBack = sectionBIdx > 0
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          disabled={!canGoBack}
+          onClick={() => setSectionBIdx(i => i - 1)}
+          className="p-2 rounded-lg glass-panel text-neural-muted hover:text-neural-text disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <div className="flex-1">
+          <p className="text-xs font-mono text-neural-violet tracking-widest uppercase mb-1">
+            Parte 2 · Estilo de aprendizaje
+          </p>
+          <ProgressBar answered={answeredCount} total={TOTAL} />
+        </div>
+      </div>
+
+      <LikertCard
+        question={q.text}
+        value={answers[q.id]}
+        sectionLabel={theme.label}
+        chipClass={`${theme.bg} ${theme.color}`}
+        onSelect={v => handleAnswer(q.id, v, advanceSectionB)}
+      />
+
+      <p className="text-center text-xs text-neural-muted/50 mt-5">
+        ¿Cuánto te identifica esta afirmación?
+      </p>
+    </div>
+  )
 }
