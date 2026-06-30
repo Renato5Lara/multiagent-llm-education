@@ -197,11 +197,9 @@ function ModuleTimeline({
 }
 
 function AdaptiveProfileCard({
-  name, initials, modality, progress, totalItems, completedItems, currentModuleTitle,
+  name, initials, modality, currentModuleTitle,
 }: {
-  name: string; initials: string; modality: string | null
-  progress: number; totalItems: number; completedItems: number
-  currentModuleTitle?: string
+  name: string; initials: string; modality: string | null; currentModuleTitle?: string
 }) {
   const modColor = modality ? MODALITY_DARK[modality] : ''
 
@@ -218,24 +216,6 @@ function AdaptiveProfileCard({
       </div>
 
       <div className="space-y-3">
-        {/* Progress */}
-        <div className="bg-neural-lowest/60 rounded-xl px-3 py-2.5">
-          <div className="flex justify-between text-xs mb-2">
-            <span className="text-neural-muted">Progreso</span>
-            <span className="text-neural-glow font-mono font-bold">{progress}%</span>
-          </div>
-          <div className="w-full bg-white/[0.06] rounded-full h-1.5">
-            <div
-              className="bg-neural-glow h-1.5 rounded-full neural-glow-sm transition-all duration-500"
-              style={{ width: `${Math.max(progress, 2)}%` }}
-            />
-          </div>
-          <p className="text-[10px] text-neural-muted/50 mt-1.5">
-            {completedItems} de {totalItems} módulos
-          </p>
-        </div>
-
-        {/* Modality — solo si viene de datos reales */}
         {modality && (
           <div className="flex items-center justify-between bg-neural-lowest/60 rounded-xl px-3 py-2.5">
             <span className="text-xs text-neural-muted">Perfil</span>
@@ -245,7 +225,6 @@ function AdaptiveProfileCard({
           </div>
         )}
 
-        {/* Recomendación — módulo actual real */}
         {currentModuleTitle && (
           <div className="bg-neural-lowest/60 rounded-xl px-3 py-2.5">
             <p className="text-[10px] text-neural-muted mb-1">Recomendación</p>
@@ -279,14 +258,10 @@ function DashboardSkeleton() {
         <Skeleton className="h-7 w-48 mb-1" />
         <Skeleton className="h-4 w-56" />
       </div>
+      <Skeleton className="h-52 rounded-2xl mb-6" />
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-        <div className="space-y-5">
-          <Skeleton className="h-56 rounded-2xl" />
-          <Skeleton className="h-64 rounded-2xl" />
-        </div>
-        <div>
-          <Skeleton className="h-72 rounded-2xl" />
-        </div>
+        <Skeleton className="h-64 rounded-2xl" />
+        <Skeleton className="h-40 rounded-2xl" />
       </div>
     </div>
   )
@@ -321,29 +296,24 @@ export default function EstudianteDashboard() {
       {!fdp ? (
         <NoCourseState />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        <div className="space-y-6">
+          {/* ── Hero — ancho completo ─────────────────────── */}
+          <FdPHeroCard course={fdp} navigate={navigate} />
 
-          {/* ── Left column ──────────────────────────────── */}
-          <div className="space-y-5">
-            <FdPHeroCard course={fdp} navigate={navigate} />
-
-            {fdp.has_learning_path && path?.items.length ? (
-              <ModuleTimeline items={path.items} courseId={fdp.course_id} navigate={navigate} />
-            ) : null}
-          </div>
-
-          {/* ── Right column ─────────────────────────────── */}
-          <div>
-            <AdaptiveProfileCard
-              name={name}
-              initials={initials}
-              modality={modality}
-              progress={fdp.progress_percentage}
-              totalItems={totalItems}
-              completedItems={completedItems}
-              currentModuleTitle={currentModuleTitle}
-            />
-          </div>
+          {/* ── Timeline + Perfil — 2 columnas ───────────── */}
+          {fdp.has_learning_path && (
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+              {path?.items.length ? (
+                <ModuleTimeline items={path.items} courseId={fdp.course_id} navigate={navigate} />
+              ) : <div />}
+              <AdaptiveProfileCard
+                name={name}
+                initials={initials}
+                modality={modality}
+                currentModuleTitle={currentModuleTitle}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
