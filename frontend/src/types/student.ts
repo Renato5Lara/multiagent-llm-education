@@ -147,27 +147,35 @@ export interface AdaptiveDecision {
   modality_label: string
 }
 
-// ── D4.2 — Content library interfaces (prepared, not yet implemented) ──────────
+// ── D4.2 — Content library ─────────────────────────────────────────────────────
 
 export type ContentType = 'theory' | 'example' | 'video' | 'diagram' | 'game' | 'simulation' | 'exercise'
 
-export interface ContentBlock {
-  id: string
-  type: ContentType
+// Matches backend ContentBlockResponse
+export interface ContentBlockItem {
+  type: string
   title: string
-  body?: string        // theory / example text
-  url?: string         // video URL
-  code?: string        // code snippet
-  language?: string    // programming language for code blocks
-  interactive?: Record<string, unknown>  // game / simulation config
-  modality_target: string[]  // which modalities this block serves best
+  body?: string | null
+  code?: string | null
+  language?: string | null
+  is_placeholder: boolean
+  placeholder_sprint?: string | null
   estimated_minutes: number
 }
 
+// Matches backend AdaptiveContentResponse
+export interface AdaptiveContentResponse {
+  topic_slug: string
+  modality: string
+  blocks: ContentBlockItem[]
+  total_minutes: number
+}
+
+// Richer interface reserved for D4.4 full render (not yet used by API)
 export interface AdaptiveModuleContent {
   module_id: string
   content_order: ContentType[]
-  blocks: ContentBlock[]  // ordered by content_order + adaptive_decision
+  blocks: ContentBlockItem[]
   estimated_minutes: number
 }
 

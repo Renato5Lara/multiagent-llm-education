@@ -29,6 +29,7 @@ const DiagnosticTest = lazy(() => import('@/pages/estudiante/DiagnosticTest'))
 const LearningPath = lazy(() => import('@/pages/estudiante/LearningPath'))
 const ContentViewer = lazy(() => import('@/pages/estudiante/ContentViewer'))
 const ModuleLearningView = lazy(() => import('@/pages/estudiante/ModuleLearningView'))
+const AdaptiveLearnView = lazy(() => import('@/pages/estudiante/AdaptiveLearnView'))
 const Evaluation = lazy(() => import('@/pages/estudiante/Evaluation'))
 const SwarmDemo = lazy(() => import('@/pages/demo/SwarmDemo'))
 const ReplayDashboard = lazy(() => import('@/pages/replay/ReplayDashboard'))
@@ -77,6 +78,7 @@ export default function App() {
                             <Route path="/estudiante/path/:courseId" element={<LearningPath />} />
                             <Route path="/estudiante/content/:resourceId" element={<ContentViewer />} />
                             <Route path="/estudiante/module/:moduleId" element={<ModuleLearningView />} />
+                            <Route path="/estudiante/learn/:topicSlug" element={<AdaptiveLearnView />} />
                             <Route path="/estudiante/evaluation/:courseId" element={<Evaluation />} />
                         </Route>
                     </Route>

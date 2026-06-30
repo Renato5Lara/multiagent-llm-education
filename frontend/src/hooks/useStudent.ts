@@ -48,6 +48,20 @@ export function useDiagnostic(courseId: string | undefined) {
   })
 }
 
+export function useAdaptiveContent(topicSlug: string | undefined, courseId: string | undefined) {
+  return useQuery({
+    queryKey: ['adaptive-content', topicSlug, courseId],
+    queryFn: async () => {
+      const resp = await api.get<import('@/types/student').AdaptiveContentResponse>(
+        `/api/students/adaptive-content/${topicSlug}?course_id=${courseId}`,
+      )
+      return resp.data
+    },
+    enabled: !!topicSlug && !!courseId,
+    staleTime: Infinity,
+  })
+}
+
 export function useAdaptiveDecision(courseId: string | undefined) {
   return useQuery({
     queryKey: ['adaptive-decision', courseId],

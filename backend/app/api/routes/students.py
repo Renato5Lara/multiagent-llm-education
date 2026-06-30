@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_estudiante, get_current_user, get_db
 from app.models.user import User
 from app.schemas.diagnostic import (
+    AdaptiveContentResponse,
     AdaptiveDecisionResponse,
+    ContentBlockResponse,
     DiagnosticSubmit,
     DiagnosticResponse,
     StudentProfileCreate,
@@ -314,6 +316,38 @@ def get_adaptive_decision(
         known_topics = sp.get("known_topics") or profile.get("consensus_summary", {}).get("known_topics", [])
         decision = compute_adaptive_decision(dominant, prior_level, known_topics or [])
     return decision
+
+
+@router.get("/adaptive-content/{topic_slug}", response_model=AdaptiveContentResponse)
+def get_adaptive_content(
+    topic_slug: str,
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """D4.2 — Returns multimodal content blocks for a topic, ordered by the student's modality."""
+    from app.services.content_library import get_adaptive_content as get_content, AVAILABLE_TOPICS
+    if topic_slug not in AVAILABLE_TOPICS:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Tema '{topic_slug}' no disponible. Temas: {AVAILABLE_TOPICS}",
+        )
+    diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
+    modality = "reading"  # safe default
+    if diagnostic:
+        profile = diagnostic.profile or {}
+        sp = profile.get("student_profile", {})
+        modality = sp.get("dominant_modality") or diagnostic.dominant_modality or "reading"
+
+    blocks_raw = get_content(topic_slug, modality)
+    blocks = [ContentBlockResponse(**b) for b in blocks_raw]
+    total_minutes = sum(b.estimated_minutes for b in blocks)
+    return AdaptiveContentResponse(
+        topic_slug=topic_slug,
+        modality=modality,
+        blocks=blocks,
+        total_minutes=total_minutes,
+    )
 
 
 @router.post("/learning-path/{course_id}", response_model=LearningPathResponse)

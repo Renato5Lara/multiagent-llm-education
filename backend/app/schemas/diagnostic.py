@@ -32,6 +32,24 @@ class AdaptiveDecisionResponse(BaseModel):
     modality_label: str
 
 
+class ContentBlockResponse(BaseModel):
+    type: str
+    title: str
+    body: Optional[str] = None
+    code: Optional[str] = None
+    language: Optional[str] = None
+    is_placeholder: bool = False
+    placeholder_sprint: Optional[str] = None
+    estimated_minutes: int = 5
+
+
+class AdaptiveContentResponse(BaseModel):
+    topic_slug: str
+    modality: str
+    blocks: list[ContentBlockResponse]
+    total_minutes: int
+
+
 class DiagnosticProfile(BaseModel):
     learning_style: str
     pace: str

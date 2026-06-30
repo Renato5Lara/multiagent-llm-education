@@ -23,6 +23,21 @@ function getLevelLabel(xp: number) {
   return [...XP_LEVELS].reverse().find(l => xp >= l.min)?.label ?? 'Principiante'
 }
 
+const TOPIC_SLUG_MAP: Array<{ keywords: string[]; slug: string }> = [
+  { keywords: ['variable', 'tipo', 'dato'],                         slug: 'variables'    },
+  { keywords: ['condicional', 'condición', 'condicion', 'if'],      slug: 'conditionals' },
+  { keywords: ['bucle', 'loop', 'ciclo', 'for', 'while', 'iterac'], slug: 'loops'        },
+  { keywords: ['función', 'funcion', 'function', 'método', 'subprog'], slug: 'functions' },
+]
+
+function detectTopicSlug(title: string): string | null {
+  const lower = title.toLowerCase()
+  for (const { keywords, slug } of TOPIC_SLUG_MAP) {
+    if (keywords.some(kw => lower.includes(kw))) return slug
+  }
+  return null
+}
+
 const MODALITY_DARK: Record<string, string> = {
   visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
   reading:     'border-green-400/40  text-green-300  bg-green-400/10',
@@ -89,7 +104,11 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
   const isLocked = item.status === 'locked'
 
   const handleClick = () => {
-    if (isAvailable && courseId) {
+    if (!isAvailable || !courseId) return
+    const topicSlug = detectTopicSlug(item.title)
+    if (topicSlug) {
+      navigate(`/estudiante/learn/${topicSlug}?courseId=${courseId}`)
+    } else {
       navigate(`/estudiante/module/${item.id}?courseId=${courseId}`)
     }
   }
@@ -254,11 +273,12 @@ export default function LearningPath() {
           />
         </div>
 
-        {/* XP + level */}
+        {/* Sistema de progreso (XP simulado para demo) */}
         <div className="flex items-center gap-2 mt-3">
           <Zap className="h-3 w-3 text-neural-glow/60" />
+          <span className="text-xs font-mono text-neural-muted/50">Progreso</span>
           <span className="text-xs font-mono text-neural-glow">{xp}</span>
-          <span className="text-xs font-mono text-neural-muted/40">/{maxXp} XP</span>
+          <span className="text-xs font-mono text-neural-muted/40">/{maxXp} pts</span>
           <span className="text-neural-muted/20 mx-1">·</span>
           <span className="text-xs text-neural-muted/60">{levelLabel}</span>
         </div>
@@ -268,7 +288,7 @@ export default function LearningPath() {
       {adaptiveDecision && (
         <div className="glass-panel rounded-2xl p-5 mb-6 border border-neural-violet/10">
           <p className="text-[9px] font-mono text-neural-violet/60 tracking-[0.2em] uppercase mb-2">
-            Estrategia adaptativa · D4.1
+            Cómo aprenderás mejor
           </p>
           <p className="text-sm text-neural-text leading-snug mb-3">
             {adaptiveDecision.strategy_description}
