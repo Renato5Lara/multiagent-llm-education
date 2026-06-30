@@ -65,28 +65,31 @@ export interface DiagnosticQuestion {
 }
 
 export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
-    // Sección A — Conocimiento previo
-    { id: 1,  section: 'prior_knowledge', topic: 'variables',    text: 'Sé qué es una variable y puedo declararla en código.' },
-    { id: 2,  section: 'prior_knowledge', topic: 'data_types',   text: 'Conozco los tipos de datos básicos: número, texto y booleano.' },
-    { id: 3,  section: 'prior_knowledge', topic: 'conditionals', text: 'Puedo escribir una estructura if-else por mi cuenta.' },
-    { id: 4,  section: 'prior_knowledge', topic: 'loops',        text: 'Entiendo cómo funciona un bucle for o while.' },
-    { id: 5,  section: 'prior_knowledge', topic: 'functions',    text: 'He definido o utilizado funciones en algún lenguaje de programación.' },
+    // Sección A — Conocimiento previo (ids 1-8, uno por tema de Fundamentos)
+    { id: 1, section: 'prior_knowledge', topic: 'algorithms',   text: 'Puedo describir los pasos para resolver un problema usando un algoritmo.' },
+    { id: 2, section: 'prior_knowledge', topic: 'variables',    text: 'Sé qué es una variable y puedo declararla con su tipo de dato.' },
+    { id: 3, section: 'prior_knowledge', topic: 'operators',    text: 'Conozco y puedo usar operadores aritméticos, relacionales y lógicos en código.' },
+    { id: 4, section: 'prior_knowledge', topic: 'input_output', text: 'Sé cómo leer datos del usuario e imprimir resultados en pantalla.' },
+    { id: 5, section: 'prior_knowledge', topic: 'conditionals', text: 'Puedo escribir una estructura if-else o switch por mi cuenta.' },
+    { id: 6, section: 'prior_knowledge', topic: 'loops',        text: 'Entiendo cómo funciona un bucle for o while y puedo usarlo.' },
+    { id: 7, section: 'prior_knowledge', topic: 'arrays',       text: 'Conozco qué es un arreglo y puedo declarar, recorrer y modificar sus elementos.' },
+    { id: 8, section: 'prior_knowledge', topic: 'functions',    text: 'He definido funciones con parámetros y valor de retorno en algún lenguaje.' },
 
-    // Sección B — Modalidad de aprendizaje (ids 6-15)
-    { id: 6,  section: 'modality', modality: 'visual',      text: 'Aprendo mejor con diagramas, esquemas o representaciones visuales.' },
-    { id: 7,  section: 'modality', modality: 'visual',      text: 'Los colores y las imágenes me ayudan a recordar conceptos nuevos.' },
-    { id: 8,  section: 'modality', modality: 'reading',     text: 'Prefiero leer una explicación detallada antes de practicar.' },
-    { id: 9,  section: 'modality', modality: 'reading',     text: 'Me resulta muy útil tener el código comentado paso a paso.' },
-    { id: 10, section: 'modality', modality: 'reading',     text: 'Prefiero leer ejemplos escritos antes de ver un video.' },
-    { id: 11, section: 'modality', modality: 'audio',       text: 'Aprendo mejor cuando alguien me explica verbalmente un concepto.' },
-    { id: 12, section: 'modality', modality: 'audio',       text: 'Escuchar narraciones o podcasts me ayuda a comprender mejor.' },
-    { id: 13, section: 'modality', modality: 'kinesthetic', text: 'Prefiero aprender haciendo ejercicios directamente, sin mucha teoría.' },
-    { id: 14, section: 'modality', modality: 'kinesthetic', text: 'Aprendo mejor cuando puedo probar, equivocarme y corregir libremente.' },
-    { id: 15, section: 'modality', modality: 'kinesthetic', text: 'Me gustan los retos y actividades interactivas para aprender.' },
+    // Sección B — Modalidad de aprendizaje (ids 9-18)
+    { id: 9,  section: 'modality', modality: 'visual',      text: 'Aprendo mejor con diagramas, esquemas o representaciones visuales.' },
+    { id: 10, section: 'modality', modality: 'visual',      text: 'Los colores y las imágenes me ayudan a recordar conceptos nuevos.' },
+    { id: 11, section: 'modality', modality: 'reading',     text: 'Prefiero leer una explicación detallada antes de practicar.' },
+    { id: 12, section: 'modality', modality: 'reading',     text: 'Me resulta muy útil tener el código comentado paso a paso.' },
+    { id: 13, section: 'modality', modality: 'reading',     text: 'Prefiero leer ejemplos escritos antes de ver un video.' },
+    { id: 14, section: 'modality', modality: 'audio',       text: 'Aprendo mejor cuando alguien me explica verbalmente un concepto.' },
+    { id: 15, section: 'modality', modality: 'audio',       text: 'Escuchar narraciones o podcasts me ayuda a comprender mejor.' },
+    { id: 16, section: 'modality', modality: 'kinesthetic', text: 'Prefiero aprender haciendo ejercicios directamente, sin mucha teoría.' },
+    { id: 17, section: 'modality', modality: 'kinesthetic', text: 'Aprendo mejor cuando puedo probar, equivocarme y corregir libremente.' },
+    { id: 18, section: 'modality', modality: 'kinesthetic', text: 'Me gustan los retos y actividades interactivas para aprender.' },
 ]
 
-export const SECTION_A_IDS = [1, 2, 3, 4, 5]
-export const SECTION_B_IDS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+export const SECTION_A_IDS = [1, 2, 3, 4, 5, 6, 7, 8]
+export const SECTION_B_IDS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
 
 // Escala Likert — aplica a ambas secciones
 // Sección A: ¿Cuánto conoces este tema?

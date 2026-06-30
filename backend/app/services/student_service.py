@@ -26,27 +26,30 @@ from app.services.academic_activation_service import academic_activation_pipelin
 
 logger = logging.getLogger(__name__)
 
-# Sección B (preguntas 6-15): mapeo a 4 modalidades canónicas
+# Sección B (preguntas 9-18): mapeo a 4 modalidades canónicas
 DIAGNOSTIC_MODALITY_MAP = {
-    6:  "visual",
-    7:  "visual",
-    8:  "reading",
-    9:  "reading",
-    10: "reading",
-    11: "audio",
-    12: "audio",
-    13: "kinesthetic",
-    14: "kinesthetic",
-    15: "kinesthetic",
+    9:  "visual",
+    10: "visual",
+    11: "reading",
+    12: "reading",
+    13: "reading",
+    14: "audio",
+    15: "audio",
+    16: "kinesthetic",
+    17: "kinesthetic",
+    18: "kinesthetic",
 }
 
-# Sección A (preguntas 1-5): conocimiento previo
+# Sección A (preguntas 1-8): 8 temas de Fundamentos de la Programación
 PRIOR_KNOWLEDGE_TOPIC_MAP = {
-    1: "variables",
-    2: "data_types",
-    3: "conditionals",
-    4: "loops",
-    5: "functions",
+    1: "algorithms",
+    2: "variables",
+    3: "operators",
+    4: "input_output",
+    5: "conditionals",
+    6: "loops",
+    7: "arrays",
+    8: "functions",
 }
 
 RECOMMENDED_STRATEGIES = {
@@ -108,7 +111,15 @@ def compute_prior_knowledge(answers: dict) -> tuple[str, list[str]]:
         if topic and int(value) >= 4:
             known.append(topic)
     count = len(known)
-    level = "beginner" if count <= 1 else ("basic" if count <= 3 else "intermediate")
+    # Thresholds over 8 possible topics
+    if count <= 1:
+        level = "beginner"
+    elif count <= 4:
+        level = "basic"
+    elif count <= 6:
+        level = "intermediate"
+    else:
+        level = "advanced"
     return level, known
 
 
@@ -152,10 +163,6 @@ def save_diagnostic(
             existing.profile = profile
             existing.modality_scores = modality_scores
             existing.dominant_modality = dominant
-            existing.secondary_modality = secondary
-            existing.prior_knowledge_level = prior_knowledge_level
-            existing.known_topics = known_topics
-            existing.confidence = confidence
             existing.completed_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(existing)
@@ -168,10 +175,6 @@ def save_diagnostic(
             profile=profile,
             modality_scores=modality_scores,
             dominant_modality=dominant,
-            secondary_modality=secondary,
-            prior_knowledge_level=prior_knowledge_level,
-            known_topics=known_topics,
-            confidence=confidence,
         )
         db.add(result)
         try:
@@ -192,10 +195,6 @@ def save_diagnostic(
                 existing.profile = profile
                 existing.modality_scores = modality_scores
                 existing.dominant_modality = dominant
-                existing.secondary_modality = secondary
-                existing.prior_knowledge_level = prior_knowledge_level
-                existing.known_topics = known_topics
-                existing.confidence = confidence
                 existing.completed_at = datetime.now(timezone.utc)
                 db.commit()
                 db.refresh(existing)
@@ -242,13 +241,12 @@ def save_student_profile_from_diagnostic(
     db: Session, student_id: str, diagnostic: DiagnosticResult
 ) -> StudentProfile:
     dominant = diagnostic.dominant_modality or "reading"
-    secondary = diagnostic.secondary_modality
     modality_scores = diagnostic.modality_scores or {}
 
     sorted_modalities = sorted(modality_scores.items(), key=lambda x: x[1], reverse=True)
     preferred = [m for m, _ in sorted_modalities if m] or [dominant]
 
-    profile = save_student_profile(
+    return save_student_profile(
         db,
         student_id=student_id,
         data=StudentProfileCreate(
@@ -256,13 +254,6 @@ def save_student_profile_from_diagnostic(
             dominant_style=dominant,
         ),
     )
-
-    if secondary:
-        profile.secondary_modality = secondary
-        db.commit()
-        db.refresh(profile)
-
-    return profile
 
 
 def get_student_profile(db: Session, student_id: str) -> Optional[StudentProfile]:
