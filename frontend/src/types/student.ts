@@ -134,6 +134,45 @@ export interface AgentPlan {
   }>
 }
 
+// ── D4.1 — Adaptive decision ───────────────────────────────────────────────────
+
+export interface AdaptiveDecision {
+  content_order: string[]
+  content_type_labels: Record<string, string>
+  skip_hint_topics: string[]
+  emphasis_topics: string[]
+  emphasis_topic_labels: string[]
+  strategy_description: string
+  prior_emphasis: string
+  modality_label: string
+}
+
+// ── D4.2 — Content library interfaces (prepared, not yet implemented) ──────────
+
+export type ContentType = 'theory' | 'example' | 'video' | 'diagram' | 'game' | 'simulation' | 'exercise'
+
+export interface ContentBlock {
+  id: string
+  type: ContentType
+  title: string
+  body?: string        // theory / example text
+  url?: string         // video URL
+  code?: string        // code snippet
+  language?: string    // programming language for code blocks
+  interactive?: Record<string, unknown>  // game / simulation config
+  modality_target: string[]  // which modalities this block serves best
+  estimated_minutes: number
+}
+
+export interface AdaptiveModuleContent {
+  module_id: string
+  content_order: ContentType[]
+  blocks: ContentBlock[]  // ordered by content_order + adaptive_decision
+  estimated_minutes: number
+}
+
+// ── Competency ─────────────────────────────────────────────────────────────────
+
 export interface Competency {
   id: string
   name: string

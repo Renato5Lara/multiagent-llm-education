@@ -10,6 +10,7 @@ import type {
   LearningPathDetail,
   CourseProgress,
   StudentProgressEntry,
+  AdaptiveDecision,
 } from '@/types/student'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useToast } from '@/hooks/use-toast'
@@ -44,6 +45,18 @@ export function useDiagnostic(courseId: string | undefined) {
       return resp.data
     },
     enabled: !!courseId,
+  })
+}
+
+export function useAdaptiveDecision(courseId: string | undefined) {
+  return useQuery({
+    queryKey: ['adaptive-decision', courseId],
+    queryFn: async () => {
+      const resp = await api.get<AdaptiveDecision>(`/api/students/adaptive-decision/${courseId}`)
+      return resp.data
+    },
+    enabled: !!courseId,
+    staleTime: Infinity, // diagnostic-derived, changes only when re-diagnosed
   })
 }
 

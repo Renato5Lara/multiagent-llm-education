@@ -1,14 +1,27 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy } from 'lucide-react'
+import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useLearningPath, useGeneratePath } from '@/hooks/useStudent'
+import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { LearningPathItem } from '@/types/student'
 import TutorWidget from '@/components/ai/TutorWidget'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
+
+const XP_PER_MISSION = 50
+
+const XP_LEVELS = [
+  { min: 0,   label: 'Principiante' },
+  { min: 100, label: 'Aprendiz de Programación' },
+  { min: 250, label: 'Programador Explorador' },
+  { min: 400, label: 'Desarrollador Emergente' },
+]
+
+function getLevelLabel(xp: number) {
+  return [...XP_LEVELS].reverse().find(l => xp >= l.min)?.label ?? 'Principiante'
+}
 
 const MODALITY_DARK: Record<string, string> = {
   visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
@@ -187,6 +200,7 @@ export default function LearningPath() {
   const navigate = useNavigate()
   const { data: path, isLoading, error } = useLearningPath(courseId)
   const generatePath = useGeneratePath()
+  const { data: adaptiveDecision } = useAdaptiveDecision(courseId)
 
   if (isLoading) return <PathSkeleton />
 
@@ -206,6 +220,9 @@ export default function LearningPath() {
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const activeItem = items.find((i: LearningPathItem) => i.status === 'available')
   const modalityStyle = MODALITY_DARK[path.dominant_modality || '']
+  const xp = completedCount * XP_PER_MISSION
+  const maxXp = totalCount * XP_PER_MISSION
+  const levelLabel = getLevelLabel(xp)
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -236,7 +253,48 @@ export default function LearningPath() {
             style={{ width: `${progressPct}%` }}
           />
         </div>
+
+        {/* XP + level */}
+        <div className="flex items-center gap-2 mt-3">
+          <Zap className="h-3 w-3 text-neural-glow/60" />
+          <span className="text-xs font-mono text-neural-glow">{xp}</span>
+          <span className="text-xs font-mono text-neural-muted/40">/{maxXp} XP</span>
+          <span className="text-neural-muted/20 mx-1">·</span>
+          <span className="text-xs text-neural-muted/60">{levelLabel}</span>
+        </div>
       </div>
+
+      {/* ── Adaptive strategy card ──────────────────────────── */}
+      {adaptiveDecision && (
+        <div className="glass-panel rounded-2xl p-5 mb-6 border border-neural-violet/10">
+          <p className="text-[9px] font-mono text-neural-violet/60 tracking-[0.2em] uppercase mb-2">
+            Estrategia adaptativa · D4.1
+          </p>
+          <p className="text-sm text-neural-text leading-snug mb-3">
+            {adaptiveDecision.strategy_description}
+          </p>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {adaptiveDecision.content_order.slice(0, 4).map((type, idx) => (
+              <span
+                key={type}
+                className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/[0.08] bg-white/[0.03] text-neural-muted/60"
+              >
+                {idx + 1}. {adaptiveDecision.content_type_labels[type] || type}
+              </span>
+            ))}
+          </div>
+          {adaptiveDecision.prior_emphasis && (
+            <p className="text-[11px] text-neural-muted/40 leading-snug">
+              {adaptiveDecision.prior_emphasis}
+            </p>
+          )}
+          {adaptiveDecision.emphasis_topic_labels.length > 0 && (
+            <p className="text-[11px] text-neural-muted/40 mt-1">
+              Temas prioritarios: {adaptiveDecision.emphasis_topic_labels.join(', ')}.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ── Mission list ────────────────────────────────────── */}
       <div className="space-y-3">

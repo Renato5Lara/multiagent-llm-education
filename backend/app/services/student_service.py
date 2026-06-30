@@ -21,6 +21,7 @@ from app.models.student_progress import LearningPath, PathModule, StudentProgres
 from app.models.learning_objective import LearningObjective
 from app.models.user import User, UserRole
 from app.schemas.diagnostic import StudentProfileCreate
+from app.services.adaptive_engine import compute_adaptive_decision
 from app.schemas.progress import CourseProgressResponse, LearningPathDetailResponse, LearningPathItem
 from app.services.academic_activation_service import academic_activation_pipeline
 
@@ -163,6 +164,7 @@ def save_diagnostic(
                 "strategy": RECOMMENDED_STRATEGIES.get(dominant, []),
                 "known_topics": known_topics,
             },
+            "adaptive_decision": compute_adaptive_decision(dominant, prior_knowledge_level, known_topics),
         }
 
         if existing:

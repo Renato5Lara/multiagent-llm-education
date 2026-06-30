@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_estudiante, get_current_user, get_db
 from app.models.user import User
 from app.schemas.diagnostic import (
+    AdaptiveDecisionResponse,
     DiagnosticSubmit,
     DiagnosticResponse,
     StudentProfileCreate,
@@ -287,6 +288,32 @@ def get_diagnostic(
             detail="No has completado el diagnóstico de este curso",
         )
     return result
+
+
+@router.get("/adaptive-decision/{course_id}", response_model=AdaptiveDecisionResponse)
+def get_adaptive_decision(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """D4.1 — Returns the adaptive content strategy for the student's diagnostic profile."""
+    diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
+    if not diagnostic:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No has completado el diagnóstico de este curso",
+        )
+    profile = diagnostic.profile or {}
+    decision = profile.get("adaptive_decision")
+    if not decision:
+        # Compute on-the-fly from stored profile (supports diagnostics created before D4.1)
+        from app.services.adaptive_engine import compute_adaptive_decision
+        sp = profile.get("student_profile", {})
+        dominant = sp.get("dominant_modality") or diagnostic.dominant_modality or "reading"
+        prior_level = sp.get("prior_knowledge", "basic")
+        known_topics = sp.get("known_topics") or profile.get("consensus_summary", {}).get("known_topics", [])
+        decision = compute_adaptive_decision(dominant, prior_level, known_topics or [])
+    return decision
 
 
 @router.post("/learning-path/{course_id}", response_model=LearningPathResponse)
