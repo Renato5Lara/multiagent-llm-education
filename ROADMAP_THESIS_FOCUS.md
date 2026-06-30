@@ -155,6 +155,76 @@ Componentes obligatorios:
 
 ## Sprints
 
+### D1 — Diagnóstico Multimodal ✅ COMPLETADO
+
+**Objetivo:** Diagnóstico bifurcado: conocimiento previo + modalidad.
+
+- Sección A: 8 preguntas (algorithms, variables, operators, input_output, conditionals, loops, arrays, functions)
+- Sección B: 10 preguntas de modalidad (visual, reading, audio, kinesthetic)
+- UI Duolingo-style: una pregunta por pantalla con auto-avance
+- Backend: profile JSON extendido con prior_knowledge, secondary_modality, confidence, recommended_learning_strategy
+- Niveles: beginner / basic / intermediate / advanced (sobre 8 temas)
+
+---
+
+### D2 — Pantalla "Swarm Thinking" 🔜 PRÓXIMO
+
+**Objetivo:** Hacer visible el trabajo del swarm durante el análisis del diagnóstico.
+Es la pantalla clave para el jurado — demuestra la arquitectura multiagente.
+
+**Flujo esperado:**
+```
+Diagnóstico completado
+↓
+"Los agentes están analizando tu perfil..."
+↓
+[Barra de progreso por agente]
+  DiagnosticAgent   ██████████  100%
+  LearningAgent     ██████████   80%
+  ContentAgent      ████████     60%
+  TutorAgent        ██████████  100%
+↓
+[Feed de mensajes entre agentes]
+  DiagnosticAgent:  "El estudiante es de modalidad kinestésica (conf. 0.82)"
+  ContentAgent:     "Recomiendo ejercicios interactivos y drag & drop"
+  TutorAgent:       "Aumentar ejemplos con live coding"
+  ConsensusAgent:   "Ruta aprobada. Iniciando generación..."
+↓
+Perfil generado → Ruta lista
+```
+
+**Notas de implementación:**
+- Puede usar datos simulados / fake-real-time (setTimeout chain)
+- Los mensajes pueden ser hardcodeados basados en el dominant_modality detectado
+- Lo importante es la legibilidad visual para el jurado
+- No requiere WebSocket real — un mock animado es suficiente para la sustentación
+
+---
+
+### D3 — Generación de Ruta Adaptativa
+
+**Objetivo:** Visualizar cómo el swarm genera la ruta personalizada.
+
+---
+
+### D4 — Contenido Adaptativo Multimodal
+
+**Objetivo:** Módulo estrella — contenido diferenciado por modalidad.
+
+---
+
+### D5 — Code Lab (Kinesthetic)
+
+**Objetivo:** Editor de código interactivo para modalidad kinestésica.
+
+---
+
+### D6 — Swarm Monitor
+
+**Objetivo:** Monitoreo en tiempo real del swarm para el investigador.
+
+---
+
 ### M1 — LLM Content Generation
 
 **Objetivo:** Eliminar contenido hardcodeado.
