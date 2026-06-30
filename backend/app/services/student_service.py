@@ -26,19 +26,34 @@ from app.services.academic_activation_service import academic_activation_pipelin
 
 logger = logging.getLogger(__name__)
 
+# Sección B (preguntas 6-15): mapeo a 4 modalidades canónicas
 DIAGNOSTIC_MODALITY_MAP = {
-    1: "reading",
-    2: "visual",
-    3: "kinesthetic",
-    4: "kinesthetic",
-    5: "reading",
-    6: "reading",
-    7: "audio",
-    8: "video",
-    9: "reading",
-    10: "video",
-    11: "game",
-    12: "reading",
+    6:  "visual",
+    7:  "visual",
+    8:  "reading",
+    9:  "reading",
+    10: "reading",
+    11: "audio",
+    12: "audio",
+    13: "kinesthetic",
+    14: "kinesthetic",
+    15: "kinesthetic",
+}
+
+# Sección A (preguntas 1-5): conocimiento previo
+PRIOR_KNOWLEDGE_TOPIC_MAP = {
+    1: "variables",
+    2: "data_types",
+    3: "conditionals",
+    4: "loops",
+    5: "functions",
+}
+
+RECOMMENDED_STRATEGIES = {
+    "visual":      ["diagrams", "flowcharts", "color-coded-examples", "visual-metaphors"],
+    "reading":     ["documentation", "step-by-step-guides", "written-examples", "text-explanations"],
+    "audio":       ["narrated-videos", "verbal-explanations", "audio-walkthroughs", "discussion"],
+    "kinesthetic": ["interactive-exercises", "live-coding", "drag-and-drop", "simulations"],
 }
 
 RESOURCE_TYPE_PRIORITY = {
@@ -52,19 +67,17 @@ RESOURCE_TYPE_PRIORITY = {
 
 
 def compute_modality_scores(answers: dict) -> dict:
-    scores = {}
-    counts = {}
+    scores: dict[str, float] = {}
+    counts: dict[str, int] = {}
     for q_id_str, value in answers.items():
         q_id = int(q_id_str)
         modality = DIAGNOSTIC_MODALITY_MAP.get(q_id)
         if modality:
             scores[modality] = scores.get(modality, 0) + value
             counts[modality] = counts.get(modality, 0) + 1
-
     for modality in scores:
         if counts[modality] > 0:
             scores[modality] = round(scores[modality] / counts[modality], 2)
-
     return scores
 
 
@@ -72,6 +85,31 @@ def get_dominant_modality(modality_scores: dict) -> str:
     if not modality_scores:
         return "reading"
     return max(modality_scores, key=modality_scores.get)
+
+
+def compute_secondary_and_confidence(modality_scores: dict) -> tuple[str | None, float]:
+    if not modality_scores or len(modality_scores) < 2:
+        return None, 1.0
+    sorted_m = sorted(modality_scores, key=modality_scores.get, reverse=True)
+    dominant_score = modality_scores[sorted_m[0]]
+    secondary_score = modality_scores[sorted_m[1]]
+    if dominant_score == 0:
+        confidence = 0.5
+    else:
+        confidence = round((dominant_score - secondary_score) / dominant_score, 2)
+        confidence = max(0.0, min(1.0, confidence))
+    return sorted_m[1], confidence
+
+
+def compute_prior_knowledge(answers: dict) -> tuple[str, list[str]]:
+    known: list[str] = []
+    for q_id_str, value in answers.items():
+        topic = PRIOR_KNOWLEDGE_TOPIC_MAP.get(int(q_id_str))
+        if topic and int(value) >= 4:
+            known.append(topic)
+    count = len(known)
+    level = "beginner" if count <= 1 else ("basic" if count <= 3 else "intermediate")
+    return level, known
 
 
 def save_diagnostic(
@@ -95,10 +133,18 @@ def save_diagnostic(
 
         modality_scores = compute_modality_scores(answers)
         dominant = get_dominant_modality(modality_scores)
+        secondary, confidence = compute_secondary_and_confidence(modality_scores)
+        prior_knowledge_level, known_topics = compute_prior_knowledge(answers)
 
         profile = {
-            "dominant_modality": dominant,
+            "student_profile": {
+                "prior_knowledge": prior_knowledge_level,
+                "dominant_modality": dominant,
+                "secondary_modality": secondary,
+                "confidence": confidence,
+            },
             "modality_scores": modality_scores,
+            "recommended_learning_strategy": RECOMMENDED_STRATEGIES.get(dominant, []),
         }
 
         if existing:
@@ -106,6 +152,10 @@ def save_diagnostic(
             existing.profile = profile
             existing.modality_scores = modality_scores
             existing.dominant_modality = dominant
+            existing.secondary_modality = secondary
+            existing.prior_knowledge_level = prior_knowledge_level
+            existing.known_topics = known_topics
+            existing.confidence = confidence
             existing.completed_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(existing)
@@ -118,6 +168,10 @@ def save_diagnostic(
             profile=profile,
             modality_scores=modality_scores,
             dominant_modality=dominant,
+            secondary_modality=secondary,
+            prior_knowledge_level=prior_knowledge_level,
+            known_topics=known_topics,
+            confidence=confidence,
         )
         db.add(result)
         try:
@@ -138,6 +192,10 @@ def save_diagnostic(
                 existing.profile = profile
                 existing.modality_scores = modality_scores
                 existing.dominant_modality = dominant
+                existing.secondary_modality = secondary
+                existing.prior_knowledge_level = prior_knowledge_level
+                existing.known_topics = known_topics
+                existing.confidence = confidence
                 existing.completed_at = datetime.now(timezone.utc)
                 db.commit()
                 db.refresh(existing)
@@ -184,15 +242,13 @@ def save_student_profile_from_diagnostic(
     db: Session, student_id: str, diagnostic: DiagnosticResult
 ) -> StudentProfile:
     dominant = diagnostic.dominant_modality or "reading"
+    secondary = diagnostic.secondary_modality
     modality_scores = diagnostic.modality_scores or {}
 
     sorted_modalities = sorted(modality_scores.items(), key=lambda x: x[1], reverse=True)
-    preferred = [m for m, _ in sorted_modalities if m]
+    preferred = [m for m, _ in sorted_modalities if m] or [dominant]
 
-    if not preferred:
-        preferred = [dominant]
-
-    return save_student_profile(
+    profile = save_student_profile(
         db,
         student_id=student_id,
         data=StudentProfileCreate(
@@ -200,6 +256,13 @@ def save_student_profile_from_diagnostic(
             dominant_style=dominant,
         ),
     )
+
+    if secondary:
+        profile.secondary_modality = secondary
+        db.commit()
+        db.refresh(profile)
+
+    return profile
 
 
 def get_student_profile(db: Session, student_id: str) -> Optional[StudentProfile]:
