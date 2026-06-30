@@ -192,8 +192,7 @@ function BlockOrderChallenge({
     <div>
       <div className="space-y-2 mb-6">
         {blocks.map((block, idx) => {
-          const isCorrect = result === 'correct' && block.id === def.blocks[idx]?.id
-          const isWrong   = result === 'wrong'   && block.id !== def.blocks[idx]?.id
+          const isWrong = result === 'wrong' && block.id !== def.blocks[idx]?.id
           return (
             <div
               key={block.id}

@@ -285,8 +285,6 @@ export default function EstudianteDashboard() {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'
 
   const modality = fdp?.dominant_modality ?? profile?.dominant_style ?? null
-  const totalItems = path?.items.length ?? 0
-  const completedItems = path?.items.filter(i => i.status === 'completed').length ?? 0
   const currentModuleTitle = path?.items.find(i => i.status === 'available')?.title
 
   return (

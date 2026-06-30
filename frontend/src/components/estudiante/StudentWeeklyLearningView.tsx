@@ -144,41 +144,6 @@ function PedagogicalStagesSection({ stages }: { stages: PedagogicalStage[] }) {
   )
 }
 
-function MisconceptionCards({ items }: { items: MisconceptionItem[] }) {
-  if (!items.length) return null
-  return (
-    <div className="space-y-3">
-      {items.map((item, i) => {
-        const SeverityIcon = SEVERITY_ICONS[item.severity] || AlertTriangle
-        return (
-          <Card key={i} className={`${SEVERITY_COLORS[item.severity] || 'bg-neural-lowest/40 border-white/[0.06]'}`}>
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <SeverityIcon className={`h-5 w-5 mt-0.5 ${
-                  item.severity === 'high' ? 'text-red-400' :
-                  item.severity === 'medium' ? 'text-amber-400' : 'text-amber-400/70'
-                }`} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-neural-text">Error común</span>
-                    <Badge variant={item.severity === 'high' ? 'destructive' : 'warning'} className="text-xs">
-                      {item.severity === 'high' ? 'Crítico' : item.severity === 'medium' ? 'Importante' : 'Leve'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-neural-muted mb-2">{item.misconception}</p>
-                  <div className="flex items-start gap-2 bg-neural-pulse/[0.05] border border-neural-pulse/10 rounded-md p-2.5">
-                    <CheckCircle className="h-4 w-4 text-neural-pulse mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-neural-pulse/80">{item.correction}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      })}
-    </div>
-  )
-}
 
 function MultimodalPromptPanel({ prompts }: { prompts: MultimodalPrompt[] }) {
   if (!prompts.length) return null
