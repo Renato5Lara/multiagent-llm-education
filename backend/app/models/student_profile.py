@@ -19,7 +19,6 @@ class StudentProfile(Base):
     student_id = Column(String(36), ForeignKey("users.id"), nullable=False, unique=True)
     preferred_modalities = Column(JSON, nullable=False)
     dominant_style = Column(String(50), nullable=True)
-    secondary_modality = Column(String(50), nullable=True)
     updated_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

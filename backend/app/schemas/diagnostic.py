@@ -16,10 +16,6 @@ class DiagnosticResponse(BaseModel):
     profile: Optional[dict] = None
     modality_scores: Optional[dict] = None
     dominant_modality: Optional[str] = None
-    secondary_modality: Optional[str] = None
-    prior_knowledge_level: Optional[str] = None
-    known_topics: Optional[list] = None
-    confidence: Optional[float] = None
     completed_at: datetime
 
     model_config = {"from_attributes": True}
