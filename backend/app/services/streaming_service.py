@@ -82,8 +82,15 @@ class StreamingService:
     def _fallback_response(self, message: str) -> str:
         msg_lower = message.lower()
         if "qué" in msg_lower or "que es" in msg_lower or "explica" in msg_lower:
-            return "¡Excelente pregunta! Este concepto es fundamental. Te recomiendo revisar el material del módulo actual con atención. ¿Hay algo específico que te gustaría que te explique con más detalle?"
-        return "Gracias por tu mensaje. Para ayudarte mejor, ¿podrías ser más específico sobre qué tema te gustaría que te explique? Puedo ayudarte con teoría, ejemplos prácticos o ejercicios."
+            return (
+                "Ahora mismo estoy en modo limitado y no quiero darte una explicación a medias. "
+                "Dime qué parte exacta te hace ruido — ¿el término en sí, un ejemplo que no cuadra, "
+                "o un código que no hace lo que esperabas? — y con ese detalle te respondo algo útil."
+            )
+        return (
+            "Para responderte algo útil necesito un poco más de precisión: ¿sobre qué concepto o "
+            "ejercicio del módulo es tu duda? Si es código, pégalo junto con lo que esperabas que hiciera."
+        )
 
 
 streaming_service = StreamingService()

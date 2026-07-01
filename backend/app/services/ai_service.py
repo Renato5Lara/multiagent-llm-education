@@ -129,30 +129,27 @@ class AIService:
         message_lower = message.lower()
         if "qué" in message_lower or "que es" in message_lower or "explica" in message_lower:
             return (
-                "¡Excelente pregunta! Este concepto es fundamental en tu formación. "
-                "Te recomiendo revisar el material del módulo actual con atención. "
-                "Si después de revisarlo tienes dudas más específicas, no dudes en preguntar. "
-                "Recuerda que la práctica constante es clave para dominar estos conceptos."
+                "Ahora mismo estoy en modo limitado y no quiero darte una explicación a medias. "
+                "Cuéntame qué parte exacta te hace ruido: ¿el término en sí, un ejemplo que no "
+                "cuadra, o un código que no hace lo que esperabas? Con ese detalle te respondo "
+                "algo que de verdad te sirva."
             )
         if "cómo" in message_lower or "como" in message_lower:
             return (
-                "Para aplicar este concepto, te sugiero seguir estos pasos:\n\n"
-                "1. Revisa la teoría en el material del curso\n"
-                "2. Observa los ejemplos prácticos proporcionados\n"
-                "3. Intenta resolver los ejercicios paso a paso\n"
-                "4. Si te trabas, repasa la sección anterior\n\n"
-                "¿Quieres que te ayude con algún ejemplo específico?"
+                "Para ayudarte con el 'cómo' necesito ver tu intento. Escríbeme qué hiciste "
+                "(aunque esté a medias), qué esperabas que pasara y qué pasó en realidad. "
+                "Esa diferencia entre lo esperado y lo ocurrido es casi siempre donde vive "
+                "la respuesta."
             )
         if "ayuda" in message_lower:
             return (
-                "¡Claro que sí! Estoy aquí para ayudarte. 😊\n\n"
-                "Dime exactamente qué parte del módulo te está costando trabajo y te explicaré "
-                "de forma sencilla. También puedo sugerirte recursos adicionales si los necesitas."
+                "Aquí estoy. Dime el punto exacto donde te trabaste: el último paso que sí "
+                "entendiste y el primero que no. Desde ahí lo desarmamos juntos."
             )
         return (
-            "Gracias por tu mensaje. Para poder ayudarte mejor, ¿podrías ser más específico "
-            "sobre qué tema o concepto del curso te gustaría que te explique? "
-            "Puedo ayudarte con teoría, ejemplos prácticos o ejercicios."
+            "Para responderte algo útil necesito un poco más de precisión: ¿sobre qué concepto "
+            "o ejercicio del módulo es tu duda? Si es código, pégalo junto con lo que esperabas "
+            "que hiciera."
         )
 
 

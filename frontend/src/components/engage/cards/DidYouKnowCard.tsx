@@ -1,18 +1,28 @@
-import type { EngagementResource } from '@/types/engagement'
+import type { EngagementResource, DidYouKnowMetadata } from '@/types/engagement'
 
 interface Props {
   resource: EngagementResource
 }
 
+function getMetadata(resource: EngagementResource): DidYouKnowMetadata {
+  return (resource.resource_metadata ?? {}) as DidYouKnowMetadata
+}
+
 /**
- * DidYouKnowCard — Sprint C1
+ * DidYouKnowCard — Sprint C1 (+ fuente/evidencia — Momento 1 D7)
  *
  * Renders a "¿Sabías que...?" discovery card with an immersive visual
  * identity: warm amber gradient, large fact display, decorative circles.
  * The card handles only its own content — framing (badge, pista count,
  * tagline) lives in EngagePhase.tsx.
+ *
+ * explanation/source/evidence are optional — older sessions or fallback
+ * resources may not carry them, so each section renders only if present.
  */
 export function DidYouKnowCard({ resource }: Props) {
+  const { explanation, source, evidence } = getMetadata(resource)
+  const sourceLabel = source?.label || source?.domain
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-amber-200 dark:border-amber-800 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/30 dark:via-yellow-950/30 dark:to-orange-950/20 min-h-[220px]">
 
@@ -45,6 +55,26 @@ export function DidYouKnowCard({ resource }: Props) {
           <p className="text-xs text-amber-700/70 dark:text-amber-400/60 border-t border-amber-200/70 dark:border-amber-700/40 pt-3 italic">
             {resource.title}
           </p>
+        )}
+
+        {/* Brief explanation — why this fact matters for the module */}
+        {explanation && (
+          <p className="text-sm text-amber-900/80 dark:text-amber-200/70 border-t border-amber-200/70 dark:border-amber-700/40 pt-3 leading-relaxed">
+            {explanation}
+          </p>
+        )}
+
+        {/* Source + evidence — builds trust that this was picked for the student, not generic */}
+        {(sourceLabel || evidence) && (
+          <div className="flex flex-col gap-1 text-[11px] text-amber-700/60 dark:text-amber-400/50">
+            {sourceLabel && (
+              <span>
+                📎 Fuente: <span className="font-medium">{sourceLabel}</span>
+                {source?.year && ` · ${source.year}`}
+              </span>
+            )}
+            {evidence && <span>🔍 Evidencia: {evidence}</span>}
+          </div>
         )}
       </div>
     </div>

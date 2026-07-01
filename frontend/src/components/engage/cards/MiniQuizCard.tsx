@@ -26,6 +26,7 @@ interface Props {
 export function MiniQuizCard({ resource, sessionId }: Props) {
   const meta      = resource.resource_metadata as MiniQuizMetadata
   const options   = meta?.options ?? []
+  const optionFeedback = Array.isArray(meta?.option_feedback) ? meta.option_feedback : null
   const question  = (resource.resource_metadata as Record<string, unknown>).question
     ? String((resource.resource_metadata as Record<string, unknown>).question)
     : null
@@ -141,12 +142,12 @@ export function MiniQuizCard({ resource, sessionId }: Props) {
               : 'text-violet-600 dark:text-violet-400',
           )}>
             {quizState === 'answered'
-              ? isCorrect ? '¡Correcto!' : 'Casi...'
+              ? isCorrect ? '¡Correcto!' : 'Intuición razonable'
               : 'Mini desafío'}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">
             {quizState === 'answered'
-              ? isCorrect ? 'Sumaste puntos de experiencia' : 'La respuesta correcta fue otra'
+              ? isCorrect ? 'Sumaste puntos de experiencia' : 'Tu elección revela algo útil — míralo abajo'
               : 'Pon a prueba lo que ya intuyes'}
           </p>
         </div>
@@ -219,13 +220,22 @@ export function MiniQuizCard({ resource, sessionId }: Props) {
               'text-sm font-semibold',
               isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400',
             )}>
-              {isCorrect ? '🎉 ¡Exacto!' : '🤔 Casi...'}
+              {isCorrect
+                ? '¡Exacto!'
+                : `Elegiste ${selectedIdx !== null ? OPTION_LETTERS[selectedIdx] : 'otra opción'} — una intuición común`}
             </p>
+
+            {/* Per-option diagnosis: names the mental model behind the chosen answer */}
+            {selectedIdx !== null && optionFeedback?.[selectedIdx] && (
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {optionFeedback[selectedIdx]}
+              </p>
+            )}
 
             {/* Explanation */}
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                {isCorrect ? 'Porque...' : '¿Por qué?'}
+                {isCorrect ? 'Porque...' : '¿Por qué la correcta es otra?'}
               </p>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                 {meta.explanation}

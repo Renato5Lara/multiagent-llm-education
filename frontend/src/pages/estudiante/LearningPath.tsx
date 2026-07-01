@@ -109,7 +109,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
     if (topicSlug) {
       navigate(`/estudiante/learn/${topicSlug}?courseId=${courseId}`)
     } else {
-      navigate(`/estudiante/module/${item.id}?courseId=${courseId}`)
+      navigate(`/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`)
     }
   }
 
@@ -199,7 +199,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
                 className="h-7 text-xs gap-1"
                 onClick={e => {
                   e.stopPropagation()
-                  navigate(`/estudiante/module/${item.id}?courseId=${courseId}`)
+                  navigate(`/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`)
                 }}
               >
                 Repasar

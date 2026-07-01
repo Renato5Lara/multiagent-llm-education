@@ -19,6 +19,8 @@ const CONFIDENCE_OPTIONS: { value: Confidence; label: string; emoji: string }[] 
 interface Props {
   resource: EngagementResource
   sessionId: string
+  /** Fired once the hypothesis is saved (success or error — never blocks the student). */
+  onSubmitted?: () => void
 }
 
 // Map knowledge_level → metadata key for adaptive question variant
@@ -49,7 +51,7 @@ function resolveAdaptiveQuestion(
  * Stores hypothesis + confidence in engagement_interactions.response_data:
  *   { hypothesis: "...", confidence: 1|2|3 }
  */
-export function DetonatingQuestionCard({ resource, sessionId }: Props) {
+export function DetonatingQuestionCard({ resource, sessionId, onSubmitted }: Props) {
   const [cardState, setCardState]     = useState<CardState>('question')
   const [hypothesis, setHypothesis]   = useState('')
   const [confidence, setConfidence]   = useState<Confidence | null>(null)
@@ -83,6 +85,7 @@ export function DetonatingQuestionCard({ resource, sessionId }: Props) {
           setCardState('submitted')
           // Bridge: SurpriseModal reads this key at module completion
           sessionStorage.setItem(`engage:hypothesis:${sessionId}`, trimmed)
+          onSubmitted?.()
         },
         onError: () => {
           // Never block the student — show confirmation even on network error
@@ -90,10 +93,11 @@ export function DetonatingQuestionCard({ resource, sessionId }: Props) {
           setSavedC(confidence)
           setCardState('submitted')
           sessionStorage.setItem(`engage:hypothesis:${sessionId}`, trimmed)
+          onSubmitted?.()
         },
       },
     )
-  }, [hypothesis, confidence, sessionId, resource.id, interactMutate])
+  }, [hypothesis, confidence, sessionId, resource.id, interactMutate, onSubmitted])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

@@ -1,16 +1,18 @@
 import { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useStartEngagement } from '@/hooks/useEngagement'
-import { EngagePhase } from './EngagePhase'
+import { EntryGate } from './EntryGate'
 
 interface Props {
   moduleId: string
+  /** Module title, used only to pick the Fase A symbol (topicSymbols). Optional — falls back gracefully. */
+  moduleTitle?: string
   onComplete: () => void
   onSkip: () => void
   onProgress?: (index: number) => void
 }
 
-export function EngageGateway({ moduleId, onComplete, onSkip, onProgress }: Props) {
+export function EngageGateway({ moduleId, moduleTitle, onComplete, onSkip, onProgress }: Props) {
   const { data: session, isLoading, isError } = useStartEngagement(moduleId)
 
   // Store session mapping so SurpriseModal can find hypothesis at module completion
@@ -43,8 +45,9 @@ export function EngageGateway({ moduleId, onComplete, onSkip, onProgress }: Prop
   if (isError || !session || session.status !== 'active') return null
 
   return (
-    <EngagePhase
+    <EntryGate
       session={session}
+      moduleTitle={moduleTitle}
       onComplete={onComplete}
       onSkip={onSkip}
       onProgress={onProgress}

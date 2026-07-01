@@ -23,6 +23,8 @@ import json
 import logging
 from typing import Any
 
+from app.agents.pedagogical_identity import PEDAGOGICAL_IDENTITY
+
 logger = logging.getLogger(__name__)
 
 # ── Mapa de tipos prioritarios por perfil de aprendizaje ────────────────────
@@ -38,18 +40,27 @@ DEFAULT_PRIORITY = PRIORITY_MAP["reading"]
 
 # ── Prompts ──────────────────────────────────────────────────────────────────
 
-_SYSTEM = """
-Eres un diseñador pedagógico experto en metodología 5E, gamificación educativa
-y psicología del aprendizaje.  Tu misión es generar recursos para la fase
-"Engage" que activen la curiosidad del estudiante ANTES de ver el contenido.
+_SYSTEM = f"""
+Eres el diseñador pedagógico de la fase "Engage" (metodología 5E) de un curso
+universitario de Fundamentos de la Programación.  Tu misión es activar la
+curiosidad del estudiante ANTES de que vea el contenido del módulo.
 
-Principios que debes aplicar:
-- Cada recurso debe generar una reacción emocional inmediata (sorpresa, intriga, desafío).
-- Conecta siempre el tema con tecnología, empresas reales o situaciones cotidianas.
-- Usa lenguaje cercano, dinámico y motivador — nunca académico ni formal.
-- Sé específico: menciona empresas, números, tecnologías o eventos reales.
-- El mini_quiz debe tener UNA respuesta correcta clara, con explicación breve.
-- El short_challenge debe poder responderse en 2-3 minutos sin material adicional.
+{PEDAGOGICAL_IDENTITY}
+
+REGLAS ESPECÍFICAS DE ENGAGE:
+- Cada recurso debe romper una expectativa concreta del estudiante o abrir un
+  conflicto que el módulo resolverá — nunca validar la importancia del tema.
+- Patrones narrativos permitidos (usa uno DISTINTO por recurso, nunca repitas
+  patrón en el mismo lote): error histórico costoso, origen accidental,
+  ironía tecnológica, experimento mental, paradoja entre lenguaje cotidiano y
+  literalidad de la máquina, escala humanizada.
+- El mini_quiz debe tener UNA respuesta correcta clara; cada distractor debe
+  encarnar un error conceptual (misconception) real y documentado del tema.
+- El short_challenge debe poder resolverse en 2-3 minutos sin material
+  adicional y garantizar un momento "ajá" verificable.
+- En "did_you_know", la fuente debe ser real y verificable. Nunca inventes una
+  URL — si no estás seguro del dominio exacto, omite el campo "domain" en vez
+  de inventarlo.
 
 Responde ÚNICAMENTE con JSON válido siguiendo el schema exacto.  Sin texto extra.
 """
@@ -71,9 +82,17 @@ JSON schema requerido:
     {{
       "resource_type": "did_you_know",
       "title": "¿Sabías que...?",
-      "content": "<máx 3 oraciones directas, datos concretos, sin relleno>",
+      "content": "<historia real con giro en máx 3 oraciones: persona, fecha y consecuencia concreta que rompe una expectativa del estudiante, más una frase puente hacia {module_title}. PROHIBIDO abrir con un porcentaje, una cifra o una encuesta>",
       "is_interactive": false,
-      "resource_metadata": {{}}
+      "resource_metadata": {{
+        "explanation": "<1 oración: por qué este dato importa para {module_title}>",
+        "source": {{
+          "label": "<nombre real de la fuente (encuesta, paper, blog técnico, informe)>",
+          "domain": "<dominio real de la fuente, ej. stackoverflow.com>",
+          "year": "<año aproximado>"
+        }},
+        "evidence": "<1 frase: qué evidencia concreta respalda el dato (tamaño de muestra, método, alcance)>"
+      }}
     }},
     {{
       "resource_type": "prior_knowledge",
@@ -85,7 +104,7 @@ JSON schema requerido:
     {{
       "resource_type": "detonating_question",
       "title": "Antes de comenzar...",
-      "content": "<pregunta que NO tiene respuesta obvia, genera debate interno — nivel intermedio>",
+      "content": "<dilema que se responde en 5 segundos con pura intuición y luego resulta incómodo: paradoja, dilema binario con trampa o experimento mental — nivel intermedio. PROHIBIDO '¿Cómo explicarías...?', '¿Qué sabes de...?', '¿Por qué es importante...?'>",
       "is_interactive": false,
       "resource_metadata": {{
         "beginner_question":     "<misma pregunta en versión simple para quien nunca ha visto el tema>",
@@ -106,13 +125,14 @@ JSON schema requerido:
     {{
       "resource_type": "mini_quiz",
       "title": "Prueba tu intuición",
-      "content": "<pregunta que parece difícil pero tiene lógica>",
+      "content": "<pregunta sobre un caso concreto con resultado verificable (ej. predecir el valor de una variable), no sobre la importancia del tema>",
       "is_interactive": true,
       "resource_metadata": {{
         "question": "<la pregunta completa>",
         "options": ["<opción A>", "<opción B>", "<opción C>", "<opción D>"],
         "correct_index": 0,
-        "explanation": "<por qué esa opción es correcta, máx 2 oraciones>"
+        "explanation": "<por qué esa opción es correcta, máx 2 oraciones>",
+        "option_feedback": ["<una frase por opción, en el mismo orden: para cada distractor, nombra la intuición razonable que lleva a elegirlo (ej. 'Eso pasa cuando lees = como una ecuación'); para la correcta, nombra qué dominó quien la eligió>"]
       }}
     }},
     {{
@@ -244,12 +264,28 @@ class EngagementGeneratorAgent:
                 "resource_type":   "did_you_know",
                 "title":           "¿Sabías que...?",
                 "content":         (
-                    f"El 73% de los ingenieros de software encuestados por Stack Overflow en 2024 "
-                    f"señala que dominar conceptos como {module_title} fue decisivo para obtener "
-                    f"su primer empleo en la industria tecnológica."
+                    "En 1947, la ingeniera Grace Hopper pegó con cinta adhesiva una polilla real "
+                    "en su bitácora: la habían encontrado aplastada dentro de un relé del computador "
+                    "Harvard Mark II, y debajo escribió \"primer caso real de un bug encontrado\". "
+                    "Años después, Hopper inventó el primer compilador porque le parecía absurdo que "
+                    "los humanos tuvieran que hablar el idioma de las máquinas — y no al revés."
                 ),
                 "is_interactive":  False,
-                "resource_metadata": {},
+                "resource_metadata": {
+                    "explanation": (
+                        f"Todo lo que vas a ver en {module_title} existe para lo mismo que empezó "
+                        f"con Hopper: acortar la distancia entre cómo piensas tú y cómo \"piensa\" la máquina."
+                    ),
+                    "source": {
+                        "label":  "Bitácora del Harvard Mark II — Computer History Museum",
+                        "domain": "computerhistory.org",
+                        "year":   "1947",
+                    },
+                    "evidence": (
+                        "La página original de la bitácora, con la polilla aún adherida, se conserva "
+                        "en el Museo Nacional de Historia Americana del Smithsonian."
+                    ),
+                },
             },
             {
                 "resource_type":   "prior_knowledge",
@@ -277,16 +313,18 @@ class EngagementGeneratorAgent:
             },
             {
                 "resource_type":   "real_news",
-                "title":           f"La industria exige {module_title}",
+                "title":           "El error de código que costó 440 millones de dólares en 45 minutos",
                 "content":         (
-                    f"Empresas como Google, Meta y Spotify publican en sus blogs técnicos que "
-                    f"los conceptos detrás de {module_title} están en el núcleo de sus sistemas "
-                    f"que sirven a más de mil millones de usuarios diariamente."
+                    "En agosto de 2012, la firma financiera Knight Capital desplegó una actualización "
+                    "reutilizando una vieja bandera de configuración — y olvidó actualizar uno de sus "
+                    "ocho servidores. Durante 45 minutos, ese servidor compró y vendió acciones sin "
+                    "control hasta perder 440 millones de dólares, más de lo que valía la empresa. "
+                    "La causa no fue un algoritmo exótico: fue código ordinario que nadie leyó con cuidado."
                 ),
                 "is_interactive":  False,
                 "resource_metadata": {
-                    "source_hint": "Google Engineering Blog",
-                    "year": "2024",
+                    "source_hint": "SEC — informe administrativo del caso Knight Capital",
+                    "year": "2012",
                 },
             },
             {

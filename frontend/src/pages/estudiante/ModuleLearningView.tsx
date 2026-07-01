@@ -145,6 +145,7 @@ export default function ModuleLearningView() {
   const { moduleId } = useParams<{ moduleId: string }>()
   const [searchParams] = useSearchParams()
   const courseId = searchParams.get('courseId') || undefined
+  const moduleTitleParam = searchParams.get('title') || undefined
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -222,6 +223,7 @@ export default function ModuleLearningView() {
         </div>
         <EngageGateway
           moduleId={moduleId}
+          moduleTitle={moduleTitleParam}
           onComplete={handleEngageDone}
           onSkip={handleEngageDone}
         />

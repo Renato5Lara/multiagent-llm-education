@@ -10,12 +10,27 @@ export interface MiniQuizMetadata {
   options: string[]
   correct_index: number
   explanation: string
+  /** Diagnóstico por opción (mismo orden que options): qué intuición lleva a elegirla. Opcional — recursos antiguos no lo traen. */
+  option_feedback?: string[]
 }
 
 export interface ShortChallengeMetadata {
   prompt: string
   hint?: string
   expected_keywords?: string[]
+}
+
+export interface DidYouKnowSource {
+  label?: string
+  domain?: string
+  year?: string
+  url?: string
+}
+
+export interface DidYouKnowMetadata {
+  explanation?: string
+  source?: DidYouKnowSource
+  evidence?: string
 }
 
 export interface EngagementBadge {
@@ -34,7 +49,7 @@ export interface EngagementResource {
   modality_target?: string | null
   display_order: number
   is_interactive: boolean
-  resource_metadata: MiniQuizMetadata | ShortChallengeMetadata | Record<string, unknown>
+  resource_metadata: MiniQuizMetadata | ShortChallengeMetadata | DidYouKnowMetadata | Record<string, unknown>
 }
 
 export type EngagementSessionStatus = 'pending' | 'active' | 'completed' | 'skipped'
