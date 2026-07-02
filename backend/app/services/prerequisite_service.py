@@ -533,7 +533,7 @@ def get_course_analytics(db: Session, teacher_id: str) -> list[dict]:
 
 def get_course_analytics_batched(db: Session, teacher_id: str) -> list[dict]:
     from app.models.resource import Resource
-    from app.models.student_progress import StudentProgress
+    from app.models.student_progress import LearningPath, PathModule, StudentProgress
 
     courses = (
         db.query(Course)
@@ -587,6 +587,26 @@ def get_course_analytics_batched(db: Session, teacher_id: str) -> list[dict]:
         key = (r.course_id, r.student_id)
         progress_per_course_student[key] = progress_per_course_student.get(key, 0) + 1
 
+    # Progreso real del flujo adaptativo: los PathModule completados son la
+    # fuente de verdad (los cursos demo no tienen Resources, por lo que el
+    # cálculo por recursos reportaba siempre 0%).
+    path_progress_rows = (
+        db.query(
+            LearningPath.course_id,
+            LearningPath.student_id,
+            func.count(PathModule.id).label("total"),
+            func.count(PathModule.id).filter(PathModule.status == "completed").label("done"),
+        )
+        .join(PathModule, PathModule.path_id == LearningPath.id)
+        .filter(LearningPath.course_id.in_(course_ids))
+        .group_by(LearningPath.course_id, LearningPath.student_id)
+        .all()
+    )
+    path_pct: dict[tuple[str, str], float] = {
+        (r.course_id, r.student_id): (r.done / r.total if r.total else 0.0)
+        for r in path_progress_rows
+    }
+
     results = []
     for cid in course_ids:
         course = course_lookup[cid]
@@ -597,17 +617,37 @@ def get_course_analytics_batched(db: Session, teacher_id: str) -> list[dict]:
         at_risk_count = 0
         total_pct = 0.0
         progress_count = 0
+        without_path = 0
 
         for sid in student_ids:
-            completed = progress_per_course_student.get((cid, sid), 0)
-            if total_res > 0:
-                pct = completed / total_res
-                total_pct += pct
-                progress_count += 1
-                if pct < 0.3:
-                    at_risk_count += 1
+            if (cid, sid) in path_pct:
+                pct = path_pct[(cid, sid)]
+            elif total_res > 0:
+                pct = progress_per_course_student.get((cid, sid), 0) / total_res
+            else:
+                without_path += 1
+                continue
+            total_pct += pct
+            progress_count += 1
+            if pct < 0.3:
+                at_risk_count += 1
 
         avg_progress = round((total_pct / progress_count) * 100, 1) if progress_count > 0 else 0.0
+
+        recommendation = None
+        if enrolled_count > 0:
+            if without_path == enrolled_count:
+                recommendation = "Ningún estudiante ha completado el diagnóstico todavía."
+            elif without_path > 0:
+                recommendation = (
+                    f"{without_path} estudiante{'s' if without_path > 1 else ''} "
+                    "sin diagnóstico: su ruta adaptativa aún no existe."
+                )
+            elif at_risk_count > 0:
+                recommendation = (
+                    f"Acompañar a {at_risk_count} estudiante{'s' if at_risk_count > 1 else ''} "
+                    "con progreso menor al 30% de su ruta."
+                )
 
         results.append({
             "course_id": cid,
@@ -617,7 +657,7 @@ def get_course_analytics_batched(db: Session, teacher_id: str) -> list[dict]:
             "at_risk_count": at_risk_count,
             "difficult_topics": [],
             "competency_gaps": [],
-            "recommendation": None,
+            "recommendation": recommendation,
         })
 
     return results

@@ -67,8 +67,9 @@ async def get_docente_ia_analytics(db: Session, teacher: User) -> dict:
     general_issues = []
     if courses_with_issues:
         worst = max(courses_with_issues, key=lambda x: x["at_risk_count"])
+        n = worst["at_risk_count"]
         general_issues.append(
-            f"{worst['course_name']}: {worst['at_risk_count']} estudiantes en riesgo"
+            f"{worst['course_name']}: {n} estudiante{'s' if n > 1 else ''} en riesgo"
         )
 
     return {

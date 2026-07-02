@@ -10,7 +10,7 @@ export default function PageHeader({ title, description, children }: PageHeaderP
     return (
         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900">{title}</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-neural-text">{title}</h1>
                 {description && (
                     <p className="text-muted-foreground mt-1">{description}</p>
                 )}

@@ -16,7 +16,7 @@ import { useCourse, usePublishCourse, useEnrollStudents, useEnrolledStudents } f
 import { useObjectives, useCreateObjective, useDeleteObjective } from '@/hooks/useObjectives'
 import { useUsers } from '@/hooks/useUsers'
 import { useInstitutionalCompetencies, useCareerCompetencies, useCourseCompetencies, useAssignCompetencies } from '@/hooks/useCompetencies'
-import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS, BLOOM_LEVELS } from '@/lib/constants'
+import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS, BLOOM_LEVELS, MODALITY_LABELS } from '@/lib/constants'
 import { useState } from 'react'
 
 export default function CourseDetail() {
@@ -31,7 +31,7 @@ export default function CourseDetail() {
     const publish = usePublishCourse()
     const createObj = useCreateObjective()
     const deleteObj = useDeleteObjective()
-    const { data: studentsData } = useUsers({ page: 1, size: 100, role: 'estudiante' })
+    const { data: studentsData, isError: studentsError } = useUsers({ page: 1, size: 100, role: 'estudiante' })
     const { data: enrolledStudents } = useEnrolledStudents(id)
     const enroll = useEnrollStudents()
     const [selectedStudents, setSelectedStudents] = useState<string[]>([])
@@ -222,6 +222,8 @@ export default function CourseDetail() {
                                             <TableHead>Estudiante</TableHead>
                                             <TableHead>Email</TableHead>
                                             <TableHead>Código</TableHead>
+                                            <TableHead>Modalidad</TableHead>
+                                            <TableHead>Progreso</TableHead>
                                             <TableHead>Estado</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -231,6 +233,19 @@ export default function CourseDetail() {
                                                 <TableCell className="font-medium">{s.first_name} {s.last_name}</TableCell>
                                                 <TableCell>{s.email}</TableCell>
                                                 <TableCell>{s.institutional_code || '-'}</TableCell>
+                                                <TableCell>
+                                                    {s.dominant_modality
+                                                        ? <Badge variant="outline">{MODALITY_LABELS[s.dominant_modality] || s.dominant_modality}</Badge>
+                                                        : <span className="text-muted-foreground text-xs">Sin diagnóstico</span>}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {s.total_modules != null ? (
+                                                        <span className="text-sm">
+                                                            {s.completed_modules}/{s.total_modules} misiones
+                                                            {s.at_risk && <Badge variant="outline" className="ml-2 border-red-400/40 text-red-400 text-[10px]">En riesgo</Badge>}
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground text-xs">Sin ruta</span>}
+                                                </TableCell>
                                                 <TableCell><Badge variant="secondary">{s.status}</Badge></TableCell>
                                             </TableRow>
                                         ))}
@@ -254,6 +269,8 @@ export default function CourseDetail() {
                                         </label>
                                     ))}
                                 </div>
+                            ) : studentsError ? (
+                                <p className="text-red-400 text-sm">No se pudo cargar la lista de estudiantes. Recarga la página o revisa tu sesión.</p>
                             ) : <p className="text-muted-foreground text-sm">Cargando estudiantes...</p>}
                             {selectedStudents.length > 0 && (
                                 <div className="mt-4">

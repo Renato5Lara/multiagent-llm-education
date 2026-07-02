@@ -29,6 +29,11 @@ class EnrolledStudentResponse(BaseModel):
     institutional_code: Optional[str] = None
     status: EnrollmentStatus
     enrolled_at: datetime
+    dominant_modality: Optional[str] = None
+    completed_modules: Optional[int] = None
+    total_modules: Optional[int] = None
+    progress_percentage: Optional[int] = None
+    at_risk: bool = False
 
     model_config = {"from_attributes": True}
 

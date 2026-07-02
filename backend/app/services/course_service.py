@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.models.course import Course, CourseStatus
@@ -272,11 +272,52 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
     for row in db.query(User).filter(User.id.in_(student_ids)).all():
         user_map[row.id] = row
 
+    # Contexto adaptativo por estudiante: modalidad detectada en el diagnóstico
+    # y progreso real de la ruta (los PathModule son la fuente de verdad del
+    # flujo del estudiante; los cursos demo no tienen Resources).
+    from app.models.diagnostic_result import DiagnosticResult
+    from app.models.student_progress import LearningPath, PathModule
+
+    modality_map = {
+        r.student_id: r.dominant_modality
+        for r in db.query(DiagnosticResult)
+        .filter(
+            DiagnosticResult.course_id == course_id,
+            DiagnosticResult.student_id.in_(student_ids),
+        )
+        .all()
+    }
+
+    progress_map: dict[str, dict] = {}
+    path_rows = (
+        db.query(
+            LearningPath.student_id,
+            func.count(PathModule.id).label("total"),
+            func.count(PathModule.id).filter(PathModule.status == "completed").label("done"),
+        )
+        .join(PathModule, PathModule.path_id == LearningPath.id)
+        .filter(
+            LearningPath.course_id == course_id,
+            LearningPath.student_id.in_(student_ids),
+        )
+        .group_by(LearningPath.student_id)
+        .all()
+    )
+    for r in path_rows:
+        pct = round(r.done / r.total * 100) if r.total else 0
+        progress_map[r.student_id] = {
+            "completed_modules": r.done,
+            "total_modules": r.total,
+            "progress_percentage": pct,
+        }
+
     students_list = []
     for enrollment in enrollments:
         student = user_map.get(enrollment.student_id)
         if not student:
             continue
+        progress = progress_map.get(student.id)
+        pct = progress["progress_percentage"] if progress else 0
         students_list.append({
             "id": enrollment.id,
             "student_id": student.id,
@@ -286,5 +327,10 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             "institutional_code": student.institutional_code,
             "status": enrollment.status.value,
             "enrolled_at": enrollment.enrolled_at.isoformat() if enrollment.enrolled_at else None,
+            "dominant_modality": modality_map.get(student.id),
+            "completed_modules": progress["completed_modules"] if progress else None,
+            "total_modules": progress["total_modules"] if progress else None,
+            "progress_percentage": pct if progress else None,
+            "at_risk": (pct < 30) if progress else False,
         })
     return students_list

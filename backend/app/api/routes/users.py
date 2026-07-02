@@ -7,7 +7,7 @@ Todos los endpoints requieren rol admin excepto /me.
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin, get_db
+from app.api.deps import get_current_admin, get_current_user, get_db
 from app.models.user import User, UserRole
 from app.schemas.user import (
     UserCreate,
@@ -29,8 +29,17 @@ def list_users(
     role: UserRole | None = Query(None, description="Filtrar por rol"),
     include_inactive: bool = Query(False, description="Incluir usuarios desactivados"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_user),
 ):
+    # El docente solo puede listar estudiantes (lo necesita para inscribirlos
+    # a su curso); el resto del listado sigue siendo exclusivo del admin.
+    if current_user.role != UserRole.ADMIN and not (
+        current_user.role == UserRole.DOCENTE and role == UserRole.ESTUDIANTE
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de administrador",
+        )
     users, total = user_service.get_users(
         db, page=page, size=size, role=role, include_inactive=include_inactive
     )

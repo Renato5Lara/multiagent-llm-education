@@ -110,6 +110,11 @@ export interface EnrolledStudent {
     institutional_code?: string
     status: string
     enrolled_at: string
+    dominant_modality?: string | null
+    completed_modules?: number | null
+    total_modules?: number | null
+    progress_percentage?: number | null
+    at_risk: boolean
 }
 
 export function useEnrolledStudents(courseId: string | undefined) {

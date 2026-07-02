@@ -150,6 +150,12 @@ export default function DocenteAnalytics() {
                                         </p>
                                     </div>
                                 )}
+
+                                {course.recommendation && (
+                                    <p className="text-xs text-muted-foreground border-t pt-2">
+                                        {course.recommendation}
+                                    </p>
+                                )}
                             </CardContent>
                         </Card>
                     ))}
