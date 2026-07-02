@@ -314,3 +314,16 @@ Este sistema es:
 No es una plataforma universitaria completa.
 
 Cada decisión debe acercar el proyecto a una sustentación exitosa.
+
+---
+
+## REGLA DE ORO
+
+Si una propuesta mejora la plataforma pero no fortalece la hipótesis,
+**se rechaza.**
+
+La tesis tiene prioridad absoluta sobre el producto.
+
+No estamos construyendo la plataforma más grande.
+
+**Estamos construyendo la evidencia científica más sólida.**
