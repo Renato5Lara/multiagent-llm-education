@@ -162,6 +162,10 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
   // Sprint 2.2 — milestone threshold tracking
   const shownMilestones = useRef<Set<number>>(new Set())
 
+  // Timers de auto-dismiss (milestone 5s, XP flash 2.2s)
+  const milestoneTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const xpTimer        = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
   // Milestones: 25 / 50 / 75 %
   const MILESTONE_THRESHOLDS = [0.25, 0.50, 0.75] as const
 
@@ -257,19 +261,20 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
     xpTimer.current = setTimeout(() => setXpFlash(null), 2200)
   }, [onTotalXpChange])
 
+  // Sprint 2.2 — resetear echo al cambiar de paso
+  // (hook: debe ejecutarse antes de cualquier early return)
+  const prevIndexRef = useRef(currentIndex)
+  if (prevIndexRef.current !== currentIndex) {
+    prevIndexRef.current = currentIndex
+    if (echoSignal !== null) setEchoSignal(null)
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (!step) return null
 
   const modality = isKnownModality(journey.dominantModality) ? journey.dominantModality : null
   const banner   = modality ? MODALITY_BANNER[modality] : null
-
-  // Sprint 2.2 — resetear echo al cambiar de paso
-  const prevIndexRef = useRef(currentIndex)
-  if (prevIndexRef.current !== currentIndex) {
-    prevIndexRef.current = currentIndex
-    if (echoSignal !== null) setEchoSignal(null)
-  }
 
   return (
     <>
