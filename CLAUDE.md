@@ -3,6 +3,7 @@
 
 > READ FIRST: THESIS_SCOPE_FREEZE.md antes de cualquier implementación.
 > READ SECOND: ROADMAP_THESIS_FOCUS.md para contexto de sprints.
+> READ THIRD: RESEARCH_ITERATIONS.md — metodología y estado de las iteraciones de investigación.
 
 ---
 
@@ -15,6 +16,33 @@ La pregunta obligatoria antes de cualquier implementación:
 > ¿Esta funcionalidad ayuda a demostrar la adaptación multimodal en Fundamentos de la Programación?
 
 Si la respuesta es NO: **no implementar.**
+
+---
+
+## METODOLOGÍA DE INVESTIGACIÓN (Fase 2+)
+
+**Regla maestra — obliga a toda IA que trabaje en este proyecto (Claude, Antigravity, ChatGPT):**
+
+> Ninguna funcionalidad nueva se implementa si antes no puede justificarse
+> como evidencia de la hipótesis de investigación.
+
+El trabajo se organiza en **Iteraciones de Investigación** (no "sprints").
+Cada iteración responde UNA pregunta de investigación observable y produce
+DOS entregables: el cambio en la plataforma + su documentación de
+investigación en RESEARCH_ITERATIONS.md.
+
+Antes de implementar cualquier cambio, responder obligatoriamente:
+
+1. ¿Qué pregunta de investigación responde?
+2. ¿Qué parte de la hipótesis fortalece?
+3. ¿Qué variable afecta?
+4. ¿Cómo se observará durante la demo?
+5. ¿Cómo aparecerá luego en Resultados y Discusión?
+
+Si no puede responder las cinco: **no se implementa.**
+
+Los componentes marcados CONGELADO en RESEARCH_ITERATIONS.md no se
+modifican salvo error crítico. "Tengo una idea mejor" no es razón válida.
 
 ---
 
