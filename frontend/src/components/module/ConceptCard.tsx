@@ -20,6 +20,18 @@ function splitContent(text: string): { keyIdea: string; rest: string } {
   }
 }
 
+/**
+ * ConceptCard — Sprint L5 / Sprint 2.1 (refinamiento visual)
+ *
+ * Referencia: pantalla "Contenido Adaptativo" — sección "Understanding Base Cases"
+ * con tipografía grande, espaciado generoso y bloques informativos bien separados.
+ *
+ * Mejoras vs versión anterior:
+ *   • Header más alto: icono text-3xl, padding generoso (px-5 py-4)
+ *   • Barra de acento superior en vez de borde lateral — más impacto visual
+ *   • "Idea clave" callout más grande (text-sm → text-base para el contenido)
+ *   • Sección expandible con mayor separación entre párrafos
+ */
 export function ConceptCard({ index, content, title, onRead }: Props) {
   const [expanded, setExpanded] = useState(false)
   const [read,     setRead]     = useState(false)
@@ -55,16 +67,22 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
       )}
       onMouseEnter={!hasMore ? handleSingleSentenceRead : undefined}
     >
-      {/* Gradient header */}
+      {/* Thin accent bar top — referencia: "Contenido Adaptativo" section divider */}
       <div className={cn(
-        'px-4 py-3 flex items-center gap-3 transition-colors duration-300',
+        'h-[3px] w-full transition-colors duration-300',
+        read ? 'bg-indigo-400 dark:bg-indigo-600' : 'bg-gray-200 dark:bg-gray-700',
+      )} />
+
+      {/* Gradient header — más alto y espacioso */}
+      <div className={cn(
+        'px-5 py-4 flex items-center gap-4 transition-colors duration-300',
         read
           ? 'bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/30'
           : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/60 dark:to-slate-900/40',
       )}>
-        {/* Domain icon + index badge */}
+        {/* Domain icon + index badge — icon más grande */}
         <div className="relative shrink-0">
-          <span className="text-2xl select-none leading-none">{icon}</span>
+          <span className="text-3xl select-none leading-none">{icon}</span>
           <span className={cn(
             'absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold border',
             read
@@ -76,27 +94,17 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
         </div>
 
         <div className="flex-1 min-w-0">
+          <p className={cn(
+            'text-[10px] font-mono font-bold tracking-[0.25em] uppercase',
+            read
+              ? 'text-indigo-600 dark:text-indigo-400'
+              : 'text-gray-500 dark:text-gray-400',
+          )}>
+            📖 Concepto
+          </p>
           {title && (
-            <p className={cn(
-              'text-xs font-mono font-bold tracking-widest uppercase truncate',
-              read
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : 'text-gray-500 dark:text-gray-400',
-            )}>
-              📖 Concepto
-            </p>
-          )}
-          {title && (
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 mt-0.5 leading-snug">
               {title}
-            </p>
-          )}
-          {!title && (
-            <p className={cn(
-              'text-xs font-mono font-bold tracking-widest uppercase',
-              read ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400',
-            )}>
-              📖 Concepto
             </p>
           )}
         </div>
@@ -106,7 +114,7 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
             type="button"
             onClick={handleToggle}
             className={cn(
-              'shrink-0 p-1 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/5',
+              'shrink-0 p-1.5 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/5',
               read ? 'text-indigo-400 dark:text-indigo-500' : 'text-muted-foreground',
             )}
             aria-label={expanded ? 'Contraer' : 'Expandir'}
@@ -119,15 +127,15 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
         )}
       </div>
 
-      {/* Key idea callout */}
+      {/* Key idea callout — más espacioso, texto más grande */}
       <div className={cn(
-        'mx-4 mt-4 mb-0 rounded-lg border-l-4 px-4 py-3 transition-colors duration-300',
+        'mx-5 mt-5 rounded-xl border-l-4 px-4 py-4 transition-colors duration-300',
         read
           ? 'border-indigo-400 dark:border-indigo-600 bg-indigo-50/60 dark:bg-indigo-950/20'
           : 'border-gray-300 dark:border-gray-600 bg-gray-50/60 dark:bg-gray-800/20',
       )}>
         <p className={cn(
-          'text-xs font-semibold uppercase tracking-wide mb-1',
+          'text-[10px] font-semibold uppercase tracking-wide mb-2',
           read ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500',
         )}>
           💡 Idea clave
@@ -140,7 +148,7 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
       {/* Expandable rest */}
       {hasMore && (
         <div className={cn(
-          'mx-4 mt-3 mb-0 overflow-hidden transition-all duration-300',
+          'mx-5 mt-3 overflow-hidden transition-all duration-300',
           expanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0',
         )}>
           <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed pb-1">
@@ -150,7 +158,7 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
       )}
 
       {/* Footer: ver más / ver menos */}
-      <div className="px-4 py-3 mt-2">
+      <div className="px-5 py-4 mt-1">
         {hasMore ? (
           <button
             type="button"

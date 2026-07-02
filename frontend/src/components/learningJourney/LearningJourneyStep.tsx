@@ -27,13 +27,14 @@ import type {
   MiniActivityMeta,
   MediaPromptMeta,
   InteractivePracticeMeta,
+  CompletionSignal,
 } from '@/types/learningJourney'
 
 // ── Shared sub-renderer props ─────────────────────────────────────────────────
 
 interface SubProps {
   step:       StepData
-  onComplete: () => void
+  onComplete: (signal?: CompletionSignal) => void
 }
 
 // ── CardPlaceholder — Sprint L3 temporary renderer ────────────────────────────
@@ -374,7 +375,9 @@ function EvaluationStep({ step, onComplete }: SubProps) {
   const handleSelect = (i: number) => {
     if (selected !== null) return
     setSelected(i)
-    onComplete()
+    // Sprint 2.2 — propaga si fue correcto o no para AdaptationEcho
+    const quality = i === correctIdx ? 'correct' : 'incorrect'
+    onComplete({ quality })
   }
 
   return (
@@ -545,7 +548,7 @@ function InteractivePracticeCard({
 
 interface Props {
   step:       StepData
-  onComplete: () => void
+  onComplete: (signal?: CompletionSignal) => void
   onXp:       (amount: number) => void
 }
 
@@ -558,9 +561,9 @@ interface Props {
  * del nivel de respuesta (reflection: solo 'clear' da XP).
  */
 export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
-  const handleComplete = () => {
+  const handleComplete = (signal?: CompletionSignal) => {
     if (step.xpReward) onXp(step.xpReward)
-    onComplete()
+    onComplete(signal)
   }
 
   switch (step.type) {
@@ -623,7 +626,9 @@ export function LearningJourneyStep({ step, onComplete, onXp }: Props) {
         <ReflectionCheckpoint
           question={step.title}
           onResponse={(level) => {
-            onComplete()
+            // Sprint 2.2 — propaga el nivel de reflexión como CompletionSignal
+            const quality = level === 'clear' ? 'clear' : level === 'stuck' ? 'confused' : 'half'
+            onComplete({ quality })
             if (level === 'clear' && step.xpReward) onXp(step.xpReward)
           }}
         />

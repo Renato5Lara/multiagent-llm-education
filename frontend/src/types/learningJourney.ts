@@ -135,6 +135,25 @@ export interface InteractivePracticeMeta {
   description?:    string
 }
 
+// ── Sprint 2.2 — CompletionSignal ────────────────────────────────────────────
+// Propagado desde los sub-componentes interactivos hacia LearningJourney para
+// que AdaptationEcho pueda mostrar el mensaje causa→consecuencia correcto.
+// Solo los pasos que realmente tienen un resultado distinto lo propagan;
+// el resto usa el fallback 'done'.
+
+export type CompletionQuality =
+  | 'correct'    // evaluation: respuesta correcta
+  | 'incorrect'  // evaluation: respuesta incorrecta
+  | 'partial'    // evaluation: parcial / micro_question sin correct definido
+  | 'clear'      // reflection: 'Todo claro'
+  | 'confused'   // reflection: 'Necesito repasar' (stuck)
+  | 'half'       // reflection: 'Más o menos' (partial)
+  | 'done'       // cualquier otro paso completado sin señal específica
+
+export interface CompletionSignal {
+  quality: CompletionQuality
+}
+
 // ── Builder stub ──────────────────────────────────────────────────────────────
 
 export interface JourneyBuildResult {

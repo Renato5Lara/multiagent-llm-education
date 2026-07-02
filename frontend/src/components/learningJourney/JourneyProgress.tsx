@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
-import type { LearningJourneyStepType } from '@/types/learningJourney'
-import { STEP_LABELS } from './journeyStepConfig'
+import type { LearningJourneyStepType, Phase5E } from '@/types/learningJourney'
+import { STEP_LABELS, PHASE_5E_CONFIG } from './journeyStepConfig'
 
 interface Props {
   currentIndex: number
@@ -8,36 +8,24 @@ interface Props {
   currentType:  LearningJourneyStepType
   totalXp:      number
   xpFlash:      number | null
+  // Sprint 2.1 — fase 5E activa: colorea la barra para que este componente
+  // acompañe al narrador pedagógico (FiveEProgressBar) en vez de competir
+  // con él. Antes tenía su propio sistema de fases por porcentaje — eliminado
+  // para que exista UN único narrador del proceso pedagógico.
+  phase?: Phase5E
 }
 
-// Learning phase derived from progress percentage.
-const PHASES: ReadonlyArray<{ threshold: number; label: string; color: string; barColor: string }> = [
-  { threshold: 0.20, label: '🗺️ Explorando',     color: 'text-sky-600 dark:text-sky-400',         barColor: 'bg-sky-400 dark:bg-sky-600' },
-  { threshold: 0.40, label: '🔍 Comprendiendo',   color: 'text-indigo-600 dark:text-indigo-400',   barColor: 'bg-indigo-400 dark:bg-indigo-600' },
-  { threshold: 0.60, label: '🛠️ Aplicando',       color: 'text-teal-600 dark:text-teal-400',       barColor: 'bg-teal-400 dark:bg-teal-600' },
-  { threshold: 0.80, label: '💡 Reflexionando',   color: 'text-amber-600 dark:text-amber-400',     barColor: 'bg-amber-400 dark:bg-amber-600' },
-  { threshold: 1.01, label: '🎯 Evaluando',        color: 'text-emerald-600 dark:text-emerald-400', barColor: 'bg-emerald-400 dark:bg-emerald-600' },
-]
-
-function getPhase(pct: number) {
-  return PHASES.find(p => pct < p.threshold) ?? PHASES[PHASES.length - 1]
-}
-
-export function JourneyProgress({ currentIndex, totalSteps, currentType, totalXp, xpFlash }: Props) {
-  const pct   = totalSteps > 0 ? (currentIndex + 1) / totalSteps : 0
-  const phase = getPhase(pct)
+export function JourneyProgress({ currentIndex, totalSteps, currentType, totalXp, xpFlash, phase }: Props) {
+  const pct      = totalSteps > 0 ? (currentIndex + 1) / totalSteps : 0
+  const barColor = phase ? PHASE_5E_CONFIG[phase].barColor : 'bg-violet-400 dark:bg-violet-600'
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-xs gap-2">
 
-        {/* Phase label + step type */}
+        {/* Current step type — the phase itself is narrated by FiveEProgressBar */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className={cn('font-bold truncate transition-colors duration-500', phase.color)}>
-            {phase.label}
-          </span>
-          <span className="text-muted-foreground/50 hidden sm:inline">·</span>
-          <span className="text-muted-foreground truncate hidden sm:inline">
+          <span className="text-muted-foreground truncate font-medium">
             {STEP_LABELS[currentType]}
           </span>
         </div>
@@ -63,10 +51,10 @@ export function JourneyProgress({ currentIndex, totalSteps, currentType, totalXp
         </div>
       </div>
 
-      {/* Phase-colored progress bar */}
+      {/* Progress bar — colored by the active 5E phase */}
       <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
         <div
-          className={cn('h-full rounded-full transition-all duration-500', phase.barColor)}
+          className={cn('h-full rounded-full transition-all duration-500', barColor)}
           style={{ width: `${pct * 100}%` }}
         />
       </div>

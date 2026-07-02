@@ -1,3 +1,5 @@
 export { LearningJourney }     from './LearningJourney'
 export { LearningJourneyStep } from './LearningJourneyStep'
 export { JourneyProgress }     from './JourneyProgress'
+export { FiveEProgressBar }    from './FiveEProgressBar'
+export { PhaseTransitionOverlay } from './PhaseTransitionOverlay'
