@@ -60,18 +60,16 @@ Tutor IA
 Evaluación
 ```
 
-### Investigador
+### Modo Evidencia (capacidad, no rol de usuario)
 
 ```
-Login (rol investigador)
+Activar Modo Evidencia (/evidencia)
 ↓
-Dashboard investigador
-↓
-Swarm Monitor
+Demo Multiagente (swarm en vivo)
 ↓
 Replay Cognitivo
 ↓
-Agent Lab (opcional)
+Decision Trace / Métricas
 ```
 
 ---
@@ -221,7 +219,7 @@ Perfil generado → Ruta lista
 
 ### D6 — Swarm Monitor
 
-**Objetivo:** Monitoreo en tiempo real del swarm para el investigador.
+**Objetivo:** Monitoreo en tiempo real del swarm para el Modo Evidencia.
 
 ---
 
@@ -251,7 +249,7 @@ Eliminar dominios hardcodeados cuando M1 esté estable.
 **Objetivo:** Parecer un producto terminado.
 
 - Dashboard estudiante rediseñado (Swarm Academy style)
-- Dashboard investigador con Swarm Monitor
+- Modo Evidencia con Swarm Monitor
 - Sidebar expandido y funcional
 - Header limpio con búsqueda
 - Eliminación de cursos no relacionados con la tesis
@@ -302,7 +300,7 @@ Solo implementar si:
 |-------|-----------------------------------|
 | P0    | Estabilidad + demo funcional      |
 | P1    | Experiencia estudiante + adaptación |
-| P2    | Herramientas del investigador     |
+| P2    | Modo Evidencia (observabilidad)   |
 | P3    | Funcionalidades futuras           |
 
 ---

@@ -126,7 +126,6 @@ export default function UsersPage() {
                         <SelectItem value="admin">Administrador</SelectItem>
                         <SelectItem value="docente">Docente</SelectItem>
                         <SelectItem value="estudiante">Estudiante</SelectItem>
-                        <SelectItem value="investigador">Investigador</SelectItem>
                     </SelectContent>
                 </Select>
                 <Button

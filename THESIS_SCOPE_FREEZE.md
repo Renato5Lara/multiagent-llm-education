@@ -57,7 +57,7 @@ Nada más.
 ## Autenticación
 
 - Login
-- Gestión de roles (estudiante / investigador)
+- Gestión de roles (estudiante / docente / admin)
 - Gestión de sesión
 
 ---
@@ -211,18 +211,20 @@ Explicabilidad
 
 ---
 
-# FLUJO DEMO — INVESTIGADOR
+# FLUJO DEMO — MODO EVIDENCIA
+
+El Modo Evidencia no es un rol de usuario: es la capacidad de
+observabilidad del sistema, activada durante la sustentación para
+demostrar cómo y por qué el swarm adaptó el aprendizaje.
 
 ```
-Login (rol investigador)
+Activar Modo Evidencia (/evidencia)
 ↓
-Dashboard investigador
-↓
-Swarm Monitor
+Demo Multiagente (swarm en vivo)
 ↓
 Replay Cognitivo
 ↓
-Explicación de Agentes
+Explicación de Agentes / Decision Trace
 ↓
 Métricas
 ```
@@ -236,7 +238,7 @@ Métricas
 | P0        | Estabilidad y demo funcional        |
 | P1        | Experiencia adaptativa del estudiante |
 | P2        | Explicabilidad multiagente          |
-| P3        | Herramientas del investigador       |
+| P3        | Modo Evidencia (observabilidad)     |
 | P4        | Polish visual                       |
 | P5        | Funcionalidades opcionales          |
 

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Bot, History, ArrowRight, Activity, Network, Cpu } from 'lucide-react'
 
-const demoModules = [
+const evidenceTools = [
   {
     title: 'Demo Multiagente',
     description: 'Visualiza el swarm de agentes pedagógicos en vivo con SSE, deliberación, consenso y trazabilidad cognitiva.',
@@ -30,7 +30,7 @@ const stats = [
   { label: 'Confianza promedio',   value: '84%', icon: Network,  color: 'text-neural-violet' },
 ]
 
-export default function InvestigadorDashboard() {
+export default function EvidenceHub() {
   const navigate = useNavigate()
 
   return (
@@ -38,14 +38,15 @@ export default function InvestigadorDashboard() {
       {/* Page header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2.5">
-          <h1 className="text-2xl font-bold text-neural-text tracking-tight">Panel del Investigador</h1>
+          <h1 className="text-2xl font-bold text-neural-text tracking-tight">Modo Evidencia</h1>
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-neural-pulse/10 border border-neural-pulse/20">
             <span className="w-1.5 h-1.5 rounded-full bg-neural-pulse animate-pulse" />
             <span className="text-[10px] font-mono text-neural-pulse tracking-wider">SISTEMA ACTIVO</span>
           </span>
         </div>
         <p className="text-sm text-neural-muted leading-relaxed">
-          Herramientas de visualización, análisis y trazabilidad del sistema multiagente pedagógico.
+          Observabilidad del sistema multiagente: visualiza cómo y por qué el swarm adaptó el aprendizaje,
+          con fines de evaluación y validación experimental de la hipótesis.
         </p>
       </div>
 
@@ -64,40 +65,40 @@ export default function InvestigadorDashboard() {
         ))}
       </div>
 
-      {/* Module cards */}
+      {/* Evidence tool cards */}
       <div>
         <p className="text-[10px] font-mono text-neural-muted/50 tracking-widest uppercase mb-4">
-          Herramientas disponibles
+          Herramientas de evidencia
         </p>
         <div className="grid gap-5 sm:grid-cols-2">
-          {demoModules.map((mod) => (
+          {evidenceTools.map((tool) => (
             <div
-              key={mod.href}
+              key={tool.href}
               className="glass-panel rounded-xl p-6 flex flex-col gap-5 group transition-colors duration-300 hover:border-white/10"
             >
               {/* Icon + label */}
               <div className="flex items-start justify-between">
-                <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${mod.iconClass}`}>
-                  <mod.icon className="h-5 w-5" />
+                <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${tool.iconClass}`}>
+                  <tool.icon className="h-5 w-5" />
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-1 rounded-full border ${mod.labelClass}`}>
-                  {mod.label}
+                <span className={`text-[10px] font-mono px-2 py-1 rounded-full border ${tool.labelClass}`}>
+                  {tool.label}
                 </span>
               </div>
 
               {/* Text */}
               <div className="space-y-1.5 flex-1">
-                <h3 className="font-semibold text-neural-text">{mod.title}</h3>
-                <p className="text-sm text-neural-muted leading-relaxed">{mod.description}</p>
+                <h3 className="font-semibold text-neural-text">{tool.title}</h3>
+                <p className="text-sm text-neural-muted leading-relaxed">{tool.description}</p>
               </div>
 
               {/* CTA */}
               <button
-                onClick={() => navigate(mod.href)}
+                onClick={() => navigate(tool.href)}
                 className={`
                   w-full flex items-center justify-center gap-2 h-10 rounded-lg
                   text-sm font-medium transition-all duration-300 border
-                  active:scale-[0.98] ${mod.btnClass}
+                  active:scale-[0.98] ${tool.btnClass}
                 `}
               >
                 Acceder

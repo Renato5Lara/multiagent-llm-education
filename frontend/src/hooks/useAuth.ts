@@ -27,7 +27,7 @@ export function useAuth() {
             if (role === 'admin') navigate('/admin')
             else if (role === 'docente') navigate('/docente')
             else if (role === 'estudiante') navigate('/estudiante')
-            else if (role === 'investigador') navigate('/investigador')
+            else if (role === 'investigador') navigate('/evidencia')
             else navigate('/')
         },
         onError: (error) => {

@@ -162,7 +162,7 @@ Muted:        #94a3b8
 P0: Estabilidad + bugs críticos + demo funcional
 P1: Experiencia adaptativa del estudiante
 P2: Explicabilidad multiagente
-P3: Herramientas del investigador (Swarm Monitor, Replay)
+P3: Modo Evidencia (Swarm Monitor, Replay, Decision Trace)
 P4: Polish visual
 P5: Funcionalidades opcionales
 ```
@@ -183,14 +183,21 @@ Login
 
 ---
 
-## FLUJO INVESTIGADOR (Referencia Canónica)
+## MODO EVIDENCIA (Referencia Canónica)
+
+**No es un rol de usuario.** Es una capacidad de observabilidad del sistema,
+destinada a visualizar el proceso interno de adaptación con fines de
+evaluación y validación experimental durante la sustentación.
+
+Los actores del sistema son tres: Estudiante (aprende), Docente (acompaña),
+Administrador (administra). El Modo Evidencia demuestra científicamente
+cómo el sistema tomó sus decisiones.
 
 ```
-Login (rol investigador)
-→ Dashboard investigador
-→ Swarm Monitor
-→ Replay Cognitivo
-→ Agent Lab (opcional)
+Acceso (/evidencia — desde sidebar admin/docente o directo)
+→ Demo Multiagente (swarm en vivo, deliberación, consenso)
+→ Replay Cognitivo (sesiones, evolución longitudinal)
+→ Decision Trace / Métricas / Timeline de adaptación
 ```
 
 ---

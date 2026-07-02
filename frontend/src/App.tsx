@@ -8,7 +8,7 @@ import AcademicGuard from '@/components/auth/AcademicGuard'
 import AdminLayout from '@/components/layout/AdminLayout'
 import DocenteLayout from '@/components/layout/DocenteLayout'
 import EstudianteLayout from '@/components/layout/EstudianteLayout'
-import InvestigadorLayout from '@/components/layout/InvestigadorLayout'
+import EvidenceLayout from '@/components/layout/EvidenceLayout'
 
 import Login from '@/pages/Login'
 import NotFound from '@/pages/NotFound'
@@ -34,12 +34,13 @@ const CodeLab = lazy(() => import('@/pages/estudiante/CodeLab'))
 const Evaluation = lazy(() => import('@/pages/estudiante/Evaluation'))
 const SwarmDemo = lazy(() => import('@/pages/demo/SwarmDemo'))
 const ReplayDashboard = lazy(() => import('@/pages/replay/ReplayDashboard'))
-const InvestigadorDashboard = lazy(() => import('@/pages/investigador/Dashboard'))
+const EvidenceHub = lazy(() => import('@/pages/evidencia/EvidenceHub'))
 
 function RootRedirect() {
     const { isAuthenticated, user } = useAuthStore()
     if (!isAuthenticated || !user) return <Navigate to="/login" replace />
-    const home = `/${user.role}`
+    // 'investigador' es un rol legado: sus usuarios aterrizan en el Modo Evidencia
+    const home = user.role === 'investigador' ? '/evidencia' : `/${user.role}`
     return <Navigate to={home} replace />
 }
 
@@ -86,10 +87,9 @@ export default function App() {
                     </Route>
                 </Route>
 
-                <Route element={<ProtectedRoute allowedRoles={['investigador']} />}>
-                    <Route element={<InvestigadorLayout />}>
-                        <Route path="/investigador" element={<InvestigadorDashboard />} />
-                    </Route>
+                {/* Modo Evidencia — capacidad de observabilidad, no un rol de usuario */}
+                <Route element={<EvidenceLayout />}>
+                    <Route path="/evidencia" element={<EvidenceHub />} />
                 </Route>
 
                 <Route path="/404" element={<NotFound />} />

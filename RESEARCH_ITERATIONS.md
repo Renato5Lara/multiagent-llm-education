@@ -110,7 +110,7 @@ Lo que esta iteración NO demuestra:
 - No demuestra mejor rendimiento académico ni retención.
 - No demuestra que la adaptación continúe durante el recorrido (solo al inicio).
 - El feed de agentes del overlay es presentacional, no trazabilidad en tiempo
-  real (esa corresponde al Swarm Monitor del investigador).
+  real (esa corresponde al Swarm Monitor del Modo Evidencia).
 
 Solo demuestra que el estudiante puede comprender por qué su experiencia es
 diferente.
@@ -173,3 +173,63 @@ El estudiante debe poder responder, sin ayuda:
 ## Estado
 
 **EN PREPARACIÓN** — inicia tras la validación observacional de la iteración 2.1.
+
+---
+
+# REORGANIZACIÓN ARQUITECTÓNICA R1 — Modo Evidencia (2026-07-02)
+
+No es una iteración de funcionalidad: es una depuración del modelo de
+actores, aprobada explícitamente por el tesista. **No se implementó ni se
+eliminó ninguna funcionalidad**; solo se reorganizó el acceso y la narrativa.
+
+## Decisión
+
+El rol **Investigador se elimina como usuario de negocio**. Todas sus
+herramientas (Demo Multiagente, Replay Cognitivo, Decision Trace, consenso,
+métricas) se conservan íntegras agrupadas bajo el **Modo Evidencia**: una
+capacidad de observabilidad del sistema destinada a la evaluación y
+validación experimental de la hipótesis durante la sustentación.
+
+Modelo de actores resultante:
+
+- **Estudiante** → aprende (protagonista).
+- **Docente** → acompaña.
+- **Administrador** → administra.
+- **Modo Evidencia** → demuestra científicamente cómo el sistema decidió.
+
+## Justificación (puerta de las 5 preguntas)
+
+1. **Pregunta de investigación:** ¿puede el jurado observar cómo el sistema
+   adaptó el aprendizaje y por qué tomó esas decisiones? (reemplaza a
+   "¿funciona el panel del investigador?").
+2. **Hipótesis:** fortalece la trazabilidad completa — la observabilidad
+   pasa de "pantalla de un rol artificial" a propiedad de la arquitectura.
+3. **Variable:** trazabilidad (dependiente); no altera la adaptación.
+4. **Observable en demo:** durante el recorrido del estudiante se activa el
+   Modo Evidencia ("Permítanme mostrar qué está ocurriendo internamente").
+5. **En Resultados y Discusión:** "la plataforma incorpora un Modo Evidencia
+   destinado a visualizar el proceso interno de adaptación con fines de
+   evaluación y validación experimental".
+
+## Hallazgo que motivó la decisión
+
+La auditoría de código confirmó que el rol ya era una cáscara: su dashboard
+solo enlazaba a /swarm-demo y /replay (rutas ya públicas), y el guard
+backend `get_current_investigador` no protegía ningún endpoint.
+
+## Cambios
+
+- Frontend: ruta pública `/evidencia` (EvidenceHub + EvidenceLayout);
+  acceso "Modo Evidencia" en sidebars de admin y docente; rol retirado de
+  selectores de administración y redirecciones (usuarios legado aterrizan
+  en /evidencia). Eliminados InvestigadorLayout y pages/investigador.
+- Backend: guards muertos retirados de deps.py; `UserRole.INVESTIGADOR` se
+  conserva en el enum solo por compatibilidad con filas existentes (sin
+  migración destructiva).
+- Documentos canónicos actualizados: CLAUDE.md, THESIS_SCOPE_FREEZE.md,
+  ROADMAP_THESIS_FOCUS.md, FLOW_AUDIT.md (Recorrido 4 → Modo Evidencia).
+
+## Estado
+
+**CONSOLIDADO.** El Recorrido 4 (FLOW_AUDIT.md) valida el Modo Evidencia
+con su nueva pregunta de investigación.

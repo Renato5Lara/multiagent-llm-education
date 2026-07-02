@@ -5,7 +5,6 @@ export const ROLES = {
     ADMIN: 'admin',
     DOCENTE: 'docente',
     ESTUDIANTE: 'estudiante',
-    INVESTIGADOR: 'investigador',
 } as const
 
 export const BLOOM_LEVELS = [

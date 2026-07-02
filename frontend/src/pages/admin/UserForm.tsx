@@ -15,6 +15,8 @@ const userSchema = z.object({
     email: z.string().email('Correo inválido'),
     first_name: z.string().min(1, 'Requerido'),
     last_name: z.string().min(1, 'Requerido'),
+    // 'investigador' no se ofrece en el selector (rol legado); queda en el
+    // schema para que editar un usuario existente con ese rol no lo reasigne.
     role: z.enum(['admin', 'docente', 'estudiante', 'investigador']),
     password: z.string().min(6, 'Mínimo 6 caracteres').optional().or(z.literal('')),
     institutional_code: z.string().optional().or(z.literal('')),
@@ -113,7 +115,6 @@ export default function UserForm({ user, onSuccess }: Props) {
                             <SelectItem value="admin">Administrador</SelectItem>
                             <SelectItem value="docente">Docente</SelectItem>
                             <SelectItem value="estudiante">Estudiante</SelectItem>
-                            <SelectItem value="investigador">Investigador</SelectItem>
                         </SelectContent>
                     </Select>
                     {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}

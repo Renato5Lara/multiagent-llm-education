@@ -23,4 +23,6 @@ export interface UserAuth {
     current_cycle?: number
 }
 
+// 'investigador' es un rol legado: retirado como usuario de negocio (ver Modo
+// Evidencia), se conserva por compatibilidad con filas existentes en BD.
 export type UserRole = 'admin' | 'docente' | 'estudiante' | 'investigador'

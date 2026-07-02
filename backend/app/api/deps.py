@@ -109,17 +109,6 @@ def get_current_estudiante(
     return current_user
 
 
-def get_current_investigador(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    if current_user.role != UserRole.INVESTIGADOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de investigador",
-        )
-    return current_user
-
-
 # ═════════════════════════════════════════════════════════════════
 # Async deps (FastAPI runtime — non-blocking)
 # ═════════════════════════════════════════════════════════════════
@@ -221,16 +210,5 @@ async def aget_current_estudiante(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Se requiere rol de estudiante",
-        )
-    return current_user
-
-
-async def aget_current_investigador(
-    current_user: User = Depends(aget_current_user),
-) -> User:
-    if current_user.role != UserRole.INVESTIGADOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de investigador",
         )
     return current_user

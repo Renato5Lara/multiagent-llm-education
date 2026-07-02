@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, BarChart3, GitCompare } from 'lucide-react'
+import { LayoutDashboard, BookOpen, BarChart3, GitCompare, FlaskConical } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
@@ -8,6 +8,7 @@ const docenteItems: SidebarItem[] = [
   { label: 'Mis Cursos', href: '/docente/courses', icon: BookOpen },
   { label: 'Analítica IA', href: '/docente/analytics', icon: BarChart3 },
   { label: 'Comparación Swarm', href: '/docente/swarm-comparison', icon: GitCompare },
+  { label: 'Modo Evidencia', href: '/evidencia', icon: FlaskConical, sectionBefore: true },
 ]
 
 export default function DocenteLayout() {

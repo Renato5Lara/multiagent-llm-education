@@ -18,6 +18,8 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
     DOCENTE = "docente"
     ESTUDIANTE = "estudiante"
+    # Legado: retirado como usuario de negocio (las herramientas viven en el
+    # Modo Evidencia). Se conserva por compatibilidad con filas existentes.
     INVESTIGADOR = "investigador"
 
 
