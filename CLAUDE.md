@@ -230,6 +230,13 @@ style(scope): descripción
 Scopes válidos:
 - `dashboard`, `learning-path`, `module`, `tutor`, `swarm`, `agents`, `auth`, `api`, `db`, `ui`
 
+**Disciplina de tipo (Etapa 3 — producto demostrable):**
+- `feat` solo cuando aparece una capacidad completamente nueva.
+- `fix` cuando se elimina un bloqueo (crítico o fricción).
+- `refactor` cuando cambia la estructura sin alterar comportamiento.
+- `docs` cuando el cambio es únicamente documentación.
+- No mezclar tipos en un mismo commit. Un commit = una decisión.
+
 ### Archivos Frontend
 
 ```

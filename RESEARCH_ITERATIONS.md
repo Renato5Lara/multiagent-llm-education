@@ -172,7 +172,13 @@ El estudiante debe poder responder, sin ayuda:
 
 ## Estado
 
-**EN PREPARACIÓN** — inicia tras la validación observacional de la iteración 2.1.
+**PAUSADA (2026-07-02)** — el proyecto entró en Etapa 3 (producto
+demostrable, ver FLOW_AUDIT.md § Tablero Etapa 2): antes de retomar 2.2 se
+deben cerrar los Bloques 2-4 (Docente, Administrador, Modo Evidencia) bajo
+el criterio "¿puede cualquier jurado usarla de principio a fin sin
+encontrar un bloqueo?". No se trabaja en paralelo. Se retoma cuando esos
+tres bloques estén cerrados y, en todo caso, tras la validación
+observacional de la iteración 2.1.
 
 ---
 

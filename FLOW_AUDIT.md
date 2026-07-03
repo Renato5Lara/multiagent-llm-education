@@ -1,5 +1,15 @@
 # FLOW_AUDIT.md — Auditoría de Recorridos
 
+> **Regla de Congelamiento (2026-07-02):** la metodología ya está definida
+> (hipótesis, arquitectura, alcance, recorridos, reglas de desarrollo,
+> documentos canónicos). No se modifica ningún documento metodológico
+> (CLAUDE.md, FLOW_AUDIT.md, RESEARCH_ITERATIONS.md,
+> THESIS_SCOPE_FREEZE.md, ROADMAP) salvo que sea **imprescindible para
+> defender la tesis o para corregir una contradicción**. Toda idea nueva
+> que no cambie el código de hoy va a "Backlog post-sustentación" (abajo),
+> no a una ronda de documentación. El repo crece en código y en checks de
+> este tablero, no en documentos nuevos.
+
 > Fase Final — modo Research Implementation.
 > El objetivo de cada sesión de desarrollo es **reducir bloqueos y fricciones**,
 > no añadir funcionalidades.
@@ -27,9 +37,23 @@
 > Regla de Cierre: un recorrido no está terminado hasta que un usuario real
 > pueda completarlo de principio a fin sin intervención del desarrollador
 > (navegador real, stack completo). Pregunta diaria: **¿qué recorrido vamos
-> a cerrar hoy?**
+> a cerrar hoy?** Criterio de producto demostrable: ¿puede cualquier jurado
+> usarla de principio a fin sin encontrar un bloqueo?
 
-**Recorrido 1 — Estudiante** (prioridad máxima)
+**CONGELADO (solo errores críticos):** Momento 1 · Journey 5E · Banner de
+adaptación · Modelo pedagógico · CodeLab integrado · Modo Evidencia ·
+Arquitectura del Swarm.
+
+**Etapa 3 — producto demostrable.** La pregunta ya no es "¿cómo mejoro la
+plataforma?" sino **"¿puede cualquier jurado usarla de principio a fin sin
+encontrar un bloqueo?"**. Prioridad de bloques: Bloque 1 Estudiante
+(CERRADO) → Bloque 2 Docente (siguiente) → Bloque 3 Administrador (mínimo)
+→ Bloque 4 Modo Evidencia (laboratorio de evidencia). No se trabaja fuera
+de orden salvo bloqueo crítico en un recorrido ya cerrado. La iteración de
+investigación 2.2 (RESEARCH_ITERATIONS.md) queda **pausada** hasta cerrar
+estos tres bloques.
+
+**Recorrido 1-2 — Estudiante** (Bloque 1 — CERRADO, prioridad máxima)
 
 - ☑ Login · ☑ Registro · ☑ Onboarding · ☑ Diagnóstico · ☑ Ruta
 - ☑ Momento 1 · ☑ Journey
@@ -42,20 +66,42 @@ completarlo. Cuatro bloqueos corregidos en la sesión de cierre: E1
 (Evaluación huérfana), F2 (doble experiencia de módulo), C3 (deadlock que
 congelaba el backend) y E2 (paso Code Lab nunca se generaba).
 
-**Recorrido 2 — Docente**
+**Recorrido 3 — Docente** (Bloque 2 — SIGUIENTE)
 
-- ⬜ Dashboard · ⬜ Ver estudiantes · ⬜ Ver progreso · ⬜ Ver dificultades
-- ⬜ Recomendar actividad
-- (base validada 2026-07-02 como "Recorrido 3" histórico; re-cerrar con la
-  Regla de Cierre)
+La auditoría funcional de 2026-07-02 (ver sección "Recorrido 3 — Docente"
+abajo) cerró la carga de datos y las métricas (🟩 en el Resumen), pero
+**no** el criterio de cierre real de este bloque. Criterio de cierre: el
+jurado entra como docente y responde estas cinco preguntas mirando la
+pantalla, **sin que nadie hable**:
 
-**Recorrido 3 — Administrador**
+- ⬜ ¿Quién necesita ayuda?
+- ⬜ ¿Quién está aprendiendo rápido?
+- ⬜ ¿Por qué el sistema adaptó distinto a cada estudiante?
+- ⬜ ¿Qué debo hacer como docente?
+- ⬜ ¿Qué evidencia tengo para confiar en esa recomendación? (score real,
+  modalidad detectada, dificultad puntual — no "la IA lo dice")
 
-- ⬜ Usuarios · ⬜ Roles · ⬜ Configuración · ⬜ Auditoría
+Hasta que las cinco estén ☑ el bloque no se considera cerrado, aunque la
+auditoría técnica lo esté. (Drift de numeración corregido 2026-07-02: esta
+sección se numeraba "Recorrido 2" aquí y "Recorrido 3" en el Resumen —
+ahora ambas usan 3.)
 
-**Recorrido 4 — Modo Evidencia**
+**Recorrido 5 — Administrador** (Bloque 3 — mínimo, deliberadamente pequeño)
 
-- ⬜ Decision Trace · ⬜ Replay · ⬜ Swarm Monitor · ⬜ Exportar evidencia
+No administra cursos ni contenidos — solo:
+
+- ⬜ Usuarios · ⬜ Roles · ⬜ Activación/reinicio de cuentas · ⬜ Configuración institucional
+
+**Recorrido 4 — Modo Evidencia** (Bloque 4 — laboratorio de evidencia)
+
+No es un dashboard de observabilidad: es donde se defiende la tesis. Debe
+responder, sin que nadie hable:
+
+- ⬜ ¿Por qué este estudiante recibió esta ruta?
+- ⬜ ¿Qué agentes participaron?
+- ⬜ ¿Qué modalidad detectó?
+- ⬜ ¿Qué evidencia produjo?
+- ⬜ ¿Cómo evolucionó?
 
 Cuando todos los ítems de un recorrido estén ☑ se marca **COMPLETADO** aquí
 y se registra la validación en su sección de acta.
@@ -232,18 +278,23 @@ Rutas: /evidencia (hub), /swarm-demo, /replay.
 
 La pregunta que debe responder este recorrido no es "¿funciona el panel?"
 sino: **¿puede el jurado observar cómo el sistema adaptó el aprendizaje
-y por qué tomó esas decisiones?**
+y por qué tomó esas decisiones?** Contrato de cierre (5 preguntas, sin que
+nadie hable): ¿por qué este estudiante recibió esta ruta? · ¿qué agentes
+participaron? · ¿qué modalidad detectó? · ¿qué evidencia produjo? · ¿cómo
+evolucionó?
 
-*(pendiente)*
+*(pendiente — Bloque 4, después de Docente y Administrador)*
 
 ---
 
 ## Recorrido 5 — Administrador
 
-Mínimo: usuarios, módulos, estado del sistema, configuración.
+Alcance mínimo y deliberado (Bloque 3): usuarios, roles,
+activación/reinicio de cuentas, configuración institucional. No administra
+cursos ni contenidos — eso vive en el recorrido Docente.
 Credenciales seed: admin@upao.edu.pe / Admin2026!
 
-*(pendiente)*
+*(pendiente — Bloque 3, después de Docente)*
 
 ---
 
@@ -266,3 +317,11 @@ Credenciales seed: admin@upao.edu.pe / Admin2026!
 - Los fallos de clic vistos en automatización fueron artefactos de viewport (elemento fuera de pantalla), no bugs de usuario — verificado con `elementFromPoint` y clic real tras `scrollIntoView`. Reconfirmado en el Recorrido 1 (botón "Inscribir" y "Continuar" del Momento 1).
 - Usuarios de prueba del Recorrido 1: `nuevo.r1@upao.edu.pe` (ciclo 3, diagnóstico completado, perfil Visual) y `sin.ciclo@upao.edu.pe` (onboarding completado, sin curso) — ambos `Recorrido2026!`.
 - `POST /api/auth/login` usa el campo `identifier` (no `email`).
+
+## Backlog post-sustentación
+
+> Ideas válidas que NO cambian el código de hoy. Se anotan aquí y se
+> siguen — no generan discusión de metodología ni edición de otros
+> documentos hasta después de cerrar los Bloques 2-4.
+
+*(vacío)*
