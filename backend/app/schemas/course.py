@@ -39,6 +39,8 @@ class EnrolledStudentResponse(BaseModel):
     confidence: Optional[int] = None
     weakest_module: Optional[str] = None
     lowest_module_score: Optional[int] = None
+    modality_detection: Optional[str] = None
+    modality_adaptation: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

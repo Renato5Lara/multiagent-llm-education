@@ -120,6 +120,8 @@ export interface EnrolledStudent {
     confidence?: number | null
     weakest_module?: string | null
     lowest_module_score?: number | null
+    modality_detection?: string | null
+    modality_adaptation?: string | null
 }
 
 export function useEnrolledStudents(courseId: string | undefined) {

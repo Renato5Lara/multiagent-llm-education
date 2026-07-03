@@ -237,14 +237,22 @@ export default function CourseDetail() {
                                                 <TableCell className="font-medium">{s.first_name} {s.last_name}</TableCell>
                                                 <TableCell>{s.email}</TableCell>
                                                 <TableCell>{s.institutional_code || '-'}</TableCell>
-                                                <TableCell>
+                                                <TableCell className="max-w-xs">
                                                     {s.dominant_modality ? (
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <Badge variant="outline">{MODALITY_LABELS[s.dominant_modality] || s.dominant_modality}</Badge>
-                                                            {s.confidence != null && (
-                                                                <span className="text-muted-foreground text-xs">{s.confidence}%</span>
+                                                        <div className="space-y-1">
+                                                            <span className="inline-flex items-center gap-1">
+                                                                <Badge variant="outline">{MODALITY_LABELS[s.dominant_modality] || s.dominant_modality}</Badge>
+                                                                {s.confidence != null && (
+                                                                    <span className="text-muted-foreground text-xs">{s.confidence}%</span>
+                                                                )}
+                                                            </span>
+                                                            {s.modality_detection && (
+                                                                <p className="text-xs text-muted-foreground"><span className="font-medium">Motivo:</span> {s.modality_detection}</p>
                                                             )}
-                                                        </span>
+                                                            {s.modality_adaptation && (
+                                                                <p className="text-xs text-muted-foreground"><span className="font-medium">Adaptación:</span> {s.modality_adaptation}</p>
+                                                            )}
+                                                        </div>
                                                     ) : <span className="text-muted-foreground text-xs">Sin diagnóstico</span>}
                                                 </TableCell>
                                                 <TableCell>

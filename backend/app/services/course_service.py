@@ -278,6 +278,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
     from app.models.diagnostic_result import DiagnosticResult
     from app.models.evaluation_attempt import EvaluationAttempt
     from app.models.student_progress import LearningPath, PathModule
+    from app.services.pedagogical_explanations import get_modality_explanation
 
     diagnostic_rows = (
         db.query(DiagnosticResult)
@@ -390,6 +391,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
         weakest = weakest_by_student.get(student.id)
         weakest_module = weak_title_map.get(weakest[0]) if weakest and weakest[0] else None
         lowest_module_score = round(weakest[1] * 100) if weakest else None
+        modality_explanation = get_modality_explanation(modality_map.get(student.id))
         students_list.append({
             "id": enrollment.id,
             "student_id": student.id,
@@ -409,5 +411,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             "confidence": confidence_map.get(student.id),
             "weakest_module": weakest_module,
             "lowest_module_score": lowest_module_score,
+            "modality_detection": modality_explanation["detection"] if modality_explanation else None,
+            "modality_adaptation": modality_explanation["adaptation"] if modality_explanation else None,
         })
     return students_list
