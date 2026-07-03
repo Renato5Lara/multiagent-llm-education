@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap } from 'lucide-react'
+import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -329,6 +329,36 @@ export default function LearningPath() {
           />
         ))}
       </div>
+
+      {/* ── Evaluación (fase Demuestra) ─────────────────────── */}
+      {completedCount > 0 && courseId && (
+        <div className="mt-6 glass-panel rounded-2xl p-5 border border-neural-glow/15">
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-neural-glow/50 bg-neural-glow/8">
+              <ClipboardCheck className="h-5 w-5 text-neural-glow" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-mono tracking-wider uppercase mb-1 text-neural-glow">
+                Evaluación
+              </p>
+              <p className="font-semibold text-neural-text">Demuestra lo aprendido</p>
+              <p className="text-xs text-neural-muted/70 mt-1 leading-snug">
+                Preguntas adaptadas a tu nivel sobre lo que ya recorriste.
+              </p>
+              <div className="mt-3">
+                <Button
+                  size="sm"
+                  className="gap-1.5 h-8 text-xs"
+                  onClick={() => navigate(`/estudiante/evaluation/${courseId}`)}
+                >
+                  Ir a la evaluación
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Completion banner ───────────────────────────────── */}
       {completedCount === totalCount && totalCount > 0 && (
