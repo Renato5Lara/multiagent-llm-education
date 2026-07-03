@@ -224,11 +224,14 @@ export default function CourseDetail() {
                                             <TableHead>Código</TableHead>
                                             <TableHead>Modalidad</TableHead>
                                             <TableHead>Progreso</TableHead>
+                                            <TableHead>Índice de progreso</TableHead>
                                             <TableHead>Estado</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {enrolledStudents.map(s => (
+                                        {[...enrolledStudents]
+                                            .sort((a, b) => (b.progress_index ?? -1) - (a.progress_index ?? -1))
+                                            .map((s, i) => (
                                             <TableRow key={s.id}>
                                                 <TableCell className="font-medium">{s.first_name} {s.last_name}</TableCell>
                                                 <TableCell>{s.email}</TableCell>
@@ -245,6 +248,19 @@ export default function CourseDetail() {
                                                             {s.at_risk && <Badge variant="outline" className="ml-2 border-red-400/40 text-red-400 text-[10px]">En riesgo</Badge>}
                                                         </span>
                                                     ) : <span className="text-muted-foreground text-xs">Sin ruta</span>}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {s.progress_index != null ? (
+                                                        <span className="text-sm font-medium">
+                                                            {i === 0 && <span className="text-muted-foreground mr-1">#1</span>}
+                                                            {s.progress_index}
+                                                            {s.avg_evaluation_score != null && (
+                                                                <span className="text-muted-foreground text-xs ml-1">
+                                                                    (ruta {s.progress_percentage}% · evaluaciones {s.avg_evaluation_score}%)
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground text-xs">Sin datos</span>}
                                                 </TableCell>
                                                 <TableCell><Badge variant="secondary">{s.status}</Badge></TableCell>
                                             </TableRow>

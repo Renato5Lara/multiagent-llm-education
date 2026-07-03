@@ -115,6 +115,8 @@ export interface EnrolledStudent {
     total_modules?: number | null
     progress_percentage?: number | null
     at_risk: boolean
+    avg_evaluation_score?: number | null
+    progress_index?: number | null
 }
 
 export function useEnrolledStudents(courseId: string | undefined) {

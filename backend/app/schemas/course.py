@@ -34,6 +34,8 @@ class EnrolledStudentResponse(BaseModel):
     total_modules: Optional[int] = None
     progress_percentage: Optional[int] = None
     at_risk: bool = False
+    avg_evaluation_score: Optional[int] = None
+    progress_index: Optional[int] = None
 
     model_config = {"from_attributes": True}
 

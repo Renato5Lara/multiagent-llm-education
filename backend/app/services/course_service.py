@@ -276,6 +276,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
     # y progreso real de la ruta (los PathModule son la fuente de verdad del
     # flujo del estudiante; los cursos demo no tienen Resources).
     from app.models.diagnostic_result import DiagnosticResult
+    from app.models.evaluation_attempt import EvaluationAttempt
     from app.models.student_progress import LearningPath, PathModule
 
     modality_map = {
@@ -311,6 +312,29 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             "progress_percentage": pct,
         }
 
+    # Promedio de evaluaciones por estudiante (score/max_score), mismo patrón
+    # de agregación que path_rows arriba. Se usa junto al progreso de ruta
+    # para construir un índice de progreso objetivo (sin XP ni CodeLab: esos
+    # no se persisten agregados por estudiante hoy).
+    eval_rows = (
+        db.query(
+            EvaluationAttempt.student_id,
+            func.avg(EvaluationAttempt.score / EvaluationAttempt.max_score).label("avg_ratio"),
+        )
+        .filter(
+            EvaluationAttempt.course_id == course_id,
+            EvaluationAttempt.student_id.in_(student_ids),
+            EvaluationAttempt.max_score > 0,
+        )
+        .group_by(EvaluationAttempt.student_id)
+        .all()
+    )
+    eval_map = {
+        r.student_id: round(r.avg_ratio * 100)
+        for r in eval_rows
+        if r.avg_ratio is not None
+    }
+
     students_list = []
     for enrollment in enrollments:
         student = user_map.get(enrollment.student_id)
@@ -318,6 +342,13 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             continue
         progress = progress_map.get(student.id)
         pct = progress["progress_percentage"] if progress else 0
+        avg_eval = eval_map.get(student.id)
+        if progress and avg_eval is not None:
+            progress_index = round((pct + avg_eval) / 2)
+        elif progress:
+            progress_index = pct
+        else:
+            progress_index = None
         students_list.append({
             "id": enrollment.id,
             "student_id": student.id,
@@ -332,5 +363,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             "total_modules": progress["total_modules"] if progress else None,
             "progress_percentage": pct if progress else None,
             "at_risk": (pct < 30) if progress else False,
+            "avg_evaluation_score": avg_eval,
+            "progress_index": progress_index,
         })
     return students_list
