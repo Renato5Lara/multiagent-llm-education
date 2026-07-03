@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import { useDocenteAnalytics } from '@/hooks/useAnalytics'
 import { useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/common/PageHeader'
+import { isThesisCourse } from '@/lib/constants'
 
 export default function DocenteAnalytics() {
     const { data, isLoading } = useDocenteAnalytics()
@@ -24,22 +25,27 @@ export default function DocenteAnalytics() {
         )
     }
 
-    const totalStudents = data?.total_students || 0
-    const totalAtRisk = data?.total_at_risk || 0
+    // El scope de la tesis es un solo curso: los KPIs deben responder por
+    // IS301, no por los 44 cursos de la malla curricular (F11).
+    const thesisCourse = data?.course_analytics?.find(c => isThesisCourse({ name: c.course_name }))
+    const totalStudents = thesisCourse?.enrolled_count ?? 0
+    const totalAtRisk = thesisCourse?.at_risk_count ?? 0
     const riskPct = totalStudents > 0 ? Math.round((totalAtRisk / totalStudents) * 100) : 0
+    const sortedCourseAnalytics = [...(data?.course_analytics ?? [])]
+        .sort((a, b) => Number(isThesisCourse({ name: b.course_name })) - Number(isThesisCourse({ name: a.course_name })))
 
     return (
         <div>
             <PageHeader
                 title="Analítica Inteligente"
-                description="Insights IA sobre rendimiento académico y detección temprana de riesgo"
+                description={thesisCourse ? `${thesisCourse.course_name} · detección temprana de riesgo` : 'Insights IA sobre rendimiento académico y detección temprana de riesgo'}
             />
 
             <div className="grid gap-4 md:grid-cols-3 mb-6">
                 <Card>
                     <CardContent className="p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground">Total Estudiantes</p>
+                            <p className="text-sm text-muted-foreground">Total Estudiantes · IS301</p>
                             <p className="text-3xl font-bold mt-1">{totalStudents}</p>
                         </div>
                         <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -50,7 +56,7 @@ export default function DocenteAnalytics() {
                 <Card>
                     <CardContent className="p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground">En Riesgo</p>
+                            <p className="text-sm text-muted-foreground">En Riesgo · IS301</p>
                             <p className="text-3xl font-bold mt-1 text-red-600">{totalAtRisk}</p>
                         </div>
                         <div className="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center">
@@ -61,7 +67,7 @@ export default function DocenteAnalytics() {
                 <Card>
                     <CardContent className="p-5 flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-muted-foreground">Tasa de Riesgo</p>
+                            <p className="text-sm text-muted-foreground">Tasa de Riesgo · IS301</p>
                             <p className="text-3xl font-bold mt-1">{riskPct}%</p>
                         </div>
                         <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -71,18 +77,16 @@ export default function DocenteAnalytics() {
                 </Card>
             </div>
 
-            {data?.general_issues && data.general_issues.length > 0 && (
+            {thesisCourse && thesisCourse.at_risk_count > 0 && (
                 <Card className="border-amber-200 bg-amber-50/30 mb-6">
                     <CardContent className="p-4">
                         <div className="flex items-center gap-2 text-amber-700 mb-2">
                             <AlertTriangle className="h-5 w-5" />
-                            <span className="font-medium">Alertas Generales del Sistema</span>
+                            <span className="font-medium">Alerta — {thesisCourse.course_name}</span>
                         </div>
-                        <ul className="space-y-1">
-                            {data.general_issues.map((issue, i) => (
-                                <li key={i} className="text-sm text-amber-600">{issue}</li>
-                            ))}
-                        </ul>
+                        <p className="text-sm text-amber-600">
+                            {thesisCourse.at_risk_count} estudiante{thesisCourse.at_risk_count > 1 ? 's' : ''} con progreso inferior al 30%.
+                        </p>
                     </CardContent>
                 </Card>
             )}
@@ -100,11 +104,13 @@ export default function DocenteAnalytics() {
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                    {data.course_analytics.map((course) => (
-                        <Card key={course.course_id} className="hover:shadow-md transition-shadow">
+                    {sortedCourseAnalytics.map((course) => (
+                        <Card key={course.course_id} className={`hover:shadow-md transition-shadow ${isThesisCourse({ name: course.course_name }) ? 'border-primary ring-1 ring-primary' : ''}`}>
                             <CardHeader className="pb-2">
                                 <div className="flex justify-between items-start">
-                                    <CardTitle className="text-base">{course.course_name}</CardTitle>
+                                    <CardTitle className="text-base">
+                                        {isThesisCourse({ name: course.course_name }) && '⭐ '}{course.course_name}
+                                    </CardTitle>
                                     <Button
                                         size="sm"
                                         variant="ghost"
