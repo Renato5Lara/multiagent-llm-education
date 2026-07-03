@@ -45,6 +45,7 @@ export interface StudentRiskPrediction {
 
 export interface CourseAnalytics {
     course_id: string
+    course_code: string
     course_name: string
     enrolled_count: number
     avg_progress: number

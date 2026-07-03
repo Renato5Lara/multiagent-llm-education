@@ -651,6 +651,7 @@ def get_course_analytics_batched(db: Session, teacher_id: str) -> list[dict]:
 
         results.append({
             "course_id": cid,
+            "course_code": course.code,
             "course_name": course.name,
             "enrolled_count": enrolled_count,
             "avg_progress": avg_progress,

@@ -41,6 +41,7 @@ class StudentRiskPrediction(BaseModel):
 
 class CourseAnalytics(BaseModel):
     course_id: str
+    course_code: str
     course_name: str
     enrolled_count: int
     avg_progress: float

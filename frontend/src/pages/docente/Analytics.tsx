@@ -27,12 +27,12 @@ export default function DocenteAnalytics() {
 
     // El scope de la tesis es un solo curso: los KPIs deben responder por
     // IS301, no por los 44 cursos de la malla curricular (F11).
-    const thesisCourse = data?.course_analytics?.find(c => isThesisCourse({ name: c.course_name }))
+    const thesisCourse = data?.course_analytics?.find(c => isThesisCourse({ code: c.course_code, name: c.course_name }))
     const totalStudents = thesisCourse?.enrolled_count ?? 0
     const totalAtRisk = thesisCourse?.at_risk_count ?? 0
     const riskPct = totalStudents > 0 ? Math.round((totalAtRisk / totalStudents) * 100) : 0
     const sortedCourseAnalytics = [...(data?.course_analytics ?? [])]
-        .sort((a, b) => Number(isThesisCourse({ name: b.course_name })) - Number(isThesisCourse({ name: a.course_name })))
+        .sort((a, b) => Number(isThesisCourse({ code: b.course_code, name: b.course_name })) - Number(isThesisCourse({ code: a.course_code, name: a.course_name })))
 
     return (
         <div>
@@ -105,11 +105,11 @@ export default function DocenteAnalytics() {
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                     {sortedCourseAnalytics.map((course) => (
-                        <Card key={course.course_id} className={`hover:shadow-md transition-shadow ${isThesisCourse({ name: course.course_name }) ? 'border-primary ring-1 ring-primary' : ''}`}>
+                        <Card key={course.course_id} className={`hover:shadow-md transition-shadow ${isThesisCourse({ code: course.course_code, name: course.course_name }) ? 'border-primary ring-1 ring-primary' : ''}`}>
                             <CardHeader className="pb-2">
                                 <div className="flex justify-between items-start">
                                     <CardTitle className="text-base">
-                                        {isThesisCourse({ name: course.course_name }) && '⭐ '}{course.course_name}
+                                        {isThesisCourse({ code: course.course_code, name: course.course_name }) && '⭐ '}{course.course_name}
                                     </CardTitle>
                                     <Button
                                         size="sm"
