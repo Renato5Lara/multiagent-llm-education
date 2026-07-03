@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -34,7 +35,10 @@ class ResearchAgent:
             cache_only=bool(state.get("cache_only", False)),
         )
         validation = self._validate_consistency(research, context)
-        memory_ids = self._publish_memory(research, state)
+        # En un hilo aparte: el INSERT síncrono puede esperar un lock de fila
+        # (dos orquestaciones concurrentes del mismo módulo) y ejecutarlo sobre
+        # el event loop congela todo el backend — deadlock C3, ver FLOW_AUDIT.
+        memory_ids = await asyncio.to_thread(self._publish_memory, research, state)
         return {
             **state,
             "research": research.to_dict(),
