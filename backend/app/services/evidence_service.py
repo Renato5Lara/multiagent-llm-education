@@ -173,16 +173,22 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
     # al capítulo de resultados de la tesis, no a esta pantalla.
     hypothesis_bridge = {
         "demonstrated": [
-            {"label": "Perfil detectado", "available": diagnostic is not None},
-            {"label": "Adaptación aplicada", "available": route_explanation is not None},
-            {"label": "Progreso Bloom", "available": has_bloom_progression},
-            {"label": "Evaluaciones", "available": len(evaluations) > 0},
-            {"label": "Memoria compartida", "available": len(memory_records) > 0},
-            {"label": "Trayectoria", "available": len(modules) > 0},
+            {"label": "Perfil de aprendizaje detectado", "available": diagnostic is not None},
+            {"label": "Estrategia adaptativa aplicada", "available": route_explanation is not None},
+            {"label": "Progresión Bloom", "available": has_bloom_progression},
+            {"label": "Resultados de evaluación", "available": len(evaluations) > 0},
+            {"label": "Registros de memoria compartida", "available": len(memory_records) > 0},
+            {"label": "Trayectoria completa del estudiante", "available": len(modules) > 0},
         ],
         "out_of_scope": [
-            {"label": "Consenso determinista", "reason": "No persistido en el flujo actual."},
-            {"label": "Comparación contra agente único", "reason": "No forma parte del recorrido registrado; corresponde al capítulo de resultados de la investigación."},
+            {
+                "label": "Consenso determinista",
+                "reason": "No forma parte del flujo persistido que utiliza actualmente la plataforma. Su evaluación corresponde al capítulo experimental de la investigación.",
+            },
+            {
+                "label": "Comparación contra agente único",
+                "reason": "No se registra durante el uso de la plataforma. La comparación se realiza mediante el diseño experimental de la tesis.",
+            },
         ],
     }
 

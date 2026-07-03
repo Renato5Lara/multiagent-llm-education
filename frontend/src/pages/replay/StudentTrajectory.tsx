@@ -211,7 +211,7 @@ export default function StudentTrajectoryPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader><CardTitle className="text-lg">Evidencias observadas durante el recorrido</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-lg">Evidencias registradas</CardTitle></CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {trajectory.hypothesis_bridge.demonstrated.map(item => (
