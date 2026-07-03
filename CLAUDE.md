@@ -334,3 +334,45 @@ La tesis tiene prioridad absoluta sobre el producto.
 No estamos construyendo la plataforma más grande.
 
 **Estamos construyendo la evidencia científica más sólida.**
+
+---
+
+## REGLA DE DESARROLLO (Etapa 2 — Plataforma funcional)
+
+> **No se desarrolla por pantalla. Se desarrolla por recorrido completo.**
+
+Desde el commit `bfec134` (Modo Evidencia), la arquitectura de investigación
+está consolidada y la pregunta de trabajo cambió:
+
+- ❌ "¿Qué otra idea mejora la plataforma?"
+- ✅ "¿Qué impide que un estudiante complete todo el flujo de aprendizaje?"
+
+El ciclo de trabajo es el de un equipo de producto:
+
+```
+Abrir la aplicación
+→ Recorrerla como el actor (estudiante / docente / admin / jurado)
+→ Encontrar un bloqueo
+→ Corregir ese bloqueo
+→ Commit (una decisión por commit)
+→ Repetir
+```
+
+Orden de prioridad de los recorridos: **Estudiante (es el 70% de la tesis)
+→ Docente (sus 4 preguntas) → Administrador (mínimo) → Modo Evidencia
+(preparación de la sustentación)**. Los bloqueos se registran en
+FLOW_AUDIT.md. Nunca "hoy mejoraré una pantalla"; siempre "hoy el actor
+podrá llegar de X a Y sin interrupciones".
+
+---
+
+## REGLA DE CIERRE
+
+> **Un recorrido no se considera terminado hasta que un usuario real pueda
+> completarlo de principio a fin sin intervención del desarrollador.**
+
+No basta con que compile ni con que los tests pasen. Cada recorrido se
+prueba como lo haría su actor correspondiente (estudiante, docente,
+administrador o jurado), en navegador real y contra el stack completo.
+La unidad de trabajo no es el sprint: es el **cierre de recorrido**.
+El tablero de cierres vive en FLOW_AUDIT.md § Tablero Etapa 2.

@@ -4,6 +4,10 @@
 > El objetivo de cada sesión de desarrollo es **reducir bloqueos y fricciones**,
 > no añadir funcionalidades.
 >
+> **Regla de Desarrollo:** no se desarrolla por pantalla, se desarrolla por
+> recorrido completo. La pregunta de cada sesión es "¿qué impide que el actor
+> complete todo el flujo?" (ver CLAUDE.md § Regla de Desarrollo).
+>
 > Severidad: **Crítico** = impide terminar el recorrido · **Medio** = el
 > recorrido termina pero genera confusión · **Bajo** = solo estética.
 > Estado: 🟩 Funcional · 🟨 Tiene fricciones · 🟥 Bloqueado · ⬜ Sin validar.
@@ -17,6 +21,44 @@
 | 3 — Docente | 🟩 | 1 (corregido) | 3 | 2026-07-02 (navegador real, e2e) |
 | 4 — Modo Evidencia | ⬜ | — | — | Pendiente (reorganizado 2026-07-02: dejó de ser rol de usuario) |
 | 5 — Administrador | ⬜ | — | — | Pendiente (crear usuario ya validado 2026-07-02) |
+
+## Tablero Etapa 2 — Cierres de recorrido
+
+> Regla de Cierre: un recorrido no está terminado hasta que un usuario real
+> pueda completarlo de principio a fin sin intervención del desarrollador
+> (navegador real, stack completo). Pregunta diaria: **¿qué recorrido vamos
+> a cerrar hoy?**
+
+**Recorrido 1 — Estudiante** (prioridad máxima)
+
+- ☑ Login · ☑ Registro · ☑ Onboarding · ☑ Diagnóstico · ☑ Ruta
+- ☑ Momento 1 · ☑ Journey
+- ☑ CodeLab · ☑ Evaluación · ☑ Resultados · ☑ Siguiente módulo
+
+**ESTUDIANTE FUNCIONALMENTE CERRADO** — cierre e2e 2026-07-02 (ver acta
+"Cierre del Recorrido 1"). El recorrido cumple el objetivo de
+investigación; los defectos restantes (F1, F12, F13) no impiden
+completarlo. Cuatro bloqueos corregidos en la sesión de cierre: E1
+(Evaluación huérfana), F2 (doble experiencia de módulo), C3 (deadlock que
+congelaba el backend) y E2 (paso Code Lab nunca se generaba).
+
+**Recorrido 2 — Docente**
+
+- ⬜ Dashboard · ⬜ Ver estudiantes · ⬜ Ver progreso · ⬜ Ver dificultades
+- ⬜ Recomendar actividad
+- (base validada 2026-07-02 como "Recorrido 3" histórico; re-cerrar con la
+  Regla de Cierre)
+
+**Recorrido 3 — Administrador**
+
+- ⬜ Usuarios · ⬜ Roles · ⬜ Configuración · ⬜ Auditoría
+
+**Recorrido 4 — Modo Evidencia**
+
+- ⬜ Decision Trace · ⬜ Replay · ⬜ Swarm Monitor · ⬜ Exportar evidencia
+
+Cuando todos los ítems de un recorrido estén ☑ se marca **COMPLETADO** aquí
+y se registra la validación en su sección de acta.
 
 ---
 
@@ -131,6 +173,55 @@ Credenciales seed: docente@upao.edu.pe / Docente2026!
 
 ---
 
+## Cierre del Recorrido 1 — tramo final ✅ 2026-07-02
+
+**Recorrido 1 funcionalmente cerrado.** El recorrido cumple el objetivo de
+investigación y los defectos restantes no impiden completarlo.
+
+**Objetivo de la sesión:** un estudiante nuevo puede completar desde la ruta
+personalizada hasta la pantalla de resultados sin intervención del
+desarrollador. **Cumplido.**
+
+Validado en navegador real con: `estudiante3@upao.edu.pe` (María, llegó a
+4/4 · 100% · 200 pts), `kines.r1@upao.edu.pe` y `kines.r2@upao.edu.pe`
+(nuevos, perfil **kinestésico** detectado con 80% conf., creados vía panel
+admin + inscritos vía docente). Contraseña de los nuevos: `Recorrido2026!`.
+
+| Etapa | Estado | Evidencia |
+| --- | --- | --- |
+| Ruta → Evaluación | 🟩 | Tarjeta "Demuestra lo aprendido" visible con ≥1 misión completada |
+| Evaluación → Resultados | 🟩 | Pregunta adaptada al módulo activo → "¡Aprobado! 1/1" → botón "Volver a la ruta" |
+| Resultados → Siguiente módulo | 🟩 | Aprobar completa la misión activa y desbloquea la siguiente (por diseño) |
+| Journey → Code Lab | 🟩 | Estudiante kinestésico: paso "Práctica en Code Lab: Funciones y módulos" en fase Practica → `/estudiante/codelab/functions` → desafío de bloques resuelto → "¡Desafíos completados!" → vuelve a la misión |
+| Una sola experiencia de módulo | 🟩 | Toda misión entra por el Journey 5E (Momento 1 → pills → completar) |
+
+### Bloqueos corregidos en esta sesión
+
+| # | Severidad | Descripción | Fix |
+| --- | --- | --- | --- |
+| E1 | Crítico | La Evaluación (`/estudiante/evaluation/:courseId`, completa con score y resultados) era **inalcanzable**: ninguna pantalla navegaba a ella. | Tarjeta "Evaluación · Demuestra lo aprendido" en `LearningPath.tsx`, visible al completar ≥1 misión. |
+| F2 | Medio | Dos experiencias de módulo según el título: 4 temas se desviaban a `AdaptiveLearnView` (sin 5E). | Eliminado `detectTopicSlug()`; toda misión entra por `/estudiante/module/:id` (Journey 5E). |
+| C3 | Crítico | Orquestar "Funciones y módulos" **congelaba todo el backend** (ni /health respondía): `publish_observation_sync` (shared_memory.py) hace un INSERT síncrono sobre el event loop; con dos orquestaciones concurrentes del mismo módulo (doble efecto React en dev) la espera del lock de fila bloqueaba el loop → deadlock; el `asyncio.wait_for(60s)` nunca dispara sobre código síncrono. Diagnóstico por `py-spy dump`. | `research_agent.analyze`: `_publish_memory` ahora corre en `asyncio.to_thread` — la espera del lock ya no bloquea el loop; la primera orquestación termina y libera. Verificado: orquestaciones sucesivas y concurrentes sin congelamiento. |
+| E2 | Crítico | El paso "Práctica en Code Lab" **nunca se generaba para ningún estudiante**, por dos capas: (a) `codeLabSelector.ts` buscaba fragmentos semánticos en el `module_id`, que es un UUID — match imposible; (b) `ModuleLearningView` pasaba al builder como `dominantModality` la modalidad del primer *prompt de medios* (`image`/`video`/`audio`), nunca la del aprendiz, así que la puerta `=== 'kinesthetic'` (matriz modalidad×fase congelada) jamás abría. | (a) el selector matchea palabras clave en id+título (es/en); (b) `ModuleLearningView` obtiene la modalidad real del aprendiz de `useLearningPath(courseId).dominant_modality` y la pasa al builder y al overlay de fase (esto además corrige F6: el overlay ya recibe la modalidad detectada, no "Adaptativa"). |
+
+### Fricciones nuevas (no bloquean)
+
+| # | Severidad | Descripción |
+| --- | --- | --- |
+| F12 | Bajo | Toast del docente: "1 estudiantes inscritos" (concordancia singular/plural, punto distinto al ya corregido en analytics). |
+| F13 | Medio | Salir del Journey hacia Code Lab y volver **reinicia el journey desde el paso 1** (el progreso de pasos no se persiste al desmontar). El estudiante puede re-avanzar, pero es fricción notable para la demo. |
+
+### Nota metodológica
+
+La validación fue con navegador real y gestos de usuario (clics, scroll,
+drag & drop en Code Lab, formularios). El comportamiento "aprobar la
+evaluación completa la misión activa" es de diseño (backend
+`evaluation_service`) y encaja con el flujo canónico Evaluación →
+Resultados → Siguiente módulo. Los journeys varían de 14 a 19 pasos según
+la orquestación — variabilidad esperada del swarm.
+
+---
+
 ## Recorrido 4 — Modo Evidencia (antes "Investigador")
 
 **Reorganización 2026-07-02:** el investigador dejó de existir como rol de
@@ -163,6 +254,10 @@ Credenciales seed: admin@upao.edu.pe / Admin2026!
 | 2026-07-02 | Crítico | Build roto: `milestoneTimer`/`xpTimer` sin declarar + `useRef` tras early return en LearningJourney.tsx | `1a48d46` |
 | 2026-07-02 | Crítico | Docente sin permiso para listar estudiantes → imposible inscribir → estudiante nuevo bloqueado en "Sin curso asignado" (C1, Recorrido 1) | `users.py` list_users: docente puede listar solo estudiantes |
 | 2026-07-02 | Crítico | Analítica docente calculaba progreso sobre Resources (0 en cursos demo) → todos los estudiantes con 0% siempre; sin modalidad ni riesgo por estudiante (C2, Recorrido 3) | progreso desde `path_modules` en vivo + tabla de inscritos con modalidad/progreso/riesgo |
+| 2026-07-02 | Crítico | Evaluación inalcanzable: ninguna pantalla navegaba a `/estudiante/evaluation` (E1, cierre R1) | tarjeta de evaluación en `LearningPath.tsx` |
+| 2026-07-02 | Medio | Doble experiencia de módulo: 4 temas desviados a la vista sin 5E (F2, cierre R1) | eliminado `detectTopicSlug()`; todo entra por el Journey |
+| 2026-07-02 | Crítico | Backend entero congelado al orquestar con concurrencia: INSERT síncrono de memoria compartida sobre el event loop → deadlock con el lock de fila (C3, cierre R1) | `_publish_memory` vía `asyncio.to_thread` en `research_agent.py` |
+| 2026-07-02 | Crítico | Paso Code Lab nunca generado: selector sobre UUID + modalidad de medios confundida con modalidad del aprendiz (E2, cierre R1) | selector por título + `dominant_modality` del learning path en `ModuleLearningView` |
 
 ## Notas operativas
 
