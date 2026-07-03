@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, Circle, Lock } from 'lucide-react'
+import { CheckCircle2, Circle, Lock, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -31,6 +31,17 @@ export default function StudentTrajectoryPage() {
     return (
         <div className="max-w-4xl mx-auto space-y-6">
             <PageHeader title="Trayectoria del estudiante" description="Evidencia cronológica del proceso de adaptación — solo datos persistidos, sin simulaciones." />
+
+            <Card className="border-dashed">
+                <CardContent className="p-4 flex items-start gap-3">
+                    <ShieldCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                        Esta vista muestra únicamente evidencias persistidas durante el recorrido real del estudiante.
+                        Cuando una decisión o registro no fue almacenado por la plataforma, se indica explícitamente
+                        en lugar de reconstruirse o simularse.
+                    </p>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardContent className="p-4">
@@ -95,6 +106,39 @@ export default function StudentTrajectoryPage() {
                     </Card>
 
                     <Card>
+                        <CardHeader><CardTitle className="text-lg">¿Por qué esta ruta?</CardTitle></CardHeader>
+                        <CardContent>
+                            {!trajectory.route_explanation ? (
+                                <p className="text-muted-foreground text-sm">Sin diagnóstico registrado — no hay decisión adaptativa que explicar.</p>
+                            ) : trajectory.route_explanation.source === 'adaptive_decision' ? (
+                                <div className="space-y-2">
+                                    <p className="text-sm">{trajectory.route_explanation.strategy_description}</p>
+                                    {trajectory.route_explanation.prior_emphasis && (
+                                        <p className="text-sm text-muted-foreground">{trajectory.route_explanation.prior_emphasis}</p>
+                                    )}
+                                    {trajectory.route_explanation.emphasis_topic_labels.length > 0 && (
+                                        <div className="flex gap-2 flex-wrap pt-1">
+                                            {trajectory.route_explanation.emphasis_topic_labels.map(t => (
+                                                <Badge key={t} variant="outline">{t}</Badge>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <p className="text-sm"><span className="font-medium">Motivo:</span> {trajectory.route_explanation.detection}</p>
+                                    <p className="text-sm"><span className="font-medium">Adaptación:</span> {trajectory.route_explanation.adaptation}</p>
+                                    <p className="text-xs text-muted-foreground pt-1 border-t mt-2">
+                                        Este diagnóstico no almacena la decisión adaptativa detallada porque fue generado
+                                        con una versión anterior del sistema. La explicación anterior se basa en la
+                                        modalidad detectada, no en una decisión adaptativa persistida.
+                                    </p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
                         <CardHeader><CardTitle className="text-lg">Ruta y progreso</CardTitle></CardHeader>
                         <CardContent>
                             {trajectory.modules.length === 0 ? (
@@ -108,6 +152,7 @@ export default function StudentTrajectoryPage() {
                                                 <div className="flex items-center gap-3">
                                                     <Icon className={`h-4 w-4 ${m.status === 'completed' ? 'text-green-600' : 'text-muted-foreground'}`} />
                                                     <span className="text-sm font-medium">{m.title}</span>
+                                                    {m.bloom_level != null && <Badge variant="outline" className="text-[10px]">Bloom {m.bloom_level}</Badge>}
                                                 </div>
                                                 <span className="text-xs text-muted-foreground">{formatDate(m.completed_at)}</span>
                                             </div>
@@ -162,6 +207,36 @@ export default function StudentTrajectoryPage() {
                                     </TableBody>
                                 </Table>
                             )}
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-lg">Evidencias observadas durante el recorrido</CardTitle></CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {trajectory.hypothesis_bridge.demonstrated.map(item => (
+                                    <div key={item.label} className="flex items-center gap-2">
+                                        {item.available ? (
+                                            <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                                        ) : (
+                                            <Circle className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        )}
+                                        <span className="text-sm">{item.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-dashed">
+                        <CardHeader><CardTitle className="text-base text-muted-foreground">Elementos fuera del alcance de esta demostración</CardTitle></CardHeader>
+                        <CardContent className="space-y-2">
+                            {trajectory.hypothesis_bridge.out_of_scope.map(item => (
+                                <div key={item.label}>
+                                    <p className="text-sm font-medium text-muted-foreground">{item.label}</p>
+                                    <p className="text-xs text-muted-foreground">{item.reason}</p>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
                 </div>

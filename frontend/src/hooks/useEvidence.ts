@@ -13,7 +13,34 @@ export interface StudentTrajectoryModule {
     order: number
     status: string
     score: number | null
+    bloom_level: number | null
     completed_at: string | null
+}
+
+export interface RouteExplanationAdaptiveDecision {
+    source: 'adaptive_decision'
+    strategy_description: string
+    prior_emphasis: string | null
+    emphasis_topic_labels: string[]
+}
+
+export interface RouteExplanationModalityFallback {
+    source: 'modality_fallback'
+    detection: string
+    adaptation: string
+}
+
+export type RouteExplanation = RouteExplanationAdaptiveDecision | RouteExplanationModalityFallback
+
+export interface HypothesisBridgeItem {
+    label: string
+    available?: boolean
+    reason?: string
+}
+
+export interface HypothesisBridge {
+    demonstrated: HypothesisBridgeItem[]
+    out_of_scope: HypothesisBridgeItem[]
 }
 
 export interface StudentTrajectoryEvaluation {
@@ -51,6 +78,8 @@ export interface StudentTrajectory {
         agents_involved: string[]
     }
     diagnostic: StudentTrajectoryDiagnostic | null
+    route_explanation: RouteExplanation | null
+    hypothesis_bridge: HypothesisBridge
     modules: StudentTrajectoryModule[]
     evaluations: StudentTrajectoryEvaluation[]
     evidence: StudentTrajectoryEvidence[]
