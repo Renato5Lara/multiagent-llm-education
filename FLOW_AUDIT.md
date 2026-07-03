@@ -29,7 +29,7 @@
 | 1 — Estudiante nuevo | 🟩 | 1 (corregido) | 3 | 2026-07-02 (navegador real, e2e) |
 | 2 — Estudiante existente | 🟩 | 0 | 4 | 2026-07-02 (navegador real, e2e) |
 | 3 — Docente | 🟩 | 2 (corregidos) | 0 | 2026-07-03 (D1-D5, navegador real, e2e) — funcionalmente validado |
-| 4 — Modo Evidencia | ⬜ | — | — | Pendiente (reorganizado 2026-07-02: dejó de ser rol de usuario) |
+| 4 — Modo Evidencia | 🟩 | 1 (E0: pipeline paralelo eliminado) | 0 | 2026-07-03 (E0+E1, navegador real, e2e) — funcionalmente validado |
 | 5 — Administrador | 🟩 | 1 (corregido) | 0 | 2026-07-03 (A1-A4, navegador real, e2e) — funcionalmente validado |
 
 ## Tablero Etapa 2 — Cierres de recorrido
@@ -46,12 +46,11 @@ Arquitectura del Swarm.
 
 **Etapa 3 — producto demostrable.** La pregunta ya no es "¿cómo mejoro la
 plataforma?" sino **"¿puede cualquier jurado usarla de principio a fin sin
-encontrar un bloqueo?"**. Prioridad de bloques: Bloque 1 Estudiante →
-Bloque 2 Docente → Bloque 3 Administrador (los tres funcionalmente
-validados) → Bloque 4 Modo Evidencia (siguiente, laboratorio de
-evidencia). No se trabaja fuera de orden salvo bloqueo crítico en un
-recorrido ya validado. La iteración de investigación 2.2
-(RESEARCH_ITERATIONS.md) queda **pausada** hasta cerrar Modo Evidencia.
+encontrar un bloqueo?"**. Los cuatro bloques (Estudiante, Docente,
+Administrador, Modo Evidencia) están funcionalmente validados. La
+iteración de investigación 2.2 (RESEARCH_ITERATIONS.md) puede retomarse;
+lo siguiente es pruebas e2e de extremo a extremo y corrección de bugs de
+cara a la sustentación.
 
 > **Terminología (2026-07-03):** "funcionalmente validado para la
 > demostración" — no "cerrado"/"completado". Un bloque validado cumple su
@@ -102,16 +101,32 @@ real. A5 (combobox `investigador` vacío en Roles.tsx, `confirm()` nativos)
 queda en Backlog post-sustentación — cosmético, no bloquea ninguna de las
 8 preguntas del audit.
 
-**Recorrido 4 — Modo Evidencia** (Bloque 4 — SIGUIENTE, laboratorio de evidencia)
+**Recorrido 4 — Modo Evidencia** (Bloque 4 — funcionalmente validado)
 
 No es un dashboard de observabilidad: es donde se defiende la tesis. Debe
 responder, sin que nadie hable:
 
-- ⬜ ¿Por qué este estudiante recibió esta ruta?
-- ⬜ ¿Qué agentes participaron?
-- ⬜ ¿Qué modalidad detectó?
-- ⬜ ¿Qué evidencia produjo?
-- ⬜ ¿Cómo evolucionó?
+- ☑ ¿Por qué este estudiante recibió esta ruta? (E1 — dos casos reales:
+  `adaptive_decision` persistido, o fallback honesto a la explicación de
+  modalidad de D3 con nota de compatibilidad)
+- ☑ ¿Qué agentes participaron? (honesto: 2 agentes reales con evidencia
+  persistida — `research_agent`, `narrative_continuity` — no se infla a
+  "8 agentes")
+- ☑ ¿Qué modalidad detectó? (E0 — `DiagnosticResult` real)
+- ☑ ¿Qué evidencia produjo? (E0 — `SharedMemoryRecord` real, 60 registros
+  verificados para María)
+- ☑ ¿Cómo evolucionó? (E0 — línea de tiempo real diagnóstico→módulos con
+  `bloom_level`→evaluaciones, fechas reales)
+
+**MODO EVIDENCIA FUNCIONALMENTE VALIDADO** — E0 (única fuente de verdad:
+se eliminó la dependencia del pipeline paralelo `weekly_learning`, que
+era 100% sintético/vacío/roto) + E1 (puente narrativo Q1/Q5), 2026-07-03,
+navegador real. "Demo Multiagente" (`/swarm-demo`) queda desvinculada del
+recorrido oficial — código conservado, fuera del alcance del jurado.
+Puente hacia la hipótesis deliberadamente parcial: "consenso determinista"
+y "comparación contra agente único" se declaran explícitamente fuera de
+alcance de esta pantalla (pertenecen al capítulo de resultados de la
+tesis), no se simulan.
 
 Cuando todos los ítems de un recorrido estén ☑ se marca **FUNCIONALMENTE
 VALIDADO** aquí y se registra la validación en su sección de acta.
