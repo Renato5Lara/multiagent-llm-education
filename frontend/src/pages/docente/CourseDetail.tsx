@@ -224,14 +224,14 @@ export default function CourseDetail() {
                                             <TableHead>Código</TableHead>
                                             <TableHead>Modalidad</TableHead>
                                             <TableHead>Progreso</TableHead>
-                                            <TableHead>Índice de progreso</TableHead>
+                                            <TableHead>Avance general</TableHead>
                                             <TableHead>Estado</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {[...enrolledStudents]
                                             .sort((a, b) => (b.progress_index ?? -1) - (a.progress_index ?? -1))
-                                            .map((s, i) => (
+                                            .map((s) => (
                                             <TableRow key={s.id}>
                                                 <TableCell className="font-medium">{s.first_name} {s.last_name}</TableCell>
                                                 <TableCell>{s.email}</TableCell>
@@ -252,7 +252,11 @@ export default function CourseDetail() {
                                                 <TableCell>
                                                     {s.progress_index != null ? (
                                                         <span className="text-sm font-medium">
-                                                            {i === 0 && <span className="text-muted-foreground mr-1">#1</span>}
+                                                            {s.progress_index >= 75
+                                                                ? '🟢'
+                                                                : s.progress_index >= 40
+                                                                    ? '🟡'
+                                                                    : '🔴'}{' '}
                                                             {s.progress_index}
                                                             {s.avg_evaluation_score != null && (
                                                                 <span className="text-muted-foreground text-xs ml-1">
