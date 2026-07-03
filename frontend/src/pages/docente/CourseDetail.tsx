@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import PageHeader from '@/components/common/PageHeader'
+import { getTeacherRecommendation } from '@/lib/teacherRecommendations'
 import WeeklyStructureCreator from '@/components/docente/WeeklyStructureCreator'
 import { useCourse, usePublishCourse, useEnrollStudents, useEnrolledStudents } from '@/hooks/useCourses'
 import { useObjectives, useCreateObjective, useDeleteObjective } from '@/hooks/useObjectives'
@@ -226,6 +227,7 @@ export default function CourseDetail() {
                                             <TableHead>Progreso</TableHead>
                                             <TableHead>Avance general</TableHead>
                                             <TableHead>Mayor dificultad</TableHead>
+                                            <TableHead>Acción sugerida</TableHead>
                                             <TableHead>Estado</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -289,6 +291,19 @@ export default function CourseDetail() {
                                                             )}
                                                         </span>
                                                     ) : <span className="text-muted-foreground text-xs">Sin evaluaciones</span>}
+                                                </TableCell>
+                                                <TableCell className="max-w-xs">
+                                                    {(() => {
+                                                        const rec = getTeacherRecommendation(s)
+                                                        return (
+                                                            <div className="space-y-1">
+                                                                <p className="text-sm font-medium">
+                                                                    {rec.level === 'ok' ? '✓' : '⚠️'} {rec.action}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground">{rec.rationale}</p>
+                                                            </div>
+                                                        )
+                                                    })()}
                                                 </TableCell>
                                                 <TableCell><Badge variant="secondary">{s.status}</Badge></TableCell>
                                             </TableRow>
