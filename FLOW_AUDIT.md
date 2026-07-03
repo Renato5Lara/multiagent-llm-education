@@ -28,9 +28,9 @@
 | --- | --- | --- | --- | --- |
 | 1 — Estudiante nuevo | 🟩 | 1 (corregido) | 3 | 2026-07-02 (navegador real, e2e) |
 | 2 — Estudiante existente | 🟩 | 0 | 4 | 2026-07-02 (navegador real, e2e) |
-| 3 — Docente | 🟩 | 1 (corregido) | 3 | 2026-07-02 (navegador real, e2e) |
+| 3 — Docente | 🟩 | 2 (corregidos) | 0 | 2026-07-03 (D1-D5, navegador real, e2e) — funcionalmente validado |
 | 4 — Modo Evidencia | ⬜ | — | — | Pendiente (reorganizado 2026-07-02: dejó de ser rol de usuario) |
-| 5 — Administrador | ⬜ | — | — | Pendiente (crear usuario ya validado 2026-07-02) |
+| 5 — Administrador | 🟩 | 1 (corregido) | 0 | 2026-07-03 (A1-A4, navegador real, e2e) — funcionalmente validado |
 
 ## Tablero Etapa 2 — Cierres de recorrido
 
@@ -46,53 +46,63 @@ Arquitectura del Swarm.
 
 **Etapa 3 — producto demostrable.** La pregunta ya no es "¿cómo mejoro la
 plataforma?" sino **"¿puede cualquier jurado usarla de principio a fin sin
-encontrar un bloqueo?"**. Prioridad de bloques: Bloque 1 Estudiante
-(CERRADO) → Bloque 2 Docente (siguiente) → Bloque 3 Administrador (mínimo)
-→ Bloque 4 Modo Evidencia (laboratorio de evidencia). No se trabaja fuera
-de orden salvo bloqueo crítico en un recorrido ya cerrado. La iteración de
-investigación 2.2 (RESEARCH_ITERATIONS.md) queda **pausada** hasta cerrar
-estos tres bloques.
+encontrar un bloqueo?"**. Prioridad de bloques: Bloque 1 Estudiante →
+Bloque 2 Docente → Bloque 3 Administrador (los tres funcionalmente
+validados) → Bloque 4 Modo Evidencia (siguiente, laboratorio de
+evidencia). No se trabaja fuera de orden salvo bloqueo crítico en un
+recorrido ya validado. La iteración de investigación 2.2
+(RESEARCH_ITERATIONS.md) queda **pausada** hasta cerrar Modo Evidencia.
 
-**Recorrido 1-2 — Estudiante** (Bloque 1 — CERRADO, prioridad máxima)
+> **Terminología (2026-07-03):** "funcionalmente validado para la
+> demostración" — no "cerrado"/"completado". Un bloque validado cumple su
+> criterio de cierre observable en navegador real; no implica ausencia de
+> defectos menores (esos van al Backlog post-sustentación).
+
+**Recorrido 1-2 — Estudiante** (Bloque 1 — funcionalmente validado, prioridad máxima)
 
 - ☑ Login · ☑ Registro · ☑ Onboarding · ☑ Diagnóstico · ☑ Ruta
 - ☑ Momento 1 · ☑ Journey
 - ☑ CodeLab · ☑ Evaluación · ☑ Resultados · ☑ Siguiente módulo
 
-**ESTUDIANTE FUNCIONALMENTE CERRADO** — cierre e2e 2026-07-02 (ver acta
-"Cierre del Recorrido 1"). El recorrido cumple el objetivo de
+**ESTUDIANTE FUNCIONALMENTE VALIDADO** — validación e2e 2026-07-02 (ver
+acta "Cierre del Recorrido 1"). El recorrido cumple el objetivo de
 investigación; los defectos restantes (F1, F12, F13) no impiden
-completarlo. Cuatro bloqueos corregidos en la sesión de cierre: E1
+completarlo. Cuatro bloqueos corregidos en la sesión de validación: E1
 (Evaluación huérfana), F2 (doble experiencia de módulo), C3 (deadlock que
 congelaba el backend) y E2 (paso Code Lab nunca se generaba).
 
-**Recorrido 3 — Docente** (Bloque 2 — SIGUIENTE)
+**Recorrido 3 — Docente** (Bloque 2 — funcionalmente validado)
 
-La auditoría funcional de 2026-07-02 (ver sección "Recorrido 3 — Docente"
-abajo) cerró la carga de datos y las métricas (🟩 en el Resumen), pero
-**no** el criterio de cierre real de este bloque. Criterio de cierre: el
-jurado entra como docente y responde estas cinco preguntas mirando la
-pantalla, **sin que nadie hable**:
+Criterio de cierre: el jurado entra como docente y responde estas cinco
+preguntas mirando la pantalla, **sin que nadie hable**:
 
-- ⬜ ¿Quién necesita ayuda?
-- ⬜ ¿Quién está aprendiendo rápido?
-- ⬜ ¿Por qué el sistema adaptó distinto a cada estudiante?
-- ⬜ ¿Qué debo hacer como docente?
-- ⬜ ¿Qué evidencia tengo para confiar en esa recomendación? (score real,
-  modalidad detectada, dificultad puntual — no "la IA lo dice")
+- ☑ ¿Quién necesita ayuda? (D5.1/D5.2 — IS301 primero, KPIs acotados)
+- ☑ ¿Quién está aprendiendo rápido? (D1 — Avance general)
+- ☑ ¿Por qué el sistema adaptó distinto a cada estudiante? (D3 — Motivo/Adaptación)
+- ☑ ¿Qué debo hacer como docente? (D4 — Acción sugerida determinista)
+- ☑ ¿Qué evidencia tengo para confiar en esa recomendación? (D2 — score
+  real, modalidad detectada, dificultad puntual — no "la IA lo dice")
 
-Hasta que las cinco estén ☑ el bloque no se considera cerrado, aunque la
-auditoría técnica lo esté. (Drift de numeración corregido 2026-07-02: esta
-sección se numeraba "Recorrido 2" aquí y "Recorrido 3" en el Resumen —
-ahora ambas usan 3.)
+**DOCENTE FUNCIONALMENTE VALIDADO** — D1→D5 + refactor de endurecimiento
+(`THESIS_COURSE_CODE`), 2026-07-03, navegador real. (Drift de numeración
+corregido 2026-07-02: esta sección se numeraba "Recorrido 2" aquí y
+"Recorrido 3" en el Resumen — ahora ambas usan 3.)
 
-**Recorrido 5 — Administrador** (Bloque 3 — mínimo, deliberadamente pequeño)
+**Recorrido 5 — Administrador** (Bloque 3 — funcionalmente validado, mínimo deliberado)
 
 No administra cursos ni contenidos — solo:
 
-- ⬜ Usuarios · ⬜ Roles · ⬜ Activación/reinicio de cuentas · ⬜ Configuración institucional
+- ☑ Usuarios (crear/editar) · ☑ Roles (cambiar rol desde Editar, A2) ·
+  ☑ Activación/reinicio de cuentas · ☑ Estado del sistema (A3 — BD, IA,
+  Investigación, Enjambre; reemplaza "Configuración institucional",
+  descartada por Regla de Oro — no fortalece la hipótesis)
 
-**Recorrido 4 — Modo Evidencia** (Bloque 4 — laboratorio de evidencia)
+**ADMINISTRADOR FUNCIONALMENTE VALIDADO** — A1→A4, 2026-07-03, navegador
+real. A5 (combobox `investigador` vacío en Roles.tsx, `confirm()` nativos)
+queda en Backlog post-sustentación — cosmético, no bloquea ninguna de las
+8 preguntas del audit.
+
+**Recorrido 4 — Modo Evidencia** (Bloque 4 — SIGUIENTE, laboratorio de evidencia)
 
 No es un dashboard de observabilidad: es donde se defiende la tesis. Debe
 responder, sin que nadie hable:
@@ -103,8 +113,8 @@ responder, sin que nadie hable:
 - ⬜ ¿Qué evidencia produjo?
 - ⬜ ¿Cómo evolucionó?
 
-Cuando todos los ítems de un recorrido estén ☑ se marca **COMPLETADO** aquí
-y se registra la validación en su sección de acta.
+Cuando todos los ítems de un recorrido estén ☑ se marca **FUNCIONALMENTE
+VALIDADO** aquí y se registra la validación en su sección de acta.
 
 ---
 
@@ -324,4 +334,11 @@ Credenciales seed: admin@upao.edu.pe / Admin2026!
 > siguen — no generan discusión de metodología ni edición de otros
 > documentos hasta después de cerrar los Bloques 2-4.
 
-*(vacío)*
+- **A5 (Administrador, cosmético):** combobox de rol vacío para el usuario
+  legado `investigador` en `frontend/src/pages/admin/Roles.tsx` (mismo fix
+  ya aplicado en `UserForm.tsx` — agregar `SelectItem` condicional).
+  Reemplazar los `confirm()` nativos del navegador por `Dialog` de shadcn
+  en `Users.tsx`/`Roles.tsx` para consistencia visual con el resto de la
+  plataforma. Ninguno bloquea las 8 preguntas del audit de Administrador —
+  corregir en el próximo commit que ya toque esas pantallas, no abrir una
+  sesión solo para esto.
