@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useCreateUser, useUpdateUser } from '@/hooks/useUsers'
+import { useCreateUser, useUpdateUser, useChangeUserRole } from '@/hooks/useUsers'
 import type { User } from '@/types/user'
 import type { UserRole } from '@/types/auth'
 
@@ -32,6 +32,7 @@ export default function UserForm({ user, onSuccess }: Props) {
     const isEdit = !!user
     const create = useCreateUser()
     const update = useUpdateUser()
+    const changeRole = useChangeUserRole()
 
     const { register, handleSubmit, formState: { errors }, watch, setValue, reset } = useForm<UserFormData>({
         resolver: zodResolver(userSchema),
@@ -65,8 +66,9 @@ export default function UserForm({ user, onSuccess }: Props) {
     }, [user, reset])
 
     const onSubmit = (data: UserFormData) => {
+        const { role: newRole, ...rest } = data
         const payload = {
-            ...data,
+            ...rest,
             password: data.password || undefined,
             institutional_code: data.institutional_code || undefined,
             area: data.area || undefined,
@@ -74,13 +76,18 @@ export default function UserForm({ user, onSuccess }: Props) {
         }
 
         if (isEdit && user) {
+            // El rol se cambia por el endpoint dedicado /role (con auditoría
+            // old_role/new_role), no por el PUT genérico — que lo ignora.
+            if (newRole !== user.role) {
+                changeRole.mutate({ id: user.id, role: newRole })
+            }
             update.mutate({ id: user.id, data: payload }, { onSuccess })
         } else {
-            create.mutate(payload as Parameters<typeof create.mutate>[0], { onSuccess })
+            create.mutate({ ...payload, role: newRole } as Parameters<typeof create.mutate>[0], { onSuccess })
         }
     }
 
-    const pending = create.isPending || update.isPending
+    const pending = create.isPending || update.isPending || changeRole.isPending
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -106,20 +113,19 @@ export default function UserForm({ user, onSuccess }: Props) {
                 <Input type="password" {...register('password')} className={errors.password ? 'border-red-500' : ''} />
                 {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
             </div>
-            {!isEdit && (
-                <div className="space-y-2">
-                    <Label>Rol *</Label>
-                    <Select value={role} onValueChange={v => setValue('role', v as UserRole, { shouldValidate: true })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="admin">Administrador</SelectItem>
-                            <SelectItem value="docente">Docente</SelectItem>
-                            <SelectItem value="estudiante">Estudiante</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
-                </div>
-            )}
+            <div className="space-y-2">
+                <Label>Rol *</Label>
+                <Select value={role} onValueChange={v => setValue('role', v as UserRole, { shouldValidate: true })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="docente">Docente</SelectItem>
+                        <SelectItem value="estudiante">Estudiante</SelectItem>
+                        {role === 'investigador' && <SelectItem value="investigador">Investigador (legado)</SelectItem>}
+                    </SelectContent>
+                </Select>
+                {errors.role && <p className="text-xs text-red-500">{errors.role.message}</p>}
+            </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label>Código institucional</Label>
