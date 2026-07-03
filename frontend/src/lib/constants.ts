@@ -28,6 +28,12 @@ export const COURSE_STATUS_COLORS: Record<string, string> = {
     archivado: 'bg-gray-100 text-gray-700',
 }
 
+// El scope de la tesis es un solo curso (THESIS_SCOPE_FREEZE.md). Mismo
+// criterio ya usado en EstudianteLayout.tsx para ubicar el curso.
+export function isThesisCourse(course: { code?: string; name?: string }): boolean {
+    return course.code === 'IS301' || !!course.name?.toLowerCase().includes('fundamentos de programaci')
+}
+
 export const ACCEPTED_FILE_TYPES = '.pdf,.mp4,.jpg,.jpeg,.png,.txt,.docx,.mp3,.wav,.ogg,.html,.zip'
 export const MAX_FILE_SIZE_MB = 50
 

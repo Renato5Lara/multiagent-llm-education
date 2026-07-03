@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCourses } from '@/hooks/useCourses'
 import { useAuthStore } from '@/stores/authStore'
-import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS } from '@/lib/constants'
+import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS, isThesisCourse } from '@/lib/constants'
 import PageHeader from '@/components/common/PageHeader'
 import { useNavigate } from 'react-router-dom'
 
@@ -75,14 +75,22 @@ export default function DocenteDashboard() {
                 <p className="text-muted-foreground text-center py-12">No tienes cursos en este ciclo.</p>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {filtered.map(course => (
-                        <Card key={course.id} className="cursor-pointer hover:shadow-md transition-shadow border" onClick={() => navigate(`/docente/courses/${course.id}`)}>
+                    {[...filtered]
+                        .sort((a, b) => Number(isThesisCourse(b)) - Number(isThesisCourse(a)))
+                        .map(course => (
+                        <Card
+                            key={course.id}
+                            className={`cursor-pointer hover:shadow-md transition-shadow border ${isThesisCourse(course) ? 'border-primary ring-1 ring-primary' : ''}`}
+                            onClick={() => navigate(`/docente/courses/${course.id}`)}
+                        >
                             <CardContent className="p-5">
                                 <div className="flex items-start justify-between mb-3">
                                     <span className="text-xs font-mono text-muted-foreground">{course.code}</span>
                                     <Badge variant="secondary" className={COURSE_STATUS_COLORS[course.status] ?? ''}>{COURSE_STATUS_LABELS[course.status] ?? course.status}</Badge>
                                 </div>
-                                <h3 className="font-semibold text-base mb-1 line-clamp-2">{course.name}</h3>
+                                <h3 className="font-semibold text-base mb-1 line-clamp-2">
+                                    {isThesisCourse(course) && '⭐ '}{course.name}
+                                </h3>
                                 <p className="text-sm text-muted-foreground">Ciclo {course.cycle} · {course.year}</p>
                             </CardContent>
                         </Card>

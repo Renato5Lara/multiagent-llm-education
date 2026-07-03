@@ -11,7 +11,7 @@ import PageHeader from '@/components/common/PageHeader'
 import CourseForm from './CourseForm'
 import { useCourses } from '@/hooks/useCourses'
 import { useCurriculumCycles, useTeacherAssignments, useAssignTeacherCourse } from '@/hooks/useCurriculum'
-import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS } from '@/lib/constants'
+import { COURSE_STATUS_LABELS, COURSE_STATUS_COLORS, isThesisCourse } from '@/lib/constants'
 
 export default function CoursesPage() {
     const { data, isLoading } = useCourses(1, 100)
@@ -52,14 +52,22 @@ export default function CoursesPage() {
                             <Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" />Crear tu primer curso</Button></div>
                     ) : (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
-                            {courses.map(c => (
-                                <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow border" onClick={() => navigate(`/docente/courses/${c.id}`)}>
+                            {[...courses]
+                                .sort((a, b) => Number(isThesisCourse(b)) - Number(isThesisCourse(a)))
+                                .map(c => (
+                                <Card
+                                    key={c.id}
+                                    className={`cursor-pointer hover:shadow-md transition-shadow border ${isThesisCourse(c) ? 'border-primary ring-1 ring-primary' : ''}`}
+                                    onClick={() => navigate(`/docente/courses/${c.id}`)}
+                                >
                                     <CardContent className="p-5">
                                         <div className="flex justify-between items-start mb-3">
                                             <span className="text-xs font-mono text-muted-foreground">{c.code}</span>
                                             <Badge variant="secondary" className={COURSE_STATUS_COLORS[c.status] ?? ''}>{COURSE_STATUS_LABELS[c.status] ?? c.status}</Badge>
                                         </div>
-                                        <h3 className="font-semibold mb-1 line-clamp-2">{c.name}</h3>
+                                        <h3 className="font-semibold mb-1 line-clamp-2">
+                                            {isThesisCourse(c) && '⭐ '}{c.name}
+                                        </h3>
                                         <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{c.description || 'Sin descripción'}</p>
                                         <p className="text-xs text-muted-foreground">{c.cycle} · {c.year}</p>
                                     </CardContent>
