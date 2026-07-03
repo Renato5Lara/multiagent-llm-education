@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useModuleOrchestration } from '@/hooks/useStudent'
-import { useUpdateModule } from '@/hooks/useStudent'
+import { useUpdateModule, useLearningPath } from '@/hooks/useStudent'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
 import { EngageGateway } from '@/components/engage/EngageGateway'
@@ -152,6 +152,11 @@ export default function ModuleLearningView() {
   const { mutate: orchestrateModule, isPending: isOrchestrating, isError: orchestrationFailed } = useModuleOrchestration()
   const updateModule = useUpdateModule()
   const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(moduleId)
+  // Modalidad del APRENDIZ (diagnóstico → learning path). No confundir con
+  // multimodal_prompts[].modality, que son modalidades de MEDIOS (image/video/
+  // audio) y nunca valen 'kinesthetic' — usarlas rompía la puerta del Code Lab.
+  const { data: learningPath } = useLearningPath(courseId)
+  const learnerModality = (learningPath?.dominant_modality ?? undefined) as LearningModality | undefined
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -233,7 +238,7 @@ export default function ModuleLearningView() {
 
   // ── GATE 2: Engage done — swarm panel transitions into content ─────────────
   if ((appPhase === 'waiting_content' || isOrchestrating) && !orchestrationFailed) {
-    const dominantModality = data?.multimodal_prompts.find(p => p.enabled)?.modality
+    const dominantModality = learnerModality
     const moduleContext: ModuleContext = {
       moduleName:       data?.module_title,
       dominantModality,
@@ -324,7 +329,7 @@ export default function ModuleLearningView() {
       {USE_LEARNING_JOURNEY && !isLoadingSession && engageSession ? (
         <LearningJourney
           journey={buildJourneyFromLegacy(engageSession, data, {
-            dominantModality: data.multimodal_prompts?.find(p => p.enabled)?.modality as LearningModality | undefined,
+            dominantModality: learnerModality,
           })}
           onComplete={handleComplete}
         />

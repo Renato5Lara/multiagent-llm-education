@@ -115,7 +115,7 @@ const MAX_INTERACTIVE_STEPS = 8
 // ── Code Lab step factory (used by both paths) ────────────────────────────────
 
 function makeCodeLabStep(moduleId: string, moduleTitle: string, phase: Phase5E): LearningJourneyStep | null {
-  const slug = getCodeLabSlug(moduleId)
+  const slug = getCodeLabSlug(`${moduleId} ${moduleTitle}`)
   if (!slug) return null
   const meta: InteractivePracticeMeta = {
     interactiveType: 'code_lab',
