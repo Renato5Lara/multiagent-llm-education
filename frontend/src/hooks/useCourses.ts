@@ -117,6 +117,9 @@ export interface EnrolledStudent {
     at_risk: boolean
     avg_evaluation_score?: number | null
     progress_index?: number | null
+    confidence?: number | null
+    weakest_module?: string | null
+    lowest_module_score?: number | null
 }
 
 export function useEnrolledStudents(courseId: string | undefined) {

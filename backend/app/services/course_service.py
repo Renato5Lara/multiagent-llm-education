@@ -279,15 +279,23 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
     from app.models.evaluation_attempt import EvaluationAttempt
     from app.models.student_progress import LearningPath, PathModule
 
-    modality_map = {
-        r.student_id: r.dominant_modality
-        for r in db.query(DiagnosticResult)
+    diagnostic_rows = (
+        db.query(DiagnosticResult)
         .filter(
             DiagnosticResult.course_id == course_id,
             DiagnosticResult.student_id.in_(student_ids),
         )
         .all()
-    }
+    )
+    modality_map = {r.student_id: r.dominant_modality for r in diagnostic_rows}
+    confidence_map: dict[str, float] = {}
+    for r in diagnostic_rows:
+        try:
+            conf = r.profile["student_profile"]["confidence"]
+        except (TypeError, KeyError):
+            continue
+        if conf is not None:
+            confidence_map[r.student_id] = round(conf * 100)
 
     progress_map: dict[str, dict] = {}
     path_rows = (
@@ -335,6 +343,36 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
         if r.avg_ratio is not None
     }
 
+    # Módulo de mayor dificultad: el intento con menor score/max_score por
+    # estudiante, con el título real del módulo (solo lectura — no toca
+    # WeaknessRecord ni el flujo de envío de evaluación).
+    attempt_rows = (
+        db.query(
+            EvaluationAttempt.student_id,
+            EvaluationAttempt.module_id,
+            EvaluationAttempt.score,
+            EvaluationAttempt.max_score,
+        )
+        .filter(
+            EvaluationAttempt.course_id == course_id,
+            EvaluationAttempt.student_id.in_(student_ids),
+            EvaluationAttempt.max_score > 0,
+        )
+        .all()
+    )
+    weakest_by_student: dict[str, tuple[str | None, float]] = {}
+    for r in attempt_rows:
+        ratio = r.score / r.max_score
+        current = weakest_by_student.get(r.student_id)
+        if current is None or ratio < current[1]:
+            weakest_by_student[r.student_id] = (r.module_id, ratio)
+
+    weak_module_ids = {m_id for m_id, _ in weakest_by_student.values() if m_id}
+    weak_title_map = {
+        m.id: m.title
+        for m in db.query(PathModule).filter(PathModule.id.in_(weak_module_ids)).all()
+    } if weak_module_ids else {}
+
     students_list = []
     for enrollment in enrollments:
         student = user_map.get(enrollment.student_id)
@@ -349,6 +387,9 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             progress_index = pct
         else:
             progress_index = None
+        weakest = weakest_by_student.get(student.id)
+        weakest_module = weak_title_map.get(weakest[0]) if weakest and weakest[0] else None
+        lowest_module_score = round(weakest[1] * 100) if weakest else None
         students_list.append({
             "id": enrollment.id,
             "student_id": student.id,
@@ -365,5 +406,8 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             "at_risk": (pct < 30) if progress else False,
             "avg_evaluation_score": avg_eval,
             "progress_index": progress_index,
+            "confidence": confidence_map.get(student.id),
+            "weakest_module": weakest_module,
+            "lowest_module_score": lowest_module_score,
         })
     return students_list

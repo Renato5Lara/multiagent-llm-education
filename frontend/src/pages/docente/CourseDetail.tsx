@@ -225,6 +225,7 @@ export default function CourseDetail() {
                                             <TableHead>Modalidad</TableHead>
                                             <TableHead>Progreso</TableHead>
                                             <TableHead>Avance general</TableHead>
+                                            <TableHead>Mayor dificultad</TableHead>
                                             <TableHead>Estado</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -237,9 +238,14 @@ export default function CourseDetail() {
                                                 <TableCell>{s.email}</TableCell>
                                                 <TableCell>{s.institutional_code || '-'}</TableCell>
                                                 <TableCell>
-                                                    {s.dominant_modality
-                                                        ? <Badge variant="outline">{MODALITY_LABELS[s.dominant_modality] || s.dominant_modality}</Badge>
-                                                        : <span className="text-muted-foreground text-xs">Sin diagnóstico</span>}
+                                                    {s.dominant_modality ? (
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <Badge variant="outline">{MODALITY_LABELS[s.dominant_modality] || s.dominant_modality}</Badge>
+                                                            {s.confidence != null && (
+                                                                <span className="text-muted-foreground text-xs">{s.confidence}%</span>
+                                                            )}
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground text-xs">Sin diagnóstico</span>}
                                                 </TableCell>
                                                 <TableCell>
                                                     {s.total_modules != null ? (
@@ -265,6 +271,16 @@ export default function CourseDetail() {
                                                             )}
                                                         </span>
                                                     ) : <span className="text-muted-foreground text-xs">Sin datos</span>}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {s.weakest_module ? (
+                                                        <span className="text-sm">
+                                                            {s.weakest_module}
+                                                            {s.lowest_module_score != null && (
+                                                                <span className="text-muted-foreground text-xs ml-1">({s.lowest_module_score}%)</span>
+                                                            )}
+                                                        </span>
+                                                    ) : <span className="text-muted-foreground text-xs">Sin evaluaciones</span>}
                                                 </TableCell>
                                                 <TableCell><Badge variant="secondary">{s.status}</Badge></TableCell>
                                             </TableRow>
