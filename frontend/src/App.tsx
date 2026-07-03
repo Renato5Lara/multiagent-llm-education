@@ -16,6 +16,7 @@ import NotFound from '@/pages/NotFound'
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'))
 const AdminUsers = lazy(() => import('@/pages/admin/Users'))
 const AdminRoles = lazy(() => import('@/pages/admin/Roles'))
+const AdminSystemStatus = lazy(() => import('@/pages/admin/SystemStatus'))
 
 const DocenteDashboard = lazy(() => import('@/pages/docente/Dashboard'))
 const DocenteCourses = lazy(() => import('@/pages/docente/Courses'))
@@ -58,6 +59,7 @@ export default function App() {
                         <Route path="/admin" element={<AdminDashboard />} />
                         <Route path="/admin/users" element={<AdminUsers />} />
                         <Route path="/admin/roles" element={<AdminRoles />} />
+                        <Route path="/admin/system" element={<AdminSystemStatus />} />
                     </Route>
                 </Route>
 

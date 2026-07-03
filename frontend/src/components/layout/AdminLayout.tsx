@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, Users, Shield, FlaskConical } from 'lucide-react'
+import { LayoutDashboard, Users, Shield, Activity, FlaskConical } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
@@ -7,6 +7,7 @@ const adminItems: SidebarItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { label: 'Usuarios', href: '/admin/users', icon: Users },
   { label: 'Roles', href: '/admin/roles', icon: Shield },
+  { label: 'Estado del sistema', href: '/admin/system', icon: Activity },
   { label: 'Modo Evidencia', href: '/evidencia', icon: FlaskConical, sectionBefore: true },
 ]
 
