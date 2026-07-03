@@ -23,21 +23,6 @@ function getLevelLabel(xp: number) {
   return [...XP_LEVELS].reverse().find(l => xp >= l.min)?.label ?? 'Principiante'
 }
 
-const TOPIC_SLUG_MAP: Array<{ keywords: string[]; slug: string }> = [
-  { keywords: ['variable', 'tipo', 'dato'],                         slug: 'variables'    },
-  { keywords: ['condicional', 'condición', 'condicion', 'if'],      slug: 'conditionals' },
-  { keywords: ['bucle', 'loop', 'ciclo', 'for', 'while', 'iterac'], slug: 'loops'        },
-  { keywords: ['función', 'funcion', 'function', 'método', 'subprog'], slug: 'functions' },
-]
-
-function detectTopicSlug(title: string): string | null {
-  const lower = title.toLowerCase()
-  for (const { keywords, slug } of TOPIC_SLUG_MAP) {
-    if (keywords.some(kw => lower.includes(kw))) return slug
-  }
-  return null
-}
-
 const MODALITY_DARK: Record<string, string> = {
   visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
   reading:     'border-green-400/40  text-green-300  bg-green-400/10',
@@ -105,12 +90,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
 
   const handleClick = () => {
     if (!isAvailable || !courseId) return
-    const topicSlug = detectTopicSlug(item.title)
-    if (topicSlug) {
-      navigate(`/estudiante/learn/${topicSlug}?courseId=${courseId}`)
-    } else {
-      navigate(`/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`)
-    }
+    navigate(`/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`)
   }
 
   return (
