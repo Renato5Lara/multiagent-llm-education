@@ -68,7 +68,7 @@ class CourseResponse(BaseModel):
     cycle: int
     year: int
     status: CourseStatus
-    teacher_id: str
+    teacher_id: Optional[str] = None
     institutional_course_id: Optional[str] = None
     is_institutional: bool = False
     created_at: datetime
