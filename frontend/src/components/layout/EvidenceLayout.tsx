@@ -1,12 +1,15 @@
 import { Outlet } from 'react-router-dom'
-import { FlaskConical, Bot, History } from 'lucide-react'
+import { FlaskConical, Route } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
+// "Demo Multiagente" (/swarm-demo) queda desvinculada del recorrido oficial
+// de la tesis: corre sobre datos sintéticos, no sobre el recorrido real de
+// un estudiante. El código se conserva (no se elimina), solo deja de estar
+// enlazado — el jurado nunca debería llegar ahí.
 const evidenceItems: SidebarItem[] = [
-  { label: 'Modo Evidencia',   href: '/evidencia',  icon: FlaskConical },
-  { label: 'Demo Multiagente', href: '/swarm-demo', icon: Bot },
-  { label: 'Replay Cognitivo', href: '/replay',     icon: History },
+  { label: 'Modo Evidencia',            href: '/evidencia', icon: FlaskConical },
+  { label: 'Trayectoria del estudiante', href: '/replay',    icon: Route },
 ]
 
 export default function EvidenceLayout() {

@@ -34,7 +34,7 @@ const AdaptiveLearnView = lazy(() => import('@/pages/estudiante/AdaptiveLearnVie
 const CodeLab = lazy(() => import('@/pages/estudiante/CodeLab'))
 const Evaluation = lazy(() => import('@/pages/estudiante/Evaluation'))
 const SwarmDemo = lazy(() => import('@/pages/demo/SwarmDemo'))
-const ReplayDashboard = lazy(() => import('@/pages/replay/ReplayDashboard'))
+const StudentTrajectory = lazy(() => import('@/pages/replay/StudentTrajectory'))
 const EvidenceHub = lazy(() => import('@/pages/evidencia/EvidenceHub'))
 
 function RootRedirect() {
@@ -51,7 +51,7 @@ export default function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/swarm-demo" element={<SwarmDemo />} />
-                <Route path="/replay" element={<ReplayDashboard />} />
+                <Route path="/replay" element={<StudentTrajectory />} />
                 <Route path="/" element={<RootRedirect />} />
 
                 <Route element={<ProtectedRoute allowedRoles={['admin']} />}>

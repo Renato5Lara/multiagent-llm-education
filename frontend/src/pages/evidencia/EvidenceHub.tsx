@@ -1,33 +1,17 @@
 import { useNavigate } from 'react-router-dom'
-import { Bot, History, ArrowRight, Activity, Network, Cpu } from 'lucide-react'
+import { Route, ArrowRight, ShieldCheck } from 'lucide-react'
 
 const evidenceTools = [
   {
-    title: 'Demo Multiagente',
-    description: 'Visualiza el swarm de agentes pedagógicos en vivo con SSE, deliberación, consenso y trazabilidad cognitiva.',
-    icon: Bot,
-    href: '/swarm-demo',
-    iconClass: 'text-neural-glow bg-neural-glow/[0.06] border-neural-glow/20',
-    btnClass:  'text-neural-glow border-neural-glow/20 hover:bg-neural-glow/[0.06]',
-    label: 'En vivo',
-    labelClass: 'bg-neural-glow/10 text-neural-glow border-neural-glow/20',
-  },
-  {
-    title: 'Replay Cognitivo',
-    description: 'Reproduce sesiones de aprendizaje, evolución longitudinal y exportación de evidencia pedagógica.',
-    icon: History,
+    title: 'Trayectoria del estudiante',
+    description: 'Evidencia cronológica real: diagnóstico, ruta, progreso, evaluaciones y registros de memoria compartida de un estudiante que completó el recorrido.',
+    icon: Route,
     href: '/replay',
     iconClass: 'text-neural-violet bg-neural-violet/[0.06] border-neural-violet/20',
     btnClass:  'text-neural-violet border-neural-violet/20 hover:bg-neural-violet/[0.06]',
-    label: 'Análisis',
+    label: 'Datos reales',
     labelClass: 'bg-neural-violet/10 text-neural-violet border-neural-violet/20',
   },
-]
-
-const stats = [
-  { label: 'Agentes configurados', value: '7',   icon: Cpu,      color: 'text-neural-glow' },
-  { label: 'Sesiones analizadas',  value: '142', icon: Activity, color: 'text-neural-pulse' },
-  { label: 'Confianza promedio',   value: '84%', icon: Network,  color: 'text-neural-violet' },
 ]
 
 export default function EvidenceHub() {
@@ -50,19 +34,13 @@ export default function EvidenceHub() {
         </p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="glass-panel rounded-xl p-4 space-y-2">
-            <div className="flex items-center gap-2">
-              <stat.icon className={`h-3.5 w-3.5 ${stat.color}`} />
-              <span className="text-[10px] font-mono text-neural-muted/60 tracking-widest uppercase truncate">
-                {stat.label}
-              </span>
-            </div>
-            <p className={`text-2xl font-bold font-mono ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
+      {/* Regla de fuente única de verdad */}
+      <div className="glass-panel rounded-xl p-4 flex items-start gap-3">
+        <ShieldCheck className="h-4 w-4 text-neural-violet mt-0.5 shrink-0" />
+        <p className="text-xs text-neural-muted leading-relaxed">
+          Solo se muestra información persistida y verificable del recorrido real del estudiante.
+          No se simulan deliberaciones, consensos ni decisiones que no existan en la base de datos.
+        </p>
       </div>
 
       {/* Evidence tool cards */}
@@ -70,7 +48,7 @@ export default function EvidenceHub() {
         <p className="text-[10px] font-mono text-neural-muted/50 tracking-widest uppercase mb-4">
           Herramientas de evidencia
         </p>
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 max-w-md">
           {evidenceTools.map((tool) => (
             <div
               key={tool.href}
