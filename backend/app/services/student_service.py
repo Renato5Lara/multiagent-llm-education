@@ -330,6 +330,31 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
     ):
         path_map[row.course_id] = row
 
+    # Progreso real por módulos de la ruta (path_modules), no por recursos:
+    # el flujo del estudiante avanza por módulos y los cursos demo tienen 0
+    # recursos, así que el cálculo por recursos daba 0% siempre. Se cuenta en
+    # vivo — paridad con la analítica del docente (C2) y con la página de Ruta,
+    # que derivan el % del estado de los módulos, no del contador cacheado.
+    path_ids = [p.id for p in path_map.values()]
+    module_totals: dict[str, int] = {}
+    module_completed: dict[str, int] = {}
+    if path_ids:
+        module_totals = dict(
+            db.query(PathModule.path_id, func.count(PathModule.id))
+            .filter(PathModule.path_id.in_(path_ids))
+            .group_by(PathModule.path_id)
+            .all()
+        )
+        module_completed = dict(
+            db.query(PathModule.path_id, func.count(PathModule.id))
+            .filter(
+                PathModule.path_id.in_(path_ids),
+                PathModule.status == "completed",
+            )
+            .group_by(PathModule.path_id)
+            .all()
+        )
+
     course_map = {c.id: c for c in db.query(Course).filter(Course.id.in_(all_course_ids)).all()}
 
     # Two seed sections (MALLA_CURRICULAR + ISIA_2025_CYCLES) create courses with the same
@@ -350,10 +375,18 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
 
         total_resources = resource_counts.get(course_id, 0)
         completed_resources = progress_counts.get(course_id, 0)
-        progress_pct = round((completed_resources / total_resources) * 100) if total_resources > 0 else 0
 
         diagnostic = diagnostic_map.get(course_id)
         learning_path = path_map.get(course_id)
+
+        # Con ruta: progreso desde módulos completados (fuente real). Sin ruta:
+        # fallback al conteo de recursos (comportamiento previo).
+        if learning_path is not None:
+            total_modules = module_totals.get(learning_path.id, 0)
+            done_modules = module_completed.get(learning_path.id, 0)
+            progress_pct = round((done_modules / total_modules) * 100) if total_modules > 0 else 0
+        else:
+            progress_pct = round((completed_resources / total_resources) * 100) if total_resources > 0 else 0
 
         results.append(
             CourseProgressResponse(
