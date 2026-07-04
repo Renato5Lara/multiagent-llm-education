@@ -482,7 +482,10 @@ def seed():
                     description=f"Curso del ciclo {cycle} de Ingeniería de Sistemas e Inteligencia Artificial",
                     cycle=cycle,
                     year=2026,
-                    teacher_id=docente.id,
+                    # El docente demo solo dicta el curso de tesis (IS301). El resto de la
+                    # malla queda sin docente para no inflar su panel con 43 cursos ajenos
+                    # (dato de demo, no lógica de negocio).
+                    teacher_id=docente.id if cd["code"] == "IS301" else None,
                     status=CourseStatus.PUBLICADO,
                 )
                 db.add(course)
