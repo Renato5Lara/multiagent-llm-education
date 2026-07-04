@@ -33,7 +33,6 @@ const ModuleLearningView = lazy(() => import('@/pages/estudiante/ModuleLearningV
 const AdaptiveLearnView = lazy(() => import('@/pages/estudiante/AdaptiveLearnView'))
 const CodeLab = lazy(() => import('@/pages/estudiante/CodeLab'))
 const Evaluation = lazy(() => import('@/pages/estudiante/Evaluation'))
-const SwarmDemo = lazy(() => import('@/pages/demo/SwarmDemo'))
 const StudentTrajectory = lazy(() => import('@/pages/replay/StudentTrajectory'))
 const EvidenceHub = lazy(() => import('@/pages/evidencia/EvidenceHub'))
 
@@ -50,7 +49,8 @@ export default function App() {
         <Suspense fallback={<LoadingScreen />}>
             <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/swarm-demo" element={<SwarmDemo />} />
+                {/* Demo antigua desvinculada del recorrido: una URL suelta va a la vista real de Evidencia. Componente conservado en pages/demo/SwarmDemo. */}
+                <Route path="/swarm-demo" element={<Navigate to="/evidencia" replace />} />
                 <Route path="/replay" element={<StudentTrajectory />} />
                 <Route path="/" element={<RootRedirect />} />
 
