@@ -88,6 +88,39 @@ class AutoEnrollmentService:
 
         return result
 
+    def ensure_thesis_course_enrollment(
+        self, db: Session, student: User, result: AcademicActivationResult
+    ) -> None:
+        """El curso de tesis (THESIS_SCOPE_FREEZE) es standalone, no institucional,
+        así que el auto-enroll por malla no lo incluye. Se asegura la inscripción
+        para que un estudiante nuevo quede listo para el diagnóstico sin depender
+        de una inscripción manual del docente. Aditivo e idempotente."""
+        if student.role != UserRole.ESTUDIANTE or not student.current_cycle:
+            return
+
+        # Identidad de dominio del curso protagonista (reutiliza la constante ya
+        # definida en evidence_service; import local para evitar ciclos de módulo).
+        from app.services.evidence_service import THESIS_COURSE_CODE
+
+        thesis_course = (
+            db.query(Course)
+            .filter(
+                Course.code == THESIS_COURSE_CODE,
+                Course.status == CourseStatus.PUBLICADO,
+            )
+            .order_by(Course.created_at.asc())
+            .first()
+        )
+        if not thesis_course or thesis_course.id in result.course_ids:
+            return
+
+        enrollment = self._ensure_enrollment(db, student.id, thesis_course.id)
+        if enrollment == "created":
+            result.enrollments_created += 1
+        elif enrollment == "reactivated":
+            result.enrollments_reactivated += 1
+        result.course_ids.append(thesis_course.id)
+
     def _ensure_course_instance(
         self, db: Session, institutional_course: InstitutionalCourse
     ) -> tuple[Course, bool, bool]:
@@ -461,6 +494,7 @@ class CurriculumActivationPipeline:
         self, db: Session, student: User, cycle: int | None = None
     ) -> AcademicActivationResult:
         result = self.auto_enrollment.enroll_student_from_curriculum(db, student, cycle)
+        self.auto_enrollment.ensure_thesis_course_enrollment(db, student, result)
 
         for course_id in result.course_ids:
             course = db.query(Course).filter(Course.id == course_id).first()
