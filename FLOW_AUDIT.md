@@ -32,6 +32,36 @@
 | 4 — Modo Evidencia | 🟩 | 1 (E0: pipeline paralelo eliminado) | 0 | 2026-07-03 (E0+E1, navegador real, e2e) — funcionalmente validado |
 | 5 — Administrador | 🟩 | 1 (corregido) | 0 | 2026-07-03 (A1-A4, navegador real, e2e) — funcionalmente validado |
 
+## Certificación funcional para la demostración — 2026-07-03
+
+**Estado: PLATAFORMA FUNCIONALMENTE CERTIFICADA PARA LA DEMOSTRACIÓN** (no "terminada").
+
+- **Commit base certificado:** `f1d2065` (rama `stabilization/m1-operational-baseline`),
+  sobre `6ae94ad` (dashboard) + `4690dce` (C4 roster) + `f1d2065` (E3 evaluación).
+  Tag: `demo-certification-v1`.
+- **Recorridos ejecutados** (navegador real, stack completo, mentalidad adversaria):
+  - **Estudiante** (kines.r1): Login → Dashboard (50→75% en vivo) → Ruta → Journey
+    → Code Lab → Evaluación (¡Aprobado!) → Resultados → cierre de bucle.
+  - **Docente**: Dashboard (IS301 primero) → Roster (C4 robusto con 5 intentos nulos)
+    → Analítica IA (4 inscritos / 75%) → Comparación Swarm (vacío honesto).
+  - **Administrador**: Dashboard ("Todo operativo") → Usuarios → Roles → Estado del sistema.
+  - **Modo Evidencia**: Trayectoria de María con evidencia real (Lectura, 4/4, 100%,
+    60 registros, agentes, Bloom, evaluaciones).
+- **Pruebas adversarias:** refresh en múltiples páginas · acceso sin sesión → redirige
+  a login · 5 evaluaciones abandonadas (gatillo C4) sin romper el roster · recarga a
+  mitad de flujo · cambio de actor. Cero errores de consola salvo los hallazgos clasificados.
+- **Criterio alcanzado:** los cuatro actores completan su recorrido de principio a fin
+  sin bloqueos Críticos ni Medios que rompan el flujo del jurado.
+- **Backlog pendiente** (no bloquea la demostración): F13 (journey reinicia al refrescar,
+  Medio-atípico), A5 (combobox `investigador`, Bajo), endpoint huérfano
+  `/api/agents/generate-evaluation`, routers duplicados `estudiantes.py`/`students.py`.
+
+> **Regla de Congelamiento Final (desde 2026-07-03):** ningún cambio entra por
+> iniciativa propia. Solo se aceptan bugs reproducibles, regresiones, errores de la
+> demo o cambios pedidos por el asesor/jurado. Toda idea nueva va al backlog. No se
+> reabre arquitectura, no hay refactors ni retoques cosméticos. El siguiente trabajo
+> es preparar la sustentación, no programar.
+
 ## Tablero Etapa 2 — Cierres de recorrido
 
 > Regla de Cierre: un recorrido no está terminado hasta que un usuario real
@@ -334,6 +364,9 @@ Credenciales seed: admin@upao.edu.pe / Admin2026!
 | 2026-07-02 | Medio | Doble experiencia de módulo: 4 temas desviados a la vista sin 5E (F2, cierre R1) | eliminado `detectTopicSlug()`; todo entra por el Journey |
 | 2026-07-02 | Crítico | Backend entero congelado al orquestar con concurrencia: INSERT síncrono de memoria compartida sobre el event loop → deadlock con el lock de fila (C3, cierre R1) | `_publish_memory` vía `asyncio.to_thread` en `research_agent.py` |
 | 2026-07-02 | Crítico | Paso Code Lab nunca generado: selector sobre UUID + modalidad de medios confundida con modalidad del aprendiz (E2, cierre R1) | selector por título + `dominant_modality` del learning path en `ModuleLearningView` |
+| 2026-07-03 | Crítico (narrativo) | Dashboard del estudiante mostraba 0% con módulos completados: `my-courses` calculaba progreso sobre recursos (0 en cursos demo), no `path_modules` (misma familia que C2) | `6ae94ad` — progreso desde `path_modules` en vivo con fallback a recursos |
+| 2026-07-03 | Crítico | Roster del docente 500 (`NoneType / int`) cuando un inscrito tenía una evaluación iniciada sin enviar (`score` NULL); Analítica IA mostraba 4 pero el roster 0 (C4) | `4690dce` — excluir `score IS NOT NULL` en las agregaciones de `get_enrolled_students` |
+| 2026-07-03 | Medio-alto | La evaluación preguntaba por el primer objetivo del curso, no por el módulo evaluado: `run_agents` re-ejecutaba `path_planner` y sobrescribía el plan del módulo; `module_id` y el tema divergían (E3) | `f1d2065` — `evaluation_generator(state)` en `start_evaluation` en vez de `run_agents` |
 
 ## Notas operativas
 
@@ -357,3 +390,15 @@ Credenciales seed: admin@upao.edu.pe / Admin2026!
   plataforma. Ninguno bloquea las 8 preguntas del audit de Administrador —
   corregir en el próximo commit que ya toque esas pantallas, no abrir una
   sesión solo para esto.
+- **F13 (Estudiante, Medio-atípico):** el Journey 5E reinicia al paso 1 tras un
+  refresh del navegador — `currentIndex = useState(0)` en `LearningJourney.tsx` sin
+  persistencia. No bloquea la compleción (el módulo se rastrea en backend) y el
+  ida-y-vuelta al Code Lab sí preserva la posición (bfcache). Fix propuesto:
+  persistir `currentIndex` en `sessionStorage` por `moduleId`. Componente CONGELADO
+  — decidir un último commit de pulido solo con aprobación explícita.
+- **Endpoint huérfano (Backend, limpieza):** `/api/agents/generate-evaluation`
+  (`agents/router.py`) aún usa `run_agents`; inalcanzable (ni el frontend ni ningún
+  caller interno lo invocan) y sin el bug E3. Candidato a eliminación.
+- **Routers duplicados (Backend, consolidación):** `estudiantes.py` (`/api/estudiante`)
+  parece un módulo ES paralelo a `students.py` (`/api/students`); ambos delegan en los
+  mismos servicios. Posible consolidación post-sustentación.
