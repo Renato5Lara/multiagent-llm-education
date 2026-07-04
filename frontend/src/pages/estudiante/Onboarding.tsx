@@ -78,8 +78,13 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#002550] via-[#003D7A] to-[#0050A0] flex items-center justify-center p-4">
-      <Card className="max-w-2xl w-full shadow-2xl border-0">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-neural-surface relative overflow-hidden">
+      {/* Fondo neural, unificado con el login y el resto de la plataforma (antes: gradiente azul) */}
+      <div className="absolute inset-0 hex-bg opacity-60 pointer-events-none" />
+      <div className="absolute inset-0 dot-grid pointer-events-none" />
+      <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-neural-glow/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/3 w-72 h-72 bg-neural-violet/5 rounded-full blur-3xl pointer-events-none" />
+      <Card className="relative z-10 max-w-2xl w-full shadow-2xl border-0">
         <CardContent className="p-8 md:p-12">
           {step === 'welcome' && (
             <div className="text-center">
