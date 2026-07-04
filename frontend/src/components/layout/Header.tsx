@@ -1,4 +1,3 @@
-import { Search } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { getRoleLabel } from '@/lib/utils'
 import UserDropdown from '@/components/common/UserDropdown'
@@ -19,17 +18,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-20 h-14 glass-panel border-b border-white/[0.06] flex items-center justify-between px-6">
-      {/* Search */}
-      <div className="flex-1 max-w-xs mx-4 hidden md:block">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neural-muted/40 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search neural nodes..."
-            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-lg pl-8 pr-3 py-1.5 text-xs text-neural-muted placeholder:text-neural-muted/30 focus:outline-none focus:border-neural-glow/40 transition-colors font-mono"
-          />
-        </div>
-      </div>
+      {/* Spacer — el buscador global se retiró (no era funcional) */}
+      <div className="flex-1" />
 
       <div className="flex items-center gap-3">
         {/* System status dot */}
