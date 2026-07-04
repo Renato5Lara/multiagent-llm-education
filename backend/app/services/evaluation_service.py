@@ -9,7 +9,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.agents.graph import run_agents
+from app.agents.nodes import evaluation_generator
 from app.agents.schemas import DiagnosticAnswers
 from app.models.evaluation_attempt import EvaluationAttempt
 from app.models.learning_objective import LearningObjective
@@ -90,7 +90,12 @@ def start_evaluation(
         "evaluation_plan": None,
     }
 
-    result = run_agents(state)
+    # Generar preguntas SOLO del módulo evaluado. Se llama al nodo directamente
+    # en vez de run_agents porque el grafo completo re-ejecuta path_planner, que
+    # regenera learning_path_plan desde los objetivos del curso y descarta el
+    # plan de un módulo construido arriba → las preguntas saldrían del primer
+    # objetivo, no del módulo disponible (divergía de attempt.module_id).
+    result = evaluation_generator(state)
     eval_plan = result.get("evaluation_plan", [])
     questions = eval_plan[0]["questions"] if eval_plan else []
 
