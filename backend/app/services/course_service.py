@@ -334,6 +334,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             EvaluationAttempt.course_id == course_id,
             EvaluationAttempt.student_id.in_(student_ids),
             EvaluationAttempt.max_score > 0,
+            EvaluationAttempt.score.isnot(None),  # solo evaluaciones enviadas (calificadas)
         )
         .group_by(EvaluationAttempt.student_id)
         .all()
@@ -358,6 +359,7 @@ def get_enrolled_students(db: Session, course_id: str, current_user: User | None
             EvaluationAttempt.course_id == course_id,
             EvaluationAttempt.student_id.in_(student_ids),
             EvaluationAttempt.max_score > 0,
+            EvaluationAttempt.score.isnot(None),  # una evaluación iniciada y no enviada tiene score NULL → None/int
         )
         .all()
     )
