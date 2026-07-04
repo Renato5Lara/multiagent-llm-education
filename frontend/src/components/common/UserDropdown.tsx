@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -40,14 +40,6 @@ export default function UserDropdown() {
         <DropdownMenuLabel className="text-neural-muted text-xs font-mono tracking-widest uppercase">
           Mi cuenta
         </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-white/[0.06]" />
-        <DropdownMenuItem
-          disabled
-          className="text-neural-muted focus:text-neural-text focus:bg-white/[0.05]"
-        >
-          <User className="mr-2 h-4 w-4" />
-          Perfil
-        </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-white/[0.06]" />
         <DropdownMenuItem
           onClick={() => { logout(); navigate('/login') }}
