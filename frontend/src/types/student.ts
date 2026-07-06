@@ -77,6 +77,7 @@ export interface CourseProgress {
   has_diagnostic: boolean
   has_learning_path: boolean
   dominant_modality: string | null
+  is_active_experience: boolean
 }
 
 export interface StudentProgressEntry {

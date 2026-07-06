@@ -113,6 +113,31 @@ export function useMyCourses() {
   })
 }
 
+export type ExperienceState = 'NOT_STARTED' | 'READY' | 'IN_PROGRESS' | 'COMPLETED'
+
+export interface ActiveExperience {
+  slug: string | null
+  title: string | null
+  state: ExperienceState
+}
+
+/**
+ * useActiveExperience — identidad de dominio del recorrido del estudiante.
+ * Devuelve { slug, title, state }; deliberadamente NO expone ningún id de curso.
+ * Es la única fuente para saber "cuál es la experiencia activa" y su estado.
+ */
+export function useActiveExperience() {
+  return useQuery({
+    queryKey: ['active-experience'],
+    queryFn: async () => {
+      const resp = await api.get<ActiveExperience>('/api/students/experience')
+      return resp.data
+    },
+    retry: false,
+    staleTime: 30000,
+  })
+}
+
 export function useGeneratePath() {
   const queryClient = useQueryClient()
   const { toast } = useToast()

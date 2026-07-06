@@ -1,196 +1,93 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GraduationCap, ArrowRight, Loader2, Sparkles, BookOpen, Cpu } from 'lucide-react'
+import { ArrowRight, Loader2, Cpu, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuthStore } from '@/stores/authStore'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/hooks/use-toast'
+import { useActiveExperience } from '@/hooks/useStudent'
 import api from '@/lib/api'
 
-const CYCLES = Array.from({ length: 10 }, (_, i) => i + 1)
-
-function CycleCourses({ cycle }: { cycle: number }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ['curriculum', 'courses', cycle],
-    queryFn: async () => {
-      const resp = await api.get('/api/curriculum/courses', { params: { cycle } })
-      return resp.data as Array<{ code: string; name: string; credits: number }>
-    },
-    staleTime: 5 * 60 * 1000,
-  })
-
-  return (
-    <Card className="bg-primary/5 border-primary/20 mb-6">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <BookOpen className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-          <div className="w-full">
-            <p className="font-medium mb-1">Ciclo {cycle}° — Cursos del plan de estudios</p>
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : data && data.length > 0 ? (
-              <ul className="text-sm text-muted-foreground space-y-0.5 list-disc list-inside">
-                {data.map(c => (
-                  <li key={c.code}>{c.name} ({c.code}) — {c.credits} créd.</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No hay cursos registrados para este ciclo.</p>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
+/**
+ * Puerta de entrada del estudiante — ya NO es una matrícula por ciclo.
+ *
+ * El estudiante no elige ciclo ni curso: inicia una experiencia de aprendizaje.
+ * El backend aprovisiona la experiencia activa (Fundamentos de la Programación)
+ * de forma independiente del ciclo; la señal de "experiencia iniciada" es la
+ * existencia de un LearningPath activo, no `current_cycle`.
+ */
 export default function Onboarding() {
-  const [selectedCycle, setSelectedCycle] = useState<number | null>(null)
-  const [step, setStep] = useState<'welcome' | 'select' | 'confirm'>('welcome')
   const navigate = useNavigate()
-  const { user, setUser } = useAuthStore()
+  const { user } = useAuthStore()
   const { toast } = useToast()
+  const queryClient = useQueryClient()
+  const { data: experience } = useActiveExperience()
 
-  const saveCycleMutation = useMutation({
-    mutationFn: async (cycle: number) => {
-      const resp = await api.patch('/api/students/onboarding/cycle', { cycle })
+  const startExperience = useMutation({
+    mutationFn: async () => {
+      // La ruta conserva su path por estabilidad de API; ya no envía "ciclo".
+      const resp = await api.patch('/api/students/onboarding/cycle')
       return resp.data
     },
-    onSuccess: (_data, cycle) => {
-      const currentUser = useAuthStore.getState().user
-      if (currentUser) {
-        setUser({ ...currentUser, current_cycle: cycle })
-      }
-      toast({ title: '¡Ciclo asignado exitosamente!' })
+    onSuccess: async () => {
+      // El AcademicGuard consulta onboarding/status: refrescamos para que reconozca
+      // la experiencia recién iniciada y no rebote de vuelta al onboarding.
+      await queryClient.invalidateQueries({ queryKey: ['active-experience'] })
       navigate('/estudiante')
     },
     onError: () => {
-      toast({ variant: 'destructive', title: 'Error al asignar ciclo' })
+      toast({ variant: 'destructive', title: 'No pudimos preparar tu experiencia. Inténtalo de nuevo.' })
     },
   })
 
-  const handleConfirm = () => {
-    if (selectedCycle) {
-      saveCycleMutation.mutate(selectedCycle)
-    }
-  }
+  const isPreparing = startExperience.isPending
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-neural-surface relative overflow-hidden">
-      {/* Fondo neural, unificado con el login y el resto de la plataforma (antes: gradiente azul) */}
+      {/* Fondo neural, unificado con el login y el resto de la plataforma */}
       <div className="absolute inset-0 hex-bg opacity-60 pointer-events-none" />
       <div className="absolute inset-0 dot-grid pointer-events-none" />
       <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-neural-glow/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/3 w-72 h-72 bg-neural-violet/5 rounded-full blur-3xl pointer-events-none" />
+
       <Card className="relative z-10 max-w-2xl w-full shadow-2xl border-0">
-        <CardContent className="p-8 md:p-12">
-          {step === 'welcome' && (
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-                <GraduationCap className="h-10 w-10 text-primary" />
-              </div>
-              <h1 className="text-3xl font-bold mb-3">
-                ¡Bienvenido, {user?.first_name || 'Estudiante'}! 👋
-              </h1>
-              <p className="text-lg text-muted-foreground mb-2">
-                Estás a punto de comenzar tu experiencia educativa inteligente.
-              </p>
-              <p className="text-muted-foreground mb-8">
-                Primero, necesitamos saber en qué ciclo académico te encuentras
-                para personalizar tu experiencia.
-              </p>
-              <Button size="lg" onClick={() => setStep('select')} className="gap-2">
-                Comenzar onboarding
+        <CardContent className="p-8 md:p-12 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-neural-glow/10 border border-neural-glow/20 flex items-center justify-center">
+            <Sparkles className="h-9 w-9 text-neural-glow" />
+          </div>
+
+          <h1 className="text-3xl font-bold mb-3">
+            Hola, {user?.first_name || 'bienvenido'} 👋
+          </h1>
+          <p className="text-lg text-muted-foreground mb-2">
+            Hoy comenzarás una experiencia de aprendizaje sobre
+            <span className="text-neural-glow font-medium"> {experience?.title ?? 'Fundamentos de la Programación'}</span>.
+          </p>
+          <p className="text-muted-foreground mb-10 max-w-lg mx-auto">
+            El sistema descubrirá cómo aprendes mejor y adaptará el contenido a ti
+            durante todo tu recorrido. No es un curso: es una experiencia hecha para ti.
+          </p>
+
+          <Button
+            size="lg"
+            className="gap-2"
+            onClick={() => startExperience.mutate()}
+            disabled={isPreparing}
+          >
+            {isPreparing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Preparando tu experiencia...
+              </>
+            ) : (
+              <>
+                <Cpu className="h-4 w-4" />
+                Comenzar experiencia
                 <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {step === 'select' && (
-            <div>
-              <div className="flex items-center gap-2 mb-6">
-                <GraduationCap className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-bold">Selecciona tu ciclo</h2>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                ¿En qué ciclo de Ingeniería de Sistemas e IA te encuentras actualmente?
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
-                {CYCLES.map(cycle => (
-                  <Button
-                    key={cycle}
-                    variant={selectedCycle === cycle ? 'default' : 'outline'}
-                    className={`h-16 text-lg font-bold ${
-                      selectedCycle === cycle
-                        ? 'ring-2 ring-primary ring-offset-2'
-                        : ''
-                    }`}
-                    onClick={() => setSelectedCycle(cycle)}
-                  >
-                    {cycle}°
-                  </Button>
-                ))}
-              </div>
-              {selectedCycle && <CycleCourses cycle={selectedCycle} />}
-              <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => setStep('welcome')}>
-                  Atrás
-                </Button>
-                <Button
-                  className="flex-1 gap-2"
-                  disabled={!selectedCycle}
-                  onClick={() => setStep('confirm')}
-                >
-                  Continuar
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {step === 'confirm' && (
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
-                <Sparkles className="h-10 w-10 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold mb-3">¡Casi listo! 🚀</h2>
-              <p className="text-muted-foreground mb-2">
-                Has seleccionado el <strong>Ciclo {selectedCycle}°</strong>
-              </p>
-              <p className="text-muted-foreground mb-8">
-                El sistema cargará automáticamente los cursos de tu ciclo
-                y podrás comenzar tu diagnóstico personalizado.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => setStep('select')}
-                  disabled={saveCycleMutation.isPending}
-                >
-                  Cambiar ciclo
-                </Button>
-                <Button
-                  onClick={handleConfirm}
-                  disabled={saveCycleMutation.isPending}
-                  className="gap-2"
-                >
-                  {saveCycleMutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Configurando...
-                    </>
-                  ) : (
-                    <>
-                      <Cpu className="h-4 w-4" />
-                      Iniciar experiencia inteligente
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

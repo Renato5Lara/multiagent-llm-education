@@ -1,46 +1,34 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuthStore } from '@/stores/authStore'
-import { useQuery } from '@tanstack/react-query'
+import { Navigate, Outlet } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
-import api from '@/lib/api'
+import { useActiveExperience } from '@/hooks/useStudent'
 
-const ONBOARDING_ROUTES = ['/estudiante/onboarding']
-
+/**
+ * AcademicGuard — puerta de la experiencia del estudiante.
+ *
+ * Ya no depende del ciclo (LMS). Pregunta al dominio: ¿cuál es el estado de la
+ * experiencia activa? Si el estudiante aún no la inició (NOT_STARTED), lo envía
+ * al onboarding; en cualquier otro estado, lo deja continuar.
+ */
 export default function AcademicGuard() {
-  const { user, isAuthenticated } = useAuthStore()
-  const location = useLocation()
-
-  const isOnboardingRoute = ONBOARDING_ROUTES.includes(location.pathname)
-
-  const { data: onboardingStatus, isLoading, isError } = useQuery({
-    queryKey: ['onboarding-status'],
-    queryFn: async () => {
-      const resp = await api.get('/api/students/onboarding/status')
-      return resp.data as { has_cycle: boolean; current_cycle: number | null; onboarding_completed: boolean }
-    },
-    enabled: isAuthenticated && user?.role === 'estudiante' && !isOnboardingRoute,
-    retry: false,
-    staleTime: 30000,
-  })
+  const { data: experience, isLoading, isError } = useActiveExperience()
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground text-sm">Verificando estado académico...</p>
+          <p className="text-muted-foreground text-sm">Preparando tu experiencia...</p>
         </div>
       </div>
     )
   }
 
+  // Fail-open: si no pudimos resolver la experiencia, no atrapamos al estudiante.
   if (isError) {
     return <Outlet />
   }
 
-  const needsOnboarding = !onboardingStatus?.has_cycle && !user?.current_cycle
-
-  if (needsOnboarding && !isOnboardingRoute) {
+  if (experience?.state === 'NOT_STARTED') {
     return <Navigate to="/estudiante/onboarding" replace />
   }
 
