@@ -135,3 +135,14 @@ class ModuleOrchestrationResponse(BaseModel):
     session_id: Optional[str] = None
     # Sprint L1 — enriched per-concept blocks; empty list on legacy/degraded responses
     concept_blocks: list[ConceptBlock] = []
+    # Misión Activa — continuidad: True si la adaptación fue releída (no regenerada)
+    resumed: bool = False
+    # Posición persistida del recorrido: {current_index, completed_step_ids, total_xp}
+    mission_cursor: Optional[dict] = None
+
+
+class MissionProgressUpdate(BaseModel):
+    """Cursor de la Misión Activa: dónde va el estudiante dentro de su recorrido."""
+    current_index: int = 0
+    completed_step_ids: list[str] = []
+    total_xp: int = 0

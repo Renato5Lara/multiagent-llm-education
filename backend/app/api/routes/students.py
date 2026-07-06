@@ -28,6 +28,7 @@ from app.schemas.progress import (
     CourseProgressResponse,
     LearningPathDetailResponse,
     LearningPathItem,
+    MissionProgressUpdate,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.schemas.auth import MessageResponse, TutorRequest
@@ -424,7 +425,39 @@ def update_module(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Módulo no encontrado",
         )
+    if data.status == "completed":
+        # Misión Activa: COMPLETADA = recorrido confirmado, unidireccional.
+        # El snapshot se conserva ("Repasar" = lectura). Best-effort.
+        from app.services import active_mission_service
+        active_mission_service.complete_mission(db, current_user, module_id)
     return module
+
+
+@router.patch("/module/{module_id}/mission-progress")
+def update_mission_progress(
+    module_id: str,
+    data: MissionProgressUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Persiste el cursor de la Misión Activa (paso actual, completados, XP).
+    Solo escribe sobre la misión del propio estudiante; 404 si no existe."""
+    from app.services import active_mission_service
+
+    mission = active_mission_service.update_cursor(
+        db,
+        current_user,
+        module_id,
+        current_index=data.current_index,
+        completed_step_ids=data.completed_step_ids,
+        total_xp=data.total_xp,
+    )
+    if mission is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No hay una misión activa para este módulo",
+        )
+    return {"ok": True, "mission_cursor": (mission.metadata_json or {}).get("mission_cursor")}
 
 
 @router.post("/progress/{course_id}", response_model=StudentProgressResponse)
@@ -521,6 +554,18 @@ async def orchestrate_module(
         (module.title[:40] if module.title else "<none>"),
     )
 
+    # ── MISIÓN ACTIVA: releer antes que regenerar (SPEC_MISION_ACTIVA §5) ──
+    # Si el estudiante ya tiene una adaptación persistida para este módulo,
+    # se devuelve tal cual: navegar nunca regenera. La deliberación original
+    # sigue consultable por su session_id (las trazas ya viven en DB).
+    from app.services import active_mission_service
+
+    mission = active_mission_service.get_resumable(db, current_user, module_id)
+    if mission is not None:
+        _orch_stage("mission_resume", request_id, module_id, student_id, _t0)
+        result = dict(mission.metadata_json[active_mission_service.SNAPSHOT_KEY])
+        return active_mission_service.annotate(result, mission, resumed=True)
+
     # ── memory_store_from_session ─────────────────────────────────────
     _orch_stage("memory_store.before", request_id, module_id, student_id, _t0)
     try:
@@ -591,6 +636,17 @@ async def orchestrate_module(
         )
         raise
     _orch_stage("model_validate.after", request_id, module_id, student_id, _t0)
+
+    # ── MISIÓN ACTIVA: persistir la adaptación generada (best-effort) ──
+    # Un snapshot degradado NO se congela como "la experiencia" del estudiante
+    # (SPEC §5): el próximo ingreso reintentará la orquestación.
+    _mission = None
+    if isinstance(result, dict) and result.get("orchestration_status") != "degraded":
+        _mission = active_mission_service.save_snapshot(
+            db, current_user, path.course_id, module_id, result
+        )
+    if isinstance(result, dict):
+        active_mission_service.annotate(result, _mission, resumed=False)
 
     # ── log_action_sync (audit — non-critical, must NOT cause a 500) ──
     _orch_stage("log_action.before", request_id, module_id, student_id, _t0)
