@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, CheckCircle, X, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -17,6 +17,12 @@ interface Props {
   journey:           JourneyData
   onComplete?:       () => void
   onTotalXpChange?:  (xp: number) => void
+  /** Misión Activa — posición persistida desde la que se reanuda el recorrido */
+  initialIndex?:            number
+  initialCompletedStepIds?: string[]
+  initialXp?:               number
+  /** Misión Activa — se dispara en cada cambio de paso para persistir el cursor */
+  onProgress?: (p: { currentIndex: number; completedStepIds: string[]; totalXp: number }) => void
 }
 
 // Sprint 2.2 — Milestones rediseñados: checklist de progreso del estudiante.
@@ -146,10 +152,21 @@ function isKnownModality(value: string | undefined): value is LearningModality {
  * - Banner CURRENT ADAPTATION rediseñado (referencia: pantalla "Contenido Adaptativo")
  * - Transición de fade entre pasos
  */
-export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props) {
-  const [currentIndex,     setCurrentIndex]     = useState(0)
-  const [completedSteps,   setCompletedSteps]   = useState<Set<string>>(new Set())
-  const [totalXp,          setTotalXp]          = useState(0)
+export function LearningJourney({
+  journey, onComplete, onTotalXpChange,
+  initialIndex, initialCompletedStepIds, initialXp, onProgress,
+}: Props) {
+  // Misión Activa — el cursor solo tiene sentido relativo a su snapshot; si el
+  // journey cambió de tamaño (builder distinto), se acota al rango válido.
+  const clampedInitial = Math.min(
+    Math.max(initialIndex ?? 0, 0),
+    Math.max(journey.steps.length - 1, 0),
+  )
+  const [currentIndex,     setCurrentIndex]     = useState(clampedInitial)
+  const [completedSteps,   setCompletedSteps]   = useState<Set<string>>(
+    () => new Set(initialCompletedStepIds ?? []),
+  )
+  const [totalXp,          setTotalXp]          = useState(initialXp ?? 0)
   const [xpFlash,          setXpFlash]          = useState<number | null>(null)
   const [cardVisible,      setCardVisible]      = useState(true)
   const [milestone,        setMilestone]        = useState<string | null>(null)
@@ -160,7 +177,12 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
   const [echoSignal,       setEchoSignal]       = useState<CompletionSignal | null>(null)
 
   // Sprint 2.2 — milestone threshold tracking
-  const shownMilestones = useRef<Set<number>>(new Set())
+  // Al reanudar, los hitos ya superados no se vuelven a celebrar.
+  const shownMilestones = useRef<Set<number>>(new Set(
+    [0.25, 0.50, 0.75].filter(
+      t => (clampedInitial + 1) / Math.max(journey.steps.length, 1) >= t,
+    ),
+  ))
 
   // Timers de auto-dismiss (milestone 5s, XP flash 2.2s)
   const milestoneTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -176,6 +198,15 @@ export function LearningJourney({ journey, onComplete, onTotalXpChange }: Props)
 
   const isCurrentCompleted = step ? completedSteps.has(step.id) : true
   const canAdvance         = !step?.requiresAnswer || isCurrentCompleted
+
+  // ── Misión Activa: persistir el cursor en cada cambio de paso ──────────────
+  const lastReportedIndex = useRef(clampedInitial)
+  useEffect(() => {
+    if (currentIndex === lastReportedIndex.current) return
+    lastReportedIndex.current = currentIndex
+    onProgress?.({ currentIndex, completedStepIds: [...completedSteps], totalXp })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex])
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 

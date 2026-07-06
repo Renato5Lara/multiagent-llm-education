@@ -3,7 +3,7 @@ import { ArrowLeft, AlertCircle, RefreshCw, Brain, ChevronDown, ChevronUp, Sword
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useModuleOrchestration } from '@/hooks/useStudent'
+import { useModuleOrchestration, useUpdateMissionProgress } from '@/hooks/useStudent'
 import { useUpdateModule, useLearningPath } from '@/hooks/useStudent'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
@@ -174,10 +174,25 @@ export default function ModuleLearningView() {
       onSuccess: (result) => {
         setData(result)
         setSessionId(result.session_id)
-        toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
+        if (result.resumed) {
+          // Misión Activa: la adaptación fue releída, no regenerada — el
+          // estudiante continúa donde quedó, sin re-Engage ni panel de espera.
+          setAppPhase('content')
+          toast({ title: 'Misión reanudada', description: 'Continúas exactamente donde quedaste' })
+        } else {
+          toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
+        }
       },
     })
   }, [moduleId, orchestrateModule, toast])
+
+  // Misión Activa — persistencia silenciosa del cursor en cada paso
+  const missionProgress = useUpdateMissionProgress()
+  const { mutate: mutateMissionProgress } = missionProgress
+  const handleJourneyProgress = useCallback((p: { currentIndex: number; completedStepIds: string[]; totalXp: number }) => {
+    if (!moduleId) return
+    mutateMissionProgress({ moduleId, ...p })
+  }, [moduleId, mutateMissionProgress])
 
   // Always go through the swarm panel after engage completes
   const handleEngageDone = useCallback(() => {
@@ -332,6 +347,10 @@ export default function ModuleLearningView() {
             dominantModality: learnerModality,
           })}
           onComplete={handleComplete}
+          initialIndex={data.mission_cursor?.current_index}
+          initialCompletedStepIds={data.mission_cursor?.completed_step_ids}
+          initialXp={data.mission_cursor?.total_xp}
+          onProgress={handleJourneyProgress}
         />
       ) : (
         <StudentWeeklyLearningView

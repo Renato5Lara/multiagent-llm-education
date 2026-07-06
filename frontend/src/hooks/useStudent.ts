@@ -289,6 +289,29 @@ export function useModuleOrchestration() {
   })
 }
 
+/**
+ * Misión Activa — persiste el cursor del recorrido (paso, completados, XP).
+ * Silencioso a propósito: la continuidad nunca interrumpe al estudiante
+ * (un fallo aquí solo significa que el próximo ingreso retoma un paso atrás).
+ */
+export function useUpdateMissionProgress() {
+  return useMutation({
+    mutationFn: async ({ moduleId, currentIndex, completedStepIds, totalXp }: {
+      moduleId: string
+      currentIndex: number
+      completedStepIds: string[]
+      totalXp: number
+    }) => {
+      const resp = await api.patch(`/api/students/module/${moduleId}/mission-progress`, {
+        current_index: currentIndex,
+        completed_step_ids: completedStepIds,
+        total_xp: totalXp,
+      })
+      return resp.data
+    },
+  })
+}
+
 export function useTutorChat() {
   return useMutation({
     mutationFn: async ({ courseId, message, context }: {

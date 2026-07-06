@@ -136,4 +136,14 @@ export interface ModuleOrchestrationResponse {
   generated_at: string
   // Sprint L1 — empty array on legacy/degraded responses
   concept_blocks: ConceptBlock[]
+  // Misión Activa — true si la adaptación fue releída del snapshot (no regenerada)
+  resumed?: boolean
+  // Posición persistida del recorrido
+  mission_cursor?: MissionCursor | null
+}
+
+export interface MissionCursor {
+  current_index: number
+  completed_step_ids: string[]
+  total_xp: number
 }
