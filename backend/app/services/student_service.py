@@ -269,13 +269,23 @@ def get_student_profile(db: Session, student_id: str) -> Optional[StudentProfile
     return db.query(StudentProfile).filter(StudentProfile.student_id == student_id).first()
 
 
-def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgressResponse]:
-    cycle = student.current_cycle
-    if not cycle:
-        return []
-
-    academic_activation_pipeline.activate_student(db, student)
-    db.commit()
+def get_student_learning_courses(db: Session, student: User) -> list[CourseProgressResponse]:
+    # Aprovisiona/asegura la EXPERIENCIA DE APRENDIZAJE del estudiante sin depender
+    # del ciclo (herencia LMS). Antes, `if not current_cycle: return []` dejaba el
+    # dashboard vacío hasta que el estudiante "seleccionaba un ciclo"; esa reja se
+    # eliminó al desacoplar el ciclo del flujo principal.
+    # TODO(Sprint 1 — Misión Activa, registrado 2026-07-06): este GET aprovisiona
+    # y commitea (escritura dentro de una lectura), herencia del patrón
+    # activate_student. Mover el aprovisionamiento a un evento explícito de
+    # inicio de experiencia y dejar este endpoint como lectura pura.
+    from app.services import learning_experience_service
+    # Si no hay experiencia activa configurada (p. ej. entorno sin seed), este
+    # GET no puede fallar: degrada a lectura pura de las matrículas existentes.
+    active_experience = learning_experience_service.get_active_experience(db)
+    if active_experience is not None:
+        learning_experience_service.start_experience(db, student)
+        db.commit()
+    active_anchor_id = active_experience.anchor_course_id if active_experience else None
 
     enrollments = (
         db.query(Enrollment)
@@ -400,6 +410,7 @@ def get_student_courses_by_cycle(db: Session, student: User) -> list[CourseProgr
                 has_diagnostic=diagnostic is not None,
                 has_learning_path=learning_path is not None,
                 dominant_modality=diagnostic.dominant_modality if diagnostic else None,
+                is_active_experience=(course.id == active_anchor_id),
             )
         )
 

@@ -94,8 +94,12 @@ class AutoEnrollmentService:
         """El curso de tesis (THESIS_SCOPE_FREEZE) es standalone, no institucional,
         así que el auto-enroll por malla no lo incluye. Se asegura la inscripción
         para que un estudiante nuevo quede listo para el diagnóstico sin depender
-        de una inscripción manual del docente. Aditivo e idempotente."""
-        if student.role != UserRole.ESTUDIANTE or not student.current_cycle:
+        de una inscripción manual del docente. Aditivo e idempotente.
+
+        Independiente del ciclo: la experiencia protagonista se aprovisiona con solo
+        ser estudiante (ya no requiere `current_cycle`, herencia LMS que se está
+        desacoplando)."""
+        if student.role != UserRole.ESTUDIANTE:
             return
 
         # Identidad de dominio del curso protagonista (reutiliza la constante ya
@@ -505,6 +509,38 @@ class CurriculumActivationPipeline:
             result.modules_created += modules_created
             result.objectives_created += objectives_created
             result.orchestration_events_created += self._ensure_orchestration_event(db, student, course)
+
+        db.flush()
+        return result
+
+    def provision_experience(
+        self, db: Session, student: User, course: Course
+    ) -> AcademicActivationResult:
+        """Aprovisiona el contenido de UNA experiencia de aprendizaje (curso ancla)
+        para el estudiante: matrícula + ruta semanal + evento de orquestación.
+        Idempotente y sin ciclo (herencia LMS desacoplada).
+
+        El `course` lo resuelve `LearningExperienceService`, que es el ÚNICO punto
+        del sistema que conoce el ancla concreta (IS301 hoy). Aquí no hay ninguna
+        referencia a ese código. `activate_student()` se conserva para compatibilidad."""
+        result = AcademicActivationResult(
+            student_id=student.id, cycle=student.current_cycle
+        )
+        if student.role != UserRole.ESTUDIANTE:
+            return result
+
+        enrollment = self.auto_enrollment._ensure_enrollment(db, student.id, course.id)
+        if enrollment == "created":
+            result.enrollments_created += 1
+        elif enrollment == "reactivated":
+            result.enrollments_reactivated += 1
+        result.course_ids.append(course.id)
+
+        _, path_created, modules_created, objectives_created = self.weekly_paths.ensure_weekly_path(db, student, course)
+        result.learning_paths_created += path_created
+        result.modules_created += modules_created
+        result.objectives_created += objectives_created
+        result.orchestration_events_created += self._ensure_orchestration_event(db, student, course)
 
         db.flush()
         return result

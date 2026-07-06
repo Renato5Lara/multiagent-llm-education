@@ -37,40 +37,44 @@ class TestOnboarding:
         assert data["has_cycle"] is False
         assert data["onboarding_completed"] is False
 
-    def test_set_cycle_exitoso(self, client, estudiante_token, estudiante_user):
+    def test_start_experience_exitoso(self, client, docente_token, estudiante_token, db):
+        # La experiencia activa se ancla al curso de tesis publicado (IS301).
+        _create_published_course(client, docente_token, db, "IS301", cycle=1)
         resp = client.patch(
             "/api/students/onboarding/cycle",
             headers=auth_header(estudiante_token),
-            json={"cycle": 3},
         )
         assert resp.status_code == 200
-        assert resp.json()["message"] == "Ciclo 3 asignado exitosamente"
+        assert resp.json()["message"] == "Experiencia de aprendizaje iniciada"
 
-    def test_onboarding_status_con_ciclo(self, client, estudiante_token, estudiante_user, db):
-        estudiante_user.current_cycle = 5
-        db.commit()
+    def test_onboarding_status_refleja_experiencia(self, client, docente_token, estudiante_token, db):
+        _create_published_course(client, docente_token, db, "IS301", cycle=1)
+        client.patch("/api/students/onboarding/cycle", headers=auth_header(estudiante_token))
         resp = client.get("/api/students/onboarding/status", headers=auth_header(estudiante_token))
         assert resp.status_code == 200
         data = resp.json()
-        assert data["has_cycle"] is True
-        assert data["current_cycle"] == 5
+        assert data["experience_started"] is True
         assert data["onboarding_completed"] is True
+        assert data["state"] in ("READY", "IN_PROGRESS")
 
-    def test_set_cycle_invalido(self, client, estudiante_token):
+    def test_start_experience_sin_configuracion(self, client, estudiante_token):
+        # Sin curso ancla publicado no hay experiencia: 503 explícito, nunca 500.
+        resp = client.patch(
+            "/api/students/onboarding/cycle",
+            headers=auth_header(estudiante_token),
+        )
+        assert resp.status_code == 503
+
+    def test_start_experience_ignora_body_legado(self, client, estudiante_token):
+        # Estabilidad de API: clientes viejos aún envían {"cycle": N}; el cuerpo
+        # se ignora (ya no existe la validación 422 de ciclo). Sin curso ancla,
+        # sigue el mismo camino que sin body: 503.
         resp = client.patch(
             "/api/students/onboarding/cycle",
             headers=auth_header(estudiante_token),
             json={"cycle": 0},
         )
-        assert resp.status_code == 422
-
-    def test_set_cycle_demasiado_alto(self, client, estudiante_token):
-        resp = client.patch(
-            "/api/students/onboarding/cycle",
-            headers=auth_header(estudiante_token),
-            json={"cycle": 11},
-        )
-        assert resp.status_code == 422
+        assert resp.status_code == 503
 
 
 class TestAcademicSummary:

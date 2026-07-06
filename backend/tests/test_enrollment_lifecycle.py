@@ -14,7 +14,7 @@ from app.models.educational_context import EducationalContext, EducationalContex
 from app.models.institutional_course import InstitutionalCourse
 from app.models.teacher_assignment import TeacherAssignment
 from app.services.course_service import resolve_or_create_course, get_courses, get_enrolled_students
-from app.services.student_service import auto_enroll_from_curriculum, get_student_courses_by_cycle
+from app.services.student_service import auto_enroll_from_curriculum, get_student_learning_courses
 from app.services.activation_service import activate_enrollments_for_course_sync, activate_all_pending_for_student_sync
 from app.services.curriculum_service import create_course_from_institutional, assign_teacher_to_course
 
@@ -279,7 +279,7 @@ class TestStudentActivation:
         auto_enroll_from_curriculum(db, estudiante_user)
         create_course_from_institutional(db, docente_user.id, institutional_course.id)
 
-        courses = get_student_courses_by_cycle(db, estudiante_user)
+        courses = get_student_learning_courses(db, estudiante_user)
         assert len(courses) >= 1
         assert courses[0].course_id is not None
 

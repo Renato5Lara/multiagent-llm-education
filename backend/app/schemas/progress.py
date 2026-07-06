@@ -68,6 +68,9 @@ class CourseProgressResponse(BaseModel):
     has_diagnostic: bool
     has_learning_path: bool
     dominant_modality: Optional[str] = None
+    # Marca (server-side) cuál de los cursos matriculados es la experiencia activa,
+    # para que el frontend nunca tenga que buscar por código (IS301) ni por "curso".
+    is_active_experience: bool = False
 
 
 class LearningPathItem(BaseModel):

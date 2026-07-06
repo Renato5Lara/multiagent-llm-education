@@ -30,11 +30,10 @@ from app.schemas.progress import (
     LearningPathItem,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
-from app.schemas.auth import MessageResponse, CycleUpdateRequest, TutorRequest
+from app.schemas.auth import MessageResponse, TutorRequest
 from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
-from app.services import student_service, evaluation_service
-from app.services.academic_activation_service import academic_activation_pipeline
+from app.services import student_service, evaluation_service, learning_experience_service
 from app.services.audit_service import log_action_sync
 from app.services.module_orchestration_service import module_orchestration_service
 from app.models.student_progress import PathModule, LearningPath
@@ -140,42 +139,67 @@ def _orch_capture(stage, request_id, module_id, student_id, t0, db, exc) -> None
 router = APIRouter(prefix="/api/students", tags=["Estudiantes"])
 
 
+# Nota: la ruta conserva su path (`/onboarding/cycle`) por estabilidad de API.
+# El concepto de "ciclo" quedó obsoleto: el cuerpo `cycle` ya no se recibe y el
+# handler inicia directamente la experiencia de aprendizaje. El rename del path se
+# hará en la fase de limpieza de rutas.
 @router.patch("/onboarding/cycle", response_model=MessageResponse)
-def set_cycle(
-    data: CycleUpdateRequest,
+def start_learning_experience(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    activation = academic_activation_pipeline.activate_student(db, current_user, data.cycle)
+    try:
+        activation = learning_experience_service.start_experience(db, current_user)
+    except ValueError as exc:
+        # Sin experiencia activa configurada (sin seed): estado del servidor,
+        # no error del cliente — nunca un 500 opaco.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
     db.commit()
     db.refresh(current_user)
     log_action_sync(
         db,
         current_user.id,
-        "set_cycle",
+        "start_experience",
         "user",
         current_user.id,
         {
-            "cycle": data.cycle,
-            "enrollments_created": activation.enrollments_created,
             "learning_paths_created": activation.learning_paths_created,
             "modules_created": activation.modules_created,
             "orchestration_events_created": activation.orchestration_events_created,
         },
     )
-    return MessageResponse(message=f"Ciclo {data.cycle} asignado exitosamente")
+    return MessageResponse(message="Experiencia de aprendizaje iniciada")
 
 
 @router.get("/onboarding/status")
 def get_onboarding_status(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
+    state = learning_experience_service.get_state(db, current_user)
+    started = state != learning_experience_service.ExperienceState.NOT_STARTED
     return {
+        # Señal nueva del sistema: ¿el estudiante ya inició su experiencia?
+        "experience_started": started,
+        "state": state.value,
+        # Campos legados conservados por compatibilidad (se retiran en limpieza):
         "has_cycle": current_user.current_cycle is not None,
         "current_cycle": current_user.current_cycle,
         "has_profile": False,
-        "onboarding_completed": current_user.current_cycle is not None,
+        "onboarding_completed": started,
     }
+
+
+@router.get("/experience")
+def get_active_experience_view(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Vista pública de la experiencia de aprendizaje activa: { slug, title, state }.
+    Deliberadamente SIN identificadores de curso — la UI nunca conoce el ancla."""
+    return learning_experience_service.get_public_view(db, current_user)
 
 
 @router.get("/academic/summary")
@@ -192,7 +216,7 @@ def get_my_courses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    courses = student_service.get_student_courses_by_cycle(db, current_user)
+    courses = student_service.get_student_learning_courses(db, current_user)
     return courses
 
 
