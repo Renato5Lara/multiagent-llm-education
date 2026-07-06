@@ -6,11 +6,8 @@ import Header from './Header'
 import TutorWidget from '@/components/ai/TutorWidget'
 import { useMyCourses } from '@/hooks/useStudent'
 
-function findFdPId(courses: { course_id: string; course_code: string; course_name: string }[] | undefined) {
-  return courses?.find(c =>
-    c.course_code === 'IS301' ||
-    c.course_name.toLowerCase().includes('fundamentos de programaci')
-  )?.course_id
+function findActiveExperienceId(courses: { course_id: string; is_active_experience: boolean }[] | undefined) {
+  return courses?.find(c => c.is_active_experience)?.course_id
 }
 
 interface OpenTutorDetail {
@@ -22,7 +19,7 @@ interface OpenTutorDetail {
 
 export default function EstudianteLayout() {
   const { data: courses } = useMyCourses()
-  const fdpId = findFdPId(courses)
+  const fdpId = findActiveExperienceId(courses)
 
   const [tutorConfig, setTutorConfig] = useState<{
     courseId: string
@@ -42,7 +39,7 @@ export default function EstudianteLayout() {
   }, [])
 
   const sidebarItems: SidebarItem[] = [
-    { label: 'Dashboard',           href: '/estudiante',                                  icon: LayoutDashboard },
+    { label: 'Mi Aprendizaje',      href: '/estudiante',                                  icon: LayoutDashboard },
     { label: 'Ruta de Aprendizaje', href: fdpId ? `/estudiante/path/${fdpId}` : '#',     icon: BookOpen, disabled: !fdpId },
   ]
 

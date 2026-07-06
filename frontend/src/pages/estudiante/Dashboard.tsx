@@ -1,6 +1,6 @@
 import {
   Brain, Zap, Lock, CheckCircle, Circle, ArrowRight,
-  BookOpen, ChevronRight, MessageCircle,
+  BookOpen, ChevronRight, MessageCircle, Loader2,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,11 +22,10 @@ const MODALITY_DARK: Record<string, string> = {
   game:        'border-amber-400/40 text-amber-300 bg-amber-400/10',
 }
 
-function findFdP(courses: CourseProgress[] | undefined) {
-  return courses?.find(c =>
-    c.course_code === 'IS301' ||
-    c.course_name.toLowerCase().includes('fundamentos de programaci')
-  )
+// La experiencia activa la marca el backend (is_active_experience); el frontend
+// nunca busca por código de curso ni conoce "IS301".
+function findActiveExperience(courses: CourseProgress[] | undefined) {
+  return courses?.find(c => c.is_active_experience)
 }
 
 function getGreeting() {
@@ -62,7 +61,7 @@ function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: R
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-[10px] font-mono text-neural-glow tracking-[0.15em] uppercase bg-neural-glow/10 border border-neural-glow/20 rounded px-2 py-0.5">
-                {course.course_code}
+                Experiencia adaptativa
               </span>
               {course.dominant_modality && (
                 <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${modColor}`}>
@@ -241,10 +240,11 @@ function AdaptiveProfileCard({
 function NoCourseState() {
   return (
     <div className="glass-panel rounded-2xl p-12 text-center">
-      <BookOpen className="h-12 w-12 text-neural-muted/20 mx-auto mb-4" />
-      <p className="text-neural-text font-semibold mb-1">Sin curso asignado</p>
+      <Loader2 className="h-12 w-12 text-neural-muted/20 mx-auto mb-4 animate-spin" />
+      <p className="text-neural-text font-semibold mb-1">Preparando tu experiencia</p>
       <p className="text-neural-muted text-sm max-w-sm mx-auto">
-        Fundamentos de la Programación (IS301) aparecerá aquí cuando el docente te asigne al grupo.
+        Estamos activando tu experiencia de aprendizaje en Fundamentos de la Programación.
+        Si esto tarda, actualiza la página en unos segundos.
       </p>
     </div>
   )
@@ -276,7 +276,7 @@ export default function EstudianteDashboard() {
   const { data: courses, isLoading: coursesLoading } = useMyCourses()
   const { data: profile } = useStudentProfile()
 
-  const fdp = findFdP(courses)
+  const fdp = findActiveExperience(courses)
   const { data: path, isLoading: pathLoading } = useLearningPath(fdp?.course_id)
 
   if (coursesLoading || (fdp?.has_learning_path && pathLoading)) return <DashboardSkeleton />
