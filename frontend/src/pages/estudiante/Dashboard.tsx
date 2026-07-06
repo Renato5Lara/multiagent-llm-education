@@ -47,8 +47,20 @@ function Greeting({ name }: { name: string }) {
   )
 }
 
-function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: ReturnType<typeof useNavigate> }) {
+function FdPHeroCard({ course, missions, currentMission, navigate }: {
+  course: CourseProgress
+  /** Progreso real por misiones (desde la ruta ya cargada); null si aún no hay ruta */
+  missions: { completed: number; total: number } | null
+  /** Primera misión disponible — el punto de continuación del estudiante */
+  currentMission: LearningPathItem | null
+  navigate: ReturnType<typeof useNavigate>
+}) {
   const modColor = course.dominant_modality ? MODALITY_DARK[course.dominant_modality] : ''
+  // El progreso que ve el estudiante es el de sus MISIONES, no el de recursos
+  // (completar misiones no movía el % anterior — dashboard "0%" engañoso).
+  const pct = missions && missions.total > 0
+    ? Math.round((missions.completed / missions.total) * 100)
+    : course.progress_percentage
 
   return (
     <div className="glass-panel rounded-2xl p-6 relative overflow-hidden">
@@ -75,19 +87,25 @@ function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: R
           {/* Big progress number */}
           <div className="text-right flex-shrink-0 ml-4">
             <p className="text-4xl font-bold font-mono text-neural-glow leading-none">
-              {course.progress_percentage}
+              {pct}
             </p>
             <p className="text-[10px] text-neural-muted/60 font-mono mt-0.5">% completado</p>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full bg-white/[0.06] rounded-full h-2 mb-5">
+        <div className="w-full bg-white/[0.06] rounded-full h-2 mb-2">
           <div
             className="bg-neural-glow h-2 rounded-full neural-glow-sm transition-all duration-700"
-            style={{ width: `${Math.max(course.progress_percentage, 2)}%` }}
+            style={{ width: `${Math.max(pct, 2)}%` }}
           />
         </div>
+        {missions && missions.total > 0 && (
+          <p className="text-[10px] font-mono text-neural-muted/50 mb-5">
+            {missions.completed}/{missions.total} misiones completadas
+          </p>
+        )}
+        {(!missions || missions.total === 0) && <div className="mb-5" />}
 
         {/* Status indicators */}
         <div className="flex items-center gap-4 mb-5">
@@ -105,21 +123,31 @@ function FdPHeroCard({ course, navigate }: { course: CourseProgress; navigate: R
           </div>
         </div>
 
-        {/* CTA */}
+        {/* CTA — conduce a la misión actual (la Misión Activa reanuda sola) */}
         {!course.has_diagnostic ? (
           <Button className="gap-2" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
             <Brain className="h-4 w-4" />
             Comenzar diagnóstico
           </Button>
-        ) : !course.has_learning_path ? (
+        ) : currentMission ? (
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              className="gap-2"
+              onClick={() => navigate(
+                `/estudiante/module/${currentMission.id}?courseId=${course.course_id}&title=${encodeURIComponent(currentMission.title)}`
+              )}
+            >
+              <ArrowRight className="h-4 w-4" />
+              Continuar misión
+            </Button>
+            <span className="text-xs text-neural-muted/70 truncate max-w-[260px]">
+              {currentMission.title}
+            </span>
+          </div>
+        ) : (
           <Button className="gap-2" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
             <Zap className="h-4 w-4" />
             Ver ruta adaptativa
-          </Button>
-        ) : (
-          <Button className="gap-2" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
-            <ArrowRight className="h-4 w-4" />
-            Continuar aprendizaje
           </Button>
         )}
       </div>
@@ -165,7 +193,11 @@ function ModuleTimeline({
             <button
               key={item.id}
               disabled={item.status === 'locked'}
-              onClick={() => item.resource_id && navigate(`/estudiante/content/${item.resource_id}`)}
+              // A la MISIÓN (reanuda o repasa vía Misión Activa), no al viewer
+              // legacy de recursos — antes era botón muerto sin resource_id.
+              onClick={() => navigate(
+                `/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`
+              )}
               className={[
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200 text-left',
                 cfg.ring,
@@ -285,7 +317,12 @@ export default function EstudianteDashboard() {
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'
 
   const modality = fdp?.dominant_modality ?? profile?.dominant_style ?? null
-  const currentModuleTitle = path?.items.find(i => i.status === 'available')?.title
+  const items = path?.items ?? []
+  const currentMission = items.find(i => i.status === 'available') ?? null
+  const missions = items.length > 0
+    ? { completed: items.filter(i => i.status === 'completed').length, total: items.length }
+    : null
+  const currentModuleTitle = currentMission?.title
 
   return (
     <div>
@@ -296,7 +333,12 @@ export default function EstudianteDashboard() {
       ) : (
         <div className="space-y-6">
           {/* ── Hero — ancho completo ─────────────────────── */}
-          <FdPHeroCard course={fdp} navigate={navigate} />
+          <FdPHeroCard
+            course={fdp}
+            missions={missions}
+            currentMission={currentMission}
+            navigate={navigate}
+          />
 
           {/* ── Timeline + Perfil — 2 columnas ───────────── */}
           {fdp.has_learning_path && (
