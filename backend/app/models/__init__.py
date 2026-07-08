@@ -26,6 +26,12 @@ from app.models.programming_metrics import ProgrammingMetrics
 from app.models.resource_programming_tag import ResourceProgrammingTag
 from app.models.learning_session import LearningSession
 from app.models.retrieval import RetrievalCache, RetrievalHistory, ResearchSession
+from app.models.knowledge_test import (
+    KnowledgeTestQuestion,
+    KnowledgeTestAttempt,
+    KnowledgeTestAnswer,
+)
+from app.models.research import ExperimentResult, ResearchMetric
 
 __all__ = [
     "User", "UserRole",
@@ -56,4 +62,6 @@ __all__ = [
     "ResourceProgrammingTag",
     "LearningSession",
     "RetrievalCache", "RetrievalHistory", "ResearchSession",
+    "KnowledgeTestQuestion", "KnowledgeTestAttempt", "KnowledgeTestAnswer",
+    "ExperimentResult", "ResearchMetric",
 ]
