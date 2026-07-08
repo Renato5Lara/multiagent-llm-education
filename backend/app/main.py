@@ -111,6 +111,20 @@ async def lifespan(app: FastAPI):
         logger.info("OpenAI LLM generation available")
     # ────────────────────────────────────────────────────────────────
 
+    # ── Research & Experiment Layer: banco fijo pre/post-test ───────
+    # Best-effort: si la migración aún no corrió, se omite sin romper el boot.
+    try:
+        from app.data.knowledge_test_bank import seed_knowledge_test_bank
+        from app.db.session import SessionLocal
+
+        with SessionLocal() as seed_db:
+            inserted = seed_knowledge_test_bank(seed_db)
+        if inserted:
+            logger.info("Banco pre/post-test: %d preguntas seedeadas", inserted)
+    except Exception as exc:
+        logger.warning("Seed del banco pre/post-test omitido: %s", exc)
+    # ────────────────────────────────────────────────────────────────
+
     yield
 
     logger.info("Apagando UPAO-MAS-EDU API")
