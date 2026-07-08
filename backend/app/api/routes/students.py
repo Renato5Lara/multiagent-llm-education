@@ -36,6 +36,7 @@ from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service, learning_experience_service
 from app.services.audit_service import log_action_sync
+from app.services import research_metrics_service
 from app.services.module_orchestration_service import module_orchestration_service
 from app.models.student_progress import PathModule, LearningPath
 from app.schemas.progress import ModuleOrchestrationResponse
@@ -411,6 +412,15 @@ def generate_learning_path(
         db, student_id=current_user.id, course_id=course_id, diagnostic=diagnostic
     )
     log_action_sync(db, current_user.id, "generar_ruta", "learning_path", path.id)
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.PATH_GENERATION_MS,
+        student_id=current_user.id,
+        course_id=course_id,
+        value=float(path.generation_duration_ms or 0),
+        unit="ms",
+        payload={"knowledge_level": path.knowledge_level, "total_modules": path.total_modules},
+    )
     return path
 
 
@@ -449,6 +459,22 @@ def update_module(
         # El snapshot se conserva ("Repasar" = lectura). Best-effort.
         from app.services import active_mission_service
         active_mission_service.complete_mission(db, current_user, module_id)
+
+        _course_id = None
+        try:
+            _path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
+            _course_id = _path.course_id if _path else None
+        except Exception:
+            pass
+        research_metrics_service.record_metric(
+            db,
+            metric_type=research_metrics_service.MISSION_COMPLETED,
+            student_id=current_user.id,
+            course_id=_course_id,
+            value=1.0,
+            unit="count",
+            payload={"module_id": module_id, "score": data.score},
+        )
     return module
 
 
@@ -476,6 +502,19 @@ def update_mission_progress(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No hay una misión activa para este módulo",
         )
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.MODULE_PROGRESS,
+        student_id=current_user.id,
+        course_id=mission.course_id,
+        value=float(data.current_index),
+        unit="step",
+        payload={
+            "module_id": module_id,
+            "completed_steps": len(data.completed_step_ids or []),
+            "total_xp": data.total_xp,
+        },
+    )
     return {"ok": True, "mission_cursor": (mission.metadata_json or {}).get("mission_cursor")}
 
 
@@ -599,6 +638,7 @@ async def orchestrate_module(
         "orchestrate_service.before", request_id, module_id, student_id, _t0,
         session_state=_orch_session_state(db),
     )
+    _ai_t0 = _time.monotonic()
     try:
         result = await module_orchestration_service.orchestrate_module(
             db=db,
@@ -614,6 +654,7 @@ async def orchestrate_module(
     except Exception as exc:  # noqa: BLE001
         _orch_capture("orchestrate_service.unexpected", request_id, module_id, student_id, _t0, db, exc)
         raise
+    _ai_elapsed_ms = (_time.monotonic() - _ai_t0) * 1000
     _status = result.get("orchestration_status") if isinstance(result, dict) else "<not-a-dict>"
     _orch_stage(
         "orchestrate_service.after", request_id, module_id, student_id, _t0,
@@ -693,6 +734,18 @@ async def orchestrate_module(
             request_id, type(exc).__name__, str(exc), _orch_session_state(db),
         )
     _orch_stage("log_action.after", request_id, module_id, student_id, _t0)
+
+    # ── métrica de investigación (best-effort, nunca causa 500) ──────
+    # Solo mide generación real: los resúmenes de misión reanudada retornan antes.
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.AI_ORCHESTRATION_MS,
+        student_id=current_user.id,
+        course_id=path.course_id,
+        value=round(_ai_elapsed_ms, 1),
+        unit="ms",
+        payload={"module_id": module_id, "status": _status},
+    )
 
     # ── return ────────────────────────────────────────────────────────
     _orch_stage(
@@ -811,6 +864,7 @@ def tutor_chat(
     except Exception as e:
         logger.warning(f"Error building tutor context: {e}")
 
+    _tutor_t0 = _time.monotonic()
     response_text = ai_service.generate_tutor_response(
         message=data.message,
         course_name=course_name,
@@ -818,6 +872,25 @@ def tutor_chat(
         progress=progress,
         learning_style=learning_style,
         bloom_level=bloom_level,
+    )
+    _tutor_ms = round((_time.monotonic() - _tutor_t0) * 1000, 1)
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.TUTOR_MESSAGE,
+        student_id=current_user.id,
+        course_id=data.course_id,
+        value=1.0,
+        unit="count",
+        payload={"endpoint": "chat"},
+    )
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.TUTOR_LATENCY_MS,
+        student_id=current_user.id,
+        course_id=data.course_id,
+        value=_tutor_ms,
+        unit="ms",
+        payload={"endpoint": "chat"},
     )
 
     return {
@@ -847,10 +920,30 @@ def analyze_error(
     except Exception:
         pass
 
+    _tutor_t0 = _time.monotonic()
     response_text = ai_service.generate_tutor_response(
         message=f"Explica por qué está mal esto y cómo corregirlo: {data.message}",
         course_name=course_name,
         bloom_level=2,
+    )
+    _tutor_ms = round((_time.monotonic() - _tutor_t0) * 1000, 1)
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.TUTOR_MESSAGE,
+        student_id=current_user.id,
+        course_id=data.course_id,
+        value=1.0,
+        unit="count",
+        payload={"endpoint": "analyze-error"},
+    )
+    research_metrics_service.record_metric(
+        db,
+        metric_type=research_metrics_service.TUTOR_LATENCY_MS,
+        student_id=current_user.id,
+        course_id=data.course_id,
+        value=_tutor_ms,
+        unit="ms",
+        payload={"endpoint": "analyze-error"},
     )
 
     return {"response": response_text}
