@@ -1,7 +1,17 @@
 import { useNavigate } from 'react-router-dom'
-import { Route, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Route, ArrowRight, ShieldCheck, FlaskConical } from 'lucide-react'
 
 const evidenceTools = [
+  {
+    title: 'Dashboard del Investigador',
+    description: 'Resultados del experimento pre-test → post-test: promedios, incremento de aprendizaje, distribución de niveles, tiempos del sistema y exportación CSV/Excel para análisis estadístico.',
+    icon: FlaskConical,
+    href: '/evidencia/investigacion',
+    iconClass: 'text-neural-glow bg-neural-glow/[0.06] border-neural-glow/20',
+    btnClass:  'text-neural-glow border-neural-glow/20 hover:bg-neural-glow/[0.06]',
+    label: 'Datos reales',
+    labelClass: 'bg-neural-glow/10 text-neural-glow border-neural-glow/20',
+  },
   {
     title: 'Trayectoria del estudiante',
     description: 'Evidencia cronológica real: diagnóstico, ruta, progreso, evaluaciones y registros de memoria compartida de un estudiante que completó el recorrido.',
@@ -48,7 +58,7 @@ export default function EvidenceHub() {
         <p className="text-[10px] font-mono text-neural-muted/50 tracking-widest uppercase mb-4">
           Herramientas de evidencia
         </p>
-        <div className="grid gap-5 max-w-md">
+        <div className="grid gap-5 sm:grid-cols-2 max-w-3xl">
           {evidenceTools.map((tool) => (
             <div
               key={tool.href}

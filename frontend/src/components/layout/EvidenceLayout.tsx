@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { FlaskConical, Route } from 'lucide-react'
+import { FlaskConical, LineChart, Route } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
@@ -8,8 +8,9 @@ import Header from './Header'
 // un estudiante. El código se conserva (no se elimina), solo deja de estar
 // enlazado — el jurado nunca debería llegar ahí.
 const evidenceItems: SidebarItem[] = [
-  { label: 'Modo Evidencia',            href: '/evidencia', icon: FlaskConical },
-  { label: 'Trayectoria del estudiante', href: '/replay',    icon: Route },
+  { label: 'Modo Evidencia',             href: '/evidencia',               icon: FlaskConical },
+  { label: 'Dashboard del Investigador', href: '/evidencia/investigacion', icon: LineChart },
+  { label: 'Trayectoria del estudiante', href: '/replay',                  icon: Route },
 ]
 
 export default function EvidenceLayout() {
