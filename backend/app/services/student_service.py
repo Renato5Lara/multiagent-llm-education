@@ -4,6 +4,7 @@ Flujo adaptativo: diagnóstico, perfil, ruta adaptativa, progreso.
 """
 
 import logging
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -417,9 +418,57 @@ def get_student_learning_courses(db: Session, student: User) -> list[CourseProgr
     return results
 
 
+def _initial_module_statuses(n_modules: int, module_breakdown: Optional[dict]) -> list[str]:
+    """Estados iniciales de los módulos de la ruta.
+
+    Sin pre-test (o sin desglose): comportamiento histórico exacto — solo el
+    primer módulo disponible. Con pre-test: los módulos iniciales consecutivos
+    dominados (pct >= MASTERY_THRESHOLD_PCT) quedan disponibles (saltables) y
+    el primer no-dominado marca el frente de trabajo, también disponible.
+    Así dos estudiantes con el mismo estilo pero distinto conocimiento reciben
+    rutas con distinto frente de desbloqueo.
+    """
+    statuses = ["locked"] * n_modules
+    if n_modules == 0:
+        return statuses
+    if not module_breakdown:
+        statuses[0] = "available"
+        return statuses
+
+    from app.services.knowledge_test_service import MASTERY_THRESHOLD_PCT
+
+    i = 0
+    while i < n_modules:
+        stats = module_breakdown.get(str(i + 1)) or {}
+        if stats.get("pct", 0.0) >= MASTERY_THRESHOLD_PCT:
+            statuses[i] = "available"
+            i += 1
+        else:
+            break
+    if i < n_modules:
+        statuses[i] = "available"
+    return statuses
+
+
 def generate_learning_path_adaptive(
     db: Session, student_id: str, course_id: str, diagnostic: DiagnosticResult
 ) -> LearningPath:
+    generation_start = time.perf_counter()
+
+    # Resultado del pre-test de conocimiento (best-effort: sin pre-test la
+    # generación reproduce el comportamiento histórico exacto)
+    knowledge_level: Optional[str] = None
+    knowledge_breakdown: Optional[dict] = None
+    try:
+        from app.services import knowledge_test_service
+
+        pretest = knowledge_test_service.get_result(db, student_id, course_id, "pre")
+        if pretest is not None:
+            knowledge_level = pretest.level
+            knowledge_breakdown = pretest.module_breakdown
+    except Exception:
+        logger.warning("Pre-test no disponible al generar la ruta", exc_info=True)
+
     existing = (
         db.query(LearningPath)
         .filter(
@@ -486,8 +535,9 @@ def generate_learning_path_adaptive(
     db.flush()
 
     if objectives:
+        initial_statuses = _initial_module_statuses(len(objectives), knowledge_breakdown)
         for i, obj in enumerate(objectives):
-            status = "available" if i == 0 else "locked"
+            status = initial_statuses[i]
             resource = get_best_resource_for_objective(obj)
             module = PathModule(
                 path_id=path.id,
@@ -510,6 +560,9 @@ def generate_learning_path_adaptive(
         )
         db.add(module)
         path.total_modules = 1
+
+    path.knowledge_level = knowledge_level
+    path.generation_duration_ms = int((time.perf_counter() - generation_start) * 1000)
 
     db.commit()
     db.refresh(path)

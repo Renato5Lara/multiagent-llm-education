@@ -388,6 +388,25 @@ def generate_learning_path(
             detail="Debes completar el diagnóstico primero",
         )
 
+    # Gate del pre-test de conocimiento (fail-open): bloquea solo si el banco
+    # está seedeado, no hay pre completado y el estudiante no tiene ruta previa
+    # (los estudiantes legacy con ruta nunca quedan bloqueados retroactivamente).
+    try:
+        from app.services import knowledge_test_service
+
+        kt_status = knowledge_test_service.get_test_status(db, current_user.id, course_id)
+        pretest_required = kt_status["pretest_required"]
+    except Exception:
+        pretest_required = False
+    if pretest_required:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "PRETEST_REQUIRED",
+                "message": "Debes completar la evaluación diagnóstica antes de generar tu ruta",
+            },
+        )
+
     path = student_service.generate_learning_path_adaptive(
         db, student_id=current_user.id, course_id=course_id, diagnostic=diagnostic
     )

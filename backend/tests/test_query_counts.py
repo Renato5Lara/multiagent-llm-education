@@ -335,7 +335,9 @@ class TestGenerateLearningPathAdaptive:
         path = generate_learning_path_adaptive(db, student.id, course.id, diag)
         cnt = _stop()
         assert path is not None
-        assert cnt <= 10, f"Expected <=10 queries, got {cnt}"
+        # 11 = presupuesto histórico (10) + 1 consulta constante del pre-test
+        # de conocimiento (no es N+1: no escala con los objetivos del curso)
+        assert cnt <= 11, f"Expected <=11 queries, got {cnt}"
 
 
 class TestGetCourseRecommendationsFromGraph:

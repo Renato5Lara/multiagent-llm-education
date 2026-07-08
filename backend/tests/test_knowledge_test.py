@@ -323,3 +323,147 @@ def test_pretest_records_research_metric(
     assert metric is not None
     assert metric.value == 100.0
     assert metric.payload["level"] == "avanzado"
+
+
+# ── Ruta adaptativa sensible al conocimiento ─────────────────────────
+
+
+def test_initial_statuses_without_pretest_is_legacy_behavior():
+    from app.services.student_service import _initial_module_statuses
+
+    assert _initial_module_statuses(3, None) == ["available", "locked", "locked"]
+    assert _initial_module_statuses(0, None) == []
+
+
+def test_initial_statuses_differ_by_knowledge_with_same_style():
+    """Dos estudiantes con el mismo estilo pero distinto conocimiento
+    reciben frentes de desbloqueo distintos."""
+    from app.services.student_service import _initial_module_statuses
+
+    low = {str(m): {"correct": 0, "total": 4, "pct": 0.0} for m in range(1, 10)}
+    high = {str(m): {"correct": 4, "total": 4, "pct": 100.0} for m in range(1, 4)}
+    high.update({str(m): {"correct": 1, "total": 4, "pct": 25.0} for m in range(4, 10)})
+
+    statuses_low = _initial_module_statuses(9, low)
+    statuses_high = _initial_module_statuses(9, high)
+
+    assert statuses_low == ["available"] + ["locked"] * 8
+    # módulos 1-3 dominados quedan disponibles; el 4 es el frente de trabajo
+    assert statuses_high == ["available"] * 4 + ["locked"] * 5
+    assert statuses_low != statuses_high
+
+
+def _create_style_diagnostic(db, student_id, course_id):
+    from app.models.diagnostic_result import DiagnosticResult
+
+    db.add(
+        DiagnosticResult(
+            student_id=student_id,
+            course_id=course_id,
+            answers={"q1": 5},
+            profile={"student_profile": {"dominant_modality": "visual"}},
+            dominant_modality="visual",
+        )
+    )
+    db.commit()
+
+
+def test_generate_path_blocked_until_pretest(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    _create_style_diagnostic(db, estudiante_user.id, curso_publicado.id)
+
+    resp = client.post(
+        f"/api/students/learning-path/{curso_publicado.id}",
+        headers=auth_header(estudiante_token),
+    )
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "PRETEST_REQUIRED"
+
+
+def test_generate_path_after_pretest_personalizes_and_measures(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    from app.models.student_progress import LearningPath, PathModule
+
+    _create_style_diagnostic(db, estudiante_user.id, curso_publicado.id)
+    start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, start["attempt_id"], start["questions"], db
+    )
+
+    resp = client.post(
+        f"/api/students/learning-path/{curso_publicado.id}",
+        headers=auth_header(estudiante_token),
+    )
+    assert resp.status_code == 200
+
+    path = (
+        db.query(LearningPath)
+        .filter(
+            LearningPath.student_id == estudiante_user.id,
+            LearningPath.course_id == curso_publicado.id,
+        )
+        .first()
+    )
+    assert path.knowledge_level == "avanzado"
+    assert path.generation_duration_ms is not None and path.generation_duration_ms >= 0
+
+    modules = (
+        db.query(PathModule)
+        .filter(PathModule.path_id == path.id)
+        .order_by(PathModule.order)
+        .all()
+    )
+    # 100% en el pre-test → todos los módulos iniciales dominados → disponibles
+    assert all(m.status == "available" for m in modules)
+
+
+def test_generate_path_without_bank_keeps_legacy_flow(
+    client, estudiante_token, curso_publicado, db, estudiante_user
+):
+    """Banco no seedeado → fail-open: la generación funciona como siempre."""
+    from app.models.student_progress import LearningPath
+
+    _create_style_diagnostic(db, estudiante_user.id, curso_publicado.id)
+    resp = client.post(
+        f"/api/students/learning-path/{curso_publicado.id}",
+        headers=auth_header(estudiante_token),
+    )
+    assert resp.status_code == 200
+    path = (
+        db.query(LearningPath)
+        .filter(LearningPath.student_id == estudiante_user.id)
+        .first()
+    )
+    assert path.knowledge_level is None
+
+
+def test_legacy_student_with_path_not_blocked(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    """Estudiante con ruta previa y sin pre-test: nunca bloqueado retroactivamente."""
+    from app.models.student_progress import LearningPath
+
+    _create_style_diagnostic(db, estudiante_user.id, curso_publicado.id)
+    db.add(
+        LearningPath(
+            student_id=estudiante_user.id,
+            course_id=curso_publicado.id,
+            total_modules=1,
+            status="active",
+        )
+    )
+    db.commit()
+
+    status_body = client.get(
+        f"/api/students/knowledge-test/{curso_publicado.id}/status",
+        headers=auth_header(estudiante_token),
+    ).json()
+    assert status_body["pretest_required"] is False
+
+    resp = client.post(
+        f"/api/students/learning-path/{curso_publicado.id}",
+        headers=auth_header(estudiante_token),
+    )
+    assert resp.status_code == 200

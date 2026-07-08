@@ -24,6 +24,8 @@ class LearningPath(Base):
     total_modules = Column(Integer, default=0)
     completed_modules = Column(Integer, default=0)
     status = Column(String(20), default="active")
+    knowledge_level = Column(String(20), nullable=True)
+    generation_duration_ms = Column(Integer, nullable=True)
     version = Column(Integer, default=1, nullable=False)
 
     __mapper_args__ = {"version_id_col": version}
