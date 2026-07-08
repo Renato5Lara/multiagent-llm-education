@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { DIAGNOSTIC_QUESTIONS, LIKERT_OPTIONS } from '@/lib/constants'
 import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
 import { useToast } from '@/hooks/use-toast'
+import api from '@/lib/api'
 import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -169,7 +170,11 @@ function TransitionScreen({ onContinue }: { onContinue: () => void }) {
 }
 
 
-function DoneScreen({ courseId, navigate }: { courseId: string; navigate: ReturnType<typeof useNavigate> }) {
+function DoneScreen({
+  courseId, navigate, pretestNext,
+}: {
+  courseId: string; navigate: ReturnType<typeof useNavigate>; pretestNext?: boolean
+}) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
@@ -177,13 +182,23 @@ function DoneScreen({ courseId, navigate }: { courseId: string; navigate: Return
           <CheckCircle2 className="h-16 w-16 text-neural-pulse" />
           <div className="absolute inset-0 bg-neural-pulse/10 rounded-full blur-xl" />
         </div>
-        <h2 className="text-xl font-bold text-neural-text mb-2">Perfil generado</h2>
+        <h2 className="text-xl font-bold text-neural-text mb-2">
+          {pretestNext ? 'Perfil de estilo registrado' : 'Perfil generado'}
+        </h2>
         <p className="text-neural-muted text-sm mb-6 leading-relaxed">
-          El swarm ha construido tu ruta personalizada. El contenido se adaptará a tu estilo de aprendizaje.
+          {pretestNext
+            ? 'Falta un paso: una evaluación diagnóstica de conocimientos para que tu ruta parta exactamente de lo que ya sabes.'
+            : 'El swarm ha construido tu ruta personalizada. El contenido se adaptará a tu estilo de aprendizaje.'}
         </p>
-        <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/path/${courseId}`)}>
-          Ver mi ruta de aprendizaje →
-        </Button>
+        {pretestNext ? (
+          <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/knowledge-test/${courseId}`)}>
+            Continuar con la evaluación diagnóstica →
+          </Button>
+        ) : (
+          <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/path/${courseId}`)}>
+            Ver mi ruta de aprendizaje →
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -233,7 +248,7 @@ export default function DiagnosticTest() {
 
   // Refs for values that are needed in effects without stale closures
   const answersRef = useRef<Record<number, number>>({})
-  const apiResultRef = useRef<{ success: boolean; error?: string } | null>(null)
+  const apiResultRef = useRef<{ success: boolean; error?: string; pretestNext?: boolean } | null>(null)
   const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => () => {
@@ -252,8 +267,22 @@ export default function DiagnosticTest() {
         const formatted: Record<string, number> = {}
         Object.entries(answersRef.current).forEach(([k, v]) => { formatted[k] = v })
         await submitDiagnostic.mutateAsync({ courseId, answers: formatted })
-        await generatePath.mutateAsync(courseId)
-        apiResultRef.current = { success: true }
+        // Flujo diagnóstico unificado: si el pre-test de conocimiento está
+        // pendiente, la ruta se genera después de rendirlo (fail-open si el
+        // status no responde: comportamiento histórico intacto).
+        let pretestNext = false
+        try {
+          const st = await api.get<{ pretest_required: boolean }>(
+            `/api/students/knowledge-test/${courseId}/status`,
+          )
+          pretestNext = !!st.data?.pretest_required
+        } catch {
+          pretestNext = false
+        }
+        if (!pretestNext) {
+          await generatePath.mutateAsync(courseId)
+        }
+        apiResultRef.current = { success: true, pretestNext }
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
         apiResultRef.current = { success: false, error: msg }
@@ -334,7 +363,7 @@ export default function DiagnosticTest() {
   }
 
   if (phase === 'done') {
-    return <DoneScreen courseId={courseId!} navigate={navigate} />
+    return <DoneScreen courseId={courseId!} navigate={navigate} pretestNext={apiResultRef.current?.pretestNext} />
   }
 
   if (phase === 'error') {

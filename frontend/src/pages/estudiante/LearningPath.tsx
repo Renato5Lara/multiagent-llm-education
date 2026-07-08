@@ -3,6 +3,7 @@ import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap, 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { LearningPathItem } from '@/types/student'
@@ -200,6 +201,7 @@ export default function LearningPath() {
   const { data: path, isLoading, error } = useLearningPath(courseId)
   const generatePath = useGeneratePath()
   const { data: adaptiveDecision } = useAdaptiveDecision(courseId)
+  const { data: ktStatus } = useKnowledgeTestStatus(courseId)
 
   if (isLoading) return <PathSkeleton />
 
@@ -348,6 +350,15 @@ export default function LearningPath() {
           <p className="text-neural-muted text-sm">
             Has completado todas las misiones de Fundamentos de la Programación.
           </p>
+          {ktStatus?.pretest?.status === 'completed' && ktStatus?.posttest?.status !== 'completed' && (
+            <Button
+              className="mt-5 gap-2"
+              onClick={() => navigate(`/estudiante/post-test/${courseId}`)}
+            >
+              Rendir Post-Test final
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )}
 

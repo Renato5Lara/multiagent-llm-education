@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMyCourses, useLearningPath, useStudentProfile } from '@/hooks/useStudent'
+import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
 import { MODALITY_LABELS } from '@/lib/constants'
@@ -56,6 +57,14 @@ function FdPHeroCard({ course, missions, currentMission, navigate }: {
   navigate: ReturnType<typeof useNavigate>
 }) {
   const modColor = course.dominant_modality ? MODALITY_DARK[course.dominant_modality] : ''
+  // Post-Test: se ofrece al cerrar el recorrido (todas las misiones completadas),
+  // solo si el pre-test existe y el post aún no se rindió.
+  const ktStatus = useKnowledgeTestStatus(course.course_id)
+  const allMissionsDone = missions !== null && missions.total > 0 && missions.completed === missions.total
+  const posttestPending =
+    allMissionsDone &&
+    ktStatus.data?.pretest?.status === 'completed' &&
+    ktStatus.data?.posttest?.status !== 'completed'
   // El progreso que ve el estudiante es el de sus MISIONES, no el de recursos
   // (completar misiones no movía el % anterior — dashboard "0%" engañoso).
   const pct = missions && missions.total > 0
@@ -128,6 +137,11 @@ function FdPHeroCard({ course, missions, currentMission, navigate }: {
           <Button className="gap-2" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
             <Brain className="h-4 w-4" />
             Comenzar diagnóstico
+          </Button>
+        ) : posttestPending ? (
+          <Button className="gap-2" onClick={() => navigate(`/estudiante/post-test/${course.course_id}`)}>
+            <CheckCircle className="h-4 w-4" />
+            Rendir Post-Test
           </Button>
         ) : currentMission ? (
           <div className="flex items-center gap-3 flex-wrap">

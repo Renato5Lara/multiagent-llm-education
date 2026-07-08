@@ -5,6 +5,7 @@ import { LoadingScreen } from '@/components/auth/ProtectedRoute'
 
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import AcademicGuard from '@/components/auth/AcademicGuard'
+import PretestGuard from '@/components/auth/PretestGuard'
 import AdminLayout from '@/components/layout/AdminLayout'
 import DocenteLayout from '@/components/layout/DocenteLayout'
 import EstudianteLayout from '@/components/layout/EstudianteLayout'
@@ -33,8 +34,10 @@ const ModuleLearningView = lazy(() => import('@/pages/estudiante/ModuleLearningV
 const AdaptiveLearnView = lazy(() => import('@/pages/estudiante/AdaptiveLearnView'))
 const CodeLab = lazy(() => import('@/pages/estudiante/CodeLab'))
 const Evaluation = lazy(() => import('@/pages/estudiante/Evaluation'))
+const KnowledgeTest = lazy(() => import('@/pages/estudiante/KnowledgeTest'))
 const StudentTrajectory = lazy(() => import('@/pages/replay/StudentTrajectory'))
 const EvidenceHub = lazy(() => import('@/pages/evidencia/EvidenceHub'))
+const ResearchDashboard = lazy(() => import('@/pages/evidencia/ResearchDashboard'))
 
 function RootRedirect() {
     const { isAuthenticated, user } = useAuthStore()
@@ -79,7 +82,9 @@ export default function App() {
                         <Route element={<EstudianteLayout />}>
                             <Route path="/estudiante" element={<EstudianteDashboard />} />
                             <Route path="/estudiante/diagnostic/:courseId" element={<DiagnosticTest />} />
-                            <Route path="/estudiante/path/:courseId" element={<LearningPath />} />
+                            <Route path="/estudiante/knowledge-test/:courseId" element={<KnowledgeTest kind="pre" />} />
+                            <Route path="/estudiante/post-test/:courseId" element={<KnowledgeTest kind="post" />} />
+                            <Route path="/estudiante/path/:courseId" element={<PretestGuard><LearningPath /></PretestGuard>} />
                             <Route path="/estudiante/content/:resourceId" element={<ContentViewer />} />
                             <Route path="/estudiante/module/:moduleId" element={<ModuleLearningView />} />
                             <Route path="/estudiante/learn/:topicSlug" element={<AdaptiveLearnView />} />
@@ -92,6 +97,7 @@ export default function App() {
                 {/* Modo Evidencia — capacidad de observabilidad, no un rol de usuario */}
                 <Route element={<EvidenceLayout />}>
                     <Route path="/evidencia" element={<EvidenceHub />} />
+                    <Route path="/evidencia/investigacion" element={<ResearchDashboard />} />
                 </Route>
 
                 <Route path="/404" element={<NotFound />} />
