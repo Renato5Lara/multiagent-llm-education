@@ -1,0 +1,491 @@
+import { useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  BookOpen,
+  CheckCircle2,
+  ClipboardList,
+  Loader2,
+  TrendingUp,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/hooks/use-toast'
+import { getErrorMessage } from '@/lib/errors'
+import { useGeneratePath } from '@/hooks/useStudent'
+import {
+  useKnowledgeComparison,
+  useKnowledgeTestStatus,
+  useStartKnowledgeTest,
+  useSubmitKnowledgeTest,
+  type KnowledgeTestKind,
+  type KnowledgeTestQuestion,
+  type KnowledgeTestResult,
+} from '@/hooks/useKnowledgeTest'
+
+const MODULE_NAMES: Record<number, string> = {
+  1: 'Introducción a la Programación',
+  2: 'Variables y Tipos de Datos',
+  3: 'Operadores y Expresiones',
+  4: 'Condicionales',
+  5: 'Bucles',
+  6: 'Funciones',
+  7: 'Arreglos',
+  8: 'Recursividad',
+  9: 'POO básica',
+}
+
+const LEVEL_STYLES: Record<string, { label: string; badge: string; bar: string }> = {
+  basico: {
+    label: 'Básico',
+    badge: 'bg-amber-400/10 text-amber-300 border-amber-400/30',
+    bar: 'bg-amber-400',
+  },
+  intermedio: {
+    label: 'Intermedio',
+    badge: 'bg-neural-glow/10 text-neural-glow border-neural-glow/30',
+    bar: 'bg-neural-glow',
+  },
+  avanzado: {
+    label: 'Avanzado',
+    badge: 'bg-neural-pulse/10 text-neural-pulse border-neural-pulse/30',
+    bar: 'bg-neural-pulse',
+  },
+}
+
+type Phase = 'intro' | 'questions' | 'result'
+
+interface KnowledgeTestProps {
+  kind: KnowledgeTestKind
+}
+
+export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
+  const { courseId } = useParams<{ courseId: string }>()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const isPre = kind === 'pre'
+  const title = isPre ? 'Evaluación Diagnóstica' : 'Post-Test'
+
+  const [phase, setPhase] = useState<Phase>('intro')
+  const [attemptId, setAttemptId] = useState<string | null>(null)
+  const [questions, setQuestions] = useState<KnowledgeTestQuestion[]>([])
+  const [answers, setAnswers] = useState<Record<string, number>>({})
+  const [current, setCurrent] = useState(0)
+  const [result, setResult] = useState<KnowledgeTestResult | null>(null)
+
+  const status = useKnowledgeTestStatus(courseId)
+  const startTest = useStartKnowledgeTest()
+  const submitTest = useSubmitKnowledgeTest()
+  const generatePath = useGeneratePath()
+
+  const attemptSummary = isPre ? status.data?.pretest : status.data?.posttest
+  const alreadyCompleted = attemptSummary?.status === 'completed'
+
+  const handleStart = () => {
+    if (!courseId) return
+    startTest.mutate(
+      { courseId, kind },
+      {
+        onSuccess: (data) => {
+          setAttemptId(data.attempt_id)
+          setQuestions(data.questions)
+          setPhase('questions')
+        },
+        onError: (error) => {
+          toast({
+            variant: 'destructive',
+            title: `No se pudo iniciar el ${title.toLowerCase()}`,
+            description: getErrorMessage(error),
+          })
+        },
+      },
+    )
+  }
+
+  const handleSubmit = () => {
+    if (!attemptId) return
+    submitTest.mutate(
+      { attemptId, answers },
+      {
+        onSuccess: (data) => {
+          setResult(data)
+          setPhase('result')
+        },
+        onError: (error) => {
+          toast({
+            variant: 'destructive',
+            title: 'Error al enviar respuestas',
+            description: getErrorMessage(error),
+          })
+        },
+      },
+    )
+  }
+
+  if (!courseId) return null
+
+  if (status.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-neural-glow" />
+      </div>
+    )
+  }
+
+  if (phase === 'result' && result) {
+    return <ResultScreen kind={kind} courseId={courseId} result={result} navigate={navigate} generatePath={generatePath} />
+  }
+
+  if (alreadyCompleted && phase === 'intro') {
+    return <CompletedScreen kind={kind} courseId={courseId} navigate={navigate} />
+  }
+
+  if (status.data && !status.data.bank_available) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
+          <AlertTriangle className="h-12 w-12 text-amber-400 mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-neural-text mb-2">Evaluación no disponible</h2>
+          <p className="text-neural-muted text-sm mb-6">
+            El banco de preguntas aún no está configurado. Puedes continuar con tu ruta normalmente.
+          </p>
+          <Button className="w-full" onClick={() => navigate('/estudiante')}>Volver al inicio</Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'intro') {
+    return (
+      <IntroScreen
+        kind={kind}
+        title={title}
+        totalQuestions={36}
+        starting={startTest.isPending}
+        onStart={handleStart}
+        onBack={() => navigate('/estudiante')}
+      />
+    )
+  }
+
+  // ── Fase de preguntas ────────────────────────────────────────────
+  const question = questions[current]
+  const answeredCount = Object.keys(answers).length
+  const progressPct = questions.length ? (answeredCount / questions.length) * 100 : 0
+
+  return (
+    <div className="max-w-2xl mx-auto py-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl font-bold text-neural-text">{title}</h1>
+          <p className="text-xs text-neural-muted mt-0.5">
+            Módulo {question.module_number}: {MODULE_NAMES[question.module_number] ?? question.topic}
+          </p>
+        </div>
+        <span className="text-xs font-mono text-neural-muted">
+          {current + 1} / {questions.length}
+        </span>
+      </div>
+
+      <div className="h-1.5 rounded-full bg-white/5 mb-8 overflow-hidden">
+        <div
+          className="h-full rounded-full bg-neural-glow transition-all duration-300"
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+
+      <div className="glass-panel rounded-2xl p-8 mb-6">
+        <p className="text-lg font-medium text-neural-text mb-6 whitespace-pre-line font-mono text-[15px] leading-relaxed">
+          {question.text}
+        </p>
+        <div className="space-y-3">
+          {question.options.map((option, idx) => {
+            const selected = answers[question.id] === idx
+            return (
+              <label
+                key={idx}
+                className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
+                  selected
+                    ? 'border-neural-glow/60 bg-neural-glow/[0.06]'
+                    : 'border-white/10 hover:border-white/20'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    selected ? 'border-neural-glow' : 'border-neural-muted/40'
+                  }`}
+                >
+                  {selected && <div className="w-2.5 h-2.5 rounded-full bg-neural-glow" />}
+                </div>
+                <input
+                  type="radio"
+                  className="hidden"
+                  name={`q-${question.id}`}
+                  checked={selected}
+                  onChange={() => setAnswers((prev) => ({ ...prev, [question.id]: idx }))}
+                />
+                <span className="text-sm text-neural-text">{option}</span>
+              </label>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="flex justify-between">
+        <Button
+          variant="outline"
+          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+          disabled={current === 0}
+        >
+          Anterior
+        </Button>
+        {current < questions.length - 1 ? (
+          <Button
+            className="gap-2"
+            onClick={() => setCurrent((c) => c + 1)}
+            disabled={answers[question.id] === undefined}
+          >
+            Siguiente
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        ) : (
+          <Button
+            className="gap-2"
+            onClick={handleSubmit}
+            disabled={answeredCount < questions.length || submitTest.isPending}
+          >
+            {submitTest.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Corrigiendo...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Enviar respuestas
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Pantallas auxiliares ─────────────────────────────────────────────
+
+function IntroScreen({
+  kind, title, totalQuestions, starting, onStart, onBack,
+}: {
+  kind: KnowledgeTestKind
+  title: string
+  totalQuestions: number
+  starting: boolean
+  onStart: () => void
+  onBack: () => void
+}) {
+  const isPre = kind === 'pre'
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center">
+      <div className="glass-panel rounded-2xl p-10 max-w-lg w-full">
+        <div className="relative w-16 h-16 mx-auto mb-6">
+          <ClipboardList className="h-16 w-16 text-neural-glow" />
+          <div className="absolute inset-0 bg-neural-glow/10 rounded-full blur-xl" />
+        </div>
+        <h1 className="text-2xl font-bold text-neural-text mb-3">{title}</h1>
+        <p className="text-neural-muted text-sm leading-relaxed mb-2">
+          {isPre
+            ? 'Antes de construir tu ruta, el sistema necesita conocer tu punto de partida: responderás preguntas de los 9 módulos de Fundamentos de la Programación.'
+            : 'Has llegado al final del recorrido. Este test mide cuánto avanzaste comparándolo con tu evaluación diagnóstica inicial.'}
+        </p>
+        <p className="text-xs text-neural-muted/70 mb-8">
+          {totalQuestions} preguntas de opción múltiple · sin límite de tiempo · se rinde una sola vez
+        </p>
+        <div className="flex gap-3">
+          <Button variant="outline" className="flex-1 gap-2" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4" />
+            Volver
+          </Button>
+          <Button className="flex-1 gap-2" onClick={onStart} disabled={starting}>
+            {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+            {isPre ? 'Comenzar evaluación' : 'Comenzar post-test'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ResultScreen({
+  kind, courseId, result, navigate, generatePath,
+}: {
+  kind: KnowledgeTestKind
+  courseId: string
+  result: KnowledgeTestResult
+  navigate: ReturnType<typeof useNavigate>
+  generatePath: ReturnType<typeof useGeneratePath>
+}) {
+  const isPre = kind === 'pre'
+  const level = LEVEL_STYLES[result.level ?? 'basico'] ?? LEVEL_STYLES.basico
+  const comparison = useKnowledgeComparison(courseId, !isPre)
+
+  const strengths = useMemo(
+    () => result.mastered_modules.map((m) => MODULE_NAMES[m] ?? `Módulo ${m}`),
+    [result.mastered_modules],
+  )
+  const weaknesses = useMemo(
+    () => result.critical_modules.map((m) => MODULE_NAMES[m] ?? `Módulo ${m}`),
+    [result.critical_modules],
+  )
+
+  const handleGeneratePath = () => {
+    generatePath.mutate(courseId, {
+      onSuccess: () => navigate(`/estudiante/path/${courseId}`),
+    })
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto py-8 space-y-6">
+      <div className="glass-panel rounded-2xl p-10 text-center">
+        <div className="relative w-16 h-16 mx-auto mb-5">
+          <Award className="h-16 w-16 text-neural-glow" />
+          <div className="absolute inset-0 bg-neural-glow/10 rounded-full blur-xl" />
+        </div>
+        <h1 className="text-xl font-bold text-neural-text mb-1">
+          {isPre ? 'Resultado del Diagnóstico' : 'Resultado del Post-Test'}
+        </h1>
+        <p className="text-5xl font-bold text-neural-text my-4">
+          {result.percentage?.toFixed(0)}<span className="text-2xl text-neural-muted">%</span>
+        </p>
+        <p className="text-xs text-neural-muted mb-4">
+          {result.score} de {result.total_questions} respuestas correctas
+        </p>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm font-medium ${level.badge}`}>
+          Nivel {level.label}
+        </span>
+      </div>
+
+      {(strengths.length > 0 || weaknesses.length > 0) && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="glass-panel rounded-xl p-5">
+            <p className="text-xs font-mono text-neural-pulse tracking-wider uppercase mb-3">
+              Temas dominados
+            </p>
+            {strengths.length ? (
+              <ul className="space-y-2">
+                {strengths.map((s) => (
+                  <li key={s} className="flex items-center gap-2 text-sm text-neural-text">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-neural-pulse shrink-0" />
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-neural-muted/70">Aún ninguno — tu ruta empezará desde la base.</p>
+            )}
+          </div>
+          <div className="glass-panel rounded-xl p-5">
+            <p className="text-xs font-mono text-amber-300 tracking-wider uppercase mb-3">
+              Temas por reforzar
+            </p>
+            {weaknesses.length ? (
+              <ul className="space-y-2">
+                {weaknesses.map((w) => (
+                  <li key={w} className="flex items-center gap-2 text-sm text-neural-text">
+                    <BookOpen className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+                    {w}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-neural-muted/70">Ningún tema crítico. ¡Buen dominio general!</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isPre && comparison.data && (
+        <div className="glass-panel rounded-xl p-6">
+          <p className="text-xs font-mono text-neural-muted/60 tracking-widest uppercase mb-4">
+            Comparación con tu diagnóstico inicial
+          </p>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold text-neural-text">{comparison.data.pre_percentage.toFixed(0)}%</p>
+              <p className="text-[11px] text-neural-muted mt-1">Pre-Test</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-neural-text">{comparison.data.post_percentage.toFixed(0)}%</p>
+              <p className="text-[11px] text-neural-muted mt-1">Post-Test</p>
+            </div>
+            <div>
+              <p className={`text-2xl font-bold flex items-center justify-center gap-1 ${
+                comparison.data.absolute_gain >= 0 ? 'text-neural-pulse' : 'text-red-400'
+              }`}>
+                <TrendingUp className="h-5 w-5" />
+                {comparison.data.absolute_gain >= 0 ? '+' : ''}{comparison.data.absolute_gain.toFixed(1)}
+              </p>
+              <p className="text-[11px] text-neural-muted mt-1">Incremento (pts)</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-center">
+        {isPre ? (
+          <Button size="lg" className="gap-2" onClick={handleGeneratePath} disabled={generatePath.isPending}>
+            {generatePath.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generando tu ruta personalizada...
+              </>
+            ) : (
+              <>
+                Generar mi Ruta de Aprendizaje
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        ) : (
+          <Button size="lg" className="gap-2" onClick={() => navigate('/estudiante')}>
+            Volver al inicio
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function CompletedScreen({
+  kind, courseId, navigate,
+}: {
+  kind: KnowledgeTestKind
+  courseId: string
+  navigate: ReturnType<typeof useNavigate>
+}) {
+  const isPre = kind === 'pre'
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
+        <CheckCircle2 className="h-14 w-14 text-neural-pulse mx-auto mb-5" />
+        <h2 className="text-lg font-bold text-neural-text mb-2">
+          {isPre ? 'Diagnóstico ya completado' : 'Post-Test ya completado'}
+        </h2>
+        <p className="text-neural-muted text-sm mb-6">
+          Este test se rinde una sola vez; tu resultado ya forma parte de tu perfil.
+        </p>
+        <Button
+          className="w-full gap-2"
+          onClick={() => navigate(isPre ? `/estudiante/path/${courseId}` : '/estudiante')}
+        >
+          {isPre ? 'Ir a mi ruta de aprendizaje' : 'Volver al inicio'}
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
+}
