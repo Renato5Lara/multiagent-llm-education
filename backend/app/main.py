@@ -38,6 +38,7 @@ from app.api.routes import (
     traces,
     engagement,
     evidence,
+    knowledge_test,
 )
 from app.weekly_learning.routes import router as weekly_learning_router
 
@@ -325,6 +326,7 @@ app.include_router(resources.router)
 app.include_router(objectives.router)
 app.include_router(estudiantes.router)
 app.include_router(students.router)
+app.include_router(knowledge_test.router)
 app.include_router(competencies.router)
 app.include_router(curriculum.router)
 app.include_router(pedagogy.router)
