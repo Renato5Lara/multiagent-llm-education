@@ -425,3 +425,89 @@ evidencia nueva de **al menos 3 de las 4 fuentes** generada por ese recorrido.
 ## Estado
 
 **EN PREPARACIÓN.** Aprobada el 2026-07-04. Arranca al cierre del Sprint 0.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 4.1 — Research & Experiment Layer (2026-07-08)
+
+## Pregunta de investigación
+
+¿El sistema multiagente adaptativo produce una ganancia de aprendizaje
+medible entre un pre-test y un post-test de conocimiento en Fundamentos
+de la Programación?
+
+## Hipótesis parcial
+
+Si el perfil del estudiante incorpora su conocimiento previo real (pre-test)
+además de su estilo, la ruta adaptativa parte del punto correcto y el
+incremento pre→post se vuelve la evidencia cuantitativa central del
+capítulo de Resultados.
+
+## Diseño experimental
+
+- **Diseño pre-experimental de un solo grupo** con pre-test y post-test.
+  No existe grupo control; todos los estudiantes pertenecen al grupo
+  "Experimental" (columna constante en la exportación, compatible SPSS).
+- **Instrumento fijo**: banco de 36 ítems MCQ (4 por módulo × 9 módulos,
+  1 básica / 2 intermedias / 1 avanzada), seedeado en BD y versionado
+  (BANK_VERSION). El mismo instrumento para todos los estudiantes y para
+  pre y post. **El LLM no participa en la construcción del instrumento**
+  (su función sigue siendo adaptar contenido, no medir).
+- **Clasificación automática**: <40% Básico, 40–70% Intermedio,
+  ≥70% Avanzado (umbrales configurables en knowledge_test_service).
+- **Ganancias calculadas**: incremento absoluto, porcentual y ganancia
+  normalizada de Hake g = (post−pre)/(100−pre).
+
+## Actualización de la decisión D1
+
+La restricción "no se crean entidades nuevas (D1 abierta)" queda
+**actualizada por orden del tesista (2026-07-07)**: se autorizan las
+entidades del instrumento experimental (knowledge_test_questions,
+knowledge_test_attempts, knowledge_test_answers, experiment_results,
+research_metrics). D2/D3 siguen abiertas; la memoria compartida existente
+sigue siendo el canal del swarm (esta capa solo la ESCRIBE con el formato
+que el perfilador ya lee).
+
+## Implementación (commits 12d0c03..7f7ac04)
+
+1. `feat(db)` modelos + migración f6a7b8c9d0e1 (reversible, guarded) y
+   seed idempotente del banco en el lifespan.
+2. `feat(api)` endpoints /api/students/knowledge-test (status/start/submit/
+   result/comparison); el pre se rinde una sola vez, el post exige pre.
+3. `feat(agents)` el pre-test enriquece DiagnosticResult.profile
+   (knowledge_assessment) y publica en shared memory el learning_profile
+   que AdaptiveLearningAgent lee — el perfilador swarm deja de correr con
+   defaults.
+4. `feat(learning-path)` la generación de ruta desbloquea módulos dominados
+   (≥75% por módulo): mismo estilo + distinto conocimiento ⇒ rutas distintas.
+   Persiste knowledge_level y generation_duration_ms.
+5. `feat(api)` métricas de investigación persistidas en el flujo real
+   (ruta, orquestación IA, tutor, misión) + dashboard /api/research +
+   exportación CSV/Excel.
+6. `feat(ui)` pantallas Evaluación Diagnóstica/Post-Test/Resultado,
+   PretestGuard sobre la ruta, CTAs de post-test y Dashboard del
+   Investigador en /evidencia/investigacion.
+
+## Evidencia observable
+
+- Modo Evidencia → Dashboard del Investigador: n, promedios pre/post,
+  incremento promedio, distribución de niveles, tiempos del sistema,
+  estudiantes por perfil y tabla por estudiante — todo desde BD.
+- Botón "Exportar resultados" (CSV con BOM UTF-8 / XLSX con hojas
+  Resultados y Resumen) listo para SPSS, RStudio o Python.
+
+## Compatibilidad (contrato de no-regresión)
+
+- Estudiantes legacy con ruta y sin pre-test: nunca bloqueados (guard y
+  gate fail-open); sin pre-test la generación reproduce el comportamiento
+  histórico exacto.
+- Banco no seedeado ⇒ toda la capa se desactiva sola (fail-open).
+- Diagnóstico de estilo (secciones A/B), swarm, auth: intactos.
+
+## Estado
+
+**FUNCIONALMENTE VALIDADO por validación automatizada** (36 tests nuevos
+en verde, baseline preexistente sin regresiones, build frontend limpio,
+endpoints probados contra el stack real). **Pendiente de validación manual
+del tesista** (recorrido completo en navegador: login → diagnóstico →
+pre-test → ruta → misión → post-test → /evidencia/investigacion → exportar).
