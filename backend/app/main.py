@@ -39,6 +39,7 @@ from app.api.routes import (
     engagement,
     evidence,
     knowledge_test,
+    research,
 )
 from app.weekly_learning.routes import router as weekly_learning_router
 
@@ -339,6 +340,7 @@ app.include_router(sandbox.router)
 app.include_router(idempotency.router)
 app.include_router(replay.router)
 app.include_router(evidence.router)
+app.include_router(research.router)
 app.include_router(traces.router)
 app.include_router(engagement.router)
 app.include_router(weekly_learning_router)
