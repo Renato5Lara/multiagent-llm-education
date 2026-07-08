@@ -382,17 +382,177 @@ def get_comparison(db: Session, student_id: str, course_id: str) -> Optional[Exp
     )
 
 
+# Nivel de conocimiento → parámetros que consume AdaptiveLearningAgent
+# (_determine_difficulty: avg_bloom>=4→advanced, >=2.5→intermediate, else beginner)
+_LEVEL_BLOOM_MAP = {"basico": [1, 2], "intermedio": [2, 3], "avanzado": [3, 5]}
+_LEVEL_PACE_MAP = {"basico": "slow", "intermedio": "moderate", "avanzado": "fast"}
+
+KNOWLEDGE_PROFILER_VOTER = "knowledge_profiler"
+KNOWLEDGE_PROFILE_KEY = "student:learning_profile"
+
+
 def enrich_profile_from_pretest(
     db: Session, student_id: str, course_id: str, attempt: KnowledgeTestAttempt
 ) -> None:
     """Integra el resultado del pre-test al perfil del estudiante.
 
-    Se implementa en la fase de integración con el Agente Perfilador
-    (escritura en DiagnosticResult.profile + shared memory + métrica).
+    Tres escrituras independientes y best-effort:
+    1. DiagnosticResult.profile (clave knowledge_assessment, merge no destructivo)
+    2. SharedMemoryRecord con el formato que lee AdaptiveLearningAgent
+    3. ResearchMetric pretest_completed
     """
-    logger.info(
-        "Pre-test completado: student=%s nivel=%s pct=%s",
-        student_id,
-        attempt.level,
-        attempt.percentage,
+    mastered, critical = module_strengths_weaknesses(attempt)
+    topic_by_module = {q.module_number: q.topic for q in get_bank_questions(db)}
+    level = attempt.level or "basico"
+
+    try:
+        _write_knowledge_assessment(
+            db, student_id, course_id, attempt, mastered, critical, topic_by_module
+        )
+    except Exception:
+        db.rollback()
+        logger.warning("knowledge_assessment no escrito en DiagnosticResult", exc_info=True)
+
+    try:
+        _publish_knowledge_profile(
+            db, student_id, course_id, attempt, level, mastered, critical, topic_by_module
+        )
+    except Exception:
+        db.rollback()
+        logger.warning("Perfil de conocimiento no publicado en shared memory", exc_info=True)
+
+    try:
+        from app.models.research import ResearchMetric
+
+        db.add(
+            ResearchMetric(
+                student_id=student_id,
+                course_id=course_id,
+                metric_type="pretest_completed",
+                value=attempt.percentage,
+                unit="percent",
+                payload={
+                    "level": level,
+                    "score": attempt.score,
+                    "total": attempt.total_questions,
+                    "duration_seconds": attempt.duration_seconds,
+                },
+            )
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.warning("Métrica pretest_completed no registrada", exc_info=True)
+
+
+def _write_knowledge_assessment(
+    db: Session,
+    student_id: str,
+    course_id: str,
+    attempt: KnowledgeTestAttempt,
+    mastered: list[int],
+    critical: list[int],
+    topic_by_module: dict[int, str],
+) -> None:
+    """Merge no destructivo de la evaluación de conocimiento en el perfil
+    diagnóstico existente (el diagnóstico de estilo queda intacto)."""
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.models.diagnostic_result import DiagnosticResult
+
+    diagnostic = (
+        db.query(DiagnosticResult)
+        .filter(
+            DiagnosticResult.student_id == student_id,
+            DiagnosticResult.course_id == course_id,
+        )
+        .first()
     )
+    if diagnostic is None:
+        logger.info("Sin diagnóstico de estilo previo; knowledge_assessment omitido")
+        return
+
+    profile = dict(diagnostic.profile or {})
+    profile["knowledge_assessment"] = {
+        "level": attempt.level,
+        "percentage": attempt.percentage,
+        "score": attempt.score,
+        "total": attempt.total_questions,
+        "strengths": [topic_by_module.get(m, str(m)) for m in mastered],
+        "weaknesses": [topic_by_module.get(m, str(m)) for m in critical],
+        "mastered_modules": mastered,
+        "critical_modules": critical,
+        "module_breakdown": attempt.module_breakdown,
+        "assessed_at": attempt.completed_at.isoformat() if attempt.completed_at else None,
+    }
+    diagnostic.profile = profile
+    flag_modified(diagnostic, "profile")
+    db.commit()
+
+
+def _publish_knowledge_profile(
+    db: Session,
+    student_id: str,
+    course_id: str,
+    attempt: KnowledgeTestAttempt,
+    level: str,
+    mastered: list[int],
+    critical: list[int],
+    topic_by_module: dict[int, str],
+) -> None:
+    """Upsert en shared memory con el formato exacto que consume
+    AdaptiveLearningAgent._load_student_profile (memory_type=inference,
+    scoped por student_id + module_id=course_id, value.learning_profile)."""
+    from app.models.shared_memory_record import SharedMemoryRecord
+    from app.models.student_profile import StudentProfile
+
+    student_profile = (
+        db.query(StudentProfile).filter(StudentProfile.student_id == student_id).first()
+    )
+    preferred_modalities = (
+        student_profile.preferred_modalities
+        if student_profile and student_profile.preferred_modalities
+        else ["visual", "reading"]
+    )
+
+    value = {
+        "learning_profile": {
+            "preferred_bloom_levels": _LEVEL_BLOOM_MAP.get(level, [2, 3]),
+            "pace": _LEVEL_PACE_MAP.get(level, "moderate"),
+            "preferred_modalities": preferred_modalities,
+            "prior_knowledge_level": level,
+            "prior_knowledge_percentage": attempt.percentage,
+            "strengths": [topic_by_module.get(m, str(m)) for m in mastered],
+            "weaknesses": [topic_by_module.get(m, str(m)) for m in critical],
+        }
+    }
+    confidence = round((attempt.percentage or 0.0) / 100, 2)
+
+    record = (
+        db.query(SharedMemoryRecord)
+        .filter(
+            SharedMemoryRecord.voter_name == KNOWLEDGE_PROFILER_VOTER,
+            SharedMemoryRecord.student_id == student_id,
+            SharedMemoryRecord.module_id == course_id,
+            SharedMemoryRecord.memory_type == "inference",
+            SharedMemoryRecord.key == KNOWLEDGE_PROFILE_KEY,
+        )
+        .first()
+    )
+    if record is None:
+        record = SharedMemoryRecord(
+            voter_name=KNOWLEDGE_PROFILER_VOTER,
+            student_id=student_id,
+            module_id=course_id,
+            memory_type="inference",
+            key=KNOWLEDGE_PROFILE_KEY,
+            value=value,
+            confidence=confidence,
+            metadata_json={"source": "knowledge_pretest", "attempt_id": attempt.id},
+        )
+        db.add(record)
+    else:
+        record.value = value
+        record.confidence = confidence
+        record.metadata_json = {"source": "knowledge_pretest", "attempt_id": attempt.id}
+    db.commit()

@@ -230,3 +230,96 @@ def test_comparison_materializes_gains(
 
     result = knowledge_test_service.get_comparison(db, estudiante_user.id, curso_publicado.id)
     assert result is not None and result.absolute_gain == 100.0
+
+
+# ── Integración con el Agente Perfilador ─────────────────────────────
+
+
+def test_pretest_publishes_profile_to_shared_memory(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    from app.models.shared_memory_record import SharedMemoryRecord
+
+    start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, start["attempt_id"], start["questions"], db
+    )
+
+    record = (
+        db.query(SharedMemoryRecord)
+        .filter(
+            SharedMemoryRecord.voter_name == "knowledge_profiler",
+            SharedMemoryRecord.student_id == estudiante_user.id,
+            SharedMemoryRecord.module_id == curso_publicado.id,
+            SharedMemoryRecord.memory_type == "inference",
+        )
+        .first()
+    )
+    assert record is not None
+    profile = record.value["learning_profile"]
+    # 100% → avanzado → bloom [3,5] (avg 4.0 → 'advanced' en AdaptiveLearningAgent)
+    assert profile["preferred_bloom_levels"] == [3, 5]
+    assert profile["pace"] == "fast"
+    assert profile["prior_knowledge_level"] == "avanzado"
+    assert record.confidence == 1.0
+
+
+def test_pretest_merges_knowledge_assessment_into_diagnostic(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    from app.models.diagnostic_result import DiagnosticResult
+
+    db.add(
+        DiagnosticResult(
+            student_id=estudiante_user.id,
+            course_id=curso_publicado.id,
+            answers={"q1": 5},
+            profile={"student_profile": {"dominant_modality": "visual"}},
+            dominant_modality="visual",
+        )
+    )
+    db.commit()
+
+    start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, start["attempt_id"], start["questions"], db
+    )
+
+    diagnostic = (
+        db.query(DiagnosticResult)
+        .filter(
+            DiagnosticResult.student_id == estudiante_user.id,
+            DiagnosticResult.course_id == curso_publicado.id,
+        )
+        .first()
+    )
+    db.refresh(diagnostic)
+    # Merge no destructivo: el diagnóstico de estilo queda intacto
+    assert diagnostic.profile["student_profile"]["dominant_modality"] == "visual"
+    ka = diagnostic.profile["knowledge_assessment"]
+    assert ka["level"] == "avanzado"
+    assert ka["mastered_modules"] == list(range(1, 10))
+    assert ka["critical_modules"] == []
+
+
+def test_pretest_records_research_metric(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    from app.models.research import ResearchMetric
+
+    start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, start["attempt_id"], start["questions"], db
+    )
+
+    metric = (
+        db.query(ResearchMetric)
+        .filter(
+            ResearchMetric.student_id == estudiante_user.id,
+            ResearchMetric.metric_type == "pretest_completed",
+        )
+        .first()
+    )
+    assert metric is not None
+    assert metric.value == 100.0
+    assert metric.payload["level"] == "avanzado"
