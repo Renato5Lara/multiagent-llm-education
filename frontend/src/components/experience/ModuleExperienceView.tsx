@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
 import { ConceptStep } from './ConceptStep'
 import { AnimatedScene } from './AnimatedScene'
+import { AudioNarration } from './AudioNarration'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
@@ -552,6 +553,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
           <div className="glass-panel rounded-2xl p-6 space-y-4">
             <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>
             {activeReinforcement.sceneId && <AnimatedScene sceneId={activeReinforcement.sceneId} />}
+            {activeReinforcement.narrationText && <AudioNarration text={activeReinforcement.narrationText} />}
             {activeReinforcement.body.map((paragraph, i) => (
               <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
                 {paragraph}

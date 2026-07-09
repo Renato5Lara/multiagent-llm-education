@@ -170,10 +170,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
           {
             kind: 'audio',
             label: 'Escuchar otra explicación',
-            title: 'Recapitulación narrada',
+            title: 'Escúchalo de otra forma',
             medium: 'clip_narrado',
+            narrationText:
+              'Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste: pero era obvio. Para una máquina, nada es obvio. Una instrucción precisa dice qué hacer, con qué, cuánto y hacia dónde. Si falta una de esas piezas, el robot va a fallar.',
             body: [
-              '🎧 Guion (40 s): «Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste "¡pero era obvio!". Para una máquina nada es obvio. Instrucción precisa = qué hacer + con qué + cuánto + dónde. Si falta una de esas piezas, el robot la va a preguntar… o va a fallar.»',
+              'Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste «¡pero era obvio!». Para una máquina nada es obvio: una instrucción precisa dice qué hacer, con qué, cuánto y hacia dónde. Si falta una de esas piezas, el robot va a fallar.',
             ],
           },
         ],

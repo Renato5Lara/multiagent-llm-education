@@ -76,6 +76,10 @@ export interface Reinforcement {
    *  presenta como animación: la etiqueta debe cumplirse con una animación
    *  real, nunca con un guion de texto (PED-002). */
   sceneId?: string
+  /** Texto a narrar con AudioNarration. Obligatorio cuando el refuerzo se
+   *  presenta como audio: «Escuchar» debe cumplirse con voz real, nunca con
+   *  un guion de texto (PED-003). Texto plano — sin emojis ni comillas. */
+  narrationText?: string
   /** Solo para kind 'reto': una variante corta de práctica. */
   practice?: OrderingPracticeDef
 }
