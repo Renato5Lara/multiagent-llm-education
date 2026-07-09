@@ -459,15 +459,16 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
           </div>
 
           <p className="text-sm text-neural-muted leading-relaxed">
-            Construiste «Instrucciones precisas» descartando las órdenes ambiguas — el error más
-            común de quienes empiezan. La misión continúa con los algoritmos: el orden de las
-            instrucciones.
+            {definition.closing.achievement}
           </p>
 
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 space-y-1.5">
             <p className="text-xs text-neural-muted">
-              <span className="font-mono text-neural-violet">PRÓXIMO CICLO ·</span>{' '}
-              Algoritmos — el orden importa <span className="text-neural-muted/50">(siguiente incremento del sprint)</span>
+              <span className="font-mono text-neural-violet">PRÓXIMA MISIÓN ·</span>{' '}
+              <span className="text-neural-text/90">{definition.closing.nextMission.title}</span>
+            </p>
+            <p className="text-xs text-neural-muted leading-relaxed">
+              {definition.closing.nextMission.hook}
             </p>
           </div>
 

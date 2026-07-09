@@ -145,6 +145,23 @@ export interface CuriosityOpening {
   revealHook: string
 }
 
+// ── Cierre del módulo ──────────────────────────────────────────────────────────
+// La continuidad narrativa vive en los DATOS del módulo, nunca hardcodeada en el
+// componente: el cierre debe nombrar lo que el estudiante construyó y tender el
+// puente hacia la misión REAL que sigue en la ruta (no hacia promesas de sprint).
+
+export interface ModuleClosing {
+  /** Qué construyó el estudiante, en términos del módulo. */
+  achievement: string
+  /** Puente narrativo hacia la siguiente misión tal como existe en la ruta. */
+  nextMission: {
+    /** Título exacto de la siguiente misión (el que el estudiante verá al llegar). */
+    title: string
+    /** Por qué lo aprendido aquí desemboca en esa misión. */
+    hook: string
+  }
+}
+
 // ── Definición del módulo ──────────────────────────────────────────────────────
 
 export interface ModuleExperienceDefinition {
@@ -155,4 +172,5 @@ export interface ModuleExperienceDefinition {
   matchTitles: string[]
   opening: CuriosityOpening
   cycles: LearningCycle[]
+  closing: ModuleClosing
 }

@@ -274,4 +274,16 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
       },
     },
   ],
+
+  // ── Cierre: puente hacia la misión REAL que sigue en la ruta ─────────────────
+  // La Misión 02 de la ruta es «Estructuras de control». El cierre debe apuntar
+  // ahí, con la misma narrativa del robot — nunca a promesas internas del sprint.
+  closing: {
+    achievement:
+      'Construiste «Instrucciones precisas» descartando las órdenes ambiguas — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación.',
+    nextMission: {
+      title: 'Estructuras de control',
+      hook: 'Tu robot ya obedece paso a paso. Pero ¿qué hace si la puerta está cerrada con llave? ¿Y si debe tocar 4 veces hasta que le abran? Enseñarle a decidir y a repetir es tu siguiente misión.',
+    },
+  },
 }
