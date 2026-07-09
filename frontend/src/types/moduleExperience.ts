@@ -72,6 +72,10 @@ export interface Reinforcement {
   title: string
   body: string[]
   medium?: TheoryMedium
+  /** Escena de AnimatedScene a renderizar. Obligatoria cuando el refuerzo se
+   *  presenta como animación: la etiqueta debe cumplirse con una animación
+   *  real, nunca con un guion de texto (PED-002). */
+  sceneId?: string
   /** Solo para kind 'reto': una variante corta de práctica. */
   practice?: OrderingPracticeDef
 }

@@ -160,11 +160,11 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
           {
             kind: 'animacion',
             label: 'Ver una animación',
-            title: 'Animación: dos robots, dos destinos',
+            title: 'Dos robots, dos destinos',
             medium: 'animacion',
+            sceneId: 'dos-robots',
             body: [
-              '🎬 Guion (45 s): dos robots idénticos reciben la misma meta. Al primero le dicen «cruza la habitación» — avanza sin rumbo y choca contra la mesa. Al segundo: «gira 90° a la izquierda, avanza 4 pasos, detente» — llega limpio a la puerta.',
-              'Mismo robot, misma meta. La única diferencia fue la precisión de las instrucciones.',
+              'Mismo robot, misma meta. El primero recibió «cruza la habitación» y terminó contra la mesa; el segundo recibió tres instrucciones precisas — y llegó. La única diferencia fue la precisión.',
             ],
           },
           {
