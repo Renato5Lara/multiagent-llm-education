@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useModuleOrchestration, useUpdateMissionProgress } from '@/hooks/useStudent'
 import { useUpdateModule, useLearningPath } from '@/hooks/useStudent'
+import { useQueryClient } from '@tanstack/react-query'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
 import { EngageGateway } from '@/components/engage/EngageGateway'
@@ -21,6 +22,8 @@ import { LearningJourney } from '@/components/learningJourney/LearningJourney'
 import { buildJourneyFromLegacy } from '@/lib/learningJourneyBuilder'
 import { TutorPresence } from '@/components/tutor/TutorPresence'
 import type { LearningModality } from '@/types/modality'
+import { getModuleExperience } from '@/lib/experiences'
+import { ModuleExperienceView } from '@/components/experience/ModuleExperienceView'
 
 const USE_LEARNING_JOURNEY = true
 
@@ -149,14 +152,19 @@ export default function ModuleLearningView() {
   const navigate = useNavigate()
   const { toast } = useToast()
 
+  // Experiencia de Módulo (patrón jul 2026): si el módulo tiene experiencia
+  // definida, el flujo de ciclos reemplaza al legacy (Engage + orquestación).
+  const experience = getModuleExperience(moduleTitleParam)
+
   const { mutate: orchestrateModule, isPending: isOrchestrating, isError: orchestrationFailed } = useModuleOrchestration()
   const updateModule = useUpdateModule()
-  const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(moduleId)
+  const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(experience ? undefined : moduleId)
   // Modalidad del APRENDIZ (diagnóstico → learning path). No confundir con
   // multimodal_prompts[].modality, que son modalidades de MEDIOS (image/video/
   // audio) y nunca valen 'kinesthetic' — usarlas rompía la puerta del Code Lab.
   const { data: learningPath } = useLearningPath(courseId)
   const learnerModality = (learningPath?.dominant_modality ?? undefined) as LearningModality | undefined
+  const queryClient = useQueryClient()
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -168,7 +176,7 @@ export default function ModuleLearningView() {
   // Orchestration runs in background while Engage is shown.
   // Phase transition is handled by AgentActivityPanel.onComplete — not here.
   useEffect(() => {
-    if (!moduleId) return
+    if (!moduleId || experience) return
 
     orchestrateModule(moduleId, {
       onSuccess: (result) => {
@@ -184,7 +192,7 @@ export default function ModuleLearningView() {
         }
       },
     })
-  }, [moduleId, orchestrateModule, toast])
+  }, [moduleId, experience, orchestrateModule, toast])
 
   // Misión Activa — persistencia silenciosa del cursor en cada paso
   const missionProgress = useUpdateMissionProgress()
@@ -207,18 +215,52 @@ export default function ModuleLearningView() {
     }
   }, [courseId, navigate])
 
-  const doComplete = useCallback(() => {
+  const doComplete = useCallback((score?: number) => {
     if (!moduleId) return
+    // A2 — score (dominio agregado) llega al evaluador via ResearchMetric.
     updateModule.mutate(
-      { moduleId, status: 'completed' },
+      { moduleId, courseId, status: 'completed', score },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           toast({ title: 'Módulo completado', description: 'Tu progreso ha sido actualizado' })
+          // Flujo continuo: el backend desbloqueó el siguiente módulo en DB.
+          // Refetch de la ruta para obtener el estado real desde el backend
+          // (no por índice local — el orden puede ser adaptativo).
+          try {
+            if (courseId) {
+              await queryClient.invalidateQueries({ queryKey: ['learning-path', courseId] })
+              const freshPath = await queryClient.fetchQuery<import('@/types/student').LearningPathDetail>({
+                queryKey: ['learning-path', courseId],
+                // staleTime 0 para forzar el fetch real
+                staleTime: 0,
+              })
+              const nextModule = freshPath?.items?.find(i => i.status === 'available')
+              if (nextModule) {
+                navigate(
+                  `/estudiante/module/${nextModule.id}?courseId=${courseId}&title=${encodeURIComponent(nextModule.title)}`,
+                  { replace: true },
+                )
+                return
+              }
+            }
+          } catch {
+            // El módulo YA quedó completado en el backend. Si la ruta no se pudo
+            // releer, se vuelve a ella igualmente: nunca dejar al estudiante
+            // varado en la pantalla de cierre con un botón que no responde.
+          }
+          // Última misión, sin siguiente disponible, o refetch fallido — mostrar ruta
           handleBack()
+        },
+        onError: () => {
+          toast({
+            variant: 'destructive',
+            title: 'No se pudo guardar tu progreso',
+            description: 'Revisa tu conexión e inténtalo de nuevo.',
+          })
         },
       },
     )
-  }, [moduleId, updateModule, toast, handleBack])
+  }, [moduleId, courseId, updateModule, toast, queryClient, navigate, handleBack])
 
   const handleComplete = useCallback(() => {
     if (!moduleId) return
@@ -231,6 +273,19 @@ export default function ModuleLearningView() {
       doComplete()
     }
   }, [moduleId, doComplete])
+
+  // ── Experiencia de Módulo (patrón jul 2026) — reemplaza el flujo legacy ────
+  if (experience && moduleId) {
+    return (
+      <ModuleExperienceView
+        definition={experience}
+        moduleId={moduleId}
+        modality={learnerModality}
+        onExit={handleBack}
+        onFinish={doComplete}
+      />
+    )
+  }
 
   // ── GATE 1: Engage phase (runs in parallel with orchestration) ────────────
   if (appPhase === 'engaging' && moduleId) {
