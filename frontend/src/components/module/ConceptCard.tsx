@@ -20,6 +20,11 @@ function splitContent(text: string): { keyIdea: string; rest: string } {
   }
 }
 
+// Feedback del PO (Pruebas 1/3/4): un texto corto se muestra COMPLETO; el
+// desplegable «Ver explicación completa» solo aparece cuando el resto del
+// texto es realmente largo. Mismo criterio que AnalogyCard (TRUNCATE_AT).
+const COLLAPSE_AT = 260
+
 /**
  * ConceptCard — Sprint L5 / Sprint 2.1 (refinamiento visual)
  *
@@ -37,7 +42,8 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
   const [read,     setRead]     = useState(false)
 
   const { keyIdea, rest } = splitContent(content)
-  const hasMore = rest.length > 0
+  const hasMore = rest.length > COLLAPSE_AT
+  const shortRest = rest.length > 0 && !hasMore
   const icon    = getConceptIcon(title ?? content.slice(0, 60))
 
   const handleToggle = () => {
@@ -145,7 +151,16 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
         </p>
       </div>
 
-      {/* Expandable rest */}
+      {/* Resto corto: visible siempre, sin desplegable (feedback PO) */}
+      {shortRest && (
+        <div className="mx-5 mt-3">
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed pb-1">
+            {rest}
+          </p>
+        </div>
+      )}
+
+      {/* Expandable rest — solo cuando el texto es realmente largo */}
       {hasMore && (
         <div className={cn(
           'mx-5 mt-3 overflow-hidden transition-all duration-300',
