@@ -171,8 +171,14 @@ export function LearningJourney({
   const [cardVisible,      setCardVisible]      = useState(true)
   const [milestone,        setMilestone]        = useState<string | null>(null)
   const [bannerDismissed,  setBannerDismissed]  = useState(false)
-  // Sprint 2.1 — overlay de transición de fase
-  const [phaseOverlay,     setPhaseOverlay]     = useState<Phase5E | null>(null)
+  // Sprint 2.1 — overlay de transición de fase.
+  // Feedback del PO (Pruebas 4): la pantalla de fase debe salir en TODAS las
+  // fases, incluida la primera — antes solo aparecía al cambiar de fase, así
+  // que la fase inicial (Explora/Descubre) entraba sin presentación.
+  const [phaseOverlay,     setPhaseOverlay]     = useState<Phase5E | null>(() => {
+    const first = journey.steps[clampedInitial]
+    return first ? resolveStepPhase(first) : null
+  })
   // Sprint 2.2 — eco de adaptación post-completado
   const [echoSignal,       setEchoSignal]       = useState<CompletionSignal | null>(null)
 
@@ -256,8 +262,9 @@ export function LearningJourney({
     }
   }, [canAdvance, isLast, currentIndex, total, changeStep, onComplete, step, steps])
 
-  // Índice al que iremos después del overlay — evita closure stale
-  const pendingIndexRef = useRef<number>(0)
+  // Índice al que iremos después del overlay — evita closure stale.
+  // Arranca en el paso inicial: el overlay de la primera fase no navega.
+  const pendingIndexRef = useRef<number>(clampedInitial)
 
   const handlePhaseOverlayDismiss = useCallback(() => {
     setPhaseOverlay(null)
