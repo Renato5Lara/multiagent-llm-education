@@ -1,0 +1,43 @@
+# LEDGER — Architecture Decision Ledger
+
+- **Naturaleza:** documento **vivo** (RFC-0000 rev. 4). Responde "¿dónde se
+  decidió esto?". Solo punteros — el contenido normativo vive en cada
+  documento. Toda decisión mayor nueva añade su fila **en el mismo commit**
+  que la introduce.
+- **Fase:** las decisiones D-001..D-026 constituyen la **Foundation Phase**
+  (cerrada el 2026-07-10 sin una línea de código).
+
+| ID | Decisión | Documento | Estado |
+|----|----------|-----------|--------|
+| D-001 | Legacy Runtime (BaseAgent) archivado como línea base experimental; nueva línea = runtime propio sobre LangGraph | Acta fundacional (commit 5e29bc9) | Vigente |
+| D-002 | Método RFC: ciclo de vida, alternativas obligatorias, solo el tesista acepta | RFC-0000 | Vigente (rev. 4) |
+| D-003 | Constitución P1–P13: estado única fuente de verdad, agentes = capacidades, evidencia real, determinismo, capacidades antes que agentes | FOUNDATIONAL_PRINCIPLES | Vigente (rev. 3) |
+| D-004 | Cuatro capas: Domain / Kernel / Graph Engine / Platform Boundary; LangGraph solo dentro del Graph Engine | RFC-0001 §1 | Vigente |
+| D-005 | Regla de control: el flujo pertenece al grafo, nunca al LLM | RFC-0001 §3 | Vigente |
+| D-006 | Runtime Contract: las cinco preguntas que todo nodo debe responder | RFC-0001 §4 | Vigente |
+| D-007 | Máquina vs programa: el ciclo pedagógico es un programa sobre el runtime | RFC-0001 §2 | Vigente |
+| D-008 | Sesión de Aprendizaje = concepto agregador; la sesión es dueña de la ejecución, no del conocimiento | RFC-0002 §1 | Vigente |
+| D-009 | 7 responsabilidades (con naturaleza y resultado esperado) → 8 capacidades; explicabilidad y deliberación NO son capacidades | RFC-0002 §2–3 | Vigente (rev. 4) |
+| D-010 | Tres tensiones canónicas como agenda del consenso | RFC-0002 §4 | Vigente |
+| D-011 | Anatomía de 8 secciones; facts/claims/decisiones (cadena epistemológica); sobres FactEntry/ClaimEntry; asunto; provenance | RFC-0003 §1–3 | Vigente (rev. 5) |
+| D-012 | Circuito event-sourced ligero: nodos proponen, reducers mutan y emiten; rechazo = evento registrado | RFC-0003 §4 | Vigente |
+| D-013 | Catálogo de invariantes INV-1..INV-12 | RFC-0003 §6 | Vigente |
+| D-014 | Modelo de ejecución: 4 garantías (producción concurrente / aplicación serializada / enrutamiento puro / checkpoint por transición); TransitionIntent sin autoridad | RFC-0004 §1–2 | Vigente (rev. 3) |
+| D-015 | El programa pedagógico emerge de reglas de enrutamiento declarativas; jamás secuencia cableada | RFC-0004 §4 | Vigente |
+| D-016 | LangGraph adoptado por ajuste estructural (Pregel/BSP); reglas de subordinación del motor | RFC-0004 §6 | Vigente |
+| D-017 | Definición de inteligencia de enjambre: estigmergia adaptativa, paisaje cognitivo (proyección), E1–E6, anti-definición, hipótesis operacional (Legacy = grupo de control) | CONCEPT-0001 | Vigente |
+| D-018 | Taxonomía del consenso: D1/D2/D3, regla de la raíz, latente/bloqueante, regla de oro del espacio de resultados | CONCEPT-0002 | Vigente |
+| D-019 | Confianza efectiva = medida de respaldo con álgebra A1–A8; parámetros solo en política versionada | RFC-0006 §1 | Vigente |
+| D-020 | Resolución por tipo (D1 evidencia / D2 evidencia×política), decisión provisional, límite de reconvocatoria; H7 resuelta (raíz → FIFO lógico → política) | RFC-0006 §4–5 | Vigente |
+| D-021 | Observabilidad = derivación de la historia; observadores jamás escriben; explicación se recorre, no se redacta; telemetría operativa ≠ evidencia | RFC-0007 | Vigente |
+| D-022 | P14 elevado: la historia es inmutable — el activo científico del sistema | Constitución rev. 3 | Vigente |
+| D-023 | P15 elevado: el runtime nunca crea conocimiento de dominio | Constitución rev. 2 | Vigente |
+| D-024 | Concept Standards = autoridad semántica paralela a los RFC (autoridades, no rangos); VOCABULARY.md como glosario vivo | README + RFC-0000 rev. 3 | Vigente |
+| D-025 | Revisión de Conformidad de Especificación (4 preguntas por cambio de código) + revisión dual Architecture/Engineering desde RFC-0008 | RFC-0000 rev. 3–4 | Vigente |
+| D-026 | Orden de diseño de transversales: 0007 → 0008 → 0005 → 0009 → 0010 | README | Vigente |
+
+## Registros abiertos (no son decisiones aún)
+
+Hipótesis H9-inter, H10, H11, extensión *reputación de capacidad* y
+candidata constitucional «la explicación se recorre, no se redacta» — ver
+VOCABULARY.md § Registro de hipótesis y el registro del README.
