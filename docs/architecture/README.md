@@ -52,6 +52,16 @@ código
   RFC-0001/0002/0003 narra una ejecución completa; 2 grietas incorporadas
   en RFC-0003 rev. 4, 2 confirmaciones. Habilita el diseño del RFC-0004.
 
+## Notas conceptuales
+
+- [CONCEPT-0001](CONCEPT-0001-inteligencia-de-enjambre.md) — ¿Qué
+  entendemos por inteligencia de enjambre en UPAO-MAS-EDU? (Aceptado):
+  paisaje cognitivo, criterios E1–E6, anti-definición, hipótesis
+  operacional. Criterio normativo del RFC-0006.
+- [CONCEPT-0002](CONCEPT-0002-taxonomia-del-consenso.md) — Taxonomía del
+  Consenso (Borrador): tipos de desacuerdo, convocatoria, resolución,
+  aplazamiento y reapertura. Puente entre CONCEPT-0001 y el RFC-0006.
+
 ## Registro de propuestas constitucionales
 
 Propuestas registradas pero NO incorporadas; si resultan rectoras, se elevan
