@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle2, Brain, AlertTriangle, ChevronLeft } from 'lucide-react'
+import { CheckCircle2, Brain, AlertTriangle, ChevronLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DIAGNOSTIC_QUESTIONS, LIKERT_OPTIONS } from '@/lib/constants'
 import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
@@ -170,11 +170,30 @@ function TransitionScreen({ onContinue }: { onContinue: () => void }) {
 }
 
 
+// DoneScreen — tras el diagnóstico:
+//   sin pretestNext → va a la ruta con ?autostart (el estudiante la VE y
+//   la lanzadera la lleva al Módulo 1 automáticamente desde el backend).
+//   con pretestNext → va al KnowledgeTest.
 function DoneScreen({
   courseId, navigate, pretestNext,
 }: {
   courseId: string; navigate: ReturnType<typeof useNavigate>; pretestNext?: boolean
 }) {
+  const generatePath = useGeneratePath()
+  const [generating, setGenerating] = useState(false)
+
+  const goToPath = () =>
+    navigate(`/estudiante/path/${courseId}?autostart=true`, { replace: true })
+
+  const handleEnter = () => {
+    // Si la ruta ya existe el autostart la detectará; si no, la generamos primero.
+    setGenerating(true)
+    generatePath.mutate(courseId, {
+      onSuccess: () => goToPath(),
+      onError: () => goToPath(), // fail-open: la ruta mostrará EmptyPath
+    })
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
@@ -183,20 +202,28 @@ function DoneScreen({
           <div className="absolute inset-0 bg-neural-pulse/10 rounded-full blur-xl" />
         </div>
         <h2 className="text-xl font-bold text-neural-text mb-2">
-          {pretestNext ? 'Perfil de estilo registrado' : 'Perfil generado'}
+          {pretestNext ? 'Perfil de estilo registrado' : 'Ruta construida para ti'}
         </h2>
         <p className="text-neural-muted text-sm mb-6 leading-relaxed">
           {pretestNext
             ? 'Falta un paso: una evaluación diagnóstica de conocimientos para que tu ruta parta exactamente de lo que ya sabes.'
-            : 'El swarm ha construido tu ruta personalizada. El contenido se adaptará a tu estilo de aprendizaje.'}
+            : 'El swarm analizó tu perfil y construyó una ruta personalizada. Vas a verla antes de comenzar.'}
         </p>
         {pretestNext ? (
           <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/knowledge-test/${courseId}`)}>
             Continuar con la evaluación diagnóstica →
           </Button>
         ) : (
-          <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/path/${courseId}`)}>
-            Ver mi ruta de aprendizaje →
+          <Button
+            className="w-full gap-2"
+            onClick={handleEnter}
+            disabled={generating || generatePath.isPending}
+          >
+            {(generating || generatePath.isPending) ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Preparando tu ruta...</>
+            ) : (
+              <>Ver mi ruta adaptativa →</>
+            )}
           </Button>
         )}
       </div>

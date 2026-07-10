@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck } from 'lucide-react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -8,6 +8,7 @@ import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/u
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { LearningPathItem } from '@/types/student'
 import TutorWidget from '@/components/ai/TutorWidget'
+import { useEffect, useState } from 'react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -89,8 +90,12 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
   const isAvailable = item.status === 'available'
   const isLocked = item.status === 'locked'
 
+  // Una misión disponible o completada puede abrirse; una completada se
+  // reingresa como repaso. Solo las bloqueadas no son navegables.
+  const isOpenable = isAvailable || isCompleted
+
   const handleClick = () => {
-    if (!isAvailable || !courseId) return
+    if (!isOpenable || !courseId) return
     navigate(`/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`)
   }
 
@@ -99,6 +104,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
       className={[
         'glass-panel rounded-2xl p-5 transition-all duration-200',
         isAvailable ? 'cursor-pointer hover:border-neural-glow/25 ring-1 ring-neural-glow/10' : '',
+        isCompleted ? 'cursor-pointer hover:border-neural-pulse/25' : '',
         isLocked ? 'opacity-50' : '',
         isCompleted ? 'border-neural-pulse/15' : '',
       ].join(' ')}
@@ -172,7 +178,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
             </div>
           )}
 
-          {isCompleted && item.resource_id && (
+          {isCompleted && (
             <div className="mt-3">
               <Button
                 variant="outline"
@@ -198,10 +204,39 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
 export default function LearningPath() {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const autostart = searchParams.get('autostart') === 'true'
+
   const { data: path, isLoading, error } = useLearningPath(courseId)
   const generatePath = useGeneratePath()
   const { data: adaptiveDecision } = useAdaptiveDecision(courseId)
   const { data: ktStatus } = useKnowledgeTestStatus(courseId)
+
+  // Cuenta regresivasegundos para autostart
+  const [countdown, setCountdown] = useState(autostart ? 4 : 0)
+
+  useEffect(() => {
+    if (!autostart || !path?.items?.length || countdown <= 0) return
+    if (countdown === 0) return
+    const t = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(t)
+          const first = path.items.find(i => i.status === 'available') ?? path.items[0]
+          if (first && courseId) {
+            navigate(
+              `/estudiante/module/${first.id}?courseId=${courseId}&title=${encodeURIComponent(first.title)}`,
+              { replace: true },
+            )
+          }
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autostart, path, courseId])
 
   if (isLoading) return <PathSkeleton />
 
@@ -227,6 +262,35 @@ export default function LearningPath() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {/* ── Banner de autostart — visible solo en modo transición del onboarding ── */}
+      {autostart && countdown > 0 && (
+        <div className="mb-6 rounded-2xl border border-neural-glow/30 bg-neural-glow/5 px-5 py-4 flex items-center justify-between gap-4 animate-in fade-in duration-500">
+          <div className="min-w-0">
+            <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-glow mb-0.5">
+              Ruta personalizada generada
+            </p>
+            <p className="text-sm text-neural-text leading-snug">
+              El swarm construyó esta ruta para ti. Tu primera misión comienza en{' '}
+              <span className="font-bold text-neural-glow">{countdown}s</span>…
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const first = items.find(i => i.status === 'available') ?? items[0]
+              if (first && courseId) {
+                navigate(
+                  `/estudiante/module/${first.id}?courseId=${courseId}&title=${encodeURIComponent(first.title)}`,
+                  { replace: true },
+                )
+              }
+            }}
+            className="shrink-0 flex items-center gap-1.5 text-xs font-mono text-neural-glow hover:text-neural-text transition-colors"
+          >
+            Empezar ya <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="mb-8">
         <p className="text-xs font-mono text-neural-glow/70 tracking-[0.15em] uppercase mb-1">

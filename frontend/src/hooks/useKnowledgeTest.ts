@@ -44,6 +44,30 @@ export interface KnowledgeTestStartResponse {
   questions: KnowledgeTestQuestion[]
 }
 
+export interface CompetencyScore {
+  competency: string
+  label: string
+  percentage: number
+  correct: number
+  total: number
+  level: 'dominado' | 'en_desarrollo' | 'inicial'
+  level_label: string
+  priority: 'critica' | 'alta' | 'media_alta'
+  weight: number
+  urgency: number
+}
+
+export interface CompetencyProfile {
+  competencies: CompetencyScore[]
+  strongest: string
+  strongest_label: string
+  strongest_percentage: number
+  focus: string
+  focus_label: string
+  focus_percentage: number
+  recommendation: string
+}
+
 export interface KnowledgeTestResult {
   attempt_id: string
   kind: KnowledgeTestKind
@@ -59,6 +83,7 @@ export interface KnowledgeTestResult {
   module_breakdown: Record<string, { correct: number; total: number; pct: number }> | null
   mastered_modules: number[]
   critical_modules: number[]
+  competency_profile: CompetencyProfile | null
 }
 
 export interface ExperimentComparison {

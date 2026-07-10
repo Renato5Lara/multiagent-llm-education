@@ -55,6 +55,23 @@ const LEVEL_STYLES: Record<string, { label: string; badge: string; bar: string }
   },
 }
 
+// Etiqueta amable de la competencia (dimensión cognitiva del ítem) — evita
+// mostrar "Módulo X" con nombres que ya no existen en el banco v2.
+const COMPETENCY_LABELS: Record<string, string> = {
+  comp_0_problema: 'Comprensión del problema',
+  comp_1_conceptos: 'Comprensión computacional',
+  comp_2_interpretacion: 'Interpretación de código',
+  comp_3_simulacion: 'Simulación mental',
+  comp_4_construccion: 'Construcción algorítmica',
+  comp_5_razonamiento: 'Razonamiento computacional',
+}
+
+const COMPETENCY_LEVEL_STYLES: Record<string, { badge: string; bar: string }> = {
+  dominado:      { badge: 'text-neural-pulse', bar: 'bg-neural-pulse' },
+  en_desarrollo: { badge: 'text-neural-glow',  bar: 'bg-neural-glow'  },
+  inicial:       { badge: 'text-amber-300',    bar: 'bg-amber-400'    },
+}
+
 type Phase = 'intro' | 'questions' | 'result'
 
 interface KnowledgeTestProps {
@@ -136,6 +153,16 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   }
 
   if (phase === 'result' && result) {
+    if (kind === 'pre' && result.competency_profile) {
+      return (
+        <CompetencyClosingScreen
+          courseId={courseId}
+          profile={result.competency_profile}
+          navigate={navigate}
+          generatePath={generatePath}
+        />
+      )
+    }
     return <ResultScreen kind={kind} courseId={courseId} result={result} navigate={navigate} generatePath={generatePath} />
   }
 
@@ -163,7 +190,6 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
       <IntroScreen
         kind={kind}
         title={title}
-        totalQuestions={36}
         starting={startTest.isPending}
         onStart={handleStart}
         onBack={() => navigate('/estudiante')}
@@ -182,7 +208,7 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
         <div>
           <h1 className="text-xl font-bold text-neural-text">{title}</h1>
           <p className="text-xs text-neural-muted mt-0.5">
-            Módulo {question.module_number}: {MODULE_NAMES[question.module_number] ?? question.topic}
+            {COMPETENCY_LABELS[question.topic] ?? 'Explorando lo que ya sabes'}
           </p>
         </div>
         <span className="text-xs font-mono text-neural-muted">
@@ -278,11 +304,10 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
 // ── Pantallas auxiliares ─────────────────────────────────────────────
 
 function IntroScreen({
-  kind, title, totalQuestions, starting, onStart, onBack,
+  kind, title, starting, onStart, onBack,
 }: {
   kind: KnowledgeTestKind
   title: string
-  totalQuestions: number
   starting: boolean
   onStart: () => void
   onBack: () => void
@@ -295,15 +320,29 @@ function IntroScreen({
           <ClipboardList className="h-16 w-16 text-neural-glow" />
           <div className="absolute inset-0 bg-neural-glow/10 rounded-full blur-xl" />
         </div>
-        <h1 className="text-2xl font-bold text-neural-text mb-3">{title}</h1>
-        <p className="text-neural-muted text-sm leading-relaxed mb-2">
-          {isPre
-            ? 'Antes de construir tu ruta, el sistema necesita conocer tu punto de partida: responderás preguntas de los 9 módulos de Fundamentos de la Programación.'
-            : 'Has llegado al final del recorrido. Este test mide cuánto avanzaste comparándolo con tu evaluación diagnóstica inicial.'}
-        </p>
-        <p className="text-xs text-neural-muted/70 mb-8">
-          {totalQuestions} preguntas de opción múltiple · sin límite de tiempo · se rinde una sola vez
-        </p>
+        <h1 className="text-2xl font-bold text-neural-text mb-4">{title}</h1>
+        {isPre ? (
+          <div className="space-y-3 mb-8">
+            <p className="text-neural-text/90 text-base leading-relaxed">
+              No te preocupes si no sabes responder.
+            </p>
+            <p className="text-neural-muted text-sm leading-relaxed">
+              Este diagnóstico <span className="text-neural-text">no tiene nota</span>. Su único
+              objetivo es conocer cómo ayudarte a aprender mejor.
+            </p>
+            <p className="text-neural-muted text-sm leading-relaxed">
+              Puedes equivocarte con tranquilidad.
+            </p>
+            <p className="text-xs text-neural-muted/60 pt-2">
+              12 situaciones para explorar lo que ya sabes · sin límite de tiempo
+            </p>
+          </div>
+        ) : (
+          <p className="text-neural-muted text-sm leading-relaxed mb-8">
+            Has llegado al final del recorrido. Este test mide cuánto avanzaste comparándolo con tu
+            diagnóstico inicial — las mismas competencias, para ver tu progreso.
+          </p>
+        )}
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1 gap-2" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" />
@@ -311,9 +350,115 @@ function IntroScreen({
           </Button>
           <Button className="flex-1 gap-2" onClick={onStart} disabled={starting}>
             {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-            {isPre ? 'Comenzar evaluación' : 'Comenzar post-test'}
+            {isPre ? 'Comenzar' : 'Comenzar post-test'}
           </Button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function CompetencyClosingScreen({
+  courseId, profile, navigate, generatePath,
+}: {
+  courseId: string
+  profile: NonNullable<KnowledgeTestResult['competency_profile']>
+  navigate: ReturnType<typeof useNavigate>
+  generatePath: ReturnType<typeof useGeneratePath>
+}) {
+  const { toast } = useToast()
+
+  const goToPath = () =>
+    navigate(`/estudiante/path/${courseId}?autostart=true`, { replace: true })
+
+  const handleGeneratePath = () => {
+    generatePath.mutate(courseId, {
+      onSuccess: () => goToPath(),
+      onError: (error) => {
+        toast({
+          title: 'Tu diagnóstico quedó guardado',
+          description: getErrorMessage(error),
+        })
+        goToPath()
+      },
+    })
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto py-8 space-y-6">
+      <div className="glass-panel rounded-2xl p-8 md:p-10">
+        <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-glow mb-2">
+          Diagnóstico completado
+        </p>
+        <h1 className="text-2xl font-bold text-neural-text mb-6">
+          Ya conocemos tu punto de partida
+        </h1>
+
+        {/* Perfil cognitivo — las 6 barras por competencia */}
+        <div className="space-y-3.5 mb-8">
+          {profile.competencies.map((c) => {
+            const style = COMPETENCY_LEVEL_STYLES[c.level] ?? COMPETENCY_LEVEL_STYLES.inicial
+            return (
+              <div key={c.competency} className="space-y-1.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-sm font-medium text-neural-text">{c.label}</p>
+                  <span className={`text-xs font-mono ${style.badge}`}>{c.percentage.toFixed(0)}%</span>
+                </div>
+                <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className={`h-1.5 rounded-full transition-all duration-700 ${style.bar}`}
+                    style={{ width: `${c.percentage}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Fortaleza / a reforzar — etiqueta adaptada al nivel real del estudiante */}
+        <div className="grid sm:grid-cols-2 gap-3 mb-6">
+          <div className="rounded-xl border border-neural-pulse/20 bg-neural-pulse/5 px-4 py-3">
+            <p className="text-[10px] font-mono tracking-wider uppercase text-neural-pulse mb-1">
+              {/* No llamar "fortaleza" a 0%; no llamar "fortaleza" cuando todo está dominado */}
+              {profile.strongest_percentage >= 70
+                ? 'Base sólida'
+                : profile.strongest_percentage < 40
+                  ? 'Tu punto de partida'
+                  : 'Tu fortaleza'}
+            </p>
+            <p className="text-sm font-medium text-neural-text">{profile.strongest_label}</p>
+            <p className="text-xs text-neural-muted mt-0.5">{profile.strongest_percentage.toFixed(0)}%</p>
+          </div>
+          <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3">
+            <p className="text-[10px] font-mono tracking-wider uppercase text-amber-300 mb-1">
+              A reforzar primero
+            </p>
+            <p className="text-sm font-medium text-neural-text">{profile.focus_label}</p>
+            <p className="text-xs text-neural-muted mt-0.5">{profile.focus_percentage.toFixed(0)}%</p>
+          </div>
+        </div>
+
+        {/* Recomendación narrativa + puente a la ruta */}
+        <p className="text-sm text-neural-muted leading-relaxed mb-8">{profile.recommendation}</p>
+
+        <Button
+          size="lg"
+          className="w-full gap-2"
+          onClick={handleGeneratePath}
+          disabled={generatePath.isPending}
+        >
+          {generatePath.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Preparando tu ruta personalizada...
+            </>
+          ) : (
+            <>
+              Ver mi ruta de aprendizaje
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </Button>
       </div>
     </div>
   )
@@ -332,6 +477,16 @@ function ResultScreen({
   const level = LEVEL_STYLES[result.level ?? 'basico'] ?? LEVEL_STYLES.basico
   const comparison = useKnowledgeComparison(courseId, !isPre)
 
+  const goToPath = () =>
+    navigate(`/estudiante/path/${courseId}?autostart=true`, { replace: true })
+
+  const handleGeneratePath = () => {
+    generatePath.mutate(courseId, {
+      onSuccess: () => goToPath(),
+      onError: () => goToPath(),  // fail-open
+    })
+  }
+
   const strengths = useMemo(
     () => result.mastered_modules.map((m) => MODULE_NAMES[m] ?? `Módulo ${m}`),
     [result.mastered_modules],
@@ -340,12 +495,6 @@ function ResultScreen({
     () => result.critical_modules.map((m) => MODULE_NAMES[m] ?? `Módulo ${m}`),
     [result.critical_modules],
   )
-
-  const handleGeneratePath = () => {
-    generatePath.mutate(courseId, {
-      onSuccess: () => navigate(`/estudiante/path/${courseId}`),
-    })
-  }
 
   return (
     <div className="max-w-2xl mx-auto py-8 space-y-6">

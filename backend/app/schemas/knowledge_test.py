@@ -52,6 +52,9 @@ class KnowledgeTestResultOut(BaseModel):
     module_breakdown: Optional[dict] = None
     mastered_modules: list[int] = []
     critical_modules: list[int] = []
+    # Dimensión cognitiva: perfil por competencia + prioridad adaptativa.
+    # None cuando el banco no tiene competencias (legacy).
+    competency_profile: Optional[dict] = None
 
 
 class KnowledgeTestStatusOut(BaseModel):

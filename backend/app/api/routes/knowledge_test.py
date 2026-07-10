@@ -40,7 +40,7 @@ def _raise_http(exc: KnowledgeTestError) -> None:
     )
 
 
-def _result_payload(attempt) -> KnowledgeTestResultOut:
+def _result_payload(db: Session, attempt) -> KnowledgeTestResultOut:
     mastered, critical = knowledge_test_service.module_strengths_weaknesses(attempt)
     return KnowledgeTestResultOut(
         attempt_id=attempt.id,
@@ -59,6 +59,7 @@ def _result_payload(attempt) -> KnowledgeTestResultOut:
         module_breakdown=attempt.module_breakdown,
         mastered_modules=mastered,
         critical_modules=critical,
+        competency_profile=knowledge_test_service.compute_competency_profile(db, attempt),
     )
 
 
@@ -120,7 +121,7 @@ def submit_test(
         )
     except KnowledgeTestError as exc:
         _raise_http(exc)
-    return _result_payload(attempt)
+    return _result_payload(db, attempt)
 
 
 @router.get("/{course_id}/result", response_model=KnowledgeTestResultOut)
@@ -136,7 +137,7 @@ def get_result(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": "RESULT_NOT_FOUND", "message": "No hay resultado para este test"},
         )
-    return _result_payload(attempt)
+    return _result_payload(db, attempt)
 
 
 @router.get("/{course_id}/comparison", response_model=ExperimentComparisonOut)

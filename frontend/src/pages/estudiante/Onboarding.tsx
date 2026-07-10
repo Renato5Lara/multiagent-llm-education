@@ -6,8 +6,9 @@ import { useAuthStore } from '@/stores/authStore'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '@/hooks/use-toast'
-import { useActiveExperience } from '@/hooks/useStudent'
+import { useActiveExperience, useMyCourses } from '@/hooks/useStudent'
 import api from '@/lib/api'
+import type { CourseProgress } from '@/types/student'
 
 /**
  * Puerta de entrada del estudiante — ya NO es una matrícula por ciclo.
@@ -23,18 +24,30 @@ export default function Onboarding() {
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const { data: experience } = useActiveExperience()
+  // useMyCourses para encontrar el courseId de la experiencia activa tras iniciarla
+  const { refetch: refetchCourses } = useMyCourses()
 
   const startExperience = useMutation({
     mutationFn: async () => {
-      // La ruta conserva su path por estabilidad de API; ya no envía "ciclo".
       const resp = await api.patch('/api/students/onboarding/cycle')
       return resp.data
     },
     onSuccess: async () => {
-      // El AcademicGuard consulta onboarding/status: refrescamos para que reconozca
-      // la experiencia recién iniciada y no rebote de vuelta al onboarding.
+      // Refrescamos la experiencia activa y los cursos del estudiante
       await queryClient.invalidateQueries({ queryKey: ['active-experience'] })
-      navigate('/estudiante')
+      await queryClient.invalidateQueries({ queryKey: ['my-courses'] })
+      // Obtenemos el courseId de la experiencia activa para navegar al diagnóstico
+      const { data: courses } = await refetchCourses()
+      const activeCourse = (courses as CourseProgress[] | undefined)?.find(
+        (c: CourseProgress) => c.is_active_experience,
+      )
+      if (activeCourse?.course_id) {
+        // Flujo continuo: directo al diagnóstico sin pasar por el Dashboard
+        navigate(`/estudiante/diagnostic/${activeCourse.course_id}`, { replace: true })
+      } else {
+        // Fallback: dashboard si el backend aún no asignó la experiencia
+        navigate('/estudiante', { replace: true })
+      }
     },
     onError: () => {
       toast({ variant: 'destructive', title: 'No pudimos preparar tu experiencia. Inténtalo de nuevo.' })

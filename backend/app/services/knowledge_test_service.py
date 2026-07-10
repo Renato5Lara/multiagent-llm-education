@@ -324,6 +324,134 @@ def module_strengths_weaknesses(attempt: KnowledgeTestAttempt) -> tuple[list[int
     return sorted(mastered), sorted(critical)
 
 
+# ── Perfil por competencia (dimensión cognitiva del diagnóstico) ─────────────
+
+COMPETENCY_LEVEL_LABELS = {
+    "dominado": "Dominado",
+    "en_desarrollo": "En desarrollo",
+    "inicial": "Inicial",
+}
+COMPETENCY_MASTERY_PCT = 70.0
+COMPETENCY_DEVELOPING_PCT = 40.0
+
+
+def _competency_level(pct: float) -> str:
+    if pct >= COMPETENCY_MASTERY_PCT:
+        return "dominado"
+    if pct >= COMPETENCY_DEVELOPING_PCT:
+        return "en_desarrollo"
+    return "inicial"
+
+
+def _competency_recommendation(strongest: dict, focus: dict) -> str:
+    strong_pct = strongest["percentage"]
+    focus_pct = focus["percentage"]
+
+    # Extremo alto: el foco (competencia de mayor urgencia) ya está dominado →
+    # todas lo están. No tiene sentido "reforzar" algo que ya se domina.
+    if focus_pct >= COMPETENCY_MASTERY_PCT:
+        return (
+            "Tienes una base sólida en las competencias evaluadas. Tu ruta "
+            "profundizará y ampliará lo que ya dominas, con retos de mayor nivel."
+        )
+
+    # Extremo bajo: no hay una fortaleza real (todo inicial). No se llama
+    # "fortaleza" a un desempeño bajo; se enmarca como punto de partida.
+    if strong_pct < COMPETENCY_DEVELOPING_PCT:
+        return (
+            f"Estás comenzando desde la base, y eso es totalmente esperado. Tu "
+            f"ruta empezará por {focus['label']} y construirá paso a paso desde ahí."
+        )
+
+    # Caso general: hay una fortaleza clara y una competencia foco distinta.
+    if strongest["competency"] == focus["competency"]:
+        return (
+            f"Tu desempeño es parejo entre competencias. Tu ruta comenzará "
+            f"reforzando {focus['label']} ({focus_pct:.0f}%)."
+        )
+    return (
+        f"Tu fortaleza es {strongest['label']} ({strong_pct:.0f}%). "
+        f"La competencia de mayor prioridad para reforzar es {focus['label']} "
+        f"({focus_pct:.0f}%): tu ruta comenzará por ahí."
+    )
+
+
+def compute_competency_profile(db: Session, attempt: KnowledgeTestAttempt) -> Optional[dict]:
+    """Perfil cognitivo por competencia desde las respuestas ya persistidas.
+
+    Reutiliza KnowledgeTestAnswer + el `topic` (competencia) de cada pregunta,
+    sin tablas nuevas. Calcula por competencia: %, nivel, prioridad, urgencia
+    adaptativa = (1 − score) × peso; y a nivel global la fortaleza principal, la
+    competencia FOCO (mayor urgencia = punto de partida del motor adaptativo) y
+    una recomendación narrativa tipo tutor. Devuelve None si el instrumento no
+    tiene la dimensión de competencia (p. ej. banco legacy)."""
+    from app.data.knowledge_test_bank import (
+        COMPETENCY_LABELS,
+        COMPETENCY_ORDER,
+        COMPETENCY_PRIORITY,
+        PRIORITY_WEIGHT,
+    )
+
+    answers = (
+        db.query(KnowledgeTestAnswer)
+        .filter(KnowledgeTestAnswer.attempt_id == attempt.id)
+        .all()
+    )
+    if not answers:
+        return None
+
+    topic_by_qid = {q.id: q.topic for q in get_bank_questions(db)}
+    stats: dict[str, dict] = {}
+    for ans in answers:
+        topic = topic_by_qid.get(ans.question_id)
+        if topic is None or topic not in COMPETENCY_LABELS:
+            continue
+        s = stats.setdefault(topic, {"correct": 0, "total": 0})
+        s["total"] += 1
+        if ans.is_correct:
+            s["correct"] += 1
+
+    competencies: list[dict] = []
+    for topic in COMPETENCY_ORDER:
+        s = stats.get(topic)
+        if not s or s["total"] == 0:
+            continue
+        pct = round(s["correct"] / s["total"] * 100, 1)
+        priority = COMPETENCY_PRIORITY.get(topic, "media_alta")
+        weight = PRIORITY_WEIGHT.get(priority, 0.6)
+        level = _competency_level(pct)
+        competencies.append(
+            {
+                "competency": topic,
+                "label": COMPETENCY_LABELS.get(topic, topic),
+                "percentage": pct,
+                "correct": s["correct"],
+                "total": s["total"],
+                "level": level,
+                "level_label": COMPETENCY_LEVEL_LABELS[level],
+                "priority": priority,
+                "weight": weight,
+                "urgency": round((1 - pct / 100) * weight, 4),
+            }
+        )
+
+    if not competencies:
+        return None
+
+    strongest = max(competencies, key=lambda c: (c["percentage"], -c["urgency"]))
+    focus = max(competencies, key=lambda c: (c["urgency"], -c["percentage"]))
+    return {
+        "competencies": competencies,
+        "strongest": strongest["competency"],
+        "strongest_label": strongest["label"],
+        "strongest_percentage": strongest["percentage"],
+        "focus": focus["competency"],
+        "focus_label": focus["label"],
+        "focus_percentage": focus["percentage"],
+        "recommendation": _competency_recommendation(strongest, focus),
+    }
+
+
 def compute_experiment_result(
     db: Session, student_id: str, course_id: str
 ) -> Optional[ExperimentResult]:
@@ -443,6 +571,34 @@ def enrich_profile_from_pretest(
     except Exception:
         db.rollback()
         logger.warning("Métrica pretest_completed no registrada", exc_info=True)
+
+    # Perfil por competencia + prioridad adaptativa: se persiste como métrica de
+    # investigación (guardado durable, reutilizable por evaluador/dashboard).
+    try:
+        from app.models.research import ResearchMetric
+
+        profile = compute_competency_profile(db, attempt)
+        if profile is not None:
+            db.add(
+                ResearchMetric(
+                    student_id=student_id,
+                    course_id=course_id,
+                    metric_type="pretest_competency_profile",
+                    value=None,
+                    unit=None,
+                    payload={
+                        "focus": profile["focus"],
+                        "focus_label": profile["focus_label"],
+                        "strongest": profile["strongest"],
+                        "recommendation": profile["recommendation"],
+                        "competencies": profile["competencies"],
+                    },
+                )
+            )
+            db.commit()
+    except Exception:
+        db.rollback()
+        logger.warning("Perfil por competencia no registrado", exc_info=True)
 
 
 def _write_knowledge_assessment(
