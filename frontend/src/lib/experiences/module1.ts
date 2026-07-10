@@ -284,15 +284,11 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
     },
   ],
 
-  // ── Cierre: puente hacia la misión REAL que sigue en la ruta ─────────────────
-  // La Misión 02 de la ruta es «Estructuras de control». El cierre debe apuntar
-  // ahí, con la misma narrativa del robot — nunca a promesas internas del sprint.
+  // ── Cierre (PED-004: modo módulo de referencia) ───────────────────────────────
+  // Sin nextMission: los módulos legacy están fuera de la experiencia, así que
+  // el cierre no anuncia nada externo. Todo termina dentro de esta misión.
   closing: {
     achievement:
-      'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación. En la siguiente misión escribirás esas instrucciones en Python, el lenguaje real.',
-    nextMission: {
-      title: 'Estructuras de control',
-      hook: 'Tu robot ya obedece paso a paso. Pero ¿qué hace si la puerta está cerrada con llave? ¿Y si debe tocar 4 veces hasta que le abran? Enseñarle a decidir y a repetir es tu siguiente misión.',
-    },
+      'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación. Esa regla es la base de todo lo que escribirás en Python.',
   },
 }

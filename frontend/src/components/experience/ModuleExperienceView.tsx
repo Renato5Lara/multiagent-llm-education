@@ -464,18 +464,20 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             {definition.closing.achievement}
           </p>
 
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 space-y-1.5">
-            <p className="text-xs text-neural-muted">
-              <span className="font-mono text-neural-violet">PRÓXIMA MISIÓN ·</span>{' '}
-              <span className="text-neural-text/90">{definition.closing.nextMission.title}</span>
-            </p>
-            <p className="text-xs text-neural-muted leading-relaxed">
-              {definition.closing.nextMission.hook}
-            </p>
-          </div>
+          {definition.closing.nextMission && (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 space-y-1.5">
+              <p className="text-xs text-neural-muted">
+                <span className="font-mono text-neural-violet">PRÓXIMA MISIÓN ·</span>{' '}
+                <span className="text-neural-text/90">{definition.closing.nextMission.title}</span>
+              </p>
+              <p className="text-xs text-neural-muted leading-relaxed">
+                {definition.closing.nextMission.hook}
+              </p>
+            </div>
+          )}
 
           <Button className="w-full" onClick={handleFinish}>
-            Continuar al siguiente módulo →
+            {definition.closing.nextMission ? 'Continuar al siguiente módulo →' : 'Finalizar misión →'}
           </Button>
         </div>
       </div>

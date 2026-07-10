@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { getErrorMessage } from '@/lib/errors'
+import { filterToReferenceModules } from '@/lib/experiences'
 import type {
   DiagnosticResult,
   LearningPath,
@@ -163,7 +164,10 @@ export function useLearningPath(courseId: string | undefined) {
     queryKey: ['learning-path', courseId],
     queryFn: async () => {
       const resp = await api.get<LearningPathDetail>(`/api/students/learning-path/${courseId}`)
-      return resp.data
+      // PED-004 — modo módulo de referencia: los módulos legacy no se muestran
+      // ni se alcanzan. Filtrar aquí cubre TODAS las superficies que consumen
+      // la ruta (página de ruta, dashboard y la navegación post-completado).
+      return { ...resp.data, items: filterToReferenceModules(resp.data.items) }
     },
     enabled: !!courseId,
   })

@@ -161,8 +161,11 @@ export interface CuriosityOpening {
 export interface ModuleClosing {
   /** Qué construyó el estudiante, en términos del módulo. */
   achievement: string
-  /** Puente narrativo hacia la siguiente misión tal como existe en la ruta. */
-  nextMission: {
+  /** Puente narrativo hacia la siguiente misión tal como existe en la ruta.
+   *  OMITIR en modo módulo de referencia (PED-004): mientras los módulos
+   *  legacy estén fuera de la experiencia, el cierre no anuncia nada externo
+   *  y todo termina dentro del módulo. */
+  nextMission?: {
     /** Título exacto de la siguiente misión (el que el estudiante verá al llegar). */
     title: string
     /** Por qué lo aprendido aquí desemboca en esa misión. */
