@@ -59,14 +59,19 @@ código
   paisaje cognitivo, criterios E1–E6, anti-definición, hipótesis
   operacional. Criterio normativo del RFC-0006.
 - [CONCEPT-0002](CONCEPT-0002-taxonomia-del-consenso.md) — Taxonomía del
-  Consenso (Borrador): tipos de desacuerdo, convocatoria, resolución,
-  aplazamiento y reapertura. Puente entre CONCEPT-0001 y el RFC-0006.
+  Consenso (Aceptado): D1/D2/D3, latente vs bloqueante, regla de oro del
+  espacio de resultados, H9. Agenda cerrada del RFC-0006.
 
 ## Registro de propuestas constitucionales
 
 Propuestas registradas pero NO incorporadas; si resultan rectoras, se elevan
 por el proceso de enmienda (RFC-0000).
 
+- **«La deliberación selecciona, jamás crea»** (CONCEPT-0002 §3;
+  candidata a principio por juicio del tesista, 2026-07-10 — "casi al
+  nivel de la Constitución"): protege la frontera capacidades/mecanismo.
+  Su elevación se decide en la aceptación del RFC-0006, donde la regla se
+  somete a su primera prueba de diseño.
 - **P14 — Inmutabilidad de la historia** (tesista, 2026-07-10): la historia de
   estados no se reescribe retrospectivamente; una corrección es un nuevo evento
   que produce un nuevo estado. Se evaluará durante RFC-0003 (LearningState) y
