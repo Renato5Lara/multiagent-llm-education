@@ -1,7 +1,8 @@
 # RFC-0004 — Runtime de Ejecución y Modelo de Transiciones
 
 - **Estado:** Aceptado (2026-07-10, rev. 2 — con los cuatro ajustes de la
-  Architecture Review del tesista; H7 registrada en la aceptación)
+  Architecture Review del tesista; H7 registrada en la aceptación;
+  rev. 3: corrección F1 de la Integrity Review v1, aprobada por el tesista)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -172,7 +173,7 @@ hacer esto`. Las reglas canónicas iniciales:
 | decisión sin entregar | el Platform Boundary (entrega al mundo) |
 | facts de entrega + facts evaluativos posteriores a una decisión `pendiente-de-validación` | **Validar** (obligatoria — RFC-0001) |
 | veredicto de Validar | Modelar (retroalimentación del student model) |
-| deliberación aplazada cuya evidencia faltante ya llegó | reapertura de la deliberación (disparador — RFC-0006) |
+| deliberación aplazada cuya evidencia faltante ya llegó | convocatoria de una **nueva deliberación enlazada** (CONCEPT-0002 §5; disparador — RFC-0006) |
 
 Consecuencias de esta forma: (a) la fase del ciclo es una *proyección*
 (`ejecución`), no un mecanismo de control; (b) cambiar la estrategia

@@ -1,6 +1,6 @@
 # RFC-0002 — Modelo de dominio: responsabilidades, resultados y capacidades
 
-- **Estado:** Aceptado (2026-07-10, rev. 3 — con modelo de propiedad y registro de la hipótesis Knowledge Claim)
+- **Estado:** Aceptado (2026-07-10, rev. 3 — con modelo de propiedad y registro de la hipótesis Knowledge Claim; rev. 4: corrección F2 de la Integrity Review v1 — las capacidades proponen, solo el Kernel decide)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -145,7 +145,7 @@ esperado de su responsabilidad, materializado en el estado:
 | **Modelar** (al estudiante) | R1 | evidencia conductual y evaluativa acumulada | modelo del estudiante, versionado |
 | **Diagnosticar** | R2 | modelo del estudiante + resultados recientes | estado de conocimiento por competencia, con confianza |
 | **Orientar** | R2 | diagnóstico + estructura de módulos | propuesta de siguiente objetivo de la ruta |
-| **Adaptar** | R3 | objetivo + modelo del estudiante + señales de sesión | decisión de diseño de experiencia (modalidad × profundidad × ritmo × andamiaje) **con las alternativas que evaluó** |
+| **Adaptar** | R3 | objetivo + modelo del estudiante + señales de sesión | propuesta de diseño de experiencia (modalidad × profundidad × ritmo × andamiaje) **con las alternativas que evaluó** |
 | **Tutorizar** | R4 | estado completo de la sesión | interacciones y señales conductuales detectadas (confusión, frustración, fluidez) |
 | **Evaluar** | R5 | objetivo + banco de ítems | resultados con trazabilidad ítem a ítem |
 | **Remediar** | R6 | evidencia de no-aprendizaje | propuesta de intervención dirigida |
