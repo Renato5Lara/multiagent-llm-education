@@ -4,11 +4,14 @@ Este directorio contiene los RFC (Request for Comments) que gobiernan el diseño
 del nuevo núcleo de IA del proyecto: un runtime multiagente real sobre LangGraph,
 con un grafo de estados compartido como única fuente de verdad.
 
-> **Foundation Phase: cerrada (2026-07-10).** Constitución, lenguaje,
-> física del runtime, semántica, consenso y gobernanza quedaron definidos
-> sin una línea de código (decisiones D-001..D-026, ver
-> [LEDGER.md](LEDGER.md)). Desde el RFC-0008 el trabajo es de ingeniería y
-> se revisa como tal (RFC-0000 rev. 4).
+> **Foundation Phase: cerrada y CONGELADA (2026-07-10).** Constitución,
+> lenguaje, física del runtime, semántica, consenso y gobernanza quedaron
+> definidos sin una línea de código (decisiones D-001..D-026, ver
+> [LEDGER.md](LEDGER.md)). Los documentos de la fase solo admiten
+> correcciones editoriales; **todo cambio conceptual pasa por el proceso
+> de gobernanza** (RFC-0000). Desde el RFC-0008 el trabajo es de
+> ingeniería y se revisa como tal (RFC-0000 rev. 4): la arquitectura
+> gobierna al desarrollo, no al revés.
 
 El runtime anterior basado en `BaseAgent` queda archivado como **Legacy Runtime**
 (línea base histórica y experimental). No recibe nuevas funcionalidades.
