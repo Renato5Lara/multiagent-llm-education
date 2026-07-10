@@ -39,11 +39,17 @@ código
 | [RFC-0003](RFC-0003-learning-state.md) | LearningState: anatomía, mutación e invariantes | Aceptado |
 | [RFC-0004](RFC-0004-execution-runtime.md) | Runtime de Ejecución y Modelo de Transiciones | Aceptado |
 | RFC-0005 | Memoria | Pendiente |
-| [RFC-0006](RFC-0006-consenso-enjambre.md) | Consenso e Inteligencia de Enjambre | Borrador |
+| [RFC-0006](RFC-0006-consenso-enjambre.md) | Consenso e Inteligencia de Enjambre | Aceptado |
 | RFC-0007 | Observabilidad | Pendiente |
 | RFC-0008 | Checkpointing y persistencia | Pendiente |
 | RFC-0009 | Human in the Loop | Pendiente |
 | RFC-0010 | Frontera con la plataforma (contrato de integración) | Pendiente |
+
+**Orden de diseño vigente** (decisión del tesista, 2026-07-10, supersede
+el orden interno de los transversales de RFC-0001): 0007 Observabilidad →
+0008 Checkpointing → 0005 Memoria → 0009 HITL → 0010 Frontera. Razón: el
+consenso ya definió qué observar y qué persistir; la memoria pasa de
+requisito previo a consecuencia del modelo.
 
 ## Validaciones conceptuales
 
