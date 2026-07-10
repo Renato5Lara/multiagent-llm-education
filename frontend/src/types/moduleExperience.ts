@@ -158,9 +158,29 @@ export interface CuriosityOpening {
 // componente: el cierre debe nombrar lo que el estudiante construyó y tender el
 // puente hacia la misión REAL que sigue en la ruta (no hacia promesas de sprint).
 
+// LEARN-002 — Cierre de la hipótesis inicial: el ciclo del experimento se
+// completa. La apertura registró qué predijo el estudiante; el cierre se lo
+// devuelve con veredicto y explicación: qué pensaste, si estabas en lo cierto,
+// y por qué ahora entiendes más. Sin esto la hipótesis quedaba sin respuesta.
+export interface HypothesisVerdict {
+  /** Etiqueta corta del veredicto («Acertaste», «Te acercaste», «Ahora lo sabes»). */
+  label: string
+  /** Qué pensó al inicio vs. qué comprobó — y por qué cambió o se confirmó. */
+  text: string
+}
+
+export interface HypothesisClosure {
+  /** Veredicto por opción de la apertura (clave = texto EXACTO de la opción). */
+  verdicts: Record<string, HypothesisVerdict>
+  /** Cierre común tras el veredicto (p. ej., el puente hacia Python). */
+  coda?: string
+}
+
 export interface ModuleClosing {
   /** Qué construyó el estudiante, en términos del módulo. */
   achievement: string
+  /** LEARN-002: respuesta a la hipótesis que el estudiante dio en la apertura. */
+  hypothesis?: HypothesisClosure
   /** Puente narrativo hacia la siguiente misión tal como existe en la ruta.
    *  OMITIR en modo módulo de referencia (PED-004): mientras los módulos
    *  legacy estén fuera de la experiencia, el cierre no anuncia nada externo

@@ -162,6 +162,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             body: [
               'Tu GPS nunca dice «ve hacia el centro». Dice: «en 200 metros, gira a la derecha en la Av. América».',
               'Distancia exacta, acción exacta, lugar exacto. El GPS te habla como se le habla a una máquina — por eso cualquier conductor que siga sus instrucciones llega al mismo lugar.',
+              'Un programa en Python es exactamente eso: una ruta de instrucciones precisas que la computadora sigue sin adivinar nada.',
             ],
           },
           {
@@ -172,6 +173,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             sceneId: 'dos-robots',
             body: [
               'Mismo robot, misma meta. El primero recibió «cruza la habitación» y terminó contra la mesa; el segundo recibió tres instrucciones precisas — y llegó. La única diferencia fue la precisión.',
+              'Cuando programes en Python harás exactamente lo del segundo robot: instrucciones exactas, en orden, sin dejar nada a la imaginación de la máquina.',
             ],
           },
           {
@@ -180,9 +182,10 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             title: 'Escúchalo de otra forma',
             medium: 'clip_narrado',
             narrationText:
-              'Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste: pero era obvio. Para una máquina, nada es obvio. Una instrucción precisa dice qué hacer, con qué, cuánto y hacia dónde. Si falta una de esas piezas, el robot va a fallar.',
+              'Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste: pero era obvio. Para una máquina, nada es obvio. Una instrucción precisa dice qué hacer, con qué, cuánto y hacia dónde. Si falta una de esas piezas, el robot va a fallar. Y Python es, simplemente, el idioma en que le escribirás esas instrucciones a tu computadora.',
             body: [
               'Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste «¡pero era obvio!». Para una máquina nada es obvio: una instrucción precisa dice qué hacer, con qué, cuánto y hacia dónde. Si falta una de esas piezas, el robot va a fallar.',
+              'Python es, simplemente, el idioma en que le escribirás esas instrucciones a tu computadora.',
             ],
           },
         ],
@@ -198,7 +201,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             title: 'Volvamos sobre la regla, con un caso resuelto',
             conceptModality: 'same',
             body: [
-              'Una instrucción es precisa cuando el robot no necesita decidir nada por su cuenta. Si al leerla te preguntas «¿cuánto?», «¿hacia dónde?» o «¿con qué?», entonces el robot también se lo pregunta — y ahí falla.',
+              'Una instrucción es precisa cuando el robot no necesita decidir nada por su cuenta. Si al leerla te preguntas «¿cuánto?», «¿hacia dónde?» o «¿con qué?», entonces el robot también se lo pregunta — y ahí falla. Python te exigirá exactamente lo mismo: cada línea debe decirlo todo.',
             ],
             illustration: {
               medium: 'ejemplo_comentado',
@@ -236,7 +239,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             conceptModality: 'alternate',
             body: [
               'Piensa en una receta de cocina. «Prepara la masa» no es un paso: es el título. Los pasos son «vierte 200 g de harina», «añade un huevo», «mezcla durante dos minutos».',
-              'El robot solo entiende los pasos de la receta, nunca el título. Ahora practica con solo dos pasos y un impostor.',
+              'El robot solo entiende los pasos de la receta, nunca el título. Un programa en Python también es una receta: solo pasos ejecutables, nunca deseos. Ahora practica con solo dos pasos y un impostor.',
             ],
             illustration: {
               medium: 'diagrama',
@@ -290,5 +293,30 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
   closing: {
     achievement:
       'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación. Esa regla es la base de todo lo que escribirás en Python.',
+
+    // LEARN-002 — la hipótesis de la apertura se responde aquí: qué pensaste,
+    // si estabas en lo cierto y por qué ahora entiendes más. Las claves son el
+    // texto EXACTO de opening.options.
+    hypothesis: {
+      verdicts: {
+        'Nada — es un robot, sabe hacerlo': {
+          label: 'Ahora lo sabes',
+          text:
+            'Pensaste que el robot sabría prepararlo solo. Hoy comprobaste lo contrario: un robot no sabe nada que no le digas. «Prepárame un sándwich» no es ejecutable — le faltan el qué, el con qué y el cuánto. Que tu idea haya cambiado no es un error: es la prueba de que aprendiste.',
+        },
+        'No sabría por dónde empezar': {
+          label: 'Te acercaste',
+          text:
+            'Intuiste que el robot se quedaría sin saber qué hacer — muy cerca de la verdad. Hoy comprobaste POR QUÉ: sin un primer paso preciso no puede ni empezar, porque no imagina nada. Tu intuición ahora tiene una regla que la explica.',
+        },
+        'Haría algo absurdo': {
+          label: 'Acertaste',
+          text:
+            'Predijiste que haría algo absurdo — y eso es exactamente lo que pasa: ejecuta lo que dices al pie de la letra, aunque el resultado sea ridículo. Hoy comprobaste por qué: para la máquina no existe nada que no le hayas dicho. Tu hipótesis quedó confirmada por el experimento.',
+        },
+      },
+      coda:
+        'Cuando escribas tu primera línea de Python le hablarás a un ejecutor igual de literal que este robot. La hipótesis que pusiste a prueba hoy será tu ventaja.',
+    },
   },
 }

@@ -4,8 +4,8 @@
 // S1: mock-first — sin backend nuevo; la evidencia se registra localmente con
 // el mismo contrato que en S3/S4 consumirá el agente evaluador.
 
-import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, BookOpen, Compass, GraduationCap, LifeBuoy, Map } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
@@ -14,11 +14,11 @@ import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
-import { recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
+import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { correctSequence } from '@/lib/experiences/ordering'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
-  Reinforcement, RemediationLevel, RemediationStep,
+  Reinforcement, ReinforcementKind, RemediationLevel, RemediationStep,
 } from '@/types/moduleExperience'
 import type { LearningModality } from '@/types/modality'
 
@@ -160,6 +160,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
   const [cycleIndex, setCycleIndex] = useState(initialCursor.cycleIndex)
   const [mastery, setMastery] = useState<Record<string, number>>(initialCursor.mastery)
   const [activeReinforcement, setActiveReinforcement] = useState<Reinforcement | null>(null)
+  // PED-005 — refuerzos ya explorados en el ciclo actual: al terminar uno se
+  // vuelve al menú (elegir nunca es un callejón) y el dominio del refuerzo se
+  // acredita solo la primera vez por tipo.
+  const [visitedReinforcements, setVisitedReinforcements] = useState<Set<ReinforcementKind>>(new Set())
   // Peldaño activo de la escalera. 0 = actividad principal (sin remediación).
   const [remediationLevel, setRemediationLevel] = useState<RemediationLevel>(0)
   // Desenlace de la práctica del ciclo actual — habilita Continuar SIEMPRE
@@ -168,6 +172,22 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
+
+  // LEARN-002 — recuperar la hipótesis registrada en la apertura para
+  // devolverle su veredicto en el cierre. Se lee solo al llegar al cierre.
+  const openingAnswer = useMemo(() => {
+    if (phase !== 'slice_end') return null
+    const ev = readEvidence(moduleId).find(e => e.type === 'opening_answer')
+    if (!ev) return null
+    const option = typeof ev.detail.option === 'string' ? ev.detail.option : ''
+    const freeText = typeof ev.detail.freeText === 'string' ? ev.detail.freeText.trim() : ''
+    return option ? { option, freeText } : null
+  }, [moduleId, phase])
+
+  const hypothesisVerdict =
+    openingAnswer && definition.closing.hypothesis
+      ? definition.closing.hypothesis.verdicts[openingAnswer.option] ?? null
+      : null
 
   const bumpMastery = useCallback((conceptId: string, delta: number) => {
     setMastery(prev => ({
@@ -216,6 +236,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     // Sin esto, practiceOutcome del ciclo anterior puede hacer que el
     // botón "Continuar" aparezca instantáneamente al montar el siguiente ciclo.
     setActiveReinforcement(null)
+    setVisitedReinforcements(new Set())
     setRemediationLevel(0)
     setPracticeOutcome(null)   // ← crítico: reset entre ciclos
     if (cycleIndex + 1 < definition.cycles.length) {
@@ -356,18 +377,27 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     }
   }, [advanceCycle, cycle, effectiveModality, mastery, moduleId])
 
-  /** Refuerzo VOLUNTARIO elegido en el menú de decisión (nunca remediación). */
+  /** Refuerzo VOLUNTARIO elegido en el menú de decisión (nunca remediación).
+   *  PED-005: al terminar se VUELVE AL MENÚ con lo visto marcado — el
+   *  estudiante puede explorar otro refuerzo o continuar, nunca queda en un
+   *  callejón por haber "elegido mal". */
   const handleReinforcementDone = useCallback(() => {
     if (!cycle || !activeReinforcement) return
+    const kind = activeReinforcement.kind
+    const firstView = !visitedReinforcements.has(kind)
     recordEvidence({
       type: 'reinforcement_viewed',
       moduleId,
       conceptId: cycle.conceptId,
-      detail: { kind: activeReinforcement.kind, remediation: false },
+      detail: { kind, remediation: false, revisit: !firstView },
     })
-    bumpMastery(cycle.conceptId, REINFORCEMENT_GAIN)
-    advanceCycle(REINFORCEMENT_GAIN)
-  }, [activeReinforcement, advanceCycle, bumpMastery, cycle, moduleId])
+    // El dominio se acredita solo la primera vez: repetir el mismo refuerzo
+    // no acumula puntos.
+    if (firstView) bumpMastery(cycle.conceptId, REINFORCEMENT_GAIN)
+    setVisitedReinforcements(prev => new Set(prev).add(kind))
+    setActiveReinforcement(null)
+    setPhase('decision')
+  }, [activeReinforcement, bumpMastery, cycle, moduleId, visitedReinforcements])
 
   // ── Escalera de remediación ──────────────────────────────────────────────────
 
@@ -460,6 +490,38 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             })}
           </div>
 
+          {/* LEARN-002 — cierre del experimento: la hipótesis de la apertura
+              recibe su veredicto ANTES del botón de salida. */}
+          {openingAnswer && hypothesisVerdict && (
+            <div className="rounded-xl border border-neural-violet/25 bg-neural-violet/5 p-5 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <FlaskConical className="h-4 w-4 text-neural-violet shrink-0" />
+                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
+                  Tu hipótesis inicial
+                </p>
+              </div>
+              <p className="text-sm text-neural-muted leading-relaxed">
+                Al empezar respondiste:{' '}
+                <span className="text-neural-text/90">«{openingAnswer.option}»</span>
+                {openingAnswer.freeText && (
+                  <>
+                    {' '}— y predijiste:{' '}
+                    <span className="text-neural-text/90 italic">«{openingAnswer.freeText}»</span>
+                  </>
+                )}
+              </p>
+              <p className="text-sm leading-relaxed">
+                <span className="font-semibold text-neural-glow">{hypothesisVerdict.label}.</span>{' '}
+                <span className="text-neural-text/90">{hypothesisVerdict.text}</span>
+              </p>
+              {definition.closing.hypothesis?.coda && (
+                <p className="text-xs text-neural-muted leading-relaxed border-t border-white/[0.06] pt-3">
+                  {definition.closing.hypothesis.coda}
+                </p>
+              )}
+            </div>
+          )}
+
           <p className="text-sm text-neural-muted leading-relaxed">
             {definition.closing.achievement}
           </p>
@@ -531,7 +593,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
       )}
 
       {phase === 'decision' && cycle?.decision && (
-        <DecisionMenu menu={cycle.decision} mastery={conceptMastery} onChoose={handleDecision} />
+        <DecisionMenu
+          menu={cycle.decision}
+          mastery={conceptMastery}
+          visited={visitedReinforcements}
+          onChoose={handleDecision}
+        />
       )}
 
       {phase === 'remediation' && cycle && step && (
