@@ -34,7 +34,7 @@ código
 |-----------|--------|--------|
 | [Constitución](FOUNDATIONAL_PRINCIPLES.md) | Principios Fundacionales (P1–P13) | Aceptado |
 | [RFC-0000](RFC-0000-proceso.md) | Proceso y plantilla de RFC | Aceptado |
-| RFC-0001 | Visión arquitectónica | Pendiente |
+| [RFC-0001](RFC-0001-vision.md) | Visión arquitectónica | Aceptado |
 | RFC-0002 | Modelo de dominio y capacidades | Pendiente |
 | RFC-0003 | LearningState (estado compartido) | Pendiente |
 | RFC-0004 | Graph Runtime (grafo principal y subgrafos) | Pendiente |
