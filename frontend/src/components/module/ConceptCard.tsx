@@ -133,23 +133,33 @@ export function ConceptCard({ index, content, title, onRead }: Props) {
         )}
       </div>
 
-      {/* Key idea callout — más espacioso, texto más grande */}
-      <div className={cn(
-        'mx-5 mt-5 rounded-xl border-l-4 px-4 py-4 transition-colors duration-300',
-        read
-          ? 'border-indigo-400 dark:border-indigo-600 bg-indigo-50/60 dark:bg-indigo-950/20'
-          : 'border-gray-300 dark:border-gray-600 bg-gray-50/60 dark:bg-gray-800/20',
-      )}>
-        <p className={cn(
-          'text-[10px] font-semibold uppercase tracking-wide mb-2',
-          read ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500',
+      {/* Feedback del PO (Pruebas 3): «Idea clave» solo tiene sentido cuando
+          resume un desarrollo. Si el contenido es una sola frase, se muestra
+          como texto normal, sin marco que prometa más de lo que hay. */}
+      {rest.length > 0 ? (
+        <div className={cn(
+          'mx-5 mt-5 rounded-xl border-l-4 px-4 py-4 transition-colors duration-300',
+          read
+            ? 'border-indigo-400 dark:border-indigo-600 bg-indigo-50/60 dark:bg-indigo-950/20'
+            : 'border-gray-300 dark:border-gray-600 bg-gray-50/60 dark:bg-gray-800/20',
         )}>
-          💡 Idea clave
-        </p>
-        <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
-          {keyIdea}
-        </p>
-      </div>
+          <p className={cn(
+            'text-[10px] font-semibold uppercase tracking-wide mb-2',
+            read ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500',
+          )}>
+            💡 Idea clave
+          </p>
+          <p className="text-sm font-medium text-gray-800 dark:text-gray-100 leading-relaxed">
+            {keyIdea}
+          </p>
+        </div>
+      ) : (
+        <div className="mx-5 mt-5">
+          <p className="text-sm text-gray-800 dark:text-gray-100 leading-relaxed">
+            {keyIdea}
+          </p>
+        </div>
+      )}
 
       {/* Resto corto: visible siempre, sin desplegable (feedback PO) */}
       {shortRest && (
