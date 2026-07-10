@@ -2,8 +2,9 @@
 
 - **Estado:** Aceptado (2026-07-10; rev. 2 añade la revisión por decisión
   irreversible — aplica desde RFC-0002; rev. 3 añade la categoría Concept
-  Standard y la Revisión de Conformidad de Especificación, por orden del
-  tesista en la resolución de la Integrity Review v1)
+  Standard y la Revisión de Conformidad de Especificación; rev. 4 añade la
+  revisión dual Architecture/Engineering y el Ledger, por orden del
+  tesista al cierre de la Foundation Phase)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -75,6 +76,29 @@ Todo RFC contiene, en este orden:
   concepto exige enmendar primero su CONCEPT. *(Rev. 3.)*
 - Todo término normativo nuevo se registra en `VOCABULARY.md` en el mismo
   commit que lo introduce. *(Rev. 3.)*
+
+## Dos tipos de revisión (desde el RFC-0008)
+
+*(Añadido en rev. 4, 2026-07-10, por orden del tesista al cierre de la
+Foundation Phase.)*
+
+- **Architecture Review** — pregunta: *¿el modelo es correcto?* Se aplica
+  a los documentos conceptuales (RFC de modelo, Concept Standards) y a
+  toda enmienda del modelo.
+- **Engineering Review** — pregunta: *¿esta implementación preserva el
+  modelo?* Se aplica a los RFC de ingeniería (0008 en adelante), a los ADR
+  y al código (donde se instrumenta como la Revisión de Conformidad).
+
+No se mezclan: una objeción conceptual detectada durante una Engineering
+Review no se debate ahí — se traslada al documento conceptual
+correspondiente y se resuelve allí antes de continuar.
+
+## Ledger de decisiones
+
+*(Añadido en rev. 4.)* Toda decisión arquitectónica mayor tiene una fila
+en `LEDGER.md` (qué se decidió, dónde, estado), añadida **en el mismo
+commit** que la introduce o la modifica. El Ledger responde "¿dónde se
+decidió esto?"; no contiene contenido normativo — solo punteros.
 
 ## Revisión de Conformidad de Especificación (fase de implementación)
 
