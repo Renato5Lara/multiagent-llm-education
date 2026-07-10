@@ -445,6 +445,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             {definition.opening.revealHook}
           </p>
           <div className="space-y-2">
+            {definition.routeTitle && (
+              <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-neural-glow/70">
+                Tu misión en «{definition.routeTitle}»
+              </p>
+            )}
             <h1 className="text-2xl font-bold text-neural-text">{definition.missionTitle}</h1>
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-[0.15em] uppercase px-3 py-1 rounded-full border border-neural-violet/30 text-neural-violet bg-neural-violet/5">
               <Compass className="h-3 w-3" />

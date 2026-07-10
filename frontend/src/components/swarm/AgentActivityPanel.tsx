@@ -39,12 +39,15 @@ interface AgentActivityPanelProps {
 
 // ── Agent timeline (same timing as original SwarmThinkingScreen) ───────────────
 
+// RC-FINAL: la deliberación es lo que el estudiante (y el jurado) deben poder
+// LEER — cada mensaje entra con ~1.3 s de aire en vez de la ráfaga anterior,
+// que hacía percibir la pantalla como una simple barra de carga.
 const AGENT_DEFS = [
-  { id: 'diagnostic', name: 'Agente Diagnóstico', startDelay: 0,    duration: 800,  msgDelay: 850  },
-  { id: 'profile',    name: 'Agente Perfil',       startDelay: 800,  duration: 750,  msgDelay: 1600 },
-  { id: 'adaptation', name: 'Agente Adaptación',   startDelay: 1550, duration: 900,  msgDelay: 2500 },
-  { id: 'tutor',      name: 'Agente Tutor',        startDelay: 2450, duration: 750,  msgDelay: 3250 },
-  { id: 'consensus',  name: 'Motor de Consenso',   startDelay: 3200, duration: 850,  msgDelay: 4100 },
+  { id: 'diagnostic', name: 'Agente Diagnóstico', startDelay: 0,    duration: 900, msgDelay: 600  },
+  { id: 'profile',    name: 'Agente Perfil',       startDelay: 1300, duration: 900, msgDelay: 1900 },
+  { id: 'adaptation', name: 'Agente Adaptación',   startDelay: 2600, duration: 900, msgDelay: 3200 },
+  { id: 'tutor',      name: 'Agente Tutor',        startDelay: 3900, duration: 900, msgDelay: 4500 },
+  { id: 'consensus',  name: 'Motor de Consenso',   startDelay: 5200, duration: 900, msgDelay: 5800 },
 ] as const
 
 // ── Label maps ─────────────────────────────────────────────────────────────────
@@ -75,6 +78,15 @@ const MODALITY_DEFAULT_STRATEGIES: Record<string, string[]> = {
   reading:     ['Texto', 'Código anotado', 'Ejemplo'],
   audio:       ['Narración', 'Explicación verbal'],
   kinesthetic: ['Juego', 'Simulación', 'Ejercicio', 'Drag & drop'],
+}
+
+/** Color de identidad por agente en la deliberación (RC-FINAL). */
+const AGENT_DOT: Record<string, string> = {
+  'Agente Diagnóstico': 'bg-neural-glow',
+  'Agente Perfil':      'bg-purple-400',
+  'Agente Adaptación':  'bg-violet-400',
+  'Agente Tutor':       'bg-orange-300',
+  'Motor de Consenso':  'bg-neural-pulse',
 }
 
 const LEVEL_LABEL: Record<string, string> = {
@@ -303,72 +315,81 @@ export function AgentActivityPanel({
         </p>
       </div>
 
-      {/* Agent progress bars */}
-      <div className="glass-panel rounded-2xl p-6 mb-4">
-        <div className="space-y-5">
-          {agents.map((agent) => (
-            <div key={agent.id}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="relative flex h-2 w-2 flex-shrink-0">
-                    {agent.status === 'running' && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
-                    )}
-                    <span className={`relative inline-flex rounded-full h-2 w-2 transition-colors duration-300 ${
-                      agent.status === 'done'    ? 'bg-neural-pulse' :
-                      agent.status === 'running' ? 'bg-neural-glow' :
-                      'bg-white/15'
-                    }`} />
-                  </span>
-                  <span className={`text-sm font-medium transition-colors duration-300 ${
-                    agent.status === 'waiting' ? 'text-neural-muted/40' : 'text-neural-text'
+      {/* Deliberación del enjambre — la conversación es la protagonista */}
+      <div className="glass-panel rounded-2xl p-5 mb-4 min-h-[220px]">
+        <p className="text-[9px] font-mono text-neural-muted/40 tracking-[0.2em] uppercase mb-4">
+          Deliberación del enjambre
+        </p>
+        <div className="space-y-3">
+          {messages.slice(0, visibleMsgs).map((msg, idx) => {
+            const isConsensus = idx === messages.length - 1
+            return (
+              <div
+                key={idx}
+                className={`rounded-xl border px-3.5 py-2.5 animate-in fade-in slide-in-from-bottom-2 duration-500 ${
+                  isConsensus
+                    ? 'border-neural-pulse/30 bg-neural-pulse/5'
+                    : 'border-white/[0.06] bg-white/[0.03]'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`inline-flex rounded-full h-1.5 w-1.5 shrink-0 ${
+                    isConsensus ? 'bg-neural-pulse' : AGENT_DOT[msg.agent] ?? 'bg-neural-glow'
+                  }`} />
+                  <p className={`text-[10px] font-mono uppercase tracking-wider ${
+                    isConsensus ? 'text-neural-pulse' : 'text-neural-glow/70'
                   }`}>
-                    {agent.name}
-                  </span>
+                    {msg.agent}
+                  </p>
+                  {isConsensus && (
+                    <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-neural-pulse">
+                      <CheckCircle2 className="h-3 w-3" /> Consenso
+                    </span>
+                  )}
                 </div>
-                <span className={`text-xs font-mono tabular-nums transition-colors duration-300 ${
-                  agent.status === 'done'    ? 'text-neural-pulse' :
-                  agent.status === 'running' ? 'text-neural-glow' :
-                  'text-neural-muted/25'
-                }`}>
-                  {agent.status === 'done' ? '100%' : agent.status === 'running' ? '···' : '—'}
-                </span>
+                <p className="text-sm text-neural-text/85 leading-snug">{msg.text}</p>
               </div>
-
-              <div className="w-full bg-white/[0.05] rounded-full h-1 overflow-hidden">
-                <div
-                  className={`h-1 w-full rounded-full origin-left transition-colors duration-300 ${
-                    agent.status === 'done' ? 'bg-neural-pulse' : 'bg-neural-glow'
-                  }`}
-                  style={{
-                    transform: `scaleX(${agent.progress / 100})`,
-                    transition: `transform ${agent.duration}ms ease-out, background-color 300ms ease`,
-                  }}
-                />
-              </div>
+            )
+          })}
+          {visibleMsgs < messages.length && (
+            <div className="flex items-center gap-2 px-1 pt-1">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-glow" />
+              </span>
+              <p className="text-xs text-neural-muted/60 italic">
+                {agents.find(a => a.status === 'running')?.name ?? 'El enjambre'} está analizando…
+              </p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Agent message feed */}
-      {visibleMsgs > 0 && (
-        <div className="glass-panel rounded-2xl p-5 mb-4">
-          <p className="text-[9px] font-mono text-neural-muted/40 tracking-[0.2em] uppercase mb-4">
-            Comunicación entre agentes
-          </p>
-          <div className="space-y-4">
-            {messages.slice(0, visibleMsgs).map((msg, idx) => (
-              <div key={idx} className="animate-in fade-in slide-in-from-bottom-1 duration-400">
-                <p className="text-[10px] font-mono text-neural-glow/60 uppercase tracking-wider mb-0.5">
-                  {msg.agent}
-                </p>
-                <p className="text-sm text-neural-muted leading-snug">{msg.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Tira compacta de estado por agente */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {agents.map(agent => (
+          <span
+            key={agent.id}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-mono transition-colors duration-300 ${
+              agent.status === 'done'
+                ? 'border-neural-pulse/30 text-neural-pulse bg-neural-pulse/5'
+                : agent.status === 'running'
+                  ? 'border-neural-glow/30 text-neural-glow bg-neural-glow/5'
+                  : 'border-white/[0.08] text-neural-muted/40'
+            }`}
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              {agent.status === 'running' && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
+              )}
+              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${
+                agent.status === 'done' ? 'bg-neural-pulse' : agent.status === 'running' ? 'bg-neural-glow' : 'bg-white/15'
+              }`} />
+            </span>
+            {agent.name}
+          </span>
+        ))}
+      </div>
 
       {/* Waiting for backend indicator (module mode only, after animation) */}
       {animationDone && !isBackendReady && (

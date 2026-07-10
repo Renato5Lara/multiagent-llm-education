@@ -22,13 +22,27 @@ export type TheoryMedium =
   | 'simulacion'
   | 'codigo_anotado'
 
+/** Infografía comparativa real (RC-FINAL): la variante visual debe SER visual,
+ *  no texto con etiqueta de infografía. Dos paneles: la instrucción ambigua con
+ *  las preguntas que el robot no puede responder, y la precisa con sus partes. */
+export interface ConceptInfographic {
+  vague: { instruction: string; questions: string[] }
+  precise: { instruction: string; parts: string[] }
+  caption: string
+}
+
 export interface ConceptVariant {
   medium: TheoryMedium
   mediumLabel: string
-  /** Párrafos o guion de narración. En S1 es mock; en S2 lo alimenta el Content Discovery Agent. */
+  /** Párrafos de apoyo. En S1 es mock; en S2 lo alimenta el Content Discovery Agent. */
   body: string[]
   /** "Elegido para ti — fuente: ..." (explicabilidad sin interrumpir) */
   sourceNote?: string
+  /** Solo variantes visuales: comparación gráfica renderizada de verdad. */
+  infographic?: ConceptInfographic
+  /** Solo variantes de audio: texto narrado con voz real (AudioNarration),
+   *  nunca un guion de desarrollador visible al estudiante. */
+  narrationText?: string
 }
 
 export interface CycleConcept {
@@ -198,6 +212,10 @@ export interface ModuleClosing {
 export interface ModuleExperienceDefinition {
   moduleNumber: number
   missionTitle: string
+  /** Título con el que la RUTA presenta este módulo (m-6): la revelación lo
+   *  cita para que el estudiante entienda que la misión temática ES el módulo
+   *  que eligió, no otro lugar. */
+  routeTitle?: string
   territory: string
   /** Títulos de PathModule que activan esta experiencia (normalizados sin tildes/case). */
   matchTitles: string[]

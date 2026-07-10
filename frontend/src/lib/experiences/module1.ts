@@ -8,6 +8,9 @@ import type { ModuleExperienceDefinition } from '@/types/moduleExperience'
 export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
   moduleNumber: 1,
   missionTitle: 'Misión 1 · El idioma de las máquinas',
+  // m-6: la ruta presenta el módulo con este título; la revelación lo cita
+  // para que el estudiante entienda que la misión temática ES ese módulo.
+  routeTitle: 'Fundamentos de Python',
   territory: 'Explorador',
   // "Fundamentos de Python" es el primer módulo de la ruta seedeada (IS301):
   // la experiencia del Módulo 1 se activa ahí. Los otros títulos cubren el
@@ -49,10 +52,19 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             medium: 'infografia',
             mediumLabel: 'Infografía',
             sourceNote: 'Elegido para ti — tu perfil capta ideas más rápido cuando las ve.',
+            infographic: {
+              vague: {
+                instruction: 'Ponle mantequilla al pan',
+                questions: ['¿con qué?', '¿cuánta?', '¿en qué lado?'],
+              },
+              precise: {
+                instruction: 'Toma el cuchillo. Unta 10 gramos de mantequilla sobre la cara superior de la rebanada.',
+                parts: ['qué hacer', 'con qué', 'cuánto', 'dónde'],
+              },
+              caption:
+                'La diferencia no es el detalle decorativo: la instrucción precisa no deja NINGUNA decisión en manos del robot.',
+            },
             body: [
-              'VAGA: «Ponle mantequilla al pan» → ¿con qué? ¿cuánta? ¿en qué lado?',
-              'PRECISA: «Toma el cuchillo. Unta 10 gramos de mantequilla sobre la cara superior de la rebanada.»',
-              'La diferencia no es la cortesía ni el detalle decorativo: es que la instrucción precisa no deja NINGUNA decisión en manos del robot.',
               'Una instrucción es precisa cuando cualquier ejecutor — humano o máquina — produce exactamente el mismo resultado.',
               'Una computadora no imagina nada más. Python es el lenguaje con el que le escribes instrucciones precisas — igual que las que acabas de construir para el robot.',
             ],
@@ -72,10 +84,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             medium: 'clip_narrado',
             mediumLabel: 'Clip narrado',
             sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
+            narrationText:
+              'Imagina que le escribes instrucciones a alguien que jamás ha visto un sándwich, y que hará exactamente lo que escribiste. Pon mantequilla en el pan. ¿Con la mano? ¿Con el codo? Tú sabías que era con cuchillo, pero no lo dijiste, y el ejecutor no adivina. Esa es la regla de oro: si tu instrucción necesita que el otro adivine algo, no es una instrucción, es un deseo. Las máquinas no cumplen deseos: ejecutan instrucciones. Y una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
             body: [
-              '🎧 Guion del clip (60 s): «Imagina que le escribes instrucciones a alguien que jamás ha visto un sándwich… y que hará EXACTAMENTE lo que escribiste. "Pon mantequilla en el pan". ¿Con la mano? ¿Con el codo? Tú sabías que era con cuchillo — pero no lo dijiste, y el ejecutor no adivina.',
+              'Imagina que le escribes instrucciones a alguien que jamás ha visto un sándwich… y que hará EXACTAMENTE lo que escribiste. «Pon mantequilla en el pan». ¿Con la mano? ¿Con el codo? Tú sabías que era con cuchillo — pero no lo dijiste, y el ejecutor no adivina.',
               'Esa es la regla de oro: si tu instrucción necesita que el otro adivine algo, no es una instrucción — es un deseo. Las máquinas no cumplen deseos. Ejecutan instrucciones.',
-              'Y esa regla no es solo del robot. Una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.»',
+              'Y esa regla no es solo del robot. Una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
             ],
           },
           kinesthetic: {

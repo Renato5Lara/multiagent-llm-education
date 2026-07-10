@@ -5,6 +5,7 @@
 import { useRef } from 'react'
 import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AudioNarration } from './AudioNarration'
 import type { CycleConcept, ConceptVariant, TheoryMedium } from '@/types/moduleExperience'
 import type { LearningModality } from '@/types/modality'
 
@@ -53,6 +54,42 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
 
         <div className={framed ? 'bg-neural-lowest/60 px-6 py-6' : 'px-6 py-6'}>
           <div className="space-y-4">
+            {/* RC-FINAL: la variante visual ES visual — comparación gráfica real */}
+            {variant.infographic && (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                  <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-amber-400">✗ Ambigua</p>
+                  <p className="text-sm md:text-base text-neural-text font-medium">
+                    «{variant.infographic.vague.instruction}»
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {variant.infographic.vague.questions.map((q, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full border border-amber-500/30 text-amber-300/90 bg-amber-500/10">
+                        {q}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
+                  <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-emerald-400">✓ Precisa</p>
+                  <p className="text-sm md:text-base text-neural-text font-medium">
+                    «{variant.infographic.precise.instruction}»
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {variant.infographic.precise.parts.map((p, i) => (
+                      <span key={i} className="text-xs px-2 py-0.5 rounded-full border border-emerald-500/30 text-emerald-300/90 bg-emerald-500/10">
+                        ✓ {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-neural-muted italic px-1">{variant.infographic.caption}</p>
+              </div>
+            )}
+
+            {/* RC-FINAL: la variante de audio SUENA — narración con voz real */}
+            {variant.narrationText && <AudioNarration text={variant.narrationText} />}
+
             {variant.body.map((paragraph, i) => (
               <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
                 {paragraph}

@@ -8,7 +8,7 @@ import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/u
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { LearningPathItem } from '@/types/student'
 import TutorWidget from '@/components/ai/TutorWidget'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -213,30 +213,32 @@ export default function LearningPath() {
   const { data: ktStatus } = useKnowledgeTestStatus(courseId)
 
   // Cuenta regresivasegundos para autostart
-  const [countdown, setCountdown] = useState(autostart ? 4 : 0)
+  // RC-FINAL: 8 s — la ruta que el swarm construyó es evidencia de la tesis;
+  // con 4 s el estudiante no alcanzaba a leer ni el perfil detectado.
+  const [countdown, setCountdown] = useState(autostart ? 8 : 0)
 
+  // Tic del contador — el updater queda PURO: navegar dentro de setCountdown
+  // disparaba "Cannot update BrowserRouter while rendering LearningPath".
   useEffect(() => {
     if (!autostart || !path?.items?.length || countdown <= 0) return
-    if (countdown === 0) return
-    const t = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(t)
-          const first = path.items.find(i => i.status === 'available') ?? path.items[0]
-          if (first && courseId) {
-            navigate(
-              `/estudiante/module/${first.id}?courseId=${courseId}&title=${encodeURIComponent(first.title)}`,
-              { replace: true },
-            )
-          }
-          return 0
-        }
-        return c - 1
-      })
-    }, 1000)
-    return () => clearInterval(t)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autostart, path, courseId])
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [autostart, path, countdown])
+
+  // Navegación al agotarse el contador — en su propio efecto, una sola vez.
+  const autoNavigated = useRef(false)
+  useEffect(() => {
+    if (!autostart || countdown !== 0 || autoNavigated.current) return
+    if (!path?.items?.length || !courseId) return
+    autoNavigated.current = true
+    const first = path.items.find(i => i.status === 'available') ?? path.items[0]
+    if (first) {
+      navigate(
+        `/estudiante/module/${first.id}?courseId=${courseId}&title=${encodeURIComponent(first.title)}`,
+        { replace: true },
+      )
+    }
+  }, [autostart, countdown, path, courseId, navigate])
 
   if (isLoading) return <PathSkeleton />
 
