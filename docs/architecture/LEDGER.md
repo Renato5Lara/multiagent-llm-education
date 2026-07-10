@@ -35,6 +35,7 @@
 | D-024 | Concept Standards = autoridad semántica paralela a los RFC (autoridades, no rangos); VOCABULARY.md como glosario vivo | README + RFC-0000 rev. 3 | Vigente |
 | D-025 | Revisión de Conformidad de Especificación (4 preguntas por cambio de código) + revisión dual Architecture/Engineering desde RFC-0008 | RFC-0000 rev. 3–4 | Vigente |
 | D-026 | Orden de diseño de transversales: 0007 → 0008 → 0005 → 0009 → 0010 | README | Vigente |
+| D-027 | Contrato de Reconstrucción R1–R6: la StateTransition como unidad de persistencia (no existe hasta persistida); replay en dos modos (reconstrucción / re-derivación contrafactual); tecnología delegada a ADRs con criterio único "preservar R1–R6" | RFC-0008 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 

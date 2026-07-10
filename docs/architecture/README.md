@@ -65,7 +65,7 @@ con el ciclo de vida del RFC-0000.
 | RFC-0005 | Memoria | Pendiente |
 | [RFC-0006](RFC-0006-consenso-enjambre.md) | Consenso e Inteligencia de Enjambre | Aceptado |
 | [RFC-0007](RFC-0007-observabilidad.md) | Observabilidad | Borrador |
-| RFC-0008 | Checkpointing y persistencia | Pendiente |
+| [RFC-0008](RFC-0008-checkpointing-persistencia.md) | Checkpointing y Persistencia | Aceptado |
 | RFC-0009 | Human in the Loop | Pendiente |
 | RFC-0010 | Frontera con la plataforma (contrato de integración) | Pendiente |
 
