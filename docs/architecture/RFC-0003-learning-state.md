@@ -1,8 +1,8 @@
 # RFC-0003 — LearningState: anatomía, disciplina de mutación e invariantes
 
-- **Estado:** Aceptado (2026-07-10, rev. 4 — aprobado por el tesista con sus
-  refinamientos de precisión; los dos ajustes del Walkthrough-0001
-  señalados en §7 fueron ratificados por el tesista el mismo día)
+- **Estado:** Aceptado (2026-07-10, rev. 5 — rev. 4 aprobada con los
+  ajustes del Walkthrough-0001 ratificados; la rev. 5 aplica la enmienda
+  `asunto` propuesta por el RFC-0006 §2 y aprobada por el tesista)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -127,12 +127,22 @@ distintas. Solo el payload es libre.
 FactEntry                             ClaimEntry
 ├── autor       capacidad|boundary¹   ├── autor       capacidad
 ├── contenido   payload libre         ├── tipo        interpretación | propuesta
-├── provenance  de qué mecanismo      ├── afirmación  payload libre
-│               salió (§3.1)          ├── respaldo    refs a entradas vigentes²
-└── vigencia    vigente |             ├── confianza   grado declarado
-                superseded-por(ref)   ├── provenance  de qué mecanismo salió (§3.1)
+├── provenance  de qué mecanismo      ├── asunto      pregunta que responde³
+│               salió (§3.1)          ├── afirmación  payload libre (incl. posición)
+└── vigencia    vigente |             ├── respaldo    refs a entradas vigentes²
+                superseded-por(ref)   ├── confianza   grado declarado
+                                      ├── provenance  de qué mecanismo salió (§3.1)
                                       └── vigencia    vigente | superseded-por(ref)
 ```
+
+³ *Enmienda del RFC-0006 §2, aprobada por el tesista (2026-07-10):* el
+**asunto** es el identificador normalizado de la pregunta que el claim
+responde — `modalidad(objetivo-X)`, `dominio(COMP-2)`,
+`siguiente-paso(sesión)` —, y dentro del asunto la afirmación declara una
+posición comparable. Permite que la detección de tensiones sea función
+pura del estado, sin interpretar payloads (regla de control, P12). El
+catálogo de asuntos se deriva del vocabulario del RFC-0002 y se fija en
+la política versionada.
 
 ¹ *Ajuste del Walkthrough-0001:* los **hechos del mundo** (ciclo de vida de
 la sesión, telemetría cruda de la plataforma) no tienen capacidad natural
@@ -252,7 +262,7 @@ rechazo registrado.
 | INV-2 | `identidad` y `contexto` son inmutables durante la sesión; una nueva versión del student model solo puede aparecer en `salidas`, nunca reemplazar el contexto cargado |
 | INV-3 | `facts`, `claims`, `deliberaciones` y `decisiones` son append-only; corregir es añadir una entrada que supersede, jamás modificar o borrar |
 | INV-4 | Todo fact declara autor (una capacidad, o el Platform Boundary para hechos del mundo) y provenance; un fact jamás lleva respaldo — su sustento es su origen |
-| INV-5 | Todo claim declara autor (siempre una capacidad), provenance, confianza y respaldo hacia entradas vigentes (facts, claims o decisiones) o elementos versionados del contexto; no existen afirmaciones sin origen causal |
+| INV-5 | Todo claim declara autor (siempre una capacidad), asunto, provenance, confianza y respaldo hacia entradas vigentes (facts, claims o decisiones) o elementos versionados del contexto; no existen afirmaciones sin origen causal ni sin pregunta que respondan |
 | INV-6 | Toda decisión referencia la deliberación o el claim-propuesta único que la produjo; no existen decisiones huérfanas |
 | INV-7 | Toda deliberación registra participantes, posiciones, regla de resolución y resultado (resuelta / aplazada / escalada); si es resuelta, registra la confianza de la resolución; si es aplazada, registra qué evidencia falta |
 | INV-8 | Los objetos de una deliberación son siempre claims; los facts no se deliberan y solo pueden ser cuestionados por nuevos facts, jamás por claims |
