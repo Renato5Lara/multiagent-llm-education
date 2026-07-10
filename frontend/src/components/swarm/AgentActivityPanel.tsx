@@ -29,10 +29,21 @@ export interface ModuleContext {
   confidence?: number
 }
 
+/** Contexto del modo 'path': lo que el diagnóstico reveló, para que la
+ *  deliberación hable de ESTE estudiante y no en genérico. */
+export interface PathContext {
+  strongestLabel?: string
+  strongestPct?: number
+  focusLabel?: string
+  focusPct?: number
+  weaknesses?: string[]
+}
+
 interface AgentActivityPanelProps {
-  mode: 'diagnostic' | 'module'
+  mode: 'diagnostic' | 'module' | 'path'
   diagnosticProfile?: DiagnosticProfile
   moduleContext?: ModuleContext
+  pathContext?: PathContext
   isBackendReady?: boolean
   onComplete: () => void
 }
@@ -140,18 +151,45 @@ function getModuleMessages(ctx?: ModuleContext) {
   ]
 }
 
+/** Modo 'path' — deliberación tras el pre-test, mientras el backend genera la
+ *  ruta. Formato pedido por el PO (Pruebas 5): cada agente aporta lo que vio,
+ *  se contestan entre sí y el consenso es lo que abre la ruta. */
+function getPathMessages(ctx?: PathContext) {
+  const strongestPct = ctx?.strongestPct !== undefined ? ` (${Math.round(ctx.strongestPct)}%)` : ''
+  const focusPct = ctx?.focusPct !== undefined ? ` (${Math.round(ctx.focusPct)}%)` : ''
+  const opening = ctx?.strongestLabel
+    ? `Detecté estos patrones en tus respuestas: tu base más sólida es «${ctx.strongestLabel}»${strongestPct}.`
+    : 'Terminé de leer tu diagnóstico. Ya identifiqué los patrones de tus respuestas.'
+  const counter = ctx?.focusLabel
+    ? `Yo vi otros: «${ctx.focusLabel}»${focusPct} es donde más apoyo vas a necesitar.`
+    : ctx?.weaknesses?.length
+      ? `Yo vi otros: conviene reforzar ${ctx.weaknesses.slice(0, 2).join(' y ')} antes de avanzar.`
+      : 'Yo no encontré temas críticos — puedes avanzar a buen ritmo.'
+
+  return [
+    { agent: 'Agente Diagnóstico', text: opening },
+    { agent: 'Agente Perfil',      text: counter },
+    { agent: 'Agente Adaptación',  text: 'Entonces propongo ordenar los módulos para reforzar eso primero, sin frenar tu avance.' },
+    { agent: 'Agente Tutor',       text: 'De acuerdo. Prepararé explicaciones y práctica adicional donde el diagnóstico mostró vacíos.' },
+    { agent: 'Motor de Consenso',  text: 'Consenso alcanzado. Tu ruta de aprendizaje quedó aprobada — abriéndola ahora.' },
+  ]
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function AgentActivityPanel({
   mode,
   diagnosticProfile,
   moduleContext,
+  pathContext,
   isBackendReady = true,
   onComplete,
 }: AgentActivityPanelProps) {
   const messages = mode === 'diagnostic' && diagnosticProfile
     ? getDiagnosticMessages(diagnosticProfile)
-    : getModuleMessages(moduleContext)
+    : mode === 'path'
+      ? getPathMessages(pathContext)
+      : getModuleMessages(moduleContext)
 
   const [agents, setAgents] = useState<AgentState[]>(
     AGENT_DEFS.map(d => ({ id: d.id, name: d.name, status: 'waiting' as AgentStatus, progress: 0, duration: d.duration }))
@@ -266,7 +304,10 @@ export function AgentActivityPanel({
 
   // ── Diagnostic summary card ────────────────────────────────────────────────
 
-  if (showSummary && mode === 'diagnostic') {
+  if (showSummary && (mode === 'diagnostic' || mode === 'path')) {
+    const summaryItems = mode === 'path'
+      ? ['Diagnóstico interpretado por el enjambre', 'Orden de módulos acordado en consenso', 'Ruta de aprendizaje aprobada']
+      : ['Perfil de aprendizaje identificado', 'Ruta adaptativa aprobada', 'Contenido multimodal generado']
     return (
       <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
         <div className="glass-panel rounded-2xl p-5 border border-neural-pulse/20">
@@ -274,7 +315,7 @@ export function AgentActivityPanel({
             Decisión del swarm
           </p>
           <div className="space-y-2.5">
-            {['Perfil de aprendizaje identificado', 'Ruta adaptativa aprobada', 'Contenido multimodal generado'].map((item, idx) => (
+            {summaryItems.map((item, idx) => (
               <div
                 key={idx}
                 className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300"
@@ -306,12 +347,16 @@ export function AgentActivityPanel({
         <h2 className="text-xl font-bold text-neural-text">
           {mode === 'module'
             ? 'Preparando tu experiencia de aprendizaje'
-            : 'Analizando tu perfil de aprendizaje'}
+            : mode === 'path'
+              ? 'Los agentes están construyendo tu ruta'
+              : 'Analizando tu perfil de aprendizaje'}
         </h2>
         <p className="text-neural-muted/70 text-sm mt-1">
           {mode === 'module'
             ? 'Los agentes están adaptando este módulo para ti'
-            : 'Los agentes están procesando tu diagnóstico'}
+            : mode === 'path'
+              ? 'Debaten tu diagnóstico hasta llegar a un consenso'
+              : 'Los agentes están procesando tu diagnóstico'}
         </p>
       </div>
 
@@ -398,7 +443,11 @@ export function AgentActivityPanel({
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-glow" />
           </span>
-          <p className="text-xs text-neural-muted">Optimizando el contenido final para tu perfil...</p>
+          <p className="text-xs text-neural-muted">
+            {mode === 'path'
+              ? 'Materializando la ruta que los agentes acordaron...'
+              : 'Optimizando el contenido final para tu perfil...'}
+          </p>
         </div>
       )}
     </div>

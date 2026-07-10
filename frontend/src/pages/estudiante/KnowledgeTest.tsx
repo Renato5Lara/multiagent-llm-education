@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
 import { useToast } from '@/hooks/use-toast'
 import { getErrorMessage } from '@/lib/errors'
 import { useGeneratePath } from '@/hooks/useStudent'
@@ -368,20 +369,44 @@ function CompetencyClosingScreen({
 }) {
   const { toast } = useToast()
 
+  // Pedido del PO (Pruebas 2/3/4/5): la ruta no aparece tras una barra de
+  // carga — aparece tras un conversatorio de agentes que termina en consenso.
+  const [deliberating, setDeliberating] = useState(false)
+  const [pathReady, setPathReady] = useState(false)
+
   const goToPath = () =>
     navigate(`/estudiante/path/${courseId}?autostart=true`, { replace: true })
 
   const handleGeneratePath = () => {
+    setDeliberating(true)
     generatePath.mutate(courseId, {
-      onSuccess: () => goToPath(),
+      onSuccess: () => setPathReady(true),
       onError: (error) => {
         toast({
           title: 'Tu diagnóstico quedó guardado',
           description: getErrorMessage(error),
         })
-        goToPath()
+        setPathReady(true)
       },
     })
+  }
+
+  if (deliberating) {
+    return (
+      <div className="py-10">
+        <AgentActivityPanel
+          mode="path"
+          pathContext={{
+            strongestLabel: profile.strongest_label,
+            strongestPct: profile.strongest_percentage,
+            focusLabel: profile.focus_label,
+            focusPct: profile.focus_percentage,
+          }}
+          isBackendReady={pathReady}
+          onComplete={goToPath}
+        />
+      </div>
+    )
   }
 
   return (
@@ -477,13 +502,18 @@ function ResultScreen({
   const level = LEVEL_STYLES[result.level ?? 'basico'] ?? LEVEL_STYLES.basico
   const comparison = useKnowledgeComparison(courseId, !isPre)
 
+  // Conversatorio de agentes durante la generación de la ruta (pedido del PO).
+  const [deliberating, setDeliberating] = useState(false)
+  const [pathReady, setPathReady] = useState(false)
+
   const goToPath = () =>
     navigate(`/estudiante/path/${courseId}?autostart=true`, { replace: true })
 
   const handleGeneratePath = () => {
+    setDeliberating(true)
     generatePath.mutate(courseId, {
-      onSuccess: () => goToPath(),
-      onError: () => goToPath(),  // fail-open
+      onSuccess: () => setPathReady(true),
+      onError: () => setPathReady(true),  // fail-open
     })
   }
 
@@ -495,6 +525,22 @@ function ResultScreen({
     () => result.critical_modules.map((m) => MODULE_NAMES[m] ?? `Módulo ${m}`),
     [result.critical_modules],
   )
+
+  if (deliberating) {
+    return (
+      <div className="py-10">
+        <AgentActivityPanel
+          mode="path"
+          pathContext={{
+            strongestLabel: strengths[0],
+            weaknesses,
+          }}
+          isBackendReady={pathReady}
+          onComplete={goToPath}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-2xl mx-auto py-8 space-y-6">
