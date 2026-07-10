@@ -176,8 +176,31 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             body: [
               'Tu GPS nunca dice «ve hacia el centro». Dice: «en 200 metros, gira a la derecha en la Av. América».',
               'Distancia exacta, acción exacta, lugar exacto. El GPS te habla como se le habla a una máquina — por eso cualquier conductor que siga sus instrucciones llega al mismo lugar.',
-              'Un programa en Python es exactamente eso: una ruta de instrucciones precisas que la computadora sigue sin adivinar nada.',
+              'Un programa en Python es exactamente eso: una ruta de instrucciones precisas que la computadora sigue sin adivinar nada. Ahora hazlo tú: arma la ruta del GPS.',
             ],
+            // BUG-003 (C-52): el ejemplo también se PRACTICA, no solo se lee.
+            practice: {
+              kind: 'ordering',
+              prompt: 'Arma la ruta que el GPS le daría a un conductor. Una de las frases no es una instrucción — descártala.',
+              items: [
+                { id: 'g2', text: 'En 200 metros, gira a la derecha en la Av. América', position: 2 },
+                {
+                  id: 'gd1',
+                  text: 'Dirígete al centro de la ciudad',
+                  position: null,
+                  whyWrong: '«Dirígete al centro» dice a dónde quieres llegar, no qué hacer ahora — es la meta disfrazada de paso, igual que «riega la planta».',
+                },
+                { id: 'g1', text: 'Avanza 400 metros por la Av. Larco', position: 1 },
+                { id: 'g3', text: 'Detente frente al edificio de la esquina', position: 3 },
+              ],
+              successFeedback:
+                'Exacto — armaste una ruta que cualquier conductor (o máquina) ejecuta igual. Así se ve un programa: pasos precisos, en orden, sin metas disfrazadas.',
+              orderFeedback: 'El conductor no puede girar en la Av. América antes de haber avanzado por la Av. Larco.',
+              generalHint: 'Una de las frases dice a DÓNDE llegar, no QUÉ hacer. Esa no es una instrucción.',
+              solutionExplanation: [
+                'Primero avanzar, después girar, después detenerse — cada paso deja al conductor donde el siguiente lo necesita. «Dirígete al centro» era la meta: el GPS nunca te la dicta como paso.',
+              ],
+            },
           },
           {
             kind: 'animacion',
