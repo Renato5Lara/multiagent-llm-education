@@ -38,6 +38,7 @@
 | D-027 | Contrato de Reconstrucción R1–R6: la StateTransition como unidad de persistencia (no existe hasta persistida); replay en dos modos (reconstrucción / re-derivación contrafactual); tecnología delegada a ADRs con criterio único "preservar R1–R6" | RFC-0008 | Vigente |
 | D-028 | Serialización canónica (JCS, IDs deterministas, escala fija decimal como contrato con precisión en política, cadena de hashes → P14 verificable) y layout de almacenamiento (bytes canónicos = verdad, JSONB = proyección, blobs content-addressed solo para payloads, inmutabilidad multicapa impuesta por la BD) | ADR-0001, ADR-0002 | Vigente |
 | D-029 | Engineering Gate: tabla contrato/preservado/evidencia como última barrera antes de fusionar cambios del runtime; una fila sin evidencia no cuenta | RFC-0000 rev. 5 | Vigente |
+| D-030 | Runtime Versioning: vector de versiones por sesión (spec_version, política, banco, student model) + runtime_version por transición (participa del hash); los experimentos se comparan por versiones, no por fechas | ADR-0003 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 

@@ -101,6 +101,10 @@ requisito previo a consecuencia del modelo.
   Almacenamiento (Aceptado): bytes canónicos como verdad, JSONB como
   proyección, blobs por contenido (jamás transiciones), inmutabilidad
   multicapa.
+- [ADR-0003](ADR/ADR-0003-runtime-versioning.md) — Runtime Versioning
+  (Aceptado): vector de versiones por sesión (`spec_version`, política,
+  banco, student model) + `runtime_version` por transición; regla de
+  comparabilidad de experimentos.
 
 ## Revisiones de integridad
 
