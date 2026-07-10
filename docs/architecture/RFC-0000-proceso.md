@@ -5,7 +5,8 @@
   Standard y la Revisión de Conformidad de Especificación; rev. 4 añade la
   revisión dual Architecture/Engineering y el Ledger, por orden del
   tesista al cierre de la Foundation Phase; rev. 5 añade el Engineering
-  Gate, por orden del tesista en la aceptación de ADR-0001/0002)
+  Gate; rev. 6 añade la regla de no-proliferación documental, por orden
+  del tesista)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -77,6 +78,12 @@ Todo RFC contiene, en este orden:
   concepto exige enmendar primero su CONCEPT. *(Rev. 3.)*
 - Todo término normativo nuevo se registra en `VOCABULARY.md` en el mismo
   commit que lo introduce. *(Rev. 3.)*
+- **No-proliferación documental**: toda nueva necesidad debe intentar
+  resolverse reutilizando la estructura documental existente
+  (Constitución, RFC, Concept Standard, ADR, registros vivos). Solo si
+  eso rompe la claridad se propone una categoría nueva, con aprobación
+  del tesista. El sistema documental no debe crecer más rápido que el
+  runtime. *(Rev. 6.)*
 
 ## Dos tipos de revisión (desde el RFC-0008)
 
