@@ -36,7 +36,7 @@ código
 | [RFC-0000](RFC-0000-proceso.md) | Proceso y plantilla de RFC | Aceptado |
 | [RFC-0001](RFC-0001-vision.md) | Visión arquitectónica | Aceptado |
 | [RFC-0002](RFC-0002-domain-model.md) | Modelo de dominio: responsabilidades, resultados y capacidades | Aceptado |
-| RFC-0003 | LearningState (estado compartido) | Pendiente |
+| [RFC-0003](RFC-0003-learning-state.md) | LearningState: anatomía, mutación e invariantes | Aceptado |
 | RFC-0004 | Graph Runtime (grafo principal y subgrafos) | Pendiente |
 | RFC-0005 | Memoria | Pendiente |
 | RFC-0006 | Consenso e inteligencia de enjambre | Pendiente |
@@ -44,6 +44,13 @@ código
 | RFC-0008 | Checkpointing y persistencia | Pendiente |
 | RFC-0009 | Human in the Loop | Pendiente |
 | RFC-0010 | Frontera con la plataforma (contrato de integración) | Pendiente |
+
+## Validaciones conceptuales
+
+- [WALKTHROUGH-0001](WALKTHROUGH-0001-diagnostico-a-remediacion-visual.md) —
+  del diagnóstico a la remediación visual (2026-07-10): el modelo de
+  RFC-0001/0002/0003 narra una ejecución completa; 2 grietas incorporadas
+  en RFC-0003 rev. 4, 2 confirmaciones. Habilita el diseño del RFC-0004.
 
 ## Registro de propuestas constitucionales
 
