@@ -112,6 +112,26 @@ function cap<T>(arr: T[], max: number): T[] {
 
 const MAX_INTERACTIVE_STEPS = 8
 
+// ── Limpieza de pasos de concepto ─────────────────────────────────────────────
+// Feedback del PO (Pruebas 3/4): (1) llegaban saludos etiquetados como
+// «Concepto» que no enseñaban nada; (2) el mismo concepto aparecía dos veces.
+// Un saludo solo se descarta si es corto Y empieza saludando — así no se toca
+// contenido real tipo «"Hola, mundo" es el primer programa…» de mayor cuerpo.
+const GREETING_START_RE = /^\s*[¡]?(hola|bienvenid\w*|te damos la bienvenida|empecemos|comencemos)\b/i
+
+function cleanConceptSteps(steps: LearningJourneyStep[]): LearningJourneyStep[] {
+  const seen = new Set<string>()
+  return steps.filter(step => {
+    if (step.type !== 'concept') return true
+    const content = step.content ?? ''
+    if (content.length < 220 && GREETING_START_RE.test(content)) return false
+    const key = `${step.title ?? ''}|${content}`.toLowerCase().replace(/\s+/g, ' ').slice(0, 160)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 // ── Code Lab step factory (used by both paths) ────────────────────────────────
 
 function makeCodeLabStep(moduleId: string, moduleTitle: string, phase: Phase5E): LearningJourneyStep | null {
@@ -299,7 +319,7 @@ function buildJourneyFromConceptBlocks(
     id:               `journey-${module_id}`,
     moduleTitle:      module_title,
     courseId:         course_id,
-    steps,
+    steps:            cleanConceptSteps(steps),
     sessionId:        engagementSession.session_id,
     dominantModality: dominantModality ?? undefined,
   }
@@ -377,7 +397,7 @@ export function buildJourneyFromLegacy(
     id:               `journey-${moduleContent.module_id}`,
     moduleTitle:      moduleContent.module_title,
     courseId:         moduleContent.course_id,
-    steps,
+    steps:            cleanConceptSteps(steps),
     sessionId:        engagementSession.session_id,
     dominantModality: dominantModality ?? undefined,
   }
