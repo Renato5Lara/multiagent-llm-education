@@ -8,13 +8,17 @@ interface Props {
   onExplore?: () => void
 }
 
+// Feedback del PO (Pruebas 1/3/4): un ejemplo corto se lee completo de una
+// vez; la mecánica de "explorar" solo tiene sentido con textos largos.
+const PREVIEW_AT = 280
+
 function getPreview(text: string): string {
+  if (text.length <= PREVIEW_AT) return text
   const period = text.indexOf('. ')
-  if (period > 0 && period < 120) return text.slice(0, period + 1)
-  return text.slice(0, 110).trim() + (text.length > 110 ? '...' : '')
+  if (period > 0 && period < 200) return text.slice(0, period + 1)
+  return text.slice(0, 180).trim() + '...'
 }
 
-const BLOOM_LABELS = ['Recordar', 'Comprender', 'Aplicar', 'Analizar', 'Evaluar', 'Crear']
 
 /**
  * ExampleCard — Sprint I1 + I2
@@ -29,9 +33,6 @@ export function ExampleCard({ index, content, onExplore }: Props) {
 
   const preview  = getPreview(content)
   const hasMore  = content.length > preview.length
-
-  const bloom    = Math.min(index, BLOOM_LABELS.length - 1)
-  const bloomLabel = BLOOM_LABELS[bloom]
 
   const handleExpand = () => {
     if (!expanded && !explored) {
@@ -72,7 +73,7 @@ export function ExampleCard({ index, content, onExplore }: Props) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs font-mono text-blue-500 dark:text-blue-400 font-medium">
-              {bloomLabel}
+              Ejemplo {index + 1}
             </span>
             {explored && (
               <span className="flex items-center gap-0.5 text-[10px] text-amber-500 font-semibold animate-in fade-in duration-300">
