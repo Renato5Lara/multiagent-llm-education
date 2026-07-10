@@ -10,14 +10,29 @@ El runtime anterior basado en `BaseAgent` queda archivado como **Legacy Runtime*
 ## Jerarquía normativa
 
 ```
-FOUNDATIONAL_PRINCIPLES.md   (constitución — los RFC no pueden contradecirla)
+FOUNDATIONAL_PRINCIPLES.md          (constitución — nada la contradice)
         ↓
-RFC-NNNN                     (decisiones mayores)
+┌───────────────────────────┬──────────────────────────────────┐
+│ RFC-NNNN                  │ CONCEPT-NNNN (Concept Standards) │
+│ decisiones de diseño      │ estándar semántico: vocabulario  │
+│                           │ y significado, jamás             │
+│                           │ implementación                   │
+└───────────────────────────┴──────────────────────────────────┘
         ↓
-ADR/                         (decisiones puntuales)
+ADR/                                (decisiones puntuales)
         ↓
-código
+código                              (+ VOCABULARY.md, glosario vivo)
 ```
+
+> **Los documentos CONCEPT aceptados constituyen el estándar semántico del
+> proyecto. Los RFC pueden apoyarse en ellos y especializarlos, pero no
+> redefinir su significado. Si un RFC necesita cambiar un concepto,
+> primero debe enmendar el documento CONCEPT correspondiente.**
+> *(Regla del tesista, 2026-07-10 — resolución del hallazgo F3.)*
+
+Autoridades distintas, no rangos: el RFC manda sobre el *diseño*; el
+CONCEPT manda sobre el *significado*. Ambos bajo la Constitución, ambos
+con el ciclo de vida del RFC-0000.
 
 ## Reglas
 
@@ -58,7 +73,7 @@ requisito previo a consecuencia del modelo.
   RFC-0001/0002/0003 narra una ejecución completa; 2 grietas incorporadas
   en RFC-0003 rev. 4, 2 confirmaciones. Habilita el diseño del RFC-0004.
 
-## Notas conceptuales
+## Concept Standards (estándar semántico)
 
 - [CONCEPT-0001](CONCEPT-0001-inteligencia-de-enjambre.md) — ¿Qué
   entendemos por inteligencia de enjambre en UPAO-MAS-EDU? (Aceptado):
@@ -67,6 +82,14 @@ requisito previo a consecuencia del modelo.
 - [CONCEPT-0002](CONCEPT-0002-taxonomia-del-consenso.md) — Taxonomía del
   Consenso (Aceptado): D1/D2/D3, latente vs bloqueante, regla de oro del
   espacio de resultados, H9. Agenda cerrada del RFC-0006.
+
+## Revisiones de integridad
+
+- [INTEGRITY-REVIEW-v1](INTEGRITY-REVIEW-v1.md) — 2026-07-10, sobre los
+  diez documentos aceptados: 0 contradicciones conceptuales, 0 ciclos.
+  Resuelta: F1/F2 aplicados (commit 00abf02); F3 resuelto con la categoría
+  Concept Standard (decisión del tesista). El glosario vivo es
+  [VOCABULARY.md](VOCABULARY.md).
 
 ## Registro de propuestas constitucionales
 

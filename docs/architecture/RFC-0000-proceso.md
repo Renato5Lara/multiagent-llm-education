@@ -1,7 +1,9 @@
 # RFC-0000 — Proceso y plantilla de RFC
 
-- **Estado:** Aceptado (2026-07-10; rev. 2 el mismo día añade la revisión
-  por decisión irreversible, por orden del tesista — aplica desde RFC-0002)
+- **Estado:** Aceptado (2026-07-10; rev. 2 añade la revisión por decisión
+  irreversible — aplica desde RFC-0002; rev. 3 añade la categoría Concept
+  Standard y la Revisión de Conformidad de Especificación, por orden del
+  tesista en la resolución de la Integrity Review v1)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -66,6 +68,30 @@ Todo RFC contiene, en este orden:
 - Nada del Legacy Runtime (`BaseAgent`) se toma como restricción de diseño;
   solo el conocimiento del dominio (pedagogía, módulos, modelos de datos,
   lógica educativa) es insumo válido.
+- Los documentos **CONCEPT** (*Concept Standards*) definen la semántica
+  del proyecto: vocabulario y significado, jamás implementación. Siguen
+  este mismo ciclo de vida, pero su autoridad es semántica: los RFC se
+  apoyan en ellos y pueden especializarlos, nunca redefinirlos; cambiar un
+  concepto exige enmendar primero su CONCEPT. *(Rev. 3.)*
+- Todo término normativo nuevo se registra en `VOCABULARY.md` en el mismo
+  commit que lo introduce. *(Rev. 3.)*
+
+## Revisión de Conformidad de Especificación (fase de implementación)
+
+*(Añadida en rev. 3, 2026-07-10, por orden del tesista — cierra el ciclo
+de gobernanza.)*
+
+Cuando exista código del runtime, ningún cambio se acepta sin responder
+cuatro preguntas:
+
+1. ¿Viola algún principio constitucional (P1–P15)?
+2. ¿Viola algún RFC o Concept Standard aceptado?
+3. ¿Introduce un concepto nuevo? Si lo hace, el cambio se detiene: el
+   concepto entra primero por CONCEPT o RFC, después el código.
+4. ¿Usa el vocabulario de `VOCABULARY.md`, sin sinónimos inventados?
+
+Un cambio que no supera las cuatro se corrige o se rechaza, y la revisión
+queda registrada en el propio cambio.
 
 ## Alternativas consideradas y rechazadas
 
