@@ -92,6 +92,16 @@ requisito previo a consecuencia del modelo.
   Consenso (Aceptado): D1/D2/D3, latente vs bloqueante, regla de oro del
   espacio de resultados, H9. Agenda cerrada del RFC-0006.
 
+## ADRs (decisiones de ingeniería — Engineering Review)
+
+- [ADR-0001](ADR/ADR-0001-canonical-serialization.md) — Serialización
+  Canónica (Aceptado): JCS + IDs deterministas + escala fija decimal
+  (contrato; precisión = política) + cadena de hashes (P14 verificable).
+- [ADR-0002](ADR/ADR-0002-transition-storage-layout.md) — Layout de
+  Almacenamiento (Aceptado): bytes canónicos como verdad, JSONB como
+  proyección, blobs por contenido (jamás transiciones), inmutabilidad
+  multicapa.
+
 ## Revisiones de integridad
 
 - [INTEGRITY-REVIEW-v1](INTEGRITY-REVIEW-v1.md) — 2026-07-10, sobre los
