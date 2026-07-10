@@ -124,6 +124,9 @@ export function RealNewsCard({ resource, sessionId }: Props) {
               <div className="space-y-0.5">
                 <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Teoría guardada</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400 italic">"{savedTheory}"</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500">
+                  Los agentes la usan para conocer tu intuición inicial: al final del módulo podrás compararla con lo que descubriste.
+                </p>
               </div>
             </div>
           ) : theoryState === 'collapsed' ? (
@@ -179,6 +182,9 @@ export function RealNewsCard({ resource, sessionId }: Props) {
                   Cancelar
                 </Button>
               </div>
+              <p className="text-[11px] text-blue-600/70 dark:text-blue-400/60">
+                Tu teoría se guarda para el cierre del módulo: ahí la compararás con lo que hayas descubierto.
+              </p>
             </div>
           )}
         </div>
