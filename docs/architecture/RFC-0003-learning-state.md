@@ -1,8 +1,8 @@
 # RFC-0003 — LearningState: anatomía, disciplina de mutación e invariantes
 
 - **Estado:** Aceptado (2026-07-10, rev. 4 — aprobado por el tesista con sus
-  refinamientos de precisión; incluye dos ajustes del Walkthrough-0001
-  señalados en §7, sujetos a su ratificación)
+  refinamientos de precisión; los dos ajustes del Walkthrough-0001
+  señalados en §7 fueron ratificados por el tesista el mismo día)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -296,8 +296,8 @@ Trazabilidad de la revisión del tesista (2026-07-10):
   donde se decidirá si es una dimensión de la provenance o una convención
   de payload del instrumento.
 
-**Ajustes del Walkthrough-0001 (incorporados en rev. 4, sujetos a
-ratificación del tesista):** (a) los hechos del mundo pueden ser autorados
+**Ajustes del Walkthrough-0001 (incorporados en rev. 4; ratificados por el
+tesista, 2026-07-10):** (a) los hechos del mundo pueden ser autorados
 por el Platform Boundary (INV-4); (b) el respaldo se amplía a decisiones y
 a elementos versionados del contexto (INV-5) — el walkthrough reveló que la
 tabla §5 ya lo asumía para Validar y las invariantes no lo permitían.
