@@ -29,8 +29,10 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
     freeTextPrompt: '¿Qué crees que haría exactamente? (opcional)',
     revealHook:
       'Los robots no imaginan nada: ejecutan lo que dices, exactamente como lo dices. ' +
-      'Decirle a una máquina qué hacer sin dejar nada a su imaginación es, precisamente, ' +
-      'lo que resuelven los programadores.',
+      'Decirle a una máquina qué hacer sin dejar nada a su imaginación es exactamente lo ' +
+      'que hace un programador. Y una computadora funciona igual que ese robot: ejecuta lo ' +
+      'que le dices, al pie de la letra, sin imaginar nada. En esta misión vas a entender ' +
+      'por qué eso importa — antes de escribir tu primera línea.',
   },
 
   cycles: [
@@ -52,6 +54,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
               'PRECISA: «Toma el cuchillo. Unta 10 gramos de mantequilla sobre la cara superior de la rebanada.»',
               'La diferencia no es la cortesía ni el detalle decorativo: es que la instrucción precisa no deja NINGUNA decisión en manos del robot.',
               'Una instrucción es precisa cuando cualquier ejecutor — humano o máquina — produce exactamente el mismo resultado.',
+              'Una computadora no imagina nada más. Python es el lenguaje con el que le escribes instrucciones precisas — igual que las que acabas de construir para el robot.',
             ],
           },
           reading: {
@@ -62,6 +65,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
               'En 2018, un profesor pidió a sus estudiantes instrucciones escritas para preparar un sándwich, y las ejecutó al pie de la letra. Untó la mantequilla con la mano (nadie mencionó el cuchillo), apiló el pan sin abrir la bolsa y colocó el jamón sellado en su empaque.',
               'No estaba saboteando: estaba ejecutando. Cada instrucción que asumía algo — «unta la mantequilla», ¿con qué? — dejaba una decisión en manos del ejecutor. Y una máquina no decide: se detiene o hace algo absurdo.',
               'Una instrucción es precisa cuando no requiere que el ejecutor adivine nada: qué objeto usar, cuánto, dónde, en qué orden. Ese es el primer hábito mental de la programación.',
+              'Una computadora funciona exactamente igual que este robot: ejecuta lo que le dices, ni más ni menos. Python es una forma de escribir esas instrucciones — y la misma regla aplica: si tu instrucción asume algo que la computadora no puede adivinar, falla.',
             ],
           },
           audio: {
@@ -70,7 +74,8 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
             sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
             body: [
               '🎧 Guion del clip (60 s): «Imagina que le escribes instrucciones a alguien que jamás ha visto un sándwich… y que hará EXACTAMENTE lo que escribiste. "Pon mantequilla en el pan". ¿Con la mano? ¿Con el codo? Tú sabías que era con cuchillo — pero no lo dijiste, y el ejecutor no adivina.',
-              'Esa es la regla de oro: si tu instrucción necesita que el otro adivine algo, no es una instrucción — es un deseo. Las máquinas no cumplen deseos. Ejecutan instrucciones.»',
+              'Esa es la regla de oro: si tu instrucción necesita que el otro adivine algo, no es una instrucción — es un deseo. Las máquinas no cumplen deseos. Ejecutan instrucciones.',
+              'Y esa regla no es solo del robot. Una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.»',
             ],
           },
           kinesthetic: {
@@ -81,6 +86,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
               '🤖 Antes de leer nada, predice: el robot recibe «pon la mantequilla en el pan». Tiene un cuchillo, una cuchara y sus pinzas metálicas. ¿Qué usará?',
               'Respuesta: ninguna de las tres — se detiene con error. La instrucción no dice QUÉ usar, y el robot no elige por ti.',
               'Ahora predice con esta otra: «toma el cuchillo con la pinza derecha y unta la mantequilla sobre la cara superior de la rebanada». ¿Se detiene? No: ejecuta. Nada quedó a su imaginación — eso es una instrucción precisa.',
+              'Ese mismo robot mental es el modelo que usarás cuando programes. Una computadora recibe instrucciones escritas — Python es el lenguaje en que las escribes — y las ejecuta exactamente como tú las escribiste.',
             ],
           },
         },
@@ -106,7 +112,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
           { id: 'p4', text: 'Detente frente a la puerta', position: 4 },
         ],
         successFeedback:
-          'Exacto: cinco instrucciones sin espacio para la imaginación del robot. Y descartaste la ambigua — eso es pensar como programador.',
+          'Exacto. Cinco instrucciones sin espacio para la imaginación. Descartaste la ambigua — eso es pensar como programador. Una computadora opera con la misma regla: recibe lo que le dices, y nada más. Pronto escribirás instrucciones así, pero para un computador real.',
         orderFeedback:
           'El robot ejecuta EXACTAMENTE en la secuencia que le das: no puede girar la manija antes de llegar a la puerta.',
         generalHint:
@@ -114,10 +120,11 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
         solutionExplanation: [
           'Cada paso responde las tres preguntas que un robot no puede adivinar: qué hacer, cuánto y hacia dónde. «Avanza 4 pasos» es ejecutable; «camina hacia adelante» no, porque el cuánto queda a su imaginación.',
           'Fíjate además en el orden: el robot no puede avanzar antes de girar, ni girar la manija antes de detenerse frente a la puerta. Una secuencia es un camino donde cada paso prepara el siguiente.',
+          'Acabas de descubrir una idea central: una máquina hace exactamente lo que le indicas — ni más, ni menos. Cuando escribas tus primeras líneas en Python, estarás haciendo lo mismo que hiciste aquí: darle instrucciones claras para que pueda ejecutarlas.',
         ],
       },
       decision: {
-        question: 'Ya entiendes lo que hace precisa a una instrucción. ¿Cómo quieres reforzarlo?',
+        question: 'Ya entiendes lo que hace precisa una instrucción — y por qué eso mismo aplica cuando programas. ¿Cómo quieres consolidarlo?',
         reinforcements: [
           {
             kind: 'reto',
@@ -282,7 +289,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
   // ahí, con la misma narrativa del robot — nunca a promesas internas del sprint.
   closing: {
     achievement:
-      'Construiste «Instrucciones precisas» descartando las órdenes ambiguas — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación.',
+      'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación. En la siguiente misión escribirás esas instrucciones en Python, el lenguaje real.',
     nextMission: {
       title: 'Estructuras de control',
       hook: 'Tu robot ya obedece paso a paso. Pero ¿qué hace si la puerta está cerrada con llave? ¿Y si debe tocar 4 veces hasta que le abran? Enseñarle a decidir y a repetir es tu siguiente misión.',
