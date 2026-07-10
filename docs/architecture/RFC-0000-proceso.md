@@ -4,7 +4,8 @@
   irreversible — aplica desde RFC-0002; rev. 3 añade la categoría Concept
   Standard y la Revisión de Conformidad de Especificación; rev. 4 añade la
   revisión dual Architecture/Engineering y el Ledger, por orden del
-  tesista al cierre de la Foundation Phase)
+  tesista al cierre de la Foundation Phase; rev. 5 añade el Engineering
+  Gate, por orden del tesista en la aceptación de ADR-0001/0002)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -116,6 +117,27 @@ cuatro preguntas:
 
 Un cambio que no supera las cuatro se corrige o se rechaza, y la revisión
 queda registrada en el propio cambio.
+
+## Engineering Gate
+
+*(Añadido en rev. 5, 2026-07-10, por orden del tesista.)*
+
+La forma operativa de la Revisión de Conformidad: **la última barrera
+antes de fusionar cualquier cambio al runtime**. El cambio presenta una
+tabla de conformidad:
+
+| Contrato | Preservado | Evidencia |
+|----------|:----------:|-----------|
+| P1–P15 | ✅/❌ | … |
+| RFCs aplicables (0003, 0004, 0006, 0008, …) | ✅/❌ | … |
+| ADRs aplicables (0001, 0002, …) | ✅/❌ | … |
+
+Reglas: (1) una fila sin **evidencia** concreta (test, propiedad
+verificada, referencia al diseño) no cuenta como preservada; (2) un ❌
+bloquea la fusión — se corrige el cambio o, si la objeción es conceptual,
+se traslada al documento correspondiente (revisión dual); (3) el reporte
+del gate se registra junto con el cambio. El gate no debate ideas:
+verifica contratos.
 
 ## Alternativas consideradas y rechazadas
 
