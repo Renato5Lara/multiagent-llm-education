@@ -1,8 +1,8 @@
 # Principios Fundacionales — Runtime Multiagente UPAO-MAS-EDU
 
 - **Estado:** Aceptado (2026-07-10 — acta fundacional del nuevo runtime;
-  rev. 2 del mismo día: enmienda P15 aprobada por el tesista durante la
-  revisión del RFC-0006)
+  rev. 2: enmienda P15 aprobada durante la revisión del RFC-0006;
+  rev. 3: enmienda P14 aprobada en la aceptación del RFC-0007)
 - **Fecha:** 2026-07-10
 - **Autoridad:** Este documento está POR ENCIMA de los RFC. Un RFC puede
   desarrollar o ampliar un principio; no puede contradecirlo. Si un diseño
@@ -126,6 +126,20 @@ es lo estable (la capacidad, nunca su topología). El modelo de dominio
 (RFC-0002) se escribe en términos de capacidades; el runtime (RFC-0004)
 decide topologías, y puede cambiarlas sin tocar el dominio.
 
+## P14 — La historia es inmutable
+
+Toda transición registrada forma parte permanente de la historia
+científica del sistema. La historia nunca se modifica ni se elimina
+retrospectivamente; cualquier corrección se representa como una nueva
+transición que referencia a la anterior. Toda evidencia, explicación,
+métrica, replay y auditoría deriva exclusivamente de esa historia.
+
+*Ciclo de vida:* propuesto por el tesista como P14 (2026-07-10, registro
+en README), adoptado como diseño en RFC-0003 (INV-3, append-only +
+supersesión), y elevado tras cumplirse la condición que el propio tesista
+fijó — el RFC-0007 comprobó que la observabilidad y el replay descansan
+íntegramente en él. **La historia es el activo científico del sistema.**
+
 ## P15 — El runtime nunca crea conocimiento de dominio
 
 Toda afirmación y toda propuesta son autoradas por una capacidad o por el
@@ -136,10 +150,9 @@ nuevo. Si la respuesta correcta es una síntesis, el mecanismo reconvoca a
 una capacidad para que la proponga: un mecanismo que redacta es cognición
 central disfrazada.
 
-*Nota de numeración:* P14 está reservado para la propuesta registrada
-«Inmutabilidad de la historia» (ver README), pendiente de evaluación tras
-el RFC-0007; este principio se numera P15 para no invalidar referencias
-existentes.
+*Nota de numeración:* este principio se numeró P15 mientras P14 estaba
+reservado para «Inmutabilidad de la historia»; ambos quedaron consolidados
+el mismo día (2026-07-10) al elevarse P14 en la aceptación del RFC-0007.
 
 ---
 
