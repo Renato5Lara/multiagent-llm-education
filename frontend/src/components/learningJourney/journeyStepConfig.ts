@@ -88,7 +88,9 @@ export const PHASE_5E_CONFIG: Record<Phase5E, {
   evaluate: {
     label: 'Demuestra', emoji: '🎯',
     color: 'text-emerald-500 dark:text-emerald-400', barColor: 'bg-emerald-400 dark:bg-emerald-500',
-    transition: 'Ya recorriste el camino completo. Ahora demuestra lo que cambió.',
+    // Feedback del PO (Pruebas 4): «dentro de Demuestra no se entiende nada»
+    // — la frase ahora dice QUÉ se hace en esta fase.
+    transition: 'Ya recorriste el camino completo. Responde las preguntas finales: son tu forma de demostrar lo que aprendiste.',
   },
 }
 
