@@ -62,7 +62,7 @@ con el ciclo de vida del RFC-0000.
 | [RFC-0002](RFC-0002-domain-model.md) | Modelo de dominio: responsabilidades, resultados y capacidades | Aceptado |
 | [RFC-0003](RFC-0003-learning-state.md) | LearningState: anatomía, mutación e invariantes | Aceptado |
 | [RFC-0004](RFC-0004-execution-runtime.md) | Runtime de Ejecución y Modelo de Transiciones | Aceptado |
-| RFC-0005 | Memoria | Pendiente |
+| [RFC-0005](RFC-0005-memoria.md) | Memoria | Aceptado |
 | [RFC-0006](RFC-0006-consenso-enjambre.md) | Consenso e Inteligencia de Enjambre | Aceptado |
 | [RFC-0007](RFC-0007-observabilidad.md) | Observabilidad | Borrador |
 | [RFC-0008](RFC-0008-checkpointing-persistencia.md) | Checkpointing y Persistencia | Aceptado |
@@ -128,6 +128,11 @@ por el proceso de enmienda (RFC-0000).
   (RFC-0007) → constitucional. Los insumos asociados (LearningState único
   origen de Domain Events; event-sourced ligero) fueron adoptados en
   RFC-0003 §4.
+- **Reputación de capacidad** — **DIFERIDA post-tesis** (RFC-0005 §3):
+  memoria del sistema que cruza estudiantes; la hipótesis no la necesita.
+  Si el análisis experimental muestra sesgo sistemático por capacidad,
+  ese hallazgo será un resultado de la tesis y su justificación de
+  adopción futura.
 - **«La explicación se recorre, no se redacta»** (RFC-0007 §2.3; candidata
   a principio por juicio del tesista, 2026-07-10 — "el mismo estatus que
   'la deliberación selecciona, jamás crea'"): la explicación oficial

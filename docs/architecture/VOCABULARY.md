@@ -38,6 +38,11 @@
   (Walkthrough-0001; H4).
 - **"Reapertura"** no existe: es la convocatoria de una nueva deliberación
   enlazada (CONCEPT-0002 §5; corrección F1).
+- **"Memoria"** distingue dos sentidos (RFC-0005): la **memoria de
+  trabajo** es el `LearningState` durante la ejecución; la **memoria
+  persistente** es el puente versionado entre sesiones. La persistente
+  jamás participa directamente de la ejecución: se carga al abrir y se
+  consolida al cerrar.
 
 ## Registro de hipótesis (índice)
 

@@ -39,6 +39,7 @@
 | D-028 | Serialización canónica (JCS, IDs deterministas, escala fija decimal como contrato con precisión en política, cadena de hashes → P14 verificable) y layout de almacenamiento (bytes canónicos = verdad, JSONB = proyección, blobs content-addressed solo para payloads, inmutabilidad multicapa impuesta por la BD) | ADR-0001, ADR-0002 | Vigente |
 | D-029 | Engineering Gate: tabla contrato/preservado/evidencia como última barrera antes de fusionar cambios del runtime; una fila sin evidencia no cuenta | RFC-0000 rev. 5 | Vigente |
 | D-030 | Runtime Versioning: vector de versiones por sesión (spec_version, política, banco, student model) + runtime_version por transición (participa del hash); los experimentos se comparan por versiones, no por fechas | ADR-0003 | Vigente |
+| D-031 | Memoria = puente versionado entre sesiones (cargar al abrir / consolidar al cerrar / jamás durante; la memoria de trabajo es el LearningState); catálogo cerrado (student model con refuerzo consolidado, ruta, deuda H9-inter adoptada, resumen destilado); reputación de capacidad diferida post-tesis | RFC-0005 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 
