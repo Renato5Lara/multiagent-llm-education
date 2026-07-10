@@ -14,18 +14,21 @@ const OPTIONS: { value: Response; label: string; emoji: string }[] = [
   { value: 'stuck',   label: 'Necesito repasar', emoji: '↩' },
 ]
 
+// Feedback del PO (Pruebas 1/3/4): nada de felicitar sin evidencia ni
+// despachar al que pide ayuda. Lo que el estudiante declara se registra y
+// los agentes lo contrastan con lo que haga en la práctica.
 const RESPONSES: Record<Response, { headline: string; body: string }> = {
   clear:   {
-    headline: '¡Excelente!',
-    body:     'Sigue adelante — el próximo bloque profundiza en este tema.',
+    headline: 'Anotado.',
+    body:     'Los agentes lo contrastarán con tu práctica: si el ejercicio confirma lo que declaras, avanzas con más autonomía.',
   },
   partial: {
-    headline: 'Completamente normal.',
-    body:     'Los conceptos se afinan a medida que avanzas. Sigue al siguiente bloque — la repetición espaciada hará el resto.',
+    headline: 'Gracias por decirlo.',
+    body:     'Los agentes lo registraron: este tema volverá a aparecer explicado de otra forma antes de darlo por dominado.',
   },
   stuck:   {
-    headline: 'Sin problema.',
-    body:     'Puedes volver a las secciones anteriores cuando quieras. El aprendizaje no es lineal.',
+    headline: 'El sistema tomó nota.',
+    body:     'No avances todavía: vuelve a la sección anterior o pregúntale al tutor. Los agentes reforzarán este tema en tu siguiente actividad.',
   },
 }
 
@@ -67,9 +70,6 @@ export function ReflectionCheckpoint({ question, onResponse }: Props) {
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
             {RESPONSES[selected].body}
           </p>
-          {selected === 'clear' && (
-            <p className="text-xs text-amber-500 font-semibold mt-1.5">✨ +5 XP</p>
-          )}
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
