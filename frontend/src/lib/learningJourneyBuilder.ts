@@ -163,10 +163,12 @@ function buildJourneyFromConceptBlocks(
     }
 
     if (block.prediction_question && !cbConfig.forcePrediction) {
+      // Feedback del PO (Pruebas 1): la revelación debe RESPONDER, no decir
+      // «sigue leyendo». La respuesta real es la explicación del propio bloque.
       const predMeta: PredictionMeta = {
         question: block.prediction_question,
-        reveal:   '¡Sigue leyendo para descubrir si tu predicción fue correcta!',
-        hint:     'Reflexiona un momento antes de continuar.',
+        reveal:   splitParagraphs(block.explanation)[0] ?? block.title,
+        hint:     `La clave está en: ${block.title.toLowerCase()}.`,
       }
       tryPush(createStep(`cb-predict-${i}`, 'prediction', currentPhase, {
         xpReward: 1, requiresAnswer: true,

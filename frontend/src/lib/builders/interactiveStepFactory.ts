@@ -279,11 +279,20 @@ export function makePrediction(moduleTitle: string, firstApplication: string | u
   }
 }
 
+// Feedback del PO (Pruebas 1): la pregunta prometía «el siguiente caso» sin
+// darlo, y la revelación decía «ya lo descubrirás». Ahora la pregunta TRAE su
+// caso y la revelación responde de verdad.
 export function makeKinestheticPrediction(moduleTitle: string, conceptIdx: number): LearningJourneyStep {
   const meta: PredictionMeta = {
-    question: `Antes de continuar: ¿cómo crees que se comporta ${moduleTitle.toLowerCase()} en el siguiente caso?`,
-    reveal:   'A medida que avances, descubrirás el comportamiento real.',
-    hint:     'No hay respuesta incorrecta — es solo una predicción.',
+    question:
+      `Un caso antes de continuar: ejecutas tu primer ejercicio de ${moduleTitle.toLowerCase()} ` +
+      'y el resultado no es el que esperabas. ¿Qué crees que hizo la computadora: ' +
+      'lo que quisiste decir, o exactamente lo que escribiste?',
+    reveal:
+      'Exactamente lo que escribiste. La computadora nunca interpreta intenciones: ' +
+      'ejecuta instrucciones al pie de la letra. En las siguientes actividades verás ' +
+      'por qué esa diferencia lo cambia todo.',
+    hint: 'Recuerda: una computadora no adivina. ¿Qué le queda entonces por hacer?',
   }
   return {
     id:             `kin-pred-${conceptIdx}`,
