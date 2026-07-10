@@ -37,7 +37,7 @@ código
 | [RFC-0001](RFC-0001-vision.md) | Visión arquitectónica | Aceptado |
 | [RFC-0002](RFC-0002-domain-model.md) | Modelo de dominio: responsabilidades, resultados y capacidades | Aceptado |
 | [RFC-0003](RFC-0003-learning-state.md) | LearningState: anatomía, mutación e invariantes | Aceptado |
-| RFC-0004 | Graph Runtime (grafo principal y subgrafos) | Pendiente |
+| [RFC-0004](RFC-0004-execution-runtime.md) | Runtime de Ejecución y Modelo de Transiciones | Aceptado |
 | RFC-0005 | Memoria | Pendiente |
 | RFC-0006 | Consenso e inteligencia de enjambre | Pendiente |
 | RFC-0007 | Observabilidad | Pendiente |
