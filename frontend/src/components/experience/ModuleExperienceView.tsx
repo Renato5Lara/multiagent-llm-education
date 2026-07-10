@@ -189,6 +189,25 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
       ? definition.closing.hypothesis.verdicts[openingAnswer.option] ?? null
       : null
 
+  // BUG-002 (C-51) — el cierre lo pronuncia el Agente Evaluador con la
+  // evidencia real observada (dominio + remediación), no una pantalla anónima.
+  // Decide el TONO, nunca el paso: continuar siempre es posible (PED-06).
+  const evaluatorVerdict = useMemo(() => {
+    if (phase !== 'slice_end') return null
+    const values = definition.cycles.map(c => mastery[c.conceptId] ?? 0)
+    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
+    const maxRemediation = readEvidence(moduleId)
+      .filter(e => e.type === 'remediation_level')
+      .reduce((max, e) => Math.max(max, Number(e.detail.level) || 0), 0)
+    if (avg >= 0.45 && maxRemediation === 0) {
+      return 'Observé tus prácticas: construiste este concepto por tu cuenta, sin necesitar apoyo. Este territorio es tuyo — podemos continuar.'
+    }
+    if (avg >= 0.3) {
+      return 'Observé tus prácticas: lo resolviste con algo de apoyo. Es suficiente para avanzar — llevo anotado qué reforzar contigo más adelante.'
+    }
+    return 'Observé tus prácticas: este concepto todavía se está construyendo, y necesitaste mi ayuda máxima. Puedes continuar — lo dejé registrado para volver sobre él contigo.'
+  }, [definition.cycles, mastery, moduleId, phase])
+
   const bumpMastery = useCallback((conceptId: string, delta: number) => {
     setMastery(prev => ({
       ...prev,
@@ -494,6 +513,22 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
               )
             })}
           </div>
+
+          {/* BUG-002 — el Agente Evaluador se pronuncia sobre lo observado. */}
+          {evaluatorVerdict && (
+            <div className="rounded-xl border border-neural-pulse/25 bg-neural-pulse/5 px-4 py-3.5 flex gap-3">
+              <span className="relative flex h-2 w-2 shrink-0 mt-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-pulse opacity-60" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-pulse" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-neural-pulse mb-1">
+                  Agente Evaluador
+                </p>
+                <p className="text-sm text-neural-text/90 leading-relaxed">{evaluatorVerdict}</p>
+              </div>
+            </div>
+          )}
 
           {/* LEARN-002 — cierre del experimento: la hipótesis de la apertura
               recibe su veredicto ANTES del botón de salida. */}
