@@ -1,6 +1,7 @@
 # RFC-0000 — Proceso y plantilla de RFC
 
-- **Estado:** Aceptado (2026-07-10)
+- **Estado:** Aceptado (2026-07-10; rev. 2 el mismo día añade la revisión
+  por decisión irreversible, por orden del tesista — aplica desde RFC-0002)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -33,16 +34,20 @@ Aceptado → Supersedido (por RFC-NNNN posterior)
 Todo RFC contiene, en este orden:
 
 1. **Objetivo** — qué decisión se toma y qué problema resuelve.
-2. **Contexto** — estado actual, restricciones, relación con la hipótesis de
+2. **Decisión irreversible** — el compromiso difícil de revertir que se
+   asume al aceptar este RFC. La revisión comienza por esta sección: si la
+   decisión irreversible está bien tomada, los detalles secundarios no
+   bloquean la aceptación. *(Desde RFC-0002.)*
+3. **Contexto** — estado actual, restricciones, relación con la hipótesis de
    la tesis (qué pregunta de investigación fortalece).
-3. **Propuesta** — el diseño, con diagramas donde aporten.
-4. **Alternativas consideradas y rechazadas** — mínimo una, con la razón
+4. **Propuesta** — el diseño, con diagramas donde aporten.
+5. **Alternativas consideradas y rechazadas** — mínimo una, con la razón
    técnica del rechazo. *Sección obligatoria: un RFC sin alternativas no pasa
    a revisión.*
-5. **Ventajas / Riesgos / Impacto / Complejidad** — análisis explícito.
-6. **Recomendación** — posición del arquitecto, aunque contradiga propuestas
+6. **Ventajas / Riesgos / Impacto / Complejidad** — análisis explícito.
+7. **Recomendación** — posición del arquitecto, aunque contradiga propuestas
    previas del tesista.
-7. **Consecuencias** — qué queda prohibido, qué deuda se asume, qué RFCs
+8. **Consecuencias** — qué queda prohibido, qué deuda se asume, qué RFCs
    futuros dependen de este.
 
 ## Reglas del proceso
