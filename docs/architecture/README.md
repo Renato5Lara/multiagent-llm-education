@@ -32,14 +32,14 @@ código
 
 | Documento | Título | Estado |
 |-----------|--------|--------|
-| [Constitución](FOUNDATIONAL_PRINCIPLES.md) | Principios Fundacionales (P1–P13) | Aceptado |
+| [Constitución](FOUNDATIONAL_PRINCIPLES.md) | Principios Fundacionales (P1–P15; P14 reservado) | Aceptado |
 | [RFC-0000](RFC-0000-proceso.md) | Proceso y plantilla de RFC | Aceptado |
 | [RFC-0001](RFC-0001-vision.md) | Visión arquitectónica | Aceptado |
 | [RFC-0002](RFC-0002-domain-model.md) | Modelo de dominio: responsabilidades, resultados y capacidades | Aceptado |
 | [RFC-0003](RFC-0003-learning-state.md) | LearningState: anatomía, mutación e invariantes | Aceptado |
 | [RFC-0004](RFC-0004-execution-runtime.md) | Runtime de Ejecución y Modelo de Transiciones | Aceptado |
 | RFC-0005 | Memoria | Pendiente |
-| RFC-0006 | Consenso e inteligencia de enjambre | Pendiente |
+| [RFC-0006](RFC-0006-consenso-enjambre.md) | Consenso e Inteligencia de Enjambre | Borrador |
 | RFC-0007 | Observabilidad | Pendiente |
 | RFC-0008 | Checkpointing y persistencia | Pendiente |
 | RFC-0009 | Human in the Loop | Pendiente |
@@ -67,11 +67,9 @@ código
 Propuestas registradas pero NO incorporadas; si resultan rectoras, se elevan
 por el proceso de enmienda (RFC-0000).
 
-- **«La deliberación selecciona, jamás crea»** (CONCEPT-0002 §3;
-  candidata a principio por juicio del tesista, 2026-07-10 — "casi al
-  nivel de la Constitución"): protege la frontera capacidades/mecanismo.
-  Su elevación se decide en la aceptación del RFC-0006, donde la regla se
-  somete a su primera prueba de diseño.
+- **«La deliberación selecciona, jamás crea»** — **ELEVADA Y GENERALIZADA
+  a P15** (2026-07-10, enmienda aprobada por el tesista durante la
+  revisión del RFC-0006): el runtime nunca crea conocimiento de dominio.
 - **P14 — Inmutabilidad de la historia** (tesista, 2026-07-10): la historia de
   estados no se reescribe retrospectivamente; una corrección es un nuevo evento
   que produce un nuevo estado. Se evaluará durante RFC-0003 (LearningState) y

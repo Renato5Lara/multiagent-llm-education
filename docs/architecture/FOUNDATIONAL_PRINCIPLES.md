@@ -1,6 +1,8 @@
 # Principios Fundacionales — Runtime Multiagente UPAO-MAS-EDU
 
-- **Estado:** Aceptado (2026-07-10 — acta fundacional del nuevo runtime)
+- **Estado:** Aceptado (2026-07-10 — acta fundacional del nuevo runtime;
+  rev. 2 del mismo día: enmienda P15 aprobada por el tesista durante la
+  revisión del RFC-0006)
 - **Fecha:** 2026-07-10
 - **Autoridad:** Este documento está POR ENCIMA de los RFC. Un RFC puede
   desarrollar o ampliar un principio; no puede contradecirlo. Si un diseño
@@ -124,6 +126,21 @@ es lo estable (la capacidad, nunca su topología). El modelo de dominio
 (RFC-0002) se escribe en términos de capacidades; el runtime (RFC-0004)
 decide topologías, y puede cambiarlas sin tocar el dominio.
 
+## P15 — El runtime nunca crea conocimiento de dominio
+
+Toda afirmación y toda propuesta son autoradas por una capacidad o por el
+Platform Boundary. Los mecanismos de coordinación — deliberación,
+enrutamiento, reducers, scheduler — únicamente **seleccionan, ordenan,
+validan o descartan** conocimiento existente; jamás generan conocimiento
+nuevo. Si la respuesta correcta es una síntesis, el mecanismo reconvoca a
+una capacidad para que la proponga: un mecanismo que redacta es cognición
+central disfrazada.
+
+*Nota de numeración:* P14 está reservado para la propuesta registrada
+«Inmutabilidad de la historia» (ver README), pendiente de evaluación tras
+el RFC-0007; este principio se numera P15 para no invalidar referencias
+existentes.
+
 ---
 
 ## Procedencia
@@ -140,3 +157,8 @@ decide topologías, y puede cambiarlas sin tocar el dominio.
   propuestas del tesista** (segunda iteración). P12 fue reformulado por el
   arquitecto como "función pura del estado" para hacerlo compatible con el
   enrutamiento dependiente de contenido (ver RFC-0004 cuando exista).
+- **P15 nació como regla local** («la deliberación selecciona, jamás
+  crea», CONCEPT-0002 §3), fue registrada como candidata, superó su
+  primera prueba de diseño en el RFC-0006 (síntesis por reconvocatoria) y
+  fue elevada y **generalizada por el tesista** a prohibición sobre todo
+  el runtime (2026-07-10, enmienda aprobada explícitamente).
