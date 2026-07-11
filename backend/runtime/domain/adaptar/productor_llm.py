@@ -1,9 +1,11 @@
 """Productor de Adaptar — versión LLM (provenance `llm`).
 
-Mismo contrato que la versión regla: mismo `asunto`, mismo respaldo, las
-alternativas embebidas en la misma afirmación — únicamente cambia CÓMO
-se elige la modalidad (P13). El proveedor razona en categorías
-pedagógicas; jamás en recursos físicos (misma frontera que la regla).
+Mismo contrato que la versión regla: mismo `asunto`, mismo respaldo
+(incluida la señal de Tutorizar cuando existe, resuelta por el mismo
+recorrido causal), las alternativas embebidas en la misma afirmación —
+únicamente cambia CÓMO se elige la modalidad (P13). El proveedor razona
+en categorías pedagógicas; jamás en recursos físicos (misma frontera que
+la regla).
 """
 
 from __future__ import annotations
@@ -12,7 +14,10 @@ from decimal import Decimal
 
 from runtime.domain.adaptar.productor import DISENO_POR_ACCION
 from runtime.domain.adaptar.provider import FakeLLMProvider, LLMProvider
-from runtime.domain.shared.causal import competencia_de_decision
+from runtime.domain.shared.causal import (
+    competencia_de_decision,
+    senal_tutorizar_de_decision,
+)
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.kernel.state.entries import (
     Capacidad,
@@ -50,16 +55,20 @@ def producir(
         competencia = competencia_de_decision(estado, decision)
         if competencia is None:
             continue
+        senal_fact = senal_tutorizar_de_decision(estado, decision)
+        senal = senal_fact.contenido["senal"] if senal_fact is not None else None
         prompt = (
-            f"accion={accion} competencia={competencia}. Diseña la "
-            f"experiencia (modalidad, profundidad) con alternativas "
-            f"descartadas y su razón. Responde JSON."
+            f"accion={accion} competencia={competencia} senal={senal}. "
+            f"Diseña la experiencia (modalidad, profundidad) con "
+            f"alternativas descartadas y su razón, considerando la señal "
+            f"de sesión si existe. Responde JSON."
         )
         respuesta = ejecutar_roundtrip(
             proveedor,
             prompt,
             campos_requeridos=("modalidad", "profundidad", "confianza"),
         )
+        respaldo = (decision.id,) if senal_fact is None else (decision.id, senal_fact.id)
         return (
             TransitionIntent(
                 productor=Capacidad.ADAPTAR,
@@ -75,7 +84,7 @@ def producir(
                             "alternativas_descartadas", []
                         ),
                     },
-                    "respaldo": (decision.id,),
+                    "respaldo": respaldo,
                     "confianza": Decimal(str(respuesta["confianza"])),
                     "provenance": Provenance.de(
                         OrigenProvenance.LLM,

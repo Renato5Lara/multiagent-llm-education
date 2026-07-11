@@ -8,6 +8,7 @@ Adaptar decide categorías pedagógicas, nunca recursos físicos.
 from decimal import Decimal
 
 from runtime.domain.adaptar import FakeLLMProvider, producir, producir_llm
+from runtime.domain.shared.causal import senal_tutorizar_de_decision
 from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_decision, registrar_fact
 from runtime.kernel.state import (
     Capacidad,
@@ -132,3 +133,80 @@ class TestP13_AdaptarContratoCompartido:
         resultado = registrar_claim(estado, **intent.argumentos)
         assert isinstance(resultado, Aplicado)
         assert producir(resultado.estado) == ()
+
+
+def _estado_con_decision_y_senal(accion: str, senal: str) -> LearningState:
+    """PR-6: mismo fixture que `_estado_con_decision`, con un fact de
+    Tutorizar añadido — ligado causalmente (`fact_origen`) al mismo fact
+    original de Evaluar, nunca por posición."""
+    estado = _estado_con_decision(accion)
+    fact_evaluar_id = estado.facts[0].id
+    r_senal = registrar_fact(
+        estado,
+        autor=Capacidad.TUTORIZAR,
+        contenido={
+            "senal": senal,
+            "fact_origen": str(fact_evaluar_id),
+            "items_incorrectos": 3,
+            "items_totales": 10,
+        },
+        provenance=Provenance.de(OrigenProvenance.REGLA, id="deteccion-conductual-v1"),
+    )
+    assert isinstance(r_senal, Aplicado)
+    return r_senal.estado
+
+
+class TestP13_AdaptarConsumeSenalDeTutorizar:
+    """RFC-0002 §3: Adaptar lee "señales de sesión" y escribe su propuesta
+    "con las alternativas que evaluó" — deja de ser una tabla fija por
+    acción cuando la señal de Tutorizar existe en el estado (PR-6)."""
+
+    def test_resuelve_la_senal_por_causalidad_no_por_posicion(self):
+        estado = _estado_con_decision_y_senal("reforzar", "confusion")
+        decision = estado.decisiones[0]
+        senal_fact = senal_tutorizar_de_decision(estado, decision)
+        assert senal_fact is not None
+        assert senal_fact.contenido["senal"] == "confusion"
+
+    def test_la_misma_accion_produce_alternativas_distintas_segun_la_senal(self):
+        confusion = _estado_con_decision_y_senal("reforzar", "confusion")
+        frustracion = _estado_con_decision_y_senal("reforzar", "frustracion")
+
+        (intent_confusion,) = producir(confusion)
+        (intent_frustracion,) = producir(frustracion)
+
+        assert (
+            intent_confusion.argumentos["afirmacion"]["alternativas_descartadas"]
+            != intent_frustracion.argumentos["afirmacion"]["alternativas_descartadas"]
+        )
+
+    def test_el_respaldo_crece_al_fact_de_tutorizar_cuando_existe(self):
+        estado = _estado_con_decision_y_senal("reforzar", "frustracion")
+        decision = estado.decisiones[0]
+        senal_fact = senal_tutorizar_de_decision(estado, decision)
+
+        (intent,) = producir(estado)
+        assert intent.argumentos["respaldo"] == (decision.id, senal_fact.id)
+
+    def test_regla_y_llm_coinciden_en_variar_por_senal(self):
+        estado = _estado_con_decision_y_senal("reforzar", "frustracion")
+        (intent_regla,) = producir(estado)
+        (intent_llm,) = producir_llm(estado, proveedor=FakeLLMProvider())
+
+        for intent in (intent_regla, intent_llm):
+            razones = {
+                alt["modalidad"]
+                for alt in intent.argumentos["afirmacion"]["alternativas_descartadas"]
+            }
+            assert razones == {"guiado", "practica"}
+
+    def test_sin_senal_en_el_estado_se_mantiene_el_diseno_por_accion(self):
+        # Regresión: los fixtures sin Tutorizar (María, P13 base) no deben
+        # cambiar de comportamiento — respaldo de un solo elemento.
+        estado = _estado_con_decision("reforzar")
+        (intent,) = producir(estado)
+        assert intent.argumentos["respaldo"] == (estado.decisiones[0].id,)
+        assert intent.argumentos["afirmacion"]["alternativas_descartadas"] == (
+            {"modalidad": "textual", "razon": "ya insuficiente en el intento anterior"},
+            {"modalidad": "ejemplo-codigo", "razon": "prematuro sin el concepto consolidado"},
+        )
