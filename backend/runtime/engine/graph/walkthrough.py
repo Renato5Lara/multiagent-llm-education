@@ -102,7 +102,15 @@ def enrutar(grafo: EstadoGrafo) -> str:
     return END
 
 
-def _construir(almacen: AlmacenTransiciones, identidad: Identidad):
+def _construir(
+    almacen: AlmacenTransiciones,
+    identidad: Identidad,
+    productor_diagnostico: Callable = producir_diagnostico,
+):
+    """`productor_diagnostico` es inyectable (por defecto, la versión
+    regla) — demuestra P13: el grafo, el scheduler, los reducers y el
+    checkpoint no cambian una línea al intercambiar la implementación de
+    una capacidad (ADR-0005 §7, guardián de P13)."""
     def aplicar(grafo: EstadoGrafo) -> dict:
         """El portal del Kernel: reducir → encadenar → persistir, por
         transición — el checkpoint ocurre antes de la siguiente activación."""
@@ -130,7 +138,7 @@ def _construir(almacen: AlmacenTransiciones, identidad: Identidad):
 
     grafo = StateGraph(EstadoGrafo)
     grafo.add_node("aplicar", aplicar)
-    grafo.add_node("diagnosticar", _nodo_productor(producir_diagnostico))
+    grafo.add_node("diagnosticar", _nodo_productor(productor_diagnostico))
     grafo.add_node("remediar", _nodo_productor(producir_remediacion))
     grafo.add_node("orientar", _nodo_productor(producir_orientacion))
     grafo.add_node("deliberar", _nodo_deliberar)
@@ -147,6 +155,7 @@ def ejecutar_walkthrough(
     almacen: AlmacenTransiciones,
     identidad: Identidad,
     hechos_del_mundo: tuple[TransitionIntent, ...],
+    productor_diagnostico: Callable = producir_diagnostico,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → diagnóstico → tensión →
     deliberación → decisión, con checkpoint por transición."""
@@ -158,4 +167,4 @@ def ejecutar_walkthrough(
         "intents": hechos_del_mundo,
         "registros": (),
     }
-    return _construir(almacen, identidad).invoke(inicial)
+    return _construir(almacen, identidad, productor_diagnostico).invoke(inicial)

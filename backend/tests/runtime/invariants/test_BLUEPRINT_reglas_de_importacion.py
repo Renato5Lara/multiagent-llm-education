@@ -72,8 +72,10 @@ class TestBLUEPRINT_LimitesFisicos:
 
     def test_ADR_0001_json_dumps_solo_en_canonical(self):
         # Único punto de serialización (orden del tesista, 2026-07-11).
+        # La búsqueda exige la invocación real "json.dumps(" — no basta
+        # con mencionarla en un comentario o docstring.
         for fuente in _fuentes():
-            if "json.dumps" in fuente.read_text(encoding="utf-8"):
+            if "json.dumps(" in fuente.read_text(encoding="utf-8"):
                 assert (
                     fuente.name == "canonical.py"
-                ), f"json.dumps fuera del punto único: {fuente}"
+                ), f"json.dumps() invocado fuera del punto único: {fuente}"
