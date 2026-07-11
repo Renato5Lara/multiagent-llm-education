@@ -9,6 +9,11 @@ EntryId en su forma textual; dataclasses por campos.
 **El float binario está prohibido en el registro** (A3): su
 representación no es reproducible entre plataformas. Los payloads usan
 entero, texto o Decimal.
+
+**Único punto autorizado de serialización del runtime** (recomendación
+del tesista, Engineering Review 2026-07-11): toda serialización pasa por
+``a_canonico``. Ningún otro módulo del runtime invoca ``json.dumps``
+directamente — regla candidata al lint de imports del CI (ADR-0005 §5).
 """
 
 from __future__ import annotations
