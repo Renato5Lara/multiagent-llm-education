@@ -38,8 +38,17 @@ def producir(
         if claim.tipo is TipoClaim.INTERPRETACION and claim.vigencia.vigente:
             prompt = (
                 f"Existe una interpretación vigente sobre el estudiante "
-                f"(claim {claim.id}). ¿Conviene avanzar al siguiente "
-                f"objetivo de la ruta? Responde JSON."
+                f"(claim {claim.id}). La política ruta-v1 propone avanzar "
+                f"al siguiente objetivo con andamiaje adicional como "
+                f"CANDIDATA en la deliberación — no es una decisión final "
+                f"ni un juicio tuyo sobre si conviene: eso lo resuelve "
+                f"después el Kernel comparando esta propuesta contra la "
+                f'de Remediar. Responde JSON con esta forma EXACTA y en '
+                f'este ORDEN: primero "razonamiento" (por qué '
+                f"avanzar-con-andamiaje es una propuesta razonable aquí), "
+                f'luego "accion" (STRING, debe ser exactamente '
+                f'"avanzar-con-andamiaje"), luego "confianza" (STRING con '
+                f'formato decimal entre "0.00" y "1.00", ejemplo "0.78").'
             )
             respuesta = ejecutar_roundtrip(
                 proveedor, prompt, campos_requeridos=("accion", "confianza")
