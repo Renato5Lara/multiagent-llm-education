@@ -15,7 +15,7 @@ from runtime.kernel.state.entries import (
 from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
 
-_ASUNTO = "siguiente-paso(sesion)"
+ASUNTO_SIGUIENTE_PASO = "siguiente-paso(sesion)"
 
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
@@ -33,7 +33,7 @@ def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
                     argumentos={
                         "autor": Capacidad.ORIENTAR,
                         "tipo": TipoClaim.PROPUESTA,
-                        "asunto": _ASUNTO,
+                        "asunto": ASUNTO_SIGUIENTE_PASO,
                         "afirmacion": {"accion": "avanzar-con-andamiaje"},
                         "respaldo": (claim.id,),
                         "confianza": Decimal("0.75"),

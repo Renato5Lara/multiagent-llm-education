@@ -107,6 +107,7 @@ def _construir(
     identidad: Identidad,
     productor_diagnostico: Callable = producir_diagnostico,
     productor_remediar: Callable = producir_remediacion,
+    productor_orientar: Callable = producir_orientacion,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -141,7 +142,7 @@ def _construir(
     grafo.add_node("aplicar", aplicar)
     grafo.add_node("diagnosticar", _nodo_productor(productor_diagnostico))
     grafo.add_node("remediar", _nodo_productor(productor_remediar))
-    grafo.add_node("orientar", _nodo_productor(producir_orientacion))
+    grafo.add_node("orientar", _nodo_productor(productor_orientar))
     grafo.add_node("deliberar", _nodo_deliberar)
     grafo.add_node("decidir", _nodo_decidir)
 
@@ -158,6 +159,7 @@ def ejecutar_walkthrough(
     hechos_del_mundo: tuple[TransitionIntent, ...],
     productor_diagnostico: Callable = producir_diagnostico,
     productor_remediar: Callable = producir_remediacion,
+    productor_orientar: Callable = producir_orientacion,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → diagnóstico → tensión →
     deliberación → decisión, con checkpoint por transición."""
@@ -170,5 +172,5 @@ def ejecutar_walkthrough(
         "registros": (),
     }
     return _construir(
-        almacen, identidad, productor_diagnostico, productor_remediar
+        almacen, identidad, productor_diagnostico, productor_remediar, productor_orientar
     ).invoke(inicial)
