@@ -77,6 +77,12 @@ del código. Los tres son filas de evidencia estándar del Engineering
 Gate. La herramienta concreta de lint de imports es implementación; su
 obligación, de este ADR.
 
+*Rev. 2 (2026-07-11, orden del tesista):* el lint incluye la regla del
+punto único de serialización — **`json.dumps` está prohibido fuera de
+`canonical.py`** y el CI falla automáticamente si aparece. El lint se
+implementa como suite de pytest (las reglas de importación son tests de
+contrato, no tooling aparte).
+
 ### 6. Fixtures
 
 Constructores compartidos por sobre (`_fact()`, `_claim()`, `_estado()`)
