@@ -4,6 +4,13 @@
 Events (INV-10). Exactamente dos resultados: aplicado o
 rechazado-y-registrado — el aplazamiento es un resultado de deliberación,
 jamás de reducer (RFC-0003 §4; P5).
+
+Convención (tesista, 2026-07-10): **cada reducer responde exactamente una
+pregunta** — registrar_fact: ¿puede existir este hecho?; registrar_claim:
+¿puede existir este claim?; superseder_*: ¿puede dejar de ser vigente?;
+registrar_decision: ¿puede existir esta decisión?; registrar_deliberacion:
+¿puede existir este episodio? Cuando un reducer empiece a responder dos
+preguntas distintas, es el momento de dividirlo.
 """
 
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
