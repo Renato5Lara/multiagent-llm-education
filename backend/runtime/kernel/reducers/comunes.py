@@ -6,10 +6,12 @@ negocio (pregunta anti-deriva n.º 1 del Prompt Maestro).
 
 from __future__ import annotations
 
+import dataclasses
 import re
 
 from runtime.kernel.events import TransicionRechazada
 from runtime.kernel.reducers.resultado import Rechazado
+from runtime.kernel.state.entries import Vigencia
 
 _TOKEN_NORMA = re.compile(r"^[A-Z][A-Z0-9-]*$")
 
@@ -28,4 +30,14 @@ def rechazo(indice: int, norma: str, motivo: str) -> Rechazado:
         eventos=(
             TransicionRechazada(transicion=indice, invariante=norma, motivo=motivo),
         ),
+    )
+
+
+def marcar_supersedida(entradas: tuple, objetivo, por) -> tuple:
+    """Marca `superseded-por` en el nuevo estado — jamás reescribe el previo."""
+    return tuple(
+        dataclasses.replace(e, vigencia=Vigencia(superseded_por=por))
+        if e.id == objetivo
+        else e
+        for e in entradas
     )

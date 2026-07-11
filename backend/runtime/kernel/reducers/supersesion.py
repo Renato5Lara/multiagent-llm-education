@@ -21,7 +21,7 @@ from runtime.kernel.events import (
     EntradaSupersedida,
     FactRegistrado,
 )
-from runtime.kernel.reducers.comunes import norma_de, rechazo
+from runtime.kernel.reducers.comunes import marcar_supersedida, norma_de, rechazo
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
 from runtime.kernel.state.entries import (
     Capacidad,
@@ -30,7 +30,6 @@ from runtime.kernel.state.entries import (
     FactEntry,
     Provenance,
     TipoClaim,
-    Vigencia,
 )
 from runtime.kernel.state.state import LearningState
 
@@ -60,13 +59,7 @@ def _validar_objetivo(
     return entrada
 
 
-def _marcar(entradas: tuple, objetivo: EntryId, por: EntryId) -> tuple:
-    return tuple(
-        dataclasses.replace(e, vigencia=Vigencia(superseded_por=por))
-        if e.id == objetivo
-        else e
-        for e in entradas
-    )
+_marcar = marcar_supersedida
 
 
 def superseder_fact(

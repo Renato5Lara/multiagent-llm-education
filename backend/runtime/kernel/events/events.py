@@ -61,3 +61,12 @@ class DecisionRegistrada(DomainEvent):
     entry_id: EntryId
     origen: EntryId
     asunto: str
+
+
+@dataclass(frozen=True, slots=True)
+class DeliberacionRegistrada(DomainEvent):
+    """Episodio de consenso registrado (INV-7); nunca opaco."""
+
+    entry_id: EntryId
+    asunto: str
+    resultado: str  # resuelta | aplazada | escalada

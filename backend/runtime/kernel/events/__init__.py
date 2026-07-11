@@ -8,6 +8,7 @@ señal de control.
 from runtime.kernel.events.events import (
     ClaimRegistrado,
     DecisionRegistrada,
+    DeliberacionRegistrada,
     DomainEvent,
     EntradaSupersedida,
     FactRegistrado,
@@ -17,6 +18,7 @@ from runtime.kernel.events.events import (
 __all__ = [
     "ClaimRegistrado",
     "DecisionRegistrada",
+    "DeliberacionRegistrada",
     "DomainEvent",
     "EntradaSupersedida",
     "FactRegistrado",
