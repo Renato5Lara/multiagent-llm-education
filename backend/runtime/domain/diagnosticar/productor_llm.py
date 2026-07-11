@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from runtime.domain.diagnosticar.productor import _UMBRAL_ERRORES
 from runtime.domain.diagnosticar.provider import FakeLLMProvider, LLMProvider
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.kernel.state.entries import (
@@ -43,10 +44,16 @@ def producir(
         errores = len(fact.contenido.get("items_incorrectos", ()))
         prompt = (
             f"Competencia={fact.contenido['competencia']} "
-            f"items_incorrectos={errores}. ¿Está dominada? Responde JSON "
-            f"con dominada, errores, razonamiento, y confianza — "
-            f'confianza como STRING con formato decimal entre "0.00" y '
-            f'"1.00" (ejemplo: "0.80"), nunca como palabra ni como número.'
+            f"items_incorrectos={errores}. Una competencia se considera "
+            f"DOMINADA cuando tiene menos de {_UMBRAL_ERRORES} items "
+            f"incorrectos (regla scoring-v1). Responde JSON con esta "
+            f'forma EXACTA y en este ORDEN: primero "razonamiento" '
+            f"(explica el criterio y aplica la regla paso a paso), luego "
+            f'"errores" (el número de items incorrectos), luego '
+            f'"dominada" (booleano, DEBE ser consistente con la '
+            f'conclusión de tu razonamiento), luego "confianza" (STRING '
+            f'con formato decimal entre "0.00" y "1.00", ejemplo "0.80", '
+            f"nunca como palabra ni como número)."
         )
         respuesta = ejecutar_roundtrip(
             proveedor, prompt, campos_requeridos=("dominada", "errores", "confianza")

@@ -46,7 +46,13 @@ _TRANSITORIAS: tuple[type[Exception], ...] = (
 class OpenAIProvider:
     """`version` identifica esta implementación de proveedor (mecanismo
     de obtención, RFC-0007 H5) — no el snapshot del modelo, que OpenAI no
-    garantiza estable entre llamadas; `modelo` es el nombre solicitado."""
+    garantiza estable entre llamadas; `modelo` es el nombre solicitado.
+
+    `temperature=0` por defecto (M3 PR-2, hallazgo empírico): con
+    temperature por defecto de la API, Diagnosticar-LLM contradecía la
+    política scoring-v1 de forma no reproducible entre llamadas
+    idénticas. Sobrescribible por capacidad/experimento; ninguna lo hace
+    todavía."""
 
     version = "openai-chat-v1"
 
@@ -58,10 +64,12 @@ class OpenAIProvider:
         esquema: Mapping[str, Any] | None = None,
         cliente: OpenAI | None = None,
         intentos: int = 3,
+        temperature: float = 0,
     ):
         self.modelo = modelo
         self._esquema = esquema
         self._intentos = intentos
+        self._temperature = temperature
         self._cliente = cliente or OpenAI(
             api_key=api_key or os.environ["OPENAI_API_KEY"]
         )
@@ -78,6 +86,7 @@ class OpenAIProvider:
                 model=self.modelo,
                 messages=[{"role": "user", "content": prompt}],
                 response_format=response_format,
+                temperature=self._temperature,
             )
             latencia_ms = (time.monotonic() - inicio) * 1000
             eleccion = respuesta.choices[0]
