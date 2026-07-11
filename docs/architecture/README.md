@@ -113,9 +113,14 @@ requisito previo a consecuencia del modelo.
   (Aceptado): cinco categorías con un destino cada una; «un bug jamás se
   disfraza de rechazo»; lo inclasificado es defecto del software.
 - [ADR-0005](ADR/ADR-0005-testing-strategy.md) — Estrategia de Pruebas
-  (Aceptado): cinco suites (el walkthrough como test de integración
-  canónico), token canónico de norma (`pytest -k INV_5`), cobertura de
-  contrato, CI con lint de imports.
+  (Aceptado, rev. 2): cinco suites (el walkthrough como test de
+  integración canónico), token canónico de norma (`pytest -k INV_5`),
+  cobertura de contrato, lint como suite (`json.dumps` prohibido fuera
+  de canonical.py).
+- [ADR-0006](ADR/ADR-0006-langgraph-adapter-rules.md) — Reglas del
+  Adaptador LangGraph (Aceptado): ocho reglas para el único módulo con
+  tecnología externa; el checkpointer nativo jamás es fuente de verdad;
+  el estado visible por un nodo es inmutable.
 
 ## Implementation Phase
 
