@@ -20,7 +20,7 @@ def _estado() -> LearningState:
     )
 
 
-class TestRegistrarFact:
+class TestINV_4_RegistrarFact:
     def test_aplicado_produce_estado_nuevo_y_evento(self):
         antes = _estado()
         resultado = registrar_fact(
@@ -37,7 +37,7 @@ class TestRegistrarFact:
         assert evento.transicion == 1
         assert str(evento.entry_id) == "T-000001/e1"
 
-    def test_p14_el_estado_anterior_queda_intacto(self):
+    def test_P14_el_estado_anterior_queda_intacto(self):
         antes = _estado()
         registrar_fact(
             antes,
@@ -62,7 +62,7 @@ class TestRegistrarFact:
         assert isinstance(evento, TransicionRechazada)
         assert evento.invariante == "INV-4"
 
-    def test_tiempo_logico_avanza_por_transicion(self):
+    def test_A4_tiempo_logico_avanza_por_transicion(self):
         # A4: la edad se mide en transiciones, jamás en reloj de pared.
         estado = _estado()
         for esperado in (1, 2, 3):

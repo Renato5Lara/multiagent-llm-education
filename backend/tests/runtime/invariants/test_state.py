@@ -45,7 +45,7 @@ def _fact(transicion: int = 1) -> FactEntry:
     )
 
 
-class TestInv1Identidad:
+class TestINV_1_Identidad:
     def test_identidad_completa_obligatoria(self):
         with pytest.raises(ValueError, match="INV-1"):
             Identidad(
@@ -58,7 +58,7 @@ class TestInv1Identidad:
             )
 
 
-class TestInv2Inmutabilidad:
+class TestINV_2_Inmutabilidad:
     def test_el_estado_es_congelado(self):
         estado = _estado()
         with pytest.raises(dataclasses.FrozenInstanceError):
@@ -69,14 +69,14 @@ class TestInv2Inmutabilidad:
             _identidad().spec_version = "otra"  # type: ignore[misc]
 
 
-class TestInv3AppendOnly:
+class TestINV_3_AppendOnly:
     def test_las_secciones_historicas_son_tuplas(self):
         estado = _estado(facts=(_fact(),))
         assert isinstance(estado.facts, tuple)
         with pytest.raises(AttributeError):
             estado.facts.append(_fact(2))  # type: ignore[attr-defined]
 
-    def test_una_transicion_produce_un_estado_nuevo_sin_tocar_el_anterior(self):
+    def test_P14_una_transicion_produce_un_estado_nuevo_sin_tocar_el_anterior(self):
         # P14: la historia jamás se reescribe — cada estado sigue intacto.
         antes = _estado()
         despues = dataclasses.replace(
@@ -87,7 +87,7 @@ class TestInv3AppendOnly:
         assert len(despues.facts) == 1
 
 
-class TestConsultas:
+class TestINV_5_ConsultasDeVigencia:
     def test_buscar_por_id(self):
         fact = _fact()
         estado = _estado(facts=(fact,), transicion=1)

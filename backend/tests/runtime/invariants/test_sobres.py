@@ -47,7 +47,7 @@ def _claim(**kwargs) -> ClaimEntry:
     return ClaimEntry(**base)
 
 
-class TestInv4Facts:
+class TestINV_4_Facts:
     def test_un_fact_jamas_lleva_respaldo_por_construccion(self):
         # INV-4: la asimetría es estructural — el campo no existe.
         assert not hasattr(_fact(), "respaldo")
@@ -63,7 +63,7 @@ class TestInv4Facts:
             _fact(autor="frontend")
 
 
-class TestInv5Claims:
+class TestINV_5_Claims:
     def test_claim_valido(self):
         claim = _claim()
         assert claim.vigencia.vigente
@@ -81,17 +81,17 @@ class TestInv5Claims:
         with pytest.raises(ValueError, match="asunto"):
             _claim(asunto="")
 
-    def test_confianza_acotada_a1(self):
+    def test_A1_confianza_acotada(self):
         with pytest.raises(ValueError, match="A1"):
             _claim(confianza=Decimal("1.2"))
 
-    def test_confianza_exige_decimal_exacto(self):
+    def test_ADR_0001_confianza_decimal_exacta(self):
         # ADR-0001 §4: jamás coma flotante binaria en confianzas.
         with pytest.raises(ValueError, match="decimal"):
             _claim(confianza=0.78)
 
 
-class TestIdsDeterministas:
+class TestADR_0001_IdsDeterministas:
     def test_formato_canonico_adr_0001(self):
         assert str(EntryId(42, 1)) == "T-000042/e1"
 
@@ -104,7 +104,7 @@ class TestIdsDeterministas:
             EntryId(-1, 1)
 
 
-class TestVigencia:
+class TestINV_3_Vigencia:
     def test_corregir_es_superseder_jamas_editar(self):
         # INV-3/P14: la corrección es una nueva entrada que supersede.
         supersedida = Vigencia(superseded_por=EntryId(3, 1))
@@ -112,7 +112,7 @@ class TestVigencia:
         assert Vigencia().vigente
 
 
-class TestDeliberacion:
+class TestP8_Deliberacion:
     def test_sin_desacuerdo_posible_no_se_convoca(self):
         # P8: el ceremonial sin desacuerdo posible está prohibido.
         with pytest.raises(ValueError, match="P8"):
