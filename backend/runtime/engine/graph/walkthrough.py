@@ -19,6 +19,8 @@ from langgraph.graph import END, START, StateGraph
 from runtime.domain.diagnosticar import producir as producir_diagnostico
 from runtime.domain.orientar import producir as producir_orientacion
 from runtime.domain.remediar import producir as producir_remediacion
+from runtime.domain.validar import producir as producir_validacion
+from runtime.domain.validar.productor import competencia_de_decision, evidencia_de_validacion
 from runtime.engine.checkpoint import (
     AlmacenTransiciones,
     RegistroTransicion,
@@ -37,7 +39,7 @@ from runtime.kernel.reducers import (
     registrar_fact,
     validar_decision,
 )
-from runtime.kernel.state.entries import Capacidad, TipoClaim
+from runtime.kernel.state.entries import Capacidad, EstadoValidacion, TipoClaim
 from runtime.kernel.state.state import Identidad, LearningState
 from runtime.kernel.transitions import TransitionIntent
 
@@ -75,12 +77,31 @@ def _nodo_decidir(grafo: EstadoGrafo) -> dict:
     return {"intents": (intent,) if intent else ()}
 
 
+def _decision_lista_para_validar(estado: LearningState) -> bool:
+    """Guardia segura (PR-2): mismo criterio de disparo que
+    `domain.validar.producir` — evita rutear a "validar" cuando su propio
+    contrato todavía no dispararía (falta el fact posterior de Evaluar),
+    lo que produciría un ciclo aplicar→enrutar sin avance."""
+    for decision in estado.decisiones:
+        if decision.estado_validacion is not EstadoValidacion.PENDIENTE_DE_VALIDACION:
+            continue
+        if not decision.vigencia.vigente:
+            continue
+        competencia = competencia_de_decision(estado, decision)
+        if competencia is None:
+            continue
+        original, _ = evidencia_de_validacion(estado, decision, competencia)
+        if original is not None:
+            return True
+    return False
+
+
 def enrutar(grafo: EstadoGrafo) -> str:
     """Función pura del estado (P12): nadie decide quién sigue, salvo el
     estado mismo. El orden de los chequeos ES el programa pedagógico."""
     estado = grafo["estado"]
     if estado.decisiones:
-        return END
+        return "validar" if _decision_lista_para_validar(estado) else END
     if estado.deliberaciones:
         return "decidir"
     if tension_bloqueante(estado) is not None:
@@ -110,6 +131,7 @@ def _construir(
     productor_diagnostico: Callable = producir_diagnostico,
     productor_remediar: Callable = producir_remediacion,
     productor_orientar: Callable = producir_orientacion,
+    productor_validar: Callable = producir_validacion,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -147,9 +169,12 @@ def _construir(
     grafo.add_node("orientar", _nodo_productor(productor_orientar))
     grafo.add_node("deliberar", _nodo_deliberar)
     grafo.add_node("decidir", _nodo_decidir)
+    grafo.add_node("validar", _nodo_productor(productor_validar))
 
     grafo.add_edge(START, "aplicar")  # aplica los hechos sembrados (E2)
-    for productor in ("diagnosticar", "remediar", "orientar", "deliberar", "decidir"):
+    for productor in (
+        "diagnosticar", "remediar", "orientar", "deliberar", "decidir", "validar",
+    ):
         grafo.add_edge(productor, "aplicar")
     grafo.add_conditional_edges("aplicar", enrutar)
     return grafo.compile()
@@ -162,9 +187,11 @@ def ejecutar_walkthrough(
     productor_diagnostico: Callable = producir_diagnostico,
     productor_remediar: Callable = producir_remediacion,
     productor_orientar: Callable = producir_orientacion,
+    productor_validar: Callable = producir_validacion,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → diagnóstico → tensión →
-    deliberación → decisión, con checkpoint por transición."""
+    deliberación → decisión (→ validación, si ya hay evidencia posterior),
+    con checkpoint por transición."""
     almacen.abrir_sesion(identidad)
     inicial: EstadoGrafo = {
         "estado": LearningState(
@@ -174,5 +201,10 @@ def ejecutar_walkthrough(
         "registros": (),
     }
     return _construir(
-        almacen, identidad, productor_diagnostico, productor_remediar, productor_orientar
+        almacen,
+        identidad,
+        productor_diagnostico,
+        productor_remediar,
+        productor_orientar,
+        productor_validar,
     ).invoke(inicial)
