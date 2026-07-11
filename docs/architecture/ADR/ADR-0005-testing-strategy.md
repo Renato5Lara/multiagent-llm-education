@@ -89,6 +89,26 @@ Constructores compartidos por sobre (`_fact()`, `_claim()`, `_estado()`)
 se consolidan en `tests/runtime/conftest.py` cuando el tercer test los
 repita — regla de tres, no anticipación.
 
+### 7. Regresiones planificadas (por disparador)
+
+No se escriben hasta que exista el código que verifican (regla de
+no-anticipación); se registran aquí para que nazcan con él.
+
+- **Guardián de P13** — *disparador: la primera capacidad con versión LLM.*
+  Test parametrizado sobre las implementaciones de una misma capacidad
+  (regla y LLM); compara únicamente el **contrato del claim** — tipo,
+  asunto, provenance, estructura — y **jamás el contenido**. Demuestra que
+  la implementación se intercambia sin alterar la interfaz.
+- **Experimento de H10** — *disparador: la segunda versión de política.*
+  **Re-derivación contrafactual** (RFC-0008 §3), no dos corridas vivas: se
+  toma la MISMA historia grabada (mismos facts, mismo no-determinismo LLM
+  registrado) y se recomputan enrutamiento y confianza efectiva bajo otra
+  política. Solo así "la historia, los hashes y la reconstrucción
+  permanecen intactos" es literalmente cierto (P14): una corrida viva de
+  `politica-v2` produciría su propia historia con sus propios hashes. El
+  test verifica que las divergencias aparecen únicamente donde la política
+  difiere, sobre una historia original que no se toca.
+
 ## Alternativas rechazadas
 
 - **Cobertura de líneas como métrica primaria**: mide ejecución, no
