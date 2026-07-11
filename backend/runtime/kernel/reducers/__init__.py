@@ -8,5 +8,12 @@ jamás de reducer (RFC-0003 §4; P5).
 
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
 from runtime.kernel.reducers.facts import registrar_fact
+from runtime.kernel.reducers.claims import registrar_claim
 
-__all__ = ["Aplicado", "Rechazado", "ResultadoReducer", "registrar_fact"]
+__all__ = [
+    "Aplicado",
+    "Rechazado",
+    "ResultadoReducer",
+    "registrar_claim",
+    "registrar_fact",
+]

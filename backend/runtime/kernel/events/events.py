@@ -8,7 +8,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from runtime.kernel.state.entries import Capacidad, EntryId, OrigenProvenance
+from runtime.kernel.state.entries import (
+    Capacidad,
+    EntryId,
+    OrigenProvenance,
+    TipoClaim,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -23,6 +28,14 @@ class FactRegistrado(DomainEvent):
     entry_id: EntryId
     autor: Capacidad | str
     origen: OrigenProvenance
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimRegistrado(DomainEvent):
+    entry_id: EntryId
+    autor: Capacidad
+    tipo: TipoClaim
+    asunto: str
 
 
 @dataclass(frozen=True, slots=True)

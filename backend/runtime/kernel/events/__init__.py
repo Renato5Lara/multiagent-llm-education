@@ -6,9 +6,10 @@ señal de control.
 """
 
 from runtime.kernel.events.events import (
+    ClaimRegistrado,
     DomainEvent,
     FactRegistrado,
     TransicionRechazada,
 )
 
-__all__ = ["DomainEvent", "FactRegistrado", "TransicionRechazada"]
+__all__ = ["ClaimRegistrado", "DomainEvent", "FactRegistrado", "TransicionRechazada"]
