@@ -109,6 +109,13 @@ requisito previo a consecuencia del modelo.
   (Aceptado): vector de versiones por sesión (`spec_version`, política,
   banco, student model) + `runtime_version` por transición; regla de
   comparabilidad de experimentos.
+- [ADR-0004](ADR/ADR-0004-error-handling.md) — Manejo de Errores
+  (Aceptado): cinco categorías con un destino cada una; «un bug jamás se
+  disfraza de rechazo»; lo inclasificado es defecto del software.
+- [ADR-0005](ADR/ADR-0005-testing-strategy.md) — Estrategia de Pruebas
+  (Aceptado): cinco suites (el walkthrough como test de integración
+  canónico), token canónico de norma (`pytest -k INV_5`), cobertura de
+  contrato, CI con lint de imports.
 
 ## Implementation Phase
 
