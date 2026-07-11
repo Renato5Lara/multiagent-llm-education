@@ -42,7 +42,13 @@ def producir(
         ):
             prompt = (
                 f"El estudiante no domina la competencia (claim {claim.id}). "
-                f"¿Qué acción de remediación recomiendas? Responde JSON."
+                f'La política remediacion-v1 indica reforzar la competencia '
+                f"antes de avanzar de tema. Responde JSON con esta forma "
+                f'EXACTA y en este ORDEN: primero "razonamiento" (por qué '
+                f'reforzar es la acción correcta aquí), luego "accion" '
+                f'(STRING, debe ser exactamente "reforzar"), luego '
+                f'"confianza" (STRING con formato decimal entre "0.00" y '
+                f'"1.00", ejemplo "0.85").'
             )
             respuesta = ejecutar_roundtrip(
                 proveedor, prompt, campos_requeridos=("accion", "confianza")
