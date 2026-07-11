@@ -129,6 +129,19 @@ Engineering Gate
 **Si existe incertidumbre:** no asumir, no improvisar, no diseñar —
 detenerse y preguntar.
 
+### Preguntas anti-deriva (antes de fusionar cualquier PR del runtime)
+
+El riesgo de la Implementation Phase no es arquitectónico: es la
+**deriva de implementación** — reducers que resuelven cosas "porque es
+práctico", capacidades que incorporan pequeñas reglas, helpers que
+esconden lógica de negocio. Cuatro preguntas; si cualquiera responde
+"no", el cambio se detiene antes de fusionarse:
+
+1. ¿La lógica nueva pertenece realmente al Aggregate (`LearningState`)?
+2. ¿La capacidad solo produce propuestas, o está empezando a decidir?
+3. ¿La transición sigue pasando por un reducer?
+4. ¿Existe un test que cite la norma que se implementó?
+
 ---
 
 ## PRINCIPIO FUNDAMENTAL
