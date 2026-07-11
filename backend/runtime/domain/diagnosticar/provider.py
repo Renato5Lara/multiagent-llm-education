@@ -1,38 +1,23 @@
-"""LLMProvider — la interfaz que aísla la capacidad del proveedor concreto.
+"""FakeLLMProvider de Diagnosticar — determinista, sin red (ADR-0005 §3).
 
-Interior libre de la capacidad (P13, RFC-0004 §4): el runtime no conoce
-esta interfaz, solo ve `TransitionIntent`s. Sustituir el proveedor
-(fake → OpenAI → Anthropic) no toca el Kernel, el Engine, los reducers ni
-el grafo — es exactamente la propiedad que el guardián de P13 verifica
-(ADR-0005 §7).
-
-`FakeLLMProvider` es determinista y no llama a ninguna API: cero costo,
-cero red, cero credenciales (ADR-0005 §3 — la capacidad puede doblar el
-LLM en sus tests; aquí, además, en su implementación de desarrollo).
+El contrato `LLMProvider` es compartido (domain/shared/llm.py); esta
+implementación es específica de Diagnosticar: espeja la regla de
+scoring-v1 leyendo el prompt, para que el guardián de P13 pueda comparar
+el CONTRATO producido por dos caminos de implementación distintos sin
+depender de una API externa.
 """
 
 from __future__ import annotations
 
 import re
-from typing import Protocol
 
+from runtime.domain.shared.llm import LLMProvider
 
-class LLMProvider(Protocol):
-    """Contrato mínimo: un prompt entra, texto sale."""
-
-    modelo: str
-    version: str
-
-    def generar(self, prompt: str) -> str: ...
+__all__ = ["LLMProvider", "FakeLLMProvider"]
 
 
 class FakeLLMProvider:
-    """Determinista: misma pregunta, misma respuesta — siempre.
-
-    No razona; espeja la regla de scoring-v1 leyendo el prompt, para que
-    el guardián de P13 pueda comparar el CONTRATO producido por dos
-    caminos de implementación distintos sin depender de una red externa.
-    """
+    """Determinista: misma pregunta, misma respuesta — siempre."""
 
     modelo = "fake-diagnostico-v1"
     version = "1"
