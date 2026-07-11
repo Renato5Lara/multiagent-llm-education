@@ -51,6 +51,11 @@ del tesista: elevarlas (P16/P17 por enmienda) o mantenerlas como reglas de
 RFC. El acta se cierra con esta anotación; la decisión puede tomarse en
 cualquier momento por el proceso de enmienda.
 
+**Resolución (mismo día):** el tesista decidió elevar ambas. **Enmienda
+Constitucional v1** ejecutada — P16 y P17 vigentes (Constitución rev. 4,
+D-035). La Constitución cierra en P1–P17. Ningún pendiente de gobernanza
+queda abierto.
+
 ## Lo que queda — y ya no es diseño
 
 Estructura de carpetas, interfaces, clases, adapters, wiring de LangGraph,

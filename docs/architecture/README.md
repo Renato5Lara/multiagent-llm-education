@@ -60,7 +60,7 @@ con el ciclo de vida del RFC-0000.
 
 | Documento | Título | Estado |
 |-----------|--------|--------|
-| [Constitución](FOUNDATIONAL_PRINCIPLES.md) | Principios Fundacionales (P1–P15) | Aceptado |
+| [Constitución](FOUNDATIONAL_PRINCIPLES.md) | Principios Fundacionales (P1–P17) | Aceptado |
 | [RFC-0000](RFC-0000-proceso.md) | Proceso y plantilla de RFC | Aceptado |
 | [RFC-0001](RFC-0001-vision.md) | Visión arquitectónica | Aceptado |
 | [RFC-0002](RFC-0002-domain-model.md) | Modelo de dominio: responsabilidades, resultados y capacidades | Aceptado |
@@ -146,15 +146,10 @@ por el proceso de enmienda (RFC-0000).
   Si el análisis experimental muestra sesgo sistemático por capacidad,
   ese hallazgo será un resultado de la tesis y su justificación de
   adopción futura.
-- **«La explicación se recorre, no se redacta»** (RFC-0007 §2.3; candidata
-  a principio por juicio del tesista, 2026-07-10): la explicación oficial
-  siempre debe poder reconstruirse desde la historia; un LLM puede
-  resumirla para un humano, jamás sustituirla. **Su elevación se decide en
-  la Closure Review.**
-- **«El humano participa por hechos, jamás por edición»** (RFC-0009;
-  candidata a principio por juicio del tesista, 2026-07-10 — "el mismo
-  estatus" que las dos reglas hermanas): protege P14, P7 y P6 a la vez.
-  **Su elevación se decide en la Closure Review.**
+- **«La explicación se recorre, no se redacta»** — **ELEVADA a P16**
+  (Enmienda Constitucional v1, 2026-07-10, tras la Closure Review).
+- **«El humano participa por hechos, jamás por edición»** — **ELEVADA a
+  P17** (Enmienda Constitucional v1, 2026-07-10, tras la Closure Review).
 
 ## Directorio
 

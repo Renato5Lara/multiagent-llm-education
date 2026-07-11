@@ -12,7 +12,7 @@
 
 | Término | Locus |
 |---------|-------|
-| P1–P15 (incl. Aggregate Root, regla de evidencia real, determinismo arquitectónico, capacidades antes que agentes, historia inmutable, el runtime no crea conocimiento) | Constitución |
+| P1–P17 (incl. Aggregate Root, regla de evidencia real, determinismo arquitectónico, capacidades antes que agentes, historia inmutable, el runtime no crea conocimiento, la explicación se recorre, el humano participa por hechos) | Constitución |
 | Ciclo de vida de documentos, decisión irreversible, enmienda, Revisión de Conformidad de Especificación | RFC-0000 |
 | Kernel, Graph Engine, Platform Boundary, Domain (las cuatro capas), regla de control, Runtime Contract, máquina/programa, ciclo canónico (Capturar → Interpretar → Deliberar → Adaptar → Validar) | RFC-0001 |
 | Responsabilidades R1–R7, resultado esperado, las ocho capacidades (Modelar, Diagnosticar, Orientar, Adaptar, Tutorizar, Evaluar, Remediar, Validar), Sesión de Aprendizaje (concepto agregador), modelo de propiedad, tensiones canónicas, criterio de existencia de capacidad | RFC-0002 |

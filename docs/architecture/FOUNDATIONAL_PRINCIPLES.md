@@ -1,8 +1,8 @@
 # Principios Fundacionales — Runtime Multiagente UPAO-MAS-EDU
 
 - **Estado:** Aceptado (2026-07-10 — acta fundacional del nuevo runtime;
-  rev. 2: enmienda P15 aprobada durante la revisión del RFC-0006;
-  rev. 3: enmienda P14 aprobada en la aceptación del RFC-0007)
+  rev. 2: enmienda P15; rev. 3: enmienda P14; rev. 4: Enmienda
+  Constitucional v1 — P16 y P17 elevados tras la Closure Review)
 - **Fecha:** 2026-07-10
 - **Autoridad:** Este documento está POR ENCIMA de los RFC. Un RFC puede
   desarrollar o ampliar un principio; no puede contradecirlo. Si un diseño
@@ -154,6 +154,24 @@ central disfrazada.
 reservado para «Inmutabilidad de la historia»; ambos quedaron consolidados
 el mismo día (2026-07-10) al elevarse P14 en la aceptación del RFC-0007.
 
+## P16 — La explicación se recorre, jamás se redacta
+
+La explicación oficial de toda decisión es el recorrido de su cadena
+causal en la historia — reconstruible, verificable, idéntica en cada
+lectura. Un modelo de lenguaje puede resumir ese recorrido para un
+humano; jamás sustituirlo: un resumen generado puede alucinar exactamente
+aquello que este sistema existe para demostrar que no se alucina.
+Protege P6, P7 y P12 a la vez.
+
+## P17 — El humano participa por hechos, jamás por edición
+
+Toda intervención humana entra al sistema como un hecho registrado (con
+su provenance); ninguna palabra humana modifica la historia — la agrega.
+El humano no participa del consenso: ejerce autoridad sobre él, desde
+fuera del runtime, y esa autoridad queda registrada con nombre y regla.
+Protege P14, la reconstrucción (RFC-0008) y la honestidad de la evidencia
+(P7).
+
 ---
 
 ## Procedencia
@@ -175,3 +193,9 @@ el mismo día (2026-07-10) al elevarse P14 en la aceptación del RFC-0007.
   primera prueba de diseño en el RFC-0006 (síntesis por reconvocatoria) y
   fue elevada y **generalizada por el tesista** a prohibición sobre todo
   el runtime (2026-07-10, enmienda aprobada explícitamente).
+- **P16 y P17 nacieron como reglas de RFC** (RFC-0007 §2.3 y RFC-0009),
+  fueron registradas como candidatas y elevadas juntas en la **Enmienda
+  Constitucional v1** (2026-07-10, tras la Closure Review), con el
+  criterio del tesista: dejaron de ser reglas locales — gobiernan varios
+  RFC simultáneamente, no hablan de tecnología sino de propiedades
+  fundamentales del sistema.
