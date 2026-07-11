@@ -129,6 +129,13 @@ Engineering Gate
 **Si existe incertidumbre:** no asumir, no improvisar, no diseñar —
 detenerse y preguntar.
 
+### Regla de derivación
+
+> **Si un atributo puede reconstruirse de forma determinista a partir del
+> origen, el reducer no debe persistirlo salvo razón explícita de
+> rendimiento o auditoría.** Los reducers derivan, no aceptan: cuantos
+> menos atributos copiados, menos inconsistencias posibles.
+
 ### Preguntas anti-deriva (antes de fusionar cualquier PR del runtime)
 
 El riesgo de la Implementation Phase no es arquitectónico: es la
