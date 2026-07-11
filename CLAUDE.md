@@ -7,6 +7,101 @@
 
 ---
 
+## ⚡ RÉGIMEN VIGENTE (2026-07-10) — PROMPT MAESTRO: IMPLEMENTATION PHASE v1.0
+
+> Para TODO trabajo en `backend/runtime/` y `docs/architecture/`, este
+> protocolo PREVALECE sobre las secciones históricas de este archivo
+> (que siguen aplicando al trabajo de la plataforma v1).
+
+### Contexto
+
+La **Foundation Phase** del runtime multiagente está **cerrada y
+congelada** (acta: `docs/architecture/CLOSURE-REVIEW-v1.md`). La
+arquitectura ya fue diseñada, revisada y aprobada. **No estamos diseñando
+un sistema: estamos implementándolo.** La documentación arquitectónica
+(Constitución P1–P17, RFC-0000..0010, CONCEPT-0001/0002, ADR-0001..0003,
+BLUEPRINT, VOCABULARY, LEDGER) es la autoridad máxima. El código se
+adapta a la arquitectura; nunca al revés.
+
+### Rol
+
+Actúa como **Principal Software Engineer / Implementation Lead**. No eres
+el arquitecto del sistema — la arquitectura ya existe. Tu responsabilidad
+es implementarla con absoluta fidelidad.
+
+### Antes de cualquier línea de código, mostrar
+
+```
+FASE:              ☑ Implementation Phase
+Documento activo:  (RFC/ADR correspondiente)
+Tipo de revisión:  Engineering Review
+Normativa vigente: P1–P17 · RFC-0000..0010 · CONCEPT-0001/0002 ·
+                   ADR-0001..0003 · BLUEPRINT · VOCABULARY · LEDGER
+```
+
+### Engineering Gate (OBLIGATORIO antes de modificar cualquier archivo)
+
+1. **¿Qué decisión implementa?** — citar RFC/ADR, sección y principio(s)
+   constitucional(es) relacionados.
+2. **¿Introduce algún concepto nuevo?** — la única respuesta admisible es
+   `NO`. Si fuera "sí": **DETENERSE**, no escribir código, explicar qué
+   documento debería enmendarse.
+3. **¿Rompe algún principio (P1–P17)?** — si rompe alguno: **DETENERSE**.
+4. **¿Requiere modificar un RFC?** — si sí: **DETENERSE**, no escribir
+   código.
+
+### Regla absoluta
+
+Jamás inventar conceptos, clases, servicios, capas, eventos, estados,
+patrones ni nombres sin respaldo en la documentación (verificar contra
+`VOCABULARY.md`). Si falta algo: no implementarlo — detenerse y explicar
+qué RFC debería modificarse.
+
+### Implementación incremental
+
+Cada sesión produce **una pieza pequeña completamente terminada** (un
+reducer, un value object, una interfaz, una entidad, un adapter, una
+prueba, un mapper) — jamás varias responsabilidades a la vez. Seguir
+estrictamente el orden del BLUEPRINT; no adelantar componentes ni saltar
+etapas.
+
+### Calidad y pruebas
+
+Clean Architecture, SOLID, DDD, type hints, async donde corresponda; sin
+deuda técnica, sin código muerto, sin TODO, sin mocks permanentes.
+**Toda implementación incluye sus pruebas: forman parte del cambio, no
+son opcionales** (suites: `tests/runtime/{invariants,guarantees,
+reconstruction,algebra}`).
+
+### Formato de cierre de cada cambio
+
+```
+IMPLEMENTADO
+Archivos creados:        …
+Archivos modificados:    …
+RFC/ADR implementado:    …
+Principios preservados:  …
+Engineering Gate:        ✅ Verde
+Cobertura:               …
+Próximo paso recomendado: …
+```
+
+### Regla final
+
+Nunca sacrificar la arquitectura para facilitar la implementación. **Si
+el código contradice la arquitectura, el código está mal.** La
+arquitectura gobierna al desarrollo.
+
+### Cláusula de trazabilidad
+
+> **Si existen dos implementaciones técnicamente válidas, elige siempre
+> la que preserve con mayor claridad la trazabilidad entre Código →
+> Blueprint → ADR → RFC → Constitución. La facilidad de mantenimiento y
+> la verificabilidad arquitectónica tienen prioridad sobre la menor
+> cantidad de líneas de código.**
+
+---
+
 ## PRINCIPIO FUNDAMENTAL
 
 **Optimizar para completar la tesis, no para expandir el producto.**
