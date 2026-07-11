@@ -110,6 +110,12 @@ requisito previo a consecuencia del modelo.
   banco, student model) + `runtime_version` por transición; regla de
   comparabilidad de experimentos.
 
+## Implementation Phase
+
+- [BLUEPRINT](BLUEPRINT.md) — estructura física del runtime (Aceptado):
+  reglas de importación vigiladas por CI, mapa RFC → código, cuatro
+  suites de aceptación como evidencia del Gate, orden de construcción.
+
 ## Revisiones
 
 - [CLOSURE-REVIEW-v1](CLOSURE-REVIEW-v1.md) — 2026-07-10: acta de cierre

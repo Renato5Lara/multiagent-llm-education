@@ -42,6 +42,8 @@
 | D-031 | Memoria = puente versionado entre sesiones (cargar al abrir / consolidar al cerrar / jamás durante; la memoria de trabajo es el LearningState); catálogo cerrado (student model con refuerzo consolidado, ruta, deuda H9-inter adoptada, resumen destilado); reputación de capacidad diferida post-tesis | RFC-0005 | Vigente |
 | D-032 | HITL: el humano participa por hechos jamás por edición; el docente ejerce autoridad EXTERNA sobre el consenso (no es un voto); el estudiante NO es HITL (es el sujeto del loop de aprendizaje); mínima intervención como criterio de escalada medible; escaladas no bloqueantes por defecto; human_reason como evidencia de investigación | RFC-0009 | Vigente |
 | D-033 | Contrato de integración: 4 entradas (abrir, hechos del mundo, palabra humana, cerrar) + 3 salidas (entregas, notificaciones de escalada, superficies de lectura); la plataforma no tiene reducers — ninguna operación de escritura del estado; la indisponibilidad no corrompe; el Legacy formalmente despedido, sin puente | RFC-0010 | Vigente |
+| D-034 | Blueprint: estructura física backend/runtime/ con reglas de importación vigiladas por CI (langgraph solo en engine/; ninguna capacidad importa a otra; el runtime jamás importa la plataforma ni el Legacy); 4 suites de aceptación como evidencia del Gate; orden de construcción kernel → checkpoint → consenso → grafo | BLUEPRINT | Vigente |
+| D-035 | Enmienda Constitucional v1: P16 («la explicación se recorre, jamás se redacta») y P17 («el humano participa por hechos, jamás por edición») elevados — dejaron de ser reglas locales: gobiernan varios RFC simultáneamente | Constitución rev. 4 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 
