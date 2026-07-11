@@ -394,3 +394,118 @@ class TestTutorizarIntegradoAlFlujo:
         estado = final["estado"]
         assert not any(f.autor is Capacidad.TUTORIZAR for f in estado.facts)
         assert estado.transicion == 7
+
+
+class TestCierreM2:
+    """Cierre de M2 (post PR-5): las ocho capacidades están cableadas al
+    grafo. Esta suite congela esa fotografía antes de PR-6.
+
+    Hallazgo de esta pasada, no un defecto: bajo el diseño actual,
+    `ejecutar_walkthrough` es una única invocación síncrona sin
+    reanudación (P10/RFC-0008 todavía no existen como mecanismo). Eso
+    hace que Validar (que exige un fact de Evaluar *posterior*, en
+    transicion, a la decisión) NUNCA pueda unirse al mismo recorrido
+    natural que Tutorizar (que exige que la decisión *todavía* no
+    exista). Ambas guardias son correctas por separado — el límite es
+    estructural, no un bug de PR-1..5. Por eso el cierre usa DOS tests
+    complementarios en vez de uno solo: el recorrido natural (6
+    capacidades + kernel, en un solo `invoke`) y la cadena causal
+    completa (las 8, con evidencia pre-sembrada — misma técnica de
+    PR-2/3)."""
+
+    def test_orden_natural_de_las_capacidades_en_un_solo_recorrido(self, esquema):
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        final = ejecutar_walkthrough(
+            almacen,
+            _identidad("s-cierre-m2-natural"),
+            TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo(),
+        )
+        estado, registros = final["estado"], final["registros"]
+
+        entradas = (
+            [(f.id.transicion, "fact", f.autor) for f in estado.facts]
+            + [(c.id.transicion, "claim", c.autor) for c in estado.claims]
+            + [(d.id.transicion, "delib", None) for d in estado.deliberaciones]
+            + [(d.id.transicion, "decision", None) for d in estado.decisiones]
+        )
+        entradas.sort(key=lambda e: e[0])
+        orden_observado = [(kind, autor) for _, kind, autor in entradas]
+
+        # El orden ES el programa pedagógico (enrutar, RFC-0004 §4):
+        # Tutorizar corre antes que exista ninguna decisión; Adaptar,
+        # apenas existe. Validar/Modelar no aparecen — ver docstring.
+        assert orden_observado == [
+            ("fact", Capacidad.EVALUAR),
+            ("fact", Capacidad.TUTORIZAR),
+            ("claim", Capacidad.DIAGNOSTICAR),
+            ("claim", Capacidad.REMEDIAR),
+            ("claim", Capacidad.ORIENTAR),
+            ("delib", None),
+            ("decision", None),
+            ("claim", Capacidad.ADAPTAR),
+        ]
+        assert not any(c.autor is Capacidad.VALIDAR for c in estado.claims)
+        assert not any(c.autor is Capacidad.MODELAR for c in estado.claims)
+
+        # P14 + RFC-0008: un registro persistido por transición aplicada,
+        # cadena de hashes verificable, lo persistido == lo ejecutado.
+        assert len(registros) == estado.transicion == 8
+        assert almacen.leer("s-cierre-m2-natural") == registros
+        assert verificar(_identidad("s-cierre-m2-natural"), registros) is None
+
+    def test_cadena_causal_completa_recorre_de_modelar_al_fact_original_sin_saltos(
+        self, esquema
+    ):
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        hechos, decision_id = TestValidarIntegradoAlFlujo._hechos_con_evidencia_completa()
+        final = ejecutar_walkthrough(
+            almacen, _identidad("s-cierre-m2-causal"), hechos
+        )
+        estado, registros = final["estado"], final["registros"]
+
+        # El recorrido causal es tipado y navegable por referencias (P6,
+        # RFC-0003 §5) — cada paso se resuelve con estado.buscar(), sin
+        # adivinar ningún eslabón: Modelar → Validar → Decisión → (claim
+        # de Remediar) → (claim de Diagnosticar) → fact original.
+        modelado = next(
+            c for c in estado.claims if c.autor is Capacidad.MODELAR and c.vigencia.vigente
+        )
+        veredicto = estado.buscar(modelado.respaldo[0])
+        assert veredicto.autor is Capacidad.VALIDAR
+
+        decision = estado.buscar(decision_id)
+        assert decision_id in veredicto.respaldo
+        assert decision.id == decision_id
+
+        claim_remediar = estado.buscar(decision.origen)
+        assert claim_remediar.autor is Capacidad.REMEDIAR
+
+        claim_diagnostico = estado.buscar(claim_remediar.respaldo[0])
+        assert claim_diagnostico.autor is Capacidad.DIAGNOSTICAR
+
+        fact_original = estado.buscar(claim_diagnostico.respaldo[0])
+        assert fact_original.autor is Capacidad.EVALUAR
+        assert fact_original.contenido["competencia"] == "COMP-2"
+
+        # Este fixture (sin rival de Orientar, sin items_totales) cubre
+        # Evaluar/Diagnosticar/Remediar/Adaptar/Validar/Modelar — no
+        # Orientar ni Tutorizar, que sí quedaron probados en
+        # test_orden_natural_de_las_capacidades_en_un_solo_recorrido. La
+        # UNIÓN de ambos tests de esta clase cubre las 8 (ver docstring).
+        autores_presentes = {c.autor for c in estado.claims} | {
+            f.autor for f in estado.facts
+        }
+        assert autores_presentes == {
+            Capacidad.EVALUAR,
+            Capacidad.DIAGNOSTICAR,
+            Capacidad.REMEDIAR,
+            Capacidad.ADAPTAR,
+            Capacidad.VALIDAR,
+            Capacidad.MODELAR,
+        }
+
+        assert len(registros) == estado.transicion
+        assert almacen.leer("s-cierre-m2-causal") == registros
+        assert verificar(_identidad("s-cierre-m2-causal"), registros) is None
