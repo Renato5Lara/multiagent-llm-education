@@ -312,3 +312,73 @@ class TestValidarIntegradoAlFlujo:
         estado = final["estado"]
         assert not any(c.autor is Capacidad.VALIDAR for c in estado.claims)
         assert estado.transicion == 6
+
+
+class TestTutorizarIntegradoAlFlujo:
+    """PR-4: Tutorizar deja de ser huérfana del grafo.
+
+    Su disparador es el PRIMER fact de Evaluar — pero exige
+    `items_totales` (domain.tutorizar.producir), campo que el fixture
+    canónico de María (`_hecho_del_mundo`, arriba) nunca sembró — solo
+    `items_incorrectos`. Por eso Tutorizar no se activa en ninguno de los
+    tests existentes (María, los guardianes P13, este mismo archivo): es
+    el comportamiento correcto de la guardia, no una omisión de PR-4. Este
+    test siembra su propio hecho, completo, para demostrar la integración."""
+
+    @staticmethod
+    def _hecho_del_mundo_completo() -> tuple[TransitionIntent, ...]:
+        return (
+            TransitionIntent(
+                productor=Capacidad.EVALUAR,
+                operacion="registrar_fact",
+                argumentos={
+                    "autor": Capacidad.EVALUAR,
+                    "contenido": {
+                        "competencia": "COMP-2",
+                        "items_incorrectos": [3, 4, 8],
+                        "items_totales": 10,
+                    },
+                    "provenance": Provenance.de(
+                        OrigenProvenance.INSTRUMENTO, banco="v2"
+                    ),
+                },
+                base=0,
+            ),
+        )
+
+    def test_tutorizar_detecta_la_senal_desde_el_primer_fact_de_evaluar(
+        self, esquema
+    ):
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        final = ejecutar_walkthrough(
+            almacen,
+            _identidad("s-tutorizar-integrado"),
+            self._hecho_del_mundo_completo(),
+        )
+        estado = final["estado"]
+
+        fact_evaluar = next(f for f in estado.facts if f.autor is Capacidad.EVALUAR)
+        senal = next(f for f in estado.facts if f.autor is Capacidad.TUTORIZAR)
+        assert senal.contenido["fact_origen"] == str(fact_evaluar.id)
+        assert senal.contenido["senal"] == "confusion"  # 3 de 10 incorrectos
+
+        # Tutorizar no bloquea nada: el resto del recorrido sigue intacto.
+        interpretacion = next(
+            c for c in estado.claims if c.tipo is TipoClaim.INTERPRETACION
+        )
+        assert interpretacion.autor is Capacidad.DIAGNOSTICAR
+        assert estado.decisiones
+
+    def test_sin_items_totales_tutorizar_no_dispara_igual_que_antes(self, esquema):
+        # Guardia segura: el fixture canónico de María no incluye
+        # items_totales — el recorrido debe seguir siendo idéntico al de
+        # antes de PR-4 (transicion == 6, sin fact de Tutorizar).
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        final = ejecutar_walkthrough(
+            almacen, _identidad("s-tutorizar-sin-total"), _hecho_del_mundo()
+        )
+        estado = final["estado"]
+        assert not any(f.autor is Capacidad.TUTORIZAR for f in estado.facts)
+        assert estado.transicion == 6

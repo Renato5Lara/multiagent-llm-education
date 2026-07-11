@@ -20,6 +20,7 @@ from runtime.domain.diagnosticar import producir as producir_diagnostico
 from runtime.domain.modelar import producir as producir_modelado
 from runtime.domain.orientar import producir as producir_orientacion
 from runtime.domain.remediar import producir as producir_remediacion
+from runtime.domain.tutorizar import producir as producir_tutoria
 from runtime.domain.validar import producir as producir_validacion
 from runtime.domain.validar.productor import competencia_de_decision, evidencia_de_validacion
 from runtime.engine.checkpoint import (
@@ -120,6 +121,27 @@ def _existe_veredicto_sin_modelar(estado: LearningState) -> bool:
     return False
 
 
+def _existe_fact_evaluar_sin_tutorizar(estado: LearningState) -> bool:
+    """Guardia segura (PR-4): mismo criterio de disparo que
+    `domain.tutorizar.producir` — un fact vigente de Evaluar que Tutorizar
+    todavía no procesó. Predicado estructural plano, igual que el de
+    Modelar (sin recorrido causal, sin importar domain.tutorizar)."""
+    for fact in estado.facts:
+        if fact.autor is not Capacidad.EVALUAR or not fact.vigencia.vigente:
+            continue
+        if not fact.contenido.get("items_totales"):
+            continue
+        ya_detecte = any(
+            f.autor is Capacidad.TUTORIZAR
+            and f.vigencia.vigente
+            and f.contenido.get("fact_origen") == str(fact.id)
+            for f in estado.facts
+        )
+        if not ya_detecte:
+            return True
+    return False
+
+
 def enrutar(grafo: EstadoGrafo) -> str:
     """Función pura del estado (P12): nadie decide quién sigue, salvo el
     estado mismo. El orden de los chequeos ES el programa pedagógico."""
@@ -134,6 +156,8 @@ def enrutar(grafo: EstadoGrafo) -> str:
         return "decidir"
     if tension_bloqueante(estado) is not None:
         return "deliberar"
+    if _existe_fact_evaluar_sin_tutorizar(estado):
+        return "tutorizar"
     interpretaciones = [
         c
         for c in estado.claims
@@ -161,6 +185,7 @@ def _construir(
     productor_orientar: Callable = producir_orientacion,
     productor_validar: Callable = producir_validacion,
     productor_modelar: Callable = producir_modelado,
+    productor_tutorizar: Callable = producir_tutoria,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -200,11 +225,12 @@ def _construir(
     grafo.add_node("decidir", _nodo_decidir)
     grafo.add_node("validar", _nodo_productor(productor_validar))
     grafo.add_node("modelar", _nodo_productor(productor_modelar))
+    grafo.add_node("tutorizar", _nodo_productor(productor_tutorizar))
 
     grafo.add_edge(START, "aplicar")  # aplica los hechos sembrados (E2)
     for productor in (
         "diagnosticar", "remediar", "orientar", "deliberar", "decidir",
-        "validar", "modelar",
+        "validar", "modelar", "tutorizar",
     ):
         grafo.add_edge(productor, "aplicar")
     grafo.add_conditional_edges("aplicar", enrutar)
@@ -220,10 +246,11 @@ def ejecutar_walkthrough(
     productor_orientar: Callable = producir_orientacion,
     productor_validar: Callable = producir_validacion,
     productor_modelar: Callable = producir_modelado,
+    productor_tutorizar: Callable = producir_tutoria,
 ) -> EstadoGrafo:
-    """Corre el Walkthrough-0001: hechos → diagnóstico → tensión →
-    deliberación → decisión (→ validación → modelado, si ya hay evidencia),
-    con checkpoint por transición."""
+    """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
+    → deliberación → decisión (→ validación → modelado, si ya hay
+    evidencia), con checkpoint por transición."""
     almacen.abrir_sesion(identidad)
     inicial: EstadoGrafo = {
         "estado": LearningState(
@@ -240,4 +267,5 @@ def ejecutar_walkthrough(
         productor_orientar,
         productor_validar,
         productor_modelar,
+        productor_tutorizar,
     ).invoke(inicial)
