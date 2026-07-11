@@ -67,7 +67,7 @@ con el ciclo de vida del RFC-0000.
 | [RFC-0007](RFC-0007-observabilidad.md) | Observabilidad | Borrador |
 | [RFC-0008](RFC-0008-checkpointing-persistencia.md) | Checkpointing y Persistencia | Aceptado |
 | [RFC-0009](RFC-0009-human-in-the-loop.md) | Human in the Loop | Aceptado |
-| RFC-0010 | Frontera con la plataforma (contrato de integración) | Pendiente |
+| [RFC-0010](RFC-0010-frontera-plataforma.md) | Frontera con la Plataforma (contrato de integración) | Aceptado |
 
 **Orden de diseño vigente** (decisión del tesista, 2026-07-10, supersede
 el orden interno de los transversales de RFC-0001): 0007 Observabilidad →
