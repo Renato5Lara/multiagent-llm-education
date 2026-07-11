@@ -12,6 +12,10 @@ con un grafo de estados compartido como única fuente de verdad.
 > de gobernanza** (RFC-0000). Desde el RFC-0008 el trabajo es de
 > ingeniería y se revisa como tal (RFC-0000 rev. 4): la arquitectura
 > gobierna al desarrollo, no al revés.
+>
+> **Closure Review: PASSED (2026-07-10)** — cero conceptos sin definición
+> autoritativa; **Implementation Phase: AUTORIZADA**
+> ([acta](CLOSURE-REVIEW-v1.md)).
 
 El runtime anterior basado en `BaseAgent` queda archivado como **Legacy Runtime**
 (línea base histórica y experimental). No recibe nuevas funcionalidades.
@@ -106,7 +110,10 @@ requisito previo a consecuencia del modelo.
   banco, student model) + `runtime_version` por transición; regla de
   comparabilidad de experimentos.
 
-## Revisiones de integridad
+## Revisiones
+
+- [CLOSURE-REVIEW-v1](CLOSURE-REVIEW-v1.md) — 2026-07-10: acta de cierre
+  de la fase de diseño. PASSED — Implementation Phase autorizada.
 
 - [INTEGRITY-REVIEW-v1](INTEGRITY-REVIEW-v1.md) — 2026-07-10, sobre los
   diez documentos aceptados: 0 contradicciones conceptuales, 0 ciclos.
