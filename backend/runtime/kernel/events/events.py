@@ -52,3 +52,12 @@ class EntradaSupersedida(DomainEvent):
 
     entry_id: EntryId
     por: EntryId
+
+
+@dataclass(frozen=True, slots=True)
+class DecisionRegistrada(DomainEvent):
+    """Decisión derivada de su origen (INV-6); nace pendiente (INV-12)."""
+
+    entry_id: EntryId
+    origen: EntryId
+    asunto: str

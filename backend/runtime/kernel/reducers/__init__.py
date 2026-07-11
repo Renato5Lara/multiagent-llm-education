@@ -10,12 +10,14 @@ from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoRedu
 from runtime.kernel.reducers.facts import registrar_fact
 from runtime.kernel.reducers.claims import registrar_claim
 from runtime.kernel.reducers.supersesion import superseder_claim, superseder_fact
+from runtime.kernel.reducers.decisiones import registrar_decision
 
 __all__ = [
     "Aplicado",
     "Rechazado",
     "ResultadoReducer",
     "registrar_claim",
+    "registrar_decision",
     "registrar_fact",
     "superseder_claim",
     "superseder_fact",

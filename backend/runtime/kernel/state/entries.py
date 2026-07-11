@@ -229,10 +229,34 @@ class EstadoValidacion(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class DecisionEntry:
-    """Decisión derivada — jamás huérfana (INV-6)."""
+    """Decisión derivada — jamás huérfana (INV-6).
+
+    El ``asunto`` y la ``confianza`` no los declara el llamador: el
+    reducer los deriva del origen (el claim-propuesta o la resolución de
+    la deliberación), de modo que una decisión no puede afirmar sobre su
+    procedencia nada que su origen no sostenga.
+    """
 
     id: EntryId
     origen: EntryId  # la deliberación o el claim-propuesta único que la produjo
+    asunto: str
     contenido: Mapping[str, Any]
+    confianza: Decimal
     estado_validacion: EstadoValidacion = EstadoValidacion.PENDIENTE_DE_VALIDACION
     vigencia: Vigencia = field(default_factory=Vigencia)
+
+    def __post_init__(self) -> None:
+        if not self.asunto:
+            raise ValueError(
+                "INV-6: toda decisión declara el asunto del slot que resuelve"
+            )
+        if not isinstance(self.confianza, Decimal):
+            raise ValueError(
+                "ADR-0001 §4: la confianza es decimal exacta — la coma "
+                "flotante binaria amenaza la reproducibilidad (A3)"
+            )
+        if not _CONFIANZA_MIN <= self.confianza <= _CONFIANZA_MAX:
+            raise ValueError(
+                f"INV-7: la confianza de la resolución está acotada a "
+                f"[0, 1]; recibida: {self.confianza}"
+            )
