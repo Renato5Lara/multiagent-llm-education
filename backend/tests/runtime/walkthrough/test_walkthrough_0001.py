@@ -282,10 +282,20 @@ class TestValidarIntegradoAlFlujo:
         decision = estado.buscar(decision_id)
         assert decision.estado_validacion is EstadoValidacion.VALIDADA
 
-        # El recorrido creció en una transición exacta (la de Validar):
-        # 5 hechos sembrados + 1 veredicto de Validar.
-        assert estado.transicion == 6
-        assert len(final["registros"]) == 6
+        # PR-3: Modelar no necesita evidencia externa — su disparador es
+        # el propio veredicto de Validar, ya presente en esta misma
+        # invocación — así que se ejecuta a continuación sin intervención.
+        modelado = next(
+            c for c in estado.claims if c.autor is Capacidad.MODELAR and c.vigencia.vigente
+        )
+        assert veredicto.id in modelado.respaldo
+        assert modelado.afirmacion["competencia"] == "COMP-2"
+        assert modelado.afirmacion["efecto_positivo"] is True
+
+        # El recorrido creció en dos transiciones exactas (Validar +
+        # Modelar, PR-2 y PR-3): 5 hechos sembrados + veredicto + modelado.
+        assert estado.transicion == 7
+        assert len(final["registros"]) == 7
 
     def test_sin_evidencia_posterior_el_recorrido_termina_igual_que_antes(
         self, esquema

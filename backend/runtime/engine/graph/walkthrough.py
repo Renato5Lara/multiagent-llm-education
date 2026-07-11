@@ -17,6 +17,7 @@ from typing import Callable, TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from runtime.domain.diagnosticar import producir as producir_diagnostico
+from runtime.domain.modelar import producir as producir_modelado
 from runtime.domain.orientar import producir as producir_orientacion
 from runtime.domain.remediar import producir as producir_remediacion
 from runtime.domain.validar import producir as producir_validacion
@@ -96,12 +97,39 @@ def _decision_lista_para_validar(estado: LearningState) -> bool:
     return False
 
 
+def _existe_veredicto_sin_modelar(estado: LearningState) -> bool:
+    """Guardia segura (PR-3): mismo criterio de disparo que
+    `domain.modelar.producir` — un veredicto vigente de Validar que ningún
+    claim vigente de Modelar haya referenciado todavía en su respaldo.
+    Predicado estructural plano (sin recorrido causal): a diferencia de
+    Validar, no hace falta importar nada de domain.modelar."""
+    for validacion in estado.claims:
+        if validacion.autor is not Capacidad.VALIDAR or not validacion.vigencia.vigente:
+            continue
+        if (
+            validacion.afirmacion.get("competencia") is None
+            or validacion.afirmacion.get("funciono") is None
+        ):
+            continue
+        ya_modelado = any(
+            c.autor is Capacidad.MODELAR and c.vigencia.vigente and validacion.id in c.respaldo
+            for c in estado.claims
+        )
+        if not ya_modelado:
+            return True
+    return False
+
+
 def enrutar(grafo: EstadoGrafo) -> str:
     """Función pura del estado (P12): nadie decide quién sigue, salvo el
     estado mismo. El orden de los chequeos ES el programa pedagógico."""
     estado = grafo["estado"]
     if estado.decisiones:
-        return "validar" if _decision_lista_para_validar(estado) else END
+        if _decision_lista_para_validar(estado):
+            return "validar"
+        if _existe_veredicto_sin_modelar(estado):
+            return "modelar"
+        return END
     if estado.deliberaciones:
         return "decidir"
     if tension_bloqueante(estado) is not None:
@@ -132,6 +160,7 @@ def _construir(
     productor_remediar: Callable = producir_remediacion,
     productor_orientar: Callable = producir_orientacion,
     productor_validar: Callable = producir_validacion,
+    productor_modelar: Callable = producir_modelado,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -170,10 +199,12 @@ def _construir(
     grafo.add_node("deliberar", _nodo_deliberar)
     grafo.add_node("decidir", _nodo_decidir)
     grafo.add_node("validar", _nodo_productor(productor_validar))
+    grafo.add_node("modelar", _nodo_productor(productor_modelar))
 
     grafo.add_edge(START, "aplicar")  # aplica los hechos sembrados (E2)
     for productor in (
-        "diagnosticar", "remediar", "orientar", "deliberar", "decidir", "validar",
+        "diagnosticar", "remediar", "orientar", "deliberar", "decidir",
+        "validar", "modelar",
     ):
         grafo.add_edge(productor, "aplicar")
     grafo.add_conditional_edges("aplicar", enrutar)
@@ -188,9 +219,10 @@ def ejecutar_walkthrough(
     productor_remediar: Callable = producir_remediacion,
     productor_orientar: Callable = producir_orientacion,
     productor_validar: Callable = producir_validacion,
+    productor_modelar: Callable = producir_modelado,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → diagnóstico → tensión →
-    deliberación → decisión (→ validación, si ya hay evidencia posterior),
+    deliberación → decisión (→ validación → modelado, si ya hay evidencia),
     con checkpoint por transición."""
     almacen.abrir_sesion(identidad)
     inicial: EstadoGrafo = {
@@ -207,4 +239,5 @@ def ejecutar_walkthrough(
         productor_remediar,
         productor_orientar,
         productor_validar,
+        productor_modelar,
     ).invoke(inicial)
