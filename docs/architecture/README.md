@@ -66,7 +66,7 @@ con el ciclo de vida del RFC-0000.
 | [RFC-0006](RFC-0006-consenso-enjambre.md) | Consenso e Inteligencia de Enjambre | Aceptado |
 | [RFC-0007](RFC-0007-observabilidad.md) | Observabilidad | Borrador |
 | [RFC-0008](RFC-0008-checkpointing-persistencia.md) | Checkpointing y Persistencia | Aceptado |
-| RFC-0009 | Human in the Loop | Pendiente |
+| [RFC-0009](RFC-0009-human-in-the-loop.md) | Human in the Loop | Aceptado |
 | RFC-0010 | Frontera con la plataforma (contrato de integración) | Pendiente |
 
 **Orden de diseño vigente** (decisión del tesista, 2026-07-10, supersede
@@ -134,12 +134,14 @@ por el proceso de enmienda (RFC-0000).
   ese hallazgo será un resultado de la tesis y su justificación de
   adopción futura.
 - **«La explicación se recorre, no se redacta»** (RFC-0007 §2.3; candidata
-  a principio por juicio del tesista, 2026-07-10 — "el mismo estatus que
-  'la deliberación selecciona, jamás crea'"): la explicación oficial
+  a principio por juicio del tesista, 2026-07-10): la explicación oficial
   siempre debe poder reconstruirse desde la historia; un LLM puede
-  resumirla para un humano, jamás sustituirla. Su elevación se decide en
-  la Architecture Integrity Review o al diseñar las superficies de consumo
-  (RFC-0010).
+  resumirla para un humano, jamás sustituirla. **Su elevación se decide en
+  la Closure Review.**
+- **«El humano participa por hechos, jamás por edición»** (RFC-0009;
+  candidata a principio por juicio del tesista, 2026-07-10 — "el mismo
+  estatus" que las dos reglas hermanas): protege P14, P7 y P6 a la vez.
+  **Su elevación se decide en la Closure Review.**
 
 ## Directorio
 

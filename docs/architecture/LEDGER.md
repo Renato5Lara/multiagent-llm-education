@@ -40,6 +40,7 @@
 | D-029 | Engineering Gate: tabla contrato/preservado/evidencia como última barrera antes de fusionar cambios del runtime; una fila sin evidencia no cuenta | RFC-0000 rev. 5 | Vigente |
 | D-030 | Runtime Versioning: vector de versiones por sesión (spec_version, política, banco, student model) + runtime_version por transición (participa del hash); los experimentos se comparan por versiones, no por fechas | ADR-0003 | Vigente |
 | D-031 | Memoria = puente versionado entre sesiones (cargar al abrir / consolidar al cerrar / jamás durante; la memoria de trabajo es el LearningState); catálogo cerrado (student model con refuerzo consolidado, ruta, deuda H9-inter adoptada, resumen destilado); reputación de capacidad diferida post-tesis | RFC-0005 | Vigente |
+| D-032 | HITL: el humano participa por hechos jamás por edición; el docente ejerce autoridad EXTERNA sobre el consenso (no es un voto); el estudiante NO es HITL (es el sujeto del loop de aprendizaje); mínima intervención como criterio de escalada medible; escaladas no bloqueantes por defecto; human_reason como evidencia de investigación | RFC-0009 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 
