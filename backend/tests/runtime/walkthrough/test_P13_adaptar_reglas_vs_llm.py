@@ -1,0 +1,134 @@
+"""Guardián de P13 para Adaptar (ADR-0005 §7) — séptima capacidad.
+
+El corazón de la hipótesis. Además del contrato compartido, vigila
+explícitamente la frontera dominio/plataforma que el tesista exigió:
+Adaptar decide categorías pedagógicas, nunca recursos físicos.
+"""
+
+from decimal import Decimal
+
+from runtime.domain.adaptar import FakeLLMProvider, producir, producir_llm
+from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_decision, registrar_fact
+from runtime.kernel.state import (
+    Capacidad,
+    OrigenProvenance,
+    Provenance,
+    TipoClaim,
+)
+from runtime.kernel.state.state import Identidad, LearningState
+
+_PROHIBIDO = ("url", "http", ".pdf", ".mp4", "recurso_id", "video_", "pdf_")
+
+
+def _identidad() -> Identidad:
+    return Identidad(
+        session_id="s-p13-adaptar",
+        student_id="maria",
+        version_student_model="v7",
+        version_banco="banco-v2",
+        version_politica="politica-v1",
+        spec_version="foundation-2026-07-10",
+    )
+
+
+def _estado_con_decision(accion: str) -> LearningState:
+    estado = LearningState(identidad=_identidad(), contexto={"ruta": "condicionales"})
+    r1 = registrar_fact(
+        estado,
+        autor=Capacidad.EVALUAR,
+        contenido={"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+        provenance=Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+    )
+    assert isinstance(r1, Aplicado)
+    r2 = registrar_claim(
+        r1.estado,
+        autor=Capacidad.DIAGNOSTICAR,
+        tipo=TipoClaim.INTERPRETACION,
+        asunto="dominio(COMP-2)",
+        afirmacion={"dominada": False},
+        respaldo=(r1.estado.facts[0].id,),
+        confianza=Decimal("0.78"),
+        provenance=Provenance.de(OrigenProvenance.REGLA, id="scoring-v1"),
+    )
+    assert isinstance(r2, Aplicado)
+    r3 = registrar_claim(
+        r2.estado,
+        autor=Capacidad.REMEDIAR,
+        tipo=TipoClaim.PROPUESTA,
+        asunto="siguiente-paso(sesion)",
+        afirmacion={"accion": accion},
+        respaldo=(r2.estado.claims[0].id,),
+        confianza=Decimal("0.82"),
+        provenance=Provenance.de(OrigenProvenance.REGLA, id="remediacion-v1"),
+    )
+    assert isinstance(r3, Aplicado)
+    r4 = registrar_decision(
+        r3.estado, origen=r3.estado.claims[-1].id, contenido={"accion": accion}
+    )
+    assert isinstance(r4, Aplicado)
+    return r4.estado
+
+
+def _texto_plano(valor) -> str:
+    return str(valor).lower()
+
+
+class TestP13_AdaptarContratoCompartido:
+    def test_mismo_operacion_tipo_asunto_y_respaldo(self):
+        estado = _estado_con_decision("reforzar")
+        decision_id = estado.decisiones[0].id
+        (intent_regla,) = producir(estado)
+        (intent_llm,) = producir_llm(estado, proveedor=FakeLLMProvider())
+
+        for intent in (intent_regla, intent_llm):
+            assert intent.operacion == "registrar_claim"
+            assert intent.argumentos["autor"] is Capacidad.ADAPTAR
+            assert intent.argumentos["tipo"] is TipoClaim.PROPUESTA
+            assert intent.argumentos["asunto"] == "modalidad(COMP-2)"
+            assert intent.argumentos["respaldo"] == (decision_id,)
+            assert isinstance(intent.argumentos["confianza"], Decimal)
+            afirmacion = intent.argumentos["afirmacion"]
+            assert "modalidad" in afirmacion
+            assert "profundidad" in afirmacion
+            assert "alternativas_descartadas" in afirmacion
+            assert len(afirmacion["alternativas_descartadas"]) >= 1
+
+        assert intent_regla.argumentos["provenance"].origen == OrigenProvenance.REGLA
+        assert intent_llm.argumentos["provenance"].origen == OrigenProvenance.LLM
+
+    def test_frontera_dura_nunca_recursos_fisicos(self):
+        # Exigencia explícita del tesista: Adaptar decide categorías
+        # pedagógicas, jamás IDs de contenido, URLs ni rutas de plataforma.
+        for accion in ("reforzar", "avanzar-con-andamiaje"):
+            estado = _estado_con_decision(accion)
+            (intent_regla,) = producir(estado)
+            (intent_llm,) = producir_llm(estado, proveedor=FakeLLMProvider())
+            for intent in (intent_regla, intent_llm):
+                texto = _texto_plano(intent.argumentos["afirmacion"])
+                for prohibido in _PROHIBIDO:
+                    assert prohibido not in texto, (
+                        f"Adaptar produjo algo que parece un recurso físico "
+                        f"({prohibido!r}): {texto}"
+                    )
+
+    def test_responde_distinto_segun_la_accion(self):
+        reforzar = _estado_con_decision("reforzar")
+        avanzar = _estado_con_decision("avanzar-con-andamiaje")
+        (intent_reforzar,) = producir(reforzar)
+        (intent_avanzar,) = producir(avanzar)
+        assert (
+            intent_reforzar.argumentos["afirmacion"]["modalidad"]
+            != intent_avanzar.argumentos["afirmacion"]["modalidad"]
+        )
+
+    def test_sin_decision_reconocida_no_dispara(self):
+        estado = _estado_con_decision("accion-desconocida")
+        assert producir(estado) == ()
+        assert producir_llm(estado) == ()
+
+    def test_no_adapta_la_misma_decision_dos_veces(self):
+        estado = _estado_con_decision("reforzar")
+        (intent,) = producir(estado)
+        resultado = registrar_claim(estado, **intent.argumentos)
+        assert isinstance(resultado, Aplicado)
+        assert producir(resultado.estado) == ()
