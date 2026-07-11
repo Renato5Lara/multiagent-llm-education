@@ -129,6 +129,20 @@ Engineering Gate
 **Si existe incertidumbre:** no asumir, no improvisar, no diseñar —
 detenerse y preguntar.
 
+### Regla de estabilidad conceptual (post-Foundation)
+
+> **Ningún PR debería aumentar el número de conceptos del sistema. Solo
+> debe aumentar el número de comportamientos ejecutables.**
+
+Más walkthroughs, más capacidades, más políticas, más experimentos — pero
+no más arquitectura, salvo que aparezca una necesidad real que el modelo
+actual no pueda expresar (y esa necesidad se resuelve primero por RFC/ADR,
+nunca directamente en código). Cada nuevo commit debe acercar el sistema
+a ejecutar un estudiante real — no necesariamente humano todavía, sino el
+recorrido completo del walkthrough. Esta regla protege lo que la
+Foundation Phase congeló: el runtime debe absorber necesidades nuevas sin
+expandirse innecesariamente.
+
 ### Regla de derivación
 
 > **Si un atributo puede reconstruirse de forma determinista a partir del
