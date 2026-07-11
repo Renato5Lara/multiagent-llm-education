@@ -64,6 +64,14 @@ class DecisionRegistrada(DomainEvent):
 
 
 @dataclass(frozen=True, slots=True)
+class DecisionValidada(DomainEvent):
+    """El veredicto de Validar quedó registrado (INV-12)."""
+
+    entry_id: EntryId
+    veredicto_claim: EntryId
+
+
+@dataclass(frozen=True, slots=True)
 class DeliberacionRegistrada(DomainEvent):
     """Episodio de consenso registrado (INV-7); nunca opaco."""
 

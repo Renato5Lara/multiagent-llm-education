@@ -19,6 +19,7 @@ from runtime.kernel.reducers.claims import registrar_claim
 from runtime.kernel.reducers.supersesion import superseder_claim, superseder_fact
 from runtime.kernel.reducers.decisiones import registrar_decision
 from runtime.kernel.reducers.deliberaciones import registrar_deliberacion
+from runtime.kernel.reducers.validacion import validar_decision
 
 __all__ = [
     "Aplicado",
@@ -30,4 +31,5 @@ __all__ = [
     "registrar_fact",
     "superseder_claim",
     "superseder_fact",
+    "validar_decision",
 ]
