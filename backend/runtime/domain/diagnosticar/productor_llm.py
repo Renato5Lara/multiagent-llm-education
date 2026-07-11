@@ -10,10 +10,10 @@ esta capacidad de su versión regla: ambas producen exclusivamente
 
 from __future__ import annotations
 
-import json
 from decimal import Decimal
 
 from runtime.domain.diagnosticar.provider import FakeLLMProvider, LLMProvider
+from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -46,7 +46,9 @@ def producir(
             f"items_incorrectos={errores}. ¿Está dominada? Responde JSON "
             f"con dominada, errores, confianza y razonamiento."
         )
-        respuesta = json.loads(proveedor.generar(prompt))
+        respuesta = ejecutar_roundtrip(
+            proveedor, prompt, campos_requeridos=("dominada", "errores", "confianza")
+        )
         return (
             TransitionIntent(
                 productor=Capacidad.DIAGNOSTICAR,

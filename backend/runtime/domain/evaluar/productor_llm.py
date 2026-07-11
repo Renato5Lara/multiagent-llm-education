@@ -9,10 +9,10 @@ través de un round-trip de prompt.
 
 from __future__ import annotations
 
-import json
 from typing import Mapping
 
 from runtime.domain.evaluar.provider import FakeLLMProvider, LLMProvider
+from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.kernel.state.entries import Capacidad, OrigenProvenance, Provenance
 from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
@@ -43,7 +43,9 @@ def producir(
         f"items_incorrectos=[{items_str}] total={len(respuestas)}. "
         f"Confirma el conteo. Responde JSON."
     )
-    respuesta = json.loads(proveedor.generar(prompt))
+    respuesta = ejecutar_roundtrip(
+        proveedor, prompt, campos_requeridos=("items_incorrectos", "items_totales")
+    )
     return (
         TransitionIntent(
             productor=Capacidad.EVALUAR,

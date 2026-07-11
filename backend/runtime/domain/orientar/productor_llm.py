@@ -8,11 +8,11 @@ claim, mismo asunto, misma estructura de argumentos hacia
 
 from __future__ import annotations
 
-import json
 from decimal import Decimal
 
 from runtime.domain.orientar.productor import ASUNTO_SIGUIENTE_PASO
 from runtime.domain.orientar.provider import FakeLLMProvider, LLMProvider
+from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -41,7 +41,9 @@ def producir(
                 f"(claim {claim.id}). ¿Conviene avanzar al siguiente "
                 f"objetivo de la ruta? Responde JSON."
             )
-            respuesta = json.loads(proveedor.generar(prompt))
+            respuesta = ejecutar_roundtrip(
+                proveedor, prompt, campos_requeridos=("accion", "confianza")
+            )
             return (
                 TransitionIntent(
                     productor=Capacidad.ORIENTAR,
