@@ -138,7 +138,7 @@ class TestWalkthrough0001:
         almacen, final = _correr("s-inv10", esquema)
         estado, registros = final["estado"], final["registros"]
         # Una transición aplicada = un registro persistido; ni una más.
-        assert len(registros) == estado.transicion == 6
+        assert len(registros) == estado.transicion == 7  # PR-5: +Adaptar
         # Lo persistido es lo ejecutado, íntegro (P14, R3).
         assert almacen.leer("s-inv10") == registros
         assert verificar(_identidad("s-inv10"), registros) is None
@@ -270,6 +270,15 @@ class TestValidarIntegradoAlFlujo:
         final = ejecutar_walkthrough(almacen, _identidad("s-validar-integrado"), hechos)
         estado = final["estado"]
 
+        # PR-5: Adaptar no necesita evidencia posterior — su disparador es
+        # la decisión misma ("reforzar" ya está en DISENO_POR_ACCION), así
+        # que corre ANTES que Validar (que sí espera el fact posterior).
+        adaptacion = next(
+            c for c in estado.claims if c.autor is Capacidad.ADAPTAR and c.vigencia.vigente
+        )
+        assert decision_id in adaptacion.respaldo
+        assert adaptacion.afirmacion["modalidad"] == "visual"
+
         veredicto = next(
             c
             for c in estado.claims
@@ -292,18 +301,20 @@ class TestValidarIntegradoAlFlujo:
         assert modelado.afirmacion["competencia"] == "COMP-2"
         assert modelado.afirmacion["efecto_positivo"] is True
 
-        # El recorrido creció en dos transiciones exactas (Validar +
-        # Modelar, PR-2 y PR-3): 5 hechos sembrados + veredicto + modelado.
-        assert estado.transicion == 7
-        assert len(final["registros"]) == 7
+        # El recorrido creció en tres transiciones exactas (Adaptar,
+        # Validar, Modelar — PR-5, PR-2, PR-3): 5 hechos sembrados +
+        # adaptación + veredicto + modelado.
+        assert estado.transicion == 8
+        assert len(final["registros"]) == 8
 
     def test_sin_evidencia_posterior_el_recorrido_termina_igual_que_antes(
         self, esquema
     ):
-        # Guardia segura: con solo el hecho inicial (sin "después"), el
-        # walkthrough debe seguir terminando en la primera decisión — el
-        # mismo comportamiento que tenía antes de PR-2 (transicion == 6
-        # por el camino Diagnosticar→Remediar/Orientar→Deliberar→Decidir).
+        # Guardia segura: con solo el hecho inicial (sin "después"),
+        # Validar no debe disparar — pero Adaptar sí (PR-5: no depende de
+        # evidencia posterior, solo de la decisión). transicion == 7 desde
+        # PR-5 (antes era 6, por el camino Diagnosticar→Remediar/
+        # Orientar→Deliberar→Decidir; ahora +Adaptar).
         almacen = AlmacenTransiciones(_URL, esquema=esquema)
         almacen.preparar()
         final = ejecutar_walkthrough(
@@ -311,7 +322,8 @@ class TestValidarIntegradoAlFlujo:
         )
         estado = final["estado"]
         assert not any(c.autor is Capacidad.VALIDAR for c in estado.claims)
-        assert estado.transicion == 6
+        assert any(c.autor is Capacidad.ADAPTAR for c in estado.claims)
+        assert estado.transicion == 7
 
 
 class TestTutorizarIntegradoAlFlujo:
@@ -372,8 +384,8 @@ class TestTutorizarIntegradoAlFlujo:
 
     def test_sin_items_totales_tutorizar_no_dispara_igual_que_antes(self, esquema):
         # Guardia segura: el fixture canónico de María no incluye
-        # items_totales — el recorrido debe seguir siendo idéntico al de
-        # antes de PR-4 (transicion == 6, sin fact de Tutorizar).
+        # items_totales — Tutorizar no debe activarse. transicion == 7
+        # desde PR-5 (Adaptar sí dispara con la sola decisión).
         almacen = AlmacenTransiciones(_URL, esquema=esquema)
         almacen.preparar()
         final = ejecutar_walkthrough(
@@ -381,4 +393,4 @@ class TestTutorizarIntegradoAlFlujo:
         )
         estado = final["estado"]
         assert not any(f.autor is Capacidad.TUTORIZAR for f in estado.facts)
-        assert estado.transicion == 6
+        assert estado.transicion == 7

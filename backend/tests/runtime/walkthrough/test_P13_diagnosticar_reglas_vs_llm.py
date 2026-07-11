@@ -147,8 +147,8 @@ class TestP13_WalkthroughConCapacidadIntercambiada:
         # Mismas propiedades estructurales que test_walkthrough_0001:
         # mismo número de transiciones, misma forma de tensión,
         # deliberación, decisión — el contenido puede variar, la FORMA no.
-        assert estado.transicion == 6
-        assert len(final["registros"]) == 6
+        assert estado.transicion == 7  # PR-5: +Adaptar
+        assert len(final["registros"]) == 7
         assert verificar(_identidad("s-p13-grafo"), final["registros"]) is None
 
         interpretacion = next(

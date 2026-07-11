@@ -126,8 +126,8 @@ class TestP13_WalkthroughConRemediarIntercambiado:
         )
         estado = final["estado"]
 
-        assert estado.transicion == 6
-        assert len(final["registros"]) == 6
+        assert estado.transicion == 7  # PR-5: +Adaptar
+        assert len(final["registros"]) == 7
         assert verificar(_identidad("s-p13-rem-grafo"), final["registros"]) is None
 
         propuesta_remediar = next(

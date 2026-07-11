@@ -16,13 +16,16 @@ from typing import Callable, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
+from runtime.domain.adaptar import producir as producir_adaptacion
+from runtime.domain.adaptar.productor import DISENO_POR_ACCION
 from runtime.domain.diagnosticar import producir as producir_diagnostico
 from runtime.domain.modelar import producir as producir_modelado
 from runtime.domain.orientar import producir as producir_orientacion
 from runtime.domain.remediar import producir as producir_remediacion
+from runtime.domain.shared.causal import competencia_de_decision
 from runtime.domain.tutorizar import producir as producir_tutoria
 from runtime.domain.validar import producir as producir_validacion
-from runtime.domain.validar.productor import competencia_de_decision, evidencia_de_validacion
+from runtime.domain.validar.productor import evidencia_de_validacion
 from runtime.engine.checkpoint import (
     AlmacenTransiciones,
     RegistroTransicion,
@@ -77,6 +80,27 @@ def _nodo_deliberar(grafo: EstadoGrafo) -> dict:
 def _nodo_decidir(grafo: EstadoGrafo) -> dict:
     intent = derivar_decision(grafo["estado"])
     return {"intents": (intent,) if intent else ()}
+
+
+def _decision_sin_adaptar(estado: LearningState) -> bool:
+    """Guardia segura (PR-5): mismo criterio de disparo que
+    `domain.adaptar.producir` — una decisión vigente cuya acción tiene
+    diseño definido (DISENO_POR_ACCION) que Adaptar todavía no adaptó.
+    Se rutea antes que Validar: Adaptar diseña la experiencia apenas
+    existe la decisión, sin depender de evidencia posterior — Validar
+    mide el efecto de esa experiencia más tarde."""
+    for decision in estado.decisiones:
+        if not decision.vigencia.vigente:
+            continue
+        if decision.contenido.get("accion") not in DISENO_POR_ACCION:
+            continue
+        ya_adapto = any(
+            c.autor is Capacidad.ADAPTAR and c.vigencia.vigente and decision.id in c.respaldo
+            for c in estado.claims
+        )
+        if not ya_adapto:
+            return True
+    return False
 
 
 def _decision_lista_para_validar(estado: LearningState) -> bool:
@@ -147,6 +171,8 @@ def enrutar(grafo: EstadoGrafo) -> str:
     estado mismo. El orden de los chequeos ES el programa pedagógico."""
     estado = grafo["estado"]
     if estado.decisiones:
+        if _decision_sin_adaptar(estado):
+            return "adaptar"
         if _decision_lista_para_validar(estado):
             return "validar"
         if _existe_veredicto_sin_modelar(estado):
@@ -186,6 +212,7 @@ def _construir(
     productor_validar: Callable = producir_validacion,
     productor_modelar: Callable = producir_modelado,
     productor_tutorizar: Callable = producir_tutoria,
+    productor_adaptar: Callable = producir_adaptacion,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -226,11 +253,12 @@ def _construir(
     grafo.add_node("validar", _nodo_productor(productor_validar))
     grafo.add_node("modelar", _nodo_productor(productor_modelar))
     grafo.add_node("tutorizar", _nodo_productor(productor_tutorizar))
+    grafo.add_node("adaptar", _nodo_productor(productor_adaptar))
 
     grafo.add_edge(START, "aplicar")  # aplica los hechos sembrados (E2)
     for productor in (
         "diagnosticar", "remediar", "orientar", "deliberar", "decidir",
-        "validar", "modelar", "tutorizar",
+        "validar", "modelar", "tutorizar", "adaptar",
     ):
         grafo.add_edge(productor, "aplicar")
     grafo.add_conditional_edges("aplicar", enrutar)
@@ -247,10 +275,11 @@ def ejecutar_walkthrough(
     productor_validar: Callable = producir_validacion,
     productor_modelar: Callable = producir_modelado,
     productor_tutorizar: Callable = producir_tutoria,
+    productor_adaptar: Callable = producir_adaptacion,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
-    → deliberación → decisión (→ validación → modelado, si ya hay
-    evidencia), con checkpoint por transición."""
+    → deliberación → decisión → adaptación (→ validación → modelado, si ya
+    hay evidencia), con checkpoint por transición."""
     almacen.abrir_sesion(identidad)
     inicial: EstadoGrafo = {
         "estado": LearningState(
@@ -268,4 +297,5 @@ def ejecutar_walkthrough(
         productor_validar,
         productor_modelar,
         productor_tutorizar,
+        productor_adaptar,
     ).invoke(inicial)

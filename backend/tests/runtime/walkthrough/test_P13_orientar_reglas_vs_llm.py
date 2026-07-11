@@ -125,8 +125,8 @@ class TestP13_WalkthroughConOrientarIntercambiado:
         )
         estado = final["estado"]
 
-        assert estado.transicion == 6
-        assert len(final["registros"]) == 6
+        assert estado.transicion == 7  # PR-5: +Adaptar
+        assert len(final["registros"]) == 7
         assert verificar(_identidad("s-p13-ori-grafo"), final["registros"]) is None
 
         propuesta_orientar = next(
@@ -158,7 +158,7 @@ class TestP13_WalkthroughConOrientarIntercambiado:
             productor_orientar=producir_llm,
         )
         estado = final["estado"]
-        assert estado.transicion == 6
+        assert estado.transicion == 7  # PR-5: +Adaptar
         assert verificar(_identidad("s-p13-todas-llm"), final["registros"]) is None
         assert all(
             c.provenance.origen == OrigenProvenance.LLM

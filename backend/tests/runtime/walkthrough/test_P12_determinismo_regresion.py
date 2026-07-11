@@ -112,7 +112,7 @@ class TestP12_RegresionDeterminismo:
             else:
                 assert marca == referencia
         assert referencia is not None
-        assert len(referencia[0]) == 6  # seis transiciones, siempre
+        assert len(referencia[0]) == 7  # siete transiciones, siempre (PR-5: +Adaptar)
 
 
 _SCRIPT = textwrap.dedent(
