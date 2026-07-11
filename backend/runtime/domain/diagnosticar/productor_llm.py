@@ -44,7 +44,9 @@ def producir(
         prompt = (
             f"Competencia={fact.contenido['competencia']} "
             f"items_incorrectos={errores}. ¿Está dominada? Responde JSON "
-            f"con dominada, errores, confianza y razonamiento."
+            f"con dominada, errores, razonamiento, y confianza — "
+            f'confianza como STRING con formato decimal entre "0.00" y '
+            f'"1.00" (ejemplo: "0.80"), nunca como palabra ni como número.'
         )
         respuesta = ejecutar_roundtrip(
             proveedor, prompt, campos_requeridos=("dominada", "errores", "confianza")

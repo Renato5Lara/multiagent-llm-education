@@ -27,8 +27,11 @@ def ejecutar_roundtrip(
     capacidad). Una respuesta incompleta es un bug del prompt o del
     proveedor — E-2 (ADR-0004): se propaga, jamás se disfraza de rechazo
     de dominio (E-1).
+
+    Solo lee `.texto` de la `LLMResponse` (M3): `usage`/`latencia_ms`/
+    `finish_reason` son observabilidad futura, no dominio.
     """
-    datos = json.loads(proveedor.generar(prompt))
+    datos = json.loads(proveedor.generar(prompt).texto)
     faltantes = [campo for campo in campos_requeridos if campo not in datos]
     if faltantes:
         raise ValueError(

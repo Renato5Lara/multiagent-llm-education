@@ -7,7 +7,7 @@ que la regla, por un camino distinto (P13).
 
 from __future__ import annotations
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -18,9 +18,11 @@ class FakeLLMProvider:
     modelo = "fake-modelado-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
+    def generar(self, prompt: str) -> LLMResponse:
         efecto_positivo = "true" if "funciono=true" in prompt else "false"
-        return (
-            f'{{"efecto_positivo": {efecto_positivo}, "confianza": "0.80", '
-            f'"razonamiento": "modelo actualizado a partir del veredicto de Validar"}}'
+        return LLMResponse(
+            texto=(
+                f'{{"efecto_positivo": {efecto_positivo}, "confianza": "0.80", '
+                f'"razonamiento": "modelo actualizado a partir del veredicto de Validar"}}'
+            )
         )

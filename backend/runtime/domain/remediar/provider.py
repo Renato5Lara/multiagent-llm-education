@@ -8,7 +8,7 @@ justificación, no la decisión de invocar.
 
 from __future__ import annotations
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -20,8 +20,10 @@ class FakeLLMProvider:
     modelo = "fake-remediacion-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
-        return (
-            '{"accion": "reforzar", "confianza": "0.85", '
-            '"razonamiento": "brecha detectada antes de avanzar de tema"}'
+    def generar(self, prompt: str) -> LLMResponse:
+        return LLMResponse(
+            texto=(
+                '{"accion": "reforzar", "confianza": "0.85", '
+                '"razonamiento": "brecha detectada antes de avanzar de tema"}'
+            )
         )

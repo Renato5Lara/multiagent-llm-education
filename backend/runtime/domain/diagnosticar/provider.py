@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -22,15 +22,17 @@ class FakeLLMProvider:
     modelo = "fake-diagnostico-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
+    def generar(self, prompt: str) -> LLMResponse:
         # Texto plano con forma de JSON — imita la respuesta de una API
         # externa; no es serialización del runtime (ADR-0001/ADR-0005
         # §5: json.dumps queda reservado a canonical.py, no a esto).
         match = re.search(r"items_incorrectos=(\d+)", prompt)
         errores = int(match.group(1)) if match else 0
         dominada = "true" if errores < 2 else "false"
-        return (
-            f'{{"dominada": {dominada}, "errores": {errores}, '
-            f'"confianza": "0.80", '
-            f'"razonamiento": "{errores} ítem(s) incorrecto(s) detectado(s)"}}'
+        return LLMResponse(
+            texto=(
+                f'{{"dominada": {dominada}, "errores": {errores}, '
+                f'"confianza": "0.80", '
+                f'"razonamiento": "{errores} ítem(s) incorrecto(s) detectado(s)"}}'
+            )
         )

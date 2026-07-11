@@ -10,6 +10,7 @@ introduce concepto nuevo).
 
 import pytest
 
+from runtime.domain.shared.llm import LLMResponse
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 
 
@@ -20,8 +21,8 @@ class _ProveedorFijo:
     def __init__(self, texto: str):
         self._texto = texto
 
-    def generar(self, prompt: str) -> str:
-        return self._texto
+    def generar(self, prompt: str) -> LLMResponse:
+        return LLMResponse(texto=self._texto)
 
 
 class TestADR_0004_EjecutarRoundtrip:

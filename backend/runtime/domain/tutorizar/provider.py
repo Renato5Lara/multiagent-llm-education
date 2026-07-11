@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -19,7 +19,7 @@ class FakeLLMProvider:
     modelo = "fake-tutoria-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
+    def generar(self, prompt: str) -> LLMResponse:
         incorrectos = re.search(r"incorrectos=(\d+)", prompt)
         total = re.search(r"total=(\d+)", prompt)
         n_incorrectos = int(incorrectos.group(1)) if incorrectos else 0
@@ -30,4 +30,4 @@ class FakeLLMProvider:
             senal = "frustracion"
         else:
             senal = "confusion"
-        return f'{{"senal": "{senal}"}}'
+        return LLMResponse(texto=f'{{"senal": "{senal}"}}')

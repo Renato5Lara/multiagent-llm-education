@@ -15,13 +15,29 @@ lo único compartido es el contrato.
 
 from __future__ import annotations
 
-from typing import Protocol
+from dataclasses import dataclass
+from typing import Mapping, Protocol
+
+
+@dataclass(frozen=True, slots=True)
+class LLMResponse:
+    """Respuesta cruda de un proveedor (M3): `texto` es lo único que
+    `ejecutar_roundtrip` interpreta hoy; `usage`/`latencia_ms`/
+    `finish_reason` quedan disponibles para observabilidad futura
+    (RFC-0007 H5: "método de obtención" en provenance) SIN que ninguna
+    capacidad los lea todavía — no persisten en el estado, no son
+    Domain Events (telemetría operativa, no evidencia)."""
+
+    texto: str
+    usage: Mapping[str, int] | None = None
+    latencia_ms: float | None = None
+    finish_reason: str | None = None
 
 
 class LLMProvider(Protocol):
-    """Contrato mínimo: un prompt entra, texto sale."""
+    """Contrato mínimo: un prompt entra, una `LLMResponse` sale."""
 
     modelo: str
     version: str
 
-    def generar(self, prompt: str) -> str: ...
+    def generar(self, prompt: str) -> LLMResponse: ...

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -20,13 +20,15 @@ class FakeLLMProvider:
     modelo = "fake-validacion-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
+    def generar(self, prompt: str) -> LLMResponse:
         antes = re.search(r"antes=(\d+)", prompt)
         despues = re.search(r"despues=(\d+)", prompt)
         n_antes = int(antes.group(1)) if antes else 0
         n_despues = int(despues.group(1)) if despues else 0
         funciono = "true" if n_despues < n_antes else "false"
-        return (
-            f'{{"funciono": {funciono}, "confianza": "0.85", '
-            f'"razonamiento": "errores {n_antes}\\u2192{n_despues}"}}'
+        return LLMResponse(
+            texto=(
+                f'{{"funciono": {funciono}, "confianza": "0.85", '
+                f'"razonamiento": "errores {n_antes}\\u2192{n_despues}"}}'
+            )
         )

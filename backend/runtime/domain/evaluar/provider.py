@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -21,7 +21,7 @@ class FakeLLMProvider:
     modelo = "fake-evaluacion-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
+    def generar(self, prompt: str) -> LLMResponse:
         incorrectos = re.search(r"items_incorrectos=\[([\d,]*)\]", prompt)
         total = re.search(r"total=(\d+)", prompt)
         lista = (
@@ -29,8 +29,10 @@ class FakeLLMProvider:
             if incorrectos
             else []
         )
-        return (
-            f'{{"items_incorrectos": {lista}, '
-            f'"items_totales": {int(total.group(1)) if total else 0}, '
-            f'"razonamiento": "conteo confirmado por revisión ítem a ítem"}}'
+        return LLMResponse(
+            texto=(
+                f'{{"items_incorrectos": {lista}, '
+                f'"items_totales": {int(total.group(1)) if total else 0}, '
+                f'"razonamiento": "conteo confirmado por revisión ítem a ítem"}}'
+            )
         )

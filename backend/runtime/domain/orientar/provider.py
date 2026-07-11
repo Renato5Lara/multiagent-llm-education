@@ -7,7 +7,7 @@ del modelo solo aporta la justificación de avanzar.
 
 from __future__ import annotations
 
-from runtime.domain.shared.llm import LLMProvider
+from runtime.domain.shared.llm import LLMProvider, LLMResponse
 
 __all__ = ["LLMProvider", "FakeLLMProvider"]
 
@@ -19,8 +19,10 @@ class FakeLLMProvider:
     modelo = "fake-orientacion-v1"
     version = "1"
 
-    def generar(self, prompt: str) -> str:
-        return (
-            '{"accion": "avanzar-con-andamiaje", "confianza": "0.78", '
-            '"razonamiento": "la ruta ya prevé soporte adicional en el siguiente objetivo"}'
+    def generar(self, prompt: str) -> LLMResponse:
+        return LLMResponse(
+            texto=(
+                '{"accion": "avanzar-con-andamiaje", "confianza": "0.78", '
+                '"razonamiento": "la ruta ya prevé soporte adicional en el siguiente objetivo"}'
+            )
         )
