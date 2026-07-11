@@ -5,8 +5,9 @@
   Standard y la Revisión de Conformidad de Especificación; rev. 4 añade la
   revisión dual Architecture/Engineering y el Ledger, por orden del
   tesista al cierre de la Foundation Phase; rev. 5 añade el Engineering
-  Gate; rev. 6 añade la regla de no-proliferación documental, por orden
-  del tesista)
+  Gate; rev. 6 añade la regla de no-proliferación documental; rev. 7
+  añade las Reglas de Implementación del Prompt Maestro, por orden del
+  tesista al abrir la Implementation Phase)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
 - **Fecha:** 2026-07-10
 - **Aprueba:** Renato Lara (tesista / Product Owner)
@@ -107,6 +108,30 @@ correspondiente y se resuelve allí antes de continuar.
 en `LEDGER.md` (qué se decidió, dónde, estado), añadida **en el mismo
 commit** que la introduce o la modifica. El Ledger responde "¿dónde se
 decidió esto?"; no contiene contenido normativo — solo punteros.
+
+## Reglas de Implementación (Prompt Maestro, Implementation Phase)
+
+*(Añadidas en rev. 7, 2026-07-10, por orden del tesista. El protocolo
+operativo completo — rol, ritual de sesión, formato de cierre — vive en
+el `CLAUDE.md` del repositorio, que gobierna toda sesión de trabajo.)*
+
+- **Incremental:** cada cambio entrega una pieza pequeña completamente
+  terminada; jamás varias responsabilidades a la vez. El orden es el del
+  BLUEPRINT, sin adelantar componentes.
+- **Las pruebas forman parte del cambio.** Un cambio sin sus pruebas está
+  incompleto; las suites de aceptación (BLUEPRINT §Suites) son la
+  evidencia estándar del Gate.
+- **Detención obligatoria:** si la implementación necesita un concepto,
+  clase, capa, evento, estado o nombre sin respaldo documental, no se
+  escribe código — se detiene y se explica qué documento debería
+  enmendarse. (Ya normativo en la Revisión de Conformidad; se reitera
+  como regla de implementación.)
+- **Cláusula de trazabilidad:** *si existen dos implementaciones
+  técnicamente válidas, se elige siempre la que preserve con mayor
+  claridad la trazabilidad Código → Blueprint → ADR → RFC → Constitución.
+  La facilidad de mantenimiento y la verificabilidad arquitectónica
+  tienen prioridad sobre la menor cantidad de líneas de código.*
+- **Si el código contradice la arquitectura, el código está mal.**
 
 ## Revisión de Conformidad de Especificación (fase de implementación)
 

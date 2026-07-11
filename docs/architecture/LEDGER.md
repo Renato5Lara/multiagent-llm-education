@@ -44,6 +44,7 @@
 | D-033 | Contrato de integración: 4 entradas (abrir, hechos del mundo, palabra humana, cerrar) + 3 salidas (entregas, notificaciones de escalada, superficies de lectura); la plataforma no tiene reducers — ninguna operación de escritura del estado; la indisponibilidad no corrompe; el Legacy formalmente despedido, sin puente | RFC-0010 | Vigente |
 | D-034 | Blueprint: estructura física backend/runtime/ con reglas de importación vigiladas por CI (langgraph solo en engine/; ninguna capacidad importa a otra; el runtime jamás importa la plataforma ni el Legacy); 4 suites de aceptación como evidencia del Gate; orden de construcción kernel → checkpoint → consenso → grafo | BLUEPRINT | Vigente |
 | D-035 | Enmienda Constitucional v1: P16 («la explicación se recorre, jamás se redacta») y P17 («el humano participa por hechos, jamás por edición») elevados — dejaron de ser reglas locales: gobiernan varios RFC simultáneamente | Constitución rev. 4 | Vigente |
+| D-036 | Prompt Maestro de la Implementation Phase: implementación incremental (una pieza terminada por cambio), pruebas parte del cambio, detención ante conceptos sin respaldo, cláusula de trazabilidad (verificabilidad > brevedad); protocolo operativo instalado en CLAUDE.md | RFC-0000 rev. 7 + CLAUDE.md | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 
