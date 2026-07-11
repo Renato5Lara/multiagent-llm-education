@@ -5,6 +5,15 @@ Mismo contrato que la versión regla: mismo tipo de intent
 se confirma el conteo (P13). El proveedor no decide qué está incorrecto:
 eso ya lo determinan `respuestas` (P12); solo confirma el resultado a
 través de un round-trip de prompt.
+
+A diferencia de Diagnosticar/Remediar/Orientar (donde el LLM aporta una
+interpretación que se registra como claim), aquí el LLM no aporta
+conocimiento nuevo: el fact es una observación objetiva (RFC-0003 §1,
+"un fact solo puede ser cuestionado por un nuevo fact — nunca por una
+opinión"). Por eso el roundtrip valida que el proveedor responde con la
+forma esperada, pero el `contenido` del fact se construye siempre con
+los valores deterministas ya calculados — nunca con lo que el modelo
+devuelve.
 """
 
 from __future__ import annotations
@@ -39,11 +48,22 @@ def producir(
         item for item, correcto in respuestas.items() if not correcto
     )
     items_str = ",".join(str(i) for i in items_incorrectos)
+    items_totales = len(respuestas)
     prompt = (
-        f"items_incorrectos=[{items_str}] total={len(respuestas)}. "
-        f"Confirma el conteo. Responde JSON."
+        f"El sistema calculó que los ítems incorrectos son "
+        f"[{items_str}] de un total de {items_totales} preguntas "
+        f"respondidas. Confirma esta observación. Responde JSON con esta "
+        f'forma EXACTA y en este ORDEN: primero "razonamiento" (por qué '
+        f'el conteo es consistente), luego "items_incorrectos" (ARRAY de '
+        f"enteros, debe ser exactamente [{items_str}]), luego "
+        f'"items_totales" (INTEGER, debe ser exactamente {items_totales} '
+        f"— el total de preguntas respondidas, no la cantidad de "
+        f"incorrectas)."
     )
-    respuesta = ejecutar_roundtrip(
+    # El roundtrip solo verifica que el proveedor responde con la forma
+    # esperada; el contenido del fact nunca proviene de esta respuesta
+    # (ver docstring del módulo — el LLM confirma, no calcula).
+    ejecutar_roundtrip(
         proveedor, prompt, campos_requeridos=("items_incorrectos", "items_totales")
     )
     return (
@@ -54,8 +74,8 @@ def producir(
                 "autor": Capacidad.EVALUAR,
                 "contenido": {
                     "competencia": competencia,
-                    "items_incorrectos": respuesta["items_incorrectos"],
-                    "items_totales": respuesta["items_totales"],
+                    "items_incorrectos": items_incorrectos,
+                    "items_totales": items_totales,
                 },
                 "provenance": Provenance.de(
                     OrigenProvenance.LLM,

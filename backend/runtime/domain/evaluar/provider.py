@@ -22,8 +22,8 @@ class FakeLLMProvider:
     version = "1"
 
     def generar(self, prompt: str) -> LLMResponse:
-        incorrectos = re.search(r"items_incorrectos=\[([\d,]*)\]", prompt)
-        total = re.search(r"total=(\d+)", prompt)
+        incorrectos = re.search(r"son \[([\d,]*)\]", prompt)
+        total = re.search(r"total de (\d+) preguntas", prompt)
         lista = (
             [int(n) for n in incorrectos.group(1).split(",") if n]
             if incorrectos
