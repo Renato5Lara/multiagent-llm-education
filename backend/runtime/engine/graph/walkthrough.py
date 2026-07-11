@@ -35,6 +35,7 @@ from runtime.kernel.reducers import (
     registrar_decision,
     registrar_deliberacion,
     registrar_fact,
+    validar_decision,
 )
 from runtime.kernel.state.entries import Capacidad, TipoClaim
 from runtime.kernel.state.state import Identidad, LearningState
@@ -45,6 +46,7 @@ _OPERACIONES: dict[str, Callable] = {
     "registrar_claim": registrar_claim,
     "registrar_deliberacion": registrar_deliberacion,
     "registrar_decision": registrar_decision,
+    "validar_decision": validar_decision,
 }
 
 
