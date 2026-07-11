@@ -9,6 +9,7 @@ jamás de reducer (RFC-0003 §4; P5).
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
 from runtime.kernel.reducers.facts import registrar_fact
 from runtime.kernel.reducers.claims import registrar_claim
+from runtime.kernel.reducers.supersesion import superseder_claim, superseder_fact
 
 __all__ = [
     "Aplicado",
@@ -16,4 +17,6 @@ __all__ = [
     "ResultadoReducer",
     "registrar_claim",
     "registrar_fact",
+    "superseder_claim",
+    "superseder_fact",
 ]

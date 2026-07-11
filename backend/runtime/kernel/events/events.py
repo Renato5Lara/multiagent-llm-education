@@ -44,3 +44,11 @@ class TransicionRechazada(DomainEvent):
 
     invariante: str
     motivo: str
+
+
+@dataclass(frozen=True, slots=True)
+class EntradaSupersedida(DomainEvent):
+    """Corregir es superseder (INV-3): la anterior queda, marcada."""
+
+    entry_id: EntryId
+    por: EntryId

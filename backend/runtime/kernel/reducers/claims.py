@@ -15,12 +15,13 @@ respaldo — este reducer no lo simula ni lo bloquea a futuro.
 from __future__ import annotations
 
 import dataclasses
-import re
 from decimal import Decimal
 from typing import Any, Mapping
 
-from runtime.kernel.events import ClaimRegistrado, TransicionRechazada
-from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
+from runtime.kernel.events import ClaimRegistrado
+from runtime.kernel.reducers.comunes import norma_de as _norma_de
+from runtime.kernel.reducers.comunes import rechazo as _rechazo
+from runtime.kernel.reducers.resultado import Aplicado, ResultadoReducer
 from runtime.kernel.state.entries import (
     Capacidad,
     ClaimEntry,
@@ -29,24 +30,6 @@ from runtime.kernel.state.entries import (
     TipoClaim,
 )
 from runtime.kernel.state.state import LearningState
-
-_TOKEN_NORMA = re.compile(r"^[A-Z][A-Z0-9-]*$")
-
-
-def _norma_de(violacion: ValueError) -> str:
-    """Extrae la norma del mensaje del sobre ("INV-5: …", "A1: …")."""
-    prefijo = str(violacion).split(":", 1)[0].split()[0]
-    return prefijo if _TOKEN_NORMA.match(prefijo) else "INV-5"
-
-
-def _rechazo(indice: int, norma: str, motivo: str) -> Rechazado:
-    return Rechazado(
-        invariante=norma,
-        motivo=motivo,
-        eventos=(
-            TransicionRechazada(transicion=indice, invariante=norma, motivo=motivo),
-        ),
-    )
 
 
 def registrar_claim(
