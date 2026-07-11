@@ -86,6 +86,7 @@ def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
                     "autor": Capacidad.VALIDAR,
                     "asunto": f"efecto({decision.id})",
                     "afirmacion": {
+                        "competencia": competencia,
                         "funciono": despues < antes,
                         "items_antes": antes,
                         "items_despues": despues,

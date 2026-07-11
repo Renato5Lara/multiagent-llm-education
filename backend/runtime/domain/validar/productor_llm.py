@@ -55,6 +55,7 @@ def producir(
                     "autor": Capacidad.VALIDAR,
                     "asunto": f"efecto({decision.id})",
                     "afirmacion": {
+                        "competencia": competencia,
                         "funciono": respuesta["funciono"],
                         "razonamiento": respuesta.get("razonamiento", ""),
                     },
