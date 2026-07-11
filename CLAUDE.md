@@ -100,6 +100,35 @@ arquitectura gobierna al desarrollo.
 > la verificabilidad arquitectónica tienen prioridad sobre la menor
 > cantidad de líneas de código.**
 
+### Regla de implementación segura
+
+Antes de modificar cualquier archivo existente del runtime: (1) leerlo
+completamente; (2) comprender su responsabilidad dentro del Blueprint;
+(3) identificar qué RFC y ADR implementa; (4) modificar únicamente la
+parte necesaria; (5) mantener el estilo existente; (6) jamás reescribir
+un archivo completo cuando el cambio es local.
+
+Si durante la modificación se detectan problemas adicionales: **NO
+corregirlos automáticamente** — registrarlos al final como observaciones;
+solo corregirlos si forman parte del cambio solicitado.
+
+**Cambios pequeños:** ningún cambio contiene más de una responsabilidad
+arquitectónica; si una tarea requiere reducers + entities + persistence +
+tests, se divide en varios commits.
+
+**Antes de terminar, responder siempre:**
+
+```
+Engineering Gate
+✓ Compila   ✓ Tests   ✓ Linter
+✓ RFC preservado   ✓ ADR preservado   ✓ Constitución preservada
+✓ No se introdujeron conceptos nuevos
+✓ No se modificó la arquitectura
+```
+
+**Si existe incertidumbre:** no asumir, no improvisar, no diseñar —
+detenerse y preguntar.
+
 ---
 
 ## PRINCIPIO FUNDAMENTAL
