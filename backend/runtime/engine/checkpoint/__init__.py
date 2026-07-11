@@ -11,9 +11,11 @@ from runtime.engine.checkpoint.cadena import (
     genesis,
     verificar,
 )
+from runtime.engine.checkpoint.storage import AlmacenTransiciones
 
 __all__ = [
     "ESCALA_DECIMAL",
+    "AlmacenTransiciones",
     "RegistroTransicion",
     "a_canonico",
     "encadenar",
