@@ -14,6 +14,7 @@ BaseAgent es una épica posterior.
 from __future__ import annotations
 
 import dataclasses
+from decimal import Decimal
 from typing import Any, Mapping
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -32,6 +33,8 @@ from runtime.boundary import (
     PeticionAbrirSesion,
     PeticionHechoDelMundo,
     abrir_sesion,
+    consultar_estado,
+    consultar_memoria,
     consultar_traza,
     registrar_hecho,
 )
@@ -98,20 +101,44 @@ class PasoTrazaOut(BaseModel):
 
 
 def _valor_json(valor: Any) -> Any:
-    """`EntryId` es el único tipo del kernel en los eventos que no es ya
-    JSON-nativo (los enum de vocabulario son `str, Enum`)."""
-    return str(valor) if isinstance(valor, EntryId) else valor
+    """RFC-0010 regla 2: vocabulario del runtime, sin traducir — recorre
+    cualquier valor del kernel (eventos, entradas del estado, uniones
+    como `ResultadoDeliberacion`) hasta que solo queden tipos JSON-nativos.
+    Los enum de vocabulario ya son `str, Enum`; `EntryId` y `Decimal`
+    (ADR-0001 §4, exactitud decimal) son los únicos que se stringifican."""
+    if isinstance(valor, (EntryId, Decimal)):
+        return str(valor)
+    if dataclasses.is_dataclass(valor) and not isinstance(valor, type):
+        return {
+            campo.name: _valor_json(getattr(valor, campo.name))
+            for campo in dataclasses.fields(valor)
+        }
+    if isinstance(valor, (tuple, list)):
+        return [_valor_json(v) for v in valor]
+    return valor
 
 
 def _evento_out(evento: DomainEvent) -> EventoOut:
-    """RFC-0010 regla 2: vocabulario del runtime, sin traducir — cada
-    campo del evento viaja tal cual, solo `EntryId` se stringifica."""
     datos = {
         campo.name: _valor_json(getattr(evento, campo.name))
         for campo in dataclasses.fields(evento)
         if campo.name != "transicion"
     }
     return EventoOut(tipo=type(evento).__name__, datos=datos)
+
+
+class EstadoOut(BaseModel):
+    transicion: int
+    facts: list[Mapping[str, Any]]
+    claims: list[Mapping[str, Any]]
+    deliberaciones: list[Mapping[str, Any]]
+    decisiones: list[Mapping[str, Any]]
+
+
+class MemoriaOut(BaseModel):
+    student_id: str
+    session_id: str
+    catalogo: Mapping[str, Any]
 
 
 @router.post("/sessions", response_model=IdentidadOut)
@@ -172,33 +199,42 @@ def hecho(
     return EntregaOut(asunto=entrega.asunto, diseno=entrega.diseno)
 
 
-@router.get("/sessions/{session_id}/traza", response_model=list[PasoTrazaOut])
-def traza(
-    session_id: str,
-    current_user: User = Depends(aget_current_estudiante),
-) -> list[PasoTrazaOut]:
-    """RFC-0007 §2.1 — la traza de eventos de la sesión, derivada de lo
-    persistido (S3, RFC-0010 §2). Esta pieza solo autoriza al estudiante
-    dueño de la sesión: `resolver_identidad` no verifica pertenencia por
-    sí solo (a diferencia de `hecho()`, aquí no hay `identidad` en el
-    cuerpo que contrastar, así que se verifica explícitamente contra lo
-    ya persistido). Modo Evidencia (docente/admin) es una superficie
-    posterior — no inventada aquí."""
-    almacen, almacen_memoria = almacenes()
+def _peticion_de(session_id: str, current_user: User) -> PeticionAbrirSesion:
+    return PeticionAbrirSesion(
+        session_id=session_id,
+        student_id=str(current_user.id),
+        version_banco=VERSION_BANCO,
+        version_politica=VERSION_POLITICA,
+        spec_version=SPEC_VERSION,
+    )
+
+
+def _verificar_pertenencia(session_id: str, current_user: User, almacen: Any) -> None:
+    """Las tres surfaces S3 de solo lectura (traza/estado/memoria) no
+    reciben una `identidad` en el cuerpo que contrastar como sí hace
+    `hecho()` (es un GET) — `resolver_identidad` tampoco verifica
+    pertenencia por sí sola, así que se verifica aquí, explícitamente,
+    contra lo ya persistido."""
     existente = almacen.identidad_existente(session_id)
     if existente is not None and existente.student_id != str(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="La sesión no pertenece al usuario autenticado",
         )
+
+
+@router.get("/sessions/{session_id}/traza", response_model=list[PasoTrazaOut])
+def traza(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante),
+) -> list[PasoTrazaOut]:
+    """RFC-0007 §2.1 — la traza de eventos de la sesión, derivada de lo
+    persistido (S3, RFC-0010 §2). Modo Evidencia (docente/admin) es una
+    superficie posterior — no inventada aquí."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
     pasos = consultar_traza(
-        PeticionAbrirSesion(
-            session_id=session_id,
-            student_id=str(current_user.id),
-            version_banco=VERSION_BANCO,
-            version_politica=VERSION_POLITICA,
-            spec_version=SPEC_VERSION,
-        ),
+        _peticion_de(session_id, current_user),
         almacen,
         almacen_memoria,
     )
@@ -209,3 +245,52 @@ def traza(
         )
         for paso in pasos
     ]
+
+
+@router.get("/sessions/{session_id}/estado", response_model=EstadoOut)
+def estado(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante),
+) -> EstadoOut:
+    """RFC-0002 §1 — el LearningState completo de la sesión (S3, RFC-0010
+    §2): facts, claims, deliberaciones, decisiones, tal como el kernel
+    los tiene, sin proyectar ni resumir."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
+    learning_state = consultar_estado(
+        _peticion_de(session_id, current_user),
+        almacen,
+        almacen_memoria,
+    )
+    return EstadoOut(
+        transicion=learning_state.transicion,
+        facts=[_valor_json(f) for f in learning_state.facts],
+        claims=[_valor_json(c) for c in learning_state.claims],
+        deliberaciones=[_valor_json(d) for d in learning_state.deliberaciones],
+        decisiones=[_valor_json(d) for d in learning_state.decisiones],
+    )
+
+
+@router.get("/sessions/{session_id}/memoria", response_model=MemoriaOut | None)
+def memoria(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante),
+) -> MemoriaOut | None:
+    """RFC-0005 §2 — la versión de memoria que ESTA sesión tiene fijada
+    (S3, RFC-0010 §2), nunca "la más reciente" del estudiante. `None`
+    si `version_student_model` es "0" (RFC-0005 §1.1): el estudiante
+    todavía no consolidó ninguna sesión — un estado válido, no un error."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
+    version = consultar_memoria(
+        _peticion_de(session_id, current_user),
+        almacen,
+        almacen_memoria,
+    )
+    if version is None:
+        return None
+    return MemoriaOut(
+        student_id=version.student_id,
+        session_id=version.session_id,
+        catalogo=version.catalogo,
+    )

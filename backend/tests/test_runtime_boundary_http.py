@@ -133,6 +133,77 @@ def test_traza_de_sesion_ajena_es_rechazada(client, autenticado):
     assert resp.status_code == 403
 
 
+def test_estado_refleja_facts_y_claims_via_http(client, autenticado):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-estado"})
+    identidad = abierta.json()
+
+    client.post(
+        "/api/runtime/hechos",
+        json={
+            "identidad": identidad,
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "origen": "instrumento",
+        },
+    )
+
+    resp = client.get("/api/runtime/sessions/s-http-estado/estado")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert len(body["facts"]) == 1
+    assert body["facts"][0]["autor"] == "boundary"
+    assert len(body["claims"]) > 0
+    assert body["transicion"] == len(body["facts"]) + len(body["claims"]) + len(
+        body["deliberaciones"]
+    ) + len(body["decisiones"])
+
+
+def test_memoria_es_none_para_estudiante_sin_historia(client, autenticado):
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-memoria-nueva"})
+    resp = client.get("/api/runtime/sessions/s-http-memoria-nueva/memoria")
+    assert resp.status_code == 200, resp.text
+    assert resp.json() is None
+
+
+def test_memoria_lee_la_version_consolidada_por_una_sesion_previa(client, autenticado):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-memoria-previa"})
+    identidad = abierta.json()
+
+    client.post(
+        "/api/runtime/hechos",
+        json={
+            "identidad": identidad,
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "origen": "instrumento",
+            "cerrar_sesion": True,
+        },
+    )
+
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-memoria-siguiente"})
+    resp = client.get("/api/runtime/sessions/s-http-memoria-siguiente/memoria")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body is not None
+    assert body["session_id"] == "s-http-memoria-previa"
+    assert body["catalogo"]
+
+
+def test_estado_y_memoria_de_sesion_ajena_son_rechazados(client, autenticado):
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-ajena-2"})
+
+    from app.api.deps import aget_current_estudiante
+    from app.main import app
+
+    class _OtroUsuario:
+        id = "otro-estudiante-cualquiera"
+
+    app.dependency_overrides[aget_current_estudiante] = lambda: _OtroUsuario()
+    try:
+        assert client.get("/api/runtime/sessions/s-http-ajena-2/estado").status_code == 403
+        assert client.get("/api/runtime/sessions/s-http-ajena-2/memoria").status_code == 403
+    finally:
+        app.dependency_overrides[aget_current_estudiante] = lambda: autenticado
+
+
 def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
     abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-ajena"})
     identidad_ajena = dict(abierta.json(), student_id="otro-estudiante-cualquiera")
