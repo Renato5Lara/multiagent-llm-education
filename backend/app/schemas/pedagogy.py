@@ -37,3 +37,23 @@ class WeeklyPedagogicalPlanResponse(BaseModel):
     validated_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+
+class AsuntoPrioridadResponse(BaseModel):
+    competencia: str
+    estudiantes_reforzar: int
+    estudiantes_avanzar: int
+
+
+class WeeklyPlanSuggestionResponse(BaseModel):
+    """Plataforma Operativa 2 — Inteligencia Docente. Sugerencia de solo
+    lectura derivada de las decisiones que el Runtime ya tomó para el
+    roster del curso; el docente conserva la autoridad de crear el plan
+    (RFC-0009) — usarla o ignorarla es su decisión."""
+
+    course_id: str
+    estudiantes_totales: int
+    estudiantes_con_evidencia: int
+    prioridades: list[AsuntoPrioridadResponse]
+    competencia_sugerida: str | None
+    bloom_target_sugerido: int | None
