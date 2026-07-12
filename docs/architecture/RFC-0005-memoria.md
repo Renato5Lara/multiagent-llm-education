@@ -1,9 +1,11 @@
 # RFC-0005 — Memoria
 
 - **Estado:** Aceptado (2026-07-10 — con la precisión del tesista:
-  memoria persistente vs memoria de trabajo)
+  memoria persistente vs memoria de trabajo; rev. 2 — 2026-07-12: enmienda
+  §1.1, el caso N=0, hallado durante la Engineering Review previa a M4
+  PR-6)
 - **Autor:** Equipo de arquitectura (Claude + tesista)
-- **Fecha:** 2026-07-10
+- **Fecha:** 2026-07-10 (rev. 2: 2026-07-12)
 - **Aprueba:** Renato Lara (tesista / Product Owner)
 - **Tipo de revisión:** Architecture Review (define modelo, no
   implementación; el almacenamiento físico será un ADR)
@@ -80,6 +82,25 @@ la corrección es ampliar *qué* se carga (política), no *cuándo* (modelo).
 Cualquier información que llegue de verdad a mitad de sesión (p. ej. un
 docente actualiza algo) entra como fact por el Platform Boundary — es un
 hecho del mundo, no una lectura de memoria.
+
+### 1.1 El caso N=0 (primera sesión de un estudiante)
+
+Cargar puede resolver dos estados: existe al menos una versión consolidada
+para el estudiante (N≥1), o no existe ninguna versión consolidada previa
+(N=0). Este segundo caso no constituye un error ni un estado excepcional,
+sino el estado esperado antes de la primera sesión.
+
+En el caso N=0, Cargar deriva un estado inicial del Student Model
+correspondiente a ese caso. Este estado inicial no constituye una versión
+consolidada y, por tanto, no modifica la historia append-only definida
+para las versiones posteriores (P14).
+
+La primera versión consolidada nace únicamente mediante Consolidar, al
+cierre de la primera sesión, exactamente bajo las mismas reglas que
+cualquier versión posterior.
+
+Esta regla no modifica el comportamiento definido para estudiantes con
+una o más versiones consolidadas.
 
 ### 2. Qué se recuerda (catálogo cerrado)
 
