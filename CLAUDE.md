@@ -113,6 +113,52 @@ Inteligencia Docente → 3 Boundary completo → 4 Observabilidad (RFC-0007)
 simulación → 8 Eliminación física de BaseAgent y código muerto. El orden
 exacto lo fija la auditoría de impacto de cada sesión, no esta lista.
 
+### Actualización 2026-07-12 (tercera) — Engineering Gate de épica, Boundary único, cierre E2E real
+
+**Engineering Gate de épica (obligatorio antes de escribir código para
+cualquier Plataforma Operativa, no para una pieza suelta):**
+
+1. **RFC/ADR propietario** — qué documento implementa, qué requisitos
+   son obligatorios, qué principios (P1–P17) pueden verse afectados.
+2. **Estado actual** — auditar el código real (no asumir): qué ya
+   existe, qué se puede reutilizar, qué es realmente nuevo.
+3. **Contrato** — Boundary, HTTP, DTOs, Frontend, sin decidir
+   implementación todavía.
+4. **Plan de implementación** — motor, boundary, API, UI, tests, en
+   commits pequeños (uno por responsabilidad arquitectónica).
+5. **Validación** — Postgres real, OpenAI real, Tavily real, navegador
+   real. Sin mocks de dominio.
+6. **Criterios de cierre** — código, tests, build, validación E2E,
+   documentación, commit.
+
+Si el paso 2 revela que la Plataforma Operativa depende de una capacidad
+que no existe todavía (p. ej. HITL dependiendo del disparador orgánico
+de escalada de RFC-0006 §4, no implementado), **no se bloquea la épica
+completa**: se recorta el alcance a lo que sí es construible hoy, se
+declara explícitamente qué queda fuera y por qué, y se registra como
+dependencia futura — nunca como pendiente silencioso.
+
+**Regla dura — Boundary único.** Ningún componente nuevo consume
+`backend/runtime/` directamente, sin excepción (Runtime Console, Replay,
+HITL, Dashboard, Investigación, Analytics, lo que venga). Único camino
+válido: `Frontend → HTTP → Boundary → Runtime (LangGraph)`. Saltarse el
+Boundary está prohibido aunque parezca más rápido para un caso puntual.
+
+**Regla de cierre E2E real (extiende la Regla de Cierre general a
+`backend/runtime/`).** Ninguna Plataforma Operativa se considera cerrada
+hasta haber sido validada mediante un recorrido extremo a extremo real:
+HTTP real + PostgreSQL real + LLM real (OpenAI/Tavily, cuando el flujo
+los active) + navegador real — nunca solo "compila" o "los tests pasan".
+Los bugs de mayor impacto encontrados hasta ahora (autorización del
+docente sobre las surfaces de lectura, `EntryId` incompatible como
+segmento de URL, `GraphRecursionError` por una cadena causal incompleta)
+aparecieron **usando el sistema real**, no leyendo el código — ninguno
+lo habría revelado una revisión estática. Excepción: cuando la
+naturaleza de la pieza hace imposible esa validación (p. ej. un
+refactor puramente interno sin superficie observable), se documenta por
+qué y se valida con la suite de tests real contra Postgres real como
+mínimo aceptable.
+
 ### Rol
 
 Actúa como **Principal Software Engineer / Implementation Lead**. No eres
