@@ -75,6 +75,31 @@ class TransicionEventos:
 
 Traza = tuple[TransicionEventos, ...]
 
+
+@dataclass(frozen=True, slots=True)
+class TransicionEstado:
+    """Un eslabón del replay (RFC-0008 §3, modo Reconstrucción — 'recorrer
+    la secuencia persistida de estados'; RFC-0007 §5): el `LearningState`
+    completo tal como quedó inmediatamente después de esa transición."""
+
+    transicion: int
+    estado: LearningState
+
+
+Replay = tuple[TransicionEstado, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _Paso:
+    """Acumulador interno de un paso de reconstrucción — nunca se expone:
+    `reconstruir_con_traza` y `reconstruir_con_replay` son proyecciones
+    distintas del MISMO recorrido (regla de derivación: un solo bucle,
+    dos vistas), no dos reconstrucciones independientes."""
+
+    transicion: int
+    estado: LearningState
+    eventos: tuple[DomainEvent, ...]
+
 # Dispatch local, deliberadamente NO importado de engine/graph/walkthrough:
 # ese módulo importa langgraph (ADR-0006 regla 1), y este es un módulo de
 # persistencia puro — no debe arrastrar esa dependencia. Duplica el
@@ -192,11 +217,11 @@ def desde_canonico(canonico: bytes) -> TransitionIntent:
     )
 
 
-def reconstruir_con_traza(
+def _reconstruir_pasos(
     identidad: Identidad,
     contexto: Mapping[str, Any],
     registros: tuple[RegistroTransicion, ...],
-) -> tuple[LearningState, Traza]:
+) -> tuple[_Paso, ...]:
     """R3 (Exactitud): reconstruir desde lo persistido produce la misma
     secuencia. Nunca invoca un productor ni un proveedor LLM — solo
     decodifica intents ya decididos (`desde_canonico`) y los aplica a
@@ -207,12 +232,11 @@ def reconstruir_con_traza(
     `registro.canonico` — si no coincide, la reconstrucción no es fiel
     y se aborta ruidosamente (ADR-0004 E-2, nunca un rechazo silencioso).
 
-    Además de reconstruir el `LearningState`, retorna la traza (RFC-0007
-    §2.1): los mismos eventos que la verificación de integridad ya
-    recalcula, expuestos por transición en vez de descartarse.
-    """
+    Único recorrido de la historia: `reconstruir`, `reconstruir_con_traza`
+    y `reconstruir_con_replay` son proyecciones de este mismo resultado,
+    no bucles independientes."""
     estado = LearningState(identidad=identidad, contexto=contexto)
-    traza: list[TransicionEventos] = []
+    pasos: list[_Paso] = []
     for registro in registros:
         intent = desde_canonico(registro.canonico)
         resultado = _OPERACIONES[intent.operacion](estado, **intent.argumentos)
@@ -231,12 +255,50 @@ def reconstruir_con_traza(
                 f"reconstrucción diverge de lo persistido"
             )
         estado = resultado.estado
-        traza.append(
-            TransicionEventos(
-                transicion=registro.transicion, eventos=resultado.eventos
+        pasos.append(
+            _Paso(
+                transicion=registro.transicion,
+                estado=estado,
+                eventos=resultado.eventos,
             )
         )
-    return estado, tuple(traza)
+    return tuple(pasos)
+
+
+def _estado_inicial(identidad: Identidad, contexto: Mapping[str, Any]) -> LearningState:
+    return LearningState(identidad=identidad, contexto=contexto)
+
+
+def reconstruir_con_traza(
+    identidad: Identidad,
+    contexto: Mapping[str, Any],
+    registros: tuple[RegistroTransicion, ...],
+) -> tuple[LearningState, Traza]:
+    """Además del `LearningState` final, retorna la traza (RFC-0007 §2.1):
+    los eventos que la verificación de integridad ya recalcula, expuestos
+    por transición en vez de descartarse."""
+    pasos = _reconstruir_pasos(identidad, contexto, registros)
+    estado = pasos[-1].estado if pasos else _estado_inicial(identidad, contexto)
+    traza = tuple(
+        TransicionEventos(transicion=p.transicion, eventos=p.eventos) for p in pasos
+    )
+    return estado, traza
+
+
+def reconstruir_con_replay(
+    identidad: Identidad,
+    contexto: Mapping[str, Any],
+    registros: tuple[RegistroTransicion, ...],
+) -> tuple[LearningState, Replay]:
+    """Además del `LearningState` final, retorna el replay (RFC-0008 §3,
+    modo Reconstrucción; RFC-0007 §5): el `LearningState` completo tal
+    como quedó después de cada transición — no solo sus eventos."""
+    pasos = _reconstruir_pasos(identidad, contexto, registros)
+    estado = pasos[-1].estado if pasos else _estado_inicial(identidad, contexto)
+    replay = tuple(
+        TransicionEstado(transicion=p.transicion, estado=p.estado) for p in pasos
+    )
+    return estado, replay
 
 
 def reconstruir(
