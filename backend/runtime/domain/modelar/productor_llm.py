@@ -3,6 +3,21 @@
 Mismo contrato que la versión regla: mismo `operacion` (registrar_claim),
 mismo `tipo`, mismo `asunto`, misma forma de `respaldo` — únicamente
 cambia CÓMO se interpreta la implicación del veredicto (P13).
+
+Modelar produce un CLAIM (mismo criterio fijado en M3 PR-7: el tipo de
+sobre, no la derivabilidad, decide la familia) — así que NO aplica
+grounding. Pero es el caso más extremo de la familia claim: la regla no
+aplica ni un umbral, copia literalmente `funciono` en `efecto_positivo`
+(ver `productor.py`, y el guardián P13
+`test_refleja_el_veredicto_sin_reinterpretarlo`) — Modelar no reabre el
+veredicto de Validar, solo interpreta su implicación para el modelo del
+estudiante. Un sondeo real (Engineering Review previa, M3 PR-8) mostró
+que, sin declarar esa regla en el prompt, el modelo anida la respuesta
+en una estructura libre inventada y nunca reproduce los campos
+exigidos. Declararla explícitamente (mismo patrón que Diagnosticar/
+Validar) produjo 10/10 corridas reales con `efecto_positivo` idéntico a
+`funciono` en ambos casos — el LLM aporta razonamiento y confianza,
+nunca el veredicto mismo.
 """
 
 from __future__ import annotations
@@ -44,7 +59,16 @@ def producir(
             continue
         prompt = (
             f"competencia={competencia} funciono={str(funciono).lower()}. "
-            f"¿Qué implica esto para el modelo del estudiante? Responde JSON."
+            f"Esto es el veredicto ya determinado por Validar sobre si la "
+            f"decisión pedagógica funcionó — efecto_positivo DEBE ser "
+            f"exactamente igual a funciono (regla modelado-v1: Modelar no "
+            f"reinterpreta el veredicto, solo explica su implicación para "
+            f"el modelo del estudiante). Responde JSON con esta forma "
+            f'EXACTA y en este ORDEN: primero "razonamiento" (explica la '
+            f'implicación para el modelo del estudiante), luego '
+            f'"efecto_positivo" (booleano, debe ser exactamente igual a '
+            f'funciono), luego "confianza" (STRING con formato decimal '
+            f'entre "0.00" y "1.00", ejemplo "0.80").'
         )
         respuesta = ejecutar_roundtrip(
             proveedor, prompt, campos_requeridos=("efecto_positivo", "confianza")
