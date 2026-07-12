@@ -24,7 +24,7 @@ import os
 import psycopg2
 import pytest
 
-from app.api.deps import aget_current_estudiante
+from app.api.deps import aget_current_docente, aget_current_estudiante
 from app.main import app
 
 _URL = os.environ.get(
@@ -67,6 +67,13 @@ def autenticado(client, estudiante_user):
     app.dependency_overrides[aget_current_estudiante] = lambda: estudiante_user
     yield estudiante_user
     app.dependency_overrides.pop(aget_current_estudiante, None)
+
+
+@pytest.fixture
+def autenticado_docente(client, docente_user):
+    app.dependency_overrides[aget_current_docente] = lambda: docente_user
+    yield docente_user
+    app.dependency_overrides.pop(aget_current_docente, None)
 
 
 def test_recorrido_completo_http_hasta_una_entrega_de_adaptar(client, autenticado):
@@ -256,4 +263,42 @@ def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
 
 def test_sin_autenticacion_es_rechazado(client):
     resp = client.post("/api/runtime/sessions", json={"session_id": "s-sin-auth"})
+    assert resp.status_code in (401, 403)
+
+
+def test_hecho_docente_via_http(client, autenticado, autenticado_docente):
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-hitl-docente"})
+
+    resp = client.post(
+        "/api/runtime/sessions/s-http-hitl-docente/hechos-docente",
+        json={
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "human_reason": "observé confusión persistente en clase",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    traza = client.get("/api/runtime/sessions/s-http-hitl-docente/traza")
+    primer_paso = traza.json()[0]
+    assert primer_paso["eventos"][0]["tipo"] == "FactRegistrado"
+    assert primer_paso["eventos"][0]["datos"]["origen"] == "humano"
+
+
+def test_hecho_docente_de_sesion_inexistente_es_404(client, autenticado_docente):
+    resp = client.post(
+        "/api/runtime/sessions/s-http-nunca-abierta/hechos-docente",
+        json={"contenido": {"competencia": "COMP-2", "items_incorrectos": []}},
+    )
+    assert resp.status_code == 404
+
+
+def test_hecho_docente_requiere_rol_docente(client, autenticado):
+    # Sin override de aget_current_docente: mismo gap ya documentado en el
+    # docstring del módulo (ninguna ruta async se ejercita sin autenticar
+    # de verdad) — 401 (sin token real) o 403 (rol) son ambos rechazo.
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-hitl-sin-rol"})
+    resp = client.post(
+        "/api/runtime/sessions/s-http-hitl-sin-rol/hechos-docente",
+        json={"contenido": {"competencia": "COMP-2", "items_incorrectos": []}},
+    )
     assert resp.status_code in (401, 403)

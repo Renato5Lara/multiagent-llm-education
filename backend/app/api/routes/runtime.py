@@ -20,7 +20,7 @@ from typing import Any, Mapping
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.deps import aget_current_estudiante
+from app.api.deps import aget_current_docente, aget_current_estudiante
 from app.models.user import User
 from app.services.runtime_connection import (
     SPEC_VERSION,
@@ -326,3 +326,42 @@ def replay(
         PasoReplayOut(transicion=paso.transicion, estado=_estado_out(paso.estado))
         for paso in pasos
     ]
+
+
+class HechoDocenteIn(BaseModel):
+    contenido: Mapping[str, Any]
+    human_reason: str | None = None
+
+
+@router.post("/sessions/{session_id}/hechos-docente", response_model=EntregaOut)
+def hecho_docente(
+    session_id: str,
+    peticion: HechoDocenteIn,
+    current_user: User = Depends(aget_current_docente),
+) -> EntregaOut:
+    """RFC-0009 §2, entrada 2 (intervención espontánea) — E3, RFC-0010 §1:
+    "juicios... del docente" como facts con provenance `humano`. Reutiliza
+    `registrar_hecho` sin cambios: el Boundary no distingue autor humano
+    de fact estudiantil salvo por `provenance` (Grieta A). No exige que
+    el docente "sea dueño" de la sesión — es autoridad, no participante
+    del consenso (RFC-0009 §3); el alcance de qué estudiantes ve cada
+    docente es una capacidad de Inteligencia Docente, no de este Boundary."""
+    almacen, almacen_memoria = almacenes()
+    identidad = almacen.identidad_existente(session_id)
+    if identidad is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="La sesión no existe"
+        )
+    contenido = dict(peticion.contenido)
+    if peticion.human_reason is not None:
+        contenido["human_reason"] = peticion.human_reason
+    entrega = registrar_hecho(
+        PeticionHechoDelMundo(
+            identidad=identidad,
+            contenido=contenido,
+            origen=OrigenProvenance.HUMANO,
+        ),
+        almacen,
+        almacen_memoria,
+    )
+    return EntregaOut(asunto=entrega.asunto, diseno=entrega.diseno)
