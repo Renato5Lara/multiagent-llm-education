@@ -23,6 +23,57 @@ un sistema: estamos implementándolo.** La documentación arquitectónica
 BLUEPRINT, VOCABULARY, LEDGER) es la autoridad máxima. El código se
 adapta a la arquitectura; nunca al revés.
 
+### Actualización 2026-07-12 — Engineering Review dirigida, épicas funcionales, retiro de BaseAgent
+
+Esta actualización no relaja el rigor arquitectónico del régimen anterior;
+cambia únicamente **cuándo** se invoca una Engineering Review completa.
+
+**Engineering Review dirigida (no exhaustiva).** Engineering Review deja
+de ser obligatoria para toda decisión. Es obligatoria únicamente cuando
+aparece: una contradicción arquitectónica real, un vacío normativo (algo
+que ningún RFC/ADR resuelve), una modificación de un RFC/ADR ya aceptado,
+o una decisión que cambia la arquitectura. Las decisiones de
+implementación ya respaldadas por RFC/ADR existentes se ejecutan
+directamente — el Engineering Gate (4 preguntas) sigue siendo obligatorio
+como verificación, pero no requiere una ronda de revisión narrada si las
+4 respuestas son limpias. La trazabilidad RFC/ADR, las pruebas
+obligatorias y la preservación de invariantes NO cambian.
+
+**Épicas funcionales.** El trabajo de `backend/runtime/` se organiza por
+épicas funcionales completas y utilizables (p. ej. "Platform Boundary",
+"runtime completamente integrado a FastAPI"), no por fragmentación
+artificial de PRs cuando esta no aporta valor técnico. Dentro de cada
+épica, la regla de "Cambios pequeños" (una responsabilidad arquitectónica
+por commit) sigue vigente sin excepción.
+
+**Priorización de épicas.** Las épicas se priorizan por el incremento de
+funcionalidad entregado al producto completo (frontend → FastAPI →
+Platform Boundary → runtime → persistencia → LLM), no por completar
+subsistemas aislados del runtime. Cuando existan varias épicas
+técnicamente posibles, se elige la que acerque más al sistema a una
+aplicación completamente utilizable de extremo a extremo.
+
+**Retiro de BaseAgent (legacy).** `backend/app/agents/base.py` y sus
+subclases (`AdaptiveAgent`, `EvaluationAgent`, `PedagogicalAgent`,
+`RiskAgent`, `ConsensusMediator`, `ConsistencyAgent`,
+`MultimodalPlanningAgent`, `PromptEngineeringAgent`,
+`StructuralPedagogicalAgent`, `AdaptiveLearningAgent`,
+`AdaptiveLearningEvaluationAgent`) dejan de ser arquitectura vigente desde
+esta fecha: no reciben funcionalidad nueva, no se usan como referencia de
+diseño para implementaciones nuevas, no se les aplican adaptaciones ni
+capas de compatibilidad híbrida. Todo desarrollo nuevo de
+agentes/orquestación ocurre exclusivamente sobre `backend/runtime/`
+(LangGraph vía RFC-0004 — que ya usa `langgraph.graph.StateGraph` real,
+esto no es una decisión nueva). Sin embargo, el código legacy permanece
+físicamente en el repositorio mientras siga siendo el único camino
+funcional que atiende peticiones HTTP reales (`backend/runtime/` aún no
+tiene el Platform Boundary de RFC-0010 integrado a FastAPI). Su
+eliminación física ocurre en una única épica de retiro, ejecutada cuando
+`backend/runtime/` alcance paridad funcional end-to-end (HTTP → Platform
+Boundary → runtime LangGraph → LLM → respuesta). No se invierte tiempo en
+migración híbrida ni en mantener ambos caminos vivos más de lo
+estrictamente necesario.
+
 ### Rol
 
 Actúa como **Principal Software Engineer / Implementation Lead**. No eres
@@ -64,6 +115,10 @@ reducer, un value object, una interfaz, una entidad, un adapter, una
 prueba, un mapper) — jamás varias responsabilidades a la vez. Seguir
 estrictamente el orden del BLUEPRINT; no adelantar componentes ni saltar
 etapas.
+
+Esta granularidad es por commit, no por sesión ni por PR: una épica
+funcional (ver actualización 2026-07-12) puede agrupar varios de estos
+commits pequeños hasta entregar una capacidad completa y utilizable.
 
 ### Calidad y pruebas
 
