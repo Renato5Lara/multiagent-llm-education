@@ -123,6 +123,28 @@ class AlmacenMemoria:
                 student_id=student_id, session_id=session_id, catalogo=catalogo
             )
 
+    def numero_version_vigente(self, student_id: str) -> str:
+        """El número de `version_student_model` para una `Identidad`
+        NUEVA (RFC-0010, primera mitad de E1): "0" (RFC-0005 §1.1, el
+        estado inicial N=0) si el estudiante nunca consolidó ninguna
+        versión, o el número más alto ya consolidado como string decimal
+        — mismo formato que `cargar_version` exige de vuelta.
+
+        Complementa `cargar()`: esa función devuelve el CONTENIDO de la
+        versión vigente (para inspección directa); esta devuelve solo su
+        NÚMERO. E1 únicamente necesita el número para fijar `Identidad`
+        (RFC-0003 INV-1: la versión se fija atómicamente al abrir); el
+        contenido se vuelve a pedir después, ya anclado en la identidad,
+        vía `cargar_version` dentro de `materializar_sesion` (M4 PR-6)."""
+        with self._conectar() as conexion, conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT COALESCE(MAX(version), 0) FROM memory_versions"
+                " WHERE student_id = %s",
+                (student_id,),
+            )
+            (numero,) = cursor.fetchone()
+            return str(numero)
+
     def cargar_version(self, student_id: str, version: str) -> VersionMemoria | None:
         """La versión EXACTA indicada — nunca "la más reciente"
         (`cargar`). Precondición: `version` ya fue decidida por el

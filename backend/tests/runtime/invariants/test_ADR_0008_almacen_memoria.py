@@ -242,3 +242,35 @@ class TestADR_0008_CargarVersion:
         # memoria"; esa forma es exclusivamente "0" (RFC-0005 §1.1).
         with pytest.raises(ValueError, match="ADR-0004 E-2"):
             almacen.cargar_version("maria", "v7")
+
+
+class TestADR_0010_E1_NumeroVersionVigente:
+    """`numero_version_vigente` — el número que la primera mitad de E1
+    (RFC-0010) necesita para fijar `Identidad.version_student_model` de
+    una sesión NUEVA. Complementa `cargar()` (que devuelve el contenido,
+    no el número)."""
+
+    def test_estudiante_sin_versiones_devuelve_el_sentinel_0(self, almacen):
+        assert almacen.numero_version_vigente("estudiante-nuevo") == "0"
+
+    def test_devuelve_el_numero_mas_alto_ya_consolidado(self, almacen):
+        v1 = preparar_version(_identidad("s-e1-v1"), _CATALOGO_VALIDO)
+        v2 = preparar_version(_identidad("s-e1-v2"), _CATALOGO_VALIDO)
+        almacen.consolidar(v1)
+        almacen.consolidar(v2)
+        assert almacen.numero_version_vigente("maria") == "2"
+
+    def test_no_cruza_identidades(self, almacen):
+        almacen.consolidar(preparar_version(_identidad("s-e1-maria", "maria"), _CATALOGO_VALIDO))
+        assert almacen.numero_version_vigente("juan") == "0"
+
+    def test_el_numero_es_consumible_por_cargar_version(self, almacen):
+        # El contrato completo de E1: el número que esta función entrega
+        # debe ser exactamente lo que `cargar_version` (usada dentro de
+        # `materializar_sesion`) acepta sin lanzar.
+        version = preparar_version(_identidad("s-e1-roundtrip"), _CATALOGO_VALIDO)
+        almacen.consolidar(version)
+        numero = almacen.numero_version_vigente("maria")
+        cargada = almacen.cargar_version("maria", numero)
+        assert cargada is not None
+        assert cargada.session_id == "s-e1-roundtrip"
