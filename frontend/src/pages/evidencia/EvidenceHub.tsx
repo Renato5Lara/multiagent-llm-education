@@ -23,10 +23,10 @@ const evidenceTools = [
     labelClass: 'bg-neural-violet/10 text-neural-violet border-neural-violet/20',
   },
   {
-    title: 'Traza del Runtime',
-    description: 'Los Domain Events del runtime LangGraph, transición por transición: facts, claims, deliberaciones, decisiones — derivados del log persistido, nunca de una segunda tubería.',
+    title: 'Runtime Console',
+    description: 'Traza, Estado Final y Memoria del runtime LangGraph en un solo lugar: facts, claims, deliberaciones, decisiones y la memoria consolidada — derivados del log persistido, nunca de una segunda tubería.',
     icon: Activity,
-    href: '/evidencia/traza',
+    href: '/evidencia/runtime',
     iconClass: 'text-neural-pulse bg-neural-pulse/[0.06] border-neural-pulse/20',
     btnClass:  'text-neural-pulse border-neural-pulse/20 hover:bg-neural-pulse/[0.06]',
     label: 'Runtime nativo',

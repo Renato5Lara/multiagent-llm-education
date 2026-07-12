@@ -11,7 +11,7 @@ const evidenceItems: SidebarItem[] = [
   { label: 'Modo Evidencia',             href: '/evidencia',               icon: FlaskConical },
   { label: 'Dashboard del Investigador', href: '/evidencia/investigacion', icon: LineChart },
   { label: 'Trayectoria del estudiante', href: '/replay',                  icon: Route },
-  { label: 'Traza del Runtime',          href: '/evidencia/traza',         icon: Activity },
+  { label: 'Runtime Console',            href: '/evidencia/runtime',       icon: Activity },
 ]
 
 export default function EvidenceLayout() {
