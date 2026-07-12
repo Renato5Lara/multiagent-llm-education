@@ -191,47 +191,61 @@ exhibiendo esas entradas (P6).
 **Enunciado:** un claim supersedido sale del paisaje; ninguna `ce` lo
 devuelve.
 
-- **Entrada:** un claim con `vigencia.superseded_por is not None`.
-- **Salida — decisión real pendiente, no resuelta por RFC-0006 §1 tal
-  cual está escrito:** el axioma dice que "ninguna ce lo devuelve",
-  pero no especifica si eso significa:
-  - **(a)** `calcular_confianza_efectiva` exige como PRECONDICIÓN que
-    el claim esté vigente, y aborta ruidosamente (`ValueError`, mismo
-    patrón que `reconstruccion.py`/`resolver_escalada` ya usan para
-    errores de programador — ADR-0004 E-2) si se invoca sobre un
-    claim supersedido; o
-  - **(b)** la función devuelve determinísticamente `Decimal("0")`
-    para cualquier claim no vigente, sin error.
-  **Recomendación de este documento (no decisión final):** (a) —
-  consistente con el patrón ya establecido en el resto del proyecto
-  ("un rechazo aquí es un bug del llamador — abortar ruidosamente,
-  jamás disfrazarlo"). El paisaje ya filtra por vigencia antes de
-  comparar `ce` (`_propuestas_vigentes` en `mecanica.py` ya lo hace);
-  la función `ce` no debería necesitar tolerar un input que el resto
-  del sistema nunca debería producirle. **Confirmar antes de
-  implementar Parte A.**
-- **Propiedad demostrable (una vez decidido a/b):** ningún claim
-  supersedido puede "ganar" una comparación de `ce` — ni por resucitar
-  con un valor alto, ni por defecto.
+- **Entrada:** `calcular_confianza_efectiva()` opera **únicamente
+  sobre claims vigentes** — la vigencia es una **precondición del
+  llamador**, no un caso que la función misma valide, filtre o
+  reporte. Un claim con `vigencia.superseded_por is not None` está
+  **fuera del dominio de la función**, en el mismo sentido en que
+  `sqrt(-1)` está fuera del dominio de una raíz cuadrada real: no es
+  un input inválido que la función deba reconocer, es un input que
+  nunca debería llegar — porque quien llama ya lo filtró.
+- **Salida:** sin contrato. La selección/validación de qué claims son
+  vigentes y participan en una comparación de `ce` pertenece a la
+  mecánica de deliberación (`mecanica.py`, RFC-0006/3) — el mismo
+  patrón que hoy ya usa `_propuestas_vigentes()` para filtrar antes de
+  comparar. `confianza.py` no importa `mecanica.py` (ya es criterio de
+  cierre de RFC-0006/1) y por tanto no puede imponerle nada a su
+  llamador más allá de documentar la precondición. Un `assert` interno
+  es aceptable como ayuda de desarrollo, pero **no es parte del
+  contrato público** — no se testea como comportamiento observable.
+- **Propiedad demostrable:** dentro de su dominio (claims vigentes),
+  ningún claim supersedido puede intervenir en el cálculo — está
+  garantizado por construcción, porque nunca es un input válido, no
+  porque la función lo detecte y lo rechace.
 - **Caso borde:** un claim vigente cuyo RESPALDO incluye un claim ya
   supersedido (la cadena causal pasa por una entrada no vigente) — A8
-  solo prohíbe calcular `ce` DEL supersedido, no prohíbe que forme
-  parte de la cadena causal de otro. Verificar que A7 sigue aplicando
-  normalmente en ese caso.
-- **Test asociado:** construir un claim, superseder su
-  rival por una deliberación real (`registrar_deliberacion`,
-  `Resuelta`), intentar `ce(rival_supersedido, ...)` → verificar el
-  comportamiento decidido arriba (error o 0, según se resuelva).
+  restringe qué claims pueden ser el PRIMER argumento de `ce`, no qué
+  puede aparecer dentro de la cadena causal que A7 recorre. Verificar
+  que A7 sigue aplicando normalmente en ese caso.
+- **Test asociado:** ninguno directo en `confianza.py` — todos los
+  tests de Parte A construyen y usan exclusivamente claims vigentes;
+  no existe un test que le pase un claim supersedido a `ce()`, porque
+  eso sería testear un comportamiento fuera de contrato. La garantía
+  de que un supersedido nunca llega a `ce()` se testea en RFC-0006/3,
+  contra `mecanica.py` (el filtro real), no aquí.
 
 ---
 
-## Resumen — decisiones que este documento deja abiertas para la aprobación
+## Resumen — decisiones (resueltas 2026-07-12)
 
-1. **A5:** evidencia ambigua (ni positiva ni negativa clara) no tiene
-   comportamiento exigido — solo que las tres direcciones cubiertas no
-   se violen. ¿De acuerdo, o quieres que se cubra explícitamente ya?
-2. **A8:** recomendación de excepción (precondición de vigencia,
-   aborta si se viola) sobre devolver 0 por defecto. ¿Apruebas (a)?
+1. **A5 — sin regla nueva.** "Evidencia ambigua" no es todavía un
+   concepto del dominio (RFC-0006 solo habla de evidencia que valida,
+   refuta o contradice) — definir un comportamiento para una cuarta
+   categoría sería inventar semántica antes de que exista un caso de
+   uso real. El contrato queda limitado a los tres casos normativos.
+   Si en RFC-0006/3 aparece un caso real inclasificable, se abre su
+   propia Engineering Review en ese momento — no se anticipa aquí.
+2. **A8 — precondición del llamador, no excepción de `confianza.py`.**
+   La vigencia se filtra ANTES de invocar `ce()`, en la mecánica de
+   deliberación (RFC-0006/3) — no dentro de la función matemática.
+   `confianza.py` no valida, no lanza `ValueError`, no conoce el
+   ciclo de vida de un claim: opera sobre un dominio ya restringido a
+   claims vigentes, por definición del contrato, no por chequeo en
+   tiempo de ejecución. Esto mantiene `confianza.py` como un
+   componente puramente matemático, independiente del ciclo de vida de
+   los claims — esa independencia es, en sí misma, evidencia adicional
+   de por qué "`confianza.py` no importa `mecanica.py`" (criterio de
+   cierre ya existente de RFC-0006/1) es la decisión correcta.
 
 ## Resumen — lo que este documento NO decide (a propósito)
 

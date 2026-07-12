@@ -443,8 +443,11 @@ Context Budget:  CONTRACT-A1-A8.md (una vez aprobado), RFC-0006,
                  aparece, justificar antes de abrir, no abrir primero.
 
 Criterios de cierre:
-  □ Los 8 axiomas (A1-A8) tienen exactamente un test dedicado cada uno,
-    contra Postgres real, siguiendo CONTRACT-A1-A8.md
+  □ A1-A7 tienen exactamente un test dedicado cada uno, contra Postgres
+    real, siguiendo CONTRACT-A1-A8.md. A8 no tiene test directo en
+    confianza.py (es una precondición del llamador, no un caso que la
+    función valide) — su garantía se testea en RFC-0006/3 contra
+    mecanica.py, el filtro real de vigencia.
   □ v1 (politica-v1 / mecanica.py) sigue produciendo exactamente las
     mismas decisiones (suite RFC-0007/RFC-0008/HITL ya existente, sin
     modificar, en verde)
