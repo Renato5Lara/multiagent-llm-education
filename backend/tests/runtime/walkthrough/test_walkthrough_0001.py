@@ -658,7 +658,12 @@ class TestM4_PR5_ConsolidacionDeMemoria:
             )
 
     def test_cerrar_sesion_consolida_exactamente_lo_que_salidas_contiene(self, esquema):
-        identidad = _identidad("s-pr5-consolida")
+        # "0": esta "maria" es N=0 en un esquema recién creado — el
+        # placeholder "v7" ya no es una referencia válida (RFC-0005
+        # §1.1; ADR-0004 E-2 para cualquier otra forma).
+        identidad = dataclasses.replace(
+            _identidad("s-pr5-consolida"), version_student_model="0"
+        )
         almacen_transiciones = AlmacenTransiciones(_URL, esquema=esquema)
         almacen_transiciones.preparar()
         almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
@@ -688,7 +693,9 @@ class TestM4_PR5_ConsolidacionDeMemoria:
         # Combina PR-1B (reanudación) + PR-5 (consolidación): la
         # primera invocación NO cierra; solo la segunda, con evidencia
         # posterior, cierra y consolida — una única versión, no dos.
-        identidad = _identidad("s-pr5-reanudada-cierra")
+        identidad = dataclasses.replace(
+            _identidad("s-pr5-reanudada-cierra"), version_student_model="0"
+        )
         almacen_1 = AlmacenTransiciones(_URL, esquema=esquema)
         almacen_1.preparar()
         almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
@@ -729,7 +736,9 @@ class TestM4_PR5_ConsolidacionDeMemoria:
     def test_cerrar_dos_veces_la_misma_sesion_falla_sin_generar_segunda_version(
         self, esquema
     ):
-        identidad = _identidad("s-pr5-doble-cierre")
+        identidad = dataclasses.replace(
+            _identidad("s-pr5-doble-cierre"), version_student_model="0"
+        )
         almacen = AlmacenTransiciones(_URL, esquema=esquema)
         almacen.preparar()
         almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)

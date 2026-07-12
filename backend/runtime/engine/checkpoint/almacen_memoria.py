@@ -128,21 +128,36 @@ class AlmacenMemoria:
         (`cargar`). Precondición: `version` ya fue decidida por el
         llamador (RFC-0003 INV-1: `Identidad.version_student_model` se
         fija atómicamente al abrir) — esta función nunca selecciona,
-        solo materializa. `None` si esa versión no existe.
+        solo materializa.
 
-        `version` llega como `str` (mismo tipo que
-        `Identidad.version_student_model`, que es de uso más antiguo
-        que ADR-0008 y no siempre corresponde a un número de
-        `memory_versions` real — p. ej. sesiones que nunca integraron
-        Memoria, "v7" como marcador libre). Una referencia que no es un
-        entero reconocible se trata igual que "esa versión no existe":
-        `None`, no una excepción — no es un defecto de programación,
-        es exactamente el caso de un estudiante o una identidad sin
-        memoria consolidada todavía."""
+        Contrato observable (RFC-0005 §1.1, ADR-0004):
+
+        - `version == "0"` — el estado inicial N=0 (RFC-0005 §1.1): no
+          existe ninguna versión consolidada, y ese es el estado
+          esperado antes de la primera sesión. Devuelve `None`, sin
+          error — cómo se resuelve internamente (con o sin consultar
+          almacenamiento) es un detalle de implementación, no parte del
+          contrato.
+        - Cualquier otra referencia que no corresponda a una versión
+          real (formato inválido, o un número que nunca se consolidó)
+          es un defecto de programación del llamador (ADR-0004 E-2): la
+          identidad prometió una referencia válida (INV-1) y no la
+          cumplió. Se aborta ruidosamente — nunca un `None` silencioso
+          que lo confundiría con el caso N=0."""
+        if version == "0":
+            # "0" es el estado inicial N=0 (RFC-0005 §1.1) — no una
+            # versión consolidada, nunca una fila de esta tabla. No es
+            # un magic value local: el significado normativo vive junto
+            # al campo en Identidad.version_student_model.
+            return None
         try:
             version_int = int(version)
-        except ValueError:
-            return None
+        except ValueError as exc:
+            raise ValueError(
+                f"version_student_model={version!r} no es una referencia "
+                f"válida de memoria (ni '0' para el estado inicial, ni un "
+                f"entero de memory_versions) — ADR-0004 E-2"
+            ) from exc
         with self._conectar() as conexion, conexion.cursor() as cursor:
             cursor.execute(
                 "SELECT session_id, catalogo FROM memory_versions"
@@ -151,7 +166,11 @@ class AlmacenMemoria:
             )
             fila = cursor.fetchone()
             if fila is None:
-                return None
+                raise ValueError(
+                    f"version_student_model={version!r} no corresponde a "
+                    f"ninguna versión consolidada de '{student_id}' — "
+                    f"ADR-0004 E-2"
+                )
             session_id, catalogo = fila
             return VersionMemoria(
                 student_id=student_id, session_id=session_id, catalogo=catalogo

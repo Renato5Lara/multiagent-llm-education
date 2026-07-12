@@ -41,6 +41,12 @@ class Identidad:
 
     session_id: str
     student_id: str
+    #: "0" es el valor reservado del estado inicial N=0 (RFC-0005 §1.1):
+    #: ningún estudiante posee todavía una versión consolidada. Nunca
+    #: corresponde a una fila de `memory_versions` (ADR-0008 §2.2 — la
+    #: numeración empieza en 1). Cualquier otro valor debe referenciar
+    #: una versión consolidada real; de lo contrario es un defecto de
+    #: programación (ADR-0004 E-2), no un `None` silencioso.
     version_student_model: str
     version_banco: str
     version_politica: str

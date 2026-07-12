@@ -203,7 +203,9 @@ class TestADR_0008_AlmacenMemoria:
 
 class TestADR_0008_CargarVersion:
     """M4 PR-6: `cargar_version` — la versión EXACTA, nunca "la más
-    reciente" (`cargar`)."""
+    reciente" (`cargar`). Matriz contractual completa (RFC-0005 §1.1,
+    ADR-0004): distingue el estado inicial N=0 (legítimo) de una
+    referencia rota (E-2, defecto de programación del llamador)."""
 
     def test_carga_la_version_exacta_aunque_exista_una_mas_reciente(self, almacen):
         v1 = preparar_version(_identidad("s-pr6-v1"), _CATALOGO_VALIDO)
@@ -220,13 +222,23 @@ class TestADR_0008_CargarVersion:
         assert version_1.catalogo["ruta_actualizada"] == "condicionales"
         assert version_1.session_id == "s-pr6-v1"
 
-    def test_version_inexistente_devuelve_none(self, almacen):
+    def test_version_cero_es_el_estado_inicial_n0(self, almacen):
+        # RFC-0005 §1.1: "0" es el estado esperado antes de la primera
+        # sesión, no un error — ni siquiera cuando ya existen versiones
+        # consolidadas para otro estudiante (no cruza identidades).
+        v1 = preparar_version(_identidad("s-pr6-otro-estudiante"), _CATALOGO_VALIDO)
+        almacen.consolidar(v1)
+        assert almacen.cargar_version("estudiante-nuevo", "0") is None
+
+    def test_version_numerica_inexistente_es_e2_y_lanza(self, almacen):
         preparar_y_consolidar = preparar_version(_identidad("s-pr6-existe"), _CATALOGO_VALIDO)
         almacen.consolidar(preparar_y_consolidar)
-        assert almacen.cargar_version("maria", "99") is None
+        with pytest.raises(ValueError, match="ADR-0004 E-2"):
+            almacen.cargar_version("maria", "99")
 
-    def test_version_no_numerica_devuelve_none_no_lanza(self, almacen):
-        # Identidad.version_student_model es de uso anterior a ADR-0008
-        # ("v7" como marcador libre en la mayoría de los tests) — no es
-        # un defecto de programación, es "sin memoria consolidada".
-        assert almacen.cargar_version("maria", "v7") is None
+    def test_version_con_formato_invalido_es_e2_y_lanza(self, almacen):
+        # "v7": el marcador libre heredado de tests anteriores a
+        # ADR-0008 — ya no es una forma válida de expresar "sin
+        # memoria"; esa forma es exclusivamente "0" (RFC-0005 §1.1).
+        with pytest.raises(ValueError, match="ADR-0004 E-2"):
+            almacen.cargar_version("maria", "v7")
