@@ -91,6 +91,48 @@ def test_recorrido_completo_http_hasta_una_entrega_de_adaptar(client, autenticad
     assert entrega["diseno"] is not None
 
 
+def test_traza_refleja_los_eventos_reales_via_http(client, autenticado):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-traza"})
+    identidad = abierta.json()
+
+    client.post(
+        "/api/runtime/hechos",
+        json={
+            "identidad": identidad,
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "origen": "instrumento",
+        },
+    )
+
+    traza = client.get("/api/runtime/sessions/s-http-traza/traza")
+    assert traza.status_code == 200, traza.text
+    pasos = traza.json()
+    assert len(pasos) > 0
+    assert pasos[0]["transicion"] == 1
+    assert pasos[0]["eventos"][0]["tipo"] == "FactRegistrado"
+    # El Platform Boundary autora facts con autor="boundary" (regla 1:
+    # traduce, no interpreta ni reatribuye a una capacidad del dominio).
+    assert pasos[0]["eventos"][0]["datos"]["autor"] == "boundary"
+
+
+def test_traza_de_sesion_ajena_es_rechazada(client, autenticado):
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-traza-ajena"})
+
+    from app.api.deps import aget_current_estudiante
+    from app.main import app
+
+    class _OtroUsuario:
+        id = "otro-estudiante-cualquiera"
+
+    app.dependency_overrides[aget_current_estudiante] = lambda: _OtroUsuario()
+    try:
+        resp = client.get("/api/runtime/sessions/s-http-traza-ajena/traza")
+    finally:
+        app.dependency_overrides[aget_current_estudiante] = lambda: autenticado
+
+    assert resp.status_code == 403
+
+
 def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
     abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-ajena"})
     identidad_ajena = dict(abierta.json(), student_id="otro-estudiante-cualquiera")

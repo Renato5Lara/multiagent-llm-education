@@ -13,6 +13,7 @@ BaseAgent es una épica posterior.
 
 from __future__ import annotations
 
+import dataclasses
 from typing import Any, Mapping
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -31,9 +32,11 @@ from runtime.boundary import (
     PeticionAbrirSesion,
     PeticionHechoDelMundo,
     abrir_sesion,
+    consultar_traza,
     registrar_hecho,
 )
-from runtime.kernel.state.entries import OrigenProvenance
+from runtime.kernel.events import DomainEvent
+from runtime.kernel.state.entries import EntryId, OrigenProvenance
 
 router = APIRouter(prefix="/api/runtime", tags=["runtime"])
 
@@ -82,6 +85,33 @@ class HechoIn(BaseModel):
 class EntregaOut(BaseModel):
     asunto: str | None
     diseno: Mapping[str, Any] | None
+
+
+class EventoOut(BaseModel):
+    tipo: str
+    datos: Mapping[str, Any]
+
+
+class PasoTrazaOut(BaseModel):
+    transicion: int
+    eventos: list[EventoOut]
+
+
+def _valor_json(valor: Any) -> Any:
+    """`EntryId` es el único tipo del kernel en los eventos que no es ya
+    JSON-nativo (los enum de vocabulario son `str, Enum`)."""
+    return str(valor) if isinstance(valor, EntryId) else valor
+
+
+def _evento_out(evento: DomainEvent) -> EventoOut:
+    """RFC-0010 regla 2: vocabulario del runtime, sin traducir — cada
+    campo del evento viaja tal cual, solo `EntryId` se stringifica."""
+    datos = {
+        campo.name: _valor_json(getattr(evento, campo.name))
+        for campo in dataclasses.fields(evento)
+        if campo.name != "transicion"
+    }
+    return EventoOut(tipo=type(evento).__name__, datos=datos)
 
 
 @router.post("/sessions", response_model=IdentidadOut)
@@ -140,3 +170,42 @@ def hecho(
         almacen_memoria,
     )
     return EntregaOut(asunto=entrega.asunto, diseno=entrega.diseno)
+
+
+@router.get("/sessions/{session_id}/traza", response_model=list[PasoTrazaOut])
+def traza(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante),
+) -> list[PasoTrazaOut]:
+    """RFC-0007 §2.1 — la traza de eventos de la sesión, derivada de lo
+    persistido (S3, RFC-0010 §2). Esta pieza solo autoriza al estudiante
+    dueño de la sesión: `resolver_identidad` no verifica pertenencia por
+    sí solo (a diferencia de `hecho()`, aquí no hay `identidad` en el
+    cuerpo que contrastar, así que se verifica explícitamente contra lo
+    ya persistido). Modo Evidencia (docente/admin) es una superficie
+    posterior — no inventada aquí."""
+    almacen, almacen_memoria = almacenes()
+    existente = almacen.identidad_existente(session_id)
+    if existente is not None and existente.student_id != str(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="La sesión no pertenece al usuario autenticado",
+        )
+    pasos = consultar_traza(
+        PeticionAbrirSesion(
+            session_id=session_id,
+            student_id=str(current_user.id),
+            version_banco=VERSION_BANCO,
+            version_politica=VERSION_POLITICA,
+            spec_version=SPEC_VERSION,
+        ),
+        almacen,
+        almacen_memoria,
+    )
+    return [
+        PasoTrazaOut(
+            transicion=paso.transicion,
+            eventos=[_evento_out(evento) for evento in paso.eventos],
+        )
+        for paso in pasos
+    ]
