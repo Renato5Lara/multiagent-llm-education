@@ -3,8 +3,16 @@
 > Documento de trabajo temporal (RFC-0006/1A). No es un RFC ni un ADR
 > — no introduce vocabulario nuevo, solo traduce RFC-0006 §1 (los
 > axiomas A1-A8, ya normativos) a un contrato que se pueda testear
-> directamente. Una vez absorbido por el código y los tests de
-> RFC-0006/1, este documento puede eliminarse.
+> directamente.
+>
+> **Retiro obligatorio, no opcional:** en cuanto RFC-0006/1 cierre (los
+> axiomas implementados en `confianza.py` y probados uno por uno), este
+> documento se elimina o se reduce a una referencia de una línea desde
+> el RFC/roadmap — su contenido ya vive en los docstrings de
+> `confianza.py` y en los tests A1-A7. Es criterio de cierre de
+> RFC-0006/1, no una limpieza aplazable ("todo documento temporal
+> desaparece cuando su conocimiento ya está absorbido por el código,
+> los tests o un RFC definitivo").
 >
 > **Cero código en este documento.** Esto es el "qué debe cumplirse",
 > no el "cómo" — el cómo (la función `f` ilustrativa de RFC-0006 §1)

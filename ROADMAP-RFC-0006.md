@@ -388,6 +388,9 @@ Criterios de cierre (todos, no "aproximadamente"):
   □ runtime_completo.py sigue en verde
   □ No aparecen TODO/FIXME nuevos
   □ No baja la cobertura de tests
+  □ Todo documento temporal que esta mini-épica haya abierto (CONTRACT-*,
+    fichas de Engineering Review previas) está retirado o reducido a una
+    referencia de una línea — su conocimiento ya vive en código/tests/RFC
 ```
 
 ### RFC-0006/1A — Engineering Review previa (solo Parte A, sin código)
@@ -465,4 +468,7 @@ Criterios de cierre:
   □ runtime_completo.py sigue en 9/9 PASS, sin ninguna categoría nueva
   □ No aparecen TODO/FIXME nuevos
   □ No baja la cobertura de tests (260 tests previos + los nuevos de A1-A8)
+  □ CONTRACT-A1-A8.md retirado o reducido a una línea de referencia —
+    su contenido ya vive en los docstrings de confianza.py y en los
+    tests A1-A7 (retiro obligatorio, ver el propio documento)
 ```
