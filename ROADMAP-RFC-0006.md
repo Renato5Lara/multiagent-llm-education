@@ -375,6 +375,9 @@ No debe cambiar: <lista explícita — todo lo que "ya que estoy aquí"
 
 Context Budget:  <archivos que esta mini-épica necesita abrir; no abrir
                  nada fuera de esta lista salvo que el propio Gate lo exija>
+                 Si durante el Gate aparece un archivo fuera de esta
+                 lista: NO abrirlo — primero justificar por qué hace
+                 falta, y solo entonces ampliar el presupuesto.
 
 Criterios de cierre (todos, no "aproximadamente"):
   □ <criterio funcional medible 1>
@@ -387,6 +390,16 @@ Criterios de cierre (todos, no "aproximadamente"):
   □ No baja la cobertura de tests
 ```
 
+### RFC-0006/1A — Engineering Review previa (solo Parte A, sin código)
+
+Antes de escribir `confianza.py`, una revisión dedicada que traduce
+A1-A8 (RFC-0006 §1) a un contrato computable — entrada, salida,
+propiedad demostrable, caso borde, test asociado, por axioma. Vive en
+`CONTRACT-A1-A8.md` (documento de trabajo temporal, no un RFC ni un
+ADR — puede eliminarse una vez que su contenido esté absorbido por el
+código y los tests). **RFC-0006/1 (la implementación, Parte 0 + Parte
+A) no empieza hasta que este documento esté aprobado.**
+
 ### Ficha — RFC-0006/1: Cimientos
 
 ```
@@ -394,14 +407,19 @@ Objetivo:        Confianza efectiva (ce) calculable y demostrada contra
                  A1-A8; la política versionada tiene un sitio real
                  donde vivir. Sin cambio de comportamiento visible.
 Partes:          0 + A
-Dependencias:    ninguna (primera mini-épica)
+Dependencias:    RFC-0006/1A (CONTRACT-A1-A8.md) aprobado
 Riesgos:         Altos ambas partes — 0 decide un mecanismo no
                  especificado; A es la pieza más delicada del RFC
-                 completo (violar A5/A6/A7 sin darse cuenta).
-Motor:           Cambia — nuevo módulo de política versionada
-                 (kernel/ o engine/, a decidir en el Contrato del Gate)
-                 + calcular_confianza_efectiva() (kernel/deliberation/).
-                 mecanica.py NO se toca todavía (politica-v1 intacta).
+                 completo (violar A5/A6/A7 sin darse cuenta) — mitigado
+                 por RFC-0006/1A.
+Motor:           Cambia — `kernel/deliberation/politica.py` (Parte 0:
+                 diccionario de constantes `POLITICAS = {"v1": ...,
+                 "v2": ...}`, sin Protocol — no hay evidencia hoy de
+                 que el dominio necesite polimorfismo; se introduce
+                 solo si aparece una política calculada dinámicamente)
+                 + `kernel/deliberation/confianza.py` (Parte A,
+                 `calcular_confianza_efectiva()`, según CONTRACT-A1-A8.md).
+                 mecanica.py NO se toca todavía (v1 intacta).
 Boundary:        No cambia.
 HTTP:            No cambia.
 Frontend:        No cambia.
@@ -414,21 +432,31 @@ No debe cambiar: politica-v1 / mecanica.py, kernel/reducers/ (ningún
                  RFC-0010 (ninguna surface nueva ni modificada),
                  backend/e2e/ (ningún ajuste — nada observable cambia).
 
-Context Budget:  RFC-0006, CONCEPT-0002, ROADMAP-RFC-0006.md,
+Context Budget:  CONTRACT-A1-A8.md (una vez aprobado), RFC-0006,
+                 CONCEPT-0002, ROADMAP-RFC-0006.md,
                  kernel/deliberation/mecanica.py (leer, no tocar),
                  kernel/state/entries.py, kernel/state/state.py,
                  kernel/reducers/ (leer, no tocar),
                  tests/runtime/ (para el patrón de test real existente).
                  No abrir boundary/, app/, frontend/ salvo que el
-                 propio Gate revele que algo ahí es necesario.
+                 propio Gate revele que algo ahí es necesario — y si
+                 aparece, justificar antes de abrir, no abrir primero.
 
 Criterios de cierre:
   □ Los 8 axiomas (A1-A8) tienen exactamente un test dedicado cada uno,
-    contra Postgres real
-  □ politica-v1 sigue produciendo exactamente las mismas decisiones
-    (suite RFC-0007/RFC-0008/HITL ya existente, sin modificar, en verde)
-  □ El mecanismo de política versionada permite que politica-v2 exista
-    sin tocar una línea de politica-v1
+    contra Postgres real, siguiendo CONTRACT-A1-A8.md
+  □ v1 (politica-v1 / mecanica.py) sigue produciendo exactamente las
+    mismas decisiones (suite RFC-0007/RFC-0008/HITL ya existente, sin
+    modificar, en verde)
+  □ El mecanismo de política versionada permite que "v2" exista sin
+    tocar una línea de "v1"
+  □ confianza.py no importa mecanica.py
+  □ mecanica.py no importa confianza.py (independencia real, no solo
+    de nombre — verificable con el mismo test estructural que ya usa
+    reconstruccion.py para su propia regla de no-importación)
+  □ Toda la Parte A puede probarse sin ejecutar LangGraph — funciones
+    puras contra un LearningState construido a mano, sin invocar
+    ejecutar_walkthrough ni ningún productor
   □ Ninguna API HTTP cambia
   □ Ninguna surface Boundary cambia
   □ runtime_completo.py sigue en 9/9 PASS, sin ninguna categoría nueva
