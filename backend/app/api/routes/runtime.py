@@ -33,6 +33,7 @@ from runtime.boundary import (
     PeticionAbrirSesion,
     PeticionHechoDelMundo,
     abrir_sesion,
+    consultar_escaladas_pendientes,
     consultar_estado,
     consultar_memoria,
     consultar_replay,
@@ -427,3 +428,34 @@ def escalada_resolver(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     return EntregaOut(asunto=entrega.asunto, diseno=entrega.diseno)
+
+
+class EscaladaOut(BaseModel):
+    id: str
+    participantes: list[str]
+    resultado: Mapping[str, Any]
+
+
+@router.get("/sessions/{session_id}/escaladas", response_model=list[EscaladaOut])
+def escaladas(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante_o_docente),
+) -> list[EscaladaOut]:
+    """RFC-0010 §2, S2 — "aviso al docente de que una deliberación espera
+    su autoridad, con su contexto navegable": la notificación dedicada,
+    no una vista derivada de `/estado` en el frontend."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
+    pendientes = consultar_escaladas_pendientes(
+        _peticion_de(session_id, current_user),
+        almacen,
+        almacen_memoria,
+    )
+    return [
+        EscaladaOut(
+            id=str(d.id),
+            participantes=[str(p) for p in d.participantes],
+            resultado=_valor_json(d.resultado),
+        )
+        for d in pendientes
+    ]

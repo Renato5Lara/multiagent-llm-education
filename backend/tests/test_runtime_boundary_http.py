@@ -415,6 +415,30 @@ def test_resolver_escalada_via_http(client, autenticado, autenticado_docente):
     assert any(dec["origen"] == cierre["id"] for dec in estado["decisiones"])
 
 
+def test_escaladas_pendientes_via_http(client, autenticado, autenticado_docente):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-s2-escaladas"})
+    identidad_json = abierta.json()
+    escalada_id, claim_elegido = _sembrar_escalada_en_sesion_http(identidad_json)
+
+    pendientes = client.get("/api/runtime/sessions/s-http-s2-escaladas/escaladas")
+    assert pendientes.status_code == 200, pendientes.text
+    cuerpo = pendientes.json()
+    assert len(cuerpo) == 1
+    assert cuerpo[0]["id"] == escalada_id
+    assert claim_elegido in cuerpo[0]["participantes"]
+    assert len(cuerpo[0]["participantes"]) == 2
+
+    client.post(
+        "/api/runtime/sessions/s-http-s2-escaladas/escaladas/resolver",
+        json={"escalada_id": escalada_id, "claim_elegido": claim_elegido},
+    )
+
+    pendientes_tras_resolver = client.get(
+        "/api/runtime/sessions/s-http-s2-escaladas/escaladas"
+    ).json()
+    assert pendientes_tras_resolver == []
+
+
 def test_resolver_escalada_con_claim_ajeno_es_422(client, autenticado, autenticado_docente):
     abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-hitl-claim-ajeno"})
     identidad_json = abierta.json()
