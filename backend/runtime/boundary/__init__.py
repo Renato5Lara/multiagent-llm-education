@@ -18,6 +18,7 @@ from runtime.boundary.surfaces import (
     consultar_entrega_vigente,
     consultar_estado,
     consultar_memoria,
+    consultar_replay,
     consultar_traza,
 )
 
@@ -30,6 +31,7 @@ __all__ = [
     "consultar_entrega_vigente",
     "consultar_estado",
     "consultar_memoria",
+    "consultar_replay",
     "consultar_traza",
     "normalizar_asunto",
     "proyectar_entrega",
