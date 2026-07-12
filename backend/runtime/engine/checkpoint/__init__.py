@@ -4,6 +4,7 @@ Piezas: serialización canónica y cadena de integridad (ADR-0001, este
 módulo) + layout de almacenamiento (ADR-0002, pieza posterior).
 """
 
+from runtime.engine.checkpoint.almacen_memoria import AlmacenMemoria
 from runtime.engine.checkpoint.canonical import ESCALA_DECIMAL, a_canonico
 from runtime.engine.checkpoint.cadena import (
     RegistroTransicion,
@@ -16,6 +17,7 @@ from runtime.engine.checkpoint.storage import AlmacenTransiciones
 
 __all__ = [
     "ESCALA_DECIMAL",
+    "AlmacenMemoria",
     "AlmacenTransiciones",
     "RegistroTransicion",
     "a_canonico",
