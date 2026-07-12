@@ -12,6 +12,7 @@ from runtime.boundary.inbound import (
     abrir_sesion,
     normalizar_asunto,
     registrar_hecho,
+    resolver_escalada,
 )
 from runtime.boundary.outbound import Entrega, proyectar_entrega
 from runtime.boundary.surfaces import (
@@ -36,4 +37,5 @@ __all__ = [
     "normalizar_asunto",
     "proyectar_entrega",
     "registrar_hecho",
+    "resolver_escalada",
 ]
