@@ -1,9 +1,9 @@
 """Recorrido E2E real y completo del runtime — un único comando, sin
 navegador, contra el stack real (HTTP + PostgreSQL + LangGraph + OpenAI
 en las capacidades que lo usan). Cubre las cuatro Plataformas Operativas
-cerradas hasta ahora: Runtime del estudiante, Observabilidad (traza,
-estado, memoria, replay), HITL (intervención docente + resolución de
-escalada).
+cerradas hasta ahora: Runtime del estudiante, Boundary, Observabilidad
+(traza, estado, memoria, replay), HITL (intervención docente +
+resolución de escalada).
 
 Requisitos:
   - Servidor real corriendo:
@@ -16,6 +16,13 @@ Requisitos:
 Uso:
   cd backend && PYTHONPATH=.:runtime python3 e2e/runtime_completo.py
 
+Cada categoría corre de forma independiente: si una falla, las
+siguientes igual se intentan (y probablemente fallen en cascada de forma
+informativa — nunca se ocultan). El resumen final (estilo de proyectos
+grandes: Kubernetes, Temporal, CockroachDB) es la referencia rápida del
+estado de la plataforma; el detalle de cada paso queda arriba, impreso
+en vivo.
+
 No reemplaza la validación en navegador real (la UI puede tener bugs que
 un cliente HTTP no revela) — es el paso previo, rápido y repetible, que
 esta suite corre antes de esa validación visual (CLAUDE.md, actualización
@@ -27,8 +34,9 @@ from __future__ import annotations
 import os
 import time
 from decimal import Decimal
+from typing import Any
 
-from e2e.cliente import ClienteE2E, FalloE2E, verificar_servidor_activo
+from e2e.cliente import ClienteE2E, verificar_servidor_activo
 
 ESTUDIANTE_EMAIL = os.environ.get("E2E_ESTUDIANTE_EMAIL", "estudiante3@upao.edu.pe")
 ESTUDIANTE_PASSWORD = os.environ.get("E2E_ESTUDIANTE_PASSWORD", "Student2026!")
@@ -37,13 +45,11 @@ DOCENTE_PASSWORD = os.environ.get("E2E_DOCENTE_PASSWORD", "Docente2026!")
 
 _SUFIJO = str(int(time.time()))
 
-
-def _paso(titulo: str) -> None:
-    print(f"\n— {titulo}")
+_RESULTADOS: list[tuple[str, bool, str]] = []
 
 
 def _ok(mensaje: str) -> None:
-    print(f"  ✓ {mensaje}")
+    print(f"    ✓ {mensaje}")
 
 
 def _sembrar_escalada(identidad_json: dict) -> tuple[str, str]:
@@ -156,84 +162,102 @@ def _sembrar_escalada(identidad_json: dict) -> tuple[str, str]:
     return str(escalada_id), str(remediar_id)
 
 
-def main() -> None:
-    print("Recorrido E2E — Runtime LangGraph (real, sin mocks)")
+def _categoria(nombre: str, ctx: dict[str, Any], fn) -> None:
+    """Corre una categoría, registra PASS/FAIL y SIGUE con la próxima —
+    un fallo no detiene el recorrido completo (cada categoría es
+    evidencia independiente sobre una capacidad distinta de la
+    plataforma; ocultar las que vienen después de la primera falla
+    escondería información, no la protege)."""
+    print(f"\n— {nombre}")
+    try:
+        fn(ctx)
+    except Exception as exc:  # noqa: BLE001 — se reporta, nunca se oculta
+        print(f"    ✗ FAIL: {exc}")
+        _RESULTADOS.append((nombre, False, str(exc)))
+    else:
+        _RESULTADOS.append((nombre, True, ""))
+
+
+def _postgres(ctx: dict[str, Any]) -> None:
     verificar_servidor_activo()
     _ok("servidor activo")
-
-    cliente = ClienteE2E()
-
-    _paso("Estudiante: login")
+    ctx["cliente"] = cliente = ClienteE2E()
     estudiante = cliente.login(ESTUDIANTE_EMAIL, ESTUDIANTE_PASSWORD)
     _ok(f"login como {estudiante['email']}")
+    ctx["session_id"] = session_id = f"e2e-{_SUFIJO}"
+    ctx["identidad"] = cliente.abrir_sesion(session_id)
+    _ok(f"sesión {session_id} abierta y persistida — escritura real en Postgres")
 
-    _paso("Estudiante: abrir sesión y registrar evidencia")
-    session_id = f"e2e-{_SUFIJO}"
-    identidad = cliente.abrir_sesion(session_id)
-    _ok(f"sesión {session_id} abierta (version_student_model={identidad['version_student_model']})")
 
+def _runtime(ctx: dict[str, Any]) -> None:
+    cliente: ClienteE2E = ctx["cliente"]
     entrega = cliente.registrar_hecho(
-        identidad, {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]}
+        ctx["identidad"], {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]}
     )
     assert entrega.get("asunto"), "el walkthrough no llegó a producir una Entrega"
-    _ok(f"entrega: {entrega['asunto']}")
+    ctx["entrega"] = entrega
+    _ok(f"walkthrough real corrió — entrega: {entrega['asunto']}")
 
-    _paso("Observabilidad: traza, estado, replay")
-    traza = cliente.traza(session_id)
-    assert traza and traza[0]["eventos"][0]["tipo"] == "FactRegistrado"
-    _ok(f"traza: {len(traza)} transiciones, T1={traza[0]['eventos'][0]['tipo']}")
 
-    estado = cliente.estado(session_id)
+def _boundary(ctx: dict[str, Any]) -> None:
+    cliente: ClienteE2E = ctx["cliente"]
+    docente = cliente.login(DOCENTE_EMAIL, DOCENTE_PASSWORD)
+    _ok(f"login como {docente['email']}")
+    estado = cliente.estado(ctx["session_id"])
     assert estado["facts"] and estado["claims"]
-    _ok(f"estado: {len(estado['facts'])} facts, {len(estado['claims'])} claims")
+    ctx["estado"] = estado
+    _ok("el docente lee /estado de la sesión del estudiante por el Boundary (RFC-0009 §1)")
 
-    replay = cliente.replay(session_id)
-    assert len(replay) == len(traza)
-    assert replay[-1]["estado"] == estado
+
+def _observabilidad(ctx: dict[str, Any]) -> None:
+    cliente: ClienteE2E = ctx["cliente"]
+    traza = cliente.traza(ctx["session_id"])
+    assert traza and traza[0]["eventos"][0]["tipo"] == "FactRegistrado"
+    ctx["traza"] = traza
+    _ok(f"traza: {len(traza)} transiciones, T1={traza[0]['eventos'][0]['tipo']}")
+    _ok(f"estado: {len(ctx['estado']['facts'])} facts, {len(ctx['estado']['claims'])} claims")
+
+
+def _replay(ctx: dict[str, Any]) -> None:
+    cliente: ClienteE2E = ctx["cliente"]
+    replay = cliente.replay(ctx["session_id"])
+    assert len(replay) == len(ctx["traza"])
+    assert replay[-1]["estado"] == ctx["estado"]
     _ok(f"replay: {len(replay)} pasos, último coincide con /estado")
 
-    # Informativo, no una aserción dura: este estudiante semilla es una
-    # cuenta real y persistente (no un esquema desechable de test), así
-    # que puede arrastrar memoria consolidada de corridas anteriores de
-    # este mismo script. La invariante real (memoria = la versión que la
-    # sesión tiene fijada) se prueba abajo con sesiones nuevas y aisladas.
-    memoria_antes = cliente.memoria(session_id)
-    _ok(f"memoria de {session_id}: {'None (N=0)' if memoria_antes is None else memoria_antes['session_id']}")
 
-    _paso("Cerrar sesión y consolidar memoria")
-    session_id_2 = f"e2e-{_SUFIJO}-cierre"
-    identidad_2 = cliente.abrir_sesion(session_id_2)
+def _memory(ctx: dict[str, Any]) -> None:
+    cliente: ClienteE2E = ctx["cliente"]
+    cliente.login(ESTUDIANTE_EMAIL, ESTUDIANTE_PASSWORD)
+    session_id_cierre = f"e2e-{_SUFIJO}-cierre"
+    identidad_cierre = cliente.abrir_sesion(session_id_cierre)
     cliente.registrar_hecho(
-        identidad_2,
+        identidad_cierre,
         {"competencia": "COMP-2", "items_incorrectos": [1]},
         cerrar_sesion=True,
     )
-    session_id_3 = f"e2e-{_SUFIJO}-siguiente"
-    cliente.abrir_sesion(session_id_3)
-    memoria_despues = cliente.memoria(session_id_3)
-    assert memoria_despues is not None
-    assert memoria_despues["session_id"] == session_id_2
-    _ok(f"memoria: consolidada por {memoria_despues['session_id']}, leída por la sesión siguiente")
+    session_id_siguiente = f"e2e-{_SUFIJO}-siguiente"
+    cliente.abrir_sesion(session_id_siguiente)
+    memoria = cliente.memoria(session_id_siguiente)
+    assert memoria is not None
+    assert memoria["session_id"] == session_id_cierre
+    _ok(f"memoria consolidada por {memoria['session_id']}, leída por la sesión siguiente")
 
-    _paso("Docente: login y lectura de una sesión ajena")
-    docente = cliente.login(DOCENTE_EMAIL, DOCENTE_PASSWORD)
-    _ok(f"login como {docente['email']}")
-    estado_para_docente = cliente.estado(session_id)
-    assert estado_para_docente == estado
-    _ok("el docente lee /estado de la sesión del estudiante (RFC-0009 §1)")
 
-    _paso("HITL: intervención espontánea del docente")
+def _hitl(ctx: dict[str, Any]) -> None:
+    cliente: ClienteE2E = ctx["cliente"]
+    session_id = ctx["session_id"]
+
+    cliente.login(DOCENTE_EMAIL, DOCENTE_PASSWORD)
     cliente.hecho_docente(
         session_id,
         {"competencia": "COMP-2", "items_incorrectos": [7]},
         human_reason="observé confusión persistente en clase",
     )
-    traza_tras_docente = cliente.traza(session_id)
-    ultimo_paso = traza_tras_docente[-1]
+    ultimo_paso = cliente.traza(session_id)[-1]
     assert any(e["datos"].get("origen") == "humano" for e in ultimo_paso["eventos"])
-    _ok("fact con origen=humano visible en la traza real")
+    _ok("intervención espontánea: fact con origen=humano visible en la traza real")
 
-    _paso("HITL: resolución de una escalada real")
     session_id_hitl = f"e2e-{_SUFIJO}-hitl"
     # /sessions (E1) sigue siendo estudiante-only (solo se abrió la
     # lectura para el docente, no la apertura) — reautenticar antes de
@@ -247,18 +271,51 @@ def main() -> None:
     cliente.resolver_escalada(
         session_id_hitl, escalada_id, claim_elegido, human_reason="fatiga observada en clase"
     )
-    estado_final = cliente.estado(session_id_hitl)
+    ctx["estado_hitl"] = estado_final = cliente.estado(session_id_hitl)
     cierre = next(d for d in estado_final["deliberaciones"] if d.get("enlaza_a") == escalada_id)
     assert cierre["resultado"]["regla"] == "decision-humana"
     assert any(dec["origen"] == cierre["id"] for dec in estado_final["decisiones"])
     _ok("escalada resuelta y decisión derivada — el runtime continuó solo")
 
-    print("\nPASS — recorrido E2E completo (login → HTTP → Postgres → LangGraph → HITL)")
+
+def _llm(ctx: dict[str, Any]) -> None:
+    # El claim de Adaptar (asunto "modalidad(...)") solo existe si un
+    # proveedor LLM real corrió — nunca lo produce un reducer ni un
+    # productor de reglas (ADR-0007).
+    estado = ctx.get("estado_hitl") or ctx["estado"]
+    claims_adaptar = [c for c in estado["claims"] if str(c.get("asunto", "")).startswith("modalidad(")]
+    assert claims_adaptar, "ningún claim de Adaptar — ¿el proveedor LLM real corrió?"
+    _ok(f"Adaptar produjo {len(claims_adaptar)} claim(s) vía LLM real: {claims_adaptar[-1]['asunto']}")
+
+
+def _resumen() -> bool:
+    ancho = 42
+    print("\n" + "=" * ancho)
+    print("RUNTIME PLATFORM CHECK")
+    print("=" * ancho + "\n")
+    for nombre, ok, _detalle in _RESULTADOS:
+        estado = "PASS" if ok else "FAIL"
+        print(f"{nombre:.<30} {estado}")
+    total_ok = sum(1 for _, ok, _ in _RESULTADOS if ok)
+    total = len(_RESULTADOS)
+    print(f"\nTotal:\n{total_ok}/{total} PASS")
+    print("=" * ancho)
+    return total_ok == total
+
+
+def main() -> bool:
+    print("Recorrido E2E — Runtime LangGraph (real, sin mocks)")
+    ctx: dict[str, Any] = {}
+    _categoria("Postgres", ctx, _postgres)
+    _categoria("Runtime", ctx, _runtime)
+    _categoria("Boundary", ctx, _boundary)
+    _categoria("Observabilidad", ctx, _observabilidad)
+    _categoria("Replay", ctx, _replay)
+    _categoria("Memory", ctx, _memory)
+    _categoria("HITL", ctx, _hitl)
+    _categoria("LLM", ctx, _llm)
+    return _resumen()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except (AssertionError, FalloE2E) as exc:
-        print(f"\nFAIL — {exc}")
-        raise SystemExit(1)
+    raise SystemExit(0 if main() else 1)
