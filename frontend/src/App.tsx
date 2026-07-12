@@ -38,6 +38,7 @@ const KnowledgeTest = lazy(() => import('@/pages/estudiante/KnowledgeTest'))
 const StudentTrajectory = lazy(() => import('@/pages/replay/StudentTrajectory'))
 const EvidenceHub = lazy(() => import('@/pages/evidencia/EvidenceHub'))
 const ResearchDashboard = lazy(() => import('@/pages/evidencia/ResearchDashboard'))
+const RuntimeTrace = lazy(() => import('@/pages/evidencia/RuntimeTrace'))
 
 function RootRedirect() {
     const { isAuthenticated, user } = useAuthStore()
@@ -98,6 +99,7 @@ export default function App() {
                 <Route element={<EvidenceLayout />}>
                     <Route path="/evidencia" element={<EvidenceHub />} />
                     <Route path="/evidencia/investigacion" element={<ResearchDashboard />} />
+                    <Route path="/evidencia/traza" element={<RuntimeTrace />} />
                 </Route>
 
                 <Route path="/404" element={<NotFound />} />

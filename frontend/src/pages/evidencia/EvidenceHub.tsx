@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Route, ArrowRight, ShieldCheck, FlaskConical } from 'lucide-react'
+import { Route, ArrowRight, ShieldCheck, FlaskConical, Activity } from 'lucide-react'
 
 const evidenceTools = [
   {
@@ -21,6 +21,16 @@ const evidenceTools = [
     btnClass:  'text-neural-violet border-neural-violet/20 hover:bg-neural-violet/[0.06]',
     label: 'Datos reales',
     labelClass: 'bg-neural-violet/10 text-neural-violet border-neural-violet/20',
+  },
+  {
+    title: 'Traza del Runtime',
+    description: 'Los Domain Events del runtime LangGraph, transición por transición: facts, claims, deliberaciones, decisiones — derivados del log persistido, nunca de una segunda tubería.',
+    icon: Activity,
+    href: '/evidencia/traza',
+    iconClass: 'text-neural-pulse bg-neural-pulse/[0.06] border-neural-pulse/20',
+    btnClass:  'text-neural-pulse border-neural-pulse/20 hover:bg-neural-pulse/[0.06]',
+    label: 'Runtime nativo',
+    labelClass: 'bg-neural-pulse/10 text-neural-pulse border-neural-pulse/20',
   },
 ]
 
