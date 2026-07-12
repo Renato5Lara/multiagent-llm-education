@@ -8,16 +8,16 @@ import PageHeader from '@/components/common/PageHeader'
 import { RuntimeTraceTimeline } from '@/components/observability/RuntimeTraceTimeline'
 import { RuntimeEstadoView } from '@/components/observability/RuntimeEstadoView'
 import { RuntimeMemoriaView } from '@/components/observability/RuntimeMemoriaView'
+import { RuntimeReplayScrubber } from '@/components/observability/RuntimeReplayScrubber'
 import { useRuntimeTrace } from '@/hooks/useRuntimeTrace'
 import { useRuntimeEstado } from '@/hooks/useRuntimeEstado'
 import { useRuntimeMemoria } from '@/hooks/useRuntimeMemoria'
+import { useRuntimeReplay } from '@/hooks/useRuntimeReplay'
 
 // Runtime Console — punto único de inspección del runtime LangGraph.
 // Cada pestaña consume exactamente una surface S3 del Platform Boundary
-// (RFC-0010 §2); ninguna llama al almacenamiento directamente. Secciones
-// previstas: Traza ✅, Estado Final ✅, Memoria ✅, Replay (épica futura —
-// exige estado por transición, no solo el evento, una capacidad nueva
-// del motor que todavía no existe).
+// (RFC-0010 §2); ninguna llama al almacenamiento directamente. Secciones:
+// Traza ✅, Estado Final ✅, Memoria ✅, Replay Cognitivo ✅ (RFC-0008 §3).
 export default function RuntimeConsolePage() {
   const [input, setInput] = useState('')
   const [sessionId, setSessionId] = useState<string | undefined>(undefined)
@@ -25,6 +25,7 @@ export default function RuntimeConsolePage() {
   const traza = useRuntimeTrace(sessionId)
   const estado = useRuntimeEstado(sessionId)
   const memoria = useRuntimeMemoria(sessionId)
+  const replay = useRuntimeReplay(sessionId)
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -76,6 +77,7 @@ export default function RuntimeConsolePage() {
                 <TabsTrigger value="traza">Traza</TabsTrigger>
                 <TabsTrigger value="estado">Estado Final</TabsTrigger>
                 <TabsTrigger value="memoria">Memoria</TabsTrigger>
+                <TabsTrigger value="replay">Replay</TabsTrigger>
               </TabsList>
 
               <TabsContent value="traza">
@@ -105,6 +107,16 @@ export default function RuntimeConsolePage() {
                   <ErrorMuted mensaje="No se pudo leer la memoria de esta sesión." />
                 ) : (
                   <RuntimeMemoriaView memoria={memoria.data ?? null} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="replay">
+                {replay.isLoading ? (
+                  <Skeleton className="h-48 rounded-lg" />
+                ) : replay.isError ? (
+                  <ErrorMuted mensaje="No se pudo leer el replay de esta sesión." />
+                ) : (
+                  <RuntimeReplayScrubber pasos={replay.data ?? []} />
                 )}
               </TabsContent>
             </Tabs>
