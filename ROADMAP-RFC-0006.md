@@ -445,30 +445,53 @@ Context Budget:  CONTRACT-A1-A8.md (una vez aprobado), RFC-0006,
                  propio Gate revele que algo ahí es necesario — y si
                  aparece, justificar antes de abrir, no abrir primero.
 
-Criterios de cierre:
-  □ A1-A7 tienen exactamente un test dedicado cada uno, contra Postgres
-    real, siguiendo CONTRACT-A1-A8.md. A8 no tiene test directo en
-    confianza.py (es una precondición del llamador, no un caso que la
-    función valide) — su garantía se testea en RFC-0006/3 contra
-    mecanica.py, el filtro real de vigencia.
-  □ v1 (politica-v1 / mecanica.py) sigue produciendo exactamente las
-    mismas decisiones (suite RFC-0007/RFC-0008/HITL ya existente, sin
-    modificar, en verde)
-  □ El mecanismo de política versionada permite que "v2" exista sin
-    tocar una línea de "v1"
-  □ confianza.py no importa mecanica.py
-  □ mecanica.py no importa confianza.py (independencia real, no solo
-    de nombre — verificable con el mismo test estructural que ya usa
-    reconstruccion.py para su propia regla de no-importación)
-  □ Toda la Parte A puede probarse sin ejecutar LangGraph — funciones
-    puras contra un LearningState construido a mano, sin invocar
-    ejecutar_walkthrough ni ningún productor
-  □ Ninguna API HTTP cambia
-  □ Ninguna surface Boundary cambia
-  □ runtime_completo.py sigue en 9/9 PASS, sin ninguna categoría nueva
-  □ No aparecen TODO/FIXME nuevos
-  □ No baja la cobertura de tests (260 tests previos + los nuevos de A1-A8)
-  □ CONTRACT-A1-A8.md retirado o reducido a una línea de referencia —
-    su contenido ya vive en los docstrings de confianza.py y en los
-    tests A1-A7 (retiro obligatorio, ver el propio documento)
+Criterios de cierre — CERRADO 2026-07-12:
+  ✓ A1-A7 tienen test dedicado (A1/A5/A6 con más de uno donde hacía
+    falta demostrar más de una propiedad — p.ej. A6 necesitó un test
+    sin ancla y otro anclado tras validación para no ser trivial),
+    contra Postgres real, siguiendo CONTRACT-A1-A8.md. A8 no tiene test
+    directo en confianza.py (es una precondición del llamador, no un
+    caso que la función valide) — su garantía se testea en RFC-0006/3
+    contra mecanica.py, el filtro real de vigencia.
+  ✓ v1 (politica-v1 / mecanica.py) sigue produciendo exactamente las
+    mismas decisiones — mecanica.py no se tocó (0 líneas), y
+    runtime_completo.py corrió el walkthrough real end-to-end
+    (Adaptar → "modalidad(COMP-2)" vía LLM real) con el mismo resultado
+    ya documentado antes de este cambio.
+  ✓ El mecanismo de política versionada permite que "v2" exista sin
+    tocar una línea de "v1" (test_una_politica_nueva_no_toca_v1)
+  ✓ confianza.py no importa mecanica.py (test estructural)
+  ✓ mecanica.py no importa confianza.py (test estructural, mismo patrón
+    que reconstruccion.py)
+  ✓ Toda la Parte A se prueba sin ejecutar LangGraph — LearningState
+    construido a mano vía reducers puros, sin walkthrough ni productores
+  ✓ Ninguna API HTTP cambió (0 archivos en app/api/ ni boundary/)
+  ✓ Ninguna surface Boundary cambió
+  ✓ runtime_completo.py sigue en 9/9 PASS, sin categoría nueva
+  ✓ No aparecen TODO/FIXME nuevos
+  ✓ Cobertura: 281 tests (260 previos + 21 nuevos: 7 Parte 0 + 14 Parte A)
+  ✓ CONTRACT-A1-A8.md reducido a una línea de referencia — verificado
+    con una Engineering Review de cierre dedicada (2026-07-12,
+    segunda ronda): la primera reducción fue prematura, dejaba A1, A2,
+    A3 y la garantía central de A5 sin restated en ningún docstring
+    (solo mencionados tangencialmente) y 5 referencias colgantes a
+    "CONTRACT-A1-A8.md" en confianza.py/politica.py/tests apuntando a
+    un documento ya vacío. Corregido: confianza.py tiene ahora una
+    sección "Garantías" explícita con las ocho, cada clase de test
+    A1-A7 tiene su enunciado en el docstring (legible sin el documento
+    viejo), y las 5 referencias colgantes se reemplazaron por punteros
+    al código real. 281/281 tests siguen en verde tras el cambio.
+
+Corrección encontrada durante la implementación (registrada, no
+oculta): el contrato original de A4/A6 (`estado.transicion -
+claim.id.transicion`, edad medida desde el ORIGEN del claim) violaba
+A7 — un test real (`TestA7_LocalidadCausal`) lo probó: actividad en un
+asunto ajeno decaía un claim que nunca tocó. Corregido a "edad medida
+desde la última validación DENTRO de la cadena causal del claim, o 0 si
+nunca hubo ninguna" — ver CONTRACT-A1-A8.md (histórico, en
+`confianza.py`) y el docstring de `Politica` en `politica.py`. Efecto
+colateral: la invariante `peso_refuerzo >= peso_decaimiento` en
+`Politica.__post_init__` dejó de ser matemáticamente necesaria bajo el
+diseño corregido (una validación recién aplicada tiene edad lógica 0 en
+su propio tick) y se retiró.
 ```
