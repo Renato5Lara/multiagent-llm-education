@@ -129,6 +129,14 @@ requisito previo a consecuencia del modelo.
   interpreta dentro de un contrato declarado); evidencia empírica de
   las 8 capacidades; riesgo de Prompt Drift registrado, no resuelto
   aquí.
+- [ADR-0008](ADR/ADR-0008-memory-storage-layout.md) — Layout de
+  Almacenamiento de Memoria (Aceptado): la unidad de versionado es el
+  cierre de sesión, nunca una invocación del Engine; memoria por
+  estudiante (`student_id`, `version`) con `session_id` como
+  procedencia; cada versión es una unidad lógica atómica, tecnología
+  libre; sin cadena de hashes propia (consolidación derivada, nunca
+  reemplaza la historia de transiciones); Consolidar consume
+  exactamente `proyectar_salidas()` (M4 PR-2).
 
 ## Implementation Phase
 
