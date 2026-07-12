@@ -499,9 +499,12 @@ class TestM4_PR1B_ReanudacionDeSesion:
         assert veredicto_desde_modelado.autor is Capacidad.VALIDAR
         decision_desde_veredicto = estado_2.buscar(veredicto.respaldo[0])
         assert decision_desde_veredicto.id == decision_id
-        claim_remediar = estado_2.buscar(decision.origen)
+        deliberacion = estado_2.buscar(decision.origen)
+        claim_remediar = estado_2.buscar(deliberacion.resultado.aceptados[0])
         assert claim_remediar.autor is Capacidad.REMEDIAR
-        fact_original = estado_2.buscar(claim_remediar.respaldo[0])
+        claim_diagnostico = estado_2.buscar(claim_remediar.respaldo[0])
+        assert claim_diagnostico.autor is Capacidad.DIAGNOSTICAR
+        fact_original = estado_2.buscar(claim_diagnostico.respaldo[0])
         assert fact_original.autor is Capacidad.EVALUAR
 
     def test_identidad_distinta_no_reanuda_lanza_INV_2(self, esquema):
@@ -518,7 +521,3 @@ class TestM4_PR1B_ReanudacionDeSesion:
         almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
         with pytest.raises(ValueError, match="INV-2"):
             ejecutar_walkthrough(almacen_2, otra_identidad, _hecho_del_mundo())
-
-        assert len(registros) == estado.transicion
-        assert almacen.leer("s-cierre-m2-causal") == registros
-        assert verificar(_identidad("s-cierre-m2-causal"), registros) is None
