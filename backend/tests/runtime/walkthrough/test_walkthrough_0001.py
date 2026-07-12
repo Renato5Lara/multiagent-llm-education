@@ -17,7 +17,8 @@ from runtime.engine.checkpoint import (
     reconstruir,
     verificar,
 )
-from runtime.engine.graph import ejecutar_walkthrough
+from runtime.engine.graph import ejecutar_walkthrough, materializar_sesion
+from runtime.kernel.memory import VersionMemoria
 from runtime.kernel.state.salidas import proyectar_salidas
 from runtime.kernel.deliberation.mecanica import REGLA_POLITICA_V1
 from runtime.kernel.state import (
@@ -60,6 +61,16 @@ def _identidad(session_id: str) -> Identidad:
         version_politica="politica-v1",
         spec_version="foundation-2026-07-10",
     )
+
+
+#: Catálogo cerrado mínimo (RFC-0005 §2) para construir `VersionMemoria`
+#: directamente en tests que no corren un walkthrough completo.
+_CATALOGO_MINIMO = {
+    "modelo_propuesto": (),
+    "ruta_actualizada": "condicionales",
+    "deuda_abierta": (),
+    "resumen_destilado": {},
+}
 
 
 def _hecho_del_mundo() -> tuple[TransitionIntent, ...]:
@@ -744,3 +755,75 @@ class TestM4_PR5_ConsolidacionDeMemoria:
         version = almacen_memoria.cargar("maria")
         assert version is not None
         assert version.session_id == "s-pr5-doble-cierre"  # sigue siendo v1, no v2
+
+
+class TestM4_PR6_MaterializarSesion:
+    """M4 PR-6: `materializar_sesion` — Cargar, wireado como Consolidar
+    lo estuvo en PR-5, pero con `cargar_version` (nunca `cargar`
+    vigente). El escenario central es el que motivó toda la revisión:
+    una sesión reanudada NUNCA debe ver una versión de memoria más
+    reciente que la que ancló al abrir, aunque otra sesión del mismo
+    estudiante haya consolidado una versión nueva mientras tanto."""
+
+    def test_sin_almacen_memoria_el_contexto_es_el_default_de_siempre(self, esquema):
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        sesion = materializar_sesion(almacen, None, _identidad("s-pr6-sin-memoria"))
+        assert sesion.estado.contexto == {"ruta": "condicionales"}
+
+    def test_sesion_nueva_usa_la_version_anclada_en_la_identidad(self, esquema):
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
+        almacen_memoria.preparar()
+
+        catalogo = dict(_CATALOGO_MINIMO, ruta_actualizada="funciones")
+        almacen_memoria.consolidar(
+            VersionMemoria(student_id="maria", session_id="s-otra-sesion-previa", catalogo=catalogo)
+        )
+
+        identidad = _identidad("s-pr6-version-anclada")
+        identidad = dataclasses.replace(identidad, version_student_model="1")
+        sesion = materializar_sesion(almacen, almacen_memoria, identidad)
+        assert sesion.estado.contexto == {"ruta": "funciones"}
+
+    def test_reanudacion_ignora_una_version_mas_reciente_consolidada_mientras_tanto(
+        self, esquema
+    ):
+        # El escenario central de la Engineering Review: la sesión A se
+        # abre anclada a v1 (ruta="condicionales"). Mientras A sigue
+        # abierta (reanudable, no cerrada), otra sesión del MISMO
+        # estudiante consolida v2 (ruta="funciones") — algo que PR-5 ya
+        # permite. Al reanudar A, su contexto debe seguir siendo v1.
+        almacen_transiciones = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_transiciones.preparar()
+        almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
+        almacen_memoria.preparar()
+
+        v1 = dict(_CATALOGO_MINIMO, ruta_actualizada="condicionales")
+        numero_v1 = almacen_memoria.consolidar(
+            VersionMemoria(student_id="maria", session_id="s-previa-1", catalogo=v1)
+        )
+        assert numero_v1 == 1
+
+        identidad_a = dataclasses.replace(
+            _identidad("s-pr6-sesion-a"), version_student_model=str(numero_v1)
+        )
+
+        # Sesión A: primera invocación (abre, ancla v1).
+        sesion_1 = materializar_sesion(almacen_transiciones, almacen_memoria, identidad_a)
+        assert sesion_1.estado.contexto == {"ruta": "condicionales"}
+
+        # Otra sesión del mismo estudiante consolida v2 mientras A sigue
+        # abierta.
+        v2 = dict(_CATALOGO_MINIMO, ruta_actualizada="funciones")
+        numero_v2 = almacen_memoria.consolidar(
+            VersionMemoria(student_id="maria", session_id="s-intercalada", catalogo=v2)
+        )
+        assert numero_v2 == 2
+        assert almacen_memoria.cargar("maria").catalogo["ruta_actualizada"] == "funciones"
+
+        # Sesión A: segunda invocación (reanuda, misma identidad_a —
+        # sigue anclada a v1, nunca ve v2).
+        sesion_2 = materializar_sesion(almacen_transiciones, almacen_memoria, identidad_a)
+        assert sesion_2.estado.contexto == {"ruta": "condicionales"}

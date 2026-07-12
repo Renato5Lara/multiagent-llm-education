@@ -199,3 +199,34 @@ class TestADR_0008_AlmacenMemoria:
             )
             filas = cursor.fetchall()
         assert filas == [(1,)]  # ni una fila más, ni una versión 2
+
+
+class TestADR_0008_CargarVersion:
+    """M4 PR-6: `cargar_version` — la versión EXACTA, nunca "la más
+    reciente" (`cargar`)."""
+
+    def test_carga_la_version_exacta_aunque_exista_una_mas_reciente(self, almacen):
+        v1 = preparar_version(_identidad("s-pr6-v1"), _CATALOGO_VALIDO)
+        otro_catalogo = dict(_CATALOGO_VALIDO, ruta_actualizada="funciones")
+        v2 = preparar_version(_identidad("s-pr6-v2"), otro_catalogo)
+        assert almacen.consolidar(v1) == 1
+        assert almacen.consolidar(v2) == 2
+
+        # Aunque la versión 2 sea la vigente, pedir la 1 explícitamente
+        # debe devolver la 1 — la ancla en `identidad` manda, no "la
+        # más reciente".
+        version_1 = almacen.cargar_version("maria", "1")
+        assert version_1 is not None
+        assert version_1.catalogo["ruta_actualizada"] == "condicionales"
+        assert version_1.session_id == "s-pr6-v1"
+
+    def test_version_inexistente_devuelve_none(self, almacen):
+        preparar_y_consolidar = preparar_version(_identidad("s-pr6-existe"), _CATALOGO_VALIDO)
+        almacen.consolidar(preparar_y_consolidar)
+        assert almacen.cargar_version("maria", "99") is None
+
+    def test_version_no_numerica_devuelve_none_no_lanza(self, almacen):
+        # Identidad.version_student_model es de uso anterior a ADR-0008
+        # ("v7" como marcador libre en la mayoría de los tests) — no es
+        # un defecto de programación, es "sin memoria consolidada".
+        assert almacen.cargar_version("maria", "v7") is None

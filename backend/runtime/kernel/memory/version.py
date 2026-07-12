@@ -56,3 +56,24 @@ def validar_version(version: VersionMemoria) -> None:
             f"RFC-0005 §2 — esperado {sorted(_CLAVES_CATALOGO)}, "
             f"recibido {sorted(claves)}"
         )
+
+
+def contexto_desde_version(version: VersionMemoria | None) -> Mapping[str, Any]:
+    """Traduce Cargar → `contexto` (M4 PR-6, RFC-0005 §1: "cargar...
+    fijarlas en identidad + contexto"). Pura: no decide qué versión usar
+    (eso ya lo fijó quien construyó la `Identidad`, INV-1) — solo
+    proyecta la ya materializada.
+
+    `None` (estudiante sin memoria previa): el `contexto` por defecto —
+    mismo valor que usa toda sesión hoy, sin inventar progresión
+    curricular (ya fijado en M4 PR-2).
+
+    Alcance de PR-6, deliberadamente: solo `ruta_actualizada` — la
+    "estructura del módulo" (RFC-0003 §2) es dato estático de
+    `policy/`, ajeno a memoria; el consumo de `deuda_abierta` por la
+    sesión siguiente (RFC-0005 §2(3), H9-inter) no tiene todavía
+    ninguna capacidad de dominio que lo lea, así que no se inventa
+    aquí (regla de no-anticipación)."""
+    if version is None:
+        return {"ruta": "condicionales"}
+    return {"ruta": version.catalogo["ruta_actualizada"]}

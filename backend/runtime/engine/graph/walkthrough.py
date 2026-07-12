@@ -47,7 +47,7 @@ from runtime.kernel.reducers import (
     registrar_fact,
     validar_decision,
 )
-from runtime.kernel.memory import preparar_version, validar_version
+from runtime.kernel.memory import contexto_desde_version, preparar_version, validar_version
 from runtime.kernel.state.entries import Capacidad, EstadoValidacion, TipoClaim
 from runtime.kernel.state.salidas import proyectar_salidas
 from runtime.kernel.state.state import Identidad, LearningState
@@ -270,6 +270,50 @@ def _construir(
     return grafo.compile()
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class SesionAbierta:
+    """Lo que `materializar_sesion` produce: un `LearningState` listo
+    para ejecutar, más la historia ya leída (para no releerla al armar
+    `EstadoGrafo`). M4 PR-6."""
+
+    estado: LearningState
+    registros: tuple[RegistroTransicion, ...]
+
+
+def materializar_sesion(
+    almacen: AlmacenTransiciones,
+    almacen_memoria: AlmacenMemoria | None,
+    identidad: Identidad,
+) -> SesionAbierta:
+    """Abre o reanuda una sesión — nunca decide qué versión de memoria
+    usar (RFC-0003 INV-1: `identidad.version_student_model` ya la fija
+    atómicamente, decidida por quien construyó `identidad`; esta
+    función solo la materializa vía `cargar_version`, jamás `cargar`
+    vigente — M4 PR-6, Engineering Review previa).
+
+    `almacen_memoria=None` (opt-in, mismo patrón que `cerrar_sesion` en
+    `ejecutar_walkthrough`): `contexto` usa el valor por defecto, sin
+    tocar memoria — compatibilidad con todo caller que todavía no
+    integra Memoria.
+    """
+    almacen.abrir_sesion(identidad)
+    registros_previos = almacen.leer(identidad.session_id)
+
+    version_memoria = (
+        almacen_memoria.cargar_version(identidad.student_id, identidad.version_student_model)
+        if almacen_memoria is not None
+        else None
+    )
+    contexto = contexto_desde_version(version_memoria)
+
+    estado = (
+        reconstruir(identidad, contexto, registros_previos)
+        if registros_previos
+        else LearningState(identidad=identidad, contexto=contexto)
+    )
+    return SesionAbierta(estado=estado, registros=registros_previos)
+
+
 def ejecutar_walkthrough(
     almacen: AlmacenTransiciones,
     identidad: Identidad,
@@ -287,6 +331,13 @@ def ejecutar_walkthrough(
     """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
     → deliberación → decisión → adaptación (→ validación → modelado, si ya
     hay evidencia), con checkpoint por transición.
+
+    Apertura/reanudación (M4 PR-6): delegada a `materializar_sesion` —
+    esta función deja de construir `LearningState`; `almacen_memoria`
+    (opt-in) también gobierna Cargar aquí, no solo Consolidar (ver más
+    abajo). Cuando se provee, `contexto` viene de la versión de memoria
+    exacta anclada en `identidad.version_student_model` (nunca "la más
+    reciente" — esa decisión ya se tomó al construir `identidad`).
 
     Reanudación (M4 PR-1B): si `identidad.session_id` ya tiene historia
     persistida, el estado de arranque se reconstruye desde ella
@@ -325,18 +376,11 @@ def ejecutar_walkthrough(
             "cerrar_sesion=True exige almacen_memoria — ADR-0008 §2.4: la "
             "consolidación nunca ocurre sin un almacén explícito"
         )
-    almacen.abrir_sesion(identidad)
-    contexto = {"ruta": "condicionales"}
-    registros_previos = almacen.leer(identidad.session_id)
-    estado = (
-        reconstruir(identidad, contexto, registros_previos)
-        if registros_previos
-        else LearningState(identidad=identidad, contexto=contexto)
-    )
+    sesion = materializar_sesion(almacen, almacen_memoria, identidad)
     inicial: EstadoGrafo = {
-        "estado": estado,
+        "estado": sesion.estado,
         "intents": hechos_del_mundo,
-        "registros": registros_previos,
+        "registros": sesion.registros,
     }
     final = _construir(
         almacen,

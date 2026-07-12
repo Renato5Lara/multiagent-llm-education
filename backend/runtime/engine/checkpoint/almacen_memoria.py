@@ -99,14 +99,55 @@ class AlmacenMemoria:
             return siguiente
 
     def cargar(self, student_id: str) -> VersionMemoria | None:
-        """La versión vigente (la de mayor número) para ese estudiante,
+        """La versión VIGENTE (la de mayor número) para ese estudiante,
         o `None` si nunca se consolidó ninguna — no es un error, es el
-        estado esperado de un estudiante nuevo."""
+        estado esperado de un estudiante nuevo.
+
+        Uso: exclusivamente por la capa que decide qué
+        `version_student_model` poner en una `Identidad` NUEVA (hoy el
+        test/harness; mañana, la primera mitad de RFC-0010 E1) — nunca
+        dentro de `materializar_sesion` (M4 PR-6), que solo usa
+        `cargar_version` (§ ese contrato: la identidad ya fija la
+        versión, materializar_sesion nunca vuelve a elegirla)."""
         with self._conectar() as conexion, conexion.cursor() as cursor:
             cursor.execute(
                 "SELECT session_id, catalogo FROM memory_versions"
                 " WHERE student_id = %s ORDER BY version DESC LIMIT 1",
                 (student_id,),
+            )
+            fila = cursor.fetchone()
+            if fila is None:
+                return None
+            session_id, catalogo = fila
+            return VersionMemoria(
+                student_id=student_id, session_id=session_id, catalogo=catalogo
+            )
+
+    def cargar_version(self, student_id: str, version: str) -> VersionMemoria | None:
+        """La versión EXACTA indicada — nunca "la más reciente"
+        (`cargar`). Precondición: `version` ya fue decidida por el
+        llamador (RFC-0003 INV-1: `Identidad.version_student_model` se
+        fija atómicamente al abrir) — esta función nunca selecciona,
+        solo materializa. `None` si esa versión no existe.
+
+        `version` llega como `str` (mismo tipo que
+        `Identidad.version_student_model`, que es de uso más antiguo
+        que ADR-0008 y no siempre corresponde a un número de
+        `memory_versions` real — p. ej. sesiones que nunca integraron
+        Memoria, "v7" como marcador libre). Una referencia que no es un
+        entero reconocible se trata igual que "esa versión no existe":
+        `None`, no una excepción — no es un defecto de programación,
+        es exactamente el caso de un estudiante o una identidad sin
+        memoria consolidada todavía."""
+        try:
+            version_int = int(version)
+        except ValueError:
+            return None
+        with self._conectar() as conexion, conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT session_id, catalogo FROM memory_versions"
+                " WHERE student_id = %s AND version = %s",
+                (student_id, version_int),
             )
             fila = cursor.fetchone()
             if fila is None:
