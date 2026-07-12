@@ -13,6 +13,7 @@ from app.models.student_progress import PathModule
 from app.services.module_orchestration_service import (
     _aplicar_modalidad_desde_entrega,
     _asunto_de_modalidad,
+    _entrega_a_dict,
 )
 from runtime.boundary import Entrega
 
@@ -67,3 +68,64 @@ class TestAplicarModalidadDesdeEntrega:
         original = [dict(p) for p in _PROMPTS]
         _aplicar_modalidad_desde_entrega(_PROMPTS, modulo, entrega)
         assert _PROMPTS == original
+
+
+class TestEntregaADict:
+    """Expone la Entrega completa (incluida alternativas_descartadas)
+    en la respuesta — RFC-0010 regla 2, Modo Evidencia."""
+
+    def test_sin_entrega_es_none(self):
+        assert _entrega_a_dict(None) is None
+
+    def test_entrega_sin_diseno_es_none(self):
+        assert _entrega_a_dict(Entrega(asunto=None, diseno=None)) is None
+
+    def test_expone_asunto_y_diseno_completos_incluidas_alternativas(self):
+        diseno = {
+            "modalidad": "visual",
+            "profundidad": "fundamentos",
+            "alternativas_descartadas": (
+                {"modalidad": "textual", "razon": "ya insuficiente en el intento anterior"},
+            ),
+        }
+        entrega = Entrega(asunto="modalidad(condicionales)", diseno=diseno)
+        resultado = _entrega_a_dict(entrega)
+        assert resultado == {"asunto": "modalidad(condicionales)", "diseno": diseno}
+        assert resultado["diseno"]["alternativas_descartadas"] == diseno["alternativas_descartadas"]
+
+
+class TestModuleOrchestrationResponseSchema:
+    def test_acepta_runtime_decision_completo(self):
+        from app.schemas.progress import ModuleOrchestrationResponse
+
+        base = {
+            "module_id": "m1", "module_title": "Condicionales",
+            "course_id": "c1", "course_name": "Fundamentos",
+            "orchestration_status": "approved", "introduction": "x",
+            "pedagogical_explanation": "x", "misconceptions": [], "examples": [],
+            "real_applications": [], "guided_practice": "x", "pedagogical_stages": [],
+            "multimodal_prompts": [], "storyboard": "x", "continuity_notes": "x",
+            "bloom_progression": [], "retrieval_evidence": {}, "confidence": 0.8,
+            "generated_at": "2026-07-12T00:00:00Z",
+            "runtime_decision": {
+                "asunto": "modalidad(condicionales)",
+                "diseno": {"modalidad": "visual", "alternativas_descartadas": ()},
+            },
+        }
+        ModuleOrchestrationResponse.model_validate(base)  # no debe lanzar
+
+    def test_runtime_decision_es_opcional(self):
+        from app.schemas.progress import ModuleOrchestrationResponse
+
+        base = {
+            "module_id": "m1", "module_title": "Condicionales",
+            "course_id": "c1", "course_name": "Fundamentos",
+            "orchestration_status": "degraded", "introduction": "x",
+            "pedagogical_explanation": "x", "misconceptions": [], "examples": [],
+            "real_applications": [], "guided_practice": "x", "pedagogical_stages": [],
+            "multimodal_prompts": [], "storyboard": "x", "continuity_notes": "x",
+            "bloom_progression": [], "retrieval_evidence": {}, "confidence": 0.0,
+            "generated_at": "2026-07-12T00:00:00Z",
+        }
+        resultado = ModuleOrchestrationResponse.model_validate(base)
+        assert resultado.runtime_decision is None

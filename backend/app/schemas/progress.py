@@ -139,6 +139,11 @@ class ModuleOrchestrationResponse(BaseModel):
     resumed: bool = False
     # Posición persistida del recorrido: {current_index, completed_step_ids, total_xp}
     mission_cursor: Optional[dict] = None
+    # Épica 2 (RFC-0010 S1): la decisión completa del runtime que informó
+    # bloom_target/modalidad — incluye alternativas_descartadas, para que
+    # Modo Evidencia "enseñe el vocabulario, no lo esconda" (RFC-0010
+    # regla 2). None si no hubo decisión aplicable (o resultado degradado).
+    runtime_decision: Optional[dict] = None
 
 
 class MissionProgressUpdate(BaseModel):

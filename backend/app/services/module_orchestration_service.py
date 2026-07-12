@@ -117,6 +117,17 @@ def _aplicar_modalidad_desde_entrega(
     return [{**p, "enabled": p.get("modality") == "image"} for p in prompts]
 
 
+def _entrega_a_dict(entrega: Entrega | None) -> dict[str, Any] | None:
+    """Expone la Entrega completa (S1) en la respuesta — incluye
+    `alternativas_descartadas` sin reinterpretarlas: Modo Evidencia
+    "enseña el vocabulario, no lo esconde" (RFC-0010 regla 2). `None` si
+    no hubo decisión aplicable (estudiante nuevo, runtime no
+    disponible) o el resultado es degradado."""
+    if entrega is None or entrega.diseno is None:
+        return None
+    return {"asunto": entrega.asunto, "diseno": entrega.diseno}
+
+
 def _leer_entrega_del_runtime(
     orch_id: str, student: "User", course: "Course"
 ) -> Entrega:
@@ -765,6 +776,7 @@ class ModuleOrchestrationService:
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "session_id": session_id,
             "concept_blocks": concept_blocks,
+            "runtime_decision": _entrega_a_dict(entrega_runtime),
         }
 
     def _degraded_result(
