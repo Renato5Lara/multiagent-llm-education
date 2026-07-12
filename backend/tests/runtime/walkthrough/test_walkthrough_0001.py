@@ -4,6 +4,7 @@ integración canónico — la historia de María sobre código real.
 Sin dobles: PostgreSQL real, LangGraph real, capacidades regla reales.
 """
 
+import dataclasses
 import os
 from decimal import Decimal
 
@@ -396,115 +397,127 @@ class TestTutorizarIntegradoAlFlujo:
         assert estado.transicion == 7
 
 
-class TestCierreM2:
-    """Cierre de M2 (post PR-5): las ocho capacidades están cableadas al
-    grafo. Esta suite congela esa fotografía antes de PR-6.
+class TestM4_PR1B_ReanudacionDeSesion:
+    """M4 PR-1B: sustituye a `TestCierreM2` (M2). Aquella suite dejó
+    documentado que Validar (exige un fact de Evaluar *posterior* a la
+    decisión) y Tutorizar (exige que la decisión *todavía* no exista)
+    nunca podían coexistir en el mismo recorrido — porque
+    `ejecutar_walkthrough` era una única invocación síncrona sin
+    reanudación (P10/RFC-0008 no existían como mecanismo). Con PR-1A
+    (reconstrucción determinista) + PR-1B (reanudación en
+    `ejecutar_walkthrough`), esa limitación ya no es estructural: esta
+    suite demuestra las OCHO capacidades en la MISMA sesión, en dos
+    invocaciones separadas — con dos `AlmacenTransiciones` distintos
+    apuntando al mismo `session_id`, simulando dos procesos (mismo
+    patrón que el kill-test de R1-R6)."""
 
-    Hallazgo de esta pasada, no un defecto: bajo el diseño actual,
-    `ejecutar_walkthrough` es una única invocación síncrona sin
-    reanudación (P10/RFC-0008 todavía no existen como mecanismo). Eso
-    hace que Validar (que exige un fact de Evaluar *posterior*, en
-    transicion, a la decisión) NUNCA pueda unirse al mismo recorrido
-    natural que Tutorizar (que exige que la decisión *todavía* no
-    exista). Ambas guardias son correctas por separado — el límite es
-    estructural, no un bug de PR-1..5. Por eso el cierre usa DOS tests
-    complementarios en vez de uno solo: el recorrido natural (6
-    capacidades + kernel, en un solo `invoke`) y la cadena causal
-    completa (las 8, con evidencia pre-sembrada — misma técnica de
-    PR-2/3)."""
+    def test_las_ocho_capacidades_en_la_misma_sesion_reanudada(self, esquema):
+        identidad = _identidad("s-m4-pr1b-reanudada")
 
-    def test_orden_natural_de_las_capacidades_en_un_solo_recorrido(self, esquema):
-        almacen = AlmacenTransiciones(_URL, esquema=esquema)
-        almacen.preparar()
-        final = ejecutar_walkthrough(
-            almacen,
-            _identidad("s-cierre-m2-natural"),
-            TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo(),
+        # Invocación #1 ("proceso" 1): siembra el fact completo (con
+        # items_totales, dispara Tutorizar) y corre hasta el END natural
+        # — sin evidencia posterior todavía, Validar no puede disparar.
+        almacen_1 = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_1.preparar()
+        final_1 = ejecutar_walkthrough(
+            almacen_1, identidad, TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo()
         )
-        estado, registros = final["estado"], final["registros"]
+        estado_1, registros_1 = final_1["estado"], final_1["registros"]
 
-        entradas = (
-            [(f.id.transicion, "fact", f.autor) for f in estado.facts]
-            + [(c.id.transicion, "claim", c.autor) for c in estado.claims]
-            + [(d.id.transicion, "delib", None) for d in estado.deliberaciones]
-            + [(d.id.transicion, "decision", None) for d in estado.decisiones]
+        assert not any(c.autor is Capacidad.VALIDAR for c in estado_1.claims)
+        assert not any(c.autor is Capacidad.MODELAR for c in estado_1.claims)
+        assert any(f.autor is Capacidad.TUTORIZAR for f in estado_1.facts)
+        assert len(registros_1) == estado_1.transicion == 8
+        assert verificar(identidad, registros_1) is None
+
+        decision_id = estado_1.decisiones[0].id
+
+        # Invocación #2 ("proceso" 2, nuevo AlmacenTransiciones — misma
+        # identidad, mismo esquema): la única evidencia nueva es el fact
+        # posterior de Evaluar. `ejecutar_walkthrough` debe reconstruir
+        # las 8 transiciones previas (PR-1A), nunca reejecutar
+        # Diagnosticar/Remediar/Orientar/Tutorizar/Adaptar de nuevo.
+        almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
+        fact_posterior = (
+            TransitionIntent(
+                productor=Capacidad.EVALUAR,
+                operacion="registrar_fact",
+                argumentos={
+                    "autor": Capacidad.EVALUAR,
+                    "contenido": {"competencia": "COMP-2", "items_incorrectos": [3]},
+                    "provenance": Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+                },
+                base=8,
+            ),
         )
-        entradas.sort(key=lambda e: e[0])
-        orden_observado = [(kind, autor) for _, kind, autor in entradas]
+        final_2 = ejecutar_walkthrough(almacen_2, identidad, fact_posterior)
+        estado_2, registros_2 = final_2["estado"], final_2["registros"]
 
-        # El orden ES el programa pedagógico (enrutar, RFC-0004 §4):
-        # Tutorizar corre antes que exista ninguna decisión; Adaptar,
-        # apenas existe. Validar/Modelar no aparecen — ver docstring.
-        assert orden_observado == [
-            ("fact", Capacidad.EVALUAR),
-            ("fact", Capacidad.TUTORIZAR),
-            ("claim", Capacidad.DIAGNOSTICAR),
-            ("claim", Capacidad.REMEDIAR),
-            ("claim", Capacidad.ORIENTAR),
-            ("delib", None),
-            ("decision", None),
-            ("claim", Capacidad.ADAPTAR),
-        ]
-        assert not any(c.autor is Capacidad.VALIDAR for c in estado.claims)
-        assert not any(c.autor is Capacidad.MODELAR for c in estado.claims)
+        # Las 8 transiciones previas se reconstruyeron, no se repitieron:
+        # mismos EntryId, mismo autor por transición — nunca una segunda
+        # interpretación de Diagnosticar ni una segunda deliberación.
+        assert estado_2.transicion == 11  # 8 reconstruidas + fact + validar + modelar
+        assert len(registros_2) == 11
+        assert registros_2[:8] == registros_1  # las primeras 8 no se re-persistieron
+        assert verificar(identidad, registros_2) is None
 
-        # P14 + RFC-0008: un registro persistido por transición aplicada,
-        # cadena de hashes verificable, lo persistido == lo ejecutado.
-        assert len(registros) == estado.transicion == 8
-        assert almacen.leer("s-cierre-m2-natural") == registros
-        assert verificar(_identidad("s-cierre-m2-natural"), registros) is None
-
-    def test_cadena_causal_completa_recorre_de_modelar_al_fact_original_sin_saltos(
-        self, esquema
-    ):
-        almacen = AlmacenTransiciones(_URL, esquema=esquema)
-        almacen.preparar()
-        hechos, decision_id = TestValidarIntegradoAlFlujo._hechos_con_evidencia_completa()
-        final = ejecutar_walkthrough(
-            almacen, _identidad("s-cierre-m2-causal"), hechos
+        veredicto = next(
+            c for c in estado_2.claims if c.autor is Capacidad.VALIDAR and c.vigencia.vigente
         )
-        estado, registros = final["estado"], final["registros"]
+        assert veredicto.asunto == f"efecto({decision_id})"
+        assert veredicto.afirmacion["funciono"] is True
 
-        # El recorrido causal es tipado y navegable por referencias (P6,
-        # RFC-0003 §5) — cada paso se resuelve con estado.buscar(), sin
-        # adivinar ningún eslabón: Modelar → Validar → Decisión → (claim
-        # de Remediar) → (claim de Diagnosticar) → fact original.
         modelado = next(
-            c for c in estado.claims if c.autor is Capacidad.MODELAR and c.vigencia.vigente
+            c for c in estado_2.claims if c.autor is Capacidad.MODELAR and c.vigencia.vigente
         )
-        veredicto = estado.buscar(modelado.respaldo[0])
-        assert veredicto.autor is Capacidad.VALIDAR
+        assert veredicto.id in modelado.respaldo
 
-        decision = estado.buscar(decision_id)
-        assert decision_id in veredicto.respaldo
-        assert decision.id == decision_id
+        decision = estado_2.buscar(decision_id)
+        assert decision.estado_validacion is EstadoValidacion.VALIDADA
 
-        claim_remediar = estado.buscar(decision.origen)
-        assert claim_remediar.autor is Capacidad.REMEDIAR
-
-        claim_diagnostico = estado.buscar(claim_remediar.respaldo[0])
-        assert claim_diagnostico.autor is Capacidad.DIAGNOSTICAR
-
-        fact_original = estado.buscar(claim_diagnostico.respaldo[0])
-        assert fact_original.autor is Capacidad.EVALUAR
-        assert fact_original.contenido["competencia"] == "COMP-2"
-
-        # Este fixture (sin rival de Orientar, sin items_totales) cubre
-        # Evaluar/Diagnosticar/Remediar/Adaptar/Validar/Modelar — no
-        # Orientar ni Tutorizar, que sí quedaron probados en
-        # test_orden_natural_de_las_capacidades_en_un_solo_recorrido. La
-        # UNIÓN de ambos tests de esta clase cubre las 8 (ver docstring).
-        autores_presentes = {c.autor for c in estado.claims} | {
-            f.autor for f in estado.facts
+        # Las OCHO capacidades, en la misma sesión — la coexistencia que
+        # antes era estructuralmente imposible en un solo recorrido.
+        autores_presentes = {c.autor for c in estado_2.claims} | {
+            f.autor for f in estado_2.facts
         }
         assert autores_presentes == {
             Capacidad.EVALUAR,
+            Capacidad.TUTORIZAR,
             Capacidad.DIAGNOSTICAR,
             Capacidad.REMEDIAR,
+            Capacidad.ORIENTAR,
             Capacidad.ADAPTAR,
             Capacidad.VALIDAR,
             Capacidad.MODELAR,
         }
+
+        # El recorrido causal completo sigue siendo navegable por
+        # referencias tras la reanudación (P6, RFC-0003 §5) — no solo el
+        # contenido coincide, la cadena de respaldo también sobrevive a
+        # la reconstrucción.
+        veredicto_desde_modelado = estado_2.buscar(modelado.respaldo[0])
+        assert veredicto_desde_modelado.autor is Capacidad.VALIDAR
+        decision_desde_veredicto = estado_2.buscar(veredicto.respaldo[0])
+        assert decision_desde_veredicto.id == decision_id
+        claim_remediar = estado_2.buscar(decision.origen)
+        assert claim_remediar.autor is Capacidad.REMEDIAR
+        fact_original = estado_2.buscar(claim_remediar.respaldo[0])
+        assert fact_original.autor is Capacidad.EVALUAR
+
+    def test_identidad_distinta_no_reanuda_lanza_INV_2(self, esquema):
+        # R5: la reanudación exige la identidad EXACTA de la sesión —
+        # ya lo garantiza AlmacenTransiciones.abrir_sesion (PR-1A no lo
+        # tocó); esta prueba solo confirma que ejecutar_walkthrough no lo
+        # esconde ni lo captura.
+        identidad = _identidad("s-m4-pr1b-identidad")
+        almacen_1 = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_1.preparar()
+        ejecutar_walkthrough(almacen_1, identidad, _hecho_del_mundo())
+
+        otra_identidad = dataclasses.replace(identidad, student_id="otro-estudiante")
+        almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
+        with pytest.raises(ValueError, match="INV-2"):
+            ejecutar_walkthrough(almacen_2, otra_identidad, _hecho_del_mundo())
 
         assert len(registros) == estado.transicion
         assert almacen.leer("s-cierre-m2-causal") == registros

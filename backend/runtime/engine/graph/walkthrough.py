@@ -30,6 +30,7 @@ from runtime.engine.checkpoint import (
     AlmacenTransiciones,
     RegistroTransicion,
     encadenar,
+    reconstruir,
 )
 from runtime.kernel.deliberation import (
     convocar,
@@ -279,14 +280,39 @@ def ejecutar_walkthrough(
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
     → deliberación → decisión → adaptación (→ validación → modelado, si ya
-    hay evidencia), con checkpoint por transición."""
+    hay evidencia), con checkpoint por transición.
+
+    Reanudación (M4 PR-1B): si `identidad.session_id` ya tiene historia
+    persistida, el estado de arranque se reconstruye desde ella
+    (`reconstruir`, RFC-0008 §3) en vez de partir de un `LearningState`
+    vacío — nunca reejecuta un productor ni un proveedor LLM para
+    reproducir esa historia (ADR-0007). `enrutar` es función pura del
+    estado (P12): no distingue si el estado llegó de una única
+    invocación o de una reconstruida, así que continúa exactamente donde
+    la sesión anterior se detuvo de forma natural (`END` sin evidencia
+    suficiente aún para Validar/Tutorizar).
+
+    Contrato de `hechos_del_mundo` (vale para toda invocación, nueva o
+    reanudada): es la evidencia NUEVA de ESTA invocación — nunca hechos
+    ya persistidos. `ejecutar_walkthrough` no deduplica entradas del
+    mundo (a diferencia de los productores, que sí evitan reinterpretar
+    dos veces la misma evidencia vía sus propias guard clauses); volver
+    a pasar un hecho ya aplicado lo registraría como una entrada nueva y
+    distinta. Invariante que gobernará también a Boundary (RFC-0010,
+    entrada E2) y a cualquier reanudación vía HITL o Memoria.
+    """
     almacen.abrir_sesion(identidad)
+    contexto = {"ruta": "condicionales"}
+    registros_previos = almacen.leer(identidad.session_id)
+    estado = (
+        reconstruir(identidad, contexto, registros_previos)
+        if registros_previos
+        else LearningState(identidad=identidad, contexto=contexto)
+    )
     inicial: EstadoGrafo = {
-        "estado": LearningState(
-            identidad=identidad, contexto={"ruta": "condicionales"}
-        ),
+        "estado": estado,
         "intents": hechos_del_mundo,
-        "registros": (),
+        "registros": registros_previos,
     }
     return _construir(
         almacen,
