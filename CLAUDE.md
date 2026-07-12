@@ -164,6 +164,11 @@ roadmap, ficha, memoria) debe responder una pregunta que ningún
 documento existente responde. Si la respuesta ya vive en otro lado, no
 se crea uno nuevo — se referencia o se amplía el que ya existe.
 Mantener documentación de más cuesta tanto como mantener código de más.
+**Todo documento marcado como temporal (CONTRACT-*, fichas de
+Engineering Review previas a una implementación) se retira o se reduce
+a una referencia de una línea en cuanto su conocimiento queda absorbido
+por el código, los tests o un RFC definitivo — es un criterio de cierre
+de la mini-épica que lo produjo, no una limpieza aplazable.**
 
 **RFCs grandes: roadmap antes que Engineering Gate.** Cuando la
 siguiente Plataforma Operativa es un RFC grande (varias capacidades
