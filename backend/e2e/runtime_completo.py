@@ -15,13 +15,22 @@ Requisitos:
 
 Uso:
   cd backend && PYTHONPATH=.:runtime python3 e2e/runtime_completo.py
+  cd backend && PYTHONPATH=.:runtime python3 e2e/runtime_completo.py --only replay
+  cd backend && PYTHONPATH=.:runtime python3 e2e/runtime_completo.py --only hitl
+
+`--only <categoria>` corre la cadena de categorías previas necesarias
+(comparten estado — Replay necesita lo que Boundary/Observabilidad ya
+dejaron listo) y se detiene después de la pedida: no es aislamiento
+verdadero, es "validar hasta aquí" sin correr el resto.
 
 Cada categoría corre de forma independiente: si una falla, las
 siguientes igual se intentan (y probablemente fallen en cascada de forma
 informativa — nunca se ocultan). El resumen final (estilo de proyectos
 grandes: Kubernetes, Temporal, CockroachDB) es la referencia rápida del
-estado de la plataforma; el detalle de cada paso queda arriba, impreso
-en vivo.
+estado de la plataforma, con una métrica corta por categoría — solo lo
+que el propio paso ya medía (conteos, duración), nunca un número
+inventado; el detalle completo de cada paso queda arriba, impreso en
+vivo.
 
 No reemplaza la validación en navegador real (la UI puede tener bugs que
 un cliente HTTP no revela) — es el paso previo, rápido y repetible, que
@@ -31,6 +40,7 @@ esta suite corre antes de esa validación visual (CLAUDE.md, actualización
 
 from __future__ import annotations
 
+import argparse
 import os
 import time
 from decimal import Decimal
@@ -45,7 +55,10 @@ DOCENTE_PASSWORD = os.environ.get("E2E_DOCENTE_PASSWORD", "Docente2026!")
 
 _SUFIJO = str(int(time.time()))
 
-_RESULTADOS: list[tuple[str, bool, str]] = []
+# (nombre, detalle, ok, duracion_ms) — el detalle es siempre algo que la
+# propia categoría ya midió (conteos reales de su respuesta HTTP), nunca
+# un número estimado o inventado para que la tabla se vea completa.
+_RESULTADOS: list[tuple[str, str, bool, float]] = []
 
 
 def _ok(mensaje: str) -> None:
@@ -167,18 +180,22 @@ def _categoria(nombre: str, ctx: dict[str, Any], fn) -> None:
     un fallo no detiene el recorrido completo (cada categoría es
     evidencia independiente sobre una capacidad distinta de la
     plataforma; ocultar las que vienen después de la primera falla
-    escondería información, no la protege)."""
+    escondería información, no la protege). `fn` devuelve una métrica
+    corta (str) de lo que ya midió — no se inventa nada aquí."""
     print(f"\n— {nombre}")
+    inicio = time.perf_counter()
     try:
-        fn(ctx)
+        detalle = fn(ctx) or ""
     except Exception as exc:  # noqa: BLE001 — se reporta, nunca se oculta
+        duracion_ms = (time.perf_counter() - inicio) * 1000
         print(f"    ✗ FAIL: {exc}")
-        _RESULTADOS.append((nombre, False, str(exc)))
+        _RESULTADOS.append((nombre, str(exc), False, duracion_ms))
     else:
-        _RESULTADOS.append((nombre, True, ""))
+        duracion_ms = (time.perf_counter() - inicio) * 1000
+        _RESULTADOS.append((nombre, detalle, True, duracion_ms))
 
 
-def _postgres(ctx: dict[str, Any]) -> None:
+def _postgres(ctx: dict[str, Any]) -> str:
     verificar_servidor_activo()
     _ok("servidor activo")
     ctx["cliente"] = cliente = ClienteE2E()
@@ -187,9 +204,10 @@ def _postgres(ctx: dict[str, Any]) -> None:
     ctx["session_id"] = session_id = f"e2e-{_SUFIJO}"
     ctx["identidad"] = cliente.abrir_sesion(session_id)
     _ok(f"sesión {session_id} abierta y persistida — escritura real en Postgres")
+    return f"sesión {session_id} escrita"
 
 
-def _runtime(ctx: dict[str, Any]) -> None:
+def _runtime(ctx: dict[str, Any]) -> str:
     cliente: ClienteE2E = ctx["cliente"]
     entrega = cliente.registrar_hecho(
         ctx["identidad"], {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]}
@@ -197,9 +215,10 @@ def _runtime(ctx: dict[str, Any]) -> None:
     assert entrega.get("asunto"), "el walkthrough no llegó a producir una Entrega"
     ctx["entrega"] = entrega
     _ok(f"walkthrough real corrió — entrega: {entrega['asunto']}")
+    return f"entrega={entrega['asunto']}"
 
 
-def _boundary(ctx: dict[str, Any]) -> None:
+def _boundary(ctx: dict[str, Any]) -> str:
     cliente: ClienteE2E = ctx["cliente"]
     docente = cliente.login(DOCENTE_EMAIL, DOCENTE_PASSWORD)
     _ok(f"login como {docente['email']}")
@@ -207,26 +226,29 @@ def _boundary(ctx: dict[str, Any]) -> None:
     assert estado["facts"] and estado["claims"]
     ctx["estado"] = estado
     _ok("el docente lee /estado de la sesión del estudiante por el Boundary (RFC-0009 §1)")
+    return "lectura cross-rol vía Boundary OK"
 
 
-def _observabilidad(ctx: dict[str, Any]) -> None:
+def _observabilidad(ctx: dict[str, Any]) -> str:
     cliente: ClienteE2E = ctx["cliente"]
     traza = cliente.traza(ctx["session_id"])
     assert traza and traza[0]["eventos"][0]["tipo"] == "FactRegistrado"
     ctx["traza"] = traza
     _ok(f"traza: {len(traza)} transiciones, T1={traza[0]['eventos'][0]['tipo']}")
     _ok(f"estado: {len(ctx['estado']['facts'])} facts, {len(ctx['estado']['claims'])} claims")
+    return f"{len(traza)} transiciones, {len(ctx['estado']['facts'])}F/{len(ctx['estado']['claims'])}C"
 
 
-def _replay(ctx: dict[str, Any]) -> None:
+def _replay(ctx: dict[str, Any]) -> str:
     cliente: ClienteE2E = ctx["cliente"]
     replay = cliente.replay(ctx["session_id"])
     assert len(replay) == len(ctx["traza"])
     assert replay[-1]["estado"] == ctx["estado"]
     _ok(f"replay: {len(replay)} pasos, último coincide con /estado")
+    return f"{len(replay)} pasos"
 
 
-def _memory(ctx: dict[str, Any]) -> None:
+def _memory(ctx: dict[str, Any]) -> str:
     cliente: ClienteE2E = ctx["cliente"]
     cliente.login(ESTUDIANTE_EMAIL, ESTUDIANTE_PASSWORD)
     session_id_cierre = f"e2e-{_SUFIJO}-cierre"
@@ -242,9 +264,10 @@ def _memory(ctx: dict[str, Any]) -> None:
     assert memoria is not None
     assert memoria["session_id"] == session_id_cierre
     _ok(f"memoria consolidada por {memoria['session_id']}, leída por la sesión siguiente")
+    return f"consolidada por {memoria['session_id']}"
 
 
-def _hitl(ctx: dict[str, Any]) -> None:
+def _hitl(ctx: dict[str, Any]) -> str:
     cliente: ClienteE2E = ctx["cliente"]
     session_id = ctx["session_id"]
 
@@ -276,46 +299,78 @@ def _hitl(ctx: dict[str, Any]) -> None:
     assert cierre["resultado"]["regla"] == "decision-humana"
     assert any(dec["origen"] == cierre["id"] for dec in estado_final["decisiones"])
     _ok("escalada resuelta y decisión derivada — el runtime continuó solo")
+    return "1 intervención espontánea, 1 escalada resuelta"
 
 
-def _llm(ctx: dict[str, Any]) -> None:
+def _llm(ctx: dict[str, Any]) -> str:
     # El claim de Adaptar (asunto "modalidad(...)") solo existe si un
     # proveedor LLM real corrió — nunca lo produce un reducer ni un
-    # productor de reglas (ADR-0007).
+    # productor de reglas (ADR-0007). No se cuentan llamadas HTTP a
+    # OpenAI/Tavily porque este cliente no las instrumenta — reportar un
+    # número no medido sería inventarlo.
     estado = ctx.get("estado_hitl") or ctx["estado"]
     claims_adaptar = [c for c in estado["claims"] if str(c.get("asunto", "")).startswith("modalidad(")]
     assert claims_adaptar, "ningún claim de Adaptar — ¿el proveedor LLM real corrió?"
     _ok(f"Adaptar produjo {len(claims_adaptar)} claim(s) vía LLM real: {claims_adaptar[-1]['asunto']}")
+    return f"Adaptar: {len(claims_adaptar)} claim(s) reales"
 
 
 def _resumen() -> bool:
-    ancho = 42
+    ancho = 46
     print("\n" + "=" * ancho)
     print("RUNTIME PLATFORM CHECK")
     print("=" * ancho + "\n")
-    for nombre, ok, _detalle in _RESULTADOS:
+    for nombre, detalle, ok, duracion_ms in _RESULTADOS:
         estado = "PASS" if ok else "FAIL"
-        print(f"{nombre:.<30} {estado}")
-    total_ok = sum(1 for _, ok, _ in _RESULTADOS if ok)
+        cola = f"({detalle}, {duracion_ms:.0f} ms)" if ok else f"— {detalle}"
+        print(f"{nombre:.<20} {estado} {cola}")
+    total_ok = sum(1 for _, _, ok, _ in _RESULTADOS if ok)
     total = len(_RESULTADOS)
     print(f"\nTotal:\n{total_ok}/{total} PASS")
     print("=" * ancho)
     return total_ok == total
 
 
-def main() -> bool:
+# Orden fijo: cada categoría depende del estado que dejan las
+# anteriores (mismo ctx compartido) — "--only X" corre la cadena hasta
+# X inclusive, nunca X en aislamiento verdadero.
+_CATEGORIAS: list[tuple[str, Any]] = [
+    ("Postgres", _postgres),
+    ("Runtime", _runtime),
+    ("Boundary", _boundary),
+    ("Observabilidad", _observabilidad),
+    ("Replay", _replay),
+    ("Memory", _memory),
+    ("HITL", _hitl),
+    ("LLM", _llm),
+]
+
+
+def main(solo: str | None = None) -> bool:
     print("Recorrido E2E — Runtime LangGraph (real, sin mocks)")
+    categorias = _CATEGORIAS
+    if solo is not None:
+        nombres = [nombre for nombre, _ in _CATEGORIAS]
+        objetivo = next((n for n in nombres if n.lower() == solo.lower()), None)
+        if objetivo is None:
+            raise SystemExit(f"--only {solo!r} inválido — opciones: {', '.join(nombres)}")
+        indice = nombres.index(objetivo)
+        categorias = _CATEGORIAS[: indice + 1]
+        print(f"(--only {objetivo}: corriendo {', '.join(n for n, _ in categorias)})")
+
     ctx: dict[str, Any] = {}
-    _categoria("Postgres", ctx, _postgres)
-    _categoria("Runtime", ctx, _runtime)
-    _categoria("Boundary", ctx, _boundary)
-    _categoria("Observabilidad", ctx, _observabilidad)
-    _categoria("Replay", ctx, _replay)
-    _categoria("Memory", ctx, _memory)
-    _categoria("HITL", ctx, _hitl)
-    _categoria("LLM", ctx, _llm)
+    for nombre, fn in categorias:
+        _categoria(nombre, ctx, fn)
     return _resumen()
 
 
 if __name__ == "__main__":
-    raise SystemExit(0 if main() else 1)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--only",
+        metavar="CATEGORIA",
+        help="corre solo hasta esta categoría (Postgres, Runtime, Boundary, "
+        "Observabilidad, Replay, Memory, HITL, LLM)",
+    )
+    argumentos = parser.parse_args()
+    raise SystemExit(0 if main(solo=argumentos.only) else 1)
