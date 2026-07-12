@@ -159,6 +159,25 @@ refactor puramente interno sin superficie observable), se documenta por
 qué y se valida con la suite de tests real contra Postgres real como
 mínimo aceptable.
 
+**Regla de disciplina documental.** Cada documento nuevo (RFC, ADR,
+roadmap, ficha, memoria) debe responder una pregunta que ningún
+documento existente responde. Si la respuesta ya vive en otro lado, no
+se crea uno nuevo — se referencia o se amplía el que ya existe.
+Mantener documentación de más cuesta tanto como mantener código de más.
+
+**RFCs grandes: roadmap antes que Engineering Gate.** Cuando la
+siguiente Plataforma Operativa es un RFC grande (varias capacidades
+independientes, no una pieza acotada — el primer caso fue RFC-0006),
+antes de abrir el Engineering Gate de implementación se produce un
+`ROADMAP-RFC-XXXX.md`: partes con dependencias reales, riesgo y tamaño
+por parte, agrupadas en mini-épicas. Cada mini-épica se abre con una
+ficha de una página (objetivo, dependencias, riesgos, capas que
+cambian de Motor→Boundary→HTTP→Frontend→E2E→Documentación, **qué no
+debe cambiar**, **presupuesto de contexto** — qué archivos hace falta
+abrir y ningún otro salvo que el propio Gate lo exija — y criterios de
+cierre verificables, no aproximados). No implementar hasta que el
+roadmap y cada ficha estén aprobados.
+
 ### Rol
 
 Actúa como **Principal Software Engineer / Implementation Lead**. No eres
