@@ -40,6 +40,7 @@ from app.api.routes import (
     evidence,
     knowledge_test,
     research,
+    runtime as runtime_boundary_routes,
 )
 from app.weekly_learning.routes import router as weekly_learning_router
 
@@ -343,6 +344,7 @@ app.include_router(evidence.router)
 app.include_router(research.router)
 app.include_router(traces.router)
 app.include_router(engagement.router)
+app.include_router(runtime_boundary_routes.router)
 app.include_router(weekly_learning_router)
 
 
