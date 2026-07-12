@@ -37,8 +37,11 @@ import json
 from decimal import Decimal
 from typing import Any, Callable, Mapping
 
+from dataclasses import dataclass
+
 from runtime.engine.checkpoint.canonical import a_canonico
 from runtime.engine.checkpoint.cadena import RegistroTransicion
+from runtime.kernel.events import DomainEvent
 from runtime.kernel.reducers import (
     Aplicado,
     registrar_claim,
@@ -59,6 +62,18 @@ from runtime.kernel.state.entries import (
 )
 from runtime.kernel.state.state import Identidad, LearningState
 from runtime.kernel.transitions import TransitionIntent
+
+
+@dataclass(frozen=True, slots=True)
+class TransicionEventos:
+    """Un eslabón de la traza (RFC-0007 §2.1): los eventos que esa
+    transición produjo, en el mismo orden en que el reducer los emitió."""
+
+    transicion: int
+    eventos: tuple[DomainEvent, ...]
+
+
+Traza = tuple[TransicionEventos, ...]
 
 # Dispatch local, deliberadamente NO importado de engine/graph/walkthrough:
 # ese módulo importa langgraph (ADR-0006 regla 1), y este es un módulo de
@@ -177,11 +192,11 @@ def desde_canonico(canonico: bytes) -> TransitionIntent:
     )
 
 
-def reconstruir(
+def reconstruir_con_traza(
     identidad: Identidad,
     contexto: Mapping[str, Any],
     registros: tuple[RegistroTransicion, ...],
-) -> LearningState:
+) -> tuple[LearningState, Traza]:
     """R3 (Exactitud): reconstruir desde lo persistido produce la misma
     secuencia. Nunca invoca un productor ni un proveedor LLM — solo
     decodifica intents ya decididos (`desde_canonico`) y los aplica a
@@ -191,8 +206,13 @@ def reconstruir(
     recién producidos por el reducer y compara byte a byte contra
     `registro.canonico` — si no coincide, la reconstrucción no es fiel
     y se aborta ruidosamente (ADR-0004 E-2, nunca un rechazo silencioso).
+
+    Además de reconstruir el `LearningState`, retorna la traza (RFC-0007
+    §2.1): los mismos eventos que la verificación de integridad ya
+    recalcula, expuestos por transición en vez de descartarse.
     """
     estado = LearningState(identidad=identidad, contexto=contexto)
+    traza: list[TransicionEventos] = []
     for registro in registros:
         intent = desde_canonico(registro.canonico)
         resultado = _OPERACIONES[intent.operacion](estado, **intent.argumentos)
@@ -211,4 +231,20 @@ def reconstruir(
                 f"reconstrucción diverge de lo persistido"
             )
         estado = resultado.estado
+        traza.append(
+            TransicionEventos(
+                transicion=registro.transicion, eventos=resultado.eventos
+            )
+        )
+    return estado, tuple(traza)
+
+
+def reconstruir(
+    identidad: Identidad,
+    contexto: Mapping[str, Any],
+    registros: tuple[RegistroTransicion, ...],
+) -> LearningState:
+    """R3 (Exactitud) — ver `reconstruir_con_traza`. Envoltorio para quien
+    solo necesita el estado final (RFC-0008 §3), sin la traza (RFC-0007)."""
+    estado, _ = reconstruir_con_traza(identidad, contexto, registros)
     return estado

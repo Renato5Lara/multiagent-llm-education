@@ -12,7 +12,13 @@ from runtime.engine.checkpoint.cadena import (
     genesis,
     verificar,
 )
-from runtime.engine.checkpoint.reconstruccion import desde_canonico, reconstruir
+from runtime.engine.checkpoint.reconstruccion import (
+    Traza,
+    TransicionEventos,
+    desde_canonico,
+    reconstruir,
+    reconstruir_con_traza,
+)
 from runtime.engine.checkpoint.storage import AlmacenTransiciones
 
 __all__ = [
@@ -20,10 +26,13 @@ __all__ = [
     "AlmacenMemoria",
     "AlmacenTransiciones",
     "RegistroTransicion",
+    "Traza",
+    "TransicionEventos",
     "a_canonico",
     "desde_canonico",
     "encadenar",
     "genesis",
     "reconstruir",
+    "reconstruir_con_traza",
     "verificar",
 ]
