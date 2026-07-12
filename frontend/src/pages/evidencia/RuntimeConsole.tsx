@@ -9,6 +9,7 @@ import { RuntimeTraceTimeline } from '@/components/observability/RuntimeTraceTim
 import { RuntimeEstadoView } from '@/components/observability/RuntimeEstadoView'
 import { RuntimeMemoriaView } from '@/components/observability/RuntimeMemoriaView'
 import { RuntimeReplayScrubber } from '@/components/observability/RuntimeReplayScrubber'
+import { RuntimeHitlPanel } from '@/components/observability/RuntimeHitlPanel'
 import { useRuntimeTrace } from '@/hooks/useRuntimeTrace'
 import { useRuntimeEstado } from '@/hooks/useRuntimeEstado'
 import { useRuntimeMemoria } from '@/hooks/useRuntimeMemoria'
@@ -17,7 +18,9 @@ import { useRuntimeReplay } from '@/hooks/useRuntimeReplay'
 // Runtime Console — punto único de inspección del runtime LangGraph.
 // Cada pestaña consume exactamente una surface S3 del Platform Boundary
 // (RFC-0010 §2); ninguna llama al almacenamiento directamente. Secciones:
-// Traza ✅, Estado Final ✅, Memoria ✅, Replay Cognitivo ✅ (RFC-0008 §3).
+// Traza ✅, Estado Final ✅, Memoria ✅, Replay Cognitivo ✅ (RFC-0008 §3),
+// HITL ✅ (RFC-0009) — reutiliza la misma consulta de Estado Final, no
+// abre una surface nueva de solo lectura.
 export default function RuntimeConsolePage() {
   const [input, setInput] = useState('')
   const [sessionId, setSessionId] = useState<string | undefined>(undefined)
@@ -78,6 +81,7 @@ export default function RuntimeConsolePage() {
                 <TabsTrigger value="estado">Estado Final</TabsTrigger>
                 <TabsTrigger value="memoria">Memoria</TabsTrigger>
                 <TabsTrigger value="replay">Replay</TabsTrigger>
+                <TabsTrigger value="hitl">HITL</TabsTrigger>
               </TabsList>
 
               <TabsContent value="traza">
@@ -118,6 +122,16 @@ export default function RuntimeConsolePage() {
                 ) : (
                   <RuntimeReplayScrubber pasos={replay.data ?? []} />
                 )}
+              </TabsContent>
+
+              <TabsContent value="hitl">
+                {estado.isLoading ? (
+                  <Skeleton className="h-48 rounded-lg" />
+                ) : estado.isError ? (
+                  <ErrorMuted mensaje="No se pudo leer el estado de esta sesión." />
+                ) : estado.data ? (
+                  <RuntimeHitlPanel estado={estado.data} sessionId={sessionId} />
+                ) : null}
               </TabsContent>
             </Tabs>
           </CardContent>
