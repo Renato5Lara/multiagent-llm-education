@@ -40,6 +40,8 @@ from app.memory.shared_memory import SharedMemoryStore
 from app.models.course import Course
 from app.models.student_progress import PathModule
 from app.models.user import User
+from app.services.runtime_bridge import consultar_decision_vigente
+from runtime.boundary import Entrega, normalizar_asunto
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,53 @@ BLOOM_LABELS = {
     5: "Evaluar",
     6: "Crear",
 }
+
+
+def _bloom_target_desde_entrega(module: "PathModule", entrega: Entrega) -> int:
+    """Épica 2: el runtime decide, este servicio ejecuta. Si la última
+    decisión del runtime (`Entrega`, S1) es sobre la MISMA competencia
+    que este módulo (`entrega.asunto == normalizar_asunto(module.title)`
+    — ADR-0010), su `profundidad` gobierna el nivel de Bloom objetivo:
+    "fundamentos" (accion "reforzar") nunca pide más que Comprender;
+    "aplicacion" (accion "avanzar-con-andamiaje") conserva el nivel
+    configurado del módulo — el andamiaje es una decisión de modalidad,
+    no de profundidad, y queda fuera de este primer cambio.
+
+    Sin decisión aplicable (estudiante nuevo, sin evaluaciones aún, o la
+    última decisión es sobre otro módulo de la misma sesión de curso):
+    se conserva el comportamiento previo — el nivel configurado del
+    módulo, sin tocar."""
+    base = module.bloom_level or 3
+    if entrega.diseno is None or entrega.asunto is None:
+        return base
+    if entrega.asunto != normalizar_asunto(module.title):
+        return base
+    if entrega.diseno.get("profundidad") == "fundamentos":
+        return min(base, 2)
+    return base
+
+
+def _bloom_target_para_modulo(
+    orch_id: str, student: "User", course: "Course", module: "PathModule"
+) -> int:
+    """Lee la decisión del runtime (S3, best-effort) y la traduce a
+    `bloom_target`. Nunca bloquea la orquestación: si el runtime no
+    responde (Postgres caído, lo que sea), degrada al comportamiento
+    previo — el nivel configurado del módulo — igual que cualquier otra
+    fase de este pipeline (ver constraints del docstring del módulo)."""
+    try:
+        entrega_runtime = consultar_decision_vigente(
+            student_id=student.id, course_id=course.id,
+        )
+        return _bloom_target_desde_entrega(module, entrega_runtime)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "orchestrate[%s]: runtime_bridge read failed (%r) — "
+            "usando module.bloom_level sin la decisión del runtime",
+            orch_id, exc,
+        )
+        return module.bloom_level or 3
+
 
 # Maximum time (seconds) for the entire orchestration.  If exceeded the
 # pipeline returns a gracefully-degraded result rather than a 500.
@@ -389,7 +438,7 @@ class ModuleOrchestrationService:
         memory_store: SharedMemoryStore | None,
     ) -> dict[str, Any]:
         topic = module.title
-        bloom_target = module.bloom_level or 3
+        bloom_target = _bloom_target_para_modulo(orch_id, student, course, module)
         session_id = uuid.uuid4().hex[:12]
         t0 = time.monotonic()
 
