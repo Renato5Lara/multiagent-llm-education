@@ -369,7 +369,22 @@ Boundary:        <cambia / no cambia>
 HTTP:            <cambia / no cambia>
 Frontend:        <cambia / no cambia>
 E2E:             <qué categoría de runtime_completo.py se ve afectada>
-Criterio cierre: <qué prueba, observable, dice "esto ya está"
+
+No debe cambiar: <lista explícita — todo lo que "ya que estoy aquí"
+                 podría tentar a tocar y que está fuera del contrato>
+
+Context Budget:  <archivos que esta mini-épica necesita abrir; no abrir
+                 nada fuera de esta lista salvo que el propio Gate lo exija>
+
+Criterios de cierre (todos, no "aproximadamente"):
+  □ <criterio funcional medible 1>
+  □ <criterio funcional medible 2>
+  □ politica-v1 sigue produciendo exactamente las mismas decisiones
+  □ Ninguna API HTTP cambia (salvo que la ficha lo liste arriba)
+  □ Ninguna surface Boundary cambia (salvo que la ficha lo liste arriba)
+  □ runtime_completo.py sigue en verde
+  □ No aparecen TODO/FIXME nuevos
+  □ No baja la cobertura de tests
 ```
 
 ### Ficha — RFC-0006/1: Cimientos
@@ -392,8 +407,31 @@ HTTP:            No cambia.
 Frontend:        No cambia.
 E2E:             No cambia — ce no es observable desde ninguna
                  categoría de runtime_completo.py hasta RFC-0006/3.
-Criterio cierre: Suite de tests, una prueba por axioma (A1-A8), contra
-                 escenarios reales (Postgres real, sin mocks) — no una
-                 sola prueba de humo. 260/260 tests previos siguen
-                 pasando (politica-v1 intacta).
+
+No debe cambiar: politica-v1 / mecanica.py, kernel/reducers/ (ningún
+                 reducer nuevo — ce es una proyección, no una
+                 mutación), boundary/, app/api/routes/, frontend/,
+                 RFC-0010 (ninguna surface nueva ni modificada),
+                 backend/e2e/ (ningún ajuste — nada observable cambia).
+
+Context Budget:  RFC-0006, CONCEPT-0002, ROADMAP-RFC-0006.md,
+                 kernel/deliberation/mecanica.py (leer, no tocar),
+                 kernel/state/entries.py, kernel/state/state.py,
+                 kernel/reducers/ (leer, no tocar),
+                 tests/runtime/ (para el patrón de test real existente).
+                 No abrir boundary/, app/, frontend/ salvo que el
+                 propio Gate revele que algo ahí es necesario.
+
+Criterios de cierre:
+  □ Los 8 axiomas (A1-A8) tienen exactamente un test dedicado cada uno,
+    contra Postgres real
+  □ politica-v1 sigue produciendo exactamente las mismas decisiones
+    (suite RFC-0007/RFC-0008/HITL ya existente, sin modificar, en verde)
+  □ El mecanismo de política versionada permite que politica-v2 exista
+    sin tocar una línea de politica-v1
+  □ Ninguna API HTTP cambia
+  □ Ninguna surface Boundary cambia
+  □ runtime_completo.py sigue en 9/9 PASS, sin ninguna categoría nueva
+  □ No aparecen TODO/FIXME nuevos
+  □ No baja la cobertura de tests (260 tests previos + los nuevos de A1-A8)
 ```
