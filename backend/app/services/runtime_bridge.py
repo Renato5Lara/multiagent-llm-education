@@ -24,6 +24,7 @@ from runtime.boundary import (
     PeticionAbrirSesion,
     PeticionHechoDelMundo,
     abrir_sesion,
+    consultar_entrega_vigente,
     normalizar_asunto,
     registrar_hecho,
 )
@@ -66,6 +67,27 @@ def registrar_evidencia_evaluacion(
                 "items_incorrectos": items_incorrectos,
             },
             origen=OrigenProvenance.INSTRUMENTO,
+        ),
+        almacen,
+        almacen_memoria,
+    )
+
+
+def consultar_decision_vigente(student_id: str, course_id: str) -> Entrega:
+    """S3 — la decisión que el runtime ya tomó para este estudiante en
+    este curso, sin registrar ningún hecho nuevo (regla 2 de RFC-0010).
+    `Entrega(asunto=None, diseno=None)` si todavía no hay evidencia
+    (estudiante nuevo, o sin evaluaciones enviadas aún) — un estado
+    válido, no un error; quien la consuma decide el comportamiento por
+    defecto en ese caso."""
+    almacen, almacen_memoria = almacenes()
+    return consultar_entrega_vigente(
+        PeticionAbrirSesion(
+            session_id=_sesion_del_curso(student_id, course_id),
+            student_id=student_id,
+            version_banco=VERSION_BANCO,
+            version_politica=VERSION_POLITICA,
+            spec_version=SPEC_VERSION,
         ),
         almacen,
         almacen_memoria,

@@ -109,3 +109,41 @@ def test_dos_modulos_del_mismo_curso_comparten_la_misma_sesion_de_runtime():
     # No lanza INV-2: la segunda llamada reanuda la misma identidad de
     # sesión que la primera (mismo estudiante, mismo curso).
     assert entrega_2 is not None
+
+
+def test_consultar_decision_vigente_sin_evidencia_es_entrega_vacia():
+    from app.services.runtime_bridge import consultar_decision_vigente
+    from runtime.boundary import Entrega
+
+    entrega = consultar_decision_vigente(student_id="nueva", course_id="curso-x")
+    assert entrega == Entrega(asunto=None, diseno=None)
+
+
+def test_consultar_decision_vigente_refleja_la_ultima_evidencia_registrada():
+    from app.services.runtime_bridge import (
+        consultar_decision_vigente,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="pedro", course_id="curso-y", titulo_modulo="Recursividad",
+        items_incorrectos=[0, 1, 2],
+    )
+    entrega = consultar_decision_vigente(student_id="pedro", course_id="curso-y")
+    assert entrega.asunto is not None
+    assert entrega.diseno is not None
+
+
+def test_consultar_decision_vigente_no_registra_ningun_hecho():
+    from app.services.runtime_bridge import consultar_decision_vigente
+    from app.services.runtime_connection import (
+        SPEC_VERSION,
+        VERSION_BANCO,
+        VERSION_POLITICA,
+        almacenes,
+    )
+
+    consultar_decision_vigente(student_id="ana", course_id="curso-z")
+    consultar_decision_vigente(student_id="ana", course_id="curso-z")
+    almacen, _ = almacenes()
+    assert almacen.leer("curso:curso-z:estudiante:ana") == ()
