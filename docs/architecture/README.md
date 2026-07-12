@@ -121,6 +121,14 @@ requisito previo a consecuencia del modelo.
   Adaptador LangGraph (Aceptado): ocho reglas para el único módulo con
   tecnología externa; el checkpointer nativo jamás es fuente de verdad;
   el estado visible por un nodo es inmutable.
+- [ADR-0007](ADR/ADR-0007-integracion-llm-productores-conocimiento.md)
+  — Estrategia de Integración LLM para Productores de Conocimiento
+  (Aceptado): el tipo de sobre que produce el reducer —no la
+  derivabilidad del valor— decide entre grounding (FACT: el LLM nunca
+  es la fuente del dato) y regla/vocabulario explícito (CLAIM: el LLM
+  interpreta dentro de un contrato declarado); evidencia empírica de
+  las 8 capacidades; riesgo de Prompt Drift registrado, no resuelto
+  aquí.
 
 ## Implementation Phase
 

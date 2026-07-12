@@ -46,6 +46,7 @@
 | D-035 | Enmienda Constitucional v1: P16 («la explicación se recorre, jamás se redacta») y P17 («el humano participa por hechos, jamás por edición») elevados — dejaron de ser reglas locales: gobiernan varios RFC simultáneamente | Constitución rev. 4 | Vigente |
 | D-036 | Prompt Maestro de la Implementation Phase: implementación incremental (una pieza terminada por cambio), pruebas parte del cambio, detención ante conceptos sin respaldo, cláusula de trazabilidad (verificabilidad > brevedad); protocolo operativo instalado en CLAUDE.md | RFC-0000 rev. 7 + CLAUDE.md | Vigente |
 | D-037 | Errores: 5 categorías con un destino cada una («un bug jamás se disfraza de rechazo»; lo inclasificado es E-2). Pruebas: 5 suites con el walkthrough como integración canónica, token canónico de norma (pytest -k INV_5), cobertura de contrato sobre líneas, CI con lint de imports | ADR-0004, ADR-0005 | Vigente |
+| D-038 | Estrategia de integración LLM: el tipo de sobre del reducer (no la derivabilidad del valor) decide entre grounding (FACT: el LLM nunca es la fuente del dato, solo verifica el contrato del proveedor) y regla/vocabulario explícito (CLAIM: el LLM interpreta dentro de un contrato declarado); guardián P13 y test contra proveedor real verifican propiedades independientes, ninguno sustituye al otro; riesgo de Prompt Drift registrado, no resuelto | ADR-0007 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 
