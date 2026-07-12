@@ -52,14 +52,14 @@ def _runtime_env(monkeypatch):
     # descartable — no comparte tablas con la plataforma (ADR-0009 §2.4).
     monkeypatch.setenv("RUNTIME_DATABASE_URL", _URL)
     monkeypatch.setenv("RUNTIME_DATABASE_SCHEMA", f"runtime_http_test_{os.getpid()}")
-    from app.api.routes.runtime import _almacenes
+    from app.services.runtime_connection import almacenes
 
-    _almacenes.cache_clear()
+    almacenes.cache_clear()
     yield
     esquema = os.environ["RUNTIME_DATABASE_SCHEMA"]
     with psycopg2.connect(_URL) as conexion, conexion.cursor() as cursor:
         cursor.execute(f"DROP SCHEMA IF EXISTS {esquema} CASCADE")
-    _almacenes.cache_clear()
+    almacenes.cache_clear()
 
 
 @pytest.fixture

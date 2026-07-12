@@ -97,9 +97,30 @@ propia conexión a almacenamiento. Sin esta decisión, la Épica 1
 
 1. Ningún archivo bajo `runtime/boundary/` importa `fastapi`, `pydantic`
    ni nada de `app/`.
-2. El único módulo de `app/` que importa `runtime.boundary` es el nuevo
-   router (o su capa de dependencias).
+2. Todo módulo de `app/` que importe `runtime.boundary` reutiliza la
+   conexión compartida de `app/services/runtime_connection.py` — ninguno
+   abre su propia instancia de `AlmacenTransiciones`/`AlmacenMemoria`
+   (ver enmienda §6).
 3. `runtime/boundary` abre su propia conexión a Postgres vía
    `AlmacenTransiciones`/`AlmacenMemoria`; nunca comparte `AsyncSession`
    de la plataforma.
 4. Los handlers HTTP del nuevo router son funciones síncronas (`def`).
+
+## 6. Enmienda 2026-07-12 (Épica 2) — más de un consumidor en `app/`
+
+§2.3 decía "único módulo de `app/` que importa `runtime.boundary`"
+pensando solo en el transporte HTTP de la Épica 1. La Épica 2 introduce
+un segundo consumidor legítimo: `app/services/runtime_bridge.py`, que
+invoca al Boundary desde el flujo de evaluación (no HTTP directo, sino
+orquestación de servicio). Restringir a "un único módulo" ya no
+describe una arquitectura real sin bloquear trabajo legítimo.
+
+**Corrección:** la conexión al runtime (`_almacenes()`, las constantes
+de versión baseline) vive en un único lugar compartido,
+`app/services/runtime_connection.py` — eso es lo que se mantiene único,
+no el número de módulos que traducen hacia `runtime.boundary`. Cualquier
+módulo de `app/` que necesite invocar al runtime importa
+`runtime.boundary` directamente para su propia traducción, pero
+reutiliza esa conexión compartida — nunca abre la suya. Sigue sin haber
+SQLAlchemy ni `AsyncSession` de la plataforma tocando Postgres del
+runtime (criterio 3 no cambia).

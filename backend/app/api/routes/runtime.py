@@ -2,17 +2,17 @@
 superficie que ejecuta LangGraph sin pasar por BaseAgent (Épica 1;
 CLAUDE.md, actualización 2026-07-12).
 
-Único módulo de `app/` que importa `runtime.boundary` (regla de
-importación de BLUEPRINT: `app/` → `boundary/` únicamente). Traduce
-HTTP ↔ DTOs del Boundary; el Boundary traduce DTOs ↔ runtime — cada capa
-hace solo su propia mitad (ADR-0009 §2.3). Aditivo: no toca
-`app/agents/` ni `/api/sessions/*` — esa migración es la Épica 2.
+Traduce HTTP ↔ DTOs del Boundary; el Boundary traduce DTOs ↔ runtime —
+cada capa hace solo su propia mitad (ADR-0009 §2.3). Comparte la
+conexión al runtime de `app/services/runtime_connection.py` con
+cualquier otro módulo de `app/` que también invoque el runtime — p. ej.
+`app/services/runtime_bridge.py` (Épica 2) — ninguno abre su propia
+instancia (ADR-0009 §6). Aditivo: no toca `app/agents/` — el retiro de
+BaseAgent es una épica posterior.
 """
 
 from __future__ import annotations
 
-import os
-from functools import lru_cache
 from typing import Any, Mapping
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -20,6 +20,12 @@ from pydantic import BaseModel
 
 from app.api.deps import aget_current_estudiante
 from app.models.user import User
+from app.services.runtime_connection import (
+    SPEC_VERSION,
+    VERSION_BANCO,
+    VERSION_POLITICA,
+    almacenes,
+)
 from runtime.boundary import (
     Identidad,
     PeticionAbrirSesion,
@@ -27,42 +33,9 @@ from runtime.boundary import (
     abrir_sesion,
     registrar_hecho,
 )
-from runtime.engine.checkpoint import AlmacenMemoria, AlmacenTransiciones
 from runtime.kernel.state.entries import OrigenProvenance
 
 router = APIRouter(prefix="/api/runtime", tags=["runtime"])
-
-#: Baseline fijo hasta que `runtime/policy/` formalice el versionado de
-#: política y banco (Épica 5, RFC-0006). No existe todavía un catálogo
-#: real entre el cual elegir — inventar un contrato HTTP para elegirlo
-#: fabricaría una capacidad inexistente (ADR-0009 §4, límite explícito).
-_VERSION_BANCO = "v1"
-_VERSION_POLITICA = "v1"
-_SPEC_VERSION = "foundation-2026-07-10"
-
-_RUNTIME_URL = os.environ.get(
-    "RUNTIME_DATABASE_URL",
-    "postgresql://upao_user:upao_pass@localhost:5432/upao_mas_edu",
-)
-_RUNTIME_ESQUEMA = os.environ.get("RUNTIME_DATABASE_SCHEMA", "runtime")
-
-
-@lru_cache(maxsize=1)
-def _almacenes() -> tuple[AlmacenTransiciones, AlmacenMemoria]:
-    """Conexión propia del runtime (ADR-0009 §2.4) — nunca el
-    AsyncSession de la plataforma. Perezosa (primer uso, no import de
-    este módulo): igual que el resto de la app, Postgres solo se exige
-    a quien de verdad ejecuta una petición — importar este router no
-    debe requerir Postgres arriba (evita romper la colección de tests
-    que no tocan `/api/runtime/*`, p. ej. los que usan SQLite). Sin
-    estado mutable propio (cada método abre y cierra su propia conexión
-    psycopg2): compartir la instancia entre requests concurrentes del
-    threadpool de FastAPI es seguro."""
-    almacen = AlmacenTransiciones(_RUNTIME_URL, esquema=_RUNTIME_ESQUEMA)
-    almacen_memoria = AlmacenMemoria(_RUNTIME_URL, esquema=_RUNTIME_ESQUEMA)
-    almacen.preparar()
-    almacen_memoria.preparar()
-    return almacen, almacen_memoria
 
 
 class IdentidadOut(BaseModel):
@@ -119,14 +92,14 @@ def abrir(
     """E1 — abrir o reanudar sesión. `student_id` viene del usuario
     autenticado, jamás del cuerpo de la petición — el Boundary traduce,
     no confía en identidad autodeclarada por el cliente."""
-    almacen, almacen_memoria = _almacenes()
+    almacen, almacen_memoria = almacenes()
     identidad = abrir_sesion(
         PeticionAbrirSesion(
             session_id=peticion.session_id,
             student_id=str(current_user.id),
-            version_banco=_VERSION_BANCO,
-            version_politica=_VERSION_POLITICA,
-            spec_version=_SPEC_VERSION,
+            version_banco=VERSION_BANCO,
+            version_politica=VERSION_POLITICA,
+            spec_version=SPEC_VERSION,
         ),
         almacen,
         almacen_memoria,
@@ -155,7 +128,7 @@ def hecho(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=f"origen inválido: {peticion.origen!r}",
         ) from exc
-    almacen, almacen_memoria = _almacenes()
+    almacen, almacen_memoria = almacenes()
     entrega = registrar_hecho(
         PeticionHechoDelMundo(
             identidad=peticion.identidad.a_identidad(),
