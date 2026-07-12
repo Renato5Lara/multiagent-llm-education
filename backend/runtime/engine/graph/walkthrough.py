@@ -171,6 +171,28 @@ def _existe_fact_evaluar_sin_tutorizar(estado: LearningState) -> bool:
     return False
 
 
+def _interpretacion_pendiente_de_remediar(estado: LearningState) -> bool:
+    """Guardia segura: mismo criterio de disparo que
+    `domain.remediar.producir` — una interpretación vigente con
+    `dominada=False` que Remediar todavía no atendió. Evita rutear a
+    "remediar" cuando su propio contrato no dispararía (interpretación
+    con `dominada=True`, competencia ya dominada, nada que remediar),
+    lo que produciría un ciclo aplicar→enrutar sin avance — el mismo
+    riesgo que ya cubren las guardias de Validar/Modelar/Tutorizar/
+    Adaptar, aquí aplicado a Remediar."""
+    ya_propuso = any(
+        c.autor is Capacidad.REMEDIAR and c.vigencia.vigente for c in estado.claims
+    )
+    if ya_propuso:
+        return False
+    return any(
+        c.tipo is TipoClaim.INTERPRETACION
+        and c.vigencia.vigente
+        and c.afirmacion.get("dominada") is False
+        for c in estado.claims
+    )
+
+
 def enrutar(grafo: EstadoGrafo) -> str:
     """Función pura del estado (P12): nadie decide quién sigue, salvo el
     estado mismo. El orden de los chequeos ES el programa pedagógico."""
@@ -201,7 +223,7 @@ def enrutar(grafo: EstadoGrafo) -> str:
         for c in estado.claims
         if c.tipo is TipoClaim.PROPUESTA and c.vigencia.vigente
     }
-    if Capacidad.REMEDIAR not in autores:
+    if _interpretacion_pendiente_de_remediar(estado):
         return "remediar"
     if Capacidad.ORIENTAR not in autores:
         return "orientar"
