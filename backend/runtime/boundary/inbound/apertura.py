@@ -16,7 +16,7 @@ from runtime.engine.checkpoint import AlmacenMemoria, AlmacenTransiciones
 from runtime.engine.graph.walkthrough import materializar_sesion
 
 
-def abrir_sesion(
+def resolver_identidad(
     peticion: PeticionAbrirSesion,
     almacen: AlmacenTransiciones,
     almacen_memoria: AlmacenMemoria,
@@ -28,13 +28,13 @@ def abrir_sesion(
     `AlmacenMemoria.cargar`). Re-resolver "la vigente" en una
     reanudación podría devolver una versión distinta si el estudiante
     consolidó memoria desde otra sesión mientras tanto, y
-    `abrir_sesion` rechazaría la reanudación por INV-2 sin que fuera un
-    error real del llamador.
+    `abrir_sesion`/`materializar_sesion` rechazarían la reanudación por
+    INV-2 sin que fuera un error real del llamador.
 
-    Devuelve la `Identidad` completa: el llamador (la plataforma) debe
-    reenviarla sin cambios en cada E2/E4 subsiguiente de esta sesión."""
+    Compartida por `abrir_sesion` (E1) y `boundary.surfaces` (S3): ambas
+    necesitan la misma resolución antes de materializar la sesión."""
     existente = almacen.identidad_existente(peticion.session_id)
-    identidad = existente or Identidad(
+    return existente or Identidad(
         session_id=peticion.session_id,
         student_id=peticion.student_id,
         version_student_model=almacen_memoria.numero_version_vigente(
@@ -44,5 +44,16 @@ def abrir_sesion(
         version_politica=peticion.version_politica,
         spec_version=peticion.spec_version,
     )
+
+
+def abrir_sesion(
+    peticion: PeticionAbrirSesion,
+    almacen: AlmacenTransiciones,
+    almacen_memoria: AlmacenMemoria,
+) -> Identidad:
+    """Devuelve la `Identidad` completa: el llamador (la plataforma)
+    debe reenviarla sin cambios en cada E2/E4 subsiguiente de esta
+    sesión."""
+    identidad = resolver_identidad(peticion, almacen, almacen_memoria)
     materializar_sesion(almacen, almacen_memoria, identidad)
     return identidad
