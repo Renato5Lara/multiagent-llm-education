@@ -16,11 +16,12 @@ import { useRuntimeMemoria } from '@/hooks/useRuntimeMemoria'
 import { useRuntimeReplay } from '@/hooks/useRuntimeReplay'
 
 // Runtime Console — punto único de inspección del runtime LangGraph.
-// Cada pestaña consume exactamente una surface S3 del Platform Boundary
-// (RFC-0010 §2); ninguna llama al almacenamiento directamente. Secciones:
-// Traza ✅, Estado Final ✅, Memoria ✅, Replay Cognitivo ✅ (RFC-0008 §3),
-// HITL ✅ (RFC-0009) — reutiliza la misma consulta de Estado Final, no
-// abre una surface nueva de solo lectura.
+// Cada pestaña consume exactamente una surface S2/S3 del Platform
+// Boundary (RFC-0010 §2); ninguna llama al almacenamiento directamente.
+// Secciones: Traza ✅, Estado Final ✅, Memoria ✅, Replay Cognitivo ✅
+// (RFC-0008 §3), HITL ✅ (RFC-0009) — consume S2 (`consultar_escaladas_
+// pendientes`), la notificación dedicada, no una vista derivada de
+// Estado Final.
 export default function RuntimeConsolePage() {
   const [input, setInput] = useState('')
   const [sessionId, setSessionId] = useState<string | undefined>(undefined)
@@ -125,13 +126,7 @@ export default function RuntimeConsolePage() {
               </TabsContent>
 
               <TabsContent value="hitl">
-                {estado.isLoading ? (
-                  <Skeleton className="h-48 rounded-lg" />
-                ) : estado.isError ? (
-                  <ErrorMuted mensaje="No se pudo leer el estado de esta sesión." />
-                ) : estado.data ? (
-                  <RuntimeHitlPanel estado={estado.data} sessionId={sessionId} />
-                ) : null}
+                <RuntimeHitlPanel sessionId={sessionId} />
               </TabsContent>
             </Tabs>
           </CardContent>

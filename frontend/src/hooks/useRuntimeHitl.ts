@@ -15,6 +15,7 @@ export function useHechoDocente(sessionId: string | undefined) {
             queryClient.invalidateQueries({ queryKey: ['runtime', 'traza', sessionId] })
             queryClient.invalidateQueries({ queryKey: ['runtime', 'estado', sessionId] })
             queryClient.invalidateQueries({ queryKey: ['runtime', 'replay', sessionId] })
+            queryClient.invalidateQueries({ queryKey: ['runtime', 'escaladas', sessionId] })
         },
     })
 }
@@ -41,6 +42,7 @@ export function useResolverEscalada(sessionId: string | undefined) {
             queryClient.invalidateQueries({ queryKey: ['runtime', 'traza', sessionId] })
             queryClient.invalidateQueries({ queryKey: ['runtime', 'estado', sessionId] })
             queryClient.invalidateQueries({ queryKey: ['runtime', 'replay', sessionId] })
+            queryClient.invalidateQueries({ queryKey: ['runtime', 'escaladas', sessionId] })
         },
     })
 }
