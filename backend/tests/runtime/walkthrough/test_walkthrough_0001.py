@@ -11,7 +11,12 @@ from decimal import Decimal
 import psycopg2
 import pytest
 
-from runtime.engine.checkpoint import AlmacenTransiciones, reconstruir, verificar
+from runtime.engine.checkpoint import (
+    AlmacenMemoria,
+    AlmacenTransiciones,
+    reconstruir,
+    verificar,
+)
 from runtime.engine.graph import ejecutar_walkthrough
 from runtime.kernel.state.salidas import proyectar_salidas
 from runtime.kernel.deliberation.mecanica import REGLA_POLITICA_V1
@@ -623,3 +628,119 @@ class TestM4_PR2_ProyeccionDeCierre:
         # el resultado de proyectar_salidas sobre sí mismo (T14, dentro
         # de ejecutar_walkthrough) — confirmarlo explícitamente.
         assert estado_original.salidas == proyectar_salidas(estado_reconstruido)
+
+
+class TestM4_PR5_ConsolidacionDeMemoria:
+    """M4 PR-5: wiring de Consolidar (ADR-0008) en `ejecutar_walkthrough`
+    — solo la escritura; Cargar queda para PR-6 (ADR-0008 §2.4)."""
+
+    def test_cerrar_sesion_sin_almacen_memoria_es_error_de_programacion(self, esquema):
+        # ADR-0004 E-2: precondición fuerte, nunca un None silencioso.
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        with pytest.raises(ValueError, match="almacen_memoria"):
+            ejecutar_walkthrough(
+                almacen,
+                _identidad("s-pr5-sin-almacen"),
+                _hecho_del_mundo(),
+                cerrar_sesion=True,
+            )
+
+    def test_cerrar_sesion_consolida_exactamente_lo_que_salidas_contiene(self, esquema):
+        identidad = _identidad("s-pr5-consolida")
+        almacen_transiciones = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_transiciones.preparar()
+        almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
+        almacen_memoria.preparar()
+
+        final = ejecutar_walkthrough(
+            almacen_transiciones,
+            identidad,
+            TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo(),
+            cerrar_sesion=True,
+            almacen_memoria=almacen_memoria,
+        )
+
+        version = almacen_memoria.cargar("maria")
+        assert version is not None
+        assert version.session_id == "s-pr5-consolida"
+        # Consolidar consume EXACTAMENTE proyectar_salidas() (ADR-0008
+        # §4) — sin transformación, ni siquiera de tipo (tuplas propias
+        # de Python se leen de vuelta como listas desde jsonb, pero el
+        # contenido debe coincidir campo a campo).
+        assert version.catalogo["ruta_actualizada"] == final["estado"].salidas["ruta_actualizada"]
+        assert version.catalogo["deuda_abierta"] == list(
+            final["estado"].salidas["deuda_abierta"]
+        )
+
+    def test_sesion_reanudada_consolida_una_sola_vez_al_cerrar(self, esquema):
+        # Combina PR-1B (reanudación) + PR-5 (consolidación): la
+        # primera invocación NO cierra; solo la segunda, con evidencia
+        # posterior, cierra y consolida — una única versión, no dos.
+        identidad = _identidad("s-pr5-reanudada-cierra")
+        almacen_1 = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_1.preparar()
+        almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
+        almacen_memoria.preparar()
+
+        ejecutar_walkthrough(
+            almacen_1, identidad, TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo()
+        )
+        assert almacen_memoria.cargar("maria") is None  # invoke#1 no cerró
+
+        almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
+        fact_posterior = (
+            TransitionIntent(
+                productor=Capacidad.EVALUAR,
+                operacion="registrar_fact",
+                argumentos={
+                    "autor": Capacidad.EVALUAR,
+                    "contenido": {"competencia": "COMP-2", "items_incorrectos": [3]},
+                    "provenance": Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+                },
+                base=8,
+            ),
+        )
+        ejecutar_walkthrough(
+            almacen_2,
+            identidad,
+            fact_posterior,
+            cerrar_sesion=True,
+            almacen_memoria=almacen_memoria,
+        )
+
+        version = almacen_memoria.cargar("maria")
+        assert version is not None
+        assert version.catalogo["modelo_propuesto"] == [
+            {"competencia": "COMP-2", "efecto_positivo": True}
+        ]
+
+    def test_cerrar_dos_veces_la_misma_sesion_falla_sin_generar_segunda_version(
+        self, esquema
+    ):
+        identidad = _identidad("s-pr5-doble-cierre")
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        almacen_memoria = AlmacenMemoria(_URL, esquema=esquema)
+        almacen_memoria.preparar()
+
+        ejecutar_walkthrough(
+            almacen,
+            identidad,
+            _hecho_del_mundo(),
+            cerrar_sesion=True,
+            almacen_memoria=almacen_memoria,
+        )
+        almacen_repetido = AlmacenTransiciones(_URL, esquema=esquema)
+        with pytest.raises(ValueError, match="ya fue consolidada"):
+            ejecutar_walkthrough(
+                almacen_repetido,
+                identidad,
+                (),
+                cerrar_sesion=True,
+                almacen_memoria=almacen_memoria,
+            )
+
+        version = almacen_memoria.cargar("maria")
+        assert version is not None
+        assert version.session_id == "s-pr5-doble-cierre"  # sigue siendo v1, no v2

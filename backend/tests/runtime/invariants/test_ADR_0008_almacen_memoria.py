@@ -176,3 +176,26 @@ class TestADR_0008_AlmacenMemoria:
                     " VALUES (%s, %s, %s, %s::jsonb)",
                     ("maria", 1, "s-otro-intento", '{"y": 2}'),
                 )
+
+    def test_consolidar_dos_veces_la_misma_sesion_se_rechaza_sin_tocar_la_tabla(
+        self, almacen, esquema
+    ):
+        # M4 PR-5: ADR-0008 §5 criterio 1 — una sesión consolida como
+        # máximo una vez. La condición se descubrió al wirear PR-5 (la
+        # implementación de PR-4 no la hacía cumplir); corregida aquí.
+        # No basta con que lance la excepción: el almacenamiento debe
+        # quedar exactamente igual que antes del segundo intento.
+        version = preparar_version(_identidad("s-pr5-duplicado"), _CATALOGO_VALIDO)
+        assert almacen.consolidar(version) == 1
+
+        with pytest.raises(ValueError, match="ya fue consolidada"):
+            almacen.consolidar(version)
+
+        with psycopg2.connect(_URL) as conexion, conexion.cursor() as cursor:
+            cursor.execute(f"SET search_path TO {esquema}")
+            cursor.execute(
+                "SELECT version FROM memory_versions WHERE student_id = %s",
+                ("maria",),
+            )
+            filas = cursor.fetchall()
+        assert filas == [(1,)]  # ni una fila más, ni una versión 2

@@ -28,6 +28,7 @@ from runtime.domain.tutorizar import producir as producir_tutoria
 from runtime.domain.validar import producir as producir_validacion
 from runtime.domain.validar.productor import evidencia_de_validacion
 from runtime.engine.checkpoint import (
+    AlmacenMemoria,
     AlmacenTransiciones,
     RegistroTransicion,
     encadenar,
@@ -46,6 +47,7 @@ from runtime.kernel.reducers import (
     registrar_fact,
     validar_decision,
 )
+from runtime.kernel.memory import preparar_version, validar_version
 from runtime.kernel.state.entries import Capacidad, EstadoValidacion, TipoClaim
 from runtime.kernel.state.salidas import proyectar_salidas
 from runtime.kernel.state.state import Identidad, LearningState
@@ -279,6 +281,8 @@ def ejecutar_walkthrough(
     productor_modelar: Callable = producir_modelado,
     productor_tutorizar: Callable = producir_tutoria,
     productor_adaptar: Callable = producir_adaptacion,
+    cerrar_sesion: bool = False,
+    almacen_memoria: AlmacenMemoria | None = None,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
     → deliberación → decisión → adaptación (→ validación → modelado, si ya
@@ -306,7 +310,21 @@ def ejecutar_walkthrough(
     Cierre (M4 PR-2): al terminar cada invocación, `estado.salidas`
     queda poblado con `proyectar_salidas` (RFC-0003 §2, RFC-0005 §2) —
     una proyección pura, recalculada siempre, nunca fuente de verdad.
+
+    Consolidar (M4 PR-5): `cerrar_sesion=True` es la señal explícita de
+    cierre que ADR-0008 §2.4 exige — nunca se infiere de que el grafo
+    llegue a `END` (una sesión reanudada llega a `END` varias veces sin
+    cerrarse, M4 PR-1B). Con `cerrar_sesion=True`, `almacen_memoria` es
+    obligatorio — su ausencia es un error de programación del llamador
+    (ADR-0004 E-2), nunca un `None` silencioso. Una sesión consolida
+    como máximo una vez (ADR-0008 §5); un segundo intento lo rechaza
+    `AlmacenMemoria.consolidar` sin dejar la tabla a medias.
     """
+    if cerrar_sesion and almacen_memoria is None:
+        raise ValueError(
+            "cerrar_sesion=True exige almacen_memoria — ADR-0008 §2.4: la "
+            "consolidación nunca ocurre sin un almacén explícito"
+        )
     almacen.abrir_sesion(identidad)
     contexto = {"ruta": "condicionales"}
     registros_previos = almacen.leer(identidad.session_id)
@@ -339,4 +357,10 @@ def ejecutar_walkthrough(
     final["estado"] = dataclasses.replace(
         final["estado"], salidas=proyectar_salidas(final["estado"])
     )
+
+    if cerrar_sesion:
+        version = preparar_version(identidad, final["estado"].salidas)
+        validar_version(version)
+        almacen_memoria.consolidar(version)
+
     return final
