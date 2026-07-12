@@ -308,21 +308,92 @@ igual que las anteriores — nunca un PR de 10 partes junto):
 
 ---
 
-## 5. Pregunta abierta antes de aprobar
+## 5. Decisiones (resueltas 2026-07-12)
 
-Dos decisiones que este documento deliberadamente NO toma porque son
-tuyas:
+1. **Parte 0 — sin ADR propio.** No hay varias alternativas
+   arquitectónicas en juego (eso es lo que justificaría un ADR): es la
+   implementación de un mecanismo que RFC-0003 (`version_politica`) ya
+   previó. Se documenta dentro del propio Engineering Gate de
+   RFC-0006/1 — el "Contrato" (punto 3 del Gate) es donde se fija
+   concretamente dónde vive la configuración versionada.
+2. **Parte E — Engineering Review dedicada, antes de esa parte, no
+   dentro de ella.** El vacío de `estado.ejecucion` (RFC-0004 §2) no se
+   resuelve sobre la marcha. Antes de abrir RFC-0006/3 corre una
+   revisión propia con su propio objetivo: ¿qué representa `ejecucion`
+   realmente?, ¿quién lo escribe?, ¿quién lo consume?, ¿cuál es su
+   ciclo de vida (persistente o efímero)?, ¿qué invariantes debe
+   cumplir? Solo con esas respuestas se implementa "urgente" en Parte E.
 
-1. **Parte 0 (dónde vive la política versionada) probablemente exige
-   un Engineering Review/mini-ADR propio** antes de tocar código — no
-   está especificado por RFC-0006. ¿Lo abro como su propio paso previo
-   a RFC-0006/1, o prefieres que proponga una opción concreta dentro
-   de esa misma mini-épica?
-2. **Parte E está bloqueada** por un vacío real de RFC-0004 §2
-   (`estado.ejecucion` nunca poblado — necesario para "urgente"). ¿Lo
-   resuelvo como su propia Engineering Review dirigida cuando llegue
-   el momento, o prefieres decidir ahora qué debería poblar
-   `ejecucion` para no descubrirlo a mitad de RFC-0006/3?
+## 6. Riesgo, dependencias y tamaño por parte
 
-No implemento nada hasta que confirmes el orden de la Parte 3 y
-respondas estas dos preguntas.
+Para decidir dónde conviene cortar en commits más pequeños dentro de
+cada mini-épica — no es documentación adicional, es la señal de dónde
+ir con más cuidado.
+
+| Parte | Riesgo | Depende de | Tamaño |
+|---|---|---|---|
+| 0 — Política versionada | Alto (decide un mecanismo no especificado por el RFC) | — | Medio |
+| A — Confianza efectiva (A1-A8) | Alto (la más delicada: violar un axioma sin darse cuenta) | 0 | Alto |
+| B — Detección D1 + clasificación | Medio (cobertura, no dificultad técnica) | — | Bajo-Medio |
+| C — Umbral θ / insuficiencia D3 | Medio (toca `enrutar()`, mismo archivo del bug de HITL) | 0, A | Bajo |
+| D — Resolución D1/D2 con margen δ | Alto (aquí nace `politica-v2`, conviven dos políticas) | 0, A, B, C | Alto |
+| E — Aplazamiento + provisional | Muy alto (bloqueado por vacío externo, RFC-0004 §2) | D + Engineering Review previa | Medio |
+| F — Escalada orgánica | Medio-Alto (contar cadenas de reconvocatoria correctamente) | 0, D, E | Medio-Alto |
+| G — Regla de la raíz / orden | Alto (motor de enrutamiento, máximo blast radius) | B | Medio |
+| H — Boundary/Frontend (validación) | Bajo | F | Bajo |
+| I — Retirar sembrado manual | Bajo | F | Bajo |
+
+## 7. Estructura fija por mini-épica
+
+Cada mini-épica se recorre siempre por las mismas seis capas — no
+porque todas cambien siempre, sino para verificar explícitamente cuáles
+sí y cuáles no, en vez de asumirlo:
+
+```
+Motor → Boundary → HTTP → Frontend → E2E → Documentación
+```
+
+Y se abre con una **ficha de una página** (objetivo, dependencias,
+riesgos, criterio de cierre) que sirve de contrato de esa mini-épica —
+evita que el alcance crezca a mitad de la implementación. Plantilla:
+
+```
+## Ficha — RFC-0006/N: <nombre>
+
+Objetivo:        <una frase — qué capacidad nueva existe al cerrar>
+Partes:          <letras de este roadmap>
+Dependencias:    <mini-épicas previas que deben estar cerradas>
+Riesgos:         <de la tabla §6, más cualquier riesgo específico>
+Motor:           <cambia / no cambia — qué archivo>
+Boundary:        <cambia / no cambia>
+HTTP:            <cambia / no cambia>
+Frontend:        <cambia / no cambia>
+E2E:             <qué categoría de runtime_completo.py se ve afectada>
+Criterio cierre: <qué prueba, observable, dice "esto ya está"
+```
+
+### Ficha — RFC-0006/1: Cimientos
+
+```
+Objetivo:        Confianza efectiva (ce) calculable y demostrada contra
+                 A1-A8; la política versionada tiene un sitio real
+                 donde vivir. Sin cambio de comportamiento visible.
+Partes:          0 + A
+Dependencias:    ninguna (primera mini-épica)
+Riesgos:         Altos ambas partes — 0 decide un mecanismo no
+                 especificado; A es la pieza más delicada del RFC
+                 completo (violar A5/A6/A7 sin darse cuenta).
+Motor:           Cambia — nuevo módulo de política versionada
+                 (kernel/ o engine/, a decidir en el Contrato del Gate)
+                 + calcular_confianza_efectiva() (kernel/deliberation/).
+                 mecanica.py NO se toca todavía (politica-v1 intacta).
+Boundary:        No cambia.
+HTTP:            No cambia.
+Frontend:        No cambia.
+E2E:             No cambia — ce no es observable desde ninguna
+                 categoría de runtime_completo.py hasta RFC-0006/3.
+Criterio cierre: Suite de tests, una prueba por axioma (A1-A8), contra
+                 escenarios reales (Postgres real, sin mocks) — no una
+                 sola prueba de humo. 260/260 tests previos siguen
+                 pasando (politica-v1 intacta).
+```
