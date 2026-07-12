@@ -105,6 +105,20 @@ class TestR1_R6_Storage:
             almacen.abrir_sesion(otra)
 
 
+class TestIdentidadExistente:
+    """`identidad_existente` — la primera mitad de E1 (RFC-0010) necesita
+    distinguir sesión NUEVA de REANUDADA antes de resolver
+    `version_student_model` (ver `boundary/inbound/apertura.py`)."""
+
+    def test_sesion_nunca_abierta_devuelve_none(self, almacen):
+        assert almacen.identidad_existente("s-nunca-abierta") is None
+
+    def test_sesion_abierta_devuelve_la_identidad_fijada(self, almacen):
+        identidad = _identidad("s-existente")
+        almacen.abrir_sesion(identidad)
+        assert almacen.identidad_existente("s-existente") == identidad
+
+
 _SCRIPT_VICTIMA = textwrap.dedent(
     """
     import os, sys, time

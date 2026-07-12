@@ -106,6 +106,36 @@ class AlmacenTransiciones:
                 ),
             )
 
+    def identidad_existente(self, session_id: str) -> Identidad | None:
+        """La `Identidad` ya fijada para `session_id`, o `None` si la
+        sesión nunca se abrió. Uso: la primera mitad de E1 (RFC-0010) —
+        antes de resolver `version_student_model` con
+        `AlmacenMemoria.numero_version_vigente`, el Boundary debe saber
+        si la sesión es NUEVA (resuelve la versión vigente) o REANUDADA
+        (reutiliza la identidad ya fijada; INV-1 la congeló al abrir, y
+        re-resolver "la vigente" podría devolver una versión distinta si
+        el estudiante consolidó memoria desde otra sesión mientras tanto
+        — R5 exige la MISMA identidad, no la más reciente)."""
+        with self._conectar() as conexion, conexion.cursor() as cursor:
+            cursor.execute(
+                "SELECT student_id, version_student_model, version_banco,"
+                " version_politica, spec_version FROM runtime_sessions"
+                " WHERE session_id = %s",
+                (session_id,),
+            )
+            fila = cursor.fetchone()
+            if fila is None:
+                return None
+            student_id, version_student_model, version_banco, version_politica, spec_version = fila
+            return Identidad(
+                session_id=session_id,
+                student_id=student_id,
+                version_student_model=version_student_model,
+                version_banco=version_banco,
+                version_politica=version_politica,
+                spec_version=spec_version,
+            )
+
     def persistir(self, registro: RegistroTransicion) -> None:
         """Una transacción por transición; el JSONB se deriva de los MISMOS
         bytes cuyo hash ya viaja en el registro (foco 2 del tesista)."""
