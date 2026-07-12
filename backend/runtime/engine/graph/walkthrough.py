@@ -12,6 +12,7 @@ la fuente es nuestra cadena + AlmacenTransiciones (regla 5).
 
 from __future__ import annotations
 
+import dataclasses
 from typing import Callable, TypedDict
 
 from langgraph.graph import END, START, StateGraph
@@ -46,6 +47,7 @@ from runtime.kernel.reducers import (
     validar_decision,
 )
 from runtime.kernel.state.entries import Capacidad, EstadoValidacion, TipoClaim
+from runtime.kernel.state.salidas import proyectar_salidas
 from runtime.kernel.state.state import Identidad, LearningState
 from runtime.kernel.transitions import TransitionIntent
 
@@ -300,6 +302,10 @@ def ejecutar_walkthrough(
     a pasar un hecho ya aplicado lo registraría como una entrada nueva y
     distinta. Invariante que gobernará también a Boundary (RFC-0010,
     entrada E2) y a cualquier reanudación vía HITL o Memoria.
+
+    Cierre (M4 PR-2): al terminar cada invocación, `estado.salidas`
+    queda poblado con `proyectar_salidas` (RFC-0003 §2, RFC-0005 §2) —
+    una proyección pura, recalculada siempre, nunca fuente de verdad.
     """
     almacen.abrir_sesion(identidad)
     contexto = {"ruta": "condicionales"}
@@ -314,7 +320,7 @@ def ejecutar_walkthrough(
         "intents": hechos_del_mundo,
         "registros": registros_previos,
     }
-    return _construir(
+    final = _construir(
         almacen,
         identidad,
         productor_diagnostico,
@@ -325,3 +331,12 @@ def ejecutar_walkthrough(
         productor_tutorizar,
         productor_adaptar,
     ).invoke(inicial)
+
+    # T14 — Cierre (M4 PR-2): proyección pura, fuera del grafo (no es un
+    # TransitionIntent, no muta el dominio, no emite Domain Events —
+    # ADR-0006 regla 1: los nodos solo proponen intents). Se recalcula
+    # en cada invocación; nunca es fuente de verdad (RFC-0003/RFC-0005).
+    final["estado"] = dataclasses.replace(
+        final["estado"], salidas=proyectar_salidas(final["estado"])
+    )
+    return final

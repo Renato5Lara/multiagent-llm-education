@@ -17,6 +17,7 @@ from runtime.kernel.state.entries import (
     TipoClaim,
     Vigencia,
 )
+from runtime.kernel.state.salidas import proyectar_salidas
 
 __all__ = [
     "BOUNDARY",
@@ -34,4 +35,5 @@ __all__ = [
     "Escalada",
     "TipoClaim",
     "Vigencia",
+    "proyectar_salidas",
 ]

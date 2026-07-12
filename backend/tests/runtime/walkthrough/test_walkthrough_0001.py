@@ -11,8 +11,9 @@ from decimal import Decimal
 import psycopg2
 import pytest
 
-from runtime.engine.checkpoint import AlmacenTransiciones, verificar
+from runtime.engine.checkpoint import AlmacenTransiciones, reconstruir, verificar
 from runtime.engine.graph import ejecutar_walkthrough
+from runtime.kernel.state.salidas import proyectar_salidas
 from runtime.kernel.deliberation.mecanica import REGLA_POLITICA_V1
 from runtime.kernel.state import (
     Capacidad,
@@ -521,3 +522,104 @@ class TestM4_PR1B_ReanudacionDeSesion:
         almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
         with pytest.raises(ValueError, match="INV-2"):
             ejecutar_walkthrough(almacen_2, otra_identidad, _hecho_del_mundo())
+
+
+class TestM4_PR2_ProyeccionDeCierre:
+    """M4 PR-2: T14 (Cierre) del Walkthrough-0001 — `salidas` como
+    proyección pura (RFC-0003 §2, RFC-0005 §2), nunca como mutación del
+    dominio. Engineering Review previa estableció, con evidencia, que
+    `salidas` no pasa por el pipeline de reducers/eventos — se recalcula
+    en cada invocación de `ejecutar_walkthrough`. Reusa el mismo patrón
+    de dos invocaciones de `TestM4_PR1B_ReanudacionDeSesion` porque el
+    criterio de aceptación central es la idempotencia frente a la
+    reconstrucción, no solo el contenido de `salidas`."""
+
+    def test_salidas_refleja_la_deuda_abierta_antes_de_validar(self, esquema):
+        # Invocación #1: sin evidencia posterior, la decisión queda
+        # pendiente — RFC-0005 §2 (3): esa deuda debe verse en `salidas`
+        # sin que nada mute EstadoValidacion en el DecisionEntry mismo.
+        identidad = _identidad("s-m4-pr2-deuda")
+        almacen = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen.preparar()
+        final = ejecutar_walkthrough(
+            almacen, identidad, TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo()
+        )
+        estado = final["estado"]
+        decision = estado.decisiones[0]
+
+        assert estado.salidas is not None
+        assert estado.salidas["modelo_propuesto"] == ()
+        assert len(estado.salidas["deuda_abierta"]) == 1
+        assert estado.salidas["deuda_abierta"][0]["decision_id"] == str(decision.id)
+        # La decisión persistida NUNCA se muta para señalar la deuda —
+        # sigue exactamente como el reducer la dejó.
+        assert decision.estado_validacion is EstadoValidacion.PENDIENTE_DE_VALIDACION
+
+    def test_salidas_refleja_el_modelo_propuesto_tras_validar_y_modelar(self, esquema):
+        identidad = _identidad("s-m4-pr2-modelo")
+        almacen_1 = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_1.preparar()
+        ejecutar_walkthrough(
+            almacen_1, identidad, TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo()
+        )
+
+        almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
+        fact_posterior = (
+            TransitionIntent(
+                productor=Capacidad.EVALUAR,
+                operacion="registrar_fact",
+                argumentos={
+                    "autor": Capacidad.EVALUAR,
+                    "contenido": {"competencia": "COMP-2", "items_incorrectos": [3]},
+                    "provenance": Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+                },
+                base=8,
+            ),
+        )
+        final_2 = ejecutar_walkthrough(almacen_2, identidad, fact_posterior)
+        estado_2 = final_2["estado"]
+
+        assert estado_2.salidas["deuda_abierta"] == ()
+        assert estado_2.salidas["modelo_propuesto"] == (
+            {"competencia": "COMP-2", "efecto_positivo": True},
+        )
+        assert estado_2.salidas["ruta_actualizada"] == "condicionales"
+        assert estado_2.salidas["resumen_destilado"]["decisiones_validadas"] == 1
+
+    def test_proyectar_salidas_es_idempotente_frente_a_la_reconstruccion(self, esquema):
+        # Criterio de aceptación arquitectónico fijado en la Engineering
+        # Review: proyectar_salidas(reconstruir(historia)) ==
+        # proyectar_salidas(estado_final_original).
+        identidad = _identidad("s-m4-pr2-idempotencia")
+        almacen_1 = AlmacenTransiciones(_URL, esquema=esquema)
+        almacen_1.preparar()
+        ejecutar_walkthrough(
+            almacen_1, identidad, TestTutorizarIntegradoAlFlujo._hecho_del_mundo_completo()
+        )
+
+        almacen_2 = AlmacenTransiciones(_URL, esquema=esquema)
+        fact_posterior = (
+            TransitionIntent(
+                productor=Capacidad.EVALUAR,
+                operacion="registrar_fact",
+                argumentos={
+                    "autor": Capacidad.EVALUAR,
+                    "contenido": {"competencia": "COMP-2", "items_incorrectos": [3]},
+                    "provenance": Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+                },
+                base=8,
+            ),
+        )
+        final_2 = ejecutar_walkthrough(almacen_2, identidad, fact_posterior)
+        estado_original = final_2["estado"]
+
+        registros = almacen_2.leer(identidad.session_id)
+        estado_reconstruido = reconstruir(
+            identidad, contexto={"ruta": "condicionales"}, registros=registros
+        )
+
+        assert proyectar_salidas(estado_reconstruido) == proyectar_salidas(estado_original)
+        # La igualdad no es casualidad: `estado_original.salidas` ya es
+        # el resultado de proyectar_salidas sobre sí mismo (T14, dentro
+        # de ejecutar_walkthrough) — confirmarlo explícitamente.
+        assert estado_original.salidas == proyectar_salidas(estado_reconstruido)
