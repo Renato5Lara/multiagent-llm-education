@@ -187,7 +187,41 @@ def test_memoria_lee_la_version_consolidada_por_una_sesion_previa(client, autent
     assert body["catalogo"]
 
 
-def test_estado_y_memoria_de_sesion_ajena_son_rechazados(client, autenticado):
+def test_replay_expone_el_estado_acumulado_via_http(client, autenticado):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-replay"})
+    identidad = abierta.json()
+
+    client.post(
+        "/api/runtime/hechos",
+        json={
+            "identidad": identidad,
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "origen": "instrumento",
+        },
+    )
+
+    resp = client.get("/api/runtime/sessions/s-http-replay/replay")
+    assert resp.status_code == 200, resp.text
+    pasos = resp.json()
+    assert len(pasos) > 0
+    assert pasos[0]["transicion"] == 1
+    assert len(pasos[0]["estado"]["facts"]) == 1
+    assert len(pasos[0]["estado"]["claims"]) == 0
+
+    ultimo = pasos[-1]
+    estado_final = client.get("/api/runtime/sessions/s-http-replay/estado").json()
+    assert ultimo["estado"] == estado_final
+
+    # Acumulativo: el conteo de entradas nunca decrece paso a paso.
+    conteos = [
+        len(p["estado"]["facts"]) + len(p["estado"]["claims"])
+        + len(p["estado"]["deliberaciones"]) + len(p["estado"]["decisiones"])
+        for p in pasos
+    ]
+    assert conteos == sorted(conteos)
+
+
+def test_estado_memoria_y_replay_de_sesion_ajena_son_rechazados(client, autenticado):
     client.post("/api/runtime/sessions", json={"session_id": "s-http-ajena-2"})
 
     from app.api.deps import aget_current_estudiante
@@ -200,6 +234,7 @@ def test_estado_y_memoria_de_sesion_ajena_son_rechazados(client, autenticado):
     try:
         assert client.get("/api/runtime/sessions/s-http-ajena-2/estado").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/memoria").status_code == 403
+        assert client.get("/api/runtime/sessions/s-http-ajena-2/replay").status_code == 403
     finally:
         app.dependency_overrides[aget_current_estudiante] = lambda: autenticado
 

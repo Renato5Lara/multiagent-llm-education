@@ -35,6 +35,7 @@ from runtime.boundary import (
     abrir_sesion,
     consultar_estado,
     consultar_memoria,
+    consultar_replay,
     consultar_traza,
     registrar_hecho,
 )
@@ -139,6 +140,21 @@ class MemoriaOut(BaseModel):
     student_id: str
     session_id: str
     catalogo: Mapping[str, Any]
+
+
+class PasoReplayOut(BaseModel):
+    transicion: int
+    estado: EstadoOut
+
+
+def _estado_out(learning_state: Any) -> EstadoOut:
+    return EstadoOut(
+        transicion=learning_state.transicion,
+        facts=[_valor_json(f) for f in learning_state.facts],
+        claims=[_valor_json(c) for c in learning_state.claims],
+        deliberaciones=[_valor_json(d) for d in learning_state.deliberaciones],
+        decisiones=[_valor_json(d) for d in learning_state.decisiones],
+    )
 
 
 @router.post("/sessions", response_model=IdentidadOut)
@@ -262,13 +278,7 @@ def estado(
         almacen,
         almacen_memoria,
     )
-    return EstadoOut(
-        transicion=learning_state.transicion,
-        facts=[_valor_json(f) for f in learning_state.facts],
-        claims=[_valor_json(c) for c in learning_state.claims],
-        deliberaciones=[_valor_json(d) for d in learning_state.deliberaciones],
-        decisiones=[_valor_json(d) for d in learning_state.decisiones],
-    )
+    return _estado_out(learning_state)
 
 
 @router.get("/sessions/{session_id}/memoria", response_model=MemoriaOut | None)
@@ -294,3 +304,25 @@ def memoria(
         session_id=version.session_id,
         catalogo=version.catalogo,
     )
+
+
+@router.get("/sessions/{session_id}/replay", response_model=list[PasoReplayOut])
+def replay(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante),
+) -> list[PasoReplayOut]:
+    """RFC-0008 §3, modo Reconstrucción — el `LearningState` completo tal
+    como quedó después de cada transición (S3, RFC-0010 §2). Distinto de
+    `/traza` (solo eventos): aquí cada paso lleva el estado acumulado
+    completo, la base para recorrer la sesión paso a paso."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
+    pasos = consultar_replay(
+        _peticion_de(session_id, current_user),
+        almacen,
+        almacen_memoria,
+    )
+    return [
+        PasoReplayOut(transicion=paso.transicion, estado=_estado_out(paso.estado))
+        for paso in pasos
+    ]
