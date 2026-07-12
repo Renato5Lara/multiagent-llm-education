@@ -38,6 +38,7 @@ from runtime.boundary import (
     consultar_replay,
     consultar_traza,
     registrar_hecho,
+    resolver_escalada,
 )
 from runtime.kernel.events import DomainEvent
 from runtime.kernel.state.entries import EntryId, OrigenProvenance
@@ -364,4 +365,45 @@ def hecho_docente(
         almacen,
         almacen_memoria,
     )
+    return EntregaOut(asunto=entrega.asunto, diseno=entrega.diseno)
+
+
+class ResolverEscaladaIn(BaseModel):
+    # `EntryId` se imprime "T-000005/e1" (barra incluida) — incompatible
+    # como segmento de URL; ambos ids viajan en el cuerpo, no en el path.
+    escalada_id: str
+    claim_elegido: str
+    human_reason: str | None = None
+
+
+@router.post("/sessions/{session_id}/escaladas/resolver", response_model=EntregaOut)
+def escalada_resolver(
+    session_id: str,
+    peticion: ResolverEscaladaIn,
+    current_user: User = Depends(aget_current_docente),
+) -> EntregaOut:
+    """RFC-0009 §2.1, §3, entrada 1 (escalada) — E3, RFC-0010 §1: la
+    autoridad humana cierra una deliberación escalada. El disparador
+    orgánico de la escalada (RFC-0006 §4) queda fuera del alcance de esta
+    pieza (Plataforma Operativa 4) — esta ruta resuelve una escalada que
+    ya existe en la historia, cualquiera sea su origen."""
+    almacen, almacen_memoria = almacenes()
+    identidad = almacen.identidad_existente(session_id)
+    if identidad is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="La sesión no existe"
+        )
+    try:
+        entrega = resolver_escalada(
+            identidad,
+            escalada_id=EntryId.parse(peticion.escalada_id),
+            claim_elegido=EntryId.parse(peticion.claim_elegido),
+            human_reason=peticion.human_reason,
+            almacen=almacen,
+            almacen_memoria=almacen_memoria,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
+        ) from exc
     return EntregaOut(asunto=entrega.asunto, diseno=entrega.diseno)

@@ -292,6 +292,129 @@ def test_hecho_docente_de_sesion_inexistente_es_404(client, autenticado_docente)
     assert resp.status_code == 404
 
 
+def _sembrar_escalada_en_sesion_http(identidad_json: dict) -> tuple[str, str]:
+    """Añade tensión + escalada directamente contra los reducers, sobre
+    la MISMA sesión/esquema ya abierta vía HTTP (mismo Postgres real que
+    `almacenes()` usa) — igual técnica que test_E3_resolver_escalada.py;
+    no organiza una segunda tubería, solo evita esperar a RFC-0006 §4
+    para poder ejercitar el endpoint HTTP con una escalada real. Retorna
+    (escalada_id, claim_remediar_id) como texto."""
+    from decimal import Decimal
+
+    from runtime.engine.checkpoint import AlmacenTransiciones, encadenar
+    from runtime.kernel.reducers import registrar_claim, registrar_deliberacion, registrar_fact
+    from runtime.kernel.state.entries import (
+        Capacidad,
+        Escalada,
+        OrigenProvenance,
+        Provenance,
+        TipoClaim,
+    )
+    from runtime.kernel.state.state import Identidad, LearningState
+
+    identidad = Identidad(**identidad_json)
+    almacen = AlmacenTransiciones(
+        os.environ["RUNTIME_DATABASE_URL"], esquema=os.environ["RUNTIME_DATABASE_SCHEMA"]
+    )
+    estado = LearningState(identidad=identidad, contexto={})
+    registros = almacen.leer(identidad.session_id)
+    if registros:
+        estado = LearningState(identidad=identidad, contexto={})
+        from runtime.engine.checkpoint import reconstruir
+        estado = reconstruir(identidad, contexto={}, registros=registros)
+
+    def _aplicar(operacion, argumentos, estado, registros):
+        funcion = {"registrar_fact": registrar_fact, "registrar_claim": registrar_claim,
+                   "registrar_deliberacion": registrar_deliberacion}[operacion]
+        resultado = funcion(estado, **argumentos)
+        assert resultado.__class__.__name__ == "Aplicado", resultado
+        from runtime.kernel.transitions import TransitionIntent
+        intent = TransitionIntent(productor="test", operacion=operacion, argumentos=argumentos, base=0)
+        registro = encadenar(identidad, registros, {"intent": intent, "eventos": resultado.eventos})
+        almacen.persistir(registro)
+        return resultado.estado, registros + (registro,)
+
+    estado, registros = _aplicar(
+        "registrar_fact",
+        {"autor": Capacidad.EVALUAR, "contenido": {"competencia": "COMP-2", "items_incorrectos": [3]},
+         "provenance": Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2")},
+        estado, registros,
+    )
+    fact_id = estado.facts[-1].id
+
+    estado, registros = _aplicar(
+        "registrar_claim",
+        {"autor": Capacidad.DIAGNOSTICAR, "tipo": TipoClaim.INTERPRETACION,
+         "asunto": "dominio(COMP-2)", "afirmacion": {"dominada": False, "errores": 1},
+         "respaldo": (fact_id,), "confianza": Decimal("0.75"),
+         "provenance": Provenance.de(OrigenProvenance.REGLA, id="scoring-v1")},
+        estado, registros,
+    )
+    interpretacion_id = estado.claims[-1].id
+
+    estado, registros = _aplicar(
+        "registrar_claim",
+        {"autor": Capacidad.REMEDIAR, "tipo": TipoClaim.PROPUESTA,
+         "asunto": "siguiente-paso(sesion)", "afirmacion": {"accion": "reforzar"},
+         "respaldo": (interpretacion_id,), "confianza": Decimal("0.60"),
+         "provenance": Provenance.de(OrigenProvenance.REGLA, id="remediacion-v1")},
+        estado, registros,
+    )
+    remediar_id = estado.claims[-1].id
+
+    estado, registros = _aplicar(
+        "registrar_claim",
+        {"autor": Capacidad.ORIENTAR, "tipo": TipoClaim.PROPUESTA,
+         "asunto": "siguiente-paso(sesion)", "afirmacion": {"accion": "avanzar-con-andamiaje"},
+         "respaldo": (interpretacion_id,), "confianza": Decimal("0.58"),
+         "provenance": Provenance.de(OrigenProvenance.REGLA, id="orientacion-v1")},
+        estado, registros,
+    )
+    orientar_id = estado.claims[-1].id
+
+    estado, registros = _aplicar(
+        "registrar_deliberacion",
+        {"participantes": (remediar_id, orientar_id), "resultado": Escalada(destinatario="docente")},
+        estado, registros,
+    )
+    escalada_id = estado.deliberaciones[-1].id
+
+    return str(escalada_id), str(remediar_id)
+
+
+def test_resolver_escalada_via_http(client, autenticado, autenticado_docente):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-hitl-escalada"})
+    identidad_json = abierta.json()
+    escalada_id, claim_elegido = _sembrar_escalada_en_sesion_http(identidad_json)
+
+    resp = client.post(
+        "/api/runtime/sessions/s-http-hitl-escalada/escaladas/resolver",
+        json={
+            "escalada_id": escalada_id,
+            "claim_elegido": claim_elegido,
+            "human_reason": "el estudiante ya mostró fatiga",
+        },
+    )
+    assert resp.status_code == 200, resp.text
+
+    estado = client.get("/api/runtime/sessions/s-http-hitl-escalada/estado").json()
+    cierre = next(d for d in estado["deliberaciones"] if d.get("enlaza_a") == escalada_id)
+    assert cierre["resultado"]["regla"] == "decision-humana"
+    assert any(dec["origen"] == cierre["id"] for dec in estado["decisiones"])
+
+
+def test_resolver_escalada_con_claim_ajeno_es_422(client, autenticado, autenticado_docente):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-hitl-claim-ajeno"})
+    identidad_json = abierta.json()
+    escalada_id, _claim_elegido = _sembrar_escalada_en_sesion_http(identidad_json)
+
+    resp = client.post(
+        "/api/runtime/sessions/s-http-hitl-claim-ajeno/escaladas/resolver",
+        json={"escalada_id": escalada_id, "claim_elegido": "T-999999/e1"},
+    )
+    assert resp.status_code == 422
+
+
 def test_hecho_docente_requiere_rol_docente(client, autenticado):
     # Sin override de aget_current_docente: mismo gap ya documentado en el
     # docstring del módulo (ninguna ruta async se ejercita sin autenticar
