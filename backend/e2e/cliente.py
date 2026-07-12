@@ -111,6 +111,20 @@ class ClienteE2E:
         self._exigir(resp, 200, "resolver_escalada")
         return resp.json()
 
+    def listar_cursos(self) -> list[dict]:
+        """`GET /api/courses` — consumidor de PLATAFORMA, no de
+        `/api/runtime/*` directamente: un docente ve solo sus cursos."""
+        return self._get("/api/courses")["courses"]
+
+    def sugerencia_semanal(self, course_id: str) -> dict:
+        """`GET /api/pedagogy/courses/{id}/weekly-plans/suggestions` —
+        Plataforma Operativa 2 (Inteligencia Docente): lee la decisión
+        vigente del Runtime para todo el roster vía
+        `runtime_bridge.consultar_decision_vigente` (S1/S3, RFC-0010).
+        Prueba la cadena real: Backend HTTP → Boundary → Runtime →
+        Persistencia → Respuesta, sin pasar por `/api/runtime/*`."""
+        return self._get(f"/api/pedagogy/courses/{course_id}/weekly-plans/suggestions")
+
     def _get(self, path: str) -> Any:
         resp = self._sesion.get(f"{self.base_url}{path}")
         self._exigir(resp, 200, path)

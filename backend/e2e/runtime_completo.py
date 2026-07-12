@@ -3,15 +3,18 @@ navegador, contra el stack real (HTTP + PostgreSQL + LangGraph + OpenAI
 en las capacidades que lo usan). Cubre las cuatro Plataformas Operativas
 cerradas hasta ahora: Runtime del estudiante, Boundary, Observabilidad
 (traza, estado, memoria, replay), HITL (intervención docente +
-resolución de escalada).
+resolución de escalada). La última categoría (Platform) prueba un
+endpoint de producto real fuera de `/api/runtime/*`
+(`GET /api/pedagogy/.../weekly-plans/suggestions`, Plataforma Operativa
+2) para que un `/api/runtime/*` sano no oculte un `runtime_bridge` roto.
 
 Requisitos:
   - Servidor real corriendo:
       cd backend && PYTHONPATH=.:runtime uvicorn app.main:app --port 8000
   - PostgreSQL real accesible (mismo que usa el servidor).
   - Usuarios semilla de seed.py ya creados (estudiante3@upao.edu.pe,
-    docente@upao.edu.pe) — override con E2E_ESTUDIANTE_EMAIL /
-    E2E_DOCENTE_EMAIL si tu seed usa otros.
+    docente@upao.edu.pe, docente dicta IS301) — override con
+    E2E_ESTUDIANTE_EMAIL / E2E_DOCENTE_EMAIL si tu seed usa otros.
 
 Uso:
   cd backend && PYTHONPATH=.:runtime python3 e2e/runtime_completo.py
@@ -315,6 +318,32 @@ def _llm(ctx: dict[str, Any]) -> str:
     return f"Adaptar: {len(claims_adaptar)} claim(s) reales"
 
 
+def _platform(ctx: dict[str, Any]) -> str:
+    """A diferencia de las 8 categorías anteriores (todas contra
+    `/api/runtime/*` directamente), esta prueba un endpoint de PRODUCTO
+    real: Plataforma Operativa 2 (Inteligencia Docente),
+    `GET /api/pedagogy/courses/{id}/weekly-plans/suggestions`, que llega
+    al Runtime por `runtime_bridge.consultar_decision_vigente` (S1/S3),
+    no por el router de runtime. Sin esto, un cambio que rompiera
+    `runtime_bridge` o `pedagogy_runtime_bridge` podía pasar 8/8 y aun
+    así dejar rota la única superficie que el docente realmente usa."""
+    cliente: ClienteE2E = ctx["cliente"]
+    cliente.login(DOCENTE_EMAIL, DOCENTE_PASSWORD)
+    cursos = cliente.listar_cursos()
+    assert cursos, "el docente semilla no tiene cursos — ¿seed.py corrió?"
+    curso = next((c for c in cursos if c["code"] == "IS301"), cursos[0])
+
+    sugerencia = cliente.sugerencia_semanal(curso["id"])
+    assert sugerencia["course_id"] == curso["id"]
+    assert "prioridades" in sugerencia
+    _ok(
+        f"weekly-plans/suggestions ({curso['code']}): "
+        f"{sugerencia['estudiantes_con_evidencia']}/{sugerencia['estudiantes_totales']} "
+        f"con evidencia del runtime"
+    )
+    return f"{curso['code']}: {sugerencia['estudiantes_con_evidencia']}/{sugerencia['estudiantes_totales']} con evidencia"
+
+
 def _resumen() -> bool:
     ancho = 46
     print("\n" + "=" * ancho)
@@ -343,6 +372,7 @@ _CATEGORIAS: list[tuple[str, Any]] = [
     ("Memory", _memory),
     ("HITL", _hitl),
     ("LLM", _llm),
+    ("Platform", _platform),
 ]
 
 
@@ -370,7 +400,7 @@ if __name__ == "__main__":
         "--only",
         metavar="CATEGORIA",
         help="corre solo hasta esta categoría (Postgres, Runtime, Boundary, "
-        "Observabilidad, Replay, Memory, HITL, LLM)",
+        "Observabilidad, Replay, Memory, HITL, LLM, Platform)",
     )
     argumentos = parser.parse_args()
     raise SystemExit(0 if main(solo=argumentos.only) else 1)
