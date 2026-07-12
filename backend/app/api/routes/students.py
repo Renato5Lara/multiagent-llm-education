@@ -798,12 +798,40 @@ def submit_evaluation(
         )
 
     log_action_sync(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+
+    # ── Épica 2 (ADR-0010): la evidencia de esta evaluación entra al
+    # runtime LangGraph por el Boundary — best-effort, nunca bloquea la
+    # respuesta ni el resultado ya persistido (mismo patrón que el
+    # análisis de IA del diagnóstico, arriba en este archivo).
+    runtime_decision = None
+    module = db.query(PathModule).filter(PathModule.id == attempt.module_id).first() if attempt.module_id else None
+    if module is not None:
+        try:
+            items_incorrectos = [
+                int(q_idx)
+                for q_idx, selected in data.answers.items()
+                if int(q_idx) < len(attempt.questions)
+                and selected != attempt.questions[int(q_idx)].get("correct")
+            ]
+            from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+            entrega = registrar_evidencia_evaluacion(
+                student_id=current_user.id,
+                course_id=attempt.course_id,
+                titulo_modulo=module.title,
+                items_incorrectos=items_incorrectos,
+            )
+            runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"runtime_bridge failed for evaluation {attempt_id}: {e}")
+
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,
         "max_score": attempt.max_score,
         "passed": bool(attempt.passed),
         "completed_at": attempt.completed_at,
+        "runtime_decision": runtime_decision,
     }
 
 
