@@ -25,6 +25,7 @@ import psycopg2
 import pytest
 
 from app.api.deps import aget_current_docente, aget_current_estudiante
+from app.api.routes.runtime import aget_current_estudiante_o_docente
 from app.main import app
 
 _URL = os.environ.get(
@@ -65,15 +66,19 @@ def _runtime_env(monkeypatch):
 @pytest.fixture
 def autenticado(client, estudiante_user):
     app.dependency_overrides[aget_current_estudiante] = lambda: estudiante_user
+    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: estudiante_user
     yield estudiante_user
     app.dependency_overrides.pop(aget_current_estudiante, None)
+    app.dependency_overrides.pop(aget_current_estudiante_o_docente, None)
 
 
 @pytest.fixture
 def autenticado_docente(client, docente_user):
     app.dependency_overrides[aget_current_docente] = lambda: docente_user
+    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: docente_user
     yield docente_user
     app.dependency_overrides.pop(aget_current_docente, None)
+    app.dependency_overrides.pop(aget_current_estudiante_o_docente, None)
 
 
 def test_recorrido_completo_http_hasta_una_entrega_de_adaptar(client, autenticado):
@@ -125,17 +130,15 @@ def test_traza_refleja_los_eventos_reales_via_http(client, autenticado):
 def test_traza_de_sesion_ajena_es_rechazada(client, autenticado):
     client.post("/api/runtime/sessions", json={"session_id": "s-http-traza-ajena"})
 
-    from app.api.deps import aget_current_estudiante
-    from app.main import app
-
     class _OtroUsuario:
         id = "otro-estudiante-cualquiera"
+        role = "estudiante"
 
-    app.dependency_overrides[aget_current_estudiante] = lambda: _OtroUsuario()
+    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: _OtroUsuario()
     try:
         resp = client.get("/api/runtime/sessions/s-http-traza-ajena/traza")
     finally:
-        app.dependency_overrides[aget_current_estudiante] = lambda: autenticado
+        app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: autenticado
 
     assert resp.status_code == 403
 
@@ -231,19 +234,17 @@ def test_replay_expone_el_estado_acumulado_via_http(client, autenticado):
 def test_estado_memoria_y_replay_de_sesion_ajena_son_rechazados(client, autenticado):
     client.post("/api/runtime/sessions", json={"session_id": "s-http-ajena-2"})
 
-    from app.api.deps import aget_current_estudiante
-    from app.main import app
-
     class _OtroUsuario:
         id = "otro-estudiante-cualquiera"
+        role = "estudiante"
 
-    app.dependency_overrides[aget_current_estudiante] = lambda: _OtroUsuario()
+    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: _OtroUsuario()
     try:
         assert client.get("/api/runtime/sessions/s-http-ajena-2/estado").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/memoria").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/replay").status_code == 403
     finally:
-        app.dependency_overrides[aget_current_estudiante] = lambda: autenticado
+        app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: autenticado
 
 
 def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
@@ -264,6 +265,17 @@ def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
 def test_sin_autenticacion_es_rechazado(client):
     resp = client.post("/api/runtime/sessions", json={"session_id": "s-sin-auth"})
     assert resp.status_code in (401, 403)
+
+
+def test_docente_puede_leer_estado_de_sesion_ajena(client, autenticado, autenticado_docente):
+    # El docente NO es el dueño de la sesión (es el estudiante), y aun
+    # así puede leer las 4 surfaces S3 — RFC-0009 §1: es el humano del
+    # loop, autoridad, no un participante con ámbito por estudiante.
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-docente-lee"})
+
+    for ruta in ("traza", "estado", "memoria", "replay"):
+        resp = client.get(f"/api/runtime/sessions/s-http-docente-lee/{ruta}")
+        assert resp.status_code == 200, f"{ruta}: {resp.text}"
 
 
 def test_hecho_docente_via_http(client, autenticado, autenticado_docente):

@@ -20,8 +20,8 @@ from typing import Any, Mapping
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.deps import aget_current_docente, aget_current_estudiante
-from app.models.user import User
+from app.api.deps import aget_current_docente, aget_current_estudiante, aget_current_user
+from app.models.user import User, UserRole
 from app.services.runtime_connection import (
     SPEC_VERSION,
     VERSION_BANCO,
@@ -44,6 +44,22 @@ from runtime.kernel.events import DomainEvent
 from runtime.kernel.state.entries import EntryId, OrigenProvenance
 
 router = APIRouter(prefix="/api/runtime", tags=["runtime"])
+
+
+async def aget_current_estudiante_o_docente(
+    current_user: User = Depends(aget_current_user),
+) -> User:
+    """Las cuatro surfaces S3 de solo lectura (traza/estado/memoria/replay)
+    también las lee el docente (RFC-0009 §1: es el humano del loop) — no
+    solo el estudiante dueño de la sesión. `_verificar_pertenencia` deja
+    pasar al docente sin exigir que sea el dueño (autoridad, no
+    participante — RFC-0009 §3), igual criterio que ya rige `hecho_docente`."""
+    if current_user.role not in (UserRole.ESTUDIANTE, UserRole.DOCENTE):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de estudiante o docente",
+        )
+    return current_user
 
 
 class IdentidadOut(BaseModel):
@@ -227,11 +243,15 @@ def _peticion_de(session_id: str, current_user: User) -> PeticionAbrirSesion:
 
 
 def _verificar_pertenencia(session_id: str, current_user: User, almacen: Any) -> None:
-    """Las tres surfaces S3 de solo lectura (traza/estado/memoria) no
+    """Las surfaces S3 de solo lectura (traza/estado/memoria/replay) no
     reciben una `identidad` en el cuerpo que contrastar como sí hace
     `hecho()` (es un GET) — `resolver_identidad` tampoco verifica
     pertenencia por sí sola, así que se verifica aquí, explícitamente,
-    contra lo ya persistido."""
+    contra lo ya persistido. El docente queda exento: es autoridad sobre
+    el loop, no un participante con ámbito por estudiante (RFC-0009 §3) —
+    mismo criterio que ya rige `hecho_docente`."""
+    if current_user.role == UserRole.DOCENTE:
+        return
     existente = almacen.identidad_existente(session_id)
     if existente is not None and existente.student_id != str(current_user.id):
         raise HTTPException(
@@ -243,11 +263,11 @@ def _verificar_pertenencia(session_id: str, current_user: User, almacen: Any) ->
 @router.get("/sessions/{session_id}/traza", response_model=list[PasoTrazaOut])
 def traza(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante),
+    current_user: User = Depends(aget_current_estudiante_o_docente),
 ) -> list[PasoTrazaOut]:
     """RFC-0007 §2.1 — la traza de eventos de la sesión, derivada de lo
-    persistido (S3, RFC-0010 §2). Modo Evidencia (docente/admin) es una
-    superficie posterior — no inventada aquí."""
+    persistido (S3, RFC-0010 §2). Lee el estudiante dueño o el docente
+    (RFC-0009 §1, HITL)."""
     almacen, almacen_memoria = almacenes()
     _verificar_pertenencia(session_id, current_user, almacen)
     pasos = consultar_traza(
@@ -267,7 +287,7 @@ def traza(
 @router.get("/sessions/{session_id}/estado", response_model=EstadoOut)
 def estado(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante),
+    current_user: User = Depends(aget_current_estudiante_o_docente),
 ) -> EstadoOut:
     """RFC-0002 §1 — el LearningState completo de la sesión (S3, RFC-0010
     §2): facts, claims, deliberaciones, decisiones, tal como el kernel
@@ -285,7 +305,7 @@ def estado(
 @router.get("/sessions/{session_id}/memoria", response_model=MemoriaOut | None)
 def memoria(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante),
+    current_user: User = Depends(aget_current_estudiante_o_docente),
 ) -> MemoriaOut | None:
     """RFC-0005 §2 — la versión de memoria que ESTA sesión tiene fijada
     (S3, RFC-0010 §2), nunca "la más reciente" del estudiante. `None`
@@ -310,7 +330,7 @@ def memoria(
 @router.get("/sessions/{session_id}/replay", response_model=list[PasoReplayOut])
 def replay(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante),
+    current_user: User = Depends(aget_current_estudiante_o_docente),
 ) -> list[PasoReplayOut]:
     """RFC-0008 §3, modo Reconstrucción — el `LearningState` completo tal
     como quedó después de cada transición (S3, RFC-0010 §2). Distinto de
