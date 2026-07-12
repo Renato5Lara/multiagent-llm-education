@@ -14,7 +14,12 @@ from runtime.boundary.inbound import (
     registrar_hecho,
 )
 from runtime.boundary.outbound import Entrega, proyectar_entrega
-from runtime.boundary.surfaces import consultar_entrega_vigente, consultar_traza
+from runtime.boundary.surfaces import (
+    consultar_entrega_vigente,
+    consultar_estado,
+    consultar_memoria,
+    consultar_traza,
+)
 
 __all__ = [
     "Entrega",
@@ -23,6 +28,8 @@ __all__ = [
     "PeticionHechoDelMundo",
     "abrir_sesion",
     "consultar_entrega_vigente",
+    "consultar_estado",
+    "consultar_memoria",
     "consultar_traza",
     "normalizar_asunto",
     "proyectar_entrega",
