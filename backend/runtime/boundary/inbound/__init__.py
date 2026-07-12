@@ -2,6 +2,7 @@
 E3 (palabra humana, RFC-0009) queda fuera del alcance de la Épica 1."""
 
 from runtime.boundary.inbound.apertura import abrir_sesion
+from runtime.boundary.inbound.asunto import normalizar_asunto
 from runtime.boundary.inbound.dto import (
     Identidad,
     PeticionAbrirSesion,
@@ -14,5 +15,6 @@ __all__ = [
     "PeticionAbrirSesion",
     "PeticionHechoDelMundo",
     "abrir_sesion",
+    "normalizar_asunto",
     "registrar_hecho",
 ]

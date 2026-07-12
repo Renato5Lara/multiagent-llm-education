@@ -10,6 +10,7 @@ from runtime.boundary.inbound import (
     PeticionAbrirSesion,
     PeticionHechoDelMundo,
     abrir_sesion,
+    normalizar_asunto,
     registrar_hecho,
 )
 from runtime.boundary.outbound import Entrega, proyectar_entrega
@@ -20,6 +21,7 @@ __all__ = [
     "PeticionAbrirSesion",
     "PeticionHechoDelMundo",
     "abrir_sesion",
+    "normalizar_asunto",
     "proyectar_entrega",
     "registrar_hecho",
 ]

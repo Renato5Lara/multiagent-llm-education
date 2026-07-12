@@ -51,6 +51,7 @@
 | D-040 | RFC-0005 incorpora explícitamente el caso N=0 (§1.1): Cargar puede resolver un estudiante sin ninguna versión consolidada previa, y eso no es un error sino el estado esperado antes de la primera sesión; ese estado inicial no constituye una versión consolidada ni toca el append-only (P14); la primera versión consolidada nace únicamente por Consolidar, igual que cualquier versión posterior; la representación concreta del estado inicial queda deliberadamente sin decidir — pertenece a la implementación (M4 PR-6) | RFC-0005 rev. 2 | Vigente |
 
 | D-041 | Transporte del Boundary: HTTP síncrono in-process vía FastAPI (sin cola); `boundary/` permanece agnóstico de framework (solo dataclasses + funciones puras), el wiring HTTP vive en `app/api/routes/runtime.py` (única puerta de `app/` hacia `boundary/`); conexión a Postgres propia del runtime (`RUNTIME_DATABASE_URL`, psycopg2, nunca el `AsyncSession` de la plataforma); handlers síncronos para aprovechar el threadpool de FastAPI sin introducir asyncio en un runtime hoy síncrono | ADR-0009 | Vigente |
+| D-042 | `competencia`/`asunto` en el flujo del estudiante = slug determinista del título del módulo (`normalizar_asunto`, `runtime/boundary/inbound/`), nunca COMP-N: el módulo adaptativo real diagnostica por Bloom+VARK, no por el catálogo COMP-0..5 (que sigue existiendo solo en el Pre/Post-Test); ningún RFC fija `competencia` a esa forma; inventar una conversión Bloom/VARK→COMP-N sería una decisión pedagógica sin respaldo | ADR-0010 | Vigente |
 
 ## Registros abiertos (no son decisiones aún)
 
