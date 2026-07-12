@@ -74,6 +74,45 @@ Boundary → runtime LangGraph → LLM → respuesta). No se invierte tiempo en
 migración híbrida ni en mantener ambos caminos vivos más de lo
 estrictamente necesario.
 
+### Actualización 2026-07-12 (segunda) — BaseAgent retirado del flujo en vivo; "Plataformas Operativas" reemplaza "Épicas"
+
+**Corrección de auditoría.** La actualización anterior de este mismo día
+afirmaba que `backend/app/agents/*` (BaseAgent) seguía siendo "el único
+camino funcional que atiende peticiones HTTP reales". Esa afirmación se
+basó en un método de auditoría impreciso (grep por nombre de clase sin
+verificar la ruta exacta de import), que produjo falsos positivos —
+notablemente sobre `/api/pedagogy/*`. Una auditoría rehecha rastreando
+cada import por su ruta exacta (no por coincidencia de texto) contra
+**todos** los routers registrados en `main.py`, sin excepción, encontró:
+**ninguno alcanza una subclase real de BaseAgent.** `ResearchAgent` y
+`ReviewerAgent` (los que sí están vivos en `module_orchestration_
+service.py` y `weekly_pedagogy_service.py`) no heredan de `BaseAgent`
+(`class ResearchAgent:`, `class ReviewerAgent:`, sin base). Las únicas
+instanciaciones reales de subclases de BaseAgent que existen en el
+repositorio están en: (a) `app/experiment/benchmark/real/executor.py` —
+el grupo de control experimental que CONCEPT-0001/D-001 reservan a
+propósito para comparar Legacy vs Runtime, y (b) rutas nunca registradas
+en `main.py` (`sessions.py`, `orchestration.py`, `observability.py`) —
+código huérfano, no un camino en vivo.
+
+**Declaración formal: BaseAgent está retirado del flujo operativo en
+vivo** (estudiante y docente), verificado por auditoría exhaustiva y por
+ejecución HTTP real end-to-end (ver runtime/architecture, commits de la
+Épica 2). Su eliminación física (`backend/app/agents/*` +
+`pedagogical_orchestration_service.py` + rutas huérfanas) sigue
+pendiente como limpieza deliberada, no como bloqueo — nada en vivo se
+rompe si se hace después.
+
+**"Plataforma Operativa N" reemplaza el conteo de "Épica N".** El motivo
+de organizar el trabajo dejó de ser "eliminar tecnología antigua" (ya
+logrado) y pasa a ser "completar la plataforma sobre Runtime LangGraph"
+— capacidades funcionales del producto, no módulos técnicos. Ejemplo de
+numeración vigente: 1 Runtime del Estudiante (COMPLETADO) → 2
+Inteligencia Docente → 3 Boundary completo → 4 Observabilidad (RFC-0007)
+→ 5 HITL (RFC-0009) → 6 Consenso avanzado (RFC-0006) → 7 Replay/
+simulación → 8 Eliminación física de BaseAgent y código muerto. El orden
+exacto lo fija la auditoría de impacto de cada sesión, no esta lista.
+
 ### Rol
 
 Actúa como **Principal Software Engineer / Implementation Lead**. No eres
