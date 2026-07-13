@@ -1,21 +1,23 @@
 """kernel.deliberation — la mecánica mínima del episodio (RFC-0006).
 
-Alcance de `mecanica.py`: la convocatoria (tensión bloqueante = ≥2
-propuestas vigentes del mismo asunto) y la resolución bajo
-`mayor-confianza-declarada` — no toca `confianza.py` todavía (eso es
-RFC-0006/3, ROADMAP-RFC-0006 Parte D). La confianza efectiva de
-`"v1"` (`politica.py`) es la declarada — una función degenerada pero
-LEGAL bajo A1-A8 (constante: satisface acotación, anclaje,
-determinismo, tiempo lógico, monotonicidades vacuamente, localidad y
-vigencia). `confianza.py` y `mecanica.py` son mutuamente independientes
-(ninguno importa al otro) — así se mantiene `"v1"` intacta mientras el
-resto de RFC-0006 se construye alrededor.
-"""
+Alcance de `mecanica.py`: la convocatoria/clasificación de tensión
+(`tension_bloqueante`, D1/D2), la resolución bajo
+`mayor-confianza-declarada` (`convocar`/`derivar_decision`, sin
+distinguir tipo todavía — eso es Parte D) y, desde RFC-0006/3, la
+derivación directa de propuesta única bajo el umbral θ
+(`derivar_decision_directa`, D3 — ROADMAP-RFC-0006 Parte C). La
+confianza efectiva de `"v1"` (`politica.py`) es la declarada — una
+función degenerada pero LEGAL bajo A1-A8. `confianza.py` nunca importa
+`mecanica.py` (esa dirección es permanente); `mecanica.py` SÍ importa
+`confianza.py` desde RFC-0006/3 — la dependencia es de un solo sentido,
+no independencia mutua (esa afirmación solo era cierta durante
+RFC-0006/1, Parte 0+A únicamente)."""
 
 from runtime.kernel.deliberation.confianza import calcular_confianza_efectiva
 from runtime.kernel.deliberation.mecanica import (
     convocar,
     derivar_decision,
+    derivar_decision_directa,
     tension_bloqueante,
 )
 from runtime.kernel.deliberation.politica import POLITICAS, Politica, resolver_politica
@@ -26,6 +28,7 @@ __all__ = [
     "calcular_confianza_efectiva",
     "convocar",
     "derivar_decision",
+    "derivar_decision_directa",
     "resolver_politica",
     "tension_bloqueante",
 ]

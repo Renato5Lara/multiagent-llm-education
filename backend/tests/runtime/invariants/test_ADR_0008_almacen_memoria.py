@@ -43,7 +43,7 @@ def _identidad(session_id: str, student_id: str = "maria") -> Identidad:
         student_id=student_id,
         version_student_model="v7",
         version_banco="banco-v2",
-        version_politica="politica-v1",
+        version_politica="v1",
         spec_version="foundation-2026-07-10",
     )
 

@@ -51,7 +51,7 @@ def _identidad(session_id: str) -> Identidad:
         student_id="maria",
         version_student_model="v7",
         version_banco="banco-v2",
-        version_politica="politica-v1",
+        version_politica="v1",
         spec_version="foundation-2026-07-10",
     )
 
@@ -131,7 +131,7 @@ _SCRIPT_VICTIMA = textwrap.dedent(
     identidad = Identidad(
         session_id="s-kill", student_id="maria",
         version_student_model="v7", version_banco="banco-v2",
-        version_politica="politica-v1", spec_version="foundation-2026-07-10",
+        version_politica="v1", spec_version="foundation-2026-07-10",
     )
     almacen = AlmacenTransiciones(url, esquema=esquema)
     almacen.abrir_sesion(identidad)

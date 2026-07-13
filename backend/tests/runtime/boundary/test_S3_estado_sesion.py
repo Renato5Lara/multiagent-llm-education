@@ -47,7 +47,7 @@ def _peticion_abrir(session_id: str, student_id: str = "maria") -> PeticionAbrir
         session_id=session_id,
         student_id=student_id,
         version_banco="banco-v2",
-        version_politica="politica-v1",
+        version_politica="v1",
         spec_version="foundation-2026-07-10",
     )
 

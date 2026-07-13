@@ -2,7 +2,8 @@
 del proyecto, sujeta a las ocho reglas del ADR-0006.
 
 El programa pedagógico NO está cableado: `enrutar` es una función pura
-del estado (RFC-0004 §4) y la secuencia observada emerge. Los nodos son
+de `(estado, política)` (RFC-0004 §4; RFC-0006/3 le agrega `política`,
+antes solo dependía del estado) y la secuencia observada emerge. Los nodos son
 productores que devuelven TransitionIntents (reglas 1 y 8); el único que
 muta es `aplicar` — el portal del Kernel — que reduce, encadena y
 persiste **después de aplicar y antes de la siguiente activación**
@@ -35,8 +36,11 @@ from runtime.engine.checkpoint import (
     reconstruir,
 )
 from runtime.kernel.deliberation import (
+    Politica,
     convocar,
     derivar_decision,
+    derivar_decision_directa,
+    resolver_politica,
     tension_bloqueante,
 )
 from runtime.kernel.reducers import (
@@ -82,8 +86,15 @@ def _nodo_deliberar(grafo: EstadoGrafo) -> dict:
     return {"intents": (intent,) if intent else ()}
 
 
-def _nodo_decidir(grafo: EstadoGrafo) -> dict:
-    intent = derivar_decision(grafo["estado"])
+def _nodo_decidir(grafo: EstadoGrafo, politica: Politica) -> dict:
+    """Prueba primero `derivar_decision` (deliberación resuelta —
+    RFC-0006/2 y anterior, sin cambios); si no hay nada que hacer ahí,
+    `derivar_decision_directa` (propuesta única bajo θ — RFC-0006/3,
+    Parte C). `enrutar()` solo enruta aquí cuando exactamente uno de
+    los dos tiene trabajo pendiente — nunca ambos a la vez, por cómo
+    están hechas las guardias de `enrutar()`."""
+    estado = grafo["estado"]
+    intent = derivar_decision(estado) or derivar_decision_directa(estado, politica)
     return {"intents": (intent,) if intent else ()}
 
 
@@ -193,9 +204,11 @@ def _interpretacion_pendiente_de_remediar(estado: LearningState) -> bool:
     )
 
 
-def enrutar(grafo: EstadoGrafo) -> str:
-    """Función pura del estado (P12): nadie decide quién sigue, salvo el
-    estado mismo. El orden de los chequeos ES el programa pedagógico."""
+def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
+    """Función pura de `(estado, politica)` (P12): nadie decide quién
+    sigue, salvo el estado mismo. El orden de los chequeos ES el
+    programa pedagógico. `politica` llega desde RFC-0006/3 (Parte C,
+    ROADMAP-RFC-0006) — antes, `enrutar` solo dependía del estado."""
     estado = grafo["estado"]
     if estado.decisiones:
         if _decision_sin_adaptar(estado):
@@ -227,6 +240,18 @@ def enrutar(grafo: EstadoGrafo) -> str:
         return "remediar"
     if Capacidad.ORIENTAR not in autores:
         return "orientar"
+    # Guardia segura (mismo patrón que PR-2..PR-5, precedente
+    # GraphRecursionError): se llega aquí SOLO después de que tanto
+    # Remediar como Orientar agotaron su oportunidad de proponer en
+    # "siguiente-paso(sesion)" — es el único punto donde una propuesta
+    # única puede considerarse definitiva (sin rival pendiente de
+    # aparecer). Llamar la MISMA función que `_nodo_decidir` invocará
+    # evita el riesgo que las guardias PR-2..PR-5 ya previenen para
+    # otros nodos: que el guardia y el nodo evalúen criterios distintos
+    # y diverjan (RFC-0006/3, corrige INV-6 — ver docstring de
+    # `derivar_decision_directa`, mecanica.py).
+    if derivar_decision_directa(estado, politica) is not None:
+        return "decidir"
     return END
 
 
@@ -245,6 +270,8 @@ def _construir(
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
     checkpoint no cambian una línea al intercambiar la implementación de
     una capacidad (ADR-0005 §7, guardián de P13)."""
+    politica: Politica = resolver_politica(identidad.version_politica)
+
     def aplicar(grafo: EstadoGrafo) -> dict:
         """El portal del Kernel: reducir → encadenar → persistir, por
         transición — el checkpoint ocurre antes de la siguiente activación."""
@@ -276,7 +303,7 @@ def _construir(
     grafo.add_node("remediar", _nodo_productor(productor_remediar))
     grafo.add_node("orientar", _nodo_productor(productor_orientar))
     grafo.add_node("deliberar", _nodo_deliberar)
-    grafo.add_node("decidir", _nodo_decidir)
+    grafo.add_node("decidir", lambda g: _nodo_decidir(g, politica))
     grafo.add_node("validar", _nodo_productor(productor_validar))
     grafo.add_node("modelar", _nodo_productor(productor_modelar))
     grafo.add_node("tutorizar", _nodo_productor(productor_tutorizar))
@@ -288,7 +315,7 @@ def _construir(
         "validar", "modelar", "tutorizar", "adaptar",
     ):
         grafo.add_edge(productor, "aplicar")
-    grafo.add_conditional_edges("aplicar", enrutar)
+    grafo.add_conditional_edges("aplicar", lambda g: enrutar(g, politica))
     return grafo.compile()
 
 

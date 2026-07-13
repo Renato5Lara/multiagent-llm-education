@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from runtime.kernel.deliberation.confianza import calcular_confianza_efectiva
+from runtime.kernel.deliberation.politica import Politica
 from runtime.kernel.state.entries import ClaimEntry, EntryId, Resuelta, TipoClaim
 from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
@@ -95,6 +97,59 @@ def derivar_decision(estado: LearningState) -> TransitionIntent | None:
             argumentos={
                 "origen": deliberacion.id,
                 "contenido": dict(aceptado.afirmacion),
+            },
+            base=estado.transicion,
+        )
+    return None
+
+
+def derivar_decision_directa(
+    estado: LearningState, politica: Politica
+) -> TransitionIntent | None:
+    """Propuesta única deriva decisión directa si `ce` alcanza θ (RFC-0006
+    §3, D3; RFC-0003 INV-6, "el origen de una decisión es ... el
+    claim-propuesta único"; ROADMAP-RFC-0006 Parte C).
+
+    Corrección de un bug preexistente, no una capacidad nueva desde
+    cero: `registrar_decision` ya aceptaba un origen `ClaimEntry` desde
+    RFC-0003 — nada en el grafo lo invocaba así. Antes de esta función,
+    un asunto con una única propuesta vigente (sin rival, por lo tanto
+    nunca convocado por `tension_bloqueante`/`convocar`) nunca derivaba
+    decisión: el ejemplo real es `"siguiente-paso(sesion)"` cuando
+    `dominada=True` — Orientar propone solo, Remediar nunca compite, y
+    el walkthrough terminaba en `END` sin decisión ni Adaptar.
+
+    Solo considera asuntos con EXACTAMENTE una propuesta vigente — un
+    asunto con ≥2 es tensión (`tension_bloqueante`, ya resuelto por
+    `convocar`/`derivar_decision`, con prioridad: `enrutar()` solo llama
+    a esta función cuando ya no hay tensión bloqueante ni deliberación
+    pendiente). Si `ce < theta`: insuficiencia (D3) — no deriva nada;
+    el "camino de evidencia" que RFC-0006 §3 describe (enrutar hacia
+    Evaluar) no es un nodo del grafo hoy (Evaluar es entrada externa,
+    E2 — RFC-0010), así que la insuficiencia se traduce, por ahora, en
+    que el walkthrough termina sin decisión y espera una reanudación
+    con más evidencia (mismo patrón ya documentado en
+    `ejecutar_walkthrough`: "`END` sin evidencia suficiente aún")."""
+    con_decision = {d.origen for d in estado.decisiones}
+    por_asunto: dict[str, list[ClaimEntry]] = defaultdict(list)
+    for claim in _claims_vigentes_de(estado, TipoClaim.PROPUESTA):
+        por_asunto[claim.asunto].append(claim)
+    for asunto in sorted(por_asunto):
+        candidatos = por_asunto[asunto]
+        if len(candidatos) != 1:
+            continue
+        claim = candidatos[0]
+        if claim.id in con_decision:
+            continue
+        ce = calcular_confianza_efectiva(claim, estado, politica)
+        if ce < politica.theta:
+            continue
+        return TransitionIntent(
+            productor="kernel",
+            operacion="registrar_decision",
+            argumentos={
+                "origen": claim.id,
+                "contenido": dict(claim.afirmacion),
             },
             base=estado.transicion,
         )

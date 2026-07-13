@@ -1,6 +1,6 @@
 """kernel.deliberation.politica — política pedagógica versionada
-(RFC-0006 §1, "los pesos son configuración versionada"; ROADMAP-RFC-0006
-Parte 0).
+(RFC-0006 §1/§3, "los pesos son configuración versionada"; umbral de
+decisión θ, VOCABULARY.md; ROADMAP-RFC-0006 Parte 0 + Parte C).
 
 Un diccionario de constantes, sin `Protocol` ni clases abstractas: hoy
 no hay evidencia de que el dominio necesite más de una forma de
@@ -49,6 +49,17 @@ class Politica:
     peso_refuerzo: Decimal
     peso_refutacion: Decimal
     peso_decaimiento: Decimal
+    theta: Decimal
+    """Umbral de decisión (RFC-0006 §3, D3): una propuesta única cuya
+    `ce` no lo alcanza no deriva decisión sola — el paisaje es
+    insuficiente, la salida es evidencia, no derivación (ROADMAP-
+    RFC-0006 Parte C). `theta = Decimal("0")` es el mínimo
+    matemáticamente posible: como A1 garantiza `ce >= 0` siempre,
+    ninguna propuesta puede caer nunca por debajo — es la elección que
+    hace la insuficiencia estructuralmente inalcanzable bajo `"v1"`,
+    por construcción, no por revisar los valores de confianza que los
+    productores actuales emiten hoy (esos podrían cambiar; la prueba
+    por A1 no)."""
 
     def __post_init__(self) -> None:
         for nombre, peso in (
@@ -58,6 +69,11 @@ class Politica:
         ):
             if peso < 0:
                 raise ValueError(f"{nombre} no puede ser negativo: {peso}")
+        if not (Decimal("0") <= self.theta <= Decimal("1")):
+            raise ValueError(
+                f"theta debe estar en [0, 1] — se compara contra ce, que "
+                f"A1 acota a ese mismo rango: theta={self.theta}"
+            )
 
 
 POLITICAS: dict[str, Politica] = {
@@ -65,6 +81,7 @@ POLITICAS: dict[str, Politica] = {
         peso_refuerzo=Decimal("0"),
         peso_refutacion=Decimal("0"),
         peso_decaimiento=Decimal("0"),
+        theta=Decimal("0"),
     ),
 }
 

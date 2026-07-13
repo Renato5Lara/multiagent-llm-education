@@ -1,4 +1,7 @@
-"""RFC-0006/1, Parte 0 — política versionada (kernel/deliberation/politica.py).
+"""kernel/deliberation/politica.py — política versionada. Nace en
+RFC-0006/1 Parte 0 (los pesos de `ce`); RFC-0006/3 Parte C le agrega
+`theta` (el umbral de decisión) sobre el mismo módulo — este archivo
+cubre `Politica` completa, no una parte congelada en el tiempo.
 
 Sin Postgres, sin LangGraph: `Politica`/`POLITICAS`/`resolver_politica`
 no dependen de nada persistido — son constantes de código.
@@ -20,6 +23,30 @@ class TestParte0_PoliticaVersionada:
         assert v1.peso_refutacion == Decimal("0")
         assert v1.peso_decaimiento == Decimal("0")
 
+    def test_v1_theta_es_cero(self):
+        """theta_v1 = 0 no es un valor empírico ajustado a los productores
+        actuales — es una prueba matemática: A1 garantiza ce >= 0 siempre,
+        así que ce >= theta se cumple para CUALQUIER claim posible, sin
+        excepción. La insuficiencia D3 queda estructuralmente
+        inalcanzable bajo v1 por construcción."""
+        assert POLITICAS["v1"].theta == Decimal("0")
+
+    def test_theta_fuera_de_0_1_es_ValueError(self):
+        with pytest.raises(ValueError, match=r"theta debe estar en \[0, 1\]"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("1.01"),
+            )
+        with pytest.raises(ValueError, match=r"theta debe estar en \[0, 1\]"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("-0.01"),
+            )
+
     def test_resolver_politica_v1(self):
         assert resolver_politica("v1") is POLITICAS["v1"]
 
@@ -37,6 +64,7 @@ class TestParte0_PoliticaVersionada:
             peso_refuerzo=Decimal("0.10"),
             peso_refutacion=Decimal("0.10"),
             peso_decaimiento=Decimal("0.02"),
+            theta=Decimal("0.30"),
         )
         assert candidata != v1_antes
         assert POLITICAS["v1"] is v1_antes
@@ -55,6 +83,7 @@ class TestParte0_PoliticaVersionada:
             peso_refuerzo=Decimal("0.01"),
             peso_refutacion=Decimal("0"),
             peso_decaimiento=Decimal("0.05"),
+            theta=Decimal("0"),
         )
         assert politica.peso_decaimiento > politica.peso_refuerzo
 
@@ -64,6 +93,7 @@ class TestParte0_PoliticaVersionada:
                 peso_refuerzo=Decimal("0"),
                 peso_refutacion=Decimal("-0.01"),
                 peso_decaimiento=Decimal("0"),
+                theta=Decimal("0"),
             )
 
     def test_no_importa_langgraph(self):

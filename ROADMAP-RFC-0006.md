@@ -286,8 +286,8 @@ igual que las anteriores — nunca un PR de 10 partes junto):
 | Mini-épica | Partes | Resultado observable al cerrar |
 |---|---|---|
 | RFC-0006/1 — Cimientos | 0 + A | `ce` calculable y testeado contra A1-A8, política versionada con un sitio real donde vivir. Sin cambios de comportamiento visible todavía. **CERRADO.** |
-| RFC-0006/2 — Detección y clasificación | B | D1 se detecta y clasifica por primera vez (inerte hoy — ningún productor la activa); la tensión D2 real (Remediar/Orientar) se preserva bit a bit. |
-| RFC-0006/3 — Propuesta única y θ | C | Una propuesta débil sin rival ya no deriva decisión sola — primer camino real de insuficiencia D3. |
+| RFC-0006/2 — Detección y clasificación | B | D1 se detecta y clasifica por primera vez (inerte hoy — ningún productor la activa); la tensión D2 real (Remediar/Orientar) se preserva bit a bit. **CERRADO.** |
+| RFC-0006/3 — Propuesta única y θ | C | Una propuesta débil sin rival ya no deriva decisión sola — primer camino real de insuficiencia D3, Y corrige un bug real preexistente (INV-6): la rama `dominada=True` dejaba de llegar a Adaptar. **CERRADO.** |
 | RFC-0006/4 — Resolución completa | D + E (tras levantar el bloqueo de `ejecucion`) | `politica-v2` resuelve con margen real; aplazamiento y provisional existen de verdad. |
 | RFC-0006/5 — Escalada y orden | F + G | S2 empieza a mostrar escaladas reales sin sembrado manual; H7 verificado. |
 | RFC-0006/6 — Cierre | H + I | Validación E2E completa, sembrado manual retirado, RFC-0006 cerrado. |
@@ -660,40 +660,80 @@ Criterios de cierre — CERRADO 2026-07-12:
 
 ---
 
-## Ficha — RFC-0006/3: Propuesta única, θ e insuficiencia (D3)
+## Ficha — RFC-0006/3: Propuesta única, θ e insuficiencia (D3) — fix de INV-6
 
-> Separada de RFC-0006/2 por el Engineering Gate (nota arriba). No
-> escribir código de esta ficha hasta cerrar y aprobar RFC-0006/2.
+> Separada de RFC-0006/2 por el Engineering Gate (nota arriba). Una
+> segunda Engineering Review (2026-07-12, tras la aprobación de abrir
+> este Gate) auditó el camino de "propuesta única" desde cero — sin
+> asumir que el diseño de esta ficha era definitivo — y encontró que el
+> alcance real es mayor y más urgente de lo escrito originalmente
+> abajo: no es solo "falta implementar D3", es **un bug preexistente
+> que deja una rama real del walkthrough terminando en silencio**. Ver
+> "Auditoría previa" (actualizada) y "Objetivo" (corregido) más abajo.
 
 ```
-Objetivo:        Una propuesta sin rival (slot pendiente con un único
-                 claim) deriva su decisión directamente si `ce` alcanza
-                 el umbral θ de la política — y esa derivación queda
+Objetivo:        [ACTUALIZADO] Corregir INV-6 (RFC-0003): una propuesta
+                 sin rival debe poder derivar su decisión directamente
+                 — hoy no puede, y eso dejaba la rama `dominada=True`
+                 del walkthrough terminando en `END` sin decisión ni
+                 Adaptar (bug real, no hueco de RFC-0006). Esta
+                 mini-épica corrige ese bug Y, en el mismo mecanismo,
+                 implementa D3: si `ce` no alcanza el umbral θ de la
+                 política, NO deriva decisión — se activa el camino de
+                 evidencia. La derivación por propuesta única queda
                  registrada como "no-convocatoria" (RFC-0006 §3, P6:
                  "decidió una capacidad sola porque nadie podía
-                 disentir"). Si `ce` no alcanza θ: NO deriva decisión —
-                 se activa el camino de evidencia.
+                 disentir").
 Partes:          C
 Dependencias:    RFC-0006/2 (Detección y clasificación) cerrado.
 
-Auditoría previa (estado actual — hallazgo del Gate de RFC-0006/2,
-verificado leyendo código, no supuesto): **hoy NO existe ningún camino
-para que una propuesta única derive una decisión.** `registrar_decision`
-solo se invoca desde `derivar_decision()` (mecanica.py), que solo lee
-`estado.deliberaciones` buscando una `Resuelta` — nunca examina un
-claim-propuesta sin rival directamente. El motivo por el que esto no se
-había notado: en el único slot de decisión real del walkthrough actual
-(`"siguiente-paso(sesion)"`), Orientar SIEMPRE propone en cuanto existe
-alguna interpretación vigente, así que ese slot tiene rivalidad
-(Remediar vs Orientar) por construcción del par de productores
-actuales, no por diseño del mecanismo — la "propuesta única" nunca se
-ejerce hoy, no porque sea imposible (a diferencia de D1 en RFC-0006/2),
-sino porque los dos únicos productores de ese slot resultan estar
-diseñados para competir siempre. RFC-0003/RFC-0006 SÍ contemplan
-"propuesta única deriva directa" como caso normativo (`registrar_decision`
-ya soporta un origen `ClaimEntry` directo — INV-6 — sin que nada del
-grafo lo invoque hoy). Esta mini-épica construye el primer camino real
-para ese caso, no lo modifica.
+Auditoría previa [ACTUALIZADA — segunda ronda, veredicto final]: **hoy
+NO existe ningún camino para que una propuesta única derive una
+decisión.** `registrar_decision` solo se invoca desde `derivar_decision()`
+(mecanica.py), que solo lee `estado.deliberaciones` buscando una
+`Resuelta` — nunca examina un claim-propuesta sin rival directamente.
+
+**Es un bug real, preexistente a RFC-0006 — no una decisión de diseño
+ni un hueco nuevo.** Evidencia normativa: `RFC-0003-learning-state.md`
+(fundacional, anterior a RFC-0006) ya define **INV-6**: *"Toda decisión
+referencia la deliberación **o el claim-propuesta único**"* — el modelo
+siempre contempló este camino. El reducer `registrar_decision` ya lo
+soporta (`_derivar_de_origen` acepta un `ClaimEntry` directo, sin
+cambios necesarios ahí). Adaptar tiene diseño pedagógico COMPLETO para
+`"avanzar-con-andamiaje"` (`DISENO_POR_ACCION`, modalidad=mixta,
+profundidad=aplicación — no un stub). Todas las piezas del dominio
+asumen que este camino existe; solo falta el cableado en `mecanica.py`.
+
+**Impacto real, trazado paso a paso:** cuando `dominada=True` (un
+estudiante responde bien), Remediar nunca propone (su guardia exige
+`dominada is False`) — Orientar propone SOLA en
+`"siguiente-paso(sesion)"`. Sin rival, `tension_bloqueante()` devuelve
+`None`, `convocar()` nunca corre, ninguna deliberación se crea,
+`derivar_decision()` nunca encuentra nada. `enrutar()` cae a
+`return END`. Como `Adaptar.producir()` itera `estado.decisiones`
+buscando una `accion` en `DISENO_POR_ACCION` (`adaptar/productor.py:86`),
+**Adaptar nunca se activa** — sin decisión, sin Adaptar, sin Entrega
+(`S1` devuelve `Entrega(asunto=None, diseno=None)`, indistinguible de
+"estudiante nuevo sin evidencia"). El walkthrough termina en silencio,
+sin error.
+
+**Por qué nadie lo había notado:** `runtime_completo.py._runtime` (la
+categoría que valida el walkthrough real vía HTTP) usa
+`items_incorrectos=[3, 4, 8]` — siempre 3 errores, siempre
+`dominada=False`, siempre forzando la rivalidad Remediar-vs-Orientar
+que sí funciona. La rama `dominada=True` nunca se ejercitó de punta a
+punta con el grafo real, ni una sola vez, hasta esta auditoría.
+
+**Consecuencia para "No debe cambiar comportamiento observable"
+(criterio original de esta ficha, ahora corregido más abajo):** con
+`theta_v1 = 0` (el mínimo posible por A1), construir este camino NO es
+un no-op para la rama `dominada=True` — es la corrección real de un
+bug: donde hoy el walkthrough termina en `END` sin decisión, pasará a
+derivar una decisión y activar Adaptar. Este es el resultado deseado,
+documentado explícitamente como fix, no como regresión. La rama
+`dominada=False` (con la tensión D2 real de RFC-0006/2) debe seguir
+byte-idéntica — ESA es la garantía de no-regresión real de esta ficha,
+no "cero cambios en absoluto".
 
 Riesgos:         Alto — mayor que lo que la ficha original de
                  RFC-0006/2 asumía. No es "agregar un chequeo dentro de
@@ -722,9 +762,16 @@ Boundary:        No cambia (a confirmar en el Gate — si D3 necesita ser
                  observable, podría tocar RFC-0007, no esta ficha).
 HTTP:            No cambia.
 Frontend:        No cambia.
-E2E:             runtime_completo.py, categoría Runtime: DEBE seguir
-                 produciendo el mismo resultado si theta_v1 se elige
-                 correctamente — validación obligatoria, no opcional.
+E2E:             runtime_completo.py, categoría Runtime (fixture
+                 `dominada=False`, 3 errores): DEBE seguir produciendo
+                 el mismo resultado — validación obligatoria. Además,
+                 esta mini-épica AGREGA la primera validación E2E real
+                 de la rama `dominada=True` (hoy no existe ninguna) —
+                 antes: `END` sin decisión; después: decisión derivada
+                 + Adaptar activado. No es una categoría nueva de
+                 `runtime_completo.py` — es un caso adicional dentro de
+                 Runtime, o un script E2E dedicado si el Gate lo
+                 justifica.
 
 No debe cambiar: `tension_bloqueante()` / clasificación D1/D2 (RFC-0006/2
                  ya cerrada, no se reabre), `confianza.py` (Parte A),
@@ -746,27 +793,60 @@ Context Budget:  ROADMAP-RFC-0006.md (este documento), RFC-0006 §3
                  que el Gate lo justifique explícitamente antes de
                  abrir.
 
-Criterios de cierre:
-  □ Existe un camino real (no solo una función pura sin wiring) para
-    que una propuesta única derive decisión cuando ce >= theta
-  □ Existe una función de insuficiencia D3 que compara `ce` contra
-    `politica.theta` y decide NO derivar cuando no se alcanza
-  □ La decisión derivada de propuesta única queda registrada de forma
-    que "decidió una capacidad sola porque nadie podía disentir" sea
-    verificable sin ambigüedad (P6) — usando el mecanismo que ya
-    distingue origen ClaimEntry vs DeliberacionEntry, sin campo nuevo
-    salvo que el Gate demuestre que hace falta
-  □ Bajo política v1, la incorporación de θ no modifica ninguna decisión
-    observable existente — el criterio es el comportamiento, no el
-    valor concreto de `theta_v1`
-  □ enrutar() usa una guardia seria (mismo patrón que PR-2..PR-5) — test
-    explícito de que no introduce un ciclo aplicar→enrutar sin avance
-  □ politica-v1 sigue produciendo exactamente las mismas decisiones —
-    runtime_completo.py 9/9 PASS, categoría Runtime sin cambio de
-    resultado observable
-  □ Ninguna API HTTP cambia (salvo que el Gate lo justifique)
-  □ Ninguna surface Boundary cambia (salvo que el Gate lo justifique)
-  □ No aparecen TODO/FIXME nuevos
-  □ No baja la cobertura de tests
-  □ Ningún documento temporal nuevo queda abierto sin retirar al cerrar
+Criterios de cierre — CERRADO 2026-07-12:
+  ✓ Existe un camino real (`derivar_decision_directa`, mecanica.py) para
+    que una propuesta única derive decisión cuando ce >= theta —
+    cableado en `enrutar()`/`_nodo_decidir` (walkthrough.py), no solo
+    una función pura sin wiring
+  ✓ La función compara `ce` contra `politica.theta`; si `ce < theta`
+    (D3, insuficiencia) no deriva nada — el "camino de evidencia" que
+    RFC-0006 §3 describe no es un nodo del grafo hoy (Evaluar es
+    entrada externa E2, no un productor interno); insuficiencia se
+    traduce en que el walkthrough espera una reanudación con más
+    evidencia, mismo patrón ya documentado en `ejecutar_walkthrough`
+  ✓ La decisión de propuesta única se distingue de una decisión
+    deliberada por su `origen` (`ClaimEntry` directo vs
+    `DeliberacionEntry`) — sin campo nuevo, el mecanismo ya existente
+    de `registrar_decision`/INV-6 alcanza para P6
+  ✓ Bajo política v1: la rama `dominada=False` (tensión D2 real,
+    RFC-0006/2) produce EXACTAMENTE las mismas decisiones que antes —
+    verificado con test Postgres+LangGraph real extendido
+    (`test_dominada_false_preserva_el_comportamiento_original`) Y con
+    runtime_completo.py (mismo shape: 7 transiciones, misma entrega).
+    La rama `dominada=True` CAMBIA de forma intencional: donde antes
+    terminaba en `END` sin decisión, ahora deriva
+    `accion="avanzar-con-andamiaje"` y activa Adaptar — confirmado con
+    Postgres+LangGraph real
+    (`test_dominada_true_no_produce_recursion_error`, extendido)
+  ✓ Test E2E real y explícito para la rama `dominada=True` — extendió
+    el archivo de regresión ya existente
+    (`test_FIX_remediar_dominada_true_no_hace_loop.py`, no uno nuevo
+    paralelo): confirma decisión derivada, Adaptar activado, y
+    `proyectar_entrega()` con contenido real (antes `(None, None)`)
+  ✓ enrutar() usa la MISMA función que `_nodo_decidir` invocará como
+    guardia (mismo patrón que tension_bloqueante/convocar,
+    PR-2..PR-5) — evita que guardia y nodo diverjan; los 296 tests
+    reales (incluido el Postgres+LangGraph extendido) confirman que no
+    hay ciclo aplicar→enrutar sin avance
+  ✓ politica-v1: runtime_completo.py 9/9 PASS; categoría Runtime
+    (dominada=False) con el MISMO shape de traza; dominada=True
+    verificado en test dedicado — ya no termina en silencio
+  ✓ Ninguna API HTTP cambia
+  ✓ Ninguna surface Boundary cambia
+  ✓ No aparecen TODO/FIXME nuevos
+  ✓ Cobertura: 296 tests (288 previos + 8 nuevos: 2 theta Parte 0/C +
+    7 Parte C puros − 1 test de independencia retirado
+    deliberadamente, ver nota abajo)
+  ✓ Ningún documento temporal nuevo abierto en esta ficha
+
+Hallazgo adicional durante el Gate — corregido dentro del alcance:
+`test_mecanica_no_importa_confianza` (RFC-0006/1) afirmaba una
+independencia que solo era válida ANTES de esta mini-épica — su propio
+docstring original decía "mecanica.py NO se toca todavía ... eso es
+RFC-0006/3". Se retiró (no se dejó romper en silencio), documentando
+por qué en `TestIndependencia`. También se corrigió
+`version_politica="politica-v1"` → `"v1"` en 19 archivos de test que
+nunca antes se validaban (el campo era decorativo hasta que
+`resolver_politica()` se cableó en `_construir()`) — mecánico, sin
+cambio de comportamiento, verificado con la suite completa.
 ```

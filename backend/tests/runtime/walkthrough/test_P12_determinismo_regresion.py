@@ -58,7 +58,7 @@ def _identidad() -> Identidad:
         student_id="maria",
         version_student_model="v7",
         version_banco="banco-v2",
-        version_politica="politica-v1",
+        version_politica="v1",
         spec_version="foundation-2026-07-10",
     )
 
@@ -129,7 +129,7 @@ _SCRIPT = textwrap.dedent(
     url, esquema = os.environ["RUNTIME_URL"], os.environ["RUNTIME_ESQUEMA"]
     identidad = Identidad(
         session_id="s-det", student_id="maria", version_student_model="v7",
-        version_banco="banco-v2", version_politica="politica-v1",
+        version_banco="banco-v2", version_politica="v1",
         spec_version="foundation-2026-07-10",
     )
     hecho = (TransitionIntent(

@@ -41,6 +41,7 @@ _POLITICA_PRUEBA = Politica(
     peso_refuerzo=Decimal("0.10"),
     peso_refutacion=Decimal("0.10"),
     peso_decaimiento=Decimal("0.02"),
+    theta=Decimal("0"),
 )
 
 
@@ -313,8 +314,18 @@ class TestA7_LocalidadCausal:
 
 
 class TestIndependencia:
-    """Criterios de cierre adicionales de RFC-0006/1 (no un axioma por
-    sí solo): confianza.py y mecanica.py son mutuamente independientes."""
+    """Criterio de cierre de RFC-0006/1 (no un axioma por sí solo):
+    `confianza.py` nunca importa `mecanica.py` — esa dirección es
+    permanente (la mecánica USA la confianza, nunca al revés).
+
+    La dirección opuesta (`mecanica.py` no importa `confianza.py`) SOLO
+    era válida durante RFC-0006/1 (Parte 0 + Parte A únicamente) — el
+    propio roadmap ya documentaba que "mecanica.py NO se toca todavía
+    ... eso es RFC-0006/3" (docstring original de este módulo). RFC-0006/3
+    (Parte C, ROADMAP-RFC-0006.md) es exactamente cuando `mecanica.py`
+    empieza a consumir `ce` (`derivar_decision_directa`, umbral θ) — el
+    test que afirmaba lo contrario se retiró ahí, no se dejó romper en
+    silencio."""
 
     def test_confianza_no_importa_mecanica(self):
         import re
@@ -323,11 +334,3 @@ class TestIndependencia:
         fuente = Path(__file__).resolve().parents[3] / "runtime" / "kernel" / "deliberation" / "confianza.py"
         texto = fuente.read_text(encoding="utf-8")
         assert not re.search(r"^\s*(import|from)\s+.*\bmecanica\b", texto, re.M)
-
-    def test_mecanica_no_importa_confianza(self):
-        import re
-        from pathlib import Path
-
-        fuente = Path(__file__).resolve().parents[3] / "runtime" / "kernel" / "deliberation" / "mecanica.py"
-        texto = fuente.read_text(encoding="utf-8")
-        assert not re.search(r"^\s*(import|from)\s+.*\bconfianza\b", texto, re.M)
