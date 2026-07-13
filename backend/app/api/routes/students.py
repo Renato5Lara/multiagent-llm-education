@@ -324,39 +324,24 @@ def get_adaptive_decision(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """La estrategia de contenido del estudiante. Fuente primaria: el
-    Runtime LangGraph (`runtime_bridge.decision_adaptativa` — Entrega
-    vigente + deuda abierta + competencias dominadas). El motor D4.1
-    (tabla VARK×nivel del diagnóstico) queda SOLO como arranque en frío,
-    mientras el runtime no tenga ninguna evidencia de este estudiante en
-    este curso — la primera evaluación o pre-test lo reemplaza."""
-    try:
-        from app.services.runtime_bridge import decision_adaptativa
+    """La estrategia de contenido del estudiante — decidida por el
+    Runtime LangGraph (`runtime_bridge.decision_adaptativa`: Entrega
+    vigente + interpretaciones reales de Diagnosticar). El diagnóstico
+    inicial ya entra al Runtime como evidencia (`save_diagnostic`), así
+    que la primera decisión también es del Runtime; sin evidencia alguna
+    se responde el default neutro de presentación — el motor D4.1
+    (tabla VARK×nivel) fue retirado."""
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        decision_adaptativa_neutra,
+    )
 
+    try:
         decision_runtime = decision_adaptativa(current_user.id, course_id)
     except Exception as e:  # noqa: BLE001
         logger.warning(f"runtime_bridge failed for adaptive-decision: {e}")
         decision_runtime = None
-    if decision_runtime is not None:
-        return decision_runtime
-
-    diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
-    if not diagnostic:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No has completado el diagnóstico de este curso",
-        )
-    profile = diagnostic.profile or {}
-    decision = profile.get("adaptive_decision")
-    if not decision:
-        # Compute on-the-fly from stored profile (supports diagnostics created before D4.1)
-        from app.services.adaptive_engine import compute_adaptive_decision
-        sp = profile.get("student_profile", {})
-        dominant = sp.get("dominant_modality") or diagnostic.dominant_modality or "reading"
-        prior_level = sp.get("prior_knowledge", "basic")
-        known_topics = sp.get("known_topics") or profile.get("consensus_summary", {}).get("known_topics", [])
-        decision = compute_adaptive_decision(dominant, prior_level, known_topics or [])
-    return decision
+    return decision_runtime if decision_runtime is not None else decision_adaptativa_neutra()
 
 
 @router.get("/adaptive-content/{topic_slug}", response_model=AdaptiveContentResponse)
@@ -366,19 +351,25 @@ def get_adaptive_content(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """D4.2 — Returns multimodal content blocks for a topic, ordered by the student's modality."""
+    """Bloques multimodales de un tema, ordenados por la modalidad que
+    el Runtime decidió para este estudiante (Entrega vigente vía
+    `decision_adaptativa`) — ya no por el VARK del diagnóstico. Sin
+    decisión todavía: orden mixto neutro."""
     from app.services.content_library import get_adaptive_content as get_content, AVAILABLE_TOPICS
     if topic_slug not in AVAILABLE_TOPICS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Tema '{topic_slug}' no disponible. Temas: {AVAILABLE_TOPICS}",
         )
-    diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
-    modality = "reading"  # safe default
-    if diagnostic:
-        profile = diagnostic.profile or {}
-        sp = profile.get("student_profile", {})
-        modality = sp.get("dominant_modality") or diagnostic.dominant_modality or "reading"
+    modality = "mixta"
+    try:
+        from app.services.runtime_bridge import decision_adaptativa
+
+        decision = decision_adaptativa(current_user.id, course_id)
+        if decision is not None:
+            modality = decision["modality_label"]
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for adaptive-content: {e}")
 
     blocks_raw = get_content(topic_slug, modality)
     blocks = [ContentBlockResponse(**b) for b in blocks_raw]

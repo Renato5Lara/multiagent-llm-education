@@ -338,3 +338,68 @@ def test_la_pregunta_no_altera_la_adaptacion_vigente():
     )
     despues = consultar_decision_vigente(student_id="lucia", course_id="curso-t4")
     assert antes == despues
+
+
+# ── El diagnóstico inicial entra al Runtime (cold-start retirado) ────
+
+
+def test_diagnostico_debil_produce_la_primera_decision_del_runtime():
+    """Traducción fiel de escala (Likert k/5 → (5−k) incorrectos de 5).
+    Limitación vigente (Parte G pendiente): Diagnosticar interpreta UNA
+    competencia por sesión — la del primer hecho registrado (orden
+    determinista por q_id); la evidencia de los demás temas queda en el
+    ledger esperando la multi-tensión. Aquí el primer tema es débil
+    (2/5 → 3 errores → no dominada) → énfasis + decisión real."""
+    from app.services.runtime_bridge import decision_adaptativa
+    from app.services.student_service import _registrar_diagnostico_en_runtime
+
+    _registrar_diagnostico_en_runtime(
+        student_id="diag-1",
+        course_id="curso-diag",
+        # q1=algorithms 2/5 (débil, primero); q2=variables 5/5 (espera);
+        # q9 es sección VARK: se ignora (no es evidencia de tema).
+        answers={"1": 2, "2": 5, "9": 4},
+    )
+    decision = decision_adaptativa(student_id="diag-1", course_id="curso-diag")
+    assert decision is not None
+    assert "algorithms" in decision["emphasis_topics"]
+    assert decision["modality_label"] == "visual"  # decisión real: reforzar
+
+
+def test_diagnostico_fuerte_interpreta_dominada_y_registra_todo():
+    """Primer tema fuerte (4/5 → 1 error → dominada bajo scoring-v1: el
+    umbral del instrumento score>=4 sobrevive la traducción) → skip.
+    Y TODA la evidencia queda registrada aunque solo la primera se
+    interprete hoy (los facts esperan la Parte G)."""
+    from app.services.runtime_bridge import (
+        _peticion,
+        decision_adaptativa,
+    )
+    from app.services.runtime_connection import almacenes
+    from app.services.student_service import _registrar_diagnostico_en_runtime
+    from runtime.boundary import consultar_estado
+
+    _registrar_diagnostico_en_runtime(
+        student_id="diag-2", course_id="curso-diag2", answers={"6": 4, "7": 3},
+    )
+    decision = decision_adaptativa(student_id="diag-2", course_id="curso-diag2")
+    assert "loops" in decision["skip_hint_topics"]  # 4/5, primero
+    almacen, almacen_memoria = almacenes()
+    estado = consultar_estado(
+        _peticion("diag-2", "curso-diag2"), almacen, almacen_memoria
+    )
+    competencias = {
+        f.contenido["competencia"]
+        for f in estado.facts
+        if "competencia" in f.contenido
+    }
+    assert competencias == {"loops", "arrays"}  # nada se pierde
+
+
+def test_sin_evidencia_alguna_decision_neutra():
+    from app.services.runtime_bridge import decision_adaptativa_neutra
+
+    neutra = decision_adaptativa_neutra()
+    assert neutra["modality_label"] == "mixta"
+    assert neutra["emphasis_topics"] == []
+    assert neutra["content_order"][0] == "theory"

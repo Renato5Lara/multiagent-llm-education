@@ -151,6 +151,39 @@ ORDEN_CONTENIDO_POR_MODALIDAD: dict[str, tuple[str, ...]] = {
     "mixta": ("theory", "diagram", "example", "exercise", "video", "simulation", "game"),
 }
 
+#: Etiquetas de los tipos de bloque para la UI (heredadas del motor
+#: D4.1 al retirarlo — presentación, no decisión).
+CONTENT_TYPE_LABELS: dict[str, str] = {
+    "theory": "Teoría",
+    "example": "Ejemplo",
+    "video": "Video",
+    "diagram": "Diagrama",
+    "game": "Juego",
+    "simulation": "Simulación",
+    "exercise": "Ejercicio",
+}
+
+
+def decision_adaptativa_neutra() -> dict[str, Any]:
+    """La respuesta de `/adaptive-decision` cuando el Runtime todavía no
+    tiene ninguna evidencia del estudiante (ni diagnóstico ni pre-test
+    ni evaluaciones). Un default de presentación (orden mixto, sin
+    énfasis), jamás una decisión: desaparece con el primer hecho real."""
+    return {
+        "content_order": list(ORDEN_CONTENIDO_POR_MODALIDAD["mixta"]),
+        "content_type_labels": CONTENT_TYPE_LABELS,
+        "skip_hint_topics": [],
+        "emphasis_topics": [],
+        "emphasis_topic_labels": [],
+        "strategy_description": (
+            "Aún no hay evidencia de tu aprendizaje: completa el diagnóstico "
+            "o tu primera actividad para que el sistema multiagente decida "
+            "tu estrategia."
+        ),
+        "prior_emphasis": "",
+        "modality_label": "mixta",
+    }
+
 _RE_COMPETENCIA = re.compile(r"^[a-z]+\((?P<competencia>.+)\)$")
 
 
@@ -164,9 +197,9 @@ def _competencia_de_asunto(asunto: str) -> str:
 
 def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | None:
     """S3, solo lectura — la estrategia de contenido derivada de lo que
-    el Runtime ya decidió para este estudiante en este curso. Reemplaza
-    al motor D4.1 (`adaptive_engine`, tabla VARK×nivel) como fuente de
-    `content_order` en cuanto existe una decisión real:
+    el Runtime ya decidió para este estudiante en este curso (el motor
+    D4.1, tabla VARK×nivel, fue retirado; el diagnóstico entra hoy como
+    evidencia y la primera decisión también es del Runtime):
 
     - `content_order` — de la modalidad de la Entrega vigente (S1),
       ajustada por su `profundidad` (fundamentos → teoría/ejemplo
@@ -231,8 +264,6 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
 
     def _etiqueta(slug: str) -> str:
         return slug.replace("-", " ").replace("_", " ").capitalize()
-
-    from app.services.adaptive_engine import CONTENT_TYPE_LABELS
 
     return {
         "content_order": orden,

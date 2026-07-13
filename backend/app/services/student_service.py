@@ -22,7 +22,6 @@ from app.models.student_progress import LearningPath, PathModule, StudentProgres
 from app.models.learning_objective import LearningObjective
 from app.models.user import User, UserRole
 from app.schemas.diagnostic import StudentProfileCreate
-from app.services.adaptive_engine import compute_adaptive_decision
 from app.schemas.progress import CourseProgressResponse, LearningPathDetailResponse, LearningPathItem
 from app.services.academic_activation_service import academic_activation_pipeline
 
@@ -125,6 +124,36 @@ def compute_prior_knowledge(answers: dict) -> tuple[str, list[str]]:
     return level, known
 
 
+def _registrar_diagnostico_en_runtime(
+    student_id: str, course_id: str, answers: dict
+) -> None:
+    """El diagnóstico inicial entra al Runtime como evidencia — la
+    primera decisión adaptativa la toma el Runtime, no una tabla local.
+    Traducción fiel de escala, no interpretación: cada tema se
+    autoevalúa en Likert 1–5; puntaje k ⇒ (5−k) ítems incorrectos de 5.
+    Preserva exactamente el umbral del instrumento (≥4 = dominado) bajo
+    scoring-v1 (≥2 errores ⇒ no dominada): 4/5 → 1 error → dominada;
+    3/5 → 2 errores → no dominada. Mismo patrón que el pre-test
+    (knowledge_test_service): una competencia por hecho, best-effort."""
+    from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+    for q_id_str, value in sorted(answers.items(), key=lambda kv: str(kv[0])):
+        try:
+            topic = PRIOR_KNOWLEDGE_TOPIC_MAP.get(int(q_id_str))
+            score = max(1, min(5, int(value)))
+        except (TypeError, ValueError):
+            continue
+        if topic is None:
+            continue
+        registrar_evidencia_evaluacion(
+            student_id=student_id,
+            course_id=course_id,
+            titulo_modulo=topic,
+            items_incorrectos=list(range(5 - score)),
+            items_totales=5,
+        )
+
+
 def save_diagnostic(
     db: Session, student_id: str, course_id: str, answers: dict
 ) -> DiagnosticResult:
@@ -165,7 +194,6 @@ def save_diagnostic(
                 "strategy": RECOMMENDED_STRATEGIES.get(dominant, []),
                 "known_topics": known_topics,
             },
-            "adaptive_decision": compute_adaptive_decision(dominant, prior_knowledge_level, known_topics),
         }
 
         if existing:
@@ -176,31 +204,32 @@ def save_diagnostic(
             existing.completed_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(existing)
-            return existing
-
-        result = DiagnosticResult(
-            student_id=student_id,
-            course_id=course_id,
-            answers=answers,
-            profile=profile,
-            modality_scores=modality_scores,
-            dominant_modality=dominant,
-        )
-        db.add(result)
-        try:
-            db.commit()
-            db.refresh(result)
-        except IntegrityError:
-            db.rollback()
-            existing = (
-                db.query(DiagnosticResult)
-                .filter(
-                    DiagnosticResult.student_id == student_id,
-                    DiagnosticResult.course_id == course_id,
-                )
-                .first()
+            result = existing
+        else:
+            result = DiagnosticResult(
+                student_id=student_id,
+                course_id=course_id,
+                answers=answers,
+                profile=profile,
+                modality_scores=modality_scores,
+                dominant_modality=dominant,
             )
-            if existing:
+            db.add(result)
+            try:
+                db.commit()
+                db.refresh(result)
+            except IntegrityError:
+                db.rollback()
+                existing = (
+                    db.query(DiagnosticResult)
+                    .filter(
+                        DiagnosticResult.student_id == student_id,
+                        DiagnosticResult.course_id == course_id,
+                    )
+                    .first()
+                )
+                if existing is None:
+                    raise
                 existing.answers = answers
                 existing.profile = profile
                 existing.modality_scores = modality_scores
@@ -208,8 +237,11 @@ def save_diagnostic(
                 existing.completed_at = datetime.now(timezone.utc)
                 db.commit()
                 db.refresh(existing)
-                return existing
-            raise
+                result = existing
+    try:
+        _registrar_diagnostico_en_runtime(student_id, course_id, answers)
+    except Exception:  # noqa: BLE001
+        logger.warning("No se pudo registrar el diagnóstico en el runtime", exc_info=True)
     return result
 
 
