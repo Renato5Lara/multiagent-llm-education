@@ -6,6 +6,7 @@ unifica vía `cerrar_sesion`. El Boundary autora el fact, jamás un claim
 from __future__ import annotations
 
 from runtime.boundary.inbound.dto import PeticionHechoDelMundo
+from runtime.boundary.inbound.productores import productor_diagnostico_activo
 from runtime.boundary.outbound.entregas import Entrega, proyectar_entrega
 from runtime.engine.checkpoint import AlmacenMemoria, AlmacenTransiciones
 from runtime.engine.graph.walkthrough import ejecutar_walkthrough
@@ -37,6 +38,7 @@ def registrar_hecho(
         almacen,
         peticion.identidad,
         hechos_del_mundo=(intent,),
+        productor_diagnostico=productor_diagnostico_activo(),
         cerrar_sesion=peticion.cerrar_sesion,
         almacen_memoria=almacen_memoria,
         urgente=peticion.urgente,
