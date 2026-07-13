@@ -40,6 +40,7 @@ from runtime.kernel.deliberation.mecanica import (
     convocar,
     tension_bloqueante,
 )
+from runtime.kernel.deliberation.politica import POLITICAS
 from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_fact
 from runtime.kernel.state.entries import (
     Capacidad,
@@ -111,7 +112,7 @@ class TestTensionCanonica1_AvanzarOReforzar_D2Real:
         producía `tension_bloqueante()` antes de clasificar D1/D2: Parte
         B no cambia ni un bit de la resolución, solo la clasifica."""
         estado = self._estado_con_tension_real()
-        intent = convocar(estado)
+        intent = convocar(estado, POLITICAS["v1"])
         assert intent is not None
         assert intent.operacion == "registrar_deliberacion"
         resultado = intent.argumentos["resultado"]

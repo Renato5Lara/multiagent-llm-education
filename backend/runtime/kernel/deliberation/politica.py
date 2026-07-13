@@ -18,8 +18,9 @@ cambia todavía (RFC-0006/1 no lo toca; eso es RFC-0006/3).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Mapping
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +62,24 @@ class Politica:
     productores actuales emiten hoy (esos podrían cambiar; la prueba
     por A1 no)."""
 
+    delta: Decimal = Decimal("0")
+    """Umbral de discriminación (RFC-0006 §4, Parte D): una tensión solo
+    se resuelve si el margen entre el ganador y su rival lo alcanza —
+    `margen < delta` es Parte E (aplazamiento/decisión provisional, no
+    implementada todavía; `convocar()` simplemente no resuelve nada en
+    ese caso). `delta = Decimal("0")` para `"v1"` es el mínimo posible:
+    el margen entre dos claims nunca es negativo (el ganador se define
+    como el de mayor puntaje), así que `margen >= 0` siempre se cumple
+    — la rama de margen insuficiente queda estructuralmente
+    inalcanzable bajo v1, misma prueba matemática que `theta`."""
+
+    pesos_asunto: Mapping[str, Decimal] = field(default_factory=dict)
+    """Peso pedagógico por asunto (RFC-0006 §4, D2: "puntaje = confianza
+    efectiva × peso de política pedagógica para ese asunto"). Un asunto
+    sin entrada usa peso 1 (neutro — no amplifica ni atenúa). Vacío para
+    `"v1"`: todo asunto usa peso 1, así que D2 se reduce a comparar `ce`
+    directamente, igual que D1."""
+
     def __post_init__(self) -> None:
         for nombre, peso in (
             ("peso_refuerzo", self.peso_refuerzo),
@@ -74,6 +93,19 @@ class Politica:
                 f"theta debe estar en [0, 1] — se compara contra ce, que "
                 f"A1 acota a ese mismo rango: theta={self.theta}"
             )
+        if not (Decimal("0") <= self.delta <= Decimal("1")):
+            raise ValueError(
+                f"delta debe estar en [0, 1] — es un margen entre dos "
+                f"puntajes que A1 acota a ese mismo rango: delta={self.delta}"
+            )
+        for asunto, peso in self.pesos_asunto.items():
+            if not (Decimal("0") <= peso <= Decimal("1")):
+                raise ValueError(
+                    f"pesos_asunto[{asunto!r}] debe estar en [0, 1] — es un "
+                    f"factor que solo puede atenuar ce, nunca amplificarlo "
+                    f"por encima de 1 (INV-7 exige Resuelta.confianza en "
+                    f"[0,1]): {peso}"
+                )
 
 
 POLITICAS: dict[str, Politica] = {
@@ -82,6 +114,8 @@ POLITICAS: dict[str, Politica] = {
         peso_refutacion=Decimal("0"),
         peso_decaimiento=Decimal("0"),
         theta=Decimal("0"),
+        delta=Decimal("0"),
+        pesos_asunto={},
     ),
 }
 

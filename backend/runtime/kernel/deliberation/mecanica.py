@@ -1,20 +1,19 @@
-"""Convocatoria y resolución mínimas (RFC-0006 §3–§4; política politica-v1).
+"""Convocatoria y resolución (RFC-0006 §3–§4; política politica-v1).
 
-Todo aquí es función pura del estado (P12): sin reloj, sin azar, sin LLM.
-La regla de politica-v1 — `mayor-confianza-declarada` — queda registrada
-por nombre en cada resolución (INV-7); los desempates son deterministas
-(orden textual del id).
-
-`tension_bloqueante()` clasifica D1/D2 (RFC-0006 §3, CONCEPT-0002 §1;
-ROADMAP-RFC-0006 Parte B) — pero `convocar()` todavía resuelve ambas
-igual (`REGLA_POLITICA_V1`): distinguir el tipo sin resolver distinto
-es exactamente el alcance de esta pieza; la resolución por tipo (D1 por
-margen δ, D2 por peso de política) es Parte D, no aquí.
+Todo aquí es función pura de `(estado, política)` (P12): sin reloj, sin
+azar, sin LLM. `tension_bloqueante()` clasifica D1/D2 (RFC-0006 §3,
+CONCEPT-0002 §1; Parte B). `convocar()` resuelve por tipo (RFC-0006 §4,
+Parte D): D1 por `ce` directo, D2 por `ce × peso de política` — la
+regla de politica-v1, `mayor-confianza-declarada`, queda registrada por
+nombre en cada resolución (INV-7); los desempates son deterministas
+(orden textual del id). `derivar_decision_directa()` deriva decisión de
+una propuesta única bajo el umbral θ (RFC-0006 §3, D3; Parte C).
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
+from decimal import Decimal
 
 from runtime.kernel.deliberation.confianza import calcular_confianza_efectiva
 from runtime.kernel.deliberation.politica import Politica
@@ -56,17 +55,42 @@ def tension_bloqueante(
     return None
 
 
-def convocar(estado: LearningState) -> TransitionIntent | None:
-    """Resuelve la tensión bloqueante bajo politica-v1 y propone el episodio.
-    Ignora `tipo` deliberadamente: D1 y D2 se resuelven igual hasta
-    Parte D (ROADMAP-RFC-0006) — clasificar sin resolver distinto es el
-    alcance exacto de Parte B."""
+def convocar(estado: LearningState, politica: Politica) -> TransitionIntent | None:
+    """Resuelve la tensión bloqueante por tipo (RFC-0006 §4, Parte D):
+    D1 (interpretativo) compara `ce` directamente; D2 (prescriptivo)
+    pondera `ce × peso de política pedagógica del asunto`
+    (`politica.pesos_asunto`, neutro=1 si el asunto no está registrado).
+    El ganador es el de mayor puntaje; si el margen sobre el rival no
+    alcanza `politica.delta`, NO se resuelve — margen insuficiente es
+    Parte E (aplazamiento/decisión provisional, no implementada
+    todavía). `Resuelta.confianza` guarda el `ce` crudo del ganador, no
+    el puntaje ponderado — así siempre respeta [0,1] (INV-7) sin
+    importar el peso, y su significado ("cuánta confianza merece el
+    claim ganador") no cambia entre D1 y D2.
+
+    Bajo `"v1"` (delta=0, pesos_asunto vacío): el margen entre dos
+    puntajes nunca es negativo, así que `margen >= delta=0` siempre se
+    cumple — nunca se difiere. Y con todo peso neutro (=1), el puntaje
+    de D2 es literalmente `ce`, igual que D1 — la comparación se reduce
+    exactamente a "mayor ce gana", que para v1 (ce == confianza
+    declarada, RFC-0006/1) es matemáticamente `mayor-confianza-
+    declarada` — de ahí que `REGLA_POLITICA_V1` siga siendo el nombre
+    correcto para registrar, no solo el histórico."""
     tension = tension_bloqueante(estado)
     if tension is None:
         return None
-    _, _, participantes = tension
+    tipo, asunto, participantes = tension
     claims = [estado.buscar(ref) for ref in participantes]
-    ganador = max(claims, key=lambda c: (c.confianza, str(c.id)))
+    ces = {c.id: calcular_confianza_efectiva(c, estado, politica) for c in claims}
+    peso = politica.pesos_asunto.get(asunto, Decimal("1")) if tipo == "D2" else Decimal("1")
+    puntajes = {claim_id: ce * peso for claim_id, ce in ces.items()}
+
+    ordenados = sorted(claims, key=lambda c: (puntajes[c.id], str(c.id)), reverse=True)
+    ganador, rival = ordenados[0], ordenados[1]
+    margen = puntajes[ganador.id] - puntajes[rival.id]
+    if margen < politica.delta:
+        return None
+
     return TransitionIntent(
         productor="kernel",
         operacion="registrar_deliberacion",
@@ -75,7 +99,7 @@ def convocar(estado: LearningState) -> TransitionIntent | None:
             "resultado": Resuelta(
                 regla=REGLA_POLITICA_V1,
                 aceptados=(ganador.id,),
-                confianza=ganador.confianza,
+                confianza=ces[ganador.id],
             ),
         },
         base=estado.transicion,

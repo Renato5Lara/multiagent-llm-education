@@ -288,7 +288,8 @@ igual que las anteriores — nunca un PR de 10 partes junto):
 | RFC-0006/1 — Cimientos | 0 + A | `ce` calculable y testeado contra A1-A8, política versionada con un sitio real donde vivir. Sin cambios de comportamiento visible todavía. **CERRADO.** |
 | RFC-0006/2 — Detección y clasificación | B | D1 se detecta y clasifica por primera vez (inerte hoy — ningún productor la activa); la tensión D2 real (Remediar/Orientar) se preserva bit a bit. **CERRADO.** |
 | RFC-0006/3 — Propuesta única y θ | C | Una propuesta débil sin rival ya no deriva decisión sola — primer camino real de insuficiencia D3, Y corrige un bug real preexistente (INV-6): la rama `dominada=True` dejaba de llegar a Adaptar. **CERRADO.** |
-| RFC-0006/4 — Resolución completa | D + E (tras levantar el bloqueo de `ejecucion`) | `politica-v2` resuelve con margen real; aplazamiento y provisional existen de verdad. |
+| RFC-0006/4a — Resolución D1/D2 con margen | D | D1 por `ce`, D2 por `ce×peso` — margen δ real. **CERRADO** (solo Parte D; ver §8 — E se desacopló tras resolver que `estado.ejecucion` está muerto). |
+| RFC-0006/4b — Aplazamiento y decisión provisional | E | Pendiente — necesita resolver primero de dónde viene "urgencia" (no de `estado.ejecucion`, ver §8). |
 | RFC-0006/5 — Escalada y orden | F + G | S2 empieza a mostrar escaladas reales sin sembrado manual; H7 verificado. |
 | RFC-0006/6 — Cierre | H + I | Validación E2E completa, sembrado manual retirado, RFC-0006 cerrado. |
 
@@ -324,15 +325,14 @@ igual que las anteriores — nunca un PR de 10 partes junto):
    previó. Se documenta dentro del propio Engineering Gate de
    RFC-0006/1 — el "Contrato" (punto 3 del Gate) es donde se fija
    concretamente dónde vive la configuración versionada.
-2. **Parte E — Engineering Review dedicada, antes de esa parte, no
-   dentro de ella.** El vacío de `estado.ejecucion` (RFC-0004 §2) no se
-   resuelve sobre la marcha. Antes de abrir RFC-0006/4 (Resolución
-   completa, D+E — numeración corrida por la división de RFC-0006/2 en
-   2+3, ver §8) corre una revisión propia con su
-   propio objetivo: ¿qué representa `ejecucion`
-   realmente?, ¿quién lo escribe?, ¿quién lo consume?, ¿cuál es su
-   ciclo de vida (persistente o efímero)?, ¿qué invariantes debe
-   cumplir? Solo con esas respuestas se implementa "urgente" en Parte E.
+2. **Parte E — RESUELTO (2026-07-12, auditoría corta antes de RFC-0006/4a,
+   sin documento nuevo — ver §8).** `estado.ejecucion` nunca se usó; su
+   propósito original (RFC-0004 §5, interrupción pendiente) ya lo
+   resuelve HITL por otro camino (`Escalada`+S2). "Urgencia" (RFC-0006
+   §4) es información del Boundary (¿hay estudiante esperando en vivo?),
+   no del Kernel — Parte E la recibirá como parámetro externo, igual
+   que `politica`, nunca leyendo `estado.ejecucion`. Parte D (RFC-0006/4a)
+   no la necesitaba en absoluto y ya está cerrada sin tocar este campo.
 
 ## 6. Riesgo, dependencias y tamaño por parte
 
@@ -461,4 +461,32 @@ matemática vía A1 (`ce >= 0` siempre), no un valor empírico. Efecto
 colateral encontrado durante la implementación: 19 archivos de test
 tenían `version_politica="politica-v1"`, nunca antes validado —
 corregido a `"v1"`, el valor real.
+
+### RFC-0006/4a — Resolución D1/D2 con margen δ (Parte D) — CERRADO
+
+`Politica.delta` + `Politica.pesos_asunto`; `convocar()` resuelve D1 por
+`ce` directo y D2 por `ce×peso`, difiere si el margen no alcanza δ (D2
+del margen es literalmente el gate; el aplazamiento real es Parte E,
+sin construir). 307/307 tests, `runtime_completo.py` 9/9 mismo shape.
+`Resuelta.confianza` guarda el `ce` crudo del ganador, nunca el puntaje
+ponderado (evita violar el rango [0,1] de INV-7 si un peso > 1 se
+registrara algún día). Detalle: `mecanica.py`,
+`tests/runtime/deliberation/test_parteD_resolucion_margen.py`.
+
+Antes de escribir código: auditoría corta (no un documento nuevo,
+resuelta en el chat) de `estado.ejecucion` — su propósito original
+(RFC-0004 §5, tracking de interrupción pendiente) ya lo resuelve HITL
+por otro camino (`Escalada` + S2), y "urgencia" (RFC-0006 §4, la Parte
+E que falta) es información que solo tiene el Boundary (¿hay un
+estudiante esperando en vivo?), no el Kernel — no debería derivarse de
+`estado.ejecucion`. Decisión: desacoplar D de E; D no necesita
+urgencia en absoluto. E queda pendiente, con esta pregunta ya resuelta
+para cuando se abra.
+
+Hallazgo de diseño (no bug): un peso por asunto (`pesos_asunto`)
+pondera a TODOS los rivales de ese asunto por igual — matemáticamente
+no puede cambiar quién gana entre dos rivales directos (escalar dos
+puntajes por la misma constante preserva su orden). Sí cambia si el
+margen escalado alcanza δ. Su uso real (desempatar prioridad ENTRE
+asuntos distintos) es Parte G (regla de la raíz), no esta pieza.
 

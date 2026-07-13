@@ -81,8 +81,8 @@ def _nodo_productor(producir: Callable) -> Callable:
     return nodo
 
 
-def _nodo_deliberar(grafo: EstadoGrafo) -> dict:
-    intent = convocar(grafo["estado"])
+def _nodo_deliberar(grafo: EstadoGrafo, politica: Politica) -> dict:
+    intent = convocar(grafo["estado"], politica)
     return {"intents": (intent,) if intent else ()}
 
 
@@ -302,7 +302,7 @@ def _construir(
     grafo.add_node("diagnosticar", _nodo_productor(productor_diagnostico))
     grafo.add_node("remediar", _nodo_productor(productor_remediar))
     grafo.add_node("orientar", _nodo_productor(productor_orientar))
-    grafo.add_node("deliberar", _nodo_deliberar)
+    grafo.add_node("deliberar", lambda g: _nodo_deliberar(g, politica))
     grafo.add_node("decidir", lambda g: _nodo_decidir(g, politica))
     grafo.add_node("validar", _nodo_productor(productor_validar))
     grafo.add_node("modelar", _nodo_productor(productor_modelar))
