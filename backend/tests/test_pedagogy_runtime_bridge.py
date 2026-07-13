@@ -148,3 +148,77 @@ def test_no_incluye_estudiantes_inactivos(db):
 
     resultado = sugerir_prioridad_semanal(db, course_id)
     assert resultado.estudiantes_totales == 0  # no cuenta al abandonado
+
+
+# ── El plan semanal se adapta con la evidencia real del curso ────────
+
+
+class TestAdaptiveLearningDesdeRuntime:
+    """`AdaptiveLearning.run` deriva de `SugerenciaSemanal` (evidencia
+    agregada del Runtime), no de un perfil sintético del docente."""
+
+    def _data(self, topic="Condicionales", bloom=4):
+        from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
+
+        return WeeklyPedagogicalPlanCreate(
+            week_number=1, topic=topic, objectives=["objetivo"],
+            bloom_target=bloom, pedagogical_style="constructivista",
+            pedagogical_intention="reforzar", preferred_modality="visual",
+        )
+
+    def _sugerencia(self, reforzar, avanzar, competencia="condicionales"):
+        from app.services.pedagogy_runtime_bridge import (
+            PrioridadAsunto,
+            SugerenciaSemanal,
+        )
+
+        return SugerenciaSemanal(
+            estudiantes_totales=reforzar + avanzar,
+            estudiantes_con_evidencia=reforzar + avanzar,
+            prioridades=(
+                PrioridadAsunto(
+                    competencia=competencia,
+                    estudiantes_reforzar=reforzar,
+                    estudiantes_avanzar=avanzar,
+                ),
+            ),
+            competencia_sugerida=competencia if reforzar else None,
+            bloom_target_sugerido=2 if reforzar else None,
+        )
+
+    def test_mayoria_reforzar_baja_el_bloom_y_cita_conteos_reales(self):
+        from app.services.weekly_pedagogy_service import AdaptiveLearning
+
+        plan = AdaptiveLearning().run(self._data(bloom=4), sugerencia=self._sugerencia(3, 1))
+        assert plan["bloom_target"] == 2
+        assert plan["bloom_adjusted"] is True
+        r = plan["adaptation_rationale"]
+        assert r["fuente"] == "runtime"
+        assert r["estudiantes_reforzar"] == 3
+        assert r["estudiantes_avanzar"] == 1
+        assert r["competencia_observada"] == "condicionales"
+        assert "pausa de reflexion y consolidacion" in plan["scaffolding"]
+
+    def test_mayoria_avanzar_conserva_el_bloom_configurado(self):
+        from app.services.weekly_pedagogy_service import AdaptiveLearning
+
+        plan = AdaptiveLearning().run(self._data(bloom=4), sugerencia=self._sugerencia(1, 3))
+        assert plan["bloom_target"] == 4
+        assert plan["bloom_adjusted"] is False
+
+    def test_sin_sugerencia_no_ajusta_nada(self):
+        from app.services.weekly_pedagogy_service import AdaptiveLearning
+
+        plan = AdaptiveLearning().run(self._data(bloom=3), sugerencia=None)
+        assert plan["bloom_target"] == 3
+        assert plan["adaptation_rationale"]["estudiantes_con_evidencia"] == 0
+
+    def test_tema_sin_evidencia_usa_el_paisaje_global_del_curso(self):
+        from app.services.weekly_pedagogy_service import AdaptiveLearning
+
+        plan = AdaptiveLearning().run(
+            self._data(topic="Recursividad", bloom=4),
+            sugerencia=self._sugerencia(4, 0, competencia="bucles"),
+        )
+        assert plan["bloom_target"] == 2  # el curso entero pide refuerzo
+        assert plan["adaptation_rationale"]["competencia_observada"] is None
