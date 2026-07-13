@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.agents.research_agent import ResearchAgent
+from app.services.research_agent import ResearchAgent
 from app.db.uow import UnitOfWork
 from app.integrations.tavily.schemas import AggregatedResearch
 

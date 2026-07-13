@@ -31,7 +31,7 @@ from app.core.config import settings
 from app.llm.config import LLMConfig
 from app.llm.service import LLMService
 
-from app.agents.research_agent import ResearchAgent
+from app.services.research_agent import ResearchAgent
 from app.memory.narrative_continuity import (
     publish_narrative_persona,
     query_narrative_persona,

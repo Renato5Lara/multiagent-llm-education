@@ -125,7 +125,7 @@ class TestNarrativeContinuity:
 
 @pytest.mark.asyncio
 async def test_research_agent_publishes_memory(db):
-    from app.agents.research_agent import ResearchAgent
+    from app.services.research_agent import ResearchAgent
 
     store = memory_store_from_session(db)
     agent = ResearchAgent(shared_memory_store=store)
@@ -152,7 +152,7 @@ async def test_research_agent_publishes_memory(db):
 
 @pytest.mark.asyncio
 async def test_research_agent_no_memory_when_no_store(db):
-    from app.agents.research_agent import ResearchAgent
+    from app.services.research_agent import ResearchAgent
 
     agent = ResearchAgent(shared_memory_store=None)
     state = await agent.analyze({

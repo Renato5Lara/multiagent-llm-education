@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.agents.programmer_agent import GeneratedEducationalCode, ProgrammerAgent
+from app.services.programmer_agent import GeneratedEducationalCode, ProgrammerAgent
 from app.sandbox import SandboxRequest, SandboxResult, SandboxRunner, SandboxStatus
 
 

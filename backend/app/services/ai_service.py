@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Optional
 
-from app.agents.prompts import (
+from app.services.llm_prompts import (
     DIAGNOSTIC_ANALYSIS_PROMPT,
     DIAGNOSTIC_SYSTEM_PROMPT,
     TUTOR_CHAT_PROMPT,

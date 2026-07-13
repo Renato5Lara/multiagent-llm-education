@@ -18,8 +18,8 @@ import uuid
 
 from sqlalchemy.orm import Session
 
-from app.agents.research_agent import ResearchAgent
-from app.agents.reviewer_agent import ReviewerAgent
+from app.services.research_agent import ResearchAgent
+from app.services.reviewer_agent import ReviewerAgent
 from app.memory.shared_memory import SharedMemoryStore
 from app.memory.pedagogical_memory import PedagogicalMemoryService
 from app.memory.narrative_continuity import query_narrative_persona

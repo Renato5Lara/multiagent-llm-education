@@ -23,7 +23,7 @@ import json
 import logging
 from typing import Any
 
-from app.agents.pedagogical_identity import PEDAGOGICAL_IDENTITY
+from app.services.pedagogical_identity import PEDAGOGICAL_IDENTITY
 
 logger = logging.getLogger(__name__)
 

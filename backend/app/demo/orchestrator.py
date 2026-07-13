@@ -8,7 +8,7 @@ from typing import Any
 
 import httpx
 
-from app.agents.reviewer_agent import ReviewerAgent
+from app.services.reviewer_agent import ReviewerAgent
 from app.core.consensus import ConsensusEngine, ConsensusVote, VoteDecision
 from app.core.trust import TrustSystem
 from app.demo.events import DemoEventEmitter

@@ -19,7 +19,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.agents.research_agent import ResearchAgent
+from app.services.research_agent import ResearchAgent
 from app.memory.narrative_continuity import (
     NARRATIVE_MEMORY_TYPE,
     publish_narrative_persona,

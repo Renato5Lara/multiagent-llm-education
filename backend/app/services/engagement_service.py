@@ -20,7 +20,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.agents.engagement_generator_agent import engagement_generator_agent
+from app.services.engagement_generator import engagement_generator_agent
 from app.models.engagement import (
     EngagementEvent,
     EngagementInteraction,

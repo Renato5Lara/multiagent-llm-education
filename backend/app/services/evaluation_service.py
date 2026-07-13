@@ -9,13 +9,117 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.agents.nodes import evaluation_generator
-from app.agents.schemas import DiagnosticAnswers
 from app.models.evaluation_attempt import EvaluationAttempt
-from app.models.learning_objective import LearningObjective
 from app.models.student_progress import LearningPath, PathModule
 
 logger = logging.getLogger(__name__)
+
+
+# Plantillas deterministas por nivel de Bloom (reubicadas desde
+# app/agents/nodes.py al retirar esa capa del flujo del estudiante — el
+# "generador" nunca fue un agente ni un LLM: la primera opción es
+# siempre la correcta, comportamiento preservado tal cual).
+_BLOOM_QUESTION_TEMPLATES: dict[int, list[dict]] = {
+    1: [
+        {
+            "question": "¿Cuál es el concepto principal de '{title}'?",
+            "options": [
+                "Una definición básica del tema",
+                "Un análisis avanzado",
+                "Una aplicación práctica",
+                "Una evaluación crítica",
+            ],
+        },
+        {
+            "question": "¿Qué característica define a '{title}'?",
+            "options": [
+                "Su definición fundamental",
+                "Su aplicación en el mundo real",
+                "Su evaluación comparativa",
+                "Su creación desde cero",
+            ],
+        },
+    ],
+    2: [
+        {
+            "question": "Explica con tus palabras qué significa '{title}'",
+            "options": [
+                "Resumir la idea central sin copiar texto",
+                "Repetir la definición textual",
+                "Solo dar un ejemplo sin explicación",
+                "Describir temas no relacionados",
+            ],
+        },
+    ],
+    3: [
+        {
+            "question": "¿Cómo se aplica '{title}' en un caso práctico?",
+            "options": [
+                "Identificando el problema y usando el concepto para resolverlo",
+                "Solo memorizando la teoría",
+                "Ignorando el contexto real",
+                "Copiando ejemplos sin adaptación",
+            ],
+        },
+    ],
+    4: [
+        {
+            "question": "Descompón '{title}' en sus partes fundamentales",
+            "options": [
+                "Identificar componentes y sus relaciones",
+                "Solo describir el concepto general",
+                "Dar un ejemplo superficial",
+                "Repetir la definición básica",
+            ],
+        },
+    ],
+    5: [
+        {
+            "question": "Evalúa la efectividad de '{title}' en un escenario real",
+            "options": [
+                "Analizando resultados y comparando alternativas",
+                "Solo describiendo el concepto",
+                "Aplicando sin crítica",
+                "Recordando la definición",
+            ],
+        },
+    ],
+    6: [
+        {
+            "question": "Diseña una solución original usando '{title}'",
+            "options": [
+                "Proponer un enfoque nuevo que integre el concepto",
+                "Repetir una solución existente",
+                "Solo teorizar sin aplicación",
+                "Ignorar el concepto principal",
+            ],
+        },
+    ],
+}
+
+_BLOOM_QUESTION_FALLBACK = [
+    {
+        "question": "Explica el concepto de '{title}'",
+        "options": [
+            "Con una descripción clara y ejemplos",
+            "Solo con la definición",
+            "Sin ejemplos prácticos",
+            "Con terminología compleja",
+        ],
+    },
+]
+
+
+def _generate_questions(title: str, bloom_level: int) -> list[dict]:
+    plantillas = _BLOOM_QUESTION_TEMPLATES.get(bloom_level, _BLOOM_QUESTION_FALLBACK)
+    return [
+        {
+            "question": p["question"].format(title=title),
+            "options": list(p["options"]),
+            "correct": 0,
+        }
+        for p in plantillas
+    ]
 
 
 def strip_correct_answers(questions: list[dict]) -> list[dict]:
@@ -62,42 +166,13 @@ def start_evaluation(
             .first()
         )
 
-    objectives = (
-        db.query(LearningObjective)
-        .filter(LearningObjective.course_id == course_id)
-        .all()
+    # Preguntas SOLO del módulo evaluado — plantillas deterministas por
+    # Bloom, generadas directamente (sin el "state" del grafo legacy que
+    # este servicio armaba solo para invocar app/agents/nodes.py).
+    questions = _generate_questions(
+        title=available_module.title if available_module else "Evaluación",
+        bloom_level=available_module.bloom_level if available_module else 3,
     )
-
-    state = {
-        "diagnostic_answers": DiagnosticAnswers(answers={}),
-        "course_objectives": objectives,
-        "course_resources": [],
-        "learning_profile": None,
-        "profile_recommendations": None,
-        "learning_path_plan": {
-            "modules": [
-                {
-                    "title": available_module.title if available_module else "Evaluación",
-                    "description": available_module.description if available_module else "",
-                    "order": available_module.order if available_module else 1,
-                    "bloom_level": available_module.bloom_level if available_module else 3,
-                    "recommended_resource_types": [],
-                    "estimated_duration": "20 min",
-                }
-            ]
-        },
-        "resource_recommendations": None,
-        "evaluation_plan": None,
-    }
-
-    # Generar preguntas SOLO del módulo evaluado. Se llama al nodo directamente
-    # en vez de run_agents porque el grafo completo re-ejecuta path_planner, que
-    # regenera learning_path_plan desde los objetivos del curso y descarta el
-    # plan de un módulo construido arriba → las preguntas saldrían del primer
-    # objetivo, no del módulo disponible (divergía de attempt.module_id).
-    result = evaluation_generator(state)
-    eval_plan = result.get("evaluation_plan", [])
-    questions = eval_plan[0]["questions"] if eval_plan else []
 
     attempt = EvaluationAttempt(
         student_id=student_id,

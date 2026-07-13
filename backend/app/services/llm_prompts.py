@@ -1,4 +1,4 @@
-from app.agents.pedagogical_identity import PEDAGOGICAL_IDENTITY
+from app.services.pedagogical_identity import PEDAGOGICAL_IDENTITY
 
 DIAGNOSTIC_SYSTEM_PROMPT = """Eres un analista educativo experto en pedagogía y taxonomía de Bloom.
 Evalúa las respuestas del test diagnóstico de un estudiante y genera un perfil académico completo.
