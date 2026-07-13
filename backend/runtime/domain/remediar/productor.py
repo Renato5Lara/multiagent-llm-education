@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -18,10 +19,11 @@ ASUNTO_SIGUIENTE_PASO = "siguiente-paso(sesion)"
 
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
-    ya_propuse = any(
-        c.autor is Capacidad.REMEDIAR and c.vigencia.vigente for c in estado.claims
-    )
-    if ya_propuse:
+    # "Ya dije mi palabra sobre este suelo" (ver domain/shared/
+    # propuestas.py): re-propone solo si su palabra previa cayó con su
+    # respaldo, o si el vencedor que la descartó cayó después — jamás
+    # por el mero hecho de haber perdido una deliberación (anti-churn).
+    if palabra_en_pie(estado, Capacidad.REMEDIAR, ASUNTO_SIGUIENTE_PASO):
         return ()
     for claim in estado.claims:
         if (

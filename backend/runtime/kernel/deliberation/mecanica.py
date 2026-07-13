@@ -22,6 +22,8 @@ from runtime.kernel.deliberation.politica import Politica
 from runtime.kernel.state.entries import (
     Aplazada,
     ClaimEntry,
+    DecisionEntry,
+    DeliberacionEntry,
     EntryId,
     Resuelta,
     ResultadoDeliberacion,
@@ -175,7 +177,12 @@ def convocar(
 
 
 def derivar_decision(estado: LearningState) -> TransitionIntent | None:
-    """Deriva la decisión de la primera deliberación resuelta sin decisión."""
+    """Deriva la decisión de la primera deliberación resuelta sin
+    decisión — SOLO si aceptó una PROPUESTA (INV-6: "las decisiones
+    derivan de propuestas"). Una resolución D1 (interpretaciones en
+    tensión) refina el paisaje, jamás deriva decisión: su efecto es la
+    interpretación ganadora + la cascada sobre lo respaldado en la
+    perdedora — el ciclo continúa por re-propuesta, no por derivación."""
     con_decision = {d.origen for d in estado.decisiones}
     for deliberacion in estado.deliberaciones:
         if not isinstance(deliberacion.resultado, Resuelta):
@@ -183,6 +190,8 @@ def derivar_decision(estado: LearningState) -> TransitionIntent | None:
         if deliberacion.id in con_decision:
             continue
         aceptado = estado.buscar(deliberacion.resultado.aceptados[0])
+        if not isinstance(aceptado, ClaimEntry) or aceptado.tipo is not TipoClaim.PROPUESTA:
+            continue
         return TransitionIntent(
             productor="kernel",
             operacion="registrar_decision",
@@ -215,7 +224,11 @@ def derivar_decision_directa(
     asunto con ≥2 es tensión (`tension_bloqueante`, ya resuelto por
     `convocar`/`derivar_decision`, con prioridad: `enrutar()` solo llama
     a esta función cuando ya no hay tensión bloqueante ni deliberación
-    pendiente). Si `ce < theta`: insuficiencia (D3) — no deriva nada;
+    pendiente). Un asunto cuya decisión vigente conserva su suelo (el
+    claim del que deriva sigue vigente) tampoco deriva de nuevo — solo
+    cuando la cascada (2026-07-13) tumbó ese suelo, la propuesta única
+    fresca reemplaza a la decisión obsoleta (y `registrar_decision` la
+    supersede). Si `ce < theta`: insuficiencia (D3) — no deriva nada;
     el "camino de evidencia" que RFC-0006 §3 describe (enrutar hacia
     Evaluar) no es un nodo del grafo hoy (Evaluar es entrada externa,
     E2 — RFC-0010), así que la insuficiencia se traduce, por ahora, en
@@ -223,6 +236,26 @@ def derivar_decision_directa(
     con más evidencia (mismo patrón ya documentado en
     `ejecutar_walkthrough`: "`END` sin evidencia suficiente aún")."""
     con_decision = {d.origen for d in estado.decisiones}
+    asuntos_con_decision_firme = set()
+    for decision in estado.decisiones:
+        if not decision.vigencia.vigente:
+            continue
+        origen = estado.buscar(decision.origen)
+        if isinstance(origen, DeliberacionEntry) and isinstance(
+            origen.resultado, Resuelta
+        ):
+            origen = estado.buscar(origen.resultado.aceptados[0])
+        if isinstance(origen, ClaimEntry) and origen.vigencia.vigente:
+            asuntos_con_decision_firme.add(decision.asunto)
+    def _ejecuta_una_decision(claim: ClaimEntry) -> bool:
+        """Un claim cuyo respaldo referencia una DECISIÓN no propone un
+        siguiente paso: EJECUTA uno ya decidido (la adaptación de
+        Adaptar, RFC-0002 R7). Derivar una decisión de él crearía
+        cadenas decisión→claim→decisión sin deliberación de por medio."""
+        return any(
+            isinstance(estado.buscar(ref), DecisionEntry) for ref in claim.respaldo
+        )
+
     por_asunto: dict[str, list[ClaimEntry]] = defaultdict(list)
     for claim in _claims_vigentes_de(estado, TipoClaim.PROPUESTA):
         por_asunto[claim.asunto].append(claim)
@@ -230,8 +263,12 @@ def derivar_decision_directa(
         candidatos = por_asunto[asunto]
         if len(candidatos) != 1:
             continue
+        if asunto in asuntos_con_decision_firme:
+            continue
         claim = candidatos[0]
         if claim.id in con_decision:
+            continue
+        if _ejecuta_una_decision(claim):
             continue
         ce = calcular_confianza_efectiva(claim, estado, politica)
         if ce < politica.theta:

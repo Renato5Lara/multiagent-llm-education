@@ -19,7 +19,7 @@ import dataclasses
 from decimal import Decimal
 
 from runtime.kernel.events import DeliberacionRegistrada, EntradaSupersedida
-from runtime.kernel.reducers.comunes import marcar_supersedida, rechazo
+from runtime.kernel.reducers.comunes import cascada_supersede, marcar_supersedida, rechazo
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
 from runtime.kernel.state.entries import (
     Aplazada,
@@ -149,14 +149,25 @@ def registrar_deliberacion(
     claims = estado.claims
     eventos: tuple = ()
     if isinstance(resultado, Resuelta):
+        descartados: set = set()
         for rival in participantes:
             if rival not in resultado.aceptados:
                 claims = marcar_supersedida(claims, rival, delib_id)
+                descartados.add(rival)
                 eventos += (
                     EntradaSupersedida(
                         transicion=indice, entry_id=rival, por=delib_id
                     ),
                 )
+        # Cascada (decisión del tesista 2026-07-13, ver comunes.py):
+        # los claims vigentes respaldados en los descartados caen con
+        # ellos — una propuesta cuyo suelo fue corregido no sigue
+        # compitiendo con confianza declarada intacta.
+        claims, caidos = cascada_supersede(claims, descartados, delib_id)
+        eventos += tuple(
+            EntradaSupersedida(transicion=indice, entry_id=cid, por=delib_id)
+            for cid in caidos
+        )
 
     nuevo_estado = dataclasses.replace(
         estado,

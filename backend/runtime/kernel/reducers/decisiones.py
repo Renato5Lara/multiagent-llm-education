@@ -16,7 +16,12 @@ import dataclasses
 from typing import Any, Mapping
 
 from runtime.kernel.events import DecisionRegistrada, EntradaSupersedida
-from runtime.kernel.reducers.comunes import marcar_supersedida, norma_de, rechazo
+from runtime.kernel.reducers.comunes import (
+    cascada_supersede,
+    marcar_supersedida,
+    norma_de,
+    rechazo,
+)
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
 from runtime.kernel.state.entries import (
     ClaimEntry,
@@ -113,6 +118,7 @@ def registrar_decision(
     # Entrega/S1 y la deuda abierta serían ambiguas). La historia queda
     # intacta: la anterior se marca superseded-por, jamás se borra.
     decisiones = estado.decisiones
+    claims = estado.claims
     eventos: tuple = ()
     for previa in decisiones:
         if previa.asunto == asunto and previa.vigencia.vigente:
@@ -122,9 +128,22 @@ def registrar_decision(
                     transicion=indice, entry_id=previa.id, por=decision.id
                 ),
             )
+            # Cascada (ver comunes.py): los claims vigentes respaldados
+            # en la decisión corregida (p. ej. la adaptación de Adaptar
+            # que la ejecutaba) caen con ella — la nueva decisión
+            # producirá su propia adaptación, nunca dos vigentes del
+            # mismo asunto de modalidad.
+            claims, caidos = cascada_supersede(claims, {previa.id}, decision.id)
+            eventos += tuple(
+                EntradaSupersedida(transicion=indice, entry_id=cid, por=decision.id)
+                for cid in caidos
+            )
 
     nuevo_estado = dataclasses.replace(
-        estado, decisiones=decisiones + (decision,), transicion=indice
+        estado,
+        claims=claims,
+        decisiones=decisiones + (decision,),
+        transicion=indice,
     )
     return Aplicado(
         estado=nuevo_estado,

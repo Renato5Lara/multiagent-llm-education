@@ -288,20 +288,11 @@ class TestValidarIntegradoAlFlujo:
         final = ejecutar_walkthrough(almacen, _identidad("s-validar-integrado"), hechos)
         estado = final["estado"]
 
-        # PR-5: Adaptar no necesita evidencia posterior — su disparador es
-        # la decisión misma ("reforzar" ya está en DISENO_POR_ACCION), así
-        # que corre ANTES que Validar (que sí espera el fact posterior).
-        adaptacion = next(
-            c for c in estado.claims if c.autor is Capacidad.ADAPTAR and c.vigencia.vigente
-        )
-        assert decision_id in adaptacion.respaldo
-        assert adaptacion.afirmacion["modalidad"] == "visual"
-
-        veredicto = next(
-            c
-            for c in estado.claims
-            if c.autor is Capacidad.VALIDAR and c.vigencia.vigente
-        )
+        # Validar corrió y validó la decisión original (funciono=True:
+        # 1 error después vs 3 antes) — el veredicto vive en la
+        # historia; su vigencia cayó después junto con la decisión que
+        # medía (cascada, 2026-07-13), jamás se borra (P14).
+        veredicto = next(c for c in estado.claims if c.autor is Capacidad.VALIDAR)
         assert veredicto.asunto == f"efecto({decision_id})"
         assert decision_id in veredicto.respaldo
         assert veredicto.afirmacion["funciono"] is True
@@ -309,34 +300,34 @@ class TestValidarIntegradoAlFlujo:
         decision = estado.buscar(decision_id)
         assert decision.estado_validacion is EstadoValidacion.VALIDADA
 
-        # PR-3: Modelar no necesita evidencia externa — su disparador es
-        # el propio veredicto de Validar, ya presente en esta misma
-        # invocación — así que se ejecuta a continuación sin intervención.
-        modelado = next(
-            c for c in estado.claims if c.autor is Capacidad.MODELAR and c.vigencia.vigente
-        )
+        modelado = next(c for c in estado.claims if c.autor is Capacidad.MODELAR)
         assert veredicto.id in modelado.respaldo
         assert modelado.afirmacion["competencia"] == "COMP-2"
         assert modelado.afirmacion["efecto_positivo"] is True
 
-        # El recorrido creció en cuatro transiciones exactas: Adaptar,
-        # Validar, Modelar (PR-5, PR-2, PR-3) + la interpretación del
-        # fact posterior por Diagnosticar (mapa completo, 2026-07-13:
-        # RFC-0002 R1 — TODA la evidencia evaluativa se interpreta, la
-        # re-evaluación tras remediar incluida; antes quedaba muda). La
-        # nueva interpretación (dominada=True, 1 error) convive con la
-        # original (dominada=False) como tensión D1 registrada en el
-        # paisaje — su re-deliberación es la mitad restante de Parte G.
-        interpretaciones_comp2 = [
-            c
-            for c in estado.claims
-            if c.autor is Capacidad.DIAGNOSTICAR
-            and c.vigencia.vigente
-            and c.asunto == "dominio(COMP-2)"
-        ]
-        assert len(interpretaciones_comp2) == 2
-        assert estado.transicion == 9
-        assert len(final["registros"]) == 9
+        # Ciclo adaptativo completo (2026-07-13): la re-evaluación
+        # posterior (1 error) se interpreta (mapa completo), gana la
+        # tensión D1 contra la interpretación original, la cascada
+        # retira la propuesta de Remediar cuyo suelo cayó, Orientar
+        # re-propone sobre el paisaje nuevo, y "reforzar" queda
+        # supersedida por "avanzar-con-andamiaje" — el sistema cambió
+        # de estrategia con la evidencia dentro de la misma invocación
+        # (CONCEPT-0002 §5: jamás reapertura, siempre entradas nuevas).
+        assert not decision.vigencia.vigente
+        decision_nueva = next(d for d in estado.decisiones if d.vigencia.vigente)
+        assert decision_nueva.contenido["accion"] == "avanzar-con-andamiaje"
+
+        adaptacion = next(
+            c for c in estado.claims if c.autor is Capacidad.ADAPTAR and c.vigencia.vigente
+        )
+        assert decision_nueva.id in adaptacion.respaldo
+        assert adaptacion.afirmacion["modalidad"] == "mixta"
+
+        # 5 sembradas + adaptación + veredicto + modelado +
+        # interpretación posterior + deliberación D1 + re-propuesta de
+        # Orientar + decisión nueva + re-adaptación = 13.
+        assert estado.transicion == 13
+        assert len(final["registros"]) == 13
 
     def test_sin_evidencia_posterior_el_recorrido_termina_igual_que_antes(
         self, esquema
@@ -484,15 +475,18 @@ class TestM4_PR1B_ReanudacionDeSesion:
         estado_2, registros_2 = final_2["estado"], final_2["registros"]
 
         # Las 8 transiciones previas se reconstruyeron, no se repitieron:
-        # mismos EntryId — nunca se reinterpreta la MISMA evidencia ni
-        # hay segunda deliberación. La evidencia NUEVA (el fact
-        # posterior) sí produce su propia interpretación (mapa completo,
-        # 2026-07-13: RFC-0002 R1) — de ahí 12, no 11.
-        assert estado_2.transicion == 12  # 8 + fact + validar + modelar + interpretación
-        assert len(registros_2) == 12
+        # mismos EntryId — nunca se reinterpreta la MISMA evidencia. La
+        # evidencia NUEVA completa el ciclo adaptativo (2026-07-13):
+        # fact + veredicto + modelado + interpretación + deliberación D1
+        # + re-propuesta de Orientar + decisión nueva + re-adaptación =
+        # 8 + 8 = 16.
+        assert estado_2.transicion == 16
+        assert len(registros_2) == 16
         assert registros_2[:8] == registros_1  # las primeras 8 no se re-persistieron
         assert verificar(identidad, registros_2) is None
 
+        # El conocimiento retrospectivo se conserva vigente (la cascada
+        # solo tumba propuestas): el veredicto midió un efecto real.
         veredicto = next(
             c for c in estado_2.claims if c.autor is Capacidad.VALIDAR and c.vigencia.vigente
         )
@@ -504,8 +498,13 @@ class TestM4_PR1B_ReanudacionDeSesion:
         )
         assert veredicto.id in modelado.respaldo
 
+        # La decisión original quedó VALIDADA y, después, supersedida
+        # por la nueva estrategia (avanzar) que la evidencia justificó.
         decision = estado_2.buscar(decision_id)
         assert decision.estado_validacion is EstadoValidacion.VALIDADA
+        assert not decision.vigencia.vigente
+        decision_nueva = next(d for d in estado_2.decisiones if d.vigencia.vigente)
+        assert decision_nueva.contenido["accion"] == "avanzar-con-andamiaje"
 
         # Las OCHO capacidades, en la misma sesión — la coexistencia que
         # antes era estructuralmente imposible en un solo recorrido.
@@ -610,7 +609,11 @@ class TestM4_PR2_ProyeccionDeCierre:
         final_2 = ejecutar_walkthrough(almacen_2, identidad, fact_posterior)
         estado_2 = final_2["estado"]
 
-        assert estado_2.salidas["deuda_abierta"] == ()
+        # La deuda abierta ya no queda vacía: el ciclo adaptativo
+        # (2026-07-13) reemplazó la decisión validada por la estrategia
+        # nueva (avanzar), que nace pendiente-de-validación — la deuda
+        # ES esa decisión nueva, exactamente una.
+        assert len(estado_2.salidas["deuda_abierta"]) == 1
         assert estado_2.salidas["modelo_propuesto"] == (
             {"competencia": "COMP-2", "efecto_positivo": True},
         )

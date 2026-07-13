@@ -25,6 +25,7 @@ from runtime.domain.modelar import producir as producir_modelado
 from runtime.domain.orientar import producir as producir_orientacion
 from runtime.domain.remediar import producir as producir_remediacion
 from runtime.domain.shared.causal import competencia_de_decision
+from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.domain.tutorizar import producir as producir_tutoria
 from runtime.domain.validar import producir as producir_validacion
 from runtime.domain.validar.productor import evidencia_de_validacion
@@ -118,8 +119,15 @@ def _decision_sin_adaptar(estado: LearningState) -> bool:
             c.autor is Capacidad.ADAPTAR and c.vigencia.vigente and decision.id in c.respaldo
             for c in estado.claims
         )
-        if not ya_adapto:
-            return True
+        if ya_adapto:
+            continue
+        # Paridad guardia/productor (mismo patrón PR-2..PR-5): el
+        # productor de Adaptar salta decisiones sin competencia
+        # derivable (`competencia_de_decision is None`) — rutear ahí
+        # ciclaría adaptar→aplicar→adaptar (bucle real, 2026-07-13).
+        if competencia_de_decision(estado, decision) is None:
+            continue
+        return True
     return False
 
 
@@ -200,10 +208,13 @@ def _evidencia_pendiente_de_diagnosticar(estado: LearningState) -> bool:
     telemetría: entradas E2 legítimas según RFC-0010), Diagnosticar no
     produce nada y el grafo ciclaba hasta `GraphRecursionError` (mismo
     patrón que ya cubren PR-2..PR-5 para los demás nodos)."""
+    # "Interpretado" es histórico, no de vigencia — mismo criterio que el
+    # productor (ver su comentario: reinterpretar un hecho cuya
+    # interpretación perdió una D1 oscilaría para siempre).
     interpretados = {
         ref
         for c in estado.claims
-        if c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+        if c.autor is Capacidad.DIAGNOSTICAR
         for ref in c.respaldo
     }
     return any(
@@ -217,21 +228,32 @@ def _evidencia_pendiente_de_diagnosticar(estado: LearningState) -> bool:
 def _interpretacion_pendiente_de_remediar(estado: LearningState) -> bool:
     """Guardia segura: mismo criterio de disparo que
     `domain.remediar.producir` — una interpretación vigente con
-    `dominada=False` que Remediar todavía no atendió. Evita rutear a
-    "remediar" cuando su propio contrato no dispararía (interpretación
-    con `dominada=True`, competencia ya dominada, nada que remediar),
-    lo que produciría un ciclo aplicar→enrutar sin avance — el mismo
-    riesgo que ya cubren las guardias de Validar/Modelar/Tutorizar/
-    Adaptar, aquí aplicado a Remediar."""
-    ya_propuso = any(
-        c.autor is Capacidad.REMEDIAR and c.vigencia.vigente for c in estado.claims
-    )
-    if ya_propuso:
+    `dominada=False` cuando Remediar no tiene palabra en pie
+    (`palabra_en_pie`, LA MISMA función que usa el productor — patrón
+    PR-2..PR-5). Evita rutear a "remediar" cuando su propio contrato no
+    dispararía, lo que produciría un ciclo aplicar→enrutar sin avance."""
+    if palabra_en_pie(estado, Capacidad.REMEDIAR, "siguiente-paso(sesion)"):
         return False
     return any(
         c.tipo is TipoClaim.INTERPRETACION
         and c.vigencia.vigente
         and c.afirmacion.get("dominada") is False
+        for c in estado.claims
+    )
+
+
+def _interpretacion_pendiente_de_orientar(estado: LearningState) -> bool:
+    """Guardia segura: mismo criterio que `domain.orientar.producir` —
+    una interpretación de dominio vigente ("dominada" en la afirmación,
+    la forma de Diagnosticar; los veredictos de Validar no cuentan),
+    cuando Orientar no tiene palabra en pie (misma función que el
+    productor)."""
+    if palabra_en_pie(estado, Capacidad.ORIENTAR, "siguiente-paso(sesion)"):
+        return False
+    return any(
+        c.tipo is TipoClaim.INTERPRETACION
+        and c.vigencia.vigente
+        and "dominada" in c.afirmacion
         for c in estado.claims
     )
 
@@ -242,28 +264,23 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
     programa pedagógico. `politica` llega desde RFC-0006/3 (Parte C,
     ROADMAP-RFC-0006) — antes, `enrutar` solo dependía del estado."""
     estado = grafo["estado"]
-    if estado.decisiones:
-        if _decision_sin_adaptar(estado):
-            return "adaptar"
-        if _decision_lista_para_validar(estado):
-            return "validar"
-        if _existe_veredicto_sin_modelar(estado):
-            return "modelar"
-        # Evidencia nueva posterior a la decisión (mapa completo,
-        # 2026-07-13): la sesión sigue CAPTURANDO señales (Tutorizar) e
-        # INTERPRETANDO evidencia (Diagnosticar) después de decidir —
-        # antes, la primera decisión congelaba ambas y un diagnóstico de
-        # 8 competencias dejaba 7 sin interpretar. Deliberadamente NO se
-        # cae a remediar/orientar/decidir: `registrar_decision` no
-        # supersede una decisión previa del mismo asunto, así que
-        # re-proponer aquí crearía una segunda decisión vigente sobre
-        # "siguiente-paso(sesion)" — la re-deliberación con evidencia
-        # nueva (CONCEPT-0002 §5) es la mitad restante de la Parte G.
-        if _existe_fact_evaluar_sin_tutorizar(estado):
-            return "tutorizar"
-        if _evidencia_pendiente_de_diagnosticar(estado):
-            return "diagnosticar"
-        return END
+    # Un solo camino, con o sin decisión previa (ciclo adaptativo
+    # continuo, 2026-07-13): la decisión no cierra el consenso — si la
+    # evidencia nueva corrige el paisaje (cascada: caen interpretación,
+    # propuestas y adaptación obsoletas), las capacidades re-proponen y
+    # el consenso reconvoca, y la decisión nueva supersede a la
+    # anterior. El orden de los chequeos ES el programa pedagógico:
+    # 1. ejecutar lo ya decidido (adaptar/validar/modelar);
+    # 2. cerrar el consenso pendiente (decidir/deliberar);
+    # 3. capturar e interpretar TODA la evidencia (regla de la raíz,
+    #    RFC-0006 §5: el mapa se completa antes de proponer);
+    # 4. proponer (remediar/orientar) y derivar (decidir).
+    if _decision_sin_adaptar(estado):
+        return "adaptar"
+    if _decision_lista_para_validar(estado):
+        return "validar"
+    if _existe_veredicto_sin_modelar(estado):
+        return "modelar"
     # Guardia segura (Parte E, mismo patrón "misma función que el nodo"
     # que derivar_decision_directa más abajo): una deliberación aplazada
     # o escalada no tiene decisión derivable — enrutarla a "decidir"
@@ -276,27 +293,11 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
         return "deliberar"
     if _existe_fact_evaluar_sin_tutorizar(estado):
         return "tutorizar"
-    # Regla de la raíz (RFC-0006 §5, CONCEPT-0002 §1): interpretar TODA
-    # la evidencia antes de proponer — las propuestas D2 se respaldan en
-    # interpretaciones D1; proponer con el mapa a medias haría que
-    # Remediar/Orientar eligieran respaldo sobre un paisaje incompleto.
     if _evidencia_pendiente_de_diagnosticar(estado):
         return "diagnosticar"
-    interpretaciones = [
-        c
-        for c in estado.claims
-        if c.tipo is TipoClaim.INTERPRETACION and c.vigencia.vigente
-    ]
-    if not interpretaciones:
-        return END
-    autores = {
-        c.autor
-        for c in estado.claims
-        if c.tipo is TipoClaim.PROPUESTA and c.vigencia.vigente
-    }
     if _interpretacion_pendiente_de_remediar(estado):
         return "remediar"
-    if Capacidad.ORIENTAR not in autores:
+    if _interpretacion_pendiente_de_orientar(estado):
         return "orientar"
     # Guardia segura (mismo patrón que PR-2..PR-5, precedente
     # GraphRecursionError): se llega aquí SOLO después de que tanto
@@ -304,10 +305,8 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
     # "siguiente-paso(sesion)" — es el único punto donde una propuesta
     # única puede considerarse definitiva (sin rival pendiente de
     # aparecer). Llamar la MISMA función que `_nodo_decidir` invocará
-    # evita el riesgo que las guardias PR-2..PR-5 ya previenen para
-    # otros nodos: que el guardia y el nodo evalúen criterios distintos
-    # y diverjan (RFC-0006/3, corrige INV-6 — ver docstring de
-    # `derivar_decision_directa`, mecanica.py).
+    # evita que guardia y nodo evalúen criterios distintos y diverjan
+    # (RFC-0006/3, corrige INV-6 — ver `derivar_decision_directa`).
     if derivar_decision_directa(estado, politica) is not None:
         return "decidir"
     return END

@@ -33,10 +33,16 @@ def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
     diagnóstico sin interpretar (mapa incompleto — bug de producto,
     2026-07-13). Un intent por activación: el ciclo
     aplicar→diagnosticar recorre la evidencia pendiente hecho a hecho."""
+    # "Interpretado" es HISTÓRICO, no de vigencia (P14/ADR-0007: la
+    # historia jamás se reejecuta): un hecho se interpreta UNA vez;
+    # si su interpretación luego pierde una deliberación D1, la
+    # corrección del paisaje ya ocurrió por consenso — reinterpretar el
+    # mismo hecho produciría una oscilación eterna (cada reinterpretación
+    # "más nueva" ganaría el desempate y supersedería a la rival).
     interpretados = {
         ref
         for c in estado.claims
-        if c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+        if c.autor is Capacidad.DIAGNOSTICAR
         for ref in c.respaldo
     }
     for fact in estado.facts:

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -19,13 +20,25 @@ ASUNTO_SIGUIENTE_PASO = "siguiente-paso(sesion)"
 
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
-    ya_propuse = any(
-        c.autor is Capacidad.ORIENTAR and c.vigencia.vigente for c in estado.claims
-    )
-    if ya_propuse:
+    # Misma guardia que Remediar (ver domain/shared/propuestas.py):
+    # re-propone si su palabra cayó con su respaldo o si el vencedor
+    # que la descartó cayó después (debate huérfano) — jamás por el
+    # mero hecho de haber perdido una deliberación (anti-churn).
+    if palabra_en_pie(estado, Capacidad.ORIENTAR, ASUNTO_SIGUIENTE_PASO):
         return ()
     for claim in estado.claims:
-        if claim.tipo is TipoClaim.INTERPRETACION and claim.vigencia.vigente:
+        # Solo interpretaciones de DOMINIO (la forma que Diagnosticar
+        # produce: afirmacion con "dominada") — no cualquier
+        # INTERPRETACION: los veredictos de Validar (asunto "efecto(…)")
+        # también son interpretaciones y respaldarse en uno creó un
+        # bucle real (2026-07-13): la cascada de la decisión superseded
+        # tumbaba el veredicto y, con él, el respaldo de la propuesta
+        # nueva. Mismo criterio de forma que ya usa Remediar.
+        if (
+            claim.tipo is TipoClaim.INTERPRETACION
+            and claim.vigencia.vigente
+            and "dominada" in claim.afirmacion
+        ):
             return (
                 TransitionIntent(
                     productor=Capacidad.ORIENTAR,
