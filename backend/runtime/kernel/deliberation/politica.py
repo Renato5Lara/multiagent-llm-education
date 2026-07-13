@@ -63,15 +63,16 @@ class Politica:
     por A1 no)."""
 
     delta: Decimal = Decimal("0")
-    """Umbral de discriminación (RFC-0006 §4, Parte D): una tensión solo
-    se resuelve si el margen entre el ganador y su rival lo alcanza —
-    `margen < delta` es Parte E (aplazamiento/decisión provisional, no
-    implementada todavía; `convocar()` simplemente no resuelve nada en
-    ese caso). `delta = Decimal("0")` para `"v1"` es el mínimo posible:
-    el margen entre dos claims nunca es negativo (el ganador se define
-    como el de mayor puntaje), así que `margen >= 0` siempre se cumple
-    — la rama de margen insuficiente queda estructuralmente
-    inalcanzable bajo v1, misma prueba matemática que `theta`."""
+    """Umbral de discriminación (RFC-0006 §4, Partes D+E): una tensión
+    solo se resuelve plenamente si el margen entre el ganador y su
+    rival lo alcanza; `margen < delta` aplaza declarando la evidencia
+    que falta — o resuelve provisionalmente si el slot es urgente
+    (Parte E, `convocar()` en `mecanica.py`). `delta = Decimal("0")`
+    para `"v1"` es el mínimo posible: el margen entre dos claims nunca
+    es negativo (el ganador se define como el de mayor puntaje), así
+    que `margen >= 0` siempre se cumple — la rama de margen
+    insuficiente queda estructuralmente inalcanzable bajo v1, misma
+    prueba matemática que `theta`."""
 
     pesos_asunto: Mapping[str, Decimal] = field(default_factory=dict)
     """Peso pedagógico por asunto (RFC-0006 §4, D2: "puntaje = confianza

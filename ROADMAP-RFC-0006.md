@@ -155,26 +155,19 @@ cuando D no puede resolver).
 políticas simultáneas, y donde un bug de selección de versión
 correría silenciosamente sobre sesiones reales.
 
-### Parte E — Aplazamiento y Decisión provisional (§4, CONCEPT-0002 §4)
+### Parte E — Aplazamiento y Decisión provisional (§4, CONCEPT-0002 §4) — CERRADA (ver §8, RFC-0006/4b)
 
 **Qué hace:** cuando el margen no alcanza δ, produce `Aplazada`
-declarando qué evidencia falta (ya es un tipo existente, nunca
-poblado). Si el slot es "urgente", en cambio resuelve con la mejor
-confianza disponible como decisión provisional (INV-12 ya la marca
-para validación prioritaria).
+declarando qué evidencia falta. Si el slot es "urgente", en cambio
+resuelve con la mejor confianza disponible como decisión provisional
+(INV-12 ya la marca para validación pendiente).
 
 **Depende de:** Parte D.
 **De qué depende:** Parte F (la escalada por reconvocatoria cuenta
 aplazamientos — sin esta parte no hay nada que contar).
-**Dificultad:** Media-Alta. **Riesgo:** Alto y **sin resolver en este
-documento**: "urgente" es "atributo derivado de `ejecución`" según el
-propio RFC — pero `estado.ejecucion` está vacío en todo el código base
-hoy (auditado en §0). Antes de implementar esta parte hace falta
-decidir, en una Engineering Review propia, qué puebla `ejecucion` y
-qué lo convierte en "urgente" — ese vacío pertenece a RFC-0004 §2, no
-a RFC-0006, y no está en el alcance de este roadmap resolverlo aquí.
-Marcado explícitamente como **bloqueo a levantar antes de esta parte**,
-no una tarea de la parte misma.
+El bloqueo original ("urgente" derivado de `estado.ejecucion`, campo
+muerto) quedó resuelto en §5/2 antes de abrirse: `urgente` es parámetro
+externo del Boundary, igual que `politica`.
 
 ### Parte F — Escalada orgánica: reserva de política + límite de reconvocatoria (§4)
 
@@ -260,7 +253,7 @@ Parte C (umbral θ, insuficiencia D3)
     ↓
 Parte D (resolución D1/D2 con margen δ — nace politica-v2)
     ↓
-Parte E (aplazamiento + provisional) ← BLOQUEADA por "ejecucion" vacío (§0)
+Parte E (aplazamiento + provisional) — CERRADA (RFC-0006/4b, §8)
     ↓
 Parte F (escalada orgánica: reserva + reconvocatoria)
     ↓
@@ -289,7 +282,7 @@ igual que las anteriores — nunca un PR de 10 partes junto):
 | RFC-0006/2 — Detección y clasificación | B | D1 se detecta y clasifica por primera vez (inerte hoy — ningún productor la activa); la tensión D2 real (Remediar/Orientar) se preserva bit a bit. **CERRADO.** |
 | RFC-0006/3 — Propuesta única y θ | C | Una propuesta débil sin rival ya no deriva decisión sola — primer camino real de insuficiencia D3, Y corrige un bug real preexistente (INV-6): la rama `dominada=True` dejaba de llegar a Adaptar. **CERRADO.** |
 | RFC-0006/4a — Resolución D1/D2 con margen | D | D1 por `ce`, D2 por `ce×peso` — margen δ real. **CERRADO** (solo Parte D; ver §8 — E se desacopló tras resolver que `estado.ejecucion` está muerto). |
-| RFC-0006/4b — Aplazamiento y decisión provisional | E | Pendiente — necesita resolver primero de dónde viene "urgencia" (no de `estado.ejecucion`, ver §8). |
+| RFC-0006/4b — Aplazamiento y decisión provisional | E | `Aplazada` poblada por primera vez (margen < δ declara la evidencia que falta); decisión provisional bajo urgencia (`urgente` = parámetro externo del Boundary); tensión abierta deja de ser bloqueante (anti-ciclo/anti-bypass). **CERRADO.** |
 | RFC-0006/5 — Escalada y orden | F + G | S2 empieza a mostrar escaladas reales sin sembrado manual; H7 verificado. |
 | RFC-0006/6 — Cierre | H + I | Validación E2E completa, sembrado manual retirado, RFC-0006 cerrado. |
 
@@ -489,4 +482,33 @@ no puede cambiar quién gana entre dos rivales directos (escalar dos
 puntajes por la misma constante preserva su orden). Sí cambia si el
 margen escalado alcanza δ. Su uso real (desempatar prioridad ENTRE
 asuntos distintos) es Parte G (regla de la raíz), no esta pieza.
+
+### RFC-0006/4b — Aplazamiento y decisión provisional (Parte E) — CERRADO
+
+`convocar(estado, politica, urgente)`: margen < δ ya no devuelve
+silencio — aplaza (`Aplazada` poblada por primera vez, con declaración
+accionable de qué evidencia discriminaría, INV-7) o, si el slot es
+urgente, resuelve provisional (`REGLA_PROVISIONAL =
+"provisional-por-urgencia"`, mismo estatus de "nombre de regla del
+catálogo" que `"decision-humana"`; confianza = `ce` del ganador, "la
+mejor confianza disponible"). `urgente` es parámetro externo del
+Boundary (§5/2): `PeticionHechoDelMundo.urgente`, y `POST /hechos`
+(estudiante en vivo, síncrono) lo fija en `True`; `hechos-docente`
+queda en `False`. 304/304 tests (`tests/runtime`), `runtime_completo.py`
+9/9 mismo shape. Detalle: `mecanica.py`, `walkthrough.py` (`enrutar`),
+`tests/runtime/deliberation/test_parteE_aplazamiento_provisional.py`,
+`tests/runtime/walkthrough/test_parteE_walkthrough_aplazamiento.py`.
+
+Hallazgo real (bug latente preexistente, no solo Parte E): `enrutar`
+hacía `if estado.deliberaciones: return "decidir"` — con cualquier
+deliberación sin decisión derivable (una `Escalada` pendiente sembrada
++ un hecho nuevo del estudiante bastaban HOY) el grafo ciclaba
+decidir→aplicar→decidir hasta `GraphRecursionError`. Corregido con la
+guardia "misma función que el nodo" (`derivar_decision(estado) is not
+None`). Consecuencia obligada: `tension_bloqueante` ahora excluye
+asuntos con deliberación abierta (aplazada/escalada sin `enlaza_a`
+posterior) — sin esa exclusión, quitar el cortocircuito habría dejado
+a la mecánica reconvocar y resolver sola una tensión que espera al
+docente (bypass de RFC-0009 §3). La reconvocatoria legítima (con
+evidencia nueva, contada para escalar) sigue siendo Parte F.
 

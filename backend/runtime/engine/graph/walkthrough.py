@@ -81,8 +81,12 @@ def _nodo_productor(producir: Callable) -> Callable:
     return nodo
 
 
-def _nodo_deliberar(grafo: EstadoGrafo, politica: Politica) -> dict:
-    intent = convocar(grafo["estado"], politica)
+def _nodo_deliberar(grafo: EstadoGrafo, politica: Politica, urgente: bool) -> dict:
+    """`urgente` (RFC-0006 §4, Parte E) es información del Boundary —
+    ¿hay un estudiante esperando esta entrega en la pantalla? — jamás
+    derivada de `estado.ejecucion` (ROADMAP-RFC-0006 §5/2). Llega como
+    parámetro externo, igual que `politica`."""
+    intent = convocar(grafo["estado"], politica, urgente)
     return {"intents": (intent,) if intent else ()}
 
 
@@ -218,7 +222,13 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
         if _existe_veredicto_sin_modelar(estado):
             return "modelar"
         return END
-    if estado.deliberaciones:
+    # Guardia segura (Parte E, mismo patrón "misma función que el nodo"
+    # que derivar_decision_directa más abajo): una deliberación aplazada
+    # o escalada no tiene decisión derivable — enrutarla a "decidir"
+    # ciclaría decidir→aplicar→decidir sin avance (precedente
+    # GraphRecursionError). Solo se enruta cuando derivar_decision tiene
+    # trabajo real (una Resuelta sin decisión).
+    if derivar_decision(estado) is not None:
         return "decidir"
     if tension_bloqueante(estado) is not None:
         return "deliberar"
@@ -265,6 +275,7 @@ def _construir(
     productor_modelar: Callable = producir_modelado,
     productor_tutorizar: Callable = producir_tutoria,
     productor_adaptar: Callable = producir_adaptacion,
+    urgente: bool = False,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -302,7 +313,7 @@ def _construir(
     grafo.add_node("diagnosticar", _nodo_productor(productor_diagnostico))
     grafo.add_node("remediar", _nodo_productor(productor_remediar))
     grafo.add_node("orientar", _nodo_productor(productor_orientar))
-    grafo.add_node("deliberar", lambda g: _nodo_deliberar(g, politica))
+    grafo.add_node("deliberar", lambda g: _nodo_deliberar(g, politica, urgente))
     grafo.add_node("decidir", lambda g: _nodo_decidir(g, politica))
     grafo.add_node("validar", _nodo_productor(productor_validar))
     grafo.add_node("modelar", _nodo_productor(productor_modelar))
@@ -376,6 +387,7 @@ def ejecutar_walkthrough(
     productor_adaptar: Callable = producir_adaptacion,
     cerrar_sesion: bool = False,
     almacen_memoria: AlmacenMemoria | None = None,
+    urgente: bool = False,
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
     → deliberación → decisión → adaptación (→ validación → modelado, si ya
@@ -411,6 +423,14 @@ def ejecutar_walkthrough(
     queda poblado con `proyectar_salidas` (RFC-0003 §2, RFC-0005 §2) —
     una proyección pura, recalculada siempre, nunca fuente de verdad.
 
+    Urgencia (RFC-0006 §4, Parte E): `urgente=True` declara que hay un
+    estudiante esperando esta entrega en la pantalla — con margen < δ,
+    la deliberación se resuelve provisionalmente en vez de aplazarse
+    (CONCEPT-0002 §4: "el aplazamiento es para el sistema; la
+    provisionalidad es para el estudiante"). Es información del
+    transporte que solo el llamador conoce (ROADMAP-RFC-0006 §5/2) —
+    jamás se deriva de `estado.ejecucion`.
+
     Consolidar (M4 PR-5): `cerrar_sesion=True` es la señal explícita de
     cierre que ADR-0008 §2.4 exige — nunca se infiere de que el grafo
     llegue a `END` (una sesión reanudada llega a `END` varias veces sin
@@ -441,6 +461,7 @@ def ejecutar_walkthrough(
         productor_modelar,
         productor_tutorizar,
         productor_adaptar,
+        urgente=urgente,
     ).invoke(inicial)
 
     # T14 — Cierre (M4 PR-2): proyección pura, fuera del grafo (no es un

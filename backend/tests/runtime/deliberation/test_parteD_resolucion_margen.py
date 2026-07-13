@@ -21,6 +21,7 @@ from runtime.kernel.deliberation.mecanica import REGLA_POLITICA_V1, convocar
 from runtime.kernel.deliberation.politica import POLITICAS, Politica
 from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_fact
 from runtime.kernel.state.entries import (
+    Aplazada,
     Capacidad,
     OrigenProvenance,
     Provenance,
@@ -120,7 +121,9 @@ class TestD2_PesoPorAsunto:
         0.50) el margen crudo es 0.30 — suficiente para delta=0.20 sin
         peso. Con peso=0.5 el margen escalado es 0.15 — YA NO alcanza
         delta=0.20. El peso no cambia quién gana; cambia si HAY
-        resolución."""
+        resolución plena: desde la Parte E, el margen insuficiente
+        produce `Aplazada`, no silencio (ver
+        test_parteE_aplazamiento_provisional.py)."""
         estado, _ = _estado_con_dos_rivales(
             TipoClaim.PROPUESTA, "siguiente-paso(sesion)", (Decimal("0.80"), Decimal("0.50"))
         )
@@ -141,7 +144,9 @@ class TestD2_PesoPorAsunto:
             delta=Decimal("0.20"),
             pesos_asunto={"siguiente-paso(sesion)": Decimal("0.5")},
         )
-        assert convocar(estado, politica_con_peso) is None
+        intent = convocar(estado, politica_con_peso)
+        assert intent is not None
+        assert isinstance(intent.argumentos["resultado"], Aplazada)
 
     def test_confianza_registrada_es_ce_crudo_no_el_puntaje_ponderado(self):
         """Resuelta.confianza siempre respeta [0,1] (INV-7) sin importar
@@ -182,11 +187,11 @@ class TestD2_PesoPorAsunto:
 
 
 class TestMargenInsuficiente_Delta:
-    def test_margen_menor_a_delta_no_resuelve(self):
+    def test_margen_menor_a_delta_no_resuelve_plenamente(self):
         """Con delta real (>0) y un margen que no lo alcanza, convocar()
-        no resuelve nada — el aplazamiento real (registrar Aplazada) es
-        Parte E, no implementada todavía. No es un error: es "todavía
-        no hay suficiente discriminación para decidir"."""
+        no resuelve plenamente: aplaza (Parte E) — "todavía no hay
+        suficiente discriminación para decidir", registrado como
+        declaración de evidencia faltante, no como silencio."""
         estado, _ = _estado_con_dos_rivales(
             TipoClaim.INTERPRETACION, "dominio(COMP-2)", (Decimal("0.50"), Decimal("0.55"))
         )
@@ -197,7 +202,9 @@ class TestMargenInsuficiente_Delta:
             theta=Decimal("0"),
             delta=Decimal("0.10"),  # margen real es 0.05 < 0.10
         )
-        assert convocar(estado, politica) is None
+        intent = convocar(estado, politica)
+        assert intent is not None
+        assert isinstance(intent.argumentos["resultado"], Aplazada)
 
     def test_margen_mayor_o_igual_a_delta_si_resuelve(self):
         estado, (id_bajo, id_alto) = _estado_con_dos_rivales(

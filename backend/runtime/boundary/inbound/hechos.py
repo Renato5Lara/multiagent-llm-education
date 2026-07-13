@@ -39,5 +39,6 @@ def registrar_hecho(
         hechos_del_mundo=(intent,),
         cerrar_sesion=peticion.cerrar_sesion,
         almacen_memoria=almacen_memoria,
+        urgente=peticion.urgente,
     )
     return proyectar_entrega(resultado["estado"])

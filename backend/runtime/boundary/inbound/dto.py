@@ -46,3 +46,10 @@ class PeticionHechoDelMundo:
     contenido: Mapping[str, Any]
     origen: OrigenProvenance
     cerrar_sesion: bool = False
+    urgente: bool = False
+    """Restricción pedagógica (RFC-0006 §4, Parte E; CONCEPT-0002 §4):
+    ¿hay un estudiante esperando esta entrega en la pantalla? Es
+    información del transporte que solo el Boundary conoce
+    (ROADMAP-RFC-0006 §5/2: jamás derivada de `estado.ejecucion`) —
+    con urgencia, un margen < δ se resuelve como decisión provisional
+    en vez de aplazarse."""

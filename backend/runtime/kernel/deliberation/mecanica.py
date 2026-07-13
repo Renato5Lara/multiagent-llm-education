@@ -3,11 +3,13 @@
 Todo aquí es función pura de `(estado, política)` (P12): sin reloj, sin
 azar, sin LLM. `tension_bloqueante()` clasifica D1/D2 (RFC-0006 §3,
 CONCEPT-0002 §1; Parte B). `convocar()` resuelve por tipo (RFC-0006 §4,
-Parte D): D1 por `ce` directo, D2 por `ce × peso de política` — la
-regla de politica-v1, `mayor-confianza-declarada`, queda registrada por
-nombre en cada resolución (INV-7); los desempates son deterministas
-(orden textual del id). `derivar_decision_directa()` deriva decisión de
-una propuesta única bajo el umbral θ (RFC-0006 §3, D3; Parte C).
+Partes D y E): D1 por `ce` directo, D2 por `ce × peso de política`; si
+el margen no alcanza δ, aplaza declarando la evidencia que falta — o
+resuelve provisionalmente si el slot es urgente (Parte E). La regla
+aplicada queda registrada por nombre en cada resolución (INV-7); los
+desempates son deterministas (orden textual del id).
+`derivar_decision_directa()` deriva decisión de una propuesta única
+bajo el umbral θ (RFC-0006 §3, D3; Parte C).
 """
 
 from __future__ import annotations
@@ -17,11 +19,25 @@ from decimal import Decimal
 
 from runtime.kernel.deliberation.confianza import calcular_confianza_efectiva
 from runtime.kernel.deliberation.politica import Politica
-from runtime.kernel.state.entries import ClaimEntry, EntryId, Resuelta, TipoClaim
+from runtime.kernel.state.entries import (
+    Aplazada,
+    ClaimEntry,
+    EntryId,
+    Resuelta,
+    ResultadoDeliberacion,
+    TipoClaim,
+)
 from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
 
 REGLA_POLITICA_V1 = "mayor-confianza-declarada"
+
+REGLA_PROVISIONAL = "provisional-por-urgencia"
+"""Resolución provisional (RFC-0006 §4; CONCEPT-0002 §4/§5 bis): "no es
+un concepto nuevo: es una decisión con confianza de resolución baja,
+que INV-12 ya obliga a validar". Un nombre más del catálogo de reglas
+de RFC-0006 — mismo estatus que `"decision-humana"` en
+`boundary/inbound/escalada.py` — nunca un tipo de resultado nuevo."""
 
 _TIPOS_EN_ORDEN = (("D1", TipoClaim.INTERPRETACION), ("D2", TipoClaim.PROPUESTA))
 """D1 antes que D2 al escanear: "los desacuerdos prescriptivos suelen
@@ -36,6 +52,29 @@ def _claims_vigentes_de(estado: LearningState, tipo: TipoClaim) -> tuple[ClaimEn
     return tuple(c for c in estado.claims if c.tipo is tipo and c.vigencia.vigente)
 
 
+def _asuntos_con_deliberacion_abierta(estado: LearningState) -> set[str]:
+    """Asuntos cuya tensión ya fue deliberada y quedó esperando: aplazada
+    (espera el camino de evidencia, CONCEPT-0002 §4) o escalada (espera
+    la autoridad humana, RFC-0009 §3). No hay reapertura (INV-3, P14):
+    lo que habrá es una NUEVA deliberación `enlaza_a` la abierta — la
+    resolución humana ya la produce `boundary/inbound/escalada.py`; la
+    reconvocatoria por evidencia nueva y su límite son Parte F
+    (ROADMAP-RFC-0006). Hasta ese enlace, la tensión NO es bloqueante:
+    reconvocarla registraría deliberaciones duplicadas sin evidencia
+    nueva (y, en el caso escalado, resolvería por mecánica lo que
+    espera al docente)."""
+    enlazadas = {d.enlaza_a for d in estado.deliberaciones if d.enlaza_a is not None}
+    abiertos: set[str] = set()
+    for deliberacion in estado.deliberaciones:
+        if isinstance(deliberacion.resultado, Resuelta):
+            continue
+        if deliberacion.id in enlazadas:
+            continue
+        participante = estado.buscar(deliberacion.participantes[0])
+        abiertos.add(participante.asunto)
+    return abiertos
+
+
 def tension_bloqueante(
     estado: LearningState,
 ) -> tuple[str, str, tuple[EntryId, ...]] | None:
@@ -43,39 +82,55 @@ def tension_bloqueante(
     `tipo` es "D1" (≥2 `INTERPRETACION` vigentes rivales del mismo
     asunto) o "D2" (≥2 `PROPUESTA` vigentes rivales del mismo asunto) —
     mismo criterio de rivalidad que antes (≥2 vigentes, mismo asunto),
-    ahora aplicado también a `INTERPRETACION`, no solo a `PROPUESTA`."""
+    ahora aplicado también a `INTERPRETACION`, no solo a `PROPUESTA`.
+    Un asunto con deliberación abierta (aplazada/escalada sin enlace
+    posterior) deja de ser bloqueante mientras espera (Parte E)."""
+    abiertos = _asuntos_con_deliberacion_abierta(estado)
     for tipo, filtro in _TIPOS_EN_ORDEN:
         por_asunto: dict[str, list[ClaimEntry]] = defaultdict(list)
         for claim in _claims_vigentes_de(estado, filtro):
             por_asunto[claim.asunto].append(claim)
         for asunto in sorted(por_asunto):
+            if asunto in abiertos:
+                continue
             rivales = por_asunto[asunto]
             if len(rivales) >= 2:
                 return tipo, asunto, tuple(sorted((c.id for c in rivales), key=str))
     return None
 
 
-def convocar(estado: LearningState, politica: Politica) -> TransitionIntent | None:
-    """Resuelve la tensión bloqueante por tipo (RFC-0006 §4, Parte D):
+def convocar(
+    estado: LearningState, politica: Politica, urgente: bool = False
+) -> TransitionIntent | None:
+    """Resuelve la tensión bloqueante por tipo (RFC-0006 §4, Partes D+E):
     D1 (interpretativo) compara `ce` directamente; D2 (prescriptivo)
     pondera `ce × peso de política pedagógica del asunto`
     (`politica.pesos_asunto`, neutro=1 si el asunto no está registrado).
-    El ganador es el de mayor puntaje; si el margen sobre el rival no
-    alcanza `politica.delta`, NO se resuelve — margen insuficiente es
-    Parte E (aplazamiento/decisión provisional, no implementada
-    todavía). `Resuelta.confianza` guarda el `ce` crudo del ganador, no
-    el puntaje ponderado — así siempre respeta [0,1] (INV-7) sin
-    importar el peso, y su significado ("cuánta confianza merece el
-    claim ganador") no cambia entre D1 y D2.
+    El ganador es el de mayor puntaje. `Resuelta.confianza` guarda el
+    `ce` crudo del ganador, no el puntaje ponderado — así siempre
+    respeta [0,1] (INV-7) sin importar el peso, y su significado
+    ("cuánta confianza merece el claim ganador") no cambia entre D1 y D2.
+
+    Margen < δ (Parte E): la regla no puede discriminar. Si nadie espera
+    (`urgente=False`), se aplaza declarando QUÉ evidencia discriminaría
+    (INV-7; CONCEPT-0002 §4: "el aplazamiento es productivo"). Si el
+    slot es urgente — hay un estudiante esperando la entrega en la
+    pantalla; información del Boundary, jamás de `estado.ejecucion`
+    (ROADMAP-RFC-0006 §5/2) — se resuelve con el mejor claim disponible
+    como decisión provisional (`REGLA_PROVISIONAL`): la confianza
+    registrada sigue siendo el `ce` del ganador ("la mejor confianza
+    disponible", ROADMAP Parte E) y la decisión derivada queda, como
+    todas, pendiente-de-validación (INV-12). Siempre que hay tensión se
+    registra un resultado — el espacio es cerrado (CONCEPT-0002 §5 bis),
+    y el grafo jamás cicla en "deliberar" sin avance.
 
     Bajo `"v1"` (delta=0, pesos_asunto vacío): el margen entre dos
     puntajes nunca es negativo, así que `margen >= delta=0` siempre se
-    cumple — nunca se difiere. Y con todo peso neutro (=1), el puntaje
-    de D2 es literalmente `ce`, igual que D1 — la comparación se reduce
-    exactamente a "mayor ce gana", que para v1 (ce == confianza
-    declarada, RFC-0006/1) es matemáticamente `mayor-confianza-
-    declarada` — de ahí que `REGLA_POLITICA_V1` siga siendo el nombre
-    correcto para registrar, no solo el histórico."""
+    cumple — la Parte E es estructuralmente inalcanzable y la
+    comparación se reduce a "mayor ce gana", que para v1 (ce ==
+    confianza declarada, RFC-0006/1) es matemáticamente
+    `mayor-confianza-declarada` — de ahí que `REGLA_POLITICA_V1` siga
+    siendo el nombre correcto para registrar, no solo el histórico."""
     tension = tension_bloqueante(estado)
     if tension is None:
         return None
@@ -88,20 +143,33 @@ def convocar(estado: LearningState, politica: Politica) -> TransitionIntent | No
     ordenados = sorted(claims, key=lambda c: (puntajes[c.id], str(c.id)), reverse=True)
     ganador, rival = ordenados[0], ordenados[1]
     margen = puntajes[ganador.id] - puntajes[rival.id]
-    if margen < politica.delta:
-        return None
+
+    resultado: ResultadoDeliberacion
+    if margen >= politica.delta:
+        resultado = Resuelta(
+            regla=REGLA_POLITICA_V1,
+            aceptados=(ganador.id,),
+            confianza=ces[ganador.id],
+        )
+    elif urgente:
+        resultado = Resuelta(
+            regla=REGLA_PROVISIONAL,
+            aceptados=(ganador.id,),
+            confianza=ces[ganador.id],
+        )
+    else:
+        resultado = Aplazada(
+            evidencia_faltante=(
+                f"evidencia sobre '{asunto}' que discrimine entre "
+                f"{ganador.id} y {rival.id}: margen {margen} < "
+                f"delta {politica.delta}"
+            )
+        )
 
     return TransitionIntent(
         productor="kernel",
         operacion="registrar_deliberacion",
-        argumentos={
-            "participantes": participantes,
-            "resultado": Resuelta(
-                regla=REGLA_POLITICA_V1,
-                aceptados=(ganador.id,),
-                confianza=ces[ganador.id],
-            ),
-        },
+        argumentos={"participantes": participantes, "resultado": resultado},
         base=estado.transicion,
     )
 

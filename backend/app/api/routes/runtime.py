@@ -226,6 +226,12 @@ def hecho(
             contenido=peticion.contenido,
             origen=origen,
             cerrar_sesion=peticion.cerrar_sesion,
+            # RFC-0006 §4 (Parte E): esta llamada es síncrona y quien la
+            # hace es el propio estudiante esperando su entrega — el slot
+            # es urgente; con margen < δ el consenso resuelve provisional
+            # en vez de aplazar. `hecho_docente` reutiliza este mismo
+            # boundary con el default (False): nadie espera en vivo.
+            urgente=True,
         ),
         almacen,
         almacen_memoria,
