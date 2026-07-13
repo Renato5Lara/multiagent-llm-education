@@ -30,16 +30,27 @@ _PROMPT_ID = "diagnostico-competencia-v1"
 def producir(
     estado: LearningState, proveedor: LLMProvider | None = None
 ) -> tuple[TransitionIntent, ...]:
-    """LEER → INTERPRETAR → PRODUCIR (RFC-0004 §1, pasos 1–3)."""
+    """LEER → INTERPRETAR → PRODUCIR (RFC-0004 §1, pasos 1–3).
+
+    Interpreta CADA hecho evaluativo una sola vez (guardia por hecho,
+    mismo patrón que la versión regla — 2026-07-13, "mapa completo"): un
+    guardián global (cualquier claim vigente de Diagnosticar silencia la
+    capacidad entera) dejaba sin interpretar el resto de competencias de
+    un mismo diagnóstico. "Interpretado" es HISTÓRICO (P14/ADR-0007: la
+    historia jamás se reejecuta), no de vigencia — reinterpretar el
+    mismo hecho tras perder una deliberación D1 produciría oscilación
+    eterna."""
     proveedor = proveedor or FakeLLMProvider()
-    ya_interprete = any(
-        c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+    interpretados = {
+        ref
         for c in estado.claims
-    )
-    if ya_interprete:
-        return ()
+        if c.autor is Capacidad.DIAGNOSTICAR
+        for ref in c.respaldo
+    }
     for fact in estado.facts:
         if not fact.vigencia.vigente or "competencia" not in fact.contenido:
+            continue
+        if fact.id in interpretados:
             continue
         errores = len(fact.contenido.get("items_incorrectos", ()))
         prompt = (

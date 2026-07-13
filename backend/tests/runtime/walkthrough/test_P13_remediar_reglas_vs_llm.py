@@ -11,6 +11,7 @@ import pytest
 from runtime.domain.remediar import FakeLLMProvider, producir, producir_llm
 from runtime.engine.checkpoint import AlmacenTransiciones, verificar
 from runtime.engine.graph import ejecutar_walkthrough
+from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_deliberacion, registrar_fact
 from runtime.kernel.state.entries import (
     Capacidad,
     EntryId,
@@ -85,6 +86,94 @@ class TestP13_RemediarContratoCompartido:
 
         assert intent_regla.argumentos["provenance"].origen == OrigenProvenance.REGLA
         assert intent_llm.argumentos["provenance"].origen == OrigenProvenance.LLM
+
+
+class TestP13_RemediarAntiChurn:
+    """Regresión real encontrada al conectar Remediar-LLM al Sprint 3.4:
+    `producir_llm` usaba `ya_propuse = any(vigente)` — una guardia más
+    laxa que `palabra_en_pie` de la versión regla. Tras perder una D2
+    limpiamente (el vencedor sigue vigente), la propuesta de Remediar
+    deja de estar vigente, así que `ya_propuse` pasaba a False y el
+    productor LLM volvía a proponer en la siguiente activación SIN
+    evidencia nueva — exactamente el churn que `palabra_en_pie` existe
+    para evitar (anti-churn, ciclo adaptativo continuo 2026-07-13)."""
+
+    def _estado_remediar_perdio_limpio(self) -> LearningState:
+        estado = LearningState(
+            identidad=_identidad("s-p13-remediar-churn"),
+            contexto={"ruta": "condicionales"},
+        )
+        r = registrar_fact(
+            estado,
+            autor=Capacidad.EVALUAR,
+            contenido={"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            provenance=Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.DIAGNOSTICAR,
+            tipo=TipoClaim.INTERPRETACION,
+            asunto="dominio(COMP-2)",
+            afirmacion={"dominada": False, "errores": 3},
+            respaldo=(estado.facts[0].id,),
+            confianza=Decimal("0.78"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="scoring-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        interpretacion_id = estado.claims[-1].id
+
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.REMEDIAR,
+            tipo=TipoClaim.PROPUESTA,
+            asunto="siguiente-paso(sesion)",
+            afirmacion={"accion": "reforzar"},
+            respaldo=(interpretacion_id,),
+            confianza=Decimal("0.60"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="remediacion-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        remediar_id = estado.claims[-1].id
+
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.ORIENTAR,
+            tipo=TipoClaim.PROPUESTA,
+            asunto="siguiente-paso(sesion)",
+            afirmacion={"accion": "avanzar-con-andamiaje"},
+            respaldo=(interpretacion_id,),
+            confianza=Decimal("0.90"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="ruta-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        orientar_id = estado.claims[-1].id
+
+        r = registrar_deliberacion(
+            estado,
+            participantes=(remediar_id, orientar_id),
+            resultado=Resuelta(
+                regla="mayor-confianza-declarada",
+                aceptados=(orientar_id,),
+                confianza=Decimal("0.90"),
+            ),
+        )
+        assert isinstance(r, Aplicado)
+        return r.estado
+
+    def test_no_reproponer_tras_perder_limpio(self):
+        estado = self._estado_remediar_perdio_limpio()
+        remediar_vigente = next(
+            c for c in estado.claims if c.autor is Capacidad.REMEDIAR
+        )
+        assert not remediar_vigente.vigencia.vigente  # perdió, quedó supersedido
+
+        assert producir(estado) == ()  # la regla ya lo garantizaba
+        assert producir_llm(estado, proveedor=FakeLLMProvider()) == ()
 
 
 @pytest.mark.skipif(not _pg_disponible(), reason="PostgreSQL no disponible")

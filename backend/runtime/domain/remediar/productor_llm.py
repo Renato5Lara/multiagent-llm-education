@@ -13,6 +13,7 @@ from decimal import Decimal
 from runtime.domain.remediar.productor import ASUNTO_SIGUIENTE_PASO
 from runtime.domain.remediar.provider import FakeLLMProvider, LLMProvider
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
+from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -28,11 +29,13 @@ _PROMPT_ID = "remediacion-siguiente-paso-v1"
 def producir(
     estado: LearningState, proveedor: LLMProvider | None = None
 ) -> tuple[TransitionIntent, ...]:
+    """Misma guardia que la versión regla (`palabra_en_pie` — ciclo
+    adaptativo continuo, 2026-07-13): re-propone solo si su palabra
+    previa cayó con su respaldo o si el vencedor que la descartó cayó
+    después (debate huérfano), jamás por el mero hecho de haber perdido
+    una deliberación (anti-churn)."""
     proveedor = proveedor or FakeLLMProvider()
-    ya_propuse = any(
-        c.autor is Capacidad.REMEDIAR and c.vigencia.vigente for c in estado.claims
-    )
-    if ya_propuse:
+    if palabra_en_pie(estado, Capacidad.REMEDIAR, ASUNTO_SIGUIENTE_PASO):
         return ()
     for claim in estado.claims:
         if (

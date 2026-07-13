@@ -11,6 +11,7 @@ import pytest
 from runtime.domain.orientar import FakeLLMProvider, producir, producir_llm
 from runtime.engine.checkpoint import AlmacenTransiciones, verificar
 from runtime.engine.graph import ejecutar_walkthrough
+from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_deliberacion, registrar_fact
 from runtime.kernel.state.entries import (
     Capacidad,
     ClaimEntry,
@@ -84,6 +85,110 @@ class TestP13_OrientarContratoCompartido:
 
         assert intent_regla.argumentos["provenance"].origen == OrigenProvenance.REGLA
         assert intent_llm.argumentos["provenance"].origen == OrigenProvenance.LLM
+
+
+class TestP13_OrientarAntiChurnYVocabulario:
+    """Dos regresiones reales encontradas al conectar Orientar-LLM al
+    Sprint 3.4 — `producir_llm` divergió de la versión regla en dos
+    fixes de 2026-07-13 que nunca se replicaron: `ya_propuse` (más laxo
+    que `palabra_en_pie`, permitía churn tras perder limpio) y el filtro
+    de interpretaciones (aceptaba CUALQUIER INTERPRETACION, incluidos
+    los veredictos de Validar — "efecto(…)" — que causó un bucle real:
+    la cascada de la decisión supersedida tumbaba el veredicto y, con
+    él, el respaldo de la propuesta nueva)."""
+
+    def test_no_reproponer_tras_perder_limpio(self):
+        estado = LearningState(
+            identidad=_identidad("s-p13-orientar-churn"),
+            contexto={"ruta": "condicionales"},
+        )
+        r = registrar_fact(
+            estado,
+            autor=Capacidad.EVALUAR,
+            contenido={"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            provenance=Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.DIAGNOSTICAR,
+            tipo=TipoClaim.INTERPRETACION,
+            asunto="dominio(COMP-2)",
+            afirmacion={"dominada": False, "errores": 3},
+            respaldo=(estado.facts[0].id,),
+            confianza=Decimal("0.78"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="scoring-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        interpretacion_id = estado.claims[-1].id
+
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.REMEDIAR,
+            tipo=TipoClaim.PROPUESTA,
+            asunto="siguiente-paso(sesion)",
+            afirmacion={"accion": "reforzar"},
+            respaldo=(interpretacion_id,),
+            confianza=Decimal("0.90"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="remediacion-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        remediar_id = estado.claims[-1].id
+
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.ORIENTAR,
+            tipo=TipoClaim.PROPUESTA,
+            asunto="siguiente-paso(sesion)",
+            afirmacion={"accion": "avanzar-con-andamiaje"},
+            respaldo=(interpretacion_id,),
+            confianza=Decimal("0.60"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="ruta-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        orientar_id = estado.claims[-1].id
+
+        r = registrar_deliberacion(
+            estado,
+            participantes=(remediar_id, orientar_id),
+            resultado=Resuelta(
+                regla="mayor-confianza-declarada",
+                aceptados=(remediar_id,),
+                confianza=Decimal("0.90"),
+            ),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+
+        orientar_vigente = next(c for c in estado.claims if c.autor is Capacidad.ORIENTAR)
+        assert not orientar_vigente.vigencia.vigente  # perdió, quedó supersedido
+
+        assert producir(estado) == ()  # la regla ya lo garantizaba
+        assert producir_llm(estado, proveedor=FakeLLMProvider()) == ()
+
+    def test_no_se_respalda_en_un_veredicto_de_validar(self):
+        veredicto = ClaimEntry(
+            id=EntryId(2, 1),
+            autor=Capacidad.VALIDAR,
+            tipo=TipoClaim.INTERPRETACION,
+            asunto="efecto(decision-1)",
+            afirmacion={"mejoro": True},
+            respaldo=(EntryId(1, 1),),
+            confianza=Decimal("0.80"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="validacion-v1"),
+        )
+        estado = LearningState(
+            identidad=_identidad("s-p13-orientar-vocabulario"),
+            contexto={"ruta": "condicionales"},
+            claims=(veredicto,),
+            transicion=2,
+        )
+        assert producir(estado) == ()  # la regla ya lo garantizaba
+        assert producir_llm(estado, proveedor=FakeLLMProvider()) == ()
 
 
 @pytest.mark.skipif(not _pg_disponible(), reason="PostgreSQL no disponible")

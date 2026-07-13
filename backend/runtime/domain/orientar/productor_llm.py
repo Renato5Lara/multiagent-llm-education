@@ -13,6 +13,7 @@ from decimal import Decimal
 from runtime.domain.orientar.productor import ASUNTO_SIGUIENTE_PASO
 from runtime.domain.orientar.provider import FakeLLMProvider, LLMProvider
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
+from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -28,14 +29,23 @@ _PROMPT_ID = "orientacion-siguiente-paso-v1"
 def producir(
     estado: LearningState, proveedor: LLMProvider | None = None
 ) -> tuple[TransitionIntent, ...]:
+    """Misma guardia que la versión regla (`palabra_en_pie` — ciclo
+    adaptativo continuo, 2026-07-13): re-propone solo si su palabra
+    previa cayó con su respaldo o si el vencedor que la descartó cayó
+    después (debate huérfano), jamás por el mero hecho de haber perdido
+    una deliberación (anti-churn). Filtra por interpretaciones de
+    DOMINIO ("dominada" en la afirmación) — no cualquier INTERPRETACION:
+    respaldarse en un veredicto de Validar creó un bucle real
+    (2026-07-13), mismo criterio de forma que Remediar."""
     proveedor = proveedor or FakeLLMProvider()
-    ya_propuse = any(
-        c.autor is Capacidad.ORIENTAR and c.vigencia.vigente for c in estado.claims
-    )
-    if ya_propuse:
+    if palabra_en_pie(estado, Capacidad.ORIENTAR, ASUNTO_SIGUIENTE_PASO):
         return ()
     for claim in estado.claims:
-        if claim.tipo is TipoClaim.INTERPRETACION and claim.vigencia.vigente:
+        if (
+            claim.tipo is TipoClaim.INTERPRETACION
+            and claim.vigencia.vigente
+            and "dominada" in claim.afirmacion
+        ):
             prompt = (
                 f"Existe una interpretación vigente sobre el estudiante "
                 f"(claim {claim.id}). La política ruta-v1 propone avanzar "

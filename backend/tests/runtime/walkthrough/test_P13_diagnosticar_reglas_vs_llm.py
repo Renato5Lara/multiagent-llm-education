@@ -21,6 +21,7 @@ import pytest
 from runtime.domain.diagnosticar import FakeLLMProvider, producir, producir_llm
 from runtime.engine.checkpoint import AlmacenTransiciones, verificar
 from runtime.engine.graph import ejecutar_walkthrough
+from runtime.kernel.reducers import Aplicado, registrar_claim, registrar_fact
 from runtime.kernel.state.entries import (
     Capacidad,
     EntryId,
@@ -103,6 +104,51 @@ class TestP13_ContratoCompartido:
             "errores",
         }
         assert "razonamiento" in intent_llm.argumentos["afirmacion"]
+
+
+class TestP13_MapaCompletoLLM:
+    """Regresión real encontrada al conectar Diagnosticar-LLM al Sprint
+    3.4: `producir_llm` seguía con la guardia global pre-2026-07-13
+    (`ya_interprete = any(claim vigente)`) que la versión regla ya había
+    corregido a guardia por hecho (RFC-0002 R1: "interpretar los
+    resultados evaluativos, todos" — el bug de producto era dejar 7 de
+    8 competencias de un diagnóstico sin interpretar)."""
+
+    def test_interpreta_cada_hecho_no_solo_el_primero(self):
+        estado = LearningState(
+            identidad=_identidad("s-p13-mapa-completo"),
+            contexto={"ruta": "condicionales"},
+        )
+        r = registrar_fact(
+            estado,
+            autor=Capacidad.EVALUAR,
+            contenido={"competencia": "COMP-1", "items_incorrectos": [1]},
+            provenance=Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        r = registrar_fact(
+            estado,
+            autor=Capacidad.EVALUAR,
+            contenido={"competencia": "COMP-2", "items_incorrectos": [1, 2, 3]},
+            provenance=Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+
+        proveedor = FakeLLMProvider()
+        (intent_1,) = producir_llm(estado, proveedor=proveedor)
+        assert intent_1.argumentos["asunto"] == "dominio(COMP-1)"
+
+        r = registrar_claim(estado, **intent_1.argumentos)
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+
+        # Con la guardia vieja (ya_interprete) esto devolvía () — la
+        # segunda competencia quedaba muda para siempre.
+        segunda = producir_llm(estado, proveedor=proveedor)
+        assert segunda != ()
+        assert segunda[0].argumentos["asunto"] == "dominio(COMP-2)"
 
 
 @pytest.mark.skipif(not _pg_disponible(), reason="PostgreSQL no disponible")
