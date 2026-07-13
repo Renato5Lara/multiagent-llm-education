@@ -6,7 +6,6 @@ import type {
   DiagnosticResult,
   LearningPath,
   PathModule,
-  AgentPlan,
   StudentProfile,
   LearningPathDetail,
   CourseProgress,
@@ -221,26 +220,6 @@ export function useCourseProgress(courseId: string | undefined) {
       return resp.data
     },
     enabled: !!courseId,
-  })
-}
-
-export function useAgentGeneratePlan() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<AgentPlan>('/api/agents/generate-plan', { course_id: courseId, answers })
-      return resp.data
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['learning-path', variables.courseId] })
-      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
-      toast({ title: 'Plan generado exitosamente' })
-    },
-    onError: (error) => {
-      toast({ variant: 'destructive', title: 'Error del agente', description: getErrorMessage(error) })
-    },
   })
 }
 

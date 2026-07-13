@@ -104,37 +104,6 @@ export interface EvaluationAttempt {
   completed_at?: string
 }
 
-export interface AgentPlan {
-  learning_profile?: {
-    learning_style: string
-    pace: string
-    collaboration: string
-    motivation: string
-    preferred_bloom_levels: number[]
-  }
-  recommendations?: string[]
-  path_plan?: {
-    modules: Array<{
-      title: string
-      description: string
-      order: number
-      bloom_level: number
-      recommended_resource_types: string[]
-      estimated_duration: string
-    }>
-  }
-  resource_recommendations?: Record<string, { resources: Array<{ id: string; filename: string; type: string }> }>
-  evaluation_plan?: Array<{
-    module_title: string
-    questions: Array<{
-      question: string
-      options: string[]
-      correct: number
-    }>
-    passing_score: number
-  }>
-}
-
 // ── D4.1 — Adaptive decision ───────────────────────────────────────────────────
 
 export interface AdaptiveDecision {

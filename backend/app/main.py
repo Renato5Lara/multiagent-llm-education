@@ -24,12 +24,10 @@ from app.api.routes import (
     objectives,
     resources,
     users,
-    estudiantes,
     competencies,
     students,
     curriculum,
     pedagogy,
-    tutor,
     swarm,
     swarm_demo,
     sandbox,
@@ -43,8 +41,6 @@ from app.api.routes import (
     runtime as runtime_boundary_routes,
 )
 from app.weekly_learning.routes import router as weekly_learning_router
-
-from app.agents.router import router as agents_router
 from app.core.config import settings
 from app.db.session import engine
 
@@ -326,15 +322,12 @@ app.include_router(users.router)
 app.include_router(courses.router)
 app.include_router(resources.router)
 app.include_router(objectives.router)
-app.include_router(estudiantes.router)
 app.include_router(students.router)
 app.include_router(knowledge_test.router)
 app.include_router(competencies.router)
 app.include_router(curriculum.router)
 app.include_router(pedagogy.router)
 app.include_router(analytics.router)
-app.include_router(tutor.router)
-app.include_router(agents_router)
 app.include_router(swarm.router)
 app.include_router(swarm_demo.router)
 app.include_router(sandbox.router)
