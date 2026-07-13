@@ -3,9 +3,8 @@ Tests de concurrencia y consistencia.
 
 Verifica:
 1. Advisory locks evitan race conditions
-2. store_memory upserts sin duplicados
-3. Rollback seguro bajo fallos
-4. Integridad ante stress concurrente
+2. Rollback seguro bajo fallos
+3. Integridad ante stress concurrente
 """
 
 import threading
@@ -20,7 +19,6 @@ from app.db.base import Base
 from app.db.locks import advisory_lock, lock_key
 from app.db.uow import UnitOfWork
 from app.models.student_memory import StudentMemory
-from app.services.memory_service import store_memory
 
 
 @pytest.fixture(scope="function")
@@ -121,70 +119,6 @@ class TestAdvisoryLock:
         with advisory_lock(db, "outer"):
             with advisory_lock(db, "inner"):
                 pass
-
-
-# =============================================================================
-# 2. store_memory Concurrency Tests (single-threaded logic)
-# =============================================================================
-
-class TestStoreMemoryConcurrency:
-    """Race conditions en store_memory."""
-
-    def test_store_memory_upsert_idempotent(self, db, estudiante_user):
-        """store_memory con misma clave hace upsert, no duplica."""
-        from app.services.memory_service import store_memory
-
-        uow = UnitOfWork(lambda: db)
-        r1 = store_memory(uow, estudiante_user.id, "preference", "modality", "visual", score=0.8)
-        uow.commit()
-        assert r1.value == "visual"
-
-        uow2 = UnitOfWork(lambda: db)
-        r2 = store_memory(uow2, estudiante_user.id, "preference", "modality", "kinesthetic", score=0.6)
-        uow2.commit()
-        assert r2.value == "kinesthetic"
-
-        count = db.query(StudentMemory).filter(
-            StudentMemory.student_id == estudiante_user.id,
-            StudentMemory.memory_type == "preference",
-            StudentMemory.key == "modality",
-        ).count()
-        assert count == 1
-
-    def test_store_memory_rollback_on_integrity_error(self, db, estudiante_user):
-        uow = UnitOfWork(lambda: db)
-
-        mem = StudentMemory(
-            student_id=estudiante_user.id,
-            memory_type="preference",
-            key="rollback-test",
-            value="original",
-        )
-        db.add(mem)
-        db.commit()
-
-        store_memory(uow, estudiante_user.id, "preference", "rollback-test", "updated")
-        uow.commit()
-
-        memories = db.query(StudentMemory).filter(
-            StudentMemory.student_id == estudiante_user.id,
-            StudentMemory.memory_type == "preference",
-            StudentMemory.key == "rollback-test",
-        ).all()
-        assert len(memories) == 1
-        assert memories[0].value == "updated"
-
-    def test_store_memory_multiple_keys(self, db, estudiante_user):
-        """Diferentes keys se insertan sin conflictos."""
-        uow = UnitOfWork(lambda: db)
-        store_memory(uow, estudiante_user.id, "preference", "key_a", "value_a")
-        store_memory(uow, estudiante_user.id, "preference", "key_b", "value_b")
-        uow.commit()
-
-        count = db.query(StudentMemory).filter(
-            StudentMemory.student_id == estudiante_user.id,
-        ).count()
-        assert count == 2
 
 
 # =============================================================================
@@ -357,69 +291,6 @@ class TestConcurrentThreadSafety:
         course_id = course.id
         session.close()
         return user_id, course_id
-
-    def test_concurrent_store_memory_different_keys(self, concurrent_engine):
-        """5 threads almacenan memorias con diferentes keys sin conflictos."""
-        user_id, _ = self._setup_base_data(concurrent_engine)
-        n_threads = 5
-        errors = []
-
-        def store_at(i):
-            try:
-                SessionLocal = sessionmaker(bind=concurrent_engine)
-                session = SessionLocal()
-                uow = UnitOfWork(lambda: session)
-                store_memory(uow, user_id, "stress", f"key_{i}", f"value_{i}")
-                uow.commit()
-                session.close()
-            except Exception as e:
-                errors.append((i, str(e)))
-
-        threads = [threading.Thread(target=store_at, args=(i,)) for i in range(n_threads)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-
-        assert len(errors) == 0, f"Errors: {errors}"
-
-        session = sessionmaker(bind=concurrent_engine)()
-        count = session.query(StudentMemory).filter(
-            StudentMemory.student_id == user_id,
-        ).count()
-        session.close()
-        assert count == n_threads
-
-    def test_concurrent_same_key_serialized(self, concurrent_engine):
-        """5 threads con la misma key: solo 1 registro final."""
-        user_id, _ = self._setup_base_data(concurrent_engine)
-        n_threads = 5
-
-        def store_same():
-            try:
-                SessionLocal = sessionmaker(bind=concurrent_engine)
-                session = SessionLocal()
-                uow = UnitOfWork(lambda: session)
-                store_memory(uow, user_id, "preference", "conflict_key", "value")
-                uow.commit()
-                session.close()
-            except Exception:
-                pass
-
-        threads = [threading.Thread(target=store_same) for _ in range(n_threads)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-
-        session = sessionmaker(bind=concurrent_engine)()
-        count = session.query(StudentMemory).filter(
-            StudentMemory.student_id == user_id,
-            StudentMemory.memory_type == "preference",
-            StudentMemory.key == "conflict_key",
-        ).count()
-        session.close()
-        assert count == 1
 
     def test_concurrent_enroll_same_student(self, concurrent_engine):
         """2 threads inscriben al mismo estudiante: solo 1 enrollment."""

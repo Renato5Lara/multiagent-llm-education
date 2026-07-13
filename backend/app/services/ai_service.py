@@ -5,7 +5,6 @@ from typing import Optional
 from app.services.llm_prompts import (
     DIAGNOSTIC_ANALYSIS_PROMPT,
     DIAGNOSTIC_SYSTEM_PROMPT,
-    TUTOR_CHAT_PROMPT,
     TUTOR_SYSTEM_PROMPT,
 )
 from app.core.config import settings
@@ -113,37 +112,6 @@ class AIService:
             "nivel_bloom_estimado": estimated_bloom,
             "confianza": 0.5,
         }
-
-    def generate_tutor_response(
-        self,
-        message: str,
-        course_name: str,
-        module_title: str = "",
-        progress: int = 0,
-        learning_style: str = "visual",
-        bloom_level: int = 2,
-        course_code: str = "",
-        prerequisites: str = "",
-    ) -> str:
-        prompt = TUTOR_CHAT_PROMPT.format(
-            course_name=course_name,
-            course_code=course_code,
-            module_title=module_title or "Módulo actual",
-            progress=progress,
-            learning_style=learning_style,
-            bloom_level=bloom_level,
-            prerequisites=prerequisites,
-            message=message,
-        )
-
-        result = self._call_openai(TUTOR_SYSTEM_PROMPT, prompt, temperature=0.7)
-        if result:
-            try:
-                data = json.loads(result)
-                return data.get("respuesta", data.get("response", result))
-            except json.JSONDecodeError:
-                return result
-        return self._fallback_tutor_response(message)
 
     def generate_tutor_response_desde_runtime(
         self,

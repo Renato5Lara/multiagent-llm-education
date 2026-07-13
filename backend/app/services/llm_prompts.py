@@ -82,23 +82,6 @@ Genera un análisis JSON con:
 4. nivel_bloom_estimado: nivel Bloom actual estimado (1-6)
 5. confianza: nivel de confianza en el análisis (0-1)"""
 
-TUTOR_CHAT_PROMPT = """Contexto del estudiante:
-- Curso: {course_name} ({course_code})
-- Módulo actual: {module_title}
-- Progreso: {progress}%
-- Estilo de aprendizaje: {learning_style}
-- Nivel Bloom actual: {bloom_level}
-- Prerrequisitos del curso: {prerequisites}
-
-Mensaje del estudiante: {message}
-
-Responde anclándote en el mensaje concreto del estudiante y en el módulo actual.
-Adapta tu respuesta al nivel Bloom del estudiante.
-Si el estudiante pregunta sobre conceptos que requieren prerrequisitos,
-sugiere repasar los fundamentos primero.
-Si está en nivel Bloom bajo, explica conceptos básicos.
-Si está en nivel alto, profundiza en análisis y aplicación."""
-
 RISK_ANALYSIS_PROMPT = """Eres un analista de riesgo académico. Evalúa el desempeño del estudiante y predice su riesgo académico.
 
 Datos del estudiante:
