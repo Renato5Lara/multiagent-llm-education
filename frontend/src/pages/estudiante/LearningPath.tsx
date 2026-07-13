@@ -7,7 +7,6 @@ import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { LearningPathItem } from '@/types/student'
-import TutorWidget from '@/components/ai/TutorWidget'
 import { useEffect, useRef, useState } from 'react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -446,12 +445,6 @@ export default function LearningPath() {
           Preguntar al Tutor IA
         </Button>
       </div>
-
-      <TutorWidget
-        courseId={courseId || ''}
-        courseName={path.course_name}
-        moduleTitle={activeItem?.title}
-      />
     </div>
   )
 }
