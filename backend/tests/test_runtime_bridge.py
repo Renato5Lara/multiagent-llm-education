@@ -147,3 +147,105 @@ def test_consultar_decision_vigente_no_registra_ningun_hecho():
     consultar_decision_vigente(student_id="ana", course_id="curso-z")
     almacen, _ = almacenes()
     assert almacen.leer("curso:curso-z:estudiante:ana") == ()
+
+
+# ── Tutor sobre Runtime ──────────────────────────────────────────────
+
+
+def test_contexto_tutor_sin_evidencia_es_vacio_y_no_registra_nada():
+    from app.services.runtime_bridge import contexto_pedagogico_tutor
+    from app.services.runtime_connection import almacenes
+
+    contexto = contexto_pedagogico_tutor(student_id="lucia", course_id="curso-t")
+    assert contexto == {
+        "asunto": None,
+        "diseno": None,
+        "senales": [],
+        "memoria": None,
+    }
+    almacen, _ = almacenes()
+    assert almacen.leer("curso:curso-t:estudiante:lucia") == ()
+
+
+def test_items_totales_activa_la_senal_de_tutorizar_y_el_contexto_la_expone():
+    """RFC-0002 R4: con el total de ítems, Tutorizar clasifica la señal
+    conductual (2 de 3 incorrectos → confusión) — y el contexto del
+    tutor la refleja junto a la adaptación vigente."""
+    from app.services.runtime_bridge import (
+        contexto_pedagogico_tutor,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="lucia",
+        course_id="curso-t2",
+        titulo_modulo="Condicionales",
+        items_incorrectos=[0, 2],
+        items_totales=3,
+    )
+    contexto = contexto_pedagogico_tutor(student_id="lucia", course_id="curso-t2")
+    assert contexto["asunto"] is not None
+    assert contexto["diseno"] is not None
+    assert "modalidad" in contexto["diseno"]
+    assert contexto["senales"] == ["confusion"]
+
+
+def test_registrar_pregunta_tutor_entra_como_interaccion_humana():
+    """La pregunta del estudiante es evidencia de sesión (E2, provenance
+    humano) — el runtime la ve; el chat de la plataforma solo redacta."""
+    from app.services.runtime_bridge import registrar_pregunta_tutor
+    from app.services.runtime_connection import (
+        SPEC_VERSION,
+        VERSION_BANCO,
+        VERSION_POLITICA,
+        almacenes,
+    )
+    from runtime.engine.checkpoint import reconstruir
+    from runtime.kernel.state.entries import OrigenProvenance
+    from runtime.kernel.state.state import Identidad
+
+    registrar_pregunta_tutor(
+        student_id="lucia",
+        course_id="curso-t3",
+        pregunta="¿Por qué mi bucle while no termina nunca?",
+    )
+
+    almacen, _ = almacenes()
+    identidad = Identidad(
+        session_id="curso:curso-t3:estudiante:lucia",
+        student_id="lucia",
+        version_student_model="0",
+        version_banco=VERSION_BANCO,
+        version_politica=VERSION_POLITICA,
+        spec_version=SPEC_VERSION,
+    )
+    estado = reconstruir(identidad, {}, almacen.leer(identidad.session_id))
+    pregunta = next(f for f in estado.facts if "pregunta" in f.contenido)
+    assert pregunta.contenido["interaccion"] == "pregunta-tutor"
+    assert "while" in pregunta.contenido["pregunta"]
+    assert pregunta.provenance.origen is OrigenProvenance.HUMANO
+
+
+def test_la_pregunta_no_altera_la_adaptacion_vigente():
+    """El chat observa y aporta evidencia, pero no dispara una nueva
+    adaptación por sí solo: la Entrega vigente antes y después de la
+    pregunta es la misma."""
+    from app.services.runtime_bridge import (
+        consultar_decision_vigente,
+        registrar_evidencia_evaluacion,
+        registrar_pregunta_tutor,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="lucia",
+        course_id="curso-t4",
+        titulo_modulo="Funciones",
+        items_incorrectos=[1],
+        items_totales=4,
+    )
+    antes = consultar_decision_vigente(student_id="lucia", course_id="curso-t4")
+    registrar_pregunta_tutor(
+        student_id="lucia", course_id="curso-t4", pregunta="¿Qué es una función?"
+    )
+    despues = consultar_decision_vigente(student_id="lucia", course_id="curso-t4")
+    assert antes == despues

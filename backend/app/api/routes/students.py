@@ -820,6 +820,10 @@ def submit_evaluation(
                 course_id=attempt.course_id,
                 titulo_modulo=module.title,
                 items_incorrectos=items_incorrectos,
+                # Con el total, Tutorizar produce la señal conductual real
+                # (fluidez/confusión/frustración) que alimenta al tutor y a
+                # las alternativas por señal de Adaptar (RFC-0002 R4).
+                items_totales=len(attempt.questions),
             )
             runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
         except Exception as e:  # noqa: BLE001
@@ -841,65 +845,50 @@ def tutor_chat(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
+    """El Tutor IA sobre el Runtime LangGraph: el contexto pedagógico
+    (adaptación vigente, señales de sesión, memoria consolidada) lo
+    decide el runtime — esta capa solo lo lee por el Boundary y redacta
+    (RFC-0002 R4: ninguna capacidad del runtime redacta mensajes; ningún
+    servicio de plataforma decide adaptación). La pregunta entra al
+    runtime como interacción de la sesión (E2), evidencia real para
+    Tutorizar y para investigación. Ambas integraciones son best-effort:
+    el chat jamás se cae porque el runtime no tenga sesión todavía."""
     course_name = ""
-    module_title = ""
-    progress = 0
-    learning_style = "visual"
-    bloom_level = 2
-
     try:
         from app.models.course import Course
-        from app.models.student_progress import LearningPath, PathModule
-        from app.services.student_service import get_student_profile
 
         course = db.query(Course).filter(Course.id == data.course_id).first()
         if course:
             course_name = course.name
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error resolving course for tutor: {e}")
 
-        path = (
-            db.query(LearningPath)
-            .filter(
-                LearningPath.student_id == current_user.id,
-                LearningPath.course_id == data.course_id,
-            )
-            .first()
+    module_title = (data.context or {}).get("module_title", "")
+
+    contexto_runtime: dict = {"asunto": None, "diseno": None, "senales": [], "memoria": None}
+    try:
+        from app.services.runtime_bridge import (
+            contexto_pedagogico_tutor,
+            registrar_pregunta_tutor,
         )
-        if path:
-            progress = round((path.completed_modules / path.total_modules * 100)) if path.total_modules > 0 else 0
-            current_module = (
-                db.query(PathModule)
-                .filter(
-                    PathModule.path_id == path.id,
-                    PathModule.status == "available",
-                )
-                .order_by(PathModule.order)
-                .first()
-            )
-            if current_module:
-                module_title = current_module.title
-                bloom_level = current_module.bloom_level or 2
 
-        profile = get_student_profile(db, current_user.id)
-        if profile and profile.dominant_style:
-            learning_style = profile.dominant_style
-
-        context = data.context or {}
-        if context.get("module_title"):
-            module_title = context["module_title"]
-        if context.get("bloom_level"):
-            bloom_level = int(context["bloom_level"])
-
-    except Exception as e:
-        logger.warning(f"Error building tutor context: {e}")
+        registrar_pregunta_tutor(
+            student_id=current_user.id,
+            course_id=data.course_id,
+            pregunta=data.message,
+        )
+        contexto_runtime = contexto_pedagogico_tutor(
+            student_id=current_user.id, course_id=data.course_id
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for tutor chat: {e}")
 
     _tutor_t0 = _time.monotonic()
-    response_text = ai_service.generate_tutor_response(
+    response_text = ai_service.generate_tutor_response_desde_runtime(
         message=data.message,
         course_name=course_name,
         module_title=module_title,
-        progress=progress,
-        learning_style=learning_style,
-        bloom_level=bloom_level,
+        contexto=contexto_runtime,
     )
     _tutor_ms = round((_time.monotonic() - _tutor_t0) * 1000, 1)
     research_metrics_service.record_metric(
@@ -926,9 +915,7 @@ def tutor_chat(
         "context": {
             "course_name": course_name,
             "module_title": module_title,
-            "progress": progress,
-            "learning_style": learning_style,
-            "bloom_level": bloom_level,
+            "runtime": contexto_runtime,
         },
     }
 
