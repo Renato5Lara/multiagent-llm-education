@@ -3,11 +3,13 @@
 Todo aquí es función pura de `(estado, política)` (P12): sin reloj, sin
 azar, sin LLM. `tension_bloqueante()` clasifica D1/D2 (RFC-0006 §3,
 CONCEPT-0002 §1; Parte B). `convocar()` resuelve por tipo (RFC-0006 §4,
-Partes D y E): D1 por `ce` directo, D2 por `ce × peso de política`; si
-el margen no alcanza δ, aplaza declarando la evidencia que falta — o
-resuelve provisionalmente si el slot es urgente (Parte E). La regla
-aplicada queda registrada por nombre en cada resolución (INV-7); los
-desempates son deterministas (orden textual del id).
+Partes D, E y F): D1 por `ce` directo, D2 por `ce × peso de política`;
+si el margen no alcanza δ, aplaza declarando la evidencia que falta —
+o resuelve provisionalmente si el slot es urgente (Parte E) — o escala
+al docente (Parte F: asunto reservado por política, o límite de
+reconvocatoria agotado en la cadena `enlaza_a`). La regla aplicada
+queda registrada por nombre en cada resolución (INV-7); los desempates
+son deterministas (orden textual del id).
 `derivar_decision_directa()` deriva decisión de una propuesta única
 bajo el umbral θ (RFC-0006 §3, D3; Parte C).
 """
@@ -25,6 +27,7 @@ from runtime.kernel.state.entries import (
     DecisionEntry,
     DeliberacionEntry,
     EntryId,
+    Escalada,
     Resuelta,
     ResultadoDeliberacion,
     TipoClaim,
@@ -54,27 +57,46 @@ def _claims_vigentes_de(estado: LearningState, tipo: TipoClaim) -> tuple[ClaimEn
     return tuple(c for c in estado.claims if c.tipo is tipo and c.vigencia.vigente)
 
 
-def _asuntos_con_deliberacion_abierta(estado: LearningState) -> set[str]:
-    """Asuntos cuya tensión ya fue deliberada y quedó esperando: aplazada
-    (espera el camino de evidencia, CONCEPT-0002 §4) o escalada (espera
-    la autoridad humana, RFC-0009 §3). No hay reapertura (INV-3, P14):
-    lo que habrá es una NUEVA deliberación `enlaza_a` la abierta — la
-    resolución humana ya la produce `boundary/inbound/escalada.py`; la
-    reconvocatoria por evidencia nueva y su límite son Parte F
-    (ROADMAP-RFC-0006). Hasta ese enlace, la tensión NO es bloqueante:
-    reconvocarla registraría deliberaciones duplicadas sin evidencia
-    nueva (y, en el caso escalado, resolvería por mecánica lo que
-    espera al docente)."""
+def _cabezas_abiertas(estado: LearningState) -> dict[str, DeliberacionEntry]:
+    """Asunto → su deliberación abierta: aplazada (espera el camino de
+    evidencia, CONCEPT-0002 §4) o escalada (espera la autoridad humana,
+    RFC-0009 §3), sin ninguna deliberación posterior `enlaza_a` ella.
+    No hay reapertura (INV-3, P14): lo que cierra una cabeza es siempre
+    una NUEVA deliberación enlazada — la resolución humana la produce
+    `boundary/inbound/escalada.py`; la reconvocatoria por evidencia
+    nueva la produce `convocar` (Parte F). A lo sumo una cabeza por
+    asunto, por construcción: toda deliberación nueva sobre un asunto
+    con cabeza nace enlazada a ella."""
     enlazadas = {d.enlaza_a for d in estado.deliberaciones if d.enlaza_a is not None}
-    abiertos: set[str] = set()
+    cabezas: dict[str, DeliberacionEntry] = {}
     for deliberacion in estado.deliberaciones:
         if isinstance(deliberacion.resultado, Resuelta):
             continue
         if deliberacion.id in enlazadas:
             continue
         participante = estado.buscar(deliberacion.participantes[0])
-        abiertos.add(participante.asunto)
-    return abiertos
+        cabezas[participante.asunto] = deliberacion
+    return cabezas
+
+
+def _aplazamientos_en_cadena(
+    estado: LearningState, cabeza: DeliberacionEntry | None
+) -> int:
+    """Cuántas `Aplazada` acumula la cadena `enlaza_a` que termina en
+    `cabeza` (CONCEPT-0002 §5: "la cadena deliberación → deliberación'
+    es, ella misma, evidencia longitudinal"). Se sigue el enlace hacia
+    atrás — nunca se cuentan deliberaciones sueltas del mismo asunto
+    como si fueran la misma cadena (ROADMAP-RFC-0006 Parte F: ese es el
+    error sutil que este recorrido evita)."""
+    contador = 0
+    actual = cabeza
+    while actual is not None:
+        if isinstance(actual.resultado, Aplazada):
+            contador += 1
+        actual = (
+            estado.buscar(actual.enlaza_a) if actual.enlaza_a is not None else None
+        )
+    return contador
 
 
 def tension_bloqueante(
@@ -85,19 +107,37 @@ def tension_bloqueante(
     asunto) o "D2" (≥2 `PROPUESTA` vigentes rivales del mismo asunto) —
     mismo criterio de rivalidad que antes (≥2 vigentes, mismo asunto),
     ahora aplicado también a `INTERPRETACION`, no solo a `PROPUESTA`.
-    Un asunto con deliberación abierta (aplazada/escalada sin enlace
-    posterior) deja de ser bloqueante mientras espera (Parte E)."""
-    abiertos = _asuntos_con_deliberacion_abierta(estado)
+
+    Con cabeza abierta (Parte E/F): una tensión ESCALADA jamás vuelve a
+    ser bloqueante — resolverla por mecánica sería el bypass que
+    RFC-0009 §3 prohíbe; solo la cierra el docente (E3). Una tensión
+    APLAZADA vuelve a ser bloqueante únicamente cuando el paisaje del
+    asunto cambió — el conjunto de rivales vigentes difiere de los
+    participantes registrados en la cabeza (CONCEPT-0002 §5: "llega la
+    evidencia declarada faltante" / "aparece una nueva propuesta rival";
+    la cascada que tumba un participante y la re-propuesta que lo
+    reemplaza son exactamente ese cambio). Con el paisaje idéntico,
+    reconvocar reproduciría la misma resolución bit a bit (los `ce` de
+    una tensión aplazada no pueden variar sin evidencia nueva en su
+    cadena — sin decisión derivada no hay refuerzo, refutación ni ancla
+    de decaimiento): sería churn, no consenso."""
+    cabezas = _cabezas_abiertas(estado)
     for tipo, filtro in _TIPOS_EN_ORDEN:
         por_asunto: dict[str, list[ClaimEntry]] = defaultdict(list)
         for claim in _claims_vigentes_de(estado, filtro):
             por_asunto[claim.asunto].append(claim)
         for asunto in sorted(por_asunto):
-            if asunto in abiertos:
-                continue
             rivales = por_asunto[asunto]
-            if len(rivales) >= 2:
-                return tipo, asunto, tuple(sorted((c.id for c in rivales), key=str))
+            if len(rivales) < 2:
+                continue
+            participantes = tuple(sorted((c.id for c in rivales), key=str))
+            cabeza = cabezas.get(asunto)
+            if cabeza is not None:
+                if isinstance(cabeza.resultado, Escalada):
+                    continue
+                if cabeza.participantes == participantes:
+                    continue
+            return tipo, asunto, participantes
     return None
 
 
@@ -126,52 +166,82 @@ def convocar(
     registra un resultado — el espacio es cerrado (CONCEPT-0002 §5 bis),
     y el grafo jamás cicla en "deliberar" sin avance.
 
-    Bajo `"v1"` (delta=0, pesos_asunto vacío): el margen entre dos
-    puntajes nunca es negativo, así que `margen >= delta=0` siempre se
-    cumple — la Parte E es estructuralmente inalcanzable y la
-    comparación se reduce a "mayor ce gana", que para v1 (ce ==
-    confianza declarada, RFC-0006/1) es matemáticamente
-    `mayor-confianza-declarada` — de ahí que `REGLA_POLITICA_V1` siga
-    siendo el nombre correcto para registrar, no solo el histórico."""
+    Escalada (RFC-0006 §4, Parte F) — dos vías, ambas de política:
+    (1) RESERVA: una tensión sobre un asunto de
+    `politica.asuntos_reservados` se escala sin computar resolución —
+    la política le quitó a la mecánica la autoridad sobre ese asunto, y
+    ni la urgencia la devuelve (resolver provisionalmente lo reservado
+    sería el bypass de RFC-0009 §3); (2) LÍMITE DE RECONVOCATORIA: si
+    la cadena `enlaza_a` ya acumula `limite_reconvocatoria` aplazadas y
+    el margen sigue sin discriminar, el resultado es `Escalada` —
+    "ninguna deliberación puede diferirse para siempre". La urgencia sí
+    precede al límite (CONCEPT-0002 §4: "la provisionalidad es para el
+    estudiante" — escalar es esperar a una persona, y el estudiante no
+    puede esperar). Toda deliberación sobre un asunto con cabeza
+    abierta nace `enlaza_a` ella (CONCEPT-0002 §5: jamás reapertura) —
+    la cadena resultante es la evidencia longitudinal que S2/Replay
+    exhiben.
+
+    Bajo `"v1"` (delta=0, pesos_asunto vacío, sin asuntos reservados):
+    el margen entre dos puntajes nunca es negativo, así que
+    `margen >= delta=0` siempre se cumple — las Partes E y F son
+    estructuralmente inalcanzables y la comparación se reduce a "mayor
+    ce gana", que para v1 (ce == confianza declarada, RFC-0006/1) es
+    matemáticamente `mayor-confianza-declarada` — de ahí que
+    `REGLA_POLITICA_V1` siga siendo el nombre correcto para registrar,
+    no solo el histórico."""
     tension = tension_bloqueante(estado)
     if tension is None:
         return None
     tipo, asunto, participantes = tension
-    claims = [estado.buscar(ref) for ref in participantes]
-    ces = {c.id: calcular_confianza_efectiva(c, estado, politica) for c in claims}
-    peso = politica.pesos_asunto.get(asunto, Decimal("1")) if tipo == "D2" else Decimal("1")
-    puntajes = {claim_id: ce * peso for claim_id, ce in ces.items()}
-
-    ordenados = sorted(claims, key=lambda c: (puntajes[c.id], str(c.id)), reverse=True)
-    ganador, rival = ordenados[0], ordenados[1]
-    margen = puntajes[ganador.id] - puntajes[rival.id]
+    cabeza = _cabezas_abiertas(estado).get(asunto)
 
     resultado: ResultadoDeliberacion
-    if margen >= politica.delta:
-        resultado = Resuelta(
-            regla=REGLA_POLITICA_V1,
-            aceptados=(ganador.id,),
-            confianza=ces[ganador.id],
-        )
-    elif urgente:
-        resultado = Resuelta(
-            regla=REGLA_PROVISIONAL,
-            aceptados=(ganador.id,),
-            confianza=ces[ganador.id],
-        )
+    if asunto in politica.asuntos_reservados:
+        resultado = Escalada()
     else:
-        resultado = Aplazada(
-            evidencia_faltante=(
-                f"evidencia sobre '{asunto}' que discrimine entre "
-                f"{ganador.id} y {rival.id}: margen {margen} < "
-                f"delta {politica.delta}"
-            )
-        )
+        claims = [estado.buscar(ref) for ref in participantes]
+        ces = {c.id: calcular_confianza_efectiva(c, estado, politica) for c in claims}
+        peso = politica.pesos_asunto.get(asunto, Decimal("1")) if tipo == "D2" else Decimal("1")
+        puntajes = {claim_id: ce * peso for claim_id, ce in ces.items()}
 
+        ordenados = sorted(claims, key=lambda c: (puntajes[c.id], str(c.id)), reverse=True)
+        ganador, rival = ordenados[0], ordenados[1]
+        margen = puntajes[ganador.id] - puntajes[rival.id]
+
+        if margen >= politica.delta:
+            resultado = Resuelta(
+                regla=REGLA_POLITICA_V1,
+                aceptados=(ganador.id,),
+                confianza=ces[ganador.id],
+            )
+        elif urgente:
+            resultado = Resuelta(
+                regla=REGLA_PROVISIONAL,
+                aceptados=(ganador.id,),
+                confianza=ces[ganador.id],
+            )
+        elif (
+            _aplazamientos_en_cadena(estado, cabeza)
+            >= politica.limite_reconvocatoria
+        ):
+            resultado = Escalada()
+        else:
+            resultado = Aplazada(
+                evidencia_faltante=(
+                    f"evidencia sobre '{asunto}' que discrimine entre "
+                    f"{ganador.id} y {rival.id}: margen {margen} < "
+                    f"delta {politica.delta}"
+                )
+            )
+
+    argumentos: dict = {"participantes": participantes, "resultado": resultado}
+    if cabeza is not None:
+        argumentos["enlaza_a"] = cabeza.id
     return TransitionIntent(
         productor="kernel",
         operacion="registrar_deliberacion",
-        argumentos={"participantes": participantes, "resultado": resultado},
+        argumentos=argumentos,
         base=estado.transicion,
     )
 
