@@ -15,8 +15,8 @@ from __future__ import annotations
 import dataclasses
 from typing import Any, Mapping
 
-from runtime.kernel.events import DecisionRegistrada
-from runtime.kernel.reducers.comunes import norma_de, rechazo
+from runtime.kernel.events import DecisionRegistrada, EntradaSupersedida
+from runtime.kernel.reducers.comunes import marcar_supersedida, norma_de, rechazo
 from runtime.kernel.reducers.resultado import Aplicado, Rechazado, ResultadoReducer
 from runtime.kernel.state.entries import (
     ClaimEntry,
@@ -107,12 +107,29 @@ def registrar_decision(
     except ValueError as violacion:
         return rechazo(indice, norma_de(violacion, "INV-6"), str(violacion))
 
+    # Corregir es superseder (RFC-0003 INV-3, P14): una decisión nueva
+    # sobre un asunto corrige a la vigente anterior del MISMO asunto —
+    # nunca conviven dos decisiones vigentes sobre el mismo asunto (la
+    # Entrega/S1 y la deuda abierta serían ambiguas). La historia queda
+    # intacta: la anterior se marca superseded-por, jamás se borra.
+    decisiones = estado.decisiones
+    eventos: tuple = ()
+    for previa in decisiones:
+        if previa.asunto == asunto and previa.vigencia.vigente:
+            decisiones = marcar_supersedida(decisiones, previa.id, decision.id)
+            eventos += (
+                EntradaSupersedida(
+                    transicion=indice, entry_id=previa.id, por=decision.id
+                ),
+            )
+
     nuevo_estado = dataclasses.replace(
-        estado, decisiones=estado.decisiones + (decision,), transicion=indice
+        estado, decisiones=decisiones + (decision,), transicion=indice
     )
     return Aplicado(
         estado=nuevo_estado,
-        eventos=(
+        eventos=eventos
+        + (
             DecisionRegistrada(
                 transicion=indice,
                 entry_id=decision.id,

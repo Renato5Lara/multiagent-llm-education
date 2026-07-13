@@ -142,3 +142,83 @@ class TestINV_6_RegistrarDecision:
         estado, propuesta_id = _estado_con_propuesta()
         registrar_decision(estado, origen=propuesta_id, contenido={})
         assert estado.decisiones == ()
+
+
+# ── Corregir es superseder (INV-3/P14 aplicado a decisiones, 2026-07-13) ──
+
+
+class TestDecisionNuevaSupersedeLaAnterior:
+    def _dos_decisiones_mismo_asunto(self):
+        """Dos propuestas sucesivas sobre siguiente-paso(sesion), cada
+        una derivando su decisión — la segunda corrige a la primera."""
+        estado, _ = _estado_con_propuesta()
+        claim_1 = estado.claims[-1].id
+        r = registrar_decision(
+            estado, origen=claim_1, contenido={"accion": "reforzar-condicionales"}
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        decision_1 = estado.decisiones[-1].id
+
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.ORIENTAR,
+            tipo=TipoClaim.PROPUESTA,
+            asunto="siguiente-paso(sesion)",
+            afirmacion={"accion": "avanzar-con-andamiaje"},
+            respaldo=(estado.facts[0].id,),
+            confianza=Decimal("0.75"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="ruta-v1"),
+        )
+        assert isinstance(r, Aplicado)
+        estado = r.estado
+        claim_2 = estado.claims[-1].id
+        r = registrar_decision(
+            estado, origen=claim_2, contenido={"accion": "avanzar-con-andamiaje"}
+        )
+        assert isinstance(r, Aplicado)
+        return r, decision_1
+
+    def test_nunca_dos_decisiones_vigentes_del_mismo_asunto(self):
+        r, decision_1_id = self._dos_decisiones_mismo_asunto()
+        vigentes = [
+            d
+            for d in r.estado.decisiones
+            if d.asunto == "siguiente-paso(sesion)" and d.vigencia.vigente
+        ]
+        assert len(vigentes) == 1
+        assert vigentes[0].contenido["accion"] == "avanzar-con-andamiaje"
+
+    def test_la_anterior_queda_superseded_por_la_nueva_con_evento(self):
+        r, decision_1_id = self._dos_decisiones_mismo_asunto()
+        previa = next(d for d in r.estado.decisiones if d.id == decision_1_id)
+        nueva = r.estado.decisiones[-1]
+        assert previa.vigencia.superseded_por == nueva.id
+        supersediones = [
+            e for e in r.eventos if type(e).__name__ == "EntradaSupersedida"
+        ]
+        assert [e.entry_id for e in supersediones] == [decision_1_id]
+
+    def test_asuntos_distintos_no_se_tocan(self):
+        estado, _ = _estado_con_propuesta()
+        claim_1 = estado.claims[-1].id
+        r = registrar_decision(
+            estado, origen=claim_1, contenido={"accion": "reforzar-condicionales"}
+        )
+        estado = r.estado
+        r = registrar_claim(
+            estado,
+            autor=Capacidad.ORIENTAR,
+            tipo=TipoClaim.PROPUESTA,
+            asunto="siguiente-paso(modulo)",
+            afirmacion={"accion": "otro"},
+            respaldo=(estado.facts[0].id,),
+            confianza=Decimal("0.7"),
+            provenance=Provenance.de(OrigenProvenance.REGLA, id="ruta-v1"),
+        )
+        estado = r.estado
+        r = registrar_decision(
+            estado, origen=estado.claims[-1].id, contenido={"accion": "otro"}
+        )
+        assert isinstance(r, Aplicado)
+        assert all(d.vigencia.vigente for d in r.estado.decisiones)
