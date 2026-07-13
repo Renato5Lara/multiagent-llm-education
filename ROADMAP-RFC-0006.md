@@ -296,8 +296,8 @@ igual que las anteriores — nunca un PR de 10 partes junto):
 > Engineering Gate reveló que Parte C requiere construir un camino de
 > enrutamiento que hoy no existe (blast radius real sobre `enrutar()`,
 > precedente `GraphRecursionError`) — se dividió en 2+3, corriendo la
-> numeración de las mini-épicas siguientes. Ver la nota al inicio de la
-> ficha RFC-0006/2 y la ficha RFC-0006/3 más abajo.
+> numeración de las mini-épicas siguientes. Ver §8 (resumen de
+> mini-épicas cerradas) para el detalle de ambas.
 
 ---
 
@@ -328,7 +328,7 @@ igual que las anteriores — nunca un PR de 10 partes junto):
    dentro de ella.** El vacío de `estado.ejecucion` (RFC-0004 §2) no se
    resuelve sobre la marcha. Antes de abrir RFC-0006/4 (Resolución
    completa, D+E — numeración corrida por la división de RFC-0006/2 en
-   2+3, ver ficha de RFC-0006/2) corre una revisión propia con su
+   2+3, ver §8) corre una revisión propia con su
    propio objetivo: ¿qué representa `ejecucion`
    realmente?, ¿quién lo escribe?, ¿quién lo consume?, ¿cuál es su
    ciclo de vida (persistente o efímero)?, ¿qué invariantes debe
@@ -403,450 +403,62 @@ Criterios de cierre (todos, no "aproximadamente"):
     referencia de una línea — su conocimiento ya vive en código/tests/RFC
 ```
 
-### RFC-0006/1A — Engineering Review previa (solo Parte A, sin código)
+## 8. Mini-épicas cerradas (resumen compacto)
 
-Antes de escribir `confianza.py`, una revisión dedicada que traduce
-A1-A8 (RFC-0006 §1) a un contrato computable — entrada, salida,
-propiedad demostrable, caso borde, test asociado, por axioma. Vive en
-`CONTRACT-A1-A8.md` (documento de trabajo temporal, no un RFC ni un
-ADR — puede eliminarse una vez que su contenido esté absorbido por el
-código y los tests). **RFC-0006/1 (la implementación, Parte 0 + Parte
-A) no empieza hasta que este documento esté aprobado.**
+Las fichas completas (auditoría paso a paso, Context Budget, criterios
+de cierre uno por uno) vivieron aquí durante la implementación de cada
+mini-épica — retiradas a este resumen una vez cerradas, siguiendo la
+misma regla que ya se aplicó a `CONTRACT-A1-A8.md`: el conocimiento
+detallado vive en el código y los tests, no en un documento paralelo
+que hay que mantener sincronizado. Lo que sigue es lo que no se puede
+reconstruir leyendo solo el código: qué se decidió y por qué.
 
-### Ficha — RFC-0006/1: Cimientos
+### RFC-0006/1 — Cimientos (Parte 0 + A) — CERRADO, commit `c1358cc`
 
-```
-Objetivo:        Confianza efectiva (ce) calculable y demostrada contra
-                 A1-A8; la política versionada tiene un sitio real
-                 donde vivir. Sin cambio de comportamiento visible.
-Partes:          0 + A
-Dependencias:    RFC-0006/1A (CONTRACT-A1-A8.md) aprobado
-Riesgos:         Altos ambas partes — 0 decide un mecanismo no
-                 especificado; A es la pieza más delicada del RFC
-                 completo (violar A5/A6/A7 sin darse cuenta) — mitigado
-                 por RFC-0006/1A.
-Motor:           Cambia — `kernel/deliberation/politica.py` (Parte 0:
-                 diccionario de constantes `POLITICAS = {"v1": ...,
-                 "v2": ...}`, sin Protocol — no hay evidencia hoy de
-                 que el dominio necesite polimorfismo; se introduce
-                 solo si aparece una política calculada dinámicamente)
-                 + `kernel/deliberation/confianza.py` (Parte A,
-                 `calcular_confianza_efectiva()`, según CONTRACT-A1-A8.md).
-                 mecanica.py NO se toca todavía (v1 intacta).
-Boundary:        No cambia.
-HTTP:            No cambia.
-Frontend:        No cambia.
-E2E:             No cambia — ce no es observable desde ninguna
-                 categoría de runtime_completo.py hasta que Parte D la
-                 conecte a mecanica.py (RFC-0006/4 tras la renumeración
-                 de 2026-07-12, antes "RFC-0006/3" — ver ficha de
-                 RFC-0006/2).
+`ce` calculable y demostrada contra A1-A8; política versionada con
+sitio real (`politica.py`). Sin cambio de comportamiento — `mecanica.py`
+no se tocó. 281/281 tests. Detalle: sección "Garantías" del docstring
+de módulo de `confianza.py`, docstring de `Politica`,
+`tests/runtime/deliberation/{test_parte0_politica,test_A1_A7_confianza_efectiva}.py`.
 
-No debe cambiar: politica-v1 / mecanica.py, kernel/reducers/ (ningún
-                 reducer nuevo — ce es una proyección, no una
-                 mutación), boundary/, app/api/routes/, frontend/,
-                 RFC-0010 (ninguna surface nueva ni modificada),
-                 backend/e2e/ (ningún ajuste — nada observable cambia).
+Hallazgo no obvio: el contrato original de "edad lógica" (A4/A6) violaba
+A7 (localidad causal) — un test real lo probó; corregido a anclar por la
+última validación DENTRO de la cadena causal del claim, nunca por el
+origen del claim ni por `estado.transicion` en bruto.
+`CONTRACT-A1-A8.md` (RFC-0006/1A, la Engineering Review previa a esta
+parte) está retirado — su contenido vive en el código citado arriba.
 
-Context Budget:  CONTRACT-A1-A8.md (una vez aprobado), RFC-0006,
-                 CONCEPT-0002, ROADMAP-RFC-0006.md,
-                 kernel/deliberation/mecanica.py (leer, no tocar),
-                 kernel/state/entries.py, kernel/state/state.py,
-                 kernel/reducers/ (leer, no tocar),
-                 tests/runtime/ (para el patrón de test real existente).
-                 No abrir boundary/, app/, frontend/ salvo que el
-                 propio Gate revele que algo ahí es necesario — y si
-                 aparece, justificar antes de abrir, no abrir primero.
+### RFC-0006/2 — Detección y clasificación D1/D2 (Parte B) — CERRADO, commit `d769ddf`
 
-Criterios de cierre — CERRADO 2026-07-12:
-  ✓ A1-A7 tienen test dedicado (A1/A5/A6 con más de uno donde hacía
-    falta demostrar más de una propiedad — p.ej. A6 necesitó un test
-    sin ancla y otro anclado tras validación para no ser trivial),
-    contra Postgres real, siguiendo CONTRACT-A1-A8.md. A8 no tiene test
-    directo en confianza.py (es una precondición del llamador, no un
-    caso que la función valide) — su garantía se testea cuando Parte D
-    conecte `ce` a mecanica.py (RFC-0006/4 tras la renumeración) contra
-    el filtro real de vigencia.
-  ✓ v1 (politica-v1 / mecanica.py) sigue produciendo exactamente las
-    mismas decisiones — mecanica.py no se tocó (0 líneas), y
-    runtime_completo.py corrió el walkthrough real end-to-end
-    (Adaptar → "modalidad(COMP-2)" vía LLM real) con el mismo resultado
-    ya documentado antes de este cambio.
-  ✓ El mecanismo de política versionada permite que "v2" exista sin
-    tocar una línea de "v1" (test_una_politica_nueva_no_toca_v1)
-  ✓ confianza.py no importa mecanica.py (test estructural)
-  ✓ mecanica.py no importa confianza.py (test estructural, mismo patrón
-    que reconstruccion.py)
-  ✓ Toda la Parte A se prueba sin ejecutar LangGraph — LearningState
-    construido a mano vía reducers puros, sin walkthrough ni productores
-  ✓ Ninguna API HTTP cambió (0 archivos en app/api/ ni boundary/)
-  ✓ Ninguna surface Boundary cambió
-  ✓ runtime_completo.py sigue en 9/9 PASS, sin categoría nueva
-  ✓ No aparecen TODO/FIXME nuevos
-  ✓ Cobertura: 281 tests (260 previos + 21 nuevos: 7 Parte 0 + 14 Parte A)
-  ✓ CONTRACT-A1-A8.md reducido a una línea de referencia — verificado
-    con una Engineering Review de cierre dedicada (2026-07-12,
-    segunda ronda): la primera reducción fue prematura, dejaba A1, A2,
-    A3 y la garantía central de A5 sin restated en ningún docstring
-    (solo mencionados tangencialmente) y 5 referencias colgantes a
-    "CONTRACT-A1-A8.md" en confianza.py/politica.py/tests apuntando a
-    un documento ya vacío. Corregido: confianza.py tiene ahora una
-    sección "Garantías" explícita con las ocho, cada clase de test
-    A1-A7 tiene su enunciado en el docstring (legible sin el documento
-    viejo), y las 5 referencias colgantes se reemplazaron por punteros
-    al código real. 281/281 tests siguen en verde tras el cambio.
+`tension_bloqueante()` clasifica D1/D2; `convocar()` sigue resolviendo
+ambas igual (resolución por tipo es Parte D). `enrutar()`: 0 líneas
+modificadas. 288/288 tests, `runtime_completo.py` 9/9 con el mismo
+shape de traza. Detalle: `mecanica.py`,
+`tests/runtime/deliberation/test_parteB_deteccion_tension.py`.
 
-Corrección encontrada durante la implementación (registrada, no
-oculta): el contrato original de A4/A6 (`estado.transicion -
-claim.id.transicion`, edad medida desde el ORIGEN del claim) violaba
-A7 — un test real (`TestA7_LocalidadCausal`) lo probó: actividad en un
-asunto ajeno decaía un claim que nunca tocó. Corregido a "edad medida
-desde la última validación DENTRO de la cadena causal del claim, o 0 si
-nunca hubo ninguna" — ver la sección "Garantías" del docstring de
-módulo de `confianza.py` y el docstring de `Politica` en `politica.py`
-(CONTRACT-A1-A8.md, el documento temporal donde se descubrió esto, ya
-está retirado). Efecto colateral: la invariante
-`peso_refuerzo >= peso_decaimiento` en `Politica.__post_init__` dejó de
-ser matemáticamente necesaria bajo el diseño corregido (una validación
-recién aplicada tiene edad lógica 0 en su propio tick) y se retiró.
-```
+Hallazgo no obvio: esta ficha originalmente agrupaba B+C; el Engineering
+Gate reveló que C necesitaba un camino de enrutamiento que no existía
+— se dividió en 2+3 en vivo (tabla de mini-épicas en §3 ya refleja la
+numeración corrida). La tensión D2 (Remediar vs Orientar, ambos sobre
+`"siguiente-paso(sesion)"`) es real y está viva en el walkthrough hoy,
+no es hipotética — es la superficie de regresión real que RFC-0006/2 y
+/3 debían preservar.
 
----
+### RFC-0006/3 — Propuesta única bajo θ (Parte C), fix de INV-6 — CERRADO, commit `ad3facb`
 
-## Ficha — RFC-0006/2: Detección y clasificación (D1/D2)
+`Politica.theta` + `derivar_decision_directa()` (D3), cableado real en
+`enrutar()`/`_nodo_decidir`. 296/296 tests, `runtime_completo.py` 9/9
+mismo shape. Detalle: `mecanica.py`, `walkthrough.py`,
+`tests/runtime/walkthrough/test_FIX_remediar_dominada_true_no_hace_loop.py`.
 
-> **Nota de proceso (2026-07-12):** esta ficha originalmente agrupaba
-> B + C ("Convocatoria real"). El Engineering Gate reveló que Parte C
-> no es "agregar un chequeo" — requiere construir un camino que hoy no
-> existe (ver la ficha RFC-0006/3 más abajo), con blast radius real
-> sobre `enrutar()` (precedente `GraphRecursionError`). Se dividió en
-> dos mini-épicas más pequeñas, manteniendo la disciplina de "un
-> concepto nuevo por commit" en vez de expandir el alcance a mitad de
-> la implementación — la numeración de mini-épicas posteriores (antes
-> RFC-0006/3..5) se corrió en consecuencia (§3, tabla actualizada).
+Hallazgo real (bug preexistente de INV-6/RFC-0003, no un hueco nuevo de
+RFC-0006): cuando `dominada=True`, Orientar propone sin rival, nunca se
+derivaba decisión, y como Adaptar exige una decisión para actuar, nunca
+se activaba — un estudiante que respondía bien no llegaba a ninguna
+Entrega, en silencio. `runtime_completo.py` nunca lo detectó porque su
+fixture siempre fuerza `dominada=False`. `theta_v1=0` es una prueba
+matemática vía A1 (`ce >= 0` siempre), no un valor empírico. Efecto
+colateral encontrado durante la implementación: 19 archivos de test
+tenían `version_politica="politica-v1"`, nunca antes validado —
+corregido a `"v1"`, el valor real.
 
-```
-Objetivo:        La tensión D1 (interpretaciones rivales del mismo
-                 asunto) se detecta y se clasifica explícitamente como
-                 D1, distinta de D2 (propuestas rivales, ya detectada
-                 hoy) — sin tocar cómo se resuelve ninguna de las dos
-                 todavía (eso es Parte D).
-Partes:          B (únicamente — C se movió a RFC-0006/3)
-Dependencias:    RFC-0006/1 (Cimientos) cerrado — `ce` y `Politica` ya
-                 existen y están probados. (No depende de `ce`
-                 directamente: B es lógica de predicado sobre
-                 `TipoClaim`, no de cálculo — la dependencia es de
-                 orden, no técnica.)
-Riesgos:         Medio (tabla §6) — es cobertura, no dificultad
-                 técnica: verificar contra las 3 tensiones canónicas de
-                 CONCEPT-0002 §1 sin dejar un cuarto caso sin
-                 clasificar. Bajo blast radius: NO toca `enrutar()`
-                 (ver Motor).
-
-Auditoría previa (estado actual, verificado leyendo código, no
-supuesto): hoy `tension_bloqueante()` (mecanica.py) solo mira claims
-`PROPUESTA` — nunca detecta rivalidad entre `INTERPRETACION`. Y NINGÚN
-productor real conectado al grafo (`diagnosticar/productor.py`,
-`diagnosticar/productor_llm.py`, ambos auditados línea por línea) puede
-hoy producir más de una `INTERPRETACION` por asunto: los dos tienen la
-guardia `ya_interprete` (si ya existe una interpretación vigente de
-Diagnosticar, no producen otra) y ambos `return` dentro del primer
-`for` que encuentra un fact — como máximo un intent por invocación. Esto
-significa: **la tensión D1 es estructuralmente imposible de producir
-hoy en el walkthrough real** — no es que no ocurra por casualidad, es
-que ningún camino del código puede generarla.
-
-Auditoría adicional — la tensión D2 SÍ es real y SÍ está viva hoy: en
-`"siguiente-paso(sesion)"`, Orientar propone incondicionalmente
-"avanzar-con-andamiaje" en cuanto existe alguna interpretación vigente
-(`orientar/productor.py`), y Remediar propone cuando
-`dominada=False` (`remediar/productor.py`) — ambas comparten
-literalmente el mismo asunto (`ASUNTO_SIGUIENTE_PASO =
-"siguiente-paso(sesion)"` en los dos archivos). Cuando ambas disparan
-en el mismo walkthrough, `tension_bloqueante()` YA las detecta hoy y
-`convocar()` YA las resuelve por `mayor-confianza-declarada` — esta es
-la tensión canónica #1 de CONCEPT-0002 §1 ("¿avanzar o reforzar?", D2
-pura), en vivo, no hipotética. **Esta es la superficie de regresión
-real de esta mini-épica**: el refactor de `tension_bloqueante()` debe
-preservar bit a bit esta detección/resolución existente — la Garantía
-de activación de abajo cubre D1 (inerte), no D2 (vivo y debe mantenerse
-idéntico).
-
-**Garantía de activación — D1 (propiedad verificable, no solo
-observación):** aunque la detección D1 exista tras RFC-0006/2, ningún
-recorrido del walkthrough actual puede activarla, porque ningún
-productor conectado genera interpretaciones rivales. Cualquier
-diferencia observable en `runtime_completo.py` atribuible a D1 durante
-esta mini-épica constituye una regresión, no un efecto secundario
-aceptable.
-
-Motor:           Cambia — `kernel/deliberation/mecanica.py` únicamente.
-                 `tension_bloqueante()` extiende su retorno de
-                 `(asunto, participantes)` a `(tipo, asunto,
-                 participantes)`, con `tipo` ∈ {"D1", "D2"} — escanea
-                 primero `INTERPRETACION` (D1) y luego `PROPUESTA` (D2)
-                 por asunto, mismo criterio de rivalidad que hoy (≥2
-                 vigentes). `convocar()` desempaqueta el 3-tuple y
-                 descarta `tipo` por ahora (ignora la clasificación,
-                 usa `participantes` exactamente como hoy — resolución
-                 sin cambios, es Parte D). `enrutar()` en
-                 `walkthrough.py` **NO cambia**: su chequeo
-                 `tension_bloqueante(estado) is not None` sigue
-                 funcionando sin modificación con el 3-tuple — inventar
-                 una rama nueva ahí sería adelantar comportamiento de
-                 Parte D que todavía no existe.
-Boundary:        No cambia.
-HTTP:            No cambia.
-Frontend:        No cambia.
-E2E:             `runtime_completo.py` no gana categoría nueva.
-                 Categoría Runtime debe seguir en verde con el MISMO
-                 resultado — es la prueba de que la tensión D2 viva
-                 (Remediar/Orientar) sigue resolviéndose exactamente
-                 igual tras el refactor.
-
-No debe cambiar: `enrutar()` / `engine/graph/walkthrough.py` (ningún
-                 archivo de grafo se toca en esta mini-épica — el
-                 3-tuple es compatible con el chequeo `is not None`
-                 existente sin editar una línea ahí), `confianza.py`
-                 (Parte A ya cerrada), `politica.py` (theta es Parte C,
-                 no esta ficha), `derivar_decision()` (Parte D),
-                 cualquier lógica de margen δ o resolución D1-vs-D2 con
-                 peso distinto (Parte D), boundary/, app/api/routes/,
-                 frontend/, REGLA_POLITICA_V1 =
-                 "mayor-confianza-declarada" (sigue siendo la única
-                 regla de resolución; D1/D2 se clasifican pero ambas
-                 siguen resolviéndose igual hasta Parte D).
-
-Context Budget:  ROADMAP-RFC-0006.md (este documento), RFC-0006 §3,
-                 CONCEPT-0002 §1 (las 3 tensiones canónicas),
-                 kernel/deliberation/mecanica.py,
-                 kernel/state/entries.py,
-                 runtime/domain/diagnosticar/,
-                 runtime/domain/remediar/productor.py,
-                 runtime/domain/orientar/productor.py (los tres, leer
-                 no tocar — ya auditados: confirman D1 inalcanzable y
-                 D2 real/vivo), tests/runtime/deliberation/ (patrón ya
-                 establecido). No abrir engine/graph/,
-                 kernel/deliberation/politica.py, boundary/, app/,
-                 frontend/ — nada de esto cambia en esta ficha.
-
-Criterios de cierre — CERRADO 2026-07-12:
-  ✓ tension_bloqueante() clasifica explícitamente cada tensión
-    encontrada como D1 o D2 — 3 tensiones canónicas de CONCEPT-0002 §1
-    (avanzar-vs-reforzar D2 real, modalidad D2, dominó-el-objetivo D1) +
-    1 caso de control sin tensión (test_parteB_deteccion_tension.py)
-  ✓ La tensión D2 viva (Remediar vs Orientar en
-    "siguiente-paso(sesion)") se detecta y resuelve exactamente igual
-    que antes del refactor — test explícito construido con los
-    productores reales (no una fixture inventada), Y confirmado en el
-    E2E real: `runtime_completo.py` produjo exactamente 7 transiciones
-    (fact→diagnosticar→remediar→orientar→deliberación→decisión→adaptar),
-    idéntico al recorrido pre-Parte-B
-  ✓ convocar() sigue produciendo el mismo TransitionIntent — mismo
-    ganador (Remediar, 0.82), misma regla (mayor-confianza-declarada)
-  ✓ enrutar() / walkthrough.py: 0 líneas modificadas (verificado con
-    test estructural: ni "D1" ni "D2" aparecen en walkthrough.py)
-  ✓ politica-v1 sigue produciendo exactamente las mismas decisiones —
-    runtime_completo.py 9/9 PASS, categoría Runtime idéntica
-    (entrega=modalidad(COMP-2), mismo shape de traza)
-  ✓ Toda la Parte B se prueba sin ejecutar LangGraph — LearningState a
-    mano o productores reales invocados directamente, sin walkthrough
-  ✓ Ninguna API HTTP cambia
-  ✓ Ninguna surface Boundary cambia
-  ✓ No aparecen TODO/FIXME nuevos
-  ✓ Cobertura: 288 tests (281 previos + 7 nuevos de Parte B)
-  ✓ Ningún documento temporal nuevo abierto en esta ficha
-```
-
----
-
-## Ficha — RFC-0006/3: Propuesta única, θ e insuficiencia (D3) — fix de INV-6
-
-> Separada de RFC-0006/2 por el Engineering Gate (nota arriba). Una
-> segunda Engineering Review (2026-07-12, tras la aprobación de abrir
-> este Gate) auditó el camino de "propuesta única" desde cero — sin
-> asumir que el diseño de esta ficha era definitivo — y encontró que el
-> alcance real es mayor y más urgente de lo escrito originalmente
-> abajo: no es solo "falta implementar D3", es **un bug preexistente
-> que deja una rama real del walkthrough terminando en silencio**. Ver
-> "Auditoría previa" (actualizada) y "Objetivo" (corregido) más abajo.
-
-```
-Objetivo:        [ACTUALIZADO] Corregir INV-6 (RFC-0003): una propuesta
-                 sin rival debe poder derivar su decisión directamente
-                 — hoy no puede, y eso dejaba la rama `dominada=True`
-                 del walkthrough terminando en `END` sin decisión ni
-                 Adaptar (bug real, no hueco de RFC-0006). Esta
-                 mini-épica corrige ese bug Y, en el mismo mecanismo,
-                 implementa D3: si `ce` no alcanza el umbral θ de la
-                 política, NO deriva decisión — se activa el camino de
-                 evidencia. La derivación por propuesta única queda
-                 registrada como "no-convocatoria" (RFC-0006 §3, P6:
-                 "decidió una capacidad sola porque nadie podía
-                 disentir").
-Partes:          C
-Dependencias:    RFC-0006/2 (Detección y clasificación) cerrado.
-
-Auditoría previa [ACTUALIZADA — segunda ronda, veredicto final]: **hoy
-NO existe ningún camino para que una propuesta única derive una
-decisión.** `registrar_decision` solo se invoca desde `derivar_decision()`
-(mecanica.py), que solo lee `estado.deliberaciones` buscando una
-`Resuelta` — nunca examina un claim-propuesta sin rival directamente.
-
-**Es un bug real, preexistente a RFC-0006 — no una decisión de diseño
-ni un hueco nuevo.** Evidencia normativa: `RFC-0003-learning-state.md`
-(fundacional, anterior a RFC-0006) ya define **INV-6**: *"Toda decisión
-referencia la deliberación **o el claim-propuesta único**"* — el modelo
-siempre contempló este camino. El reducer `registrar_decision` ya lo
-soporta (`_derivar_de_origen` acepta un `ClaimEntry` directo, sin
-cambios necesarios ahí). Adaptar tiene diseño pedagógico COMPLETO para
-`"avanzar-con-andamiaje"` (`DISENO_POR_ACCION`, modalidad=mixta,
-profundidad=aplicación — no un stub). Todas las piezas del dominio
-asumen que este camino existe; solo falta el cableado en `mecanica.py`.
-
-**Impacto real, trazado paso a paso:** cuando `dominada=True` (un
-estudiante responde bien), Remediar nunca propone (su guardia exige
-`dominada is False`) — Orientar propone SOLA en
-`"siguiente-paso(sesion)"`. Sin rival, `tension_bloqueante()` devuelve
-`None`, `convocar()` nunca corre, ninguna deliberación se crea,
-`derivar_decision()` nunca encuentra nada. `enrutar()` cae a
-`return END`. Como `Adaptar.producir()` itera `estado.decisiones`
-buscando una `accion` en `DISENO_POR_ACCION` (`adaptar/productor.py:86`),
-**Adaptar nunca se activa** — sin decisión, sin Adaptar, sin Entrega
-(`S1` devuelve `Entrega(asunto=None, diseno=None)`, indistinguible de
-"estudiante nuevo sin evidencia"). El walkthrough termina en silencio,
-sin error.
-
-**Por qué nadie lo había notado:** `runtime_completo.py._runtime` (la
-categoría que valida el walkthrough real vía HTTP) usa
-`items_incorrectos=[3, 4, 8]` — siempre 3 errores, siempre
-`dominada=False`, siempre forzando la rivalidad Remediar-vs-Orientar
-que sí funciona. La rama `dominada=True` nunca se ejercitó de punta a
-punta con el grafo real, ni una sola vez, hasta esta auditoría.
-
-**Consecuencia para "No debe cambiar comportamiento observable"
-(criterio original de esta ficha, ahora corregido más abajo):** con
-`theta_v1 = 0` (el mínimo posible por A1), construir este camino NO es
-un no-op para la rama `dominada=True` — es la corrección real de un
-bug: donde hoy el walkthrough termina en `END` sin decisión, pasará a
-derivar una decisión y activar Adaptar. Este es el resultado deseado,
-documentado explícitamente como fix, no como regresión. La rama
-`dominada=False` (con la tensión D2 real de RFC-0006/2) debe seguir
-byte-idéntica — ESA es la garantía de no-regresión real de esta ficha,
-no "cero cambios en absoluto".
-
-Riesgos:         Alto — mayor que lo que la ficha original de
-                 RFC-0006/2 asumía. No es "agregar un chequeo dentro de
-                 convocar()": es una rama de enrutamiento nueva en
-                 `enrutar()` (`engine/graph/walkthrough.py`), el mismo
-                 archivo del `GraphRecursionError` de HITL. Riesgo
-                 específico: una guardia mal puesta en esta rama puede
-                 crear un ciclo aplicar→enrutar sin avance (mismo tipo
-                 de bug que las guardias PR-2..PR-5 ya existentes en
-                 ese archivo previenen para otros nodos) — replicar el
-                 mismo patrón de guardia, no inventar uno nuevo.
-
-Motor:           Cambia — `kernel/deliberation/politica.py` (nuevo
-                 campo `theta: Decimal`; `theta_v1` se decide en el
-                 Gate de esta ficha, demostrado por la suite, no
-                 asumido de antemano) + `kernel/deliberation/mecanica.py`
-                 (nueva función — p. ej. `derivar_directa()` o nombre
-                 que decida el Gate — que localiza una PROPUESTA vigente
-                 sin rival y sin decisión ya derivada de su asunto, y
-                 devuelve un intent de decisión si `ce >= theta`, o
-                 nada si no) + `engine/graph/walkthrough.py` (`enrutar()`
-                 gana la rama de insuficiencia — con guardia segura,
-                 mismo patrón que las guardias PR-2..PR-5 existentes,
-                 para no repetir el riesgo de GraphRecursionError).
-Boundary:        No cambia (a confirmar en el Gate — si D3 necesita ser
-                 observable, podría tocar RFC-0007, no esta ficha).
-HTTP:            No cambia.
-Frontend:        No cambia.
-E2E:             runtime_completo.py, categoría Runtime (fixture
-                 `dominada=False`, 3 errores): DEBE seguir produciendo
-                 el mismo resultado — validación obligatoria. Además,
-                 esta mini-épica AGREGA la primera validación E2E real
-                 de la rama `dominada=True` (hoy no existe ninguna) —
-                 antes: `END` sin decisión; después: decisión derivada
-                 + Adaptar activado. No es una categoría nueva de
-                 `runtime_completo.py` — es un caso adicional dentro de
-                 Runtime, o un script E2E dedicado si el Gate lo
-                 justifica.
-
-No debe cambiar: `tension_bloqueante()` / clasificación D1/D2 (RFC-0006/2
-                 ya cerrada, no se reabre), `confianza.py` (Parte A),
-                 resolución con margen δ (Parte D), REGLA_POLITICA_V1,
-                 boundary/, app/api/routes/, frontend/.
-
-Context Budget:  ROADMAP-RFC-0006.md (este documento), RFC-0006 §3
-                 completo, CONCEPT-0002 §1/§3,
-                 kernel/deliberation/mecanica.py,
-                 kernel/deliberation/politica.py,
-                 kernel/reducers/decisiones.py (ya soporta origen
-                 ClaimEntry directo — leer antes de tocar),
-                 engine/graph/walkthrough.py completo (leer entero antes
-                 de tocar una línea — precedente GraphRecursionError),
-                 runtime/domain/remediar/, runtime/domain/orientar/
-                 (leer, no tocar), tests/runtime/deliberation/,
-                 tests de grafo existentes (patrón de guardias
-                 PR-2..PR-5). No abrir boundary/, app/, frontend/ salvo
-                 que el Gate lo justifique explícitamente antes de
-                 abrir.
-
-Criterios de cierre — CERRADO 2026-07-12:
-  ✓ Existe un camino real (`derivar_decision_directa`, mecanica.py) para
-    que una propuesta única derive decisión cuando ce >= theta —
-    cableado en `enrutar()`/`_nodo_decidir` (walkthrough.py), no solo
-    una función pura sin wiring
-  ✓ La función compara `ce` contra `politica.theta`; si `ce < theta`
-    (D3, insuficiencia) no deriva nada — el "camino de evidencia" que
-    RFC-0006 §3 describe no es un nodo del grafo hoy (Evaluar es
-    entrada externa E2, no un productor interno); insuficiencia se
-    traduce en que el walkthrough espera una reanudación con más
-    evidencia, mismo patrón ya documentado en `ejecutar_walkthrough`
-  ✓ La decisión de propuesta única se distingue de una decisión
-    deliberada por su `origen` (`ClaimEntry` directo vs
-    `DeliberacionEntry`) — sin campo nuevo, el mecanismo ya existente
-    de `registrar_decision`/INV-6 alcanza para P6
-  ✓ Bajo política v1: la rama `dominada=False` (tensión D2 real,
-    RFC-0006/2) produce EXACTAMENTE las mismas decisiones que antes —
-    verificado con test Postgres+LangGraph real extendido
-    (`test_dominada_false_preserva_el_comportamiento_original`) Y con
-    runtime_completo.py (mismo shape: 7 transiciones, misma entrega).
-    La rama `dominada=True` CAMBIA de forma intencional: donde antes
-    terminaba en `END` sin decisión, ahora deriva
-    `accion="avanzar-con-andamiaje"` y activa Adaptar — confirmado con
-    Postgres+LangGraph real
-    (`test_dominada_true_no_produce_recursion_error`, extendido)
-  ✓ Test E2E real y explícito para la rama `dominada=True` — extendió
-    el archivo de regresión ya existente
-    (`test_FIX_remediar_dominada_true_no_hace_loop.py`, no uno nuevo
-    paralelo): confirma decisión derivada, Adaptar activado, y
-    `proyectar_entrega()` con contenido real (antes `(None, None)`)
-  ✓ enrutar() usa la MISMA función que `_nodo_decidir` invocará como
-    guardia (mismo patrón que tension_bloqueante/convocar,
-    PR-2..PR-5) — evita que guardia y nodo diverjan; los 296 tests
-    reales (incluido el Postgres+LangGraph extendido) confirman que no
-    hay ciclo aplicar→enrutar sin avance
-  ✓ politica-v1: runtime_completo.py 9/9 PASS; categoría Runtime
-    (dominada=False) con el MISMO shape de traza; dominada=True
-    verificado en test dedicado — ya no termina en silencio
-  ✓ Ninguna API HTTP cambia
-  ✓ Ninguna surface Boundary cambia
-  ✓ No aparecen TODO/FIXME nuevos
-  ✓ Cobertura: 296 tests (288 previos + 8 nuevos: 2 theta Parte 0/C +
-    7 Parte C puros − 1 test de independencia retirado
-    deliberadamente, ver nota abajo)
-  ✓ Ningún documento temporal nuevo abierto en esta ficha
-
-Hallazgo adicional durante el Gate — corregido dentro del alcance:
-`test_mecanica_no_importa_confianza` (RFC-0006/1) afirmaba una
-independencia que solo era válida ANTES de esta mini-épica — su propio
-docstring original decía "mecanica.py NO se toca todavía ... eso es
-RFC-0006/3". Se retiró (no se dejó romper en silencio), documentando
-por qué en `TestIndependencia`. También se corrigió
-`version_politica="politica-v1"` → `"v1"` en 19 archivos de test que
-nunca antes se validaban (el campo era decorativo hasta que
-`resolver_politica()` se cableó en `_construir()`) — mecánico, sin
-cambio de comportamiento, verificado con la suite completa.
-```
