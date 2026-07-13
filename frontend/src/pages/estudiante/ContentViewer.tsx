@@ -25,7 +25,6 @@ export default function ContentViewer() {
     const { resourceId } = useParams<{ resourceId: string }>()
     const [searchParams] = useSearchParams()
     const courseId = searchParams.get('courseId') || undefined
-    const sessionId = searchParams.get('sessionId') || undefined
     const navigate = useNavigate()
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -57,9 +56,6 @@ export default function ContentViewer() {
             { courseId, resourceId: resourceId || undefined, progressPercentage: 100 },
             {
                 onSuccess: () => {
-                    if (sessionId) {
-                        api.post(`/api/sessions/${sessionId}/end`).catch(() => {})
-                    }
                     queryClient.invalidateQueries({ queryKey: ['learning-path', courseId] })
                     queryClient.invalidateQueries({ queryKey: ['my-courses'] })
                     toast({ title: 'Recurso marcado como completado' })
