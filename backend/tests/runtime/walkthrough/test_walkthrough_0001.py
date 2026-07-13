@@ -319,11 +319,24 @@ class TestValidarIntegradoAlFlujo:
         assert modelado.afirmacion["competencia"] == "COMP-2"
         assert modelado.afirmacion["efecto_positivo"] is True
 
-        # El recorrido creció en tres transiciones exactas (Adaptar,
-        # Validar, Modelar — PR-5, PR-2, PR-3): 5 hechos sembrados +
-        # adaptación + veredicto + modelado.
-        assert estado.transicion == 8
-        assert len(final["registros"]) == 8
+        # El recorrido creció en cuatro transiciones exactas: Adaptar,
+        # Validar, Modelar (PR-5, PR-2, PR-3) + la interpretación del
+        # fact posterior por Diagnosticar (mapa completo, 2026-07-13:
+        # RFC-0002 R1 — TODA la evidencia evaluativa se interpreta, la
+        # re-evaluación tras remediar incluida; antes quedaba muda). La
+        # nueva interpretación (dominada=True, 1 error) convive con la
+        # original (dominada=False) como tensión D1 registrada en el
+        # paisaje — su re-deliberación es la mitad restante de Parte G.
+        interpretaciones_comp2 = [
+            c
+            for c in estado.claims
+            if c.autor is Capacidad.DIAGNOSTICAR
+            and c.vigencia.vigente
+            and c.asunto == "dominio(COMP-2)"
+        ]
+        assert len(interpretaciones_comp2) == 2
+        assert estado.transicion == 9
+        assert len(final["registros"]) == 9
 
     def test_sin_evidencia_posterior_el_recorrido_termina_igual_que_antes(
         self, esquema
@@ -471,10 +484,12 @@ class TestM4_PR1B_ReanudacionDeSesion:
         estado_2, registros_2 = final_2["estado"], final_2["registros"]
 
         # Las 8 transiciones previas se reconstruyeron, no se repitieron:
-        # mismos EntryId, mismo autor por transición — nunca una segunda
-        # interpretación de Diagnosticar ni una segunda deliberación.
-        assert estado_2.transicion == 11  # 8 reconstruidas + fact + validar + modelar
-        assert len(registros_2) == 11
+        # mismos EntryId — nunca se reinterpreta la MISMA evidencia ni
+        # hay segunda deliberación. La evidencia NUEVA (el fact
+        # posterior) sí produce su propia interpretación (mapa completo,
+        # 2026-07-13: RFC-0002 R1) — de ahí 12, no 11.
+        assert estado_2.transicion == 12  # 8 + fact + validar + modelar + interpretación
+        assert len(registros_2) == 12
         assert registros_2[:8] == registros_1  # las primeras 8 no se re-persistieron
         assert verificar(identidad, registros_2) is None
 

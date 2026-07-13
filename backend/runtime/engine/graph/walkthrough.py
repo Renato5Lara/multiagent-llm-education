@@ -190,22 +190,27 @@ def _existe_fact_evaluar_sin_tutorizar(estado: LearningState) -> bool:
 
 def _evidencia_pendiente_de_diagnosticar(estado: LearningState) -> bool:
     """Guardia segura: mismo criterio de disparo que
-    `domain.diagnosticar.producir` — evidencia evaluativa vigente
-    (`competencia` en el contenido) cuando Diagnosticar aún no
-    interpretó. Sin ella, `enrutar` mandaba a "diagnosticar" ante
-    CUALQUIER estado sin interpretaciones — con una sesión cuyo único
-    hecho no es evaluable (una interacción de tutor, telemetría, ciclo
-    de vida: entradas E2 legítimas según RFC-0010), Diagnosticar no
+    `domain.diagnosticar.producir` — un hecho evaluativo vigente
+    (`competencia` en el contenido) que ningún claim vigente de
+    Diagnosticar respalda todavía (guardia POR HECHO, igual que el
+    productor: un diagnóstico de 8 competencias produce 8
+    interpretaciones, no 1). Sin ella, `enrutar` mandaba a
+    "diagnosticar" ante CUALQUIER estado sin interpretaciones — con una
+    sesión cuyo único hecho no es evaluable (una interacción de tutor,
+    telemetría: entradas E2 legítimas según RFC-0010), Diagnosticar no
     produce nada y el grafo ciclaba hasta `GraphRecursionError` (mismo
     patrón que ya cubren PR-2..PR-5 para los demás nodos)."""
-    ya_interprete = any(
-        c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+    interpretados = {
+        ref
         for c in estado.claims
-    )
-    if ya_interprete:
-        return False
+        if c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+        for ref in c.respaldo
+    }
     return any(
-        f.vigencia.vigente and "competencia" in f.contenido for f in estado.facts
+        f.vigencia.vigente
+        and "competencia" in f.contenido
+        and f.id not in interpretados
+        for f in estado.facts
     )
 
 
@@ -244,6 +249,20 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
             return "validar"
         if _existe_veredicto_sin_modelar(estado):
             return "modelar"
+        # Evidencia nueva posterior a la decisión (mapa completo,
+        # 2026-07-13): la sesión sigue CAPTURANDO señales (Tutorizar) e
+        # INTERPRETANDO evidencia (Diagnosticar) después de decidir —
+        # antes, la primera decisión congelaba ambas y un diagnóstico de
+        # 8 competencias dejaba 7 sin interpretar. Deliberadamente NO se
+        # cae a remediar/orientar/decidir: `registrar_decision` no
+        # supersede una decisión previa del mismo asunto, así que
+        # re-proponer aquí crearía una segunda decisión vigente sobre
+        # "siguiente-paso(sesion)" — la re-deliberación con evidencia
+        # nueva (CONCEPT-0002 §5) es la mitad restante de la Parte G.
+        if _existe_fact_evaluar_sin_tutorizar(estado):
+            return "tutorizar"
+        if _evidencia_pendiente_de_diagnosticar(estado):
+            return "diagnosticar"
         return END
     # Guardia segura (Parte E, mismo patrón "misma función que el nodo"
     # que derivar_decision_directa más abajo): una deliberación aplazada
@@ -257,14 +276,18 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
         return "deliberar"
     if _existe_fact_evaluar_sin_tutorizar(estado):
         return "tutorizar"
+    # Regla de la raíz (RFC-0006 §5, CONCEPT-0002 §1): interpretar TODA
+    # la evidencia antes de proponer — las propuestas D2 se respaldan en
+    # interpretaciones D1; proponer con el mapa a medias haría que
+    # Remediar/Orientar eligieran respaldo sobre un paisaje incompleto.
+    if _evidencia_pendiente_de_diagnosticar(estado):
+        return "diagnosticar"
     interpretaciones = [
         c
         for c in estado.claims
         if c.tipo is TipoClaim.INTERPRETACION and c.vigencia.vigente
     ]
     if not interpretaciones:
-        if _evidencia_pendiente_de_diagnosticar(estado):
-            return "diagnosticar"
         return END
     autores = {
         c.autor

@@ -23,15 +23,26 @@ _UMBRAL_ERRORES = 2  # regla scoring-v1: ≥2 errores ⇒ competencia no dominad
 
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
-    """LEER → INTERPRETAR → PRODUCIR (RFC-0004 §1, pasos 1–3)."""
-    ya_interprete = any(
-        c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+    """LEER → INTERPRETAR → PRODUCIR (RFC-0004 §1, pasos 1–3).
+
+    Interpreta CADA hecho evaluativo una sola vez (guardia por hecho,
+    mismo patrón que Tutorizar: `fact.id` en el respaldo de un claim
+    vigente propio) — no "una vez por sesión": RFC-0002 R1 encarga a
+    Diagnosticar interpretar los resultados evaluativos, todos. La
+    guardia global anterior dejaba 7 de 8 competencias de un
+    diagnóstico sin interpretar (mapa incompleto — bug de producto,
+    2026-07-13). Un intent por activación: el ciclo
+    aplicar→diagnosticar recorre la evidencia pendiente hecho a hecho."""
+    interpretados = {
+        ref
         for c in estado.claims
-    )
-    if ya_interprete:
-        return ()
+        if c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+        for ref in c.respaldo
+    }
     for fact in estado.facts:
         if not fact.vigencia.vigente or "competencia" not in fact.contenido:
+            continue
+        if fact.id in interpretados:
             continue
         errores = len(fact.contenido.get("items_incorrectos", ()))
         return (

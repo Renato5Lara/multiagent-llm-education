@@ -280,8 +280,16 @@ def _hitl(ctx: dict[str, Any]) -> str:
         {"competencia": "COMP-2", "items_incorrectos": [7]},
         human_reason="observé confusión persistente en clase",
     )
-    ultimo_paso = cliente.traza(session_id)[-1]
-    assert any(e["datos"].get("origen") == "humano" for e in ultimo_paso["eventos"])
+    # El fact humano ya no es necesariamente el ÚLTIMO paso: desde el
+    # mapa completo (2026-07-13) el runtime también INTERPRETA la
+    # evidencia del docente (Diagnosticar corre después del fact) — se
+    # busca en la traza, no en la última posición.
+    pasos = cliente.traza(session_id)
+    assert any(
+        e["datos"].get("origen") == "humano"
+        for paso in pasos
+        for e in paso["eventos"]
+    ), "ningún fact con origen=humano en la traza"
     _ok("intervención espontánea: fact con origen=humano visible en la traza real")
 
     session_id_hitl = f"e2e-{_SUFIJO}-hitl"
