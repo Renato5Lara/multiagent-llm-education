@@ -13,6 +13,7 @@ service.py`; este puente solo le entrega la decisión del runtime.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from app.services.runtime_connection import (
@@ -138,6 +139,114 @@ def modalidad_desde_entrega(asunto_esperado: str, entrega: Entrega) -> str | Non
         return None
     modalidad = entrega.diseno.get("modalidad")
     return str(modalidad) if modalidad else None
+
+
+#: Orden de bloques de contenido por modalidad del runtime (vocabulario
+#: literal de `DISENO_POR_ACCION` — "visual" para "reforzar", "mixta"
+#: para "avanzar-con-andamiaje"; sin taxonomía pedagógica adicional).
+#: Es TRADUCCIÓN de la decisión, no una decisión: el orden solo dice
+#: cómo se renderiza la modalidad que el runtime ya eligió.
+ORDEN_CONTENIDO_POR_MODALIDAD: dict[str, tuple[str, ...]] = {
+    "visual": ("diagram", "example", "video", "theory", "exercise", "simulation", "game"),
+    "mixta": ("theory", "diagram", "example", "exercise", "video", "simulation", "game"),
+}
+
+_RE_COMPETENCIA = re.compile(r"^[a-z]+\((?P<competencia>.+)\)$")
+
+
+def _competencia_de_asunto(asunto: str) -> str:
+    """`"modalidad(bucles)"` → `"bucles"`; `"dominio(x)"` → `"x"`. Si el
+    asunto no tiene esa forma, se devuelve tal cual (traducción, jamás
+    inferencia)."""
+    m = _RE_COMPETENCIA.match(asunto)
+    return m.group("competencia") if m else asunto
+
+
+def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | None:
+    """S3, solo lectura — la estrategia de contenido derivada de lo que
+    el Runtime ya decidió para este estudiante en este curso. Reemplaza
+    al motor D4.1 (`adaptive_engine`, tabla VARK×nivel) como fuente de
+    `content_order` en cuanto existe una decisión real:
+
+    - `content_order` — de la modalidad de la Entrega vigente (S1),
+      ajustada por su `profundidad` (fundamentos → teoría/ejemplo
+      primero; aplicacion → práctica primero).
+    - `emphasis_topics` — competencias que Diagnosticar interpretó como
+      NO dominadas (interpretaciones vigentes, `dominada=False`).
+    - `skip_hint_topics` — competencias que Diagnosticar ya interpretó
+      como dominadas.
+
+    `None` si el runtime todavía no decidió nada para este curso
+    (estudiante sin evidencia) — el llamador decide su arranque en frío,
+    nunca esta función."""
+    almacen, almacen_memoria = almacenes()
+    peticion = _peticion(student_id, course_id)
+    entrega = consultar_entrega_vigente(peticion, almacen, almacen_memoria)
+    if entrega.diseno is None or entrega.asunto is None:
+        return None
+    estado = consultar_estado(peticion, almacen, almacen_memoria)
+
+    modalidad = str(entrega.diseno.get("modalidad") or "mixta")
+    profundidad = entrega.diseno.get("profundidad")
+    orden = list(
+        ORDEN_CONTENIDO_POR_MODALIDAD.get(
+            modalidad, ORDEN_CONTENIDO_POR_MODALIDAD["mixta"]
+        )
+    )
+    if profundidad == "fundamentos":
+        al_frente = ["theory", "example"]
+        nota = "Refuerzo de fundamentos: teoría y ejemplos antes de la práctica."
+    elif profundidad == "aplicacion":
+        al_frente = ["exercise"]
+        nota = "Énfasis en aplicación: práctica desde el inicio, con andamiaje."
+    else:
+        al_frente = []
+        nota = ""
+    for bloque in reversed(al_frente):
+        if bloque in orden:
+            orden.remove(bloque)
+            orden.insert(0, bloque)
+
+    interpretaciones = [
+        c
+        for c in estado.claims
+        if c.autor is Capacidad.DIAGNOSTICAR
+        and c.vigencia.vigente
+        and "dominada" in c.afirmacion
+    ]
+    emphasis = sorted(
+        {
+            _competencia_de_asunto(c.asunto)
+            for c in interpretaciones
+            if c.afirmacion["dominada"] is False
+        }
+    )
+    dominadas = sorted(
+        {
+            _competencia_de_asunto(c.asunto)
+            for c in interpretaciones
+            if c.afirmacion["dominada"] is True
+        }
+    )
+
+    def _etiqueta(slug: str) -> str:
+        return slug.replace("-", " ").replace("_", " ").capitalize()
+
+    from app.services.adaptive_engine import CONTENT_TYPE_LABELS
+
+    return {
+        "content_order": orden,
+        "content_type_labels": CONTENT_TYPE_LABELS,
+        "skip_hint_topics": dominadas,
+        "emphasis_topics": emphasis,
+        "emphasis_topic_labels": [_etiqueta(t) for t in emphasis],
+        "strategy_description": (
+            f"Estrategia decidida por el sistema multiagente a partir de tu "
+            f"evidencia real: modalidad {modalidad}."
+        ),
+        "prior_emphasis": nota,
+        "modality_label": modalidad,
+    }
 
 
 def contexto_pedagogico_tutor(student_id: str, course_id: str) -> dict[str, Any]:

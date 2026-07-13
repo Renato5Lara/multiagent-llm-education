@@ -324,7 +324,22 @@ def get_adaptive_decision(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """D4.1 — Returns the adaptive content strategy for the student's diagnostic profile."""
+    """La estrategia de contenido del estudiante. Fuente primaria: el
+    Runtime LangGraph (`runtime_bridge.decision_adaptativa` — Entrega
+    vigente + deuda abierta + competencias dominadas). El motor D4.1
+    (tabla VARK×nivel del diagnóstico) queda SOLO como arranque en frío,
+    mientras el runtime no tenga ninguna evidencia de este estudiante en
+    este curso — la primera evaluación o pre-test lo reemplaza."""
+    try:
+        from app.services.runtime_bridge import decision_adaptativa
+
+        decision_runtime = decision_adaptativa(current_user.id, course_id)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for adaptive-decision: {e}")
+        decision_runtime = None
+    if decision_runtime is not None:
+        return decision_runtime
+
     diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
     if not diagnostic:
         raise HTTPException(

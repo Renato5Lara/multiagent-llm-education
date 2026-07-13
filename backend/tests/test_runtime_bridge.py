@@ -180,6 +180,64 @@ def test_derivaciones_compartidas_de_la_entrega():
     assert modalidad_desde_entrega(asunto, sin_decision) is None
 
 
+# ── Estrategia de contenido (adaptive-decision) sobre Runtime ────────
+
+
+def test_decision_adaptativa_sin_evidencia_es_none():
+    from app.services.runtime_bridge import decision_adaptativa
+
+    assert decision_adaptativa(student_id="nadie", course_id="curso-ad0") is None
+
+
+def test_decision_adaptativa_deriva_de_la_entrega_del_runtime():
+    """Con evidencia débil (2/3 incorrectos → 'reforzar'), la estrategia
+    sale de la decisión del runtime: modalidad visual gobierna el orden
+    y 'fundamentos' empuja teoría/ejemplo al frente; la competencia
+    interpretada como no dominada queda como énfasis — cero tablas VARK
+    involucradas."""
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="rocio",
+        course_id="curso-ad1",
+        titulo_modulo="Bucles",
+        items_incorrectos=[0, 2],
+        items_totales=3,
+    )
+    decision = decision_adaptativa(student_id="rocio", course_id="curso-ad1")
+    assert decision is not None
+    assert decision["modality_label"] == "visual"  # accion "reforzar"
+    # fundamentos: theory/example al frente del orden visual
+    assert decision["content_order"][:2] == ["theory", "example"]
+    assert set(decision["content_order"]) == {
+        "theory", "example", "diagram", "video", "exercise", "simulation", "game",
+    }
+    assert decision["emphasis_topics"] == ["bucles"]
+    assert decision["emphasis_topic_labels"] == ["Bucles"]
+    assert decision["skip_hint_topics"] == []
+
+
+def test_decision_adaptativa_competencia_dominada_va_a_skip_hint():
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="rocio",
+        course_id="curso-ad2",
+        titulo_modulo="Variables",
+        items_incorrectos=[],
+        items_totales=4,
+    )
+    decision = decision_adaptativa(student_id="rocio", course_id="curso-ad2")
+    assert decision is not None
+    assert decision["skip_hint_topics"] == ["variables"]
+
+
 # ── Tutor sobre Runtime ──────────────────────────────────────────────
 
 
