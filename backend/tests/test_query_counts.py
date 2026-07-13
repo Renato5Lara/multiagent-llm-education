@@ -23,7 +23,7 @@ from app.models.competency import Competency, CourseCompetency
 from app.models.diagnostic_result import DiagnosticResult
 
 from app.services.prerequisite_service import (
-    check_course_access, get_next_recommended_course, get_all_student_curriculum_status,
+    check_course_access, get_all_student_curriculum_status,
 )
 from app.services.course_service import get_enrolled_students, get_courses
 from app.services.student_service import get_learning_path_detail, generate_learning_path_adaptive
@@ -298,20 +298,6 @@ class TestCheckCourseAccess:
         result = check_course_access(db, student, course2)
         cnt = _stop()
         assert cnt <= 5, f"Expected <=5 queries for check_course_access, got {cnt}"
-
-
-class TestGetNextRecommendedCourse:
-    """get_next_recommended_course: must batch-check all courses, not N+1 per course."""
-
-    def test_with_prereqs(self, db, student, course, course2, inst_course,
-                          inst_course2, prereq_relation, enrollment):
-        student.current_cycle = 1
-        db.commit()
-        _start()
-        result = get_next_recommended_course(db, student)
-        cnt = _stop()
-        # should operate in constant queries regardless of how many next-cycle courses
-        assert cnt <= 8, f"Expected <=8 queries, got {cnt}. Possible N+1 per course!"
 
 
 class TestGetLearningPathDetail:

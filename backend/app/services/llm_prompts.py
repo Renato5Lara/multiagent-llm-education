@@ -82,19 +82,3 @@ Genera un análisis JSON con:
 4. nivel_bloom_estimado: nivel Bloom actual estimado (1-6)
 5. confianza: nivel de confianza en el análisis (0-1)"""
 
-RISK_ANALYSIS_PROMPT = """Eres un analista de riesgo académico. Evalúa el desempeño del estudiante y predice su riesgo académico.
-
-Datos del estudiante:
-- Cursos activos: {active_courses}
-- Cursos finalizados: {completed_courses}
-- Progreso promedio: {avg_progress}%
-- Diagnósticos completados: {diagnostics_completed}/{total_diagnostics}
-- Prerrequisitos pendientes: {pending_prerequisites}
-- Tasa de finalización: {completion_rate}
-
-Genera un análisis JSON con:
-1. nivel_riesgo: "bajo" | "medio" | "alto"
-2. puntuacion_riesgo: número entre 0 y 1
-3. factores: lista de factores de riesgo detectados
-4. explicacion: explicación detallada del análisis
-5. recomendaciones: lista de recomendaciones personalizadas"""

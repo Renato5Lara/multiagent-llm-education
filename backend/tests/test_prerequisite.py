@@ -55,33 +55,10 @@ class TestCourseAccess:
         data = resp.json()
         assert isinstance(data, list)
 
-    def test_risk_prediction_returns_risk(self, client, estudiante_token, estudiante_user, db):
-        estudiante_user.current_cycle = 1
-        db.commit()
-
-        resp = client.get("/api/analytics/risk-prediction", headers=auth_header(estudiante_token))
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "risk_level" in data
-        assert data["risk_level"] in ("bajo", "medio", "alto")
-        assert "risk_score" in data
-
 
 class TestIADashboard:
-    """Tests para el dashboard IA del estudiante."""
-
-    def test_ia_dashboard_estudiante(self, client, estudiante_token, estudiante_user, db):
-        estudiante_user.current_cycle = 1
-        db.commit()
-
-        resp = client.get("/api/analytics/dashboard", headers=auth_header(estudiante_token))
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "student_risk" in data
-        assert "curriculum_status" in data
-        assert "strengths" in data
-        assert "warnings" in data
-        assert "stats" in data
+    """Tests para el dashboard IA (solo docente: el análisis del
+    estudiante vive en el Runtime, no en heurísticas de plataforma)."""
 
     def test_ia_dashboard_docente(self, client, docente_token, db):
         resp = client.get("/api/analytics/dashboard", headers=auth_header(docente_token))
@@ -89,18 +66,6 @@ class TestIADashboard:
         data = resp.json()
         assert "course_analytics" in data
         assert "total_students" in data
-
-    def test_ia_dashboard_with_enrollments(self, client, docente_token, estudiante_token, estudiante_user, db):
-        estudiante_user.current_cycle = 1
-        db.commit()
-        cid = _create_published_course(client, docente_token, db, "DIA-01", cycle=1)
-        client.post(f"/api/courses/{cid}/enroll", headers=auth_header(docente_token),
-                     json={"student_ids": [estudiante_user.id]})
-
-        resp = client.get("/api/analytics/dashboard", headers=auth_header(estudiante_token))
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["stats"]["enrolled"] >= 1
 
     def test_docente_analytics_shows_courses(self, client, docente_token, db):
         _create_published_course(client, docente_token, db, "DOC-ANA-01", cycle=1)
