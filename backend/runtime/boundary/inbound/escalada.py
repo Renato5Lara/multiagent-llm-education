@@ -25,7 +25,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from runtime.boundary.inbound.productores import productor_diagnostico_activo
+from runtime.boundary.inbound.productores import (
+    productor_diagnostico_activo,
+    productor_orientar_activo,
+    productor_remediar_activo,
+)
 from runtime.boundary.outbound.entregas import Entrega, proyectar_entrega
 from runtime.engine.checkpoint import AlmacenMemoria, AlmacenTransiciones
 from runtime.engine.graph.walkthrough import ejecutar_walkthrough, materializar_sesion
@@ -109,6 +113,8 @@ def resolver_escalada(
         identidad,
         hechos_del_mundo=(intent_fact, intent_deliberacion),
         productor_diagnostico=productor_diagnostico_activo(),
+        productor_remediar=productor_remediar_activo(),
+        productor_orientar=productor_orientar_activo(),
         almacen_memoria=almacen_memoria,
     )
     return proyectar_entrega(resultado["estado"])
