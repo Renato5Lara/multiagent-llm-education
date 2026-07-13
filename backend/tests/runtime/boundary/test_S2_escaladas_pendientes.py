@@ -105,8 +105,9 @@ def _aplicar_y_persistir(almacen, identidad, estado, registros, intent):
 
 def _sembrar_escalada(almacen, identidad):
     """Misma técnica de test_E3_resolver_escalada.py: fact → interpretación
-    → tensión → deliberación ESCALADA construida directamente (RFC-0006
-    §4 no implementado todavía)."""
+    → tensión → deliberación ESCALADA construida directamente — aísla S2
+    del consenso; la escalada ORGÁNICA (RFC-0006 §4, Parte F) se prueba
+    en `tests/runtime/walkthrough/test_parteF_escalada_organica_grafo.py`."""
     almacen.abrir_sesion(identidad)
     estado = LearningState(identidad=identidad, contexto={"ruta": "condicionales"})
     registros = ()
