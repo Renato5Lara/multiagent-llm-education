@@ -11,6 +11,11 @@ from sqlalchemy.orm import Session
 
 from app.models.evaluation_attempt import EvaluationAttempt
 from app.models.student_progress import LearningPath, PathModule
+from app.services.runtime_bridge import (
+    asunto_de_modalidad,
+    bloom_target_desde_entrega,
+    consultar_decision_vigente,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -169,9 +174,31 @@ def start_evaluation(
     # Preguntas SOLO del módulo evaluado — plantillas deterministas por
     # Bloom, generadas directamente (sin el "state" del grafo legacy que
     # este servicio armaba solo para invocar app/agents/nodes.py).
+    # El nivel Bloom lo gobierna la decisión vigente del Runtime cuando
+    # aplica a esta competencia (misma derivación compartida que la
+    # orquestación de contenido: `bloom_target_desde_entrega`); sin
+    # decisión aplicable — o sin runtime disponible — degrada al nivel
+    # configurado del módulo, el comportamiento previo exacto.
+    bloom_objetivo = available_module.bloom_level if available_module else 3
+    if available_module is not None:
+        try:
+            entrega = consultar_decision_vigente(
+                student_id=student_id, course_id=course_id
+            )
+            bloom_objetivo = bloom_target_desde_entrega(
+                available_module.bloom_level,
+                asunto_de_modalidad(available_module.title),
+                entrega,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "start_evaluation: runtime_bridge read failed (%r) — "
+                "sin decisión del runtime, nivel configurado del módulo",
+                exc,
+            )
     questions = _generate_questions(
         title=available_module.title if available_module else "Evaluación",
-        bloom_level=available_module.bloom_level if available_module else 3,
+        bloom_level=bloom_objetivo,
     )
 
     attempt = EvaluationAttempt(
