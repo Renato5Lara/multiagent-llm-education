@@ -149,6 +149,37 @@ def test_consultar_decision_vigente_no_registra_ningun_hecho():
     assert almacen.leer("curso:curso-z:estudiante:ana") == ()
 
 
+# ── Derivación compartida de la Entrega (una traducción, N consumidores) ──
+
+
+def test_derivaciones_compartidas_de_la_entrega():
+    from app.services.runtime_bridge import (
+        asunto_de_modalidad,
+        bloom_target_desde_entrega,
+        modalidad_desde_entrega,
+    )
+    from runtime.boundary import Entrega
+
+    asunto = asunto_de_modalidad("Bucles y Repetición")
+    assert asunto == "modalidad(bucles-y-repeticion)"
+
+    reforzar = Entrega(asunto=asunto, diseno={"modalidad": "visual", "profundidad": "fundamentos"})
+    avanzar = Entrega(asunto=asunto, diseno={"modalidad": "mixta", "profundidad": "aplicacion"})
+    otro_modulo = Entrega(asunto="modalidad(condicionales)", diseno={"modalidad": "visual", "profundidad": "fundamentos"})
+    sin_decision = Entrega(asunto=None, diseno=None)
+
+    # fundamentos nunca pide más que Comprender; aplicacion conserva
+    assert bloom_target_desde_entrega(4, asunto, reforzar) == 2
+    assert bloom_target_desde_entrega(4, asunto, avanzar) == 4
+    # decisión de OTRA competencia no gobierna este módulo (ADR-0010)
+    assert bloom_target_desde_entrega(4, asunto, otro_modulo) == 4
+    assert bloom_target_desde_entrega(None, asunto, sin_decision) == 3
+
+    assert modalidad_desde_entrega(asunto, reforzar) == "visual"
+    assert modalidad_desde_entrega(asunto, otro_modulo) is None
+    assert modalidad_desde_entrega(asunto, sin_decision) is None
+
+
 # ── Tutor sobre Runtime ──────────────────────────────────────────────
 
 

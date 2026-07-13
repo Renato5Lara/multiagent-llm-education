@@ -40,7 +40,11 @@ from app.memory.shared_memory import SharedMemoryStore
 from app.models.course import Course
 from app.models.student_progress import PathModule
 from app.models.user import User
-from app.services.runtime_bridge import consultar_decision_vigente
+from app.services.runtime_bridge import (
+    asunto_de_modalidad,
+    bloom_target_desde_entrega,
+    consultar_decision_vigente,
+)
 from runtime.boundary import Entrega, normalizar_asunto
 
 logger = logging.getLogger(__name__)
@@ -56,39 +60,20 @@ BLOOM_LABELS = {
 
 
 def _asunto_de_modalidad(module: "PathModule") -> str:
-    """El `asunto` que Adaptar produce SIEMPRE tiene la forma
-    `f"modalidad({competencia})"` (`runtime/domain/adaptar/productor.py`
-    — el único lugar del runtime que fija `asunto` para sus claims); no
-    es la competencia sola. Comparar contra `normalizar_asunto(module.
-    title)` directamente nunca coincide — bug real encontrado por
-    `TestLeerEntregaDelRuntime.test_lee_de_verdad_la_decision_del_runtime`
-    (la comparación ingenua hacía que la Épica 2 nunca aplicara ninguna
-    decisión del runtime, silenciosamente)."""
-    return f"modalidad({normalizar_asunto(module.title)})"
+    """Delegado en `runtime_bridge.asunto_de_modalidad` — la traducción
+    vive UNA sola vez en el puente (la comparten engagement y cualquier
+    consumidor futuro de la Entrega); aquí solo se adapta la firma al
+    modelo `PathModule` de este servicio."""
+    return asunto_de_modalidad(module.title)
 
 
 def _bloom_target_desde_entrega(module: "PathModule", entrega: Entrega) -> int:
-    """Épica 2: el runtime decide, este servicio ejecuta. Si la última
-    decisión del runtime (`Entrega`, S1) es sobre la MISMA competencia
-    que este módulo (`entrega.asunto == _asunto_de_modalidad(module)` —
-    ADR-0010), su `profundidad` gobierna el nivel de Bloom objetivo:
-    "fundamentos" (accion "reforzar") nunca pide más que Comprender;
-    "aplicacion" (accion "avanzar-con-andamiaje") conserva el nivel
-    configurado del módulo — el andamiaje es una decisión de modalidad,
-    no de profundidad, y queda fuera de este primer cambio.
-
-    Sin decisión aplicable (estudiante nuevo, sin evaluaciones aún, o la
-    última decisión es sobre otro módulo de la misma sesión de curso):
-    se conserva el comportamiento previo — el nivel configurado del
-    módulo, sin tocar."""
-    base = module.bloom_level or 3
-    if entrega.diseno is None or entrega.asunto is None:
-        return base
-    if entrega.asunto != _asunto_de_modalidad(module):
-        return base
-    if entrega.diseno.get("profundidad") == "fundamentos":
-        return min(base, 2)
-    return base
+    """Delegado en `runtime_bridge.bloom_target_desde_entrega` (Épica 2:
+    el runtime decide, este servicio ejecuta) — misma razón que
+    `_asunto_de_modalidad`."""
+    return bloom_target_desde_entrega(
+        module.bloom_level, _asunto_de_modalidad(module), entrega
+    )
 
 
 def _aplicar_modalidad_desde_entrega(

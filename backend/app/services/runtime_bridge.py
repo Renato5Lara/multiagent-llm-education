@@ -99,6 +99,47 @@ def consultar_decision_vigente(student_id: str, course_id: str) -> Entrega:
     )
 
 
+def asunto_de_modalidad(titulo_modulo: str) -> str:
+    """El `asunto` que Adaptar produce SIEMPRE tiene la forma
+    `f"modalidad({competencia})"` (`runtime/domain/adaptar/productor.py`
+    — el único lugar del runtime que fija `asunto` para sus claims); no
+    es la competencia sola. Comparar contra `normalizar_asunto(titulo)`
+    directamente nunca coincide — bug real encontrado en la Épica 2 (la
+    comparación ingenua hacía que ninguna decisión del runtime se
+    aplicara, silenciosamente). Extraído de `module_orchestration_
+    service` para que TODO consumidor de la Entrega derive igual —
+    una sola traducción, cero decisiones propias."""
+    return f"modalidad({normalizar_asunto(titulo_modulo)})"
+
+
+def bloom_target_desde_entrega(
+    bloom_configurado: int | None, asunto_esperado: str, entrega: Entrega
+) -> int:
+    """El runtime decide, la plataforma ejecuta: si la Entrega vigente
+    (S1) es sobre la MISMA competencia (`asunto_esperado`, ADR-0010), su
+    `profundidad` gobierna el Bloom objetivo — "fundamentos" (accion
+    "reforzar") nunca pide más que Comprender; "aplicacion" conserva el
+    nivel configurado. Sin decisión aplicable: el nivel configurado del
+    módulo, sin tocar."""
+    base = bloom_configurado or 3
+    if entrega.diseno is None or entrega.asunto != asunto_esperado:
+        return base
+    if entrega.diseno.get("profundidad") == "fundamentos":
+        return min(base, 2)
+    return base
+
+
+def modalidad_desde_entrega(asunto_esperado: str, entrega: Entrega) -> str | None:
+    """La modalidad que el runtime decidió para esta competencia
+    (literalmente la palabra de `DISENO_POR_ACCION`, sin taxonomía
+    adicional), o `None` si la Entrega vigente no aplica a este módulo
+    — quien consuma decide su neutro, jamás una regla propia."""
+    if entrega.diseno is None or entrega.asunto != asunto_esperado:
+        return None
+    modalidad = entrega.diseno.get("modalidad")
+    return str(modalidad) if modalidad else None
+
+
 def contexto_pedagogico_tutor(student_id: str, course_id: str) -> dict[str, Any]:
     """S3, solo lectura — el contexto pedagógico que el Runtime ya
     decidió para este estudiante: la adaptación vigente (S1), las
