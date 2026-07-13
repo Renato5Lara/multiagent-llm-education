@@ -87,6 +87,41 @@ class TestParte0_PoliticaVersionada:
         )
         assert politica.peso_decaimiento > politica.peso_refuerzo
 
+    def test_v1_no_reserva_asuntos_y_su_limite_es_inerte(self):
+        """Parte F sobre v1: ambas vías de escalada quedan
+        estructuralmente inalcanzables — sin asuntos reservados la
+        primera vía nunca aplica, y con delta=0 ninguna `Aplazada`
+        puede producirse, así que ninguna cadena alcanza el límite de
+        reconvocatoria (misma prueba matemática que theta/delta).
+        politica-v1 sigue produciendo exactamente las mismas decisiones."""
+        v1 = POLITICAS["v1"]
+        assert v1.asuntos_reservados == frozenset()
+        assert v1.delta == Decimal("0")  # la premisa de la prueba de inercia
+        assert v1.limite_reconvocatoria == 2
+
+    def test_limite_de_reconvocatoria_menor_que_1_es_ValueError(self):
+        """Con límite 0 el aplazamiento productivo (CONCEPT-0002 §4)
+        sería inalcanzable: toda tensión sin margen iría directa al
+        docente en su primera convocatoria."""
+        with pytest.raises(ValueError, match="limite_reconvocatoria debe ser >= 1"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("0"),
+                limite_reconvocatoria=0,
+            )
+
+    def test_asunto_reservado_vacio_es_ValueError(self):
+        with pytest.raises(ValueError, match="no admite asuntos vacíos"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("0"),
+                asuntos_reservados=frozenset({""}),
+            )
+
     def test_rechaza_pesos_negativos(self):
         with pytest.raises(ValueError, match="no puede ser negativo"):
             Politica(

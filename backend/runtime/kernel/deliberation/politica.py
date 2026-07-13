@@ -81,6 +81,32 @@ class Politica:
     `"v1"`: todo asunto usa peso 1, así que D2 se reduce a comparar `ce`
     directamente, igual que D1."""
 
+    asuntos_reservados: frozenset[str] = frozenset()
+    """Primera vía de escalada (RFC-0006 §4: "casos que la política
+    reserva al humano"; ROADMAP-RFC-0006 Parte F: "lista de
+    configuración"): una tensión sobre un asunto reservado no se
+    resuelve por mecánica — se escala al docente, incluso bajo urgencia
+    (resolver provisionalmente lo que la política reservó al humano
+    sería el mismo bypass que RFC-0009 §3 prohíbe). Gobierna
+    DELIBERACIONES (tensiones, ≥2 participantes — P8): el gating de una
+    decisión sin tensión es "Aprobación requerida" (RFC-0009 §2),
+    explícitamente diferida (ROADMAP-RFC-0006 §4). Vacío para `"v1"`:
+    ningún asunto reservado, la vía es inalcanzable."""
+
+    limite_reconvocatoria: int = 2
+    """Segunda vía de escalada (RFC-0006 §4, vocabulario normativo
+    "límite de reconvocatoria"): una tensión aplazada y reconvocada N
+    veces sin discriminar escala al docente — "ninguna deliberación
+    puede diferirse para siempre". N cuenta las `Aplazada` de la cadena
+    `enlaza_a` (CONCEPT-0002 §5): cuando la cadena ya acumula N
+    aplazamientos y la regla sigue sin discriminar, el resultado es
+    `Escalada`, no otra `Aplazada`. Con 2: el primer aplazamiento
+    declara la evidencia que falta; si la reconvocatoria con evidencia
+    nueva tampoco discrimina, la tercera convocatoria va al docente.
+    Bajo `"v1"` es inerte por la misma prueba matemática que `delta`:
+    con delta=0 ninguna `Aplazada` puede producirse, así que ninguna
+    cadena puede alcanzar límite alguno."""
+
     def __post_init__(self) -> None:
         for nombre, peso in (
             ("peso_refuerzo", self.peso_refuerzo),
@@ -107,6 +133,21 @@ class Politica:
                     f"por encima de 1 (INV-7 exige Resuelta.confianza en "
                     f"[0,1]): {peso}"
                 )
+        if self.limite_reconvocatoria < 1:
+            raise ValueError(
+                f"limite_reconvocatoria debe ser >= 1 — con 0 ninguna "
+                f"tensión podría aplazarse jamás (la primera convocatoria "
+                f"sin margen iría directa al docente, y el aplazamiento "
+                f"productivo de CONCEPT-0002 §4 quedaría inalcanzable): "
+                f"{self.limite_reconvocatoria}"
+            )
+        for asunto in self.asuntos_reservados:
+            if not asunto:
+                raise ValueError(
+                    "asuntos_reservados no admite asuntos vacíos — un "
+                    "asunto es el identificador normalizado de una "
+                    "pregunta (RFC-0006 §2)"
+                )
 
 
 POLITICAS: dict[str, Politica] = {
@@ -117,6 +158,8 @@ POLITICAS: dict[str, Politica] = {
         theta=Decimal("0"),
         delta=Decimal("0"),
         pesos_asunto={},
+        asuntos_reservados=frozenset(),
+        limite_reconvocatoria=2,
     ),
 }
 
