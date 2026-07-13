@@ -167,11 +167,13 @@ def _existe_veredicto_sin_modelar(estado: LearningState) -> bool:
 
 def _existe_fact_evaluar_sin_tutorizar(estado: LearningState) -> bool:
     """Guardia segura (PR-4): mismo criterio de disparo que
-    `domain.tutorizar.producir` — un fact vigente de Evaluar que Tutorizar
-    todavía no procesó. Predicado estructural plano, igual que el de
-    Modelar (sin recorrido causal, sin importar domain.tutorizar)."""
+    `domain.tutorizar.producir` — evidencia evaluativa vigente
+    (`competencia` + `items_totales`, por forma, no por autor: desde
+    RFC-0010/Grieta A la evidencia real la autora el Boundary) que
+    Tutorizar todavía no procesó. Predicado estructural plano, igual que
+    el de Modelar (sin recorrido causal, sin importar domain.tutorizar)."""
     for fact in estado.facts:
-        if fact.autor is not Capacidad.EVALUAR or not fact.vigencia.vigente:
+        if not fact.vigencia.vigente or "competencia" not in fact.contenido:
             continue
         if not fact.contenido.get("items_totales"):
             continue
@@ -184,6 +186,27 @@ def _existe_fact_evaluar_sin_tutorizar(estado: LearningState) -> bool:
         if not ya_detecte:
             return True
     return False
+
+
+def _evidencia_pendiente_de_diagnosticar(estado: LearningState) -> bool:
+    """Guardia segura: mismo criterio de disparo que
+    `domain.diagnosticar.producir` — evidencia evaluativa vigente
+    (`competencia` en el contenido) cuando Diagnosticar aún no
+    interpretó. Sin ella, `enrutar` mandaba a "diagnosticar" ante
+    CUALQUIER estado sin interpretaciones — con una sesión cuyo único
+    hecho no es evaluable (una interacción de tutor, telemetría, ciclo
+    de vida: entradas E2 legítimas según RFC-0010), Diagnosticar no
+    produce nada y el grafo ciclaba hasta `GraphRecursionError` (mismo
+    patrón que ya cubren PR-2..PR-5 para los demás nodos)."""
+    ya_interprete = any(
+        c.autor is Capacidad.DIAGNOSTICAR and c.vigencia.vigente
+        for c in estado.claims
+    )
+    if ya_interprete:
+        return False
+    return any(
+        f.vigencia.vigente and "competencia" in f.contenido for f in estado.facts
+    )
 
 
 def _interpretacion_pendiente_de_remediar(estado: LearningState) -> bool:
@@ -240,7 +263,9 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
         if c.tipo is TipoClaim.INTERPRETACION and c.vigencia.vigente
     ]
     if not interpretaciones:
-        return "diagnosticar"
+        if _evidencia_pendiente_de_diagnosticar(estado):
+            return "diagnosticar"
+        return END
     autores = {
         c.autor
         for c in estado.claims

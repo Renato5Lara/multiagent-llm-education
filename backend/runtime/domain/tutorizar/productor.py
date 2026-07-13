@@ -8,10 +8,16 @@ fluidez) a partir de la sesión; NO propone estrategias, NO redacta
 mensajes al estudiante, NO toma decisiones pedagógicas. Cualquier uso
 posterior de estas señales pertenece a otra capacidad o al Boundary.
 
-Puro-de-estado: lee facts de Evaluar (proporción de items incorrectos)
-como proxy determinista de la señal. Sin float en el contenido — la
-proporción se guarda como conteos enteros (ADR-0001 A3: float prohibido
-en el registro).
+Puro-de-estado: lee evidencia evaluativa (proporción de items
+incorrectos) como proxy determinista de la señal. El disparo es por
+FORMA del contenido (`competencia` + `items_totales`), no por autor —
+mismo patrón que Diagnosticar: desde RFC-0010 (Grieta A) la evidencia
+real entra autorada por el Boundary, no por Evaluar; exigir
+`autor is EVALUAR` dejaba la señal muda en el flujo real. Exigir
+`competencia` excluye además el propio output de Tutorizar
+(senal/fact_origen, sin competencia): sin auto-disparo. Sin float en el
+contenido — la proporción se guarda como conteos enteros (ADR-0001 A3:
+float prohibido en el registro).
 """
 
 from __future__ import annotations
@@ -31,7 +37,7 @@ def _senal(incorrectos: int, total: int) -> str:
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
     for fact in estado.facts:
-        if fact.autor is not Capacidad.EVALUAR or not fact.vigencia.vigente:
+        if not fact.vigencia.vigente or "competencia" not in fact.contenido:
             continue
         ya_detecte = any(
             f.autor is Capacidad.TUTORIZAR
