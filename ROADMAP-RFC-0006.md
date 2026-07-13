@@ -285,11 +285,19 @@ igual que las anteriores — nunca un PR de 10 partes junto):
 
 | Mini-épica | Partes | Resultado observable al cerrar |
 |---|---|---|
-| RFC-0006/1 — Cimientos | 0 + A | `ce` calculable y testeado contra A1-A8, política versionada con un sitio real donde vivir. Sin cambios de comportamiento visible todavía. |
-| RFC-0006/2 — Convocatoria real | B + C | D1 se detecta por primera vez; una propuesta débil ya no deriva decisión sola. |
-| RFC-0006/3 — Resolución completa | D + E (tras levantar el bloqueo de `ejecucion`) | `politica-v2` resuelve con margen real; aplazamiento y provisional existen de verdad. |
-| RFC-0006/4 — Escalada y orden | F + G | S2 empieza a mostrar escaladas reales sin sembrado manual; H7 verificado. |
-| RFC-0006/5 — Cierre | H + I | Validación E2E completa, sembrado manual retirado, RFC-0006 cerrado. |
+| RFC-0006/1 — Cimientos | 0 + A | `ce` calculable y testeado contra A1-A8, política versionada con un sitio real donde vivir. Sin cambios de comportamiento visible todavía. **CERRADO.** |
+| RFC-0006/2 — Detección y clasificación | B | D1 se detecta y clasifica por primera vez (inerte hoy — ningún productor la activa); la tensión D2 real (Remediar/Orientar) se preserva bit a bit. |
+| RFC-0006/3 — Propuesta única y θ | C | Una propuesta débil sin rival ya no deriva decisión sola — primer camino real de insuficiencia D3. |
+| RFC-0006/4 — Resolución completa | D + E (tras levantar el bloqueo de `ejecucion`) | `politica-v2` resuelve con margen real; aplazamiento y provisional existen de verdad. |
+| RFC-0006/5 — Escalada y orden | F + G | S2 empieza a mostrar escaladas reales sin sembrado manual; H7 verificado. |
+| RFC-0006/6 — Cierre | H + I | Validación E2E completa, sembrado manual retirado, RFC-0006 cerrado. |
+
+> **Nota (2026-07-12):** RFC-0006/2 originalmente agrupaba B+C. El
+> Engineering Gate reveló que Parte C requiere construir un camino de
+> enrutamiento que hoy no existe (blast radius real sobre `enrutar()`,
+> precedente `GraphRecursionError`) — se dividió en 2+3, corriendo la
+> numeración de las mini-épicas siguientes. Ver la nota al inicio de la
+> ficha RFC-0006/2 y la ficha RFC-0006/3 más abajo.
 
 ---
 
@@ -318,8 +326,10 @@ igual que las anteriores — nunca un PR de 10 partes junto):
    concretamente dónde vive la configuración versionada.
 2. **Parte E — Engineering Review dedicada, antes de esa parte, no
    dentro de ella.** El vacío de `estado.ejecucion` (RFC-0004 §2) no se
-   resuelve sobre la marcha. Antes de abrir RFC-0006/3 corre una
-   revisión propia con su propio objetivo: ¿qué representa `ejecucion`
+   resuelve sobre la marcha. Antes de abrir RFC-0006/4 (Resolución
+   completa, D+E — numeración corrida por la división de RFC-0006/2 en
+   2+3, ver ficha de RFC-0006/2) corre una revisión propia con su
+   propio objetivo: ¿qué representa `ejecucion`
    realmente?, ¿quién lo escribe?, ¿quién lo consume?, ¿cuál es su
    ciclo de vida (persistente o efímero)?, ¿qué invariantes debe
    cumplir? Solo con esas respuestas se implementa "urgente" en Parte E.
@@ -427,7 +437,10 @@ Boundary:        No cambia.
 HTTP:            No cambia.
 Frontend:        No cambia.
 E2E:             No cambia — ce no es observable desde ninguna
-                 categoría de runtime_completo.py hasta RFC-0006/3.
+                 categoría de runtime_completo.py hasta que Parte D la
+                 conecte a mecanica.py (RFC-0006/4 tras la renumeración
+                 de 2026-07-12, antes "RFC-0006/3" — ver ficha de
+                 RFC-0006/2).
 
 No debe cambiar: politica-v1 / mecanica.py, kernel/reducers/ (ningún
                  reducer nuevo — ce es una proyección, no una
@@ -451,8 +464,9 @@ Criterios de cierre — CERRADO 2026-07-12:
     sin ancla y otro anclado tras validación para no ser trivial),
     contra Postgres real, siguiendo CONTRACT-A1-A8.md. A8 no tiene test
     directo en confianza.py (es una precondición del llamador, no un
-    caso que la función valide) — su garantía se testea en RFC-0006/3
-    contra mecanica.py, el filtro real de vigencia.
+    caso que la función valide) — su garantía se testea cuando Parte D
+    conecte `ce` a mecanica.py (RFC-0006/4 tras la renumeración) contra
+    el filtro real de vigencia.
   ✓ v1 (politica-v1 / mecanica.py) sigue produciendo exactamente las
     mismas decisiones — mecanica.py no se tocó (0 líneas), y
     runtime_completo.py corrió el walkthrough real end-to-end
@@ -488,10 +502,271 @@ claim.id.transicion`, edad medida desde el ORIGEN del claim) violaba
 A7 — un test real (`TestA7_LocalidadCausal`) lo probó: actividad en un
 asunto ajeno decaía un claim que nunca tocó. Corregido a "edad medida
 desde la última validación DENTRO de la cadena causal del claim, o 0 si
-nunca hubo ninguna" — ver CONTRACT-A1-A8.md (histórico, en
-`confianza.py`) y el docstring de `Politica` en `politica.py`. Efecto
-colateral: la invariante `peso_refuerzo >= peso_decaimiento` en
-`Politica.__post_init__` dejó de ser matemáticamente necesaria bajo el
-diseño corregido (una validación recién aplicada tiene edad lógica 0 en
-su propio tick) y se retiró.
+nunca hubo ninguna" — ver la sección "Garantías" del docstring de
+módulo de `confianza.py` y el docstring de `Politica` en `politica.py`
+(CONTRACT-A1-A8.md, el documento temporal donde se descubrió esto, ya
+está retirado). Efecto colateral: la invariante
+`peso_refuerzo >= peso_decaimiento` en `Politica.__post_init__` dejó de
+ser matemáticamente necesaria bajo el diseño corregido (una validación
+recién aplicada tiene edad lógica 0 en su propio tick) y se retiró.
+```
+
+---
+
+## Ficha — RFC-0006/2: Detección y clasificación (D1/D2)
+
+> **Nota de proceso (2026-07-12):** esta ficha originalmente agrupaba
+> B + C ("Convocatoria real"). El Engineering Gate reveló que Parte C
+> no es "agregar un chequeo" — requiere construir un camino que hoy no
+> existe (ver la ficha RFC-0006/3 más abajo), con blast radius real
+> sobre `enrutar()` (precedente `GraphRecursionError`). Se dividió en
+> dos mini-épicas más pequeñas, manteniendo la disciplina de "un
+> concepto nuevo por commit" en vez de expandir el alcance a mitad de
+> la implementación — la numeración de mini-épicas posteriores (antes
+> RFC-0006/3..5) se corrió en consecuencia (§3, tabla actualizada).
+
+```
+Objetivo:        La tensión D1 (interpretaciones rivales del mismo
+                 asunto) se detecta y se clasifica explícitamente como
+                 D1, distinta de D2 (propuestas rivales, ya detectada
+                 hoy) — sin tocar cómo se resuelve ninguna de las dos
+                 todavía (eso es Parte D).
+Partes:          B (únicamente — C se movió a RFC-0006/3)
+Dependencias:    RFC-0006/1 (Cimientos) cerrado — `ce` y `Politica` ya
+                 existen y están probados. (No depende de `ce`
+                 directamente: B es lógica de predicado sobre
+                 `TipoClaim`, no de cálculo — la dependencia es de
+                 orden, no técnica.)
+Riesgos:         Medio (tabla §6) — es cobertura, no dificultad
+                 técnica: verificar contra las 3 tensiones canónicas de
+                 CONCEPT-0002 §1 sin dejar un cuarto caso sin
+                 clasificar. Bajo blast radius: NO toca `enrutar()`
+                 (ver Motor).
+
+Auditoría previa (estado actual, verificado leyendo código, no
+supuesto): hoy `tension_bloqueante()` (mecanica.py) solo mira claims
+`PROPUESTA` — nunca detecta rivalidad entre `INTERPRETACION`. Y NINGÚN
+productor real conectado al grafo (`diagnosticar/productor.py`,
+`diagnosticar/productor_llm.py`, ambos auditados línea por línea) puede
+hoy producir más de una `INTERPRETACION` por asunto: los dos tienen la
+guardia `ya_interprete` (si ya existe una interpretación vigente de
+Diagnosticar, no producen otra) y ambos `return` dentro del primer
+`for` que encuentra un fact — como máximo un intent por invocación. Esto
+significa: **la tensión D1 es estructuralmente imposible de producir
+hoy en el walkthrough real** — no es que no ocurra por casualidad, es
+que ningún camino del código puede generarla.
+
+Auditoría adicional — la tensión D2 SÍ es real y SÍ está viva hoy: en
+`"siguiente-paso(sesion)"`, Orientar propone incondicionalmente
+"avanzar-con-andamiaje" en cuanto existe alguna interpretación vigente
+(`orientar/productor.py`), y Remediar propone cuando
+`dominada=False` (`remediar/productor.py`) — ambas comparten
+literalmente el mismo asunto (`ASUNTO_SIGUIENTE_PASO =
+"siguiente-paso(sesion)"` en los dos archivos). Cuando ambas disparan
+en el mismo walkthrough, `tension_bloqueante()` YA las detecta hoy y
+`convocar()` YA las resuelve por `mayor-confianza-declarada` — esta es
+la tensión canónica #1 de CONCEPT-0002 §1 ("¿avanzar o reforzar?", D2
+pura), en vivo, no hipotética. **Esta es la superficie de regresión
+real de esta mini-épica**: el refactor de `tension_bloqueante()` debe
+preservar bit a bit esta detección/resolución existente — la Garantía
+de activación de abajo cubre D1 (inerte), no D2 (vivo y debe mantenerse
+idéntico).
+
+**Garantía de activación — D1 (propiedad verificable, no solo
+observación):** aunque la detección D1 exista tras RFC-0006/2, ningún
+recorrido del walkthrough actual puede activarla, porque ningún
+productor conectado genera interpretaciones rivales. Cualquier
+diferencia observable en `runtime_completo.py` atribuible a D1 durante
+esta mini-épica constituye una regresión, no un efecto secundario
+aceptable.
+
+Motor:           Cambia — `kernel/deliberation/mecanica.py` únicamente.
+                 `tension_bloqueante()` extiende su retorno de
+                 `(asunto, participantes)` a `(tipo, asunto,
+                 participantes)`, con `tipo` ∈ {"D1", "D2"} — escanea
+                 primero `INTERPRETACION` (D1) y luego `PROPUESTA` (D2)
+                 por asunto, mismo criterio de rivalidad que hoy (≥2
+                 vigentes). `convocar()` desempaqueta el 3-tuple y
+                 descarta `tipo` por ahora (ignora la clasificación,
+                 usa `participantes` exactamente como hoy — resolución
+                 sin cambios, es Parte D). `enrutar()` en
+                 `walkthrough.py` **NO cambia**: su chequeo
+                 `tension_bloqueante(estado) is not None` sigue
+                 funcionando sin modificación con el 3-tuple — inventar
+                 una rama nueva ahí sería adelantar comportamiento de
+                 Parte D que todavía no existe.
+Boundary:        No cambia.
+HTTP:            No cambia.
+Frontend:        No cambia.
+E2E:             `runtime_completo.py` no gana categoría nueva.
+                 Categoría Runtime debe seguir en verde con el MISMO
+                 resultado — es la prueba de que la tensión D2 viva
+                 (Remediar/Orientar) sigue resolviéndose exactamente
+                 igual tras el refactor.
+
+No debe cambiar: `enrutar()` / `engine/graph/walkthrough.py` (ningún
+                 archivo de grafo se toca en esta mini-épica — el
+                 3-tuple es compatible con el chequeo `is not None`
+                 existente sin editar una línea ahí), `confianza.py`
+                 (Parte A ya cerrada), `politica.py` (theta es Parte C,
+                 no esta ficha), `derivar_decision()` (Parte D),
+                 cualquier lógica de margen δ o resolución D1-vs-D2 con
+                 peso distinto (Parte D), boundary/, app/api/routes/,
+                 frontend/, REGLA_POLITICA_V1 =
+                 "mayor-confianza-declarada" (sigue siendo la única
+                 regla de resolución; D1/D2 se clasifican pero ambas
+                 siguen resolviéndose igual hasta Parte D).
+
+Context Budget:  ROADMAP-RFC-0006.md (este documento), RFC-0006 §3,
+                 CONCEPT-0002 §1 (las 3 tensiones canónicas),
+                 kernel/deliberation/mecanica.py,
+                 kernel/state/entries.py,
+                 runtime/domain/diagnosticar/,
+                 runtime/domain/remediar/productor.py,
+                 runtime/domain/orientar/productor.py (los tres, leer
+                 no tocar — ya auditados: confirman D1 inalcanzable y
+                 D2 real/vivo), tests/runtime/deliberation/ (patrón ya
+                 establecido). No abrir engine/graph/,
+                 kernel/deliberation/politica.py, boundary/, app/,
+                 frontend/ — nada de esto cambia en esta ficha.
+
+Criterios de cierre — CERRADO 2026-07-12:
+  ✓ tension_bloqueante() clasifica explícitamente cada tensión
+    encontrada como D1 o D2 — 3 tensiones canónicas de CONCEPT-0002 §1
+    (avanzar-vs-reforzar D2 real, modalidad D2, dominó-el-objetivo D1) +
+    1 caso de control sin tensión (test_parteB_deteccion_tension.py)
+  ✓ La tensión D2 viva (Remediar vs Orientar en
+    "siguiente-paso(sesion)") se detecta y resuelve exactamente igual
+    que antes del refactor — test explícito construido con los
+    productores reales (no una fixture inventada), Y confirmado en el
+    E2E real: `runtime_completo.py` produjo exactamente 7 transiciones
+    (fact→diagnosticar→remediar→orientar→deliberación→decisión→adaptar),
+    idéntico al recorrido pre-Parte-B
+  ✓ convocar() sigue produciendo el mismo TransitionIntent — mismo
+    ganador (Remediar, 0.82), misma regla (mayor-confianza-declarada)
+  ✓ enrutar() / walkthrough.py: 0 líneas modificadas (verificado con
+    test estructural: ni "D1" ni "D2" aparecen en walkthrough.py)
+  ✓ politica-v1 sigue produciendo exactamente las mismas decisiones —
+    runtime_completo.py 9/9 PASS, categoría Runtime idéntica
+    (entrega=modalidad(COMP-2), mismo shape de traza)
+  ✓ Toda la Parte B se prueba sin ejecutar LangGraph — LearningState a
+    mano o productores reales invocados directamente, sin walkthrough
+  ✓ Ninguna API HTTP cambia
+  ✓ Ninguna surface Boundary cambia
+  ✓ No aparecen TODO/FIXME nuevos
+  ✓ Cobertura: 288 tests (281 previos + 7 nuevos de Parte B)
+  ✓ Ningún documento temporal nuevo abierto en esta ficha
+```
+
+---
+
+## Ficha — RFC-0006/3: Propuesta única, θ e insuficiencia (D3)
+
+> Separada de RFC-0006/2 por el Engineering Gate (nota arriba). No
+> escribir código de esta ficha hasta cerrar y aprobar RFC-0006/2.
+
+```
+Objetivo:        Una propuesta sin rival (slot pendiente con un único
+                 claim) deriva su decisión directamente si `ce` alcanza
+                 el umbral θ de la política — y esa derivación queda
+                 registrada como "no-convocatoria" (RFC-0006 §3, P6:
+                 "decidió una capacidad sola porque nadie podía
+                 disentir"). Si `ce` no alcanza θ: NO deriva decisión —
+                 se activa el camino de evidencia.
+Partes:          C
+Dependencias:    RFC-0006/2 (Detección y clasificación) cerrado.
+
+Auditoría previa (estado actual — hallazgo del Gate de RFC-0006/2,
+verificado leyendo código, no supuesto): **hoy NO existe ningún camino
+para que una propuesta única derive una decisión.** `registrar_decision`
+solo se invoca desde `derivar_decision()` (mecanica.py), que solo lee
+`estado.deliberaciones` buscando una `Resuelta` — nunca examina un
+claim-propuesta sin rival directamente. El motivo por el que esto no se
+había notado: en el único slot de decisión real del walkthrough actual
+(`"siguiente-paso(sesion)"`), Orientar SIEMPRE propone en cuanto existe
+alguna interpretación vigente, así que ese slot tiene rivalidad
+(Remediar vs Orientar) por construcción del par de productores
+actuales, no por diseño del mecanismo — la "propuesta única" nunca se
+ejerce hoy, no porque sea imposible (a diferencia de D1 en RFC-0006/2),
+sino porque los dos únicos productores de ese slot resultan estar
+diseñados para competir siempre. RFC-0003/RFC-0006 SÍ contemplan
+"propuesta única deriva directa" como caso normativo (`registrar_decision`
+ya soporta un origen `ClaimEntry` directo — INV-6 — sin que nada del
+grafo lo invoque hoy). Esta mini-épica construye el primer camino real
+para ese caso, no lo modifica.
+
+Riesgos:         Alto — mayor que lo que la ficha original de
+                 RFC-0006/2 asumía. No es "agregar un chequeo dentro de
+                 convocar()": es una rama de enrutamiento nueva en
+                 `enrutar()` (`engine/graph/walkthrough.py`), el mismo
+                 archivo del `GraphRecursionError` de HITL. Riesgo
+                 específico: una guardia mal puesta en esta rama puede
+                 crear un ciclo aplicar→enrutar sin avance (mismo tipo
+                 de bug que las guardias PR-2..PR-5 ya existentes en
+                 ese archivo previenen para otros nodos) — replicar el
+                 mismo patrón de guardia, no inventar uno nuevo.
+
+Motor:           Cambia — `kernel/deliberation/politica.py` (nuevo
+                 campo `theta: Decimal`; `theta_v1` se decide en el
+                 Gate de esta ficha, demostrado por la suite, no
+                 asumido de antemano) + `kernel/deliberation/mecanica.py`
+                 (nueva función — p. ej. `derivar_directa()` o nombre
+                 que decida el Gate — que localiza una PROPUESTA vigente
+                 sin rival y sin decisión ya derivada de su asunto, y
+                 devuelve un intent de decisión si `ce >= theta`, o
+                 nada si no) + `engine/graph/walkthrough.py` (`enrutar()`
+                 gana la rama de insuficiencia — con guardia segura,
+                 mismo patrón que las guardias PR-2..PR-5 existentes,
+                 para no repetir el riesgo de GraphRecursionError).
+Boundary:        No cambia (a confirmar en el Gate — si D3 necesita ser
+                 observable, podría tocar RFC-0007, no esta ficha).
+HTTP:            No cambia.
+Frontend:        No cambia.
+E2E:             runtime_completo.py, categoría Runtime: DEBE seguir
+                 produciendo el mismo resultado si theta_v1 se elige
+                 correctamente — validación obligatoria, no opcional.
+
+No debe cambiar: `tension_bloqueante()` / clasificación D1/D2 (RFC-0006/2
+                 ya cerrada, no se reabre), `confianza.py` (Parte A),
+                 resolución con margen δ (Parte D), REGLA_POLITICA_V1,
+                 boundary/, app/api/routes/, frontend/.
+
+Context Budget:  ROADMAP-RFC-0006.md (este documento), RFC-0006 §3
+                 completo, CONCEPT-0002 §1/§3,
+                 kernel/deliberation/mecanica.py,
+                 kernel/deliberation/politica.py,
+                 kernel/reducers/decisiones.py (ya soporta origen
+                 ClaimEntry directo — leer antes de tocar),
+                 engine/graph/walkthrough.py completo (leer entero antes
+                 de tocar una línea — precedente GraphRecursionError),
+                 runtime/domain/remediar/, runtime/domain/orientar/
+                 (leer, no tocar), tests/runtime/deliberation/,
+                 tests de grafo existentes (patrón de guardias
+                 PR-2..PR-5). No abrir boundary/, app/, frontend/ salvo
+                 que el Gate lo justifique explícitamente antes de
+                 abrir.
+
+Criterios de cierre:
+  □ Existe un camino real (no solo una función pura sin wiring) para
+    que una propuesta única derive decisión cuando ce >= theta
+  □ Existe una función de insuficiencia D3 que compara `ce` contra
+    `politica.theta` y decide NO derivar cuando no se alcanza
+  □ La decisión derivada de propuesta única queda registrada de forma
+    que "decidió una capacidad sola porque nadie podía disentir" sea
+    verificable sin ambigüedad (P6) — usando el mecanismo que ya
+    distingue origen ClaimEntry vs DeliberacionEntry, sin campo nuevo
+    salvo que el Gate demuestre que hace falta
+  □ Bajo política v1, la incorporación de θ no modifica ninguna decisión
+    observable existente — el criterio es el comportamiento, no el
+    valor concreto de `theta_v1`
+  □ enrutar() usa una guardia seria (mismo patrón que PR-2..PR-5) — test
+    explícito de que no introduce un ciclo aplicar→enrutar sin avance
+  □ politica-v1 sigue produciendo exactamente las mismas decisiones —
+    runtime_completo.py 9/9 PASS, categoría Runtime sin cambio de
+    resultado observable
+  □ Ninguna API HTTP cambia (salvo que el Gate lo justifique)
+  □ Ninguna surface Boundary cambia (salvo que el Gate lo justifique)
+  □ No aparecen TODO/FIXME nuevos
+  □ No baja la cobertura de tests
+  □ Ningún documento temporal nuevo queda abierto sin retirar al cerrar
 ```
