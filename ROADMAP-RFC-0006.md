@@ -512,3 +512,40 @@ a la mecánica reconvocar y resolver sola una tensión que espera al
 docente (bypass de RFC-0009 §3). La reconvocatoria legítima (con
 evidencia nueva, contada para escalar) sigue siendo Parte F.
 
+
+### RFC-0006/5 — Escalada orgánica (Parte F) — CERRADO, commits `ee98360`+`200c4a5`+`b39cda1`
+
+Las dos vías de RFC-0006 §4 viven en `convocar()`: RESERVA
+(`politica.asuntos_reservados` — se escala sin computar resolución, y
+la urgencia NO devuelve la autoridad reservada: anti-bypass RFC-0009
+§3) y LÍMITE (`politica.limite_reconvocatoria` — la cadena `enlaza_a`
+que acumula N `Aplazada` sin discriminar escala; la urgencia sí precede
+al límite: "la provisionalidad es para el estudiante"). La
+reconvocatoria (CONCEPT-0002 §5) también nació aquí: una tensión
+aplazada vuelve a ser bloqueante solo cuando el conjunto de rivales
+vigentes difiere de los participantes registrados en su cabeza
+(anti-churn: con paisaje idéntico la resolución se reproduciría bit a
+bit); la deliberación nueva nace `enlaza_a` la cabeza, jamás
+reapertura. Una tensión escalada jamás vuelve a ser bloqueante — solo
+el docente (E3) la cierra. 338/338 tests, `runtime_completo.py` 9/9.
+Detalle: `mecanica.py` (`_cabezas_abiertas`, `_aplazamientos_en_cadena`),
+`tests/runtime/deliberation/test_parteF_escalada_organica.py`,
+`tests/runtime/walkthrough/test_parteF_escalada_organica_grafo.py`
+(grafo real: S2 recibe la escalada SIN sembrado manual — la deuda
+original de esta parte — y la resolución del docente continúa hasta
+Adaptar/Entrega en ambas vías).
+
+Hallazgo no obvio (dependencia futura declarada, no pendiente
+silencioso): bajo los productores de REGLAS que hoy corren en vivo,
+las confianzas son constantes (Diagnosticar 0.78 para toda
+interpretación, Remediar 0.82, Orientar 0.75) — los márgenes son fijos
+(D1 = 0.00, D2 = 0.07) y por tanto NO existe ningún δ > 0 que produzca
+aplazamientos orgánicos sin apagar a la vez la auto-resolución de toda
+D1 (el ciclo adaptativo continuo del 2026-07-13 depende de que las D1
+empatadas se resuelvan). La activación de la Parte F en producción no
+es un valor de configuración: requiere confianzas que varíen con la
+evidencia (productores LLM en el walkthrough vivo — ya construidos y
+probados en M3 — o una regla de scoring sensible a la evidencia). La
+política v2 se decide cuando esa migración ocurra; hasta entonces
+producción sigue en v1 y la Parte F queda lista y probada, igual que
+quedó la Parte E.
