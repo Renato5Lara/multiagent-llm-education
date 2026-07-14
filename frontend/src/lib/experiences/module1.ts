@@ -324,9 +324,10 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
     },
   ],
 
-  // ── Cierre (PED-004: modo módulo de referencia) ───────────────────────────────
-  // Sin nextMission: los módulos legacy están fuera de la experiencia, así que
-  // el cierre no anuncia nada externo. Todo termina dentro de esta misión.
+  // ── Cierre ─────────────────────────────────────────────────────────────────
+  // Módulo 2 ("Estructuras de control") ya tiene experiencia propia (PED-004
+  // deja de aplicarle el modo de referencia): el cierre anuncia la siguiente
+  // misión real de la ruta.
   closing: {
     achievement:
       'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos — el error más común de quienes empiezan. Ya sabes cómo se le habla a una máquina: sin dejar nada a su imaginación. Esa regla es la base de todo lo que escribirás en Python.',
@@ -354,6 +355,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
       },
       coda:
         'Cuando escribas tu primera línea de Python le hablarás a un ejecutor igual de literal que este robot. La hipótesis que pusiste a prueba hoy será tu ventaja.',
+    },
+
+    nextMission: {
+      title: 'Misión 2 · Decisiones que la máquina entiende',
+      hook:
+        'Ya sabes darle instrucciones precisas a una máquina. La siguiente pregunta es qué pasa cuando esa máquina debe decidir — y para eso necesita condiciones tan precisas como las instrucciones que acabas de dominar.',
     },
   },
 }

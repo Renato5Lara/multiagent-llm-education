@@ -278,6 +278,11 @@ export default function ModuleLearningView() {
   if (experience && moduleId) {
     return (
       <ModuleExperienceView
+        // key: fuerza un remount al cambiar de módulo — sin esto, navegar de
+        // un módulo a otro con experiencia propia (p. ej. al terminar y
+        // continuar automáticamente) reutiliza la instancia y arrastra la
+        // fase (slice_end) y el dominio del módulo anterior.
+        key={moduleId}
         definition={experience}
         moduleId={moduleId}
         modality={learnerModality}
