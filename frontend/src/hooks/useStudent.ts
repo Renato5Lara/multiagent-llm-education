@@ -21,7 +21,12 @@ export function useSubmitDiagnostic() {
 
   return useMutation({
     mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<DiagnosticResult>(`/api/students/diagnostic/${courseId}`, { answers })
+      // La deliberación real encadena 5 agentes LLM (Diagnóstico → Perfil →
+      // Adaptación → Tutor → Consenso): 30-45s+ observados, igual que
+      // useModuleOrchestration — mismo motivo, mismo ajuste.
+      const resp = await api.post<DiagnosticResult>(`/api/students/diagnostic/${courseId}`, { answers }, {
+        timeout: 120_000,
+      })
       return resp.data
     },
     onSuccess: (_data, variables) => {
@@ -324,7 +329,11 @@ export function useStartEvaluation() {
 export function useSubmitEvaluation() {
   return useMutation({
     mutationFn: async ({ attemptId, answers }: { attemptId: string; answers: Record<number, number> }) => {
-      const resp = await api.post(`/api/students/evaluation/${attemptId}/submit`, { answers })
+      // Dispara Diagnosticar → Remediar/Orientar → Consenso sobre LLM real
+      // (mismo motivo que useSubmitDiagnostic/useModuleOrchestration).
+      const resp = await api.post(`/api/students/evaluation/${attemptId}/submit`, { answers }, {
+        timeout: 120_000,
+      })
       return resp.data
     },
   })
