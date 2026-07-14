@@ -8,7 +8,7 @@
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
 import { useState } from 'react'
-import { Code2, Loader2 } from 'lucide-react'
+import { Code2, LifeBuoy, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { usePyodide } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
@@ -141,6 +141,22 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       {error && <p className="text-sm text-amber-400">{error}</p>}
       {!done && attempts > 0 && !error && output !== null && (
         <p className="text-sm text-neural-muted">{practice.hint}</p>
+      )}
+      {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
+          del propio ejercicio (mismo criterio que la escalera de remediación:
+          más acompañamiento antes de ofrecer la respuesta, nunca en su lugar). */}
+      {!done && attempts >= 2 && practice.workedExample && (
+        <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
+          <div className="flex items-center gap-2">
+            <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
+            <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+              Apoyo — veamos un caso parecido
+            </p>
+          </div>
+          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{practice.workedExample.code}</pre>
+          <p className="text-sm text-neural-muted">→ {practice.workedExample.output}</p>
+          <p className="text-sm text-neural-text/80 leading-relaxed">{practice.workedExample.explanation}</p>
+        </div>
       )}
       {solved && (
         <p className="text-sm text-emerald-400">

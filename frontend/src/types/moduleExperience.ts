@@ -199,6 +199,16 @@ export interface PythonMicroPracticeDef {
   expectedOutput: string
   /** Pista mostrada tras el primer intento fallido. */
   hint: string
+  /** Apoyo tras el segundo intento fallido — un caso resuelto ANÁLOGO (mismo
+   *  patrón, datos distintos), nunca la solución del propio ejercicio. Mismo
+   *  espíritu que `RemediationIllustration`, aplicado a la micropráctica de
+   *  Python. Opcional: sin él, el intento 2 no agrega apoyo nuevo (compatible
+   *  con el contenido ya autorado). */
+  workedExample?: {
+    code: string
+    output: string
+    explanation: string
+  }
   /** Solución — se ofrece solo tras agotar los intentos, nunca antes. */
   solutionCode: string
 }

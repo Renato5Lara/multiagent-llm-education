@@ -166,6 +166,11 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
           starterCode: '# escribe tu instrucción aquí\n',
           expectedOutput: 'Robot listo',
           hint: 'Usa la función print() con el texto exacto entre comillas: print("Robot listo")',
+          workedExample: {
+            code: 'print("Hola")',
+            output: 'Hola',
+            explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Robot listo".',
+          },
           solutionCode: 'print("Robot listo")',
         },
       },
