@@ -86,22 +86,44 @@ function describeAdaptation(profundidad: string | undefined, reinforcement: Rein
  *  atrás, el estudiante no necesita tocar nada para que esto avance). */
 const ADAPTATION_MESSAGE_MS = 1600
 
+/** Saludo al reanudar una sesión previa (auditoría de continuidad, jul 2026):
+ *  el sistema no solo restaura la pantalla, dice explícitamente que recuerda
+ *  al estudiante — mismo espíritu que describeAdaptation, nunca jerga técnica. */
+function describeWelcomeBack(cursor: Pick<ExperienceCursor, 'phase' | 'remediationLevel'>): string {
+  if (cursor.phase === 'remediation' || cursor.phase === 'reinforcement') {
+    return 'Bienvenido de nuevo. La última vez vimos que este concepto todavía necesitaba un poco más de práctica — continuemos justo desde ahí.'
+  }
+  return 'Bienvenido de nuevo. Continuemos justo donde lo dejaste.'
+}
+
+/** Cuánto queda visible el saludo de bienvenida antes de apagarse solo —
+ *  nunca bloquea ni exige un clic; es un tono, no un paso. */
+const WELCOME_BACK_MS = 5000
+
 // A1 — persistencia temporal del cursor en localStorage: reanuda tras recarga o
 // salida sin perder el avance. Provisional (S1); migrará a Misión Activa backend
-// en S3. Solo se persiste el estado reconstruible.
-// 'practice' y 'decision' SÍ reanudan directo: ninguno de los dos depende de
-// estado efímero para renderizar (practice arranca limpia; decision solo
-// necesita `mastery`, ya persistido). 'reinforcement' y 'remediation' no —
-// dependen de qué refuerzo/peldaño estaba activo (estado en memoria, no
-// persistido) y resumir ahí en blanco rompería la pantalla; caen al concepto
-// del ciclo actual, conservando el dominio (refinamiento de experiencia, jul
-// 2026 — "si regreso atrás me reinicia la sesión" rompía la inmersión).
-const RESUMABLE_PHASES: Phase[] = ['opening', 'reveal', 'concept', 'practice', 'decision', 'slice_end']
+// en S3. Persiste el ESTADO DE APRENDIZAJE completo, no solo la pantalla
+// (refinamiento de experiencia, jul 2026 — auditoría de continuidad: salir y
+// volver, o refrescar, obligaba a rehacer una práctica ya resuelta porque solo
+// se guardaba {phase, cycleIndex, mastery}). 'reinforcement' y 'remediation'
+// ahora SÍ reanudan directo: `activeReinforcementKind`/`remediationLevel` ya
+// alcanzan para reconstruir qué refuerzo o peldaño estaba activo (se busca de
+// nuevo en el propio contenido del ciclo, nunca se serializa el objeto).
+const RESUMABLE_PHASES: Phase[] = [
+  'opening', 'reveal', 'concept', 'practice', 'decision', 'reinforcement', 'remediation', 'slice_end',
+]
 
 interface ExperienceCursor {
   phase: Phase
   cycleIndex: number
   mastery: Record<string, number>
+  practiceOutcome: PracticeOutcome | null
+  pythonOutcome: PracticeOutcome | null
+  pythonPracticeDone: boolean
+  remediationLevel: RemediationLevel
+  visitedReinforcements: ReinforcementKind[]
+  activeReinforcementKind: ReinforcementKind | null
+  autoReinforcement: boolean
 }
 
 const cursorKey = (moduleId: string) => `experience-cursor:${moduleId}`
@@ -110,17 +132,42 @@ function defaultMastery(definition: ModuleExperienceDefinition): Record<string, 
   return Object.fromEntries(definition.cycles.map(c => [c.conceptId, c.priorMastery]))
 }
 
-function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): ExperienceCursor {
+function emptyCursor(mastery: Record<string, number>): ExperienceCursor {
+  return {
+    phase: 'opening', cycleIndex: 0, mastery,
+    practiceOutcome: null, pythonOutcome: null, pythonPracticeDone: false,
+    remediationLevel: 0, visitedReinforcements: [], activeReinforcementKind: null,
+    autoReinforcement: false,
+  }
+}
+
+/** `resumed` distingue "cursor real recuperado de una sesión anterior" de
+ *  "arranque en frío" — gobierna si se muestra el saludo de bienvenida de
+ *  regreso (nunca en la primera vez, solo cuando de verdad había algo que
+ *  recordar). */
+function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): ExperienceCursor & { resumed: boolean } {
   const base = defaultMastery(definition)
   try {
     const raw = localStorage.getItem(cursorKey(moduleId))
-    if (!raw) return { phase: 'opening', cycleIndex: 0, mastery: base }
+    if (!raw) return { ...emptyCursor(base), resumed: false }
     const saved = JSON.parse(raw) as Partial<ExperienceCursor>
     const cycleIndex = Math.min(Math.max(saved.cycleIndex ?? 0, 0), definition.cycles.length - 1)
     const phase = saved.phase && RESUMABLE_PHASES.includes(saved.phase) ? saved.phase : 'concept'
-    return { phase, cycleIndex, mastery: { ...base, ...(saved.mastery ?? {}) } }
+    return {
+      phase,
+      cycleIndex,
+      mastery: { ...base, ...(saved.mastery ?? {}) },
+      practiceOutcome: saved.practiceOutcome ?? null,
+      pythonOutcome: saved.pythonOutcome ?? null,
+      pythonPracticeDone: saved.pythonPracticeDone ?? false,
+      remediationLevel: (saved.remediationLevel as RemediationLevel | undefined) ?? 0,
+      visitedReinforcements: saved.visitedReinforcements ?? [],
+      activeReinforcementKind: saved.activeReinforcementKind ?? null,
+      autoReinforcement: saved.autoReinforcement ?? false,
+      resumed: phase !== 'opening',
+    }
   } catch {
-    return { phase: 'opening', cycleIndex: 0, mastery: base }
+    return { ...emptyCursor(base), resumed: false }
   }
 }
 
@@ -219,37 +266,46 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   const effectiveModality: LearningModality = modality ?? 'reading'
   const submitCycleEvidence = useSubmitCycleEvidence()
 
-  // A1 — rehidratar el cursor persistido una sola vez al montar.
-  const [initialCursor] = useState<ExperienceCursor>(() => loadCursor(moduleId, definition))
+  // A1 — rehidratar el cursor persistido una sola vez al montar. Ya no es solo
+  // la pantalla: todo el sub-estado pedagógico se restaura junto con ella
+  // (auditoría de continuidad, jul 2026) para que reanudar nunca obligue a
+  // rehacer una práctica ya resuelta.
+  const [initialCursor] = useState(() => loadCursor(moduleId, definition))
   const [phase, setPhase] = useState<Phase>(initialCursor.phase)
   const [cycleIndex, setCycleIndex] = useState(initialCursor.cycleIndex)
   const [mastery, setMastery] = useState<Record<string, number>>(initialCursor.mastery)
-  const [activeReinforcement, setActiveReinforcement] = useState<Reinforcement | null>(null)
+  const [activeReinforcement, setActiveReinforcement] = useState<Reinforcement | null>(() => {
+    if (!initialCursor.activeReinforcementKind) return null
+    const savedCycle = definition.cycles[initialCursor.cycleIndex]
+    return savedCycle?.decision?.reinforcements.find(r => r.kind === initialCursor.activeReinforcementKind) ?? null
+  })
   // PED-005 — refuerzos ya explorados en el ciclo actual: al terminar uno se
   // vuelve al menú (elegir nunca es un callejón) y el dominio del refuerzo se
   // acredita solo la primera vez por tipo.
-  const [visitedReinforcements, setVisitedReinforcements] = useState<Set<ReinforcementKind>>(new Set())
+  const [visitedReinforcements, setVisitedReinforcements] = useState<Set<ReinforcementKind>>(
+    () => new Set(initialCursor.visitedReinforcements),
+  )
   // Peldaño activo de la escalera. 0 = actividad principal (sin remediación).
-  const [remediationLevel, setRemediationLevel] = useState<RemediationLevel>(0)
+  const [remediationLevel, setRemediationLevel] = useState<RemediationLevel>(initialCursor.remediationLevel)
   // Desenlace de la práctica del ciclo actual — habilita Continuar SIEMPRE
   // (nunca-bloquear), incluso cuando se mostró la solución.
-  const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(null)
+  const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(initialCursor.practiceOutcome)
   // La UI obedece al Runtime (no solo lo notifica): cuando `profundidad`
   // devuelta por cycle-evidence es "fundamentos", se inserta automáticamente
   // un refuerzo del propio ciclo (mismo mecanismo que el menú de decisión, sin
   // agente ni fase nueva) antes de continuar. Esta bandera distingue ese
   // origen del refuerzo elegido voluntariamente, para que al terminar continúe
   // el ciclo en vez de volver al menú.
-  const [autoReinforcement, setAutoReinforcement] = useState(false)
+  const [autoReinforcement, setAutoReinforcement] = useState(initialCursor.autoReinforcement)
   // "Ahora hazlo tú" (PythonBridge.practice): si el puente del ciclo trae una
   // micropráctica interactiva, Continuar espera a que quede resuelta o con
   // solución mostrada — igual que el refuerzo del menú, nunca bloquea después
   // de eso. Sin `practice` en el puente, este estado nunca se consulta.
-  const [pythonPracticeDone, setPythonPracticeDone] = useState(false)
+  const [pythonPracticeDone, setPythonPracticeDone] = useState(initialCursor.pythonPracticeDone)
   // Evidencia de la micropráctica de Python — se combina con practiceOutcome
   // en advanceCycle para que el Runtime vea el ciclo completo (ordenamiento +
   // Python), no solo la mitad. null mientras no se haya resuelto ni agotado.
-  const [pythonOutcome, setPythonOutcome] = useState<PracticeOutcome | null>(null)
+  const [pythonOutcome, setPythonOutcome] = useState<PracticeOutcome | null>(initialCursor.pythonOutcome)
   // Frase conversacional de la adaptación (describeAdaptation) — visible
   // durante la fase 'adapting' una vez que la decisión real ya llegó, justo
   // antes de transicionar. null mientras se espera la respuesta del Runtime.
@@ -261,6 +317,23 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   useEffect(() => () => {
     if (adaptationTimeoutRef.current) clearTimeout(adaptationTimeoutRef.current)
   }, [])
+  // Saludo de bienvenida al reanudar (describeWelcomeBack) — solo cuando el
+  // cursor cargado venía de verdad de una sesión anterior (`resumed`), nunca
+  // en el arranque en frío. Se apaga solo (WELCOME_BACK_MS) o al primer gesto
+  // del estudiante (cualquier cambio de fase), lo que ocurra primero.
+  const [welcomeBackMessage, setWelcomeBackMessage] = useState<string | null>(
+    () => (initialCursor.resumed ? describeWelcomeBack(initialCursor) : null),
+  )
+  const welcomeBackPhaseRef = useRef(initialCursor.phase)
+  useEffect(() => {
+    if (!welcomeBackMessage) return
+    if (phase !== welcomeBackPhaseRef.current) {
+      setWelcomeBackMessage(null)
+      return
+    }
+    const timeout = setTimeout(() => setWelcomeBackMessage(null), WELCOME_BACK_MS)
+    return () => clearTimeout(timeout)
+  }, [phase, welcomeBackMessage])
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
@@ -307,10 +380,22 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     }))
   }, [])
 
-  // A1 — persistir el cursor en cada cambio de fase/ciclo/dominio.
+  // A1 — persistir el cursor en cada cambio de sub-estado pedagógico, no solo
+  // de pantalla — es lo que permite reanudar (P1 de la auditoría de
+  // continuidad) sin rehacer una práctica ya resuelta.
   useEffect(() => {
-    saveCursor(moduleId, { phase, cycleIndex, mastery })
-  }, [moduleId, phase, cycleIndex, mastery])
+    saveCursor(moduleId, {
+      phase, cycleIndex, mastery,
+      practiceOutcome, pythonOutcome, pythonPracticeDone,
+      remediationLevel,
+      visitedReinforcements: Array.from(visitedReinforcements),
+      activeReinforcementKind: activeReinforcement?.kind ?? null,
+      autoReinforcement,
+    })
+  }, [
+    moduleId, phase, cycleIndex, mastery, practiceOutcome, pythonOutcome, pythonPracticeDone,
+    remediationLevel, visitedReinforcements, activeReinforcement, autoReinforcement,
+  ])
 
   // Cierre de la misión: se borra el cursor (el repaso posterior parte limpio)
   // y se marca el módulo completado vía la lógica legacy. "Salir" a media misión
@@ -817,6 +902,16 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           Ciclo {cycleIndex + 1} de {definition.cycles.length}
         </span>
       </div>
+
+      {welcomeBackMessage && (
+        <div className="rounded-xl border border-neural-glow/25 bg-neural-glow/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-500">
+          <span className="relative flex h-2 w-2 shrink-0 mt-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-glow" />
+          </span>
+          <p className="text-sm text-neural-text/90 leading-relaxed">{welcomeBackMessage}</p>
+        </div>
+      )}
 
       {phase === 'concept' && cycle && (
         <div className="space-y-5">
