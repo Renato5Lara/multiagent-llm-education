@@ -48,6 +48,13 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
       },
       concept: {
         title: '¿Qué hace evaluable a una condición?',
+        secondExample: {
+          label: 'Otro caso — la alarma contra incendios',
+          body: [
+            'Una alarma contra incendios no decide «si hay mucho humo»: decide con un sensor que mide partículas de humo por metro cúbico — ¿supera las 500? Si SÍ, suena la alarma. Si NO, permanece en silencio.',
+            'Es la misma estructura del paraguas y el termostato, en un contexto donde el error cuesta caro: por eso el sensor nunca usa una idea vaga como «mucho humo».',
+          ],
+        },
         pythonBridge: {
           label: 'Esto ya es Python',
           code: 'if temperatura > 24:\n    apagar_calefaccion()\nelse:\n    mantener_calefaccion()',
@@ -211,6 +218,12 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
               solutionExplanation: [
                 'Primero se consulta el temporizador, después se decide el color según su resultado — «poco tráfico» era la condición vaga, igual que «mal tiempo» o «cuando alguien quiera pasar».',
               ],
+            },
+            pythonBridge: {
+              label: 'Esto ya es Python',
+              code: 'if temporizador.transcurrio(segundos=40):\n    cambiar_a_verde_peatonal()\nelse:\n    mantener_en_rojo()',
+              explanation:
+                'La decisión del semáforo que acabas de armar es exactamente este `if`/`else`: una condición medible (¿pasaron 40 segundos?) y una acción para cada resultado — sin "poco tráfico" en ninguna parte.',
             },
           },
           {

@@ -53,6 +53,13 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
       },
       concept: {
         title: '¿Qué hace precisa a una instrucción?',
+        secondExample: {
+          label: 'Otro caso — el manual de una silla',
+          body: [
+            'Un manual de ensamblaje nunca dice «arma la silla»: dice «atornilla la pata en la esquina inferior izquierda con el tornillo A, hasta que quede firme». Qué pieza, dónde, con qué tornillo y hasta cuándo — nada queda a tu imaginación.',
+            'Es la misma regla del pan, en un contexto completamente distinto: una instrucción precisa no cambia según el tema, cambia según cuánto deja adivinar.',
+          ],
+        },
         pythonBridge: {
           label: 'Esto ya es Python',
           code: 'untar(herramienta="cuchillo", ingrediente="mantequilla", gramos=10, lado="superior")',
@@ -218,6 +225,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
               solutionExplanation: [
                 'Primero avanzar, después girar, después detenerse — cada paso deja al conductor donde el siguiente lo necesita. «Dirígete al centro» era la meta: el GPS nunca te la dicta como paso.',
               ],
+            },
+            pythonBridge: {
+              label: 'Esto ya es Python',
+              code: 'avanzar(metros=400, calle="Av. Larco")\ngirar(direccion="derecha", calle="Av. America")\ndetenerse(lugar="edificio de la esquina")',
+              explanation:
+                'La ruta del GPS que acabas de armar es la misma secuencia, en Python: tres funciones, en orden, cada una con sus datos exactos — nada de "dirígete al centro".',
             },
           },
           {

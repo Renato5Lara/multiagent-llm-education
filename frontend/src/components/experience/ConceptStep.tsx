@@ -104,6 +104,21 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
         <p className="text-xs text-neural-muted/60 italic px-1">{variant.sourceNote}</p>
       )}
 
+      {/* Un segundo caso — no un refuerzo opcional, parte del recorrido:
+          la teoría no depende de un solo ejemplo para fijar la idea. */}
+      {concept.secondExample && (
+        <div className="glass-panel rounded-2xl p-5 space-y-3">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+            {concept.secondExample.label}
+          </p>
+          {concept.secondExample.body.map((paragraph, i) => (
+            <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      )}
+
       {/* Puente a Python del propio ejemplo de la teoría — el estudiante ve
           código real mientras aprende el concepto, no solo al final. */}
       {concept.pythonBridge && <PythonBridge bridge={concept.pythonBridge} />}

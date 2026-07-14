@@ -692,6 +692,8 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             ))}
           </div>
 
+          {activeReinforcement.pythonBridge && <PythonBridge bridge={activeReinforcement.pythonBridge} />}
+
           {activeReinforcement.practice ? (
             <ReinforcementPractice
               practice={activeReinforcement.practice}

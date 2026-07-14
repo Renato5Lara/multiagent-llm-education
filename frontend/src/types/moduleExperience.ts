@@ -45,9 +45,21 @@ export interface ConceptVariant {
   narrationText?: string
 }
 
+/** Un segundo ejemplo concreto DEL MISMO concepto — no un refuerzo opcional:
+ *  parte del recorrido obligatorio, para que la teoría no dependa de un solo
+ *  caso (refinamiento de experiencia, jul 2026 — "más ejemplos... durante
+ *  toda la explicación", no solo al final). */
+export interface SecondExample {
+  label: string
+  body: string[]
+}
+
 export interface CycleConcept {
   title: string
   variants: Record<LearningModality, ConceptVariant>
+  /** Un segundo caso concreto, distinto del de `variants`, mostrado siempre
+   *  (no depende de la modalidad) — refuerza con variación, no repetición. */
+  secondExample?: SecondExample
   /** Puente a Python del PROPIO ejemplo de la teoría (no el de la práctica) —
    *  aparece durante el desarrollo del concepto, antes de la actividad. */
   pythonBridge?: PythonBridge
@@ -99,6 +111,10 @@ export interface Reinforcement {
   narrationText?: string
   /** Solo para kind 'reto': una variante corta de práctica. */
   practice?: OrderingPracticeDef
+  /** Solo para kind 'ejemplo': su propio puente a Python — si el estudiante
+   *  explora un ejemplo adicional, también ve su código, no solo el del
+   *  ejemplo principal del ciclo. */
+  pythonBridge?: PythonBridge
 }
 
 export interface DecisionMenuDef {
