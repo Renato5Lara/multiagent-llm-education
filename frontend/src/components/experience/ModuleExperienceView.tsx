@@ -279,6 +279,40 @@ function alternateModality(current: LearningModality): LearningModality {
   return MODALITY_ORDER.find(m => m !== current) ?? current
 }
 
+/** Motor de selección de experiencias (Pilar 1 + Pilar 2 integrados):
+ *  el refuerzo automático ya no es "el primero sin visitar" — es el tipo de
+ *  ACTIVIDAD (interactiva/guiada/visual/auditiva) que mejor corresponde a
+ *  cómo aprende el estudiante, entre los que el propio ciclo ya trae
+ *  autorados. Nunca genera nada: si el tipo ideal no está en este ciclo
+ *  (p. ej. módulo 2 sin 'animacion' todavía), cae al siguiente de la lista
+ *  — reutilización con prioridad, exactamente como se pidió, cero recursos
+ *  inventados. `reto` siempre encabeza cuando `preferChallenge` (Orientar/
+ *  "aplicacion"): un desafío es interactivo por naturaleza, no depende de
+ *  la modalidad de consumo. */
+const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> = {
+  visual: ['animacion', 'ejemplo', 'reto', 'audio'],
+  reading: ['ejemplo', 'animacion', 'reto', 'audio'],
+  audio: ['audio', 'ejemplo', 'animacion', 'reto'],
+  kinesthetic: ['reto', 'ejemplo', 'animacion', 'audio'],
+}
+
+function selectReinforcement(
+  reinforcements: Reinforcement[] | undefined,
+  visited: Set<ReinforcementKind>,
+  modality: LearningModality,
+  preferChallenge: boolean,
+): Reinforcement | undefined {
+  if (!reinforcements?.length) return undefined
+  const priority = preferChallenge
+    ? (['reto', ...REINFORCEMENT_BY_MODALITY[modality].filter(k => k !== 'reto')] as ReinforcementKind[])
+    : REINFORCEMENT_BY_MODALITY[modality]
+  for (const kind of priority) {
+    const match = reinforcements.find(r => r.kind === kind && !visited.has(r.kind))
+    if (match) return match
+  }
+  return reinforcements.find(r => !visited.has(r.kind))
+}
+
 /** Clasificación del desenlace — vale más que una nota para el evaluador. */
 function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 'solucion_mostrada' {
   if (outcome.solutionShown) return 'solucion_mostrada'
@@ -528,21 +562,26 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // alternativas_descartadas no tienen equivalente y se ignoran a
           // propósito, nunca se inventa una traducción).
           const modalidadRecomendada = diseno?.modalidad ? String(diseno.modalidad) : undefined
-          if (modalidadRecomendada && MODALITY_ORDER.includes(modalidadRecomendada as LearningModality)) {
-            setModalityOverride(modalidadRecomendada as LearningModality)
-          }
-          // La adaptación ya no responde solo a la dificultad: "aplicacion"
+          const modalidadHonrada =
+            modalidadRecomendada && MODALITY_ORDER.includes(modalidadRecomendada as LearningModality)
+              ? (modalidadRecomendada as LearningModality)
+              : undefined
+          if (modalidadHonrada) setModalityOverride(modalidadHonrada)
+          // Adaptación multimodal real (no solo cantidad de ayuda): el
+          // refuerzo automático se elige según DOS señales reales — qué
+          // necesita el estudiante (profundidad: reforzar/desafiar) y cómo
+          // aprende mejor (modalidad: la recién recomendada por Adaptar, o
+          // si no hubo ninguna esta vez, la ya diagnosticada). "aplicacion"
           // es la propuesta REAL de Orientar cuando Diagnosticar marcó el
           // concepto como dominado (runtime/domain/orientar/productor.py) —
-          // antes se descartaba en silencio. Ahora, igual que "fundamentos"
-          // inserta refuerzo por dificultad, "aplicacion" inserta el reto
-          // (el único refuerzo pensado como desafío, nunca como repaso) —
-          // mismo mecanismo de auto-refuerzo ya existente, ninguna decisión
-          // ni concepto nuevo en el Runtime.
+          // antes se descartaba en silencio; "fundamentos" es Remediar.
+          // Mismo mecanismo de auto-refuerzo ya existente, ningún concepto
+          // nuevo en el Runtime ni recurso inventado en el frontend.
+          const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
           const reinforcement = profundidad === 'fundamentos'
-            ? cycle.decision?.reinforcements.find(r => !visitedReinforcements.has(r.kind))
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false)
             : profundidad === 'aplicacion'
-              ? cycle.decision?.reinforcements.find(r => r.kind === 'reto' && !visitedReinforcements.has(r.kind))
+              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true)
               : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
