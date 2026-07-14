@@ -209,6 +209,24 @@ export const CICLO_2_VARIABLES: LearningCycle = {
           code: 'saldo = 50\nsaldo = saldo - 12\nprint(saldo)',
           explanation:
             '«saldo» aparece tres veces, y las tres son la MISMA caja: se crea, se lee para restar, y se vuelve a guardar con el nuevo valor. Por eso «saldo = saldo - 12» no es una ecuación matemática — es «toma lo que hay en saldo, réstale 12, y guarda el resultado ahí mismo».',
+          practice: {
+            prompt: 'Ahora hazlo tú: crea una variable precio con el valor 25, réstale un descuento de 5, y muestra el resultado con print()',
+            starterCode: '# escribe tu código aquí\n',
+            expectedOutput: '20',
+            hint: 'Usa el operador - para restar: primero precio = 25, después precio = precio - 5, y recién ahí print(precio).',
+            hintsByCategory: {
+              sintaxis: 'Revisa el signo = y que no falte ningún paréntesis en print(precio).',
+              variables: 'Python no encuentra precio porque nunca se creó con = antes de restarle el descuento.',
+              logica: 'Revisa el orden: primero se crea precio con 25, y solo después se le resta 5 — igual que hiciste con saldo.',
+              salida: 'print(precio) debe mostrar el número 20 — revisa que estés restando 5, no otro valor.',
+            },
+            workedExample: {
+              code: 'puntos = 100\npuntos = puntos + 30\nprint(puntos)',
+              output: '130',
+              explanation: 'El operador + suma en vez de restar, pero la mecánica es la misma: se lee lo que había en puntos, se le suma 30, y se guarda el resultado en la misma caja. Tu ejercicio resta en vez de sumar.',
+            },
+            solutionCode: 'precio = 25\nprecio = precio - 5\nprint(precio)',
+          },
         },
       },
       {
