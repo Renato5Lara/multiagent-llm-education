@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.concept_block import ConceptBlock  # Sprint L1
 
@@ -151,3 +151,15 @@ class MissionProgressUpdate(BaseModel):
     current_index: int = 0
     completed_step_ids: list[str] = []
     total_xp: int = 0
+
+
+class CycleEvidenceSubmit(BaseModel):
+    """Evidencia real de haber resuelto la práctica de UN ciclo de aprendizaje
+    (ModuleExperienceView) — traducción fiel de intentos a items, mismo
+    patrón que ya usa `_registrar_diagnostico_en_runtime` para el Likert del
+    diagnóstico: cada intento es un item; los intentos antes de resolver
+    (o todos, si se reveló la solución) son incorrectos."""
+    course_id: str
+    competencia: str
+    attempts: int = Field(..., ge=1)
+    solved: bool

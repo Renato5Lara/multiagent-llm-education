@@ -338,3 +338,29 @@ export function useSubmitEvaluation() {
     },
   })
 }
+
+export interface CycleEvidencePayload {
+  courseId: string
+  competencia: string
+  attempts: number
+  solved: boolean
+}
+
+/** Evaluación continua (refinamiento de experiencia, jul 2026): la
+ *  evidencia de resolver la práctica de un ciclo entra al Runtime real
+ *  en el momento en que ocurre, sin esperar la Evaluación de Módulo
+ *  separada. Fire-and-forget desde la UI — nunca bloquea al estudiante
+ *  ni su avance (mismo criterio best-effort del propio endpoint). */
+export function useSubmitCycleEvidence() {
+  return useMutation({
+    mutationFn: async (payload: CycleEvidencePayload) => {
+      const resp = await api.post('/api/students/cycle-evidence', {
+        course_id: payload.courseId,
+        competencia: payload.competencia,
+        attempts: payload.attempts,
+        solved: payload.solved,
+      }, { timeout: 120_000 })
+      return resp.data
+    },
+  })
+}

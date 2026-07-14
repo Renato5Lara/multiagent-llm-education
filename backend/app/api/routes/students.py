@@ -29,6 +29,7 @@ from app.schemas.progress import (
     LearningPathDetailResponse,
     LearningPathItem,
     MissionProgressUpdate,
+    CycleEvidenceSubmit,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.schemas.auth import MessageResponse, TutorRequest
@@ -522,6 +523,41 @@ def update_mission_progress(
         },
     )
     return {"ok": True, "mission_cursor": (mission.metadata_json or {}).get("mission_cursor")}
+
+
+@router.post("/cycle-evidence")
+def submit_cycle_evidence(
+    data: CycleEvidenceSubmit,
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Evaluación continua (refinamiento de experiencia, jul 2026): la
+    evidencia de resolver la práctica de UN ciclo de aprendizaje entra al
+    Runtime real en el momento en que ocurre — no espera a la Evaluación
+    de Módulo separada. Mismo puente, mismo contrato que ya usa
+    submit_evaluation y _registrar_diagnostico_en_runtime (traducción
+    fiel de intentos a items, jamás una capacidad nueva): cada intento es
+    un item; los intentos previos a resolver (o todos, si se reveló la
+    solución) son incorrectos. Best-effort — nunca bloquea al estudiante,
+    igual que las otras dos llamadas a este puente."""
+    runtime_decision = None
+    try:
+        from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+        # Resuelto → los intentos ANTERIORES al que acertó son incorrectos.
+        # No resuelto (solución revelada) → todos los intentos cuentan como
+        # incorrectos, igual que una pregunta sin responder correctamente.
+        errores = max(0, data.attempts - 1) if data.solved else data.attempts
+        entrega = registrar_evidencia_evaluacion(
+            student_id=current_user.id,
+            course_id=data.course_id,
+            titulo_modulo=data.competencia,
+            items_incorrectos=list(range(errores)),
+            items_totales=data.attempts,
+        )
+        runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
+    return {"ok": True, "runtime_decision": runtime_decision}
 
 
 @router.post("/progress/{course_id}", response_model=StudentProgressResponse)

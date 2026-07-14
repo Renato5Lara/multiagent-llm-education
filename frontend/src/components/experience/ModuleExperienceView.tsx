@@ -1,8 +1,10 @@
 // Experiencia de Módulo — orquesta el patrón congelado (jul 2026):
 // apertura de curiosidad → ciclos [concepto multimodal → práctica universal →
 // feedback → momento de decisión] → cierre del incremento.
-// S1: mock-first — sin backend nuevo; la evidencia se registra localmente con
-// el mismo contrato que en S3/S4 consumirá el agente evaluador.
+// La evidencia se registra localmente (mapa de dominio, cursor) Y, desde el
+// refinamiento de evaluación continua, entra al Runtime real al cerrar cada
+// ciclo (ver advanceCycle) — el mismo contrato que ya usaba la Evaluación de
+// Módulo, solo que ahora también se dispara aquí.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map } from 'lucide-react'
@@ -17,6 +19,7 @@ import { CuriosityFactCard } from './CuriosityFactCard'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
+import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
@@ -96,6 +99,10 @@ interface Props {
   definition: ModuleExperienceDefinition
   moduleId: string
   modality?: LearningModality
+  /** Requerido para la evaluación continua (registrar_evidencia_evaluacion
+   *  necesita course_id) — opcional solo para no romper llamadas previas al
+   *  refinamiento de experiencia; sin él, la evidencia sigue siendo local. */
+  courseId?: string
   /** Salida sin completar (botón "Salir" a media misión). */
   onExit: () => void
   /** Cierre de la misión — marca el módulo completado (reusa la lógica legacy).
@@ -158,8 +165,9 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
   return outcome.attempts <= 1 ? 'domino_solo' : 'con_pistas'
 }
 
-export function ModuleExperienceView({ definition, moduleId, modality, onExit, onFinish }: Props) {
+export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish }: Props) {
   const effectiveModality: LearningModality = modality ?? 'reading'
+  const submitCycleEvidence = useSubmitCycleEvidence()
 
   // A1 — rehidratar el cursor persistido una sola vez al montar.
   const [initialCursor] = useState<ExperienceCursor>(() => loadCursor(moduleId, definition))
@@ -252,21 +260,27 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
   const advanceCycle = useCallback((pendingGain = 0) => {
     if (!cycle) return
     const finalMastery = Math.min(1, Math.max(0, (mastery[cycle.conceptId] ?? 0) + pendingGain))
-    // PUNTO DE INTEGRACIÓN FUTURA (evaluación continua, sin implementar
-    // todavía): este es el momento exacto en que un ciclo cierra con un
-    // dominio real medido (intentos, pistas, tiempo — no un puntaje
-    // inventado). Hoy `recordEvidence` solo persiste en localStorage y
-    // alimenta el mapa de dominio local del estudiante. El día que se decida
-    // conectar esta señal al Runtime real, el destino es
-    // `runtime_bridge.registrar_evidencia_evaluacion` (mismo contrato que ya
-    // usa la evaluación de módulo) — la cadencia (cada ciclo vs. acumulado)
-    // es una decisión de diseño pendiente, no una que deba resolverse aquí.
     recordEvidence({
       type: 'cycle_completed',
       moduleId,
       conceptId: cycle.conceptId,
       detail: { cycleId: cycle.id, mastery: Math.round(finalMastery * 100) / 100 },
     })
+    // Evaluación continua (refinamiento de experiencia, jul 2026): el cierre
+    // de CADA ciclo entra al Runtime real, no solo al mapa de dominio local
+    // — mismo contrato que ya usa la Evaluación de Módulo
+    // (registrar_evidencia_evaluacion), traducción fiel de intentos a items
+    // (igual que _registrar_diagnostico_en_runtime con el Likert). Haber
+    // necesitado la escalera de remediación (remediationLevel > 0) cuenta
+    // como la práctica agotada sin ayuda — el crédito reducido que ya
+    // reconoce LEVEL_GAIN_FACTOR localmente es la misma señal que el
+    // Runtime necesita ver como "no dominada". Fire-and-forget: nunca
+    // bloquea el avance del estudiante.
+    if (courseId) {
+      const solved = remediationLevel === 0 && !!practiceOutcome && !practiceOutcome.solutionShown
+      const attempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
+      submitCycleEvidence.mutate({ courseId, competencia: cycle.conceptId, attempts, solved })
+    }
     // Limpia TODO el estado del ciclo completado antes de avanzar.
     // Sin esto, practiceOutcome del ciclo anterior puede hacer que el
     // botón "Continuar" aparezca instantáneamente al montar el siguiente ciclo.
@@ -280,7 +294,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     } else {
       setPhase('slice_end')
     }
-  }, [cycle, cycleIndex, definition.cycles.length, mastery, moduleId])
+  }, [courseId, cycle, cycleIndex, definition.cycles.length, mastery, moduleId, practiceOutcome, remediationLevel, submitCycleEvidence])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────

@@ -288,6 +288,7 @@ export default function ModuleLearningView() {
         key={moduleId}
         definition={experience}
         moduleId={moduleId}
+        courseId={courseId}
         modality={learnerModality}
         onExit={handleBack}
         onFinish={doComplete}
