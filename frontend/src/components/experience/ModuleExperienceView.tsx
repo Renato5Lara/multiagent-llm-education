@@ -6,7 +6,7 @@
 // ciclo (ver advanceCycle) — el mismo contrato que ya usaba la Evaluación de
 // Módulo, solo que ahora también se dispara aquí.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -20,7 +20,6 @@ import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
-import { useToast } from '@/hooks/use-toast'
 import { correctSequence } from '@/lib/experiences/ordering'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
@@ -53,6 +52,39 @@ const ADAPTING_STEPS = [
   'Detectando qué tanto dominas el concepto',
   'Eligiendo la mejor forma de continuar',
 ] as const
+
+// Capa conversacional de la adaptación (refinamiento de experiencia, jul
+// 2026): lo que antes era un toast técnico ("Modalidad: visual · reforzando
+// fundamentos") pasa a ser una frase en primera persona, sin mencionar
+// Runtime/agentes/modalidad — el estudiante nunca "abre otra herramienta",
+// el sistema simplemente le ofrece la ayuda que ya decidió. Extensible por
+// diseño: cuando existan más ReinforcementKind (video, imagen, podcast,
+// simulación), esos casos solo agregan una entrada aquí — la mecánica
+// (mensaje → pausa breve → transición) no cambia.
+const REINFORCEMENT_OFFER: Record<ReinforcementKind, string> = {
+  ejemplo: 'Creo que un ejemplo diferente puede ayudarte a entenderlo mejor.',
+  animacion: 'Vamos a probar otra forma de explicarlo.',
+  audio: 'Si prefieres, escuchemos otra explicación antes de continuar.',
+  reto: 'Antes de seguir, resolvamos un reto más para afianzarlo.',
+}
+
+/** Frase que acompaña la transición entre ciclos — nunca jerga técnica.
+ *  `reinforcement` ya viene filtrado por "no visitado"; su sola presencia
+ *  significa que el Runtime decidió reforzar (profundidad=fundamentos). */
+function describeAdaptation(profundidad: string | undefined, reinforcement: Reinforcement | undefined): string {
+  if (reinforcement) {
+    return `Veo que todavía necesitas un poco más de práctica con esto. ${REINFORCEMENT_OFFER[reinforcement.kind]}`
+  }
+  if (profundidad === 'fundamentos') {
+    return 'Vamos a reforzar esta idea un poco más antes de seguir.'
+  }
+  return 'Perfecto, ya dominaste esta parte. Continuemos con el siguiente desafío.'
+}
+
+/** Cuánto queda visible la frase de adaptación antes de transicionar — tiempo
+ *  de lectura, no una espera técnica (nunca bloquea: el "Continuar" ya quedó
+ *  atrás, el estudiante no necesita tocar nada para que esto avance). */
+const ADAPTATION_MESSAGE_MS = 1600
 
 // A1 — persistencia temporal del cursor en localStorage: reanuda tras recarga o
 // salida sin perder el avance. Provisional (S1); migrará a Misión Activa backend
@@ -186,7 +218,6 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
 export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish }: Props) {
   const effectiveModality: LearningModality = modality ?? 'reading'
   const submitCycleEvidence = useSubmitCycleEvidence()
-  const { toast } = useToast()
 
   // A1 — rehidratar el cursor persistido una sola vez al montar.
   const [initialCursor] = useState<ExperienceCursor>(() => loadCursor(moduleId, definition))
@@ -219,6 +250,17 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // en advanceCycle para que el Runtime vea el ciclo completo (ordenamiento +
   // Python), no solo la mitad. null mientras no se haya resuelto ni agotado.
   const [pythonOutcome, setPythonOutcome] = useState<PracticeOutcome | null>(null)
+  // Frase conversacional de la adaptación (describeAdaptation) — visible
+  // durante la fase 'adapting' una vez que la decisión real ya llegó, justo
+  // antes de transicionar. null mientras se espera la respuesta del Runtime.
+  const [adaptationMessage, setAdaptationMessage] = useState<string | null>(null)
+  // Timeout de la pausa de lectura tras mostrar adaptationMessage — se limpia
+  // al desmontar para no tocar estado de un componente ya fuera de pantalla
+  // (p. ej. el estudiante presiona "Salir" durante esa pausa).
+  const adaptationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (adaptationTimeoutRef.current) clearTimeout(adaptationTimeoutRef.current)
+  }, [])
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
@@ -300,6 +342,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     setAutoReinforcement(false)
     setPythonPracticeDone(false)
     setPythonOutcome(null)
+    setAdaptationMessage(null)
     if (cycleIndex + 1 < definition.cycles.length) {
       setCycleIndex(i => i + 1)
       setPhase('concept')
@@ -361,34 +404,28 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       {
         onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
           const diseno = data?.runtime_decision?.diseno
-          const profundidad = diseno?.profundidad
-          if (diseno) {
-            const modalidad = String(diseno.modalidad ?? '')
-            const profundidadLabel = profundidad === 'fundamentos'
-              ? 'reforzando fundamentos antes de seguir'
-              : 'avanzando con práctica'
-            toast({
-              title: '🧠 El sistema ajustó tu estrategia',
-              description: modalidad
-                ? `Modalidad: ${modalidad} · ${profundidadLabel}`
-                : profundidadLabel,
-            })
-          }
+          const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
           const reinforcement = profundidad === 'fundamentos'
             ? cycle.decision?.reinforcements.find(r => !visitedReinforcements.has(r.kind))
             : undefined
-          if (reinforcement) {
-            setAutoReinforcement(true)
-            setActiveReinforcement(reinforcement)
-            setPhase('reinforcement')
-          } else {
-            commitAdvance()
-          }
+          // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
+          // modalidad) — se muestra dentro de la propia fase 'adapting', una
+          // pausa de lectura breve antes de transicionar, nunca un toast aparte.
+          setAdaptationMessage(describeAdaptation(profundidad, reinforcement))
+          adaptationTimeoutRef.current = setTimeout(() => {
+            if (reinforcement) {
+              setAutoReinforcement(true)
+              setActiveReinforcement(reinforcement)
+              setPhase('reinforcement')
+            } else {
+              commitAdvance()
+            }
+          }, ADAPTATION_MESSAGE_MS)
         },
         onError: () => commitAdvance(),
       },
     )
-  }, [commitAdvance, courseId, cycle, mastery, moduleId, practiceOutcome, pythonOutcome, remediationLevel, submitCycleEvidence, toast, visitedReinforcements])
+  }, [commitAdvance, courseId, cycle, mastery, moduleId, practiceOutcome, pythonOutcome, remediationLevel, submitCycleEvidence, visitedReinforcements])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────
@@ -622,21 +659,33 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-pulse opacity-60" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-neural-pulse" />
           </span>
-          <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-pulse">
-            Personalizando tu siguiente paso
-          </p>
-          <ul className="space-y-2.5 text-left">
-            {ADAPTING_STEPS.map((step, i) => (
-              <li
-                key={step}
-                className="text-sm text-neural-text/80 flex items-center gap-2.5 animate-in fade-in slide-in-from-left-1"
-                style={{ animationDelay: `${i * 450}ms`, animationDuration: '400ms', animationFillMode: 'both' }}
-              >
-                <span className="text-neural-glow shrink-0">✓</span>
-                {step}
-              </li>
-            ))}
-          </ul>
+          {adaptationMessage ? (
+            // La decisión ya llegó — la narración reemplaza el checklist
+            // (nunca coexisten: decirle "sigo eligiendo" mientras ya se sabe
+            // qué sigue sería contradictorio). Última parada antes de que la
+            // transición programada (ADAPTATION_MESSAGE_MS) cambie de fase.
+            <p className="text-base text-neural-text leading-relaxed animate-in fade-in duration-500">
+              {adaptationMessage}
+            </p>
+          ) : (
+            <>
+              <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-pulse">
+                Personalizando tu siguiente paso
+              </p>
+              <ul className="space-y-2.5 text-left">
+                {ADAPTING_STEPS.map((step, i) => (
+                  <li
+                    key={step}
+                    className="text-sm text-neural-text/80 flex items-center gap-2.5 animate-in fade-in slide-in-from-left-1"
+                    style={{ animationDelay: `${i * 450}ms`, animationDuration: '400ms', animationFillMode: 'both' }}
+                  >
+                    <span className="text-neural-glow shrink-0">✓</span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       </div>
     )
