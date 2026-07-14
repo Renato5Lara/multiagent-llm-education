@@ -51,6 +51,26 @@ export interface PythonRunResult {
   error: string | null
 }
 
+/** En qué se equivocó el estudiante — no CUÁNTAS veces, sino DE QUÉ tipo. */
+export type PythonErrorCategory = 'sintaxis' | 'variables' | 'logica' | 'salida'
+
+const SYNTAX_ERROR_NAMES = ['SyntaxError', 'IndentationError', 'TabError']
+const VARIABLE_ERROR_NAMES = ['NameError', 'UnboundLocalError']
+
+/** Deriva de la propia excepción de Python (`error`) que Pyodide ya entrega
+ *  en `PythonRunResult.error` (traceback de CPython incluido) — no es una
+ *  capacidad nueva, es leer lo que el intérprete ya dijo. `null` (sin
+ *  excepción, pero salida distinta a la esperada) clasifica como `salida`.
+ *  El resto de excepciones reales (TypeError, ValueError, ZeroDivisionError,
+ *  etc.) caen en `logica` — no son de sintaxis ni de variable no definida. */
+export function classifyPythonError(error: string | null): PythonErrorCategory {
+  if (!error) return 'salida'
+  const exceptionName = error.match(/(\w+Error):/)?.[1]
+  if (exceptionName && SYNTAX_ERROR_NAMES.includes(exceptionName)) return 'sintaxis'
+  if (exceptionName && VARIABLE_ERROR_NAMES.includes(exceptionName)) return 'variables'
+  return 'logica'
+}
+
 export function usePyodide() {
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)

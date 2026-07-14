@@ -7,6 +7,7 @@
 // amplían PracticeDef en S3 sin cambiar este patrón.
 
 import type { LearningModality } from '@/types/modality'
+import type { PythonErrorCategory } from '@/hooks/usePyodide'
 
 // ── Teoría multimodal ──────────────────────────────────────────────────────────
 
@@ -197,8 +198,16 @@ export interface PythonMicroPracticeDef {
   starterCode: string
   /** Salida esperada por stdout (comparación exacta, recortando espacios). */
   expectedOutput: string
-  /** Pista mostrada tras el primer intento fallido. */
+  /** Pista genérica tras el primer intento fallido — fallback cuando la
+   *  categoría del error (sintaxis/variables/lógica/salida, derivada del
+   *  propio error de Pyodide) no tiene una pista específica en
+   *  `hintsByCategory`, o cuando este campo no está definido. */
   hint: string
+  /** Pista específica por tipo de error — la ayuda responde a POR QUÉ falló,
+   *  no solo a CUÁNTAS veces. Opcional y parcial: las categorías ausentes
+   *  caen en `hint`. Sin este campo, el comportamiento es idéntico al de
+   *  antes (siempre `hint`). */
+  hintsByCategory?: Partial<Record<PythonErrorCategory, string>>
   /** Apoyo tras el segundo intento fallido — un caso resuelto ANÁLOGO (mismo
    *  patrón, datos distintos), nunca la solución del propio ejercicio. Mismo
    *  espíritu que `RemediationIllustration`, aplicado a la micropráctica de

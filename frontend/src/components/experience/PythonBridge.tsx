@@ -8,14 +8,25 @@
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
 import { useState } from 'react'
-import { Code2, LifeBuoy, Loader2 } from 'lucide-react'
+import { Code2, Eye, LifeBuoy, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { usePyodide } from '@/hooks/usePyodide'
+import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef } from '@/types/moduleExperience'
 import type { PracticeOutcome } from './OrderingPractice'
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
+
+/** Diagnóstico genérico por categoría — verdadero para cualquier ejercicio,
+ *  no autorado por contenido (a diferencia de `hintsByCategory`, que sí lo
+ *  es). Nunca revela nada del ejercicio concreto, solo nombra lo que Python
+ *  ya dijo en un lenguaje que un principiante entiende. */
+const ERROR_CATEGORY_LABEL: Record<PythonErrorCategory, string> = {
+  sintaxis: 'Python no pudo ni empezar a ejecutar tu código — algo en la escritura (comillas, paréntesis, dos puntos) no cuadra.',
+  variables: 'Python buscó algo que todavía no existe — un nombre usado antes de crearlo.',
+  logica: 'Tu código se ejecutó, pero algo en el camino no hizo lo que esperabas.',
+  salida: 'Tu código corrió sin errores — pero lo que muestra no es exactamente lo pedido.',
+}
 
 interface Props {
   bridge: PythonBridgeDef
@@ -71,6 +82,10 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
   const [solved, setSolved] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
   const [running, setRunning] = useState(false)
+  // POR QUÉ falló el último intento, no solo CUÁNTAS veces — deriva del error
+  // real de Pyodide (o su ausencia), nunca de un conteo. Gobierna qué pista
+  // y qué diagnóstico se muestran.
+  const [lastCategory, setLastCategory] = useState<PythonErrorCategory | null>(null)
 
   const done = solved || showSolution
   const exhausted = attempts >= MAX_ATTEMPTS_BEFORE_SOLUTION
@@ -91,8 +106,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       detail: { practice: 'python', attempt: nextAttempts, status: correct ? 'correct' : 'incorrect', correct },
     })
     if (correct) {
+      setLastCategory(null)
       setSolved(true)
       onDone?.({ attempts: nextAttempts, timeMs: 0, solutionShown: false })
+    } else {
+      setLastCategory(classifyPythonError(result.error))
     }
   }
 
@@ -139,8 +157,19 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
         </div>
       )}
       {error && <p className="text-sm text-amber-400">{error}</p>}
-      {!done && attempts > 0 && !error && output !== null && (
-        <p className="text-sm text-neural-muted">{practice.hint}</p>
+      {/* La ayuda responde a POR QUÉ falló (lastCategory), no solo a cuántas
+          veces — antes, un error real (SyntaxError/NameError) nunca mostraba
+          pista alguna; ahora toda categoría tiene su propio diagnóstico. */}
+      {!done && lastCategory && (
+        <div className="space-y-1.5">
+          <div className="flex items-start gap-2">
+            <Eye className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
+            <p className="text-sm text-neural-glow/90 leading-relaxed">{ERROR_CATEGORY_LABEL[lastCategory]}</p>
+          </div>
+          <p className="text-sm text-neural-muted">
+            {practice.hintsByCategory?.[lastCategory] ?? practice.hint}
+          </p>
+        </div>
       )}
       {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
           del propio ejercicio (mismo criterio que la escalera de remediación:

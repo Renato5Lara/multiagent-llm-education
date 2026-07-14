@@ -166,6 +166,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
           starterCode: '# escribe tu instrucción aquí\n',
           expectedOutput: 'Robot listo',
           hint: 'Usa la función print() con el texto exacto entre comillas: print("Robot listo")',
+          hintsByCategory: {
+            sintaxis: 'Revisa que las comillas y los paréntesis estén completos: print("texto") necesita abrir y cerrar ambos.',
+            variables: 'No necesitas ninguna variable aquí — escribe el texto directamente entre comillas, dentro de print(...).',
+            logica: 'print() solo necesita el texto entre paréntesis — no hace falta llamar a ninguna otra función.',
+            salida: 'Revisa mayúsculas, espacios y signos: debe coincidir letra por letra con "Robot listo".',
+          },
           workedExample: {
             code: 'print("Hola")',
             output: 'Hola',
