@@ -212,6 +212,25 @@ export const CICLO_3_INPUT: LearningCycle = {
           code: 'termino = input("¿Qué buscas? ")\nbuscar(termino)',
           explanation:
             'La secuencia que armaste es, en Python, dos líneas: input() pregunta y guarda; buscar(termino) usa esa respuesta. Nada de "encuentra lo que buscas" — eso no es una instrucción.',
+          practice: {
+            prompt: 'Ahora hazlo tú: pide la comida favorita con input() y únela al texto "Tu comida favorita es " usando el operador + antes de mostrarla con print()',
+            starterCode: '# escribe tu código aquí\n',
+            expectedOutput: '¿Cuál es tu comida favorita? Tu comida favorita es pizza',
+            simulatedInputs: ['pizza'],
+            hint: 'El operador + une dos textos en uno solo: "Tu comida favorita es " + comida — recuerda dejar el espacio antes de la comilla final.',
+            hintsByCategory: {
+              sintaxis: 'Revisa las comillas y el signo + entre los dos textos: "Tu comida favorita es " + comida',
+              variables: 'Python no encuentra comida porque nunca se creó con input() antes de usarla con +.',
+              logica: 'Revisa el orden: primero input() guarda la respuesta, y solo después + puede unirla al texto fijo.',
+              salida: '+ une los textos exactamente como están escritos — revisa que el espacio quede antes de la comilla final, no después.',
+            },
+            workedExample: {
+              code: 'color = input("¿Cuál es tu color favorito? ")\nprint("Tu color favorito es " + color)',
+              output: '¿Cuál es tu color favorito? Tu color favorito es azul',
+              explanation: '+ pegó "Tu color favorito es " con el valor de color, sin espacio de más ni de menos porque el espacio ya estaba dentro de las comillas del texto fijo. Tu ejercicio une comida, no color.',
+            },
+            solutionCode: 'comida = input("¿Cuál es tu comida favorita? ")\nprint("Tu comida favorita es " + comida)',
+          },
         },
       },
       {
