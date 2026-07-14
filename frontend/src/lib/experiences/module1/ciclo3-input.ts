@@ -175,6 +175,31 @@ export const CICLO_3_INPUT: LearningCycle = {
             'Preguntar, guardar y solo después calcular — el mismo orden que necesita cualquier input() real. «Decide cuánta propina dejar» era la meta, no una instrucción sobre la caja.',
           ],
         },
+        pythonBridge: {
+          label: 'Esto ya es Python',
+          code: 'cuenta = float(input("¿Cuánto fue la cuenta? "))\npropina = cuenta * 0.10\nprint(propina)',
+          explanation:
+            'input() SIEMPRE entrega texto, incluso si escribes un número — por eso hace falta float(...) para convertirlo antes de multiplicarlo. Sin ese casting, Python no puede calcular el 10% de un texto.',
+          practice: {
+            prompt: 'Ahora hazlo tú: pide la edad con input(), conviértela a número entero con int(), y muestra cuántos años faltan para llegar a 100',
+            starterCode: '# escribe tu código aquí\n',
+            expectedOutput: '¿Cuántos años tienes? 80',
+            simulatedInputs: ['20'],
+            hint: 'input() siempre entrega texto — usa int(input(...)) para convertirlo a número antes de restarlo: edad = int(input("¿Cuántos años tienes? "))',
+            hintsByCategory: {
+              sintaxis: 'Revisa que int() e input() tengan sus paréntesis completos: int(input("¿Cuántos años tienes? "))',
+              variables: 'Python no encuentra edad porque nunca se creó con int(input(...)) antes de restarla de 100.',
+              logica: 'Si ves "unsupported operand type(s) for -: \'int\' and \'str\'", olvidaste envolver input() con int() — sin el casting, edad sigue siendo texto y no se puede restar.',
+              salida: 'print(faltan) debe mostrar el número 80 — revisa que estés restando edad de 100, no al revés.',
+            },
+            workedExample: {
+              code: 'cuenta = float(input("¿Cuánto fue la cuenta? "))\npropina = cuenta * 0.10\nprint(propina)',
+              output: '¿Cuánto fue la cuenta? 5.0',
+              explanation: 'float(input(...)) convierte el texto "50" en el número 50.0 antes de multiplicarlo por 0.10. Sin float(...), Python no puede multiplicar un texto por un decimal. Tu ejercicio usa int() y resta, no float() y multiplica.',
+            },
+            solutionCode: 'edad = int(input("¿Cuántos años tienes? "))\nfaltan = 100 - edad\nprint(faltan)',
+          },
+        },
       },
       {
         kind: 'ejemplo',
