@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
+import { getModuleExperience } from '@/lib/experiences'
 import type { LearningPathItem } from '@/types/student'
 import { useEffect, useRef, useState } from 'react'
 
@@ -273,6 +274,14 @@ export default function LearningPath() {
   const totalCount = items.length
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const activeItem = items.find((i: LearningPathItem) => i.status === 'available')
+  // Auditoría pedagógica (jul 2026): un curso no puede mostrar dos modelos de
+  // evaluación a la vez. Cuando TODAS las misiones ya usan el patrón de
+  // ciclos (evidencia continua real vía cycle-evidence, ver
+  // ModuleExperienceView), la evaluación separada de abajo deja de
+  // mostrarse — reutiliza el mismo registro (`getModuleExperience`) que ya
+  // decide qué misiones usan ese flujo, sin backend/ruta/estado nuevos. Los
+  // cursos que aún no migraron conservan la evaluación legacy intacta.
+  const usesContinuousEvaluation = items.length > 0 && items.every(i => getModuleExperience(i.title) !== null)
   const modalityStyle = MODALITY_DARK[path.dominant_modality || '']
   const xp = completedCount * XP_PER_MISSION
   const maxXp = totalCount * XP_PER_MISSION
@@ -394,8 +403,10 @@ export default function LearningPath() {
         ))}
       </div>
 
-      {/* ── Evaluación (fase Demuestra) ─────────────────────── */}
-      {completedCount > 0 && courseId && (
+      {/* ── Evaluación (fase Demuestra) ───────────────────────
+          Oculta cuando el curso ya evalúa continuamente por ciclos — dos
+          modelos de evaluación a la vez contradicen esa continuidad. */}
+      {completedCount > 0 && courseId && !usesContinuousEvaluation && (
         <div className="mt-6 glass-panel rounded-2xl p-5 border border-neural-glow/15">
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-neural-glow/50 bg-neural-glow/8">
