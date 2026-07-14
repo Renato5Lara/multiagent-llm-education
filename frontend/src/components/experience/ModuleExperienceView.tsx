@@ -20,6 +20,7 @@ import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
+import { useToast } from '@/hooks/use-toast'
 import { correctSequence } from '@/lib/experiences/ordering'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
@@ -168,6 +169,7 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
 export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish }: Props) {
   const effectiveModality: LearningModality = modality ?? 'reading'
   const submitCycleEvidence = useSubmitCycleEvidence()
+  const { toast } = useToast()
 
   // A1 — rehidratar el cursor persistido una sola vez al montar.
   const [initialCursor] = useState<ExperienceCursor>(() => loadCursor(moduleId, definition))
@@ -279,7 +281,30 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     if (courseId) {
       const solved = remediationLevel === 0 && !!practiceOutcome && !practiceOutcome.solutionShown
       const attempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
-      submitCycleEvidence.mutate({ courseId, competencia: cycle.conceptId, attempts, solved })
+      submitCycleEvidence.mutate(
+        { courseId, competencia: cycle.conceptId, attempts, solved },
+        {
+          // Capa de presentación pedagógica (no un agente nuevo): reutiliza
+          // la MISMA Entrega real que el Runtime acaba de devolver — nunca
+          // texto inventado. Sin esto, la evaluación continua era invisible:
+          // el estudiante nunca sabía que el sistema lo observó al cerrar el
+          // ciclo. No bloquea el avance — llega después, como confirmación.
+          onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+            const diseno = data?.runtime_decision?.diseno
+            if (!diseno) return
+            const modalidad = String(diseno.modalidad ?? '')
+            const profundidad = diseno.profundidad === 'fundamentos'
+              ? 'reforzando fundamentos antes de seguir'
+              : 'avanzando con práctica'
+            toast({
+              title: '🧠 El sistema ajustó tu estrategia',
+              description: modalidad
+                ? `Modalidad: ${modalidad} · ${profundidad}`
+                : profundidad,
+            })
+          },
+        },
+      )
     }
     // Limpia TODO el estado del ciclo completado antes de avanzar.
     // Sin esto, practiceOutcome del ciclo anterior puede hacer que el
@@ -294,7 +319,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     } else {
       setPhase('slice_end')
     }
-  }, [courseId, cycle, cycleIndex, definition.cycles.length, mastery, moduleId, practiceOutcome, remediationLevel, submitCycleEvidence])
+  }, [courseId, cycle, cycleIndex, definition.cycles.length, mastery, moduleId, practiceOutcome, remediationLevel, submitCycleEvidence, toast])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────
