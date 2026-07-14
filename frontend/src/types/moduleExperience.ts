@@ -140,6 +140,18 @@ export interface RemediationLadder {
   steps: RemediationStep[]
 }
 
+// ── ¿Sabías que...? ─────────────────────────────────────────────────────────────
+// El flujo legacy (EngageGateway) ya tenía esta tarjeta; el patrón de
+// experiencia (S1) no. Recuperada aquí como dato del ciclo — rompe la
+// monotonía teoría→práctica y sirve de transición antes del concepto
+// (refinamiento de experiencia, jul 2026 — prioridad del usuario).
+export interface CuriosityFact {
+  /** El dato en sí — verificable, no una curiosidad inventada. */
+  fact: string
+  /** Por qué este dato conecta con lo que el estudiante está por aprender. */
+  connection: string
+}
+
 // ── Puente a Python ─────────────────────────────────────────────────────────────
 // El estudiante resuelve la analogía (robot, sensor, etc.) pero pasa buena
 // parte del módulo sin sentir que está aprendiendo Python. El puente conecta
@@ -171,6 +183,8 @@ export interface LearningCycle {
   remediation?: RemediationLadder
   /** Se muestra justo al resolver la práctica — el momento "esto era Python". */
   pythonBridge?: PythonBridge
+  /** Se muestra antes del concepto — la pausa "¿Sabías que...?". */
+  curiosityFact?: CuriosityFact
 }
 
 // ── Apertura de curiosidad ─────────────────────────────────────────────────────

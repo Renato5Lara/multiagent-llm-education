@@ -13,6 +13,7 @@ import { ConceptStep } from './ConceptStep'
 import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
+import { CuriosityFactCard } from './CuriosityFactCard'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
@@ -609,7 +610,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
       </div>
 
       {phase === 'concept' && cycle && (
-        <ConceptStep concept={cycle.concept} modality={effectiveModality} onContinue={handleConceptDone} />
+        <div className="space-y-5">
+          {cycle.curiosityFact && <CuriosityFactCard fact={cycle.curiosityFact} />}
+          <ConceptStep concept={cycle.concept} modality={effectiveModality} onContinue={handleConceptDone} />
+        </div>
       )}
 
       {phase === 'practice' && cycle && (
