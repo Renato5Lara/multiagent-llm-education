@@ -97,6 +97,12 @@ export function OrderingPractice({
   const [flaggedIndex, setFlaggedIndex] = useState<number | null>(null)
   const [solved, setSolved] = useState(false)
   const [solutionShown, setSolutionShown] = useState(false)
+  // Arrastrar y soltar (Pilar 1 — interactividad): mismo estado `sequence` y
+  // el mismo `toggle`/reordenamiento de siempre, solo un segundo camino de
+  // entrada además del clic — nunca lo reemplaza (accesibilidad, y el clic
+  // ya estaba validado en producción).
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   const solution = useMemo(() => correctSequence(practice), [practice])
   const decoyItems = useMemo(() => practice.items.filter(i => i.position === null), [practice.items])
@@ -110,6 +116,38 @@ export function OrderingPractice({
     setFlaggedId(null)
     setFlaggedIndex(null)
     setSequence(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]))
+  }
+
+  const handleDragStart = (id: string) => (e: React.DragEvent) => {
+    if (finished) return
+    e.dataTransfer.setData('text/plain', id)
+    e.dataTransfer.effectAllowed = 'move'
+    setDraggedId(id)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedId(null)
+    setDragOverIndex(null)
+  }
+
+  /** Suelta en la secuencia — si `index` no viene, agrega al final (soltar en
+   *  el fondo del banco o la secuencia); si viene, inserta o reordena ahí. */
+  const handleDropAt = (index?: number) => (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (finished) return
+    const id = e.dataTransfer.getData('text/plain')
+    if (!id) return
+    setFeedback(null)
+    setFlaggedId(null)
+    setFlaggedIndex(null)
+    setSequence(prev => {
+      const without = prev.filter(x => x !== id)
+      const insertAt = index ?? without.length
+      return [...without.slice(0, insertAt), id, ...without.slice(insertAt)]
+    })
+    setDraggedId(null)
+    setDragOverIndex(null)
   }
 
   const check = () => {
@@ -166,10 +204,14 @@ export function OrderingPractice({
           <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-muted mb-2">
             Tu secuencia
           </p>
-          <div className="space-y-1.5 min-h-[52px] rounded-xl border border-dashed border-white/[0.1] p-2">
+          <div
+            onDragOver={e => e.preventDefault()}
+            onDrop={handleDropAt()}
+            className="space-y-1.5 min-h-[52px] rounded-xl border border-dashed border-white/[0.1] p-2"
+          >
             {sequence.length === 0 && (
               <p className="text-xs text-neural-muted/50 px-2 py-2">
-                Toca las instrucciones del banco, en el orden en que el robot debe ejecutarlas.
+                Arrastra o toca las instrucciones del banco, en el orden en que el robot debe ejecutarlas.
               </p>
             )}
             {sequence.map((id, i) => {
@@ -180,11 +222,18 @@ export function OrderingPractice({
                   type="button"
                   onClick={() => toggle(id)}
                   disabled={finished}
+                  draggable={!finished}
+                  onDragStart={handleDragStart(id)}
+                  onDragEnd={handleDragEnd}
+                  onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverIndex(i) }}
+                  onDrop={handleDropAt(i)}
                   className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors disabled:cursor-default',
-                    isFlagged
-                      ? 'bg-amber-500/10 border-amber-500/40'
-                      : 'bg-neural-glow/10 border-neural-glow/30 hover:bg-neural-glow/15',
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors cursor-grab active:cursor-grabbing disabled:cursor-default',
+                    dragOverIndex === i && draggedId && draggedId !== id
+                      ? 'border-neural-glow/60 bg-neural-glow/20'
+                      : isFlagged
+                        ? 'bg-amber-500/10 border-amber-500/40'
+                        : 'bg-neural-glow/10 border-neural-glow/30 hover:bg-neural-glow/15',
                   )}
                 >
                   <span className={cn('text-[11px] font-mono shrink-0 w-5', isFlagged ? 'text-amber-400' : 'text-neural-glow')}>
@@ -212,7 +261,10 @@ export function OrderingPractice({
                   key={item.id}
                   type="button"
                   onClick={() => toggle(item.id)}
-                  className="px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.02] text-sm text-neural-muted hover:border-white/20 hover:bg-white/[0.04] hover:text-neural-text transition-colors"
+                  draggable
+                  onDragStart={handleDragStart(item.id)}
+                  onDragEnd={handleDragEnd}
+                  className="px-3 py-2 rounded-lg border border-white/[0.08] bg-white/[0.02] text-sm text-neural-muted hover:border-white/20 hover:bg-white/[0.04] hover:text-neural-text transition-colors cursor-grab active:cursor-grabbing"
                 >
                   {item.text}
                 </button>
