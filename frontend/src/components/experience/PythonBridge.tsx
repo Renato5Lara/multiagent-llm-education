@@ -8,10 +8,11 @@
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
 import { useState } from 'react'
-import { Code2, Eye, LifeBuoy, Loader2 } from 'lucide-react'
+import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
+import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef } from '@/types/moduleExperience'
 import type { PracticeOutcome } from './OrderingPractice'
 
@@ -34,6 +35,12 @@ interface Props {
    *  micropráctica). Los llamadores sin práctica interactiva pueden omitirlos. */
   moduleId?: string
   conceptId?: string
+  /** Solo necesario cuando `bridge.practice.nextStage` existe: habilita la
+   *  llamada real a cycle-evidence ENTRE etapas de una misma progresión (no
+   *  solo al cerrar el ciclo completo) — mismo endpoint, mismo Runtime, sin
+   *  agente nuevo. Sin `courseId` las etapas se encadenan igual, solo sin
+   *  la nota de adaptación intermedia. */
+  courseId?: string
   /** Se llama una sola vez, cuando la micropráctica queda resuelta o se reveló
    *  la solución — nunca antes, nunca bloquea el avance. Mismo contrato
    *  (`PracticeOutcome`) que la práctica de ordenamiento, para que el llamador
@@ -41,7 +48,7 @@ interface Props {
   onPracticeDone?: (outcome: PracticeOutcome) => void
 }
 
-export function PythonBridge({ bridge, moduleId = '', conceptId = '', onPracticeDone }: Props) {
+export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone }: Props) {
   return (
     <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
@@ -61,6 +68,7 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', onPractice
           practice={bridge.practice}
           moduleId={moduleId}
           conceptId={conceptId}
+          courseId={courseId}
           onDone={onPracticeDone}
         />
       )}
@@ -68,13 +76,25 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', onPractice
   )
 }
 
-function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
+/** Nota breve entre etapas de una misma progresión, derivada de la
+ *  respuesta REAL del Runtime (nunca texto de relleno) — mismo criterio
+ *  que `describeAdaptation` en ModuleExperienceView, versión corta porque
+ *  aquí no hay refuerzo que insertar, solo una micropráctica que continúa. */
+function describeStageAdaptation(profundidad: string | undefined): string | null {
+  if (profundidad === 'aplicacion') return 'Vas muy bien con esto — sigamos profundizando.'
+  if (profundidad === 'fundamentos') return 'Vamos con calma en esta parte — aquí tienes otra vuelta.'
+  return null
+}
+
+function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }: {
   practice: PythonMicroPracticeDef
   moduleId: string
   conceptId: string
+  courseId?: string
   onDone?: (outcome: PracticeOutcome) => void
 }) {
   const { ready, loadError, run } = usePyodide()
+  const submitCycleEvidence = useSubmitCycleEvidence()
   // `stage` es la etapa EN CURSO de la progresión (practice.nextStage.
   // nextStage...) — el estudiante nunca ve "Etapa 1 de 3": es la misma
   // tarjeta que va cambiando de prompt/código a medida que profundiza en el
@@ -92,10 +112,16 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
   // y qué diagnóstico se muestran.
   const [lastCategory, setLastCategory] = useState<PythonErrorCategory | null>(null)
   // Evidencia ACUMULADA de las etapas ya superadas de esta misma cadena — el
-  // Runtime recibe un solo resultado al terminar la progresión completa,
-  // nunca uno por etapa (eso es la iteración futura, no esta).
+  // Runtime SIGUE recibiendo un solo resultado combinado al terminar la
+  // progresión completa (cycle-evidence de cierre de ciclo, sin cambios).
+  // Lo nuevo es la llamada ADICIONAL por etapa, abajo: evidencia real ENTRE
+  // etapas del mismo concepto, no solo al final.
   const [priorAttempts, setPriorAttempts] = useState(0)
   const [priorSolutionShown, setPriorSolutionShown] = useState(false)
+  // Nota real de adaptación entre etapas (Pilar 2 — adaptación no solo entre
+  // ciclos): se llena con la respuesta REAL de cycle-evidence, nunca un
+  // texto fijo; `null` mientras no hay nada que decir todavía.
+  const [stageNote, setStageNote] = useState<string | null>(null)
 
   // Mostrar la solución de una etapa intermedia NO termina la cadena de
   // golpe: el estudiante pidió verla, se queda visible hasta que decide
@@ -104,8 +130,13 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
   const done = solved || (showSolution && !stage.nextStage)
   const exhausted = attempts >= MAX_ATTEMPTS_BEFORE_SOLUTION
 
-  const goToStage = (next: PythonMicroPracticeDef, solutionShownHere: boolean) => {
-    setPriorAttempts(prev => prev + attempts)
+  /** `stageAttempts` se recibe explícito, nunca leído de `attempts` por
+   *  closure: cuando se llama justo tras `setAttempts(nextAttempts)` en el
+   *  mismo evento (handleRun), React todavía no aplicó ese update — leerlo
+   *  del closure enviaba `attempts: 0` al backend, que exige `ge=1` (bug
+   *  real encontrado validando en navegador, no en revisión de código). */
+  const goToStage = (next: PythonMicroPracticeDef, solutionShownHere: boolean, stageAttempts: number) => {
+    setPriorAttempts(prev => prev + stageAttempts)
     setPriorSolutionShown(prev => prev || solutionShownHere)
     setStage(next)
     setCode(next.starterCode)
@@ -114,6 +145,22 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
     setError(null)
     setLastCategory(null)
     setShowSolution(false)
+    setStageNote(null)
+    // Evidencia real de ESTA etapa (no la acumulada) hacia el mismo Runtime
+    // que ya evalúa el ciclo completo — misma competencia, mismo endpoint,
+    // sin agente nuevo. Best-effort: si falla o no hay courseId, la cadena
+    // sigue exactamente igual, solo sin la nota.
+    if (courseId) {
+      submitCycleEvidence.mutate(
+        { courseId, competencia: conceptId, attempts: stageAttempts, solved: !solutionShownHere },
+        {
+          onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+            const profundidad = data?.runtime_decision?.diseno?.profundidad
+            setStageNote(describeStageAdaptation(profundidad ? String(profundidad) : undefined))
+          },
+        },
+      )
+    }
   }
 
   const handleRun = () => {
@@ -137,7 +184,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
     }
     setLastCategory(null)
     if (stage.nextStage) {
-      goToStage(stage.nextStage, false)
+      goToStage(stage.nextStage, false, nextAttempts)
     } else {
       setSolved(true)
       onDone?.({ attempts: priorAttempts + nextAttempts, timeMs: 0, solutionShown: priorSolutionShown })
@@ -159,7 +206,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
 
   const handleContinueAfterSolution = () => {
     if (!stage.nextStage) return
-    goToStage(stage.nextStage, true)
+    goToStage(stage.nextStage, true, attempts)
   }
 
   return (
@@ -167,6 +214,16 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
         Ahora hazlo tú
       </p>
+      {/* Adaptación real ENTRE etapas de la misma progresión (no solo entre
+          ciclos) — aparece cuando cycle-evidence ya respondió para la etapa
+          anterior; nunca bloquea, el estudiante puede escribir de inmediato
+          aunque la nota tarde un segundo más en llegar. */}
+      {stageNote && (
+        <div className="flex items-start gap-2 rounded-lg border border-neural-glow/20 bg-neural-glow/5 px-3 py-2">
+          <Sparkles className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
+          <p className="text-sm text-neural-glow/90 leading-relaxed">{stageNote}</p>
+        </div>
+      )}
       <p className="text-sm text-neural-text/90">{stage.prompt}</p>
       {/* input() no tiene terminal real en el navegador: en vez de ocultar el
           valor simulado, se muestra explícitamente — el estudiante ve QUÉ

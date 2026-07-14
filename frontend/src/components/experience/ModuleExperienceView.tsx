@@ -990,6 +990,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               bridge={cycle.pythonBridge}
               moduleId={moduleId}
               conceptId={cycle.conceptId}
+              courseId={courseId}
               onPracticeDone={outcome => {
                 setPythonPracticeDone(true)
                 setPythonOutcome(outcome)
@@ -1050,6 +1051,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               bridge={activeReinforcement.pythonBridge}
               moduleId={moduleId}
               conceptId={cycle?.conceptId ?? ''}
+              courseId={courseId}
             />
           )}
 
