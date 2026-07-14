@@ -215,6 +215,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // solución mostrada — igual que el refuerzo del menú, nunca bloquea después
   // de eso. Sin `practice` en el puente, este estado nunca se consulta.
   const [pythonPracticeDone, setPythonPracticeDone] = useState(false)
+  // Evidencia de la micropráctica de Python — se combina con practiceOutcome
+  // en advanceCycle para que el Runtime vea el ciclo completo (ordenamiento +
+  // Python), no solo la mitad. null mientras no se haya resuelto ni agotado.
+  const [pythonOutcome, setPythonOutcome] = useState<PracticeOutcome | null>(null)
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
@@ -295,6 +299,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     setPracticeOutcome(null)   // ← crítico: reset entre ciclos
     setAutoReinforcement(false)
     setPythonPracticeDone(false)
+    setPythonOutcome(null)
     if (cycleIndex + 1 < definition.cycles.length) {
       setCycleIndex(i => i + 1)
       setPhase('concept')
@@ -337,8 +342,19 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     // entrega/decision_adaptativa en el backend), se inserta un refuerzo
     // del propio ciclo antes de continuar — reutiliza el mecanismo de
     // refuerzos ya existente (PED-005), nunca uno nuevo.
-    const solved = remediationLevel === 0 && !!practiceOutcome && !practiceOutcome.solutionShown
-    const attempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
+    //
+    // Cierre del bucle observar→adaptar: si el puente del ciclo trae una
+    // micropráctica de Python, su evidencia (pythonOutcome) se COMBINA con la
+    // de la práctica de ordenamiento antes de enviarla — el Runtime debe ver
+    // el ciclo completo, no solo la mitad. Necesitar la solución en cualquiera
+    // de las dos cuenta como "no dominada", igual que la escalera de
+    // remediación ya hace con la suya.
+    const pythonRequired = !!cycle.pythonBridge?.practice
+    const orderingSolved = !!practiceOutcome && !practiceOutcome.solutionShown
+    const pythonSolved = !pythonRequired || (!!pythonOutcome && !pythonOutcome.solutionShown)
+    const solved = remediationLevel === 0 && orderingSolved && pythonSolved
+    const orderingAttempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
+    const attempts = orderingAttempts + (pythonOutcome?.attempts ?? 0)
     setPhase('adapting')
     submitCycleEvidence.mutate(
       { courseId, competencia: cycle.conceptId, attempts, solved },
@@ -372,7 +388,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         onError: () => commitAdvance(),
       },
     )
-  }, [commitAdvance, courseId, cycle, mastery, moduleId, practiceOutcome, remediationLevel, submitCycleEvidence, toast, visitedReinforcements])
+  }, [commitAdvance, courseId, cycle, mastery, moduleId, practiceOutcome, pythonOutcome, remediationLevel, submitCycleEvidence, toast, visitedReinforcements])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────
@@ -722,7 +738,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           )}
 
           <Button className="w-full" onClick={handleFinish}>
-            {definition.closing.nextMission ? 'Continuar al siguiente módulo →' : 'Finalizar misión →'}
+            {/* "misión", nunca "módulo" — el resto de la experiencia ya evita esa
+                palabra (missionTitle, routeTitle); este era el único lugar que
+                todavía la usaba, rompiendo la sensación de aprendizaje continuo. */}
+            {definition.closing.nextMission ? 'Seguir con la siguiente misión →' : 'Finalizar misión →'}
           </Button>
         </div>
       </div>
@@ -773,9 +792,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               bridge={cycle.pythonBridge}
               moduleId={moduleId}
               conceptId={cycle.conceptId}
-              onPracticeDone={solved => {
+              onPracticeDone={outcome => {
                 setPythonPracticeDone(true)
-                if (solved) bumpMastery(cycle.conceptId, PYTHON_PRACTICE_GAIN)
+                setPythonOutcome(outcome)
+                if (!outcome.solutionShown) bumpMastery(cycle.conceptId, PYTHON_PRACTICE_GAIN)
               }}
             />
           )}

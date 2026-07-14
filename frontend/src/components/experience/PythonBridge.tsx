@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { usePyodide } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef } from '@/types/moduleExperience'
+import type { PracticeOutcome } from './OrderingPractice'
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
 
@@ -22,9 +23,11 @@ interface Props {
    *  micropráctica). Los llamadores sin práctica interactiva pueden omitirlos. */
   moduleId?: string
   conceptId?: string
-  /** Se llama una sola vez, cuando la micropráctica queda resuelta o se
-   *  reveló la solución — nunca antes, nunca bloquea el avance. */
-  onPracticeDone?: (solved: boolean) => void
+  /** Se llama una sola vez, cuando la micropráctica queda resuelta o se reveló
+   *  la solución — nunca antes, nunca bloquea el avance. Mismo contrato
+   *  (`PracticeOutcome`) que la práctica de ordenamiento, para que el llamador
+   *  pueda combinar ambas señales en la evidencia que recibe el Runtime. */
+  onPracticeDone?: (outcome: PracticeOutcome) => void
 }
 
 export function PythonBridge({ bridge, moduleId = '', conceptId = '', onPracticeDone }: Props) {
@@ -58,7 +61,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
   practice: PythonMicroPracticeDef
   moduleId: string
   conceptId: string
-  onDone?: (solved: boolean) => void
+  onDone?: (outcome: PracticeOutcome) => void
 }) {
   const { ready, loadError, run } = usePyodide()
   const [code, setCode] = useState(practice.starterCode)
@@ -89,7 +92,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
     })
     if (correct) {
       setSolved(true)
-      onDone?.(true)
+      onDone?.({ attempts: nextAttempts, timeMs: 0, solutionShown: false })
     }
   }
 
@@ -101,7 +104,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       conceptId,
       detail: { practice: 'python', attempts, solutionShown: true, final: true },
     })
-    onDone?.(false)
+    onDone?.({ attempts, timeMs: 0, solutionShown: true })
   }
 
   return (
