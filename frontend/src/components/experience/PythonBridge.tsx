@@ -92,7 +92,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
 
   const handleRun = () => {
     setRunning(true)
-    const result = run(code)
+    const result = run(code, practice.simulatedInputs)
     setRunning(false)
     setOutput(result.stdout)
     setError(result.error)
@@ -131,6 +131,21 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
         Ahora hazlo tú
       </p>
       <p className="text-sm text-neural-text/90">{practice.prompt}</p>
+      {/* input() no tiene terminal real en el navegador: en vez de ocultar el
+          valor simulado, se muestra explícitamente — el estudiante ve QUÉ
+          escribe el usuario simulado, nunca un dato que aparece de la nada. */}
+      {practice.simulatedInputs && practice.simulatedInputs.length > 0 && (
+        <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1.5">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+            Simularemos que el usuario escribe
+          </p>
+          {practice.simulatedInputs.map((value, i) => (
+            <p key={i} className="font-mono text-[13px] text-neural-text/90">
+              {value}
+            </p>
+          ))}
+        </div>
+      )}
       <textarea
         value={code}
         onChange={e => setCode(e.target.value)}

@@ -6,6 +6,7 @@
 import type { ModuleExperienceDefinition } from '@/types/moduleExperience'
 import { CICLO_1_INSTRUCCIONES_PRECISAS } from './module1/ciclo1-instrucciones-precisas'
 import { CICLO_2_VARIABLES } from './module1/ciclo2-variables'
+import { CICLO_3_INPUT } from './module1/ciclo3-input'
 
 export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
   moduleNumber: 1,
@@ -40,7 +41,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
       'por qué eso importa — antes de escribir tu primera línea.',
   },
 
-  cycles: [CICLO_1_INSTRUCCIONES_PRECISAS, CICLO_2_VARIABLES],
+  cycles: [CICLO_1_INSTRUCCIONES_PRECISAS, CICLO_2_VARIABLES, CICLO_3_INPUT],
 
   // ── Cierre ─────────────────────────────────────────────────────────────────
   // Módulo 2 ("Estructuras de control") ya tiene experiencia propia (PED-004
@@ -48,7 +49,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
   // misión real de la ruta.
   closing: {
     achievement:
-      'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos, y después «Variables» — cajas con nombre que guardan un valor y te ahorran repetirlo. Ya sabes cómo se le habla a una máquina y cómo hacer que recuerde algo por ti. Esas dos reglas son la base de todo lo que escribirás en Python.',
+      'Construiste «Instrucciones precisas» descartando los objetivos disfrazados de pasos, después «Variables» — cajas con nombre que guardan un valor — y ahora «Entrada de datos» — la forma en que un programa pregunta, espera y escucha a quien lo usa. Ya sabes cómo se le habla a una máquina, cómo hacer que recuerde algo por ti, y cómo dejar que la persona decida qué valor entra. Esas tres reglas son la base de todo lo que escribirás en Python.',
 
     // LEARN-002 — la hipótesis de la apertura se responde aquí: qué pensaste,
     // si estabas en lo cierto y por qué ahora entiendes más. Las claves son el

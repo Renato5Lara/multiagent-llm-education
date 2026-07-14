@@ -220,6 +220,13 @@ export interface PythonMicroPracticeDef {
   }
   /** Solución — se ofrece solo tras agotar los intentos, nunca antes. */
   solutionCode: string
+  /** Valor(es) que "escribe" el usuario simulado, en el mismo orden en que el
+   *  código del estudiante llama a input(). Se muestran en la UI ANTES de
+   *  ejecutar — el estudiante ve exactamente qué recibirá su input(), nunca
+   *  un valor mágico — y se inyectan a pyodide.setStdin en ese orden.
+   *  Ausente = sin stdin conectado (comportamiento previo, sin cambios para
+   *  las microprácticas de print()/variables que no lo necesitan). */
+  simulatedInputs?: string[]
 }
 
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────

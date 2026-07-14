@@ -12,6 +12,7 @@ const PYODIDE_CDN = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
 interface PyodideInterface {
   runPython: (code: string) => unknown
   setStdout: (options: { batched: (output: string) => void }) => void
+  setStdin: (options: { stdin: () => string }) => void
 }
 
 declare global {
@@ -93,11 +94,18 @@ export function usePyodide() {
     }
   }, [])
 
-  const run = (code: string): PythonRunResult => {
+  /** `stdinValues`: respuestas simuladas de input(), en el orden en que el
+   *  código las consume. Sin este parámetro, input() falla con OSError (sin
+   *  stdin conectado) — igual que antes de esta capacidad. */
+  const run = (code: string, stdinValues?: string[]): PythonRunResult => {
     const py = pyodideRef.current
     if (!py) return { stdout: '', error: 'Python todavía no está listo.' }
     const lines: string[] = []
     py.setStdout({ batched: (output: string) => lines.push(output) })
+    if (stdinValues && stdinValues.length > 0) {
+      let cursor = 0
+      py.setStdin({ stdin: () => (cursor < stdinValues.length ? stdinValues[cursor++] : '') })
+    }
     try {
       py.runPython(code)
       return { stdout: lines.join('\n'), error: null }
