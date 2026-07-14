@@ -127,6 +127,11 @@ interface ExperienceCursor {
   visitedReinforcements: ReinforcementKind[]
   activeReinforcementKind: ReinforcementKind | null
   autoReinforcement: boolean
+  /** Modalidad real recomendada por Adaptar (runtime_decision.diseno.modalidad)
+   *  cuando coincide con una de las 4 modalidades conocidas — antes se recibía
+   *  y se descartaba en silencio. `null` = sin recomendación aplicada todavía,
+   *  se usa la modalidad diagnosticada del estudiante. */
+  modalityOverride: LearningModality | null
 }
 
 const cursorKey = (moduleId: string) => `experience-cursor:${moduleId}`
@@ -140,7 +145,7 @@ function emptyCursor(mastery: Record<string, number>): ExperienceCursor {
     phase: 'opening', cycleIndex: 0, mastery,
     practiceOutcome: null, pythonOutcome: null, pythonPracticeDone: false,
     remediationLevel: 0, visitedReinforcements: [], activeReinforcementKind: null,
-    autoReinforcement: false,
+    autoReinforcement: false, modalityOverride: null,
   }
 }
 
@@ -167,6 +172,7 @@ function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): E
       visitedReinforcements: saved.visitedReinforcements ?? [],
       activeReinforcementKind: saved.activeReinforcementKind ?? null,
       autoReinforcement: saved.autoReinforcement ?? false,
+      modalityOverride: saved.modalityOverride ?? null,
       resumed: phase !== 'opening',
     }
   } catch {
@@ -266,7 +272,6 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
 }
 
 export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish }: Props) {
-  const effectiveModality: LearningModality = modality ?? 'reading'
   const submitCycleEvidence = useSubmitCycleEvidence()
 
   // A1 — rehidratar el cursor persistido una sola vez al montar. Ya no es solo
@@ -300,6 +305,13 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // origen del refuerzo elegido voluntariamente, para que al terminar continúe
   // el ciclo en vez de volver al menú.
   const [autoReinforcement, setAutoReinforcement] = useState(initialCursor.autoReinforcement)
+  // Pilar 2 — Adaptar ya recomienda una modalidad real (runtime_decision.
+  // diseno.modalidad) en cada cycle-evidence; antes se recibía y se
+  // descartaba. Cuando coincide con una de las 4 modalidades conocidas
+  // (MODALITY_ORDER), reemplaza a la diagnosticada para el resto de la
+  // misión — null mantiene el comportamiento previo exacto.
+  const [modalityOverride, setModalityOverride] = useState<LearningModality | null>(initialCursor.modalityOverride)
+  const effectiveModality: LearningModality = modalityOverride ?? modality ?? 'reading'
   // "Ahora hazlo tú" (PythonBridge.practice): si el puente del ciclo trae una
   // micropráctica interactiva, Continuar espera a que quede resuelta o con
   // solución mostrada — igual que el refuerzo del menú, nunca bloquea después
@@ -394,10 +406,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       visitedReinforcements: Array.from(visitedReinforcements),
       activeReinforcementKind: activeReinforcement?.kind ?? null,
       autoReinforcement,
+      modalityOverride,
     })
   }, [
     moduleId, phase, cycleIndex, mastery, practiceOutcome, pythonOutcome, pythonPracticeDone,
-    remediationLevel, visitedReinforcements, activeReinforcement, autoReinforcement,
+    remediationLevel, visitedReinforcements, activeReinforcement, autoReinforcement, modalityOverride,
   ])
 
   // Cierre de la misión: se borra el cursor (el repaso posterior parte limpio)
@@ -493,6 +506,17 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
           const diseno = data?.runtime_decision?.diseno
           const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
+          // Adaptar también recomienda una modalidad real
+          // (runtime/domain/adaptar/productor.py: DISENO_POR_ACCION) — antes
+          // se recibía y se descartaba igual que profundidad. Solo se honra
+          // cuando coincide con una de las 4 modalidades conocidas (hoy,
+          // "visual" en el caso "reforzar"; "mixta" y el resto de
+          // alternativas_descartadas no tienen equivalente y se ignoran a
+          // propósito, nunca se inventa una traducción).
+          const modalidadRecomendada = diseno?.modalidad ? String(diseno.modalidad) : undefined
+          if (modalidadRecomendada && MODALITY_ORDER.includes(modalidadRecomendada as LearningModality)) {
+            setModalityOverride(modalidadRecomendada as LearningModality)
+          }
           // La adaptación ya no responde solo a la dificultad: "aplicacion"
           // es la propuesta REAL de Orientar cuando Diagnosticar marcó el
           // concepto como dominado (runtime/domain/orientar/productor.py) —
