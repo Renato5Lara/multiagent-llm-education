@@ -191,7 +191,7 @@ export default function ModuleLearningView() {
           setAppPhase('content')
           toast({ title: 'Misión reanudada', description: 'Continúas exactamente donde quedaste' })
         } else {
-          toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
+          toast({ title: 'Misión preparada', description: 'Contenido pedagógico generado exitosamente' })
         }
       },
     })
@@ -225,7 +225,7 @@ export default function ModuleLearningView() {
       { moduleId, courseId, status: 'completed', score },
       {
         onSuccess: async () => {
-          toast({ title: 'Módulo completado', description: 'Tu progreso ha sido actualizado' })
+          toast({ title: 'Misión completada', description: 'Tu progreso quedó guardado.' })
           // Flujo continuo: el backend desbloqueó el siguiente módulo en DB.
           // Refetch de la ruta para obtener el estado real desde el backend
           // (no por índice local — el orden puede ser adaptativo).
