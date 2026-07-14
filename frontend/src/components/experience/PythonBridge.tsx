@@ -75,6 +75,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
   onDone?: (outcome: PracticeOutcome) => void
 }) {
   const { ready, loadError, run } = usePyodide()
+  // `stage` es la etapa EN CURSO de la progresión (practice.nextStage.
+  // nextStage...) — el estudiante nunca ve "Etapa 1 de 3": es la misma
+  // tarjeta que va cambiando de prompt/código a medida que profundiza en el
+  // mismo concepto. `practice` (el prop) sigue siendo la primera etapa.
+  const [stage, setStage] = useState<PythonMicroPracticeDef>(practice)
   const [code, setCode] = useState(practice.starterCode)
   const [attempts, setAttempts] = useState(0)
   const [output, setOutput] = useState<string | null>(null)
@@ -86,43 +91,75 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
   // real de Pyodide (o su ausencia), nunca de un conteo. Gobierna qué pista
   // y qué diagnóstico se muestran.
   const [lastCategory, setLastCategory] = useState<PythonErrorCategory | null>(null)
+  // Evidencia ACUMULADA de las etapas ya superadas de esta misma cadena — el
+  // Runtime recibe un solo resultado al terminar la progresión completa,
+  // nunca uno por etapa (eso es la iteración futura, no esta).
+  const [priorAttempts, setPriorAttempts] = useState(0)
+  const [priorSolutionShown, setPriorSolutionShown] = useState(false)
 
-  const done = solved || showSolution
+  // Mostrar la solución de una etapa intermedia NO termina la cadena de
+  // golpe: el estudiante pidió verla, se queda visible hasta que decide
+  // continuar (pendingContinue) — solo la ÚLTIMA etapa marca `done` real.
+  const pendingContinue = showSolution && !!stage.nextStage
+  const done = solved || (showSolution && !stage.nextStage)
   const exhausted = attempts >= MAX_ATTEMPTS_BEFORE_SOLUTION
+
+  const goToStage = (next: PythonMicroPracticeDef, solutionShownHere: boolean) => {
+    setPriorAttempts(prev => prev + attempts)
+    setPriorSolutionShown(prev => prev || solutionShownHere)
+    setStage(next)
+    setCode(next.starterCode)
+    setAttempts(0)
+    setOutput(null)
+    setError(null)
+    setLastCategory(null)
+    setShowSolution(false)
+  }
 
   const handleRun = () => {
     setRunning(true)
-    const result = run(code, practice.simulatedInputs)
+    const result = run(code, stage.simulatedInputs)
     setRunning(false)
     setOutput(result.stdout)
     setError(result.error)
     const nextAttempts = attempts + 1
     setAttempts(nextAttempts)
-    const correct = !result.error && result.stdout.trim() === practice.expectedOutput.trim()
+    const correct = !result.error && result.stdout.trim() === stage.expectedOutput.trim()
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
       conceptId,
       detail: { practice: 'python', attempt: nextAttempts, status: correct ? 'correct' : 'incorrect', correct },
     })
-    if (correct) {
-      setLastCategory(null)
-      setSolved(true)
-      onDone?.({ attempts: nextAttempts, timeMs: 0, solutionShown: false })
-    } else {
+    if (!correct) {
       setLastCategory(classifyPythonError(result.error))
+      return
+    }
+    setLastCategory(null)
+    if (stage.nextStage) {
+      goToStage(stage.nextStage, false)
+    } else {
+      setSolved(true)
+      onDone?.({ attempts: priorAttempts + nextAttempts, timeMs: 0, solutionShown: priorSolutionShown })
     }
   }
 
   const handleShowSolution = () => {
-    setShowSolution(true)
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
       conceptId,
       detail: { practice: 'python', attempts, solutionShown: true, final: true },
     })
-    onDone?.({ attempts, timeMs: 0, solutionShown: true })
+    setShowSolution(true)
+    if (!stage.nextStage) {
+      onDone?.({ attempts: priorAttempts + attempts, timeMs: 0, solutionShown: true })
+    }
+  }
+
+  const handleContinueAfterSolution = () => {
+    if (!stage.nextStage) return
+    goToStage(stage.nextStage, true)
   }
 
   return (
@@ -130,16 +167,16 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
         Ahora hazlo tú
       </p>
-      <p className="text-sm text-neural-text/90">{practice.prompt}</p>
+      <p className="text-sm text-neural-text/90">{stage.prompt}</p>
       {/* input() no tiene terminal real en el navegador: en vez de ocultar el
           valor simulado, se muestra explícitamente — el estudiante ve QUÉ
           escribe el usuario simulado, nunca un dato que aparece de la nada. */}
-      {practice.simulatedInputs && practice.simulatedInputs.length > 0 && (
+      {stage.simulatedInputs && stage.simulatedInputs.length > 0 && (
         <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1.5">
           <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
             Simularemos que el usuario escribe
           </p>
-          {practice.simulatedInputs.map((value, i) => (
+          {stage.simulatedInputs.map((value, i) => (
             <p key={i} className="font-mono text-[13px] text-neural-text/90">
               {value}
             </p>
@@ -149,47 +186,52 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       <textarea
         value={code}
         onChange={e => setCode(e.target.value)}
-        disabled={done}
+        disabled={done || showSolution}
         rows={3}
         spellCheck={false}
         className="w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70"
       />
       <div className="flex items-center gap-2 flex-wrap">
-        <Button size="sm" onClick={handleRun} disabled={!ready || done || running} className="gap-2">
+        <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running} className="gap-2">
           {running && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {ready ? 'Ejecutar →' : 'Cargando Python…'}
         </Button>
-        {!done && exhausted && (
+        {!done && !showSolution && exhausted && (
           <Button size="sm" variant="ghost" onClick={handleShowSolution}>
             Ver solución
           </Button>
         )}
+        {pendingContinue && (
+          <Button size="sm" onClick={handleContinueAfterSolution} className="gap-2">
+            Continuar →
+          </Button>
+        )}
       </div>
       {loadError && <p className="text-sm text-red-400">{loadError}</p>}
-      {output !== null && (
+      {output !== null && !showSolution && (
         <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
           {output || '(sin salida)'}
         </div>
       )}
-      {error && <p className="text-sm text-amber-400">{error}</p>}
+      {error && !showSolution && <p className="text-sm text-amber-400">{error}</p>}
       {/* La ayuda responde a POR QUÉ falló (lastCategory), no solo a cuántas
           veces — antes, un error real (SyntaxError/NameError) nunca mostraba
           pista alguna; ahora toda categoría tiene su propio diagnóstico. */}
-      {!done && lastCategory && (
+      {!done && !showSolution && lastCategory && (
         <div className="space-y-1.5">
           <div className="flex items-start gap-2">
             <Eye className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
             <p className="text-sm text-neural-glow/90 leading-relaxed">{ERROR_CATEGORY_LABEL[lastCategory]}</p>
           </div>
           <p className="text-sm text-neural-muted">
-            {practice.hintsByCategory?.[lastCategory] ?? practice.hint}
+            {stage.hintsByCategory?.[lastCategory] ?? stage.hint}
           </p>
         </div>
       )}
       {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
           del propio ejercicio (mismo criterio que la escalera de remediación:
           más acompañamiento antes de ofrecer la respuesta, nunca en su lugar). */}
-      {!done && attempts >= 2 && practice.workedExample && (
+      {!done && !showSolution && attempts >= 2 && stage.workedExample && (
         <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
           <div className="flex items-center gap-2">
             <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
@@ -197,9 +239,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
               Apoyo — veamos un caso parecido
             </p>
           </div>
-          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{practice.workedExample.code}</pre>
-          <p className="text-sm text-neural-muted">→ {practice.workedExample.output}</p>
-          <p className="text-sm text-neural-text/80 leading-relaxed">{practice.workedExample.explanation}</p>
+          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.workedExample.code}</pre>
+          <p className="text-sm text-neural-muted">→ {stage.workedExample.output}</p>
+          <p className="text-sm text-neural-text/80 leading-relaxed">{stage.workedExample.explanation}</p>
         </div>
       )}
       {solved && (
@@ -210,7 +252,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, onDone }: {
       {showSolution && (
         <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1">
           <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">Solución</p>
-          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{practice.solutionCode}</pre>
+          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.solutionCode}</pre>
         </div>
       )}
     </div>

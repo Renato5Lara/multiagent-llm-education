@@ -141,6 +141,27 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Robot listo".',
       },
       solutionCode: 'print("Robot listo")',
+      // Progresión pedagógica v1 (misma tarjeta, sin pantalla nueva): tras
+      // acertar, profundiza el MISMO concepto — modificar el mensaje —
+      // en vez de terminar aquí.
+      nextStage: {
+        prompt: 'Ahora profundiza: cambia el mensaje para que la consola muestre exactamente Sistema listo',
+        starterCode: 'print("Robot listo")\n',
+        expectedOutput: 'Sistema listo',
+        hint: 'Solo cambia el texto entre comillas — el resto de la línea no necesita tocarse: print("Sistema listo")',
+        hintsByCategory: {
+          sintaxis: 'Revisa que las comillas sigan completas después de cambiar el texto.',
+          variables: 'No necesitas ninguna variable — sigue siendo un texto directo entre comillas.',
+          logica: 'Solo cambia lo que está entre comillas; print() no cambia.',
+          salida: 'Revisa que el texto sea exactamente "Sistema listo" — mayúscula inicial, sin comillas de más.',
+        },
+        workedExample: {
+          code: 'print("Motor listo")',
+          output: 'Motor listo',
+          explanation: 'Cambiar el mensaje es escribir un texto distinto entre las mismas comillas — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Sistema listo".',
+        },
+        solutionCode: 'print("Sistema listo")',
+      },
     },
   },
   decision: {

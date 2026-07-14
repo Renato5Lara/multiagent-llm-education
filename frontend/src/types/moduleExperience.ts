@@ -227,6 +227,14 @@ export interface PythonMicroPracticeDef {
    *  Ausente = sin stdin conectado (comportamiento previo, sin cambios para
    *  las microprácticas de print()/variables que no lo necesitan). */
   simulatedInputs?: string[]
+  /** Progresión pedagógica del MISMO concepto (jul 2026, v1 — infraestructura
+   *  mínima, no el diseño final del flujo adaptativo): al resolver esta etapa,
+   *  si existe nextStage se muestra en el mismo componente, sin pantalla
+   *  nueva ni "Etapa X de Y" — el estudiante nunca cambia de actividad, solo
+   *  profundiza (arrastrar → completar → escribir → modificar → aplicar).
+   *  Cadena lineal por ahora: decidir cuándo reforzar, repetir o saltar una
+   *  etapa según evidencia queda para una iteración futura, no esta. */
+  nextStage?: PythonMicroPracticeDef
 }
 
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
