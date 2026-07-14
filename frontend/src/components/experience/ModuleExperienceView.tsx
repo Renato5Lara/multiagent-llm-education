@@ -159,6 +159,11 @@ function masteryGain(outcome: PracticeOutcome, level: RemediationLevel = 0): num
  *  resolver. Se aplica solo en el menú de decisión, nunca en la escalera. */
 const REINFORCEMENT_GAIN = 0.05
 
+/** Ganancia de la micropráctica de Python ("ahora hazlo tú") — mismo orden de
+ *  magnitud que un refuerzo voluntario: complementa la práctica principal,
+ *  nunca la sustituye. Cero si se reveló la solución. */
+const PYTHON_PRACTICE_GAIN = 0.05
+
 /** Intentos que la actividad concede antes de agotarse (espejo de
  *  MAX_ATTEMPTS_BEFORE_SOLUTION en OrderingPractice). Solo para la evidencia
  *  del Nivel 3, donde ya no hay actividad que los cuente. */
@@ -205,6 +210,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // origen del refuerzo elegido voluntariamente, para que al terminar continúe
   // el ciclo en vez de volver al menú.
   const [autoReinforcement, setAutoReinforcement] = useState(false)
+  // "Ahora hazlo tú" (PythonBridge.practice): si el puente del ciclo trae una
+  // micropráctica interactiva, Continuar espera a que quede resuelta o con
+  // solución mostrada — igual que el refuerzo del menú, nunca bloquea después
+  // de eso. Sin `practice` en el puente, este estado nunca se consulta.
+  const [pythonPracticeDone, setPythonPracticeDone] = useState(false)
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
@@ -284,6 +294,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     setRemediationLevel(0)
     setPracticeOutcome(null)   // ← crítico: reset entre ciclos
     setAutoReinforcement(false)
+    setPythonPracticeDone(false)
     if (cycleIndex + 1 < definition.cycles.length) {
       setCycleIndex(i => i + 1)
       setPhase('concept')
@@ -758,9 +769,17 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             onExhausted={handlePracticeExhausted}
           />
           {practiceOutcome && cycle.pythonBridge && (
-            <PythonBridge bridge={cycle.pythonBridge} />
+            <PythonBridge
+              bridge={cycle.pythonBridge}
+              moduleId={moduleId}
+              conceptId={cycle.conceptId}
+              onPracticeDone={solved => {
+                setPythonPracticeDone(true)
+                if (solved) bumpMastery(cycle.conceptId, PYTHON_PRACTICE_GAIN)
+              }}
+            />
           )}
-          {practiceOutcome && (
+          {practiceOutcome && (!cycle.pythonBridge?.practice || pythonPracticeDone) && (
             <div className="flex justify-end animate-in fade-in duration-300">
               <Button onClick={handlePracticeContinue} className="gap-2">
                 Continuar →
@@ -808,7 +827,13 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             ))}
           </div>
 
-          {activeReinforcement.pythonBridge && <PythonBridge bridge={activeReinforcement.pythonBridge} />}
+          {activeReinforcement.pythonBridge && (
+            <PythonBridge
+              bridge={activeReinforcement.pythonBridge}
+              moduleId={moduleId}
+              conceptId={cycle?.conceptId ?? ''}
+            />
+          )}
 
           {activeReinforcement.practice ? (
             <ReinforcementPractice

@@ -161,6 +161,13 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
         code: 'avanzar(pasos=4)\ngirar(grados=90, direccion="izquierda")\ndetenerse()\nextender_mano()\ngirar_manija()',
         explanation:
           'La secuencia que acabas de construir es, literalmente, un programa: cada línea es una instrucción precisa que Python ejecuta de arriba hacia abajo, exactamente en el orden en que la escribiste — ni una línea más, ni una menos de lo que dijiste.',
+        practice: {
+          prompt: 'Ahora hazlo tú: escribe una instrucción precisa en Python real para que la consola muestre exactamente Robot listo',
+          starterCode: '# escribe tu instrucción aquí\n',
+          expectedOutput: 'Robot listo',
+          hint: 'Usa la función print() con el texto exacto entre comillas: print("Robot listo")',
+          solutionCode: 'print("Robot listo")',
+        },
       },
       decision: {
         question: 'Ya entiendes lo que hace precisa una instrucción — y por qué eso mismo aplica cuando programas. ¿Cómo quieres consolidarlo?',

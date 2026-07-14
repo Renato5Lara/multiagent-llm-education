@@ -184,6 +184,23 @@ export interface PythonBridge {
   code: string
   /** Une la analogía recién resuelta con el fragmento de arriba. */
   explanation: string
+  /** Micropráctica interactiva opcional — "ahora hazlo tú": el estudiante
+   *  escribe Python real (ejecutado con Pyodide, en el navegador) inmediatamente
+   *  después del puente, mientras la analogía sigue fresca. */
+  practice?: PythonMicroPracticeDef
+}
+
+export interface PythonMicroPracticeDef {
+  /** Qué debe lograr el código que escriba (consigna corta, 1-2 líneas). */
+  prompt: string
+  /** Scaffold inicial del editor — nunca la solución. */
+  starterCode: string
+  /** Salida esperada por stdout (comparación exacta, recortando espacios). */
+  expectedOutput: string
+  /** Pista mostrada tras el primer intento fallido. */
+  hint: string
+  /** Solución — se ofrece solo tras agotar los intentos, nunca antes. */
+  solutionCode: string
 }
 
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
