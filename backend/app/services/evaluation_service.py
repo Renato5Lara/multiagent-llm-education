@@ -55,6 +55,15 @@ _BLOOM_QUESTION_TEMPLATES: dict[int, list[dict]] = {
                 "Describir temas no relacionados",
             ],
         },
+        {
+            "question": "¿Cuál es la relación entre '{title}' y lo que ya aprendiste antes?",
+            "options": [
+                "Se conecta y amplía conceptos previos del curso",
+                "No tiene relación con nada anterior",
+                "Reemplaza por completo lo ya aprendido",
+                "Es un tema aislado sin conexión",
+            ],
+        },
     ],
     3: [
         {
@@ -64,6 +73,15 @@ _BLOOM_QUESTION_TEMPLATES: dict[int, list[dict]] = {
                 "Solo memorizando la teoría",
                 "Ignorando el contexto real",
                 "Copiando ejemplos sin adaptación",
+            ],
+        },
+        {
+            "question": "¿Qué pasos seguirías para resolver un problema nuevo usando '{title}'?",
+            "options": [
+                "Analizar el problema y adaptar el procedimiento aprendido",
+                "Aplicar el mismo ejemplo sin cambios",
+                "Saltar directo a la solución sin plan",
+                "Ignorar el problema y usar otro tema",
             ],
         },
     ],
@@ -77,6 +95,15 @@ _BLOOM_QUESTION_TEMPLATES: dict[int, list[dict]] = {
                 "Repetir la definición básica",
             ],
         },
+        {
+            "question": "¿Qué relación existe entre las partes de '{title}'?",
+            "options": [
+                "Cada parte depende y afecta a las demás",
+                "Las partes son totalmente independientes",
+                "Solo una parte importa realmente",
+                "No hay relación identificable",
+            ],
+        },
     ],
     5: [
         {
@@ -88,6 +115,15 @@ _BLOOM_QUESTION_TEMPLATES: dict[int, list[dict]] = {
                 "Recordando la definición",
             ],
         },
+        {
+            "question": "¿Qué criterio usarías para comparar dos soluciones basadas en '{title}'?",
+            "options": [
+                "Comparar resultados, costos y limitaciones de cada una",
+                "Elegir la primera que funcione sin comparar",
+                "Preferir siempre la más compleja",
+                "Ignorar los resultados obtenidos",
+            ],
+        },
     ],
     6: [
         {
@@ -97,6 +133,15 @@ _BLOOM_QUESTION_TEMPLATES: dict[int, list[dict]] = {
                 "Repetir una solución existente",
                 "Solo teorizar sin aplicación",
                 "Ignorar el concepto principal",
+            ],
+        },
+        {
+            "question": "¿Cómo combinarías '{title}' con otro concepto para resolver un problema nuevo?",
+            "options": [
+                "Integrando ambos conceptos de forma coherente",
+                "Usando solo uno e ignorando el otro",
+                "Aplicándolos por separado sin conexión",
+                "Descartando ambos y empezando de cero",
             ],
         },
     ],
