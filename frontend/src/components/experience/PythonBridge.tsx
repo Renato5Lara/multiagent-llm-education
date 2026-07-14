@@ -81,8 +81,8 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
  *  que `describeAdaptation` en ModuleExperienceView, versión corta porque
  *  aquí no hay refuerzo que insertar, solo una micropráctica que continúa. */
 function describeStageAdaptation(profundidad: string | undefined): string | null {
-  if (profundidad === 'aplicacion') return 'Vas muy bien con esto — sigamos profundizando.'
-  if (profundidad === 'fundamentos') return 'Vamos con calma en esta parte — aquí tienes otra vuelta.'
+  if (profundidad === 'aplicacion') return 'Vas muy bien con esto — vamos con menos apoyo.'
+  if (profundidad === 'fundamentos') return 'Vamos con calma en esta parte — aquí tienes más apoyo.'
   return null
 }
 
@@ -122,13 +122,38 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   // ciclos): se llena con la respuesta REAL de cycle-evidence, nunca un
   // texto fijo; `null` mientras no hay nada que decir todavía.
   const [stageNote, setStageNote] = useState<string | null>(null)
+  // Espera breve mientras el Runtime real decide la siguiente etapa — nunca
+  // más de una llamada real (best-effort, ver applyStage/goToStage).
+  const [deciding, setDeciding] = useState(false)
+  // La decisión real ya NO solo cambia el texto: "fundamentos" adelanta el
+  // apoyo (caso resuelto visible antes, solución disponible antes) y
+  // "aplicacion" retira el andamiaje (arranca en blanco, sin la respuesta
+  // anterior precargada) — mismo criterio de la escalera de remediación
+  // (más o menos acompañamiento), aplicado ahora dentro de la progresión.
+  const [earlyHelp, setEarlyHelp] = useState(false)
 
   // Mostrar la solución de una etapa intermedia NO termina la cadena de
   // golpe: el estudiante pidió verla, se queda visible hasta que decide
   // continuar (pendingContinue) — solo la ÚLTIMA etapa marca `done` real.
   const pendingContinue = showSolution && !!stage.nextStage
   const done = solved || (showSolution && !stage.nextStage)
-  const exhausted = attempts >= MAX_ATTEMPTS_BEFORE_SOLUTION
+  const attemptsBeforeSolution = earlyHelp ? 2 : MAX_ATTEMPTS_BEFORE_SOLUTION
+  const workedExampleThreshold = earlyHelp ? 1 : 2
+  const exhausted = attempts >= attemptsBeforeSolution
+
+  const applyStage = (next: PythonMicroPracticeDef, profundidad: string | undefined) => {
+    const openChallenge = profundidad === 'aplicacion'
+    setStage(next)
+    setCode(openChallenge ? '' : next.starterCode)
+    setEarlyHelp(profundidad === 'fundamentos')
+    setAttempts(0)
+    setOutput(null)
+    setError(null)
+    setLastCategory(null)
+    setShowSolution(false)
+    setStageNote(describeStageAdaptation(profundidad))
+    setDeciding(false)
+  }
 
   /** `stageAttempts` se recibe explícito, nunca leído de `attempts` por
    *  closure: cuando se llama justo tras `setAttempts(nextAttempts)` en el
@@ -138,29 +163,27 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   const goToStage = (next: PythonMicroPracticeDef, solutionShownHere: boolean, stageAttempts: number) => {
     setPriorAttempts(prev => prev + stageAttempts)
     setPriorSolutionShown(prev => prev || solutionShownHere)
-    setStage(next)
-    setCode(next.starterCode)
-    setAttempts(0)
-    setOutput(null)
-    setError(null)
-    setLastCategory(null)
-    setShowSolution(false)
     setStageNote(null)
     // Evidencia real de ESTA etapa (no la acumulada) hacia el mismo Runtime
     // que ya evalúa el ciclo completo — misma competencia, mismo endpoint,
-    // sin agente nuevo. Best-effort: si falla o no hay courseId, la cadena
-    // sigue exactamente igual, solo sin la nota.
-    if (courseId) {
-      submitCycleEvidence.mutate(
-        { courseId, competencia: conceptId, attempts: stageAttempts, solved: !solutionShownHere },
-        {
-          onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
-            const profundidad = data?.runtime_decision?.diseno?.profundidad
-            setStageNote(describeStageAdaptation(profundidad ? String(profundidad) : undefined))
-          },
-        },
-      )
+    // sin agente nuevo. Best-effort: sin courseId, o si falla, la etapa
+    // siguiente se aplica igual, solo sin decisión real (sin andamiaje extra
+    // ni reto abierto) — nunca bloquea al estudiante.
+    if (!courseId) {
+      applyStage(next, undefined)
+      return
     }
+    setDeciding(true)
+    submitCycleEvidence.mutate(
+      { courseId, competencia: conceptId, attempts: stageAttempts, solved: !solutionShownHere },
+      {
+        onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+          const profundidad = data?.runtime_decision?.diseno?.profundidad
+          applyStage(next, profundidad ? String(profundidad) : undefined)
+        },
+        onError: () => applyStage(next, undefined),
+      },
+    )
   }
 
   const handleRun = () => {
@@ -214,17 +237,24 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
         Ahora hazlo tú
       </p>
-      {/* Adaptación real ENTRE etapas de la misma progresión (no solo entre
-          ciclos) — aparece cuando cycle-evidence ya respondió para la etapa
-          anterior; nunca bloquea, el estudiante puede escribir de inmediato
-          aunque la nota tarde un segundo más en llegar. */}
-      {stageNote && (
-        <div className="flex items-start gap-2 rounded-lg border border-neural-glow/20 bg-neural-glow/5 px-3 py-2">
-          <Sparkles className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
-          <p className="text-sm text-neural-glow/90 leading-relaxed">{stageNote}</p>
+      {/* Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
+          de mostrar la siguiente — breve (best-effort, nunca más de una
+          llamada), pero real: la etapa que aparece después ya cambia según
+          esa decisión (más apoyo / menos andamiaje), no solo el texto. */}
+      {deciding ? (
+        <div className="flex items-center gap-2 py-3 text-sm text-neural-muted">
+          <Loader2 className="h-4 w-4 animate-spin text-neural-glow shrink-0" />
+          Personalizando tu siguiente paso…
         </div>
-      )}
-      <p className="text-sm text-neural-text/90">{stage.prompt}</p>
+      ) : (
+        <>
+          {stageNote && (
+            <div className="flex items-start gap-2 rounded-lg border border-neural-glow/20 bg-neural-glow/5 px-3 py-2">
+              <Sparkles className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
+              <p className="text-sm text-neural-glow/90 leading-relaxed">{stageNote}</p>
+            </div>
+          )}
+          <p className="text-sm text-neural-text/90">{stage.prompt}</p>
       {/* input() no tiene terminal real en el navegador: en vez de ocultar el
           valor simulado, se muestra explícitamente — el estudiante ve QUÉ
           escribe el usuario simulado, nunca un dato que aparece de la nada. */}
@@ -288,7 +318,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
           del propio ejercicio (mismo criterio que la escalera de remediación:
           más acompañamiento antes de ofrecer la respuesta, nunca en su lugar). */}
-      {!done && !showSolution && attempts >= 2 && stage.workedExample && (
+      {!done && !showSolution && attempts >= workedExampleThreshold && stage.workedExample && (
         <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
           <div className="flex items-center gap-2">
             <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
@@ -311,6 +341,8 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
           <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">Solución</p>
           <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.solutionCode}</pre>
         </div>
+      )}
+        </>
       )}
     </div>
   )
