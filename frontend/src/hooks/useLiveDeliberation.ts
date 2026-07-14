@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useRuntimeTrace, type RuntimeEvento } from './useRuntimeTrace'
+import { useRuntimeTrace, type RuntimeEvento, type RuntimePasoTraza } from './useRuntimeTrace'
 
 // Traduce los Domain Events reales del runtime (RFC-0003 §4) a texto legible
 // para el estudiante — nunca datos simulados: cada línea viene de un evento
@@ -31,7 +31,10 @@ function agenteDe(autor: unknown): string {
   return CAPACIDAD_LABEL[key] ?? (key ? `Agente ${key}` : 'El sistema')
 }
 
-function describir(evento: RuntimeEvento, key: string): LiveDeliberationEvent | null {
+/** Exportada para reutilizarse fuera de la espera en vivo — el Dashboard de
+ *  investigación (Pilar 5) narra la MISMA traza ya persistida, sin sondeo,
+ *  con exactamente esta traducción (nunca una segunda versión del texto). */
+export function describir(evento: RuntimeEvento, key: string): LiveDeliberationEvent | null {
   const d = evento.datos
   const asunto = typeof d.asunto === 'string' ? d.asunto : ''
   switch (evento.tipo) {
@@ -58,23 +61,27 @@ function describir(evento: RuntimeEvento, key: string): LiveDeliberationEvent | 
   }
 }
 
+/** Traduce una traza completa ya persistida (sin sondeo) — misma función
+ *  `describir` que usa la espera en vivo, para que el Dashboard narre
+ *  exactamente lo mismo que ya vio el estudiante durante el diagnóstico. */
+export function traducirTraza(data: RuntimePasoTraza[] | undefined): LiveDeliberationEvent[] {
+  if (!data) return []
+  const eventos: LiveDeliberationEvent[] = []
+  for (const paso of data) {
+    for (const evento of paso.eventos) {
+      const entryId = typeof evento.datos.entry_id === 'string' ? evento.datos.entry_id : `${paso.transicion}`
+      const item = describir(evento, entryId)
+      if (item) eventos.push(item)
+    }
+  }
+  return eventos
+}
+
 /** Sondea la traza real de `sessionId` cada 2.5s mientras `enabled` — pensado
  *  para el tramo de espera de una petición HTTP en curso (diagnóstico,
  *  evaluación, orquestación de módulo). Se detiene (enabled=false) en cuanto
  *  la petición real responde. */
 export function useLiveDeliberation(sessionId: string | undefined, enabled: boolean): LiveDeliberationEvent[] {
   const { data } = useRuntimeTrace(enabled ? sessionId : undefined, 2500)
-
-  return useMemo(() => {
-    if (!data) return []
-    const eventos: LiveDeliberationEvent[] = []
-    for (const paso of data) {
-      for (const evento of paso.eventos) {
-        const entryId = typeof evento.datos.entry_id === 'string' ? evento.datos.entry_id : `${paso.transicion}`
-        const item = describir(evento, entryId)
-        if (item) eventos.push(item)
-      }
-    }
-    return eventos
-  }, [data])
+  return useMemo(() => traducirTraza(data), [data])
 }

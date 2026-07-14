@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck, ArrowRight } from 'lucide-react'
+import { Lock, CheckCircle, ChevronRight, ChevronDown, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -7,6 +7,9 @@ import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
 import { getModuleExperience } from '@/lib/experiences'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
+import { AgentDecisionTimeline } from '@/components/observability/AgentDecisionTimeline'
 import type { LearningPathItem } from '@/types/student'
 import { useEffect, useRef, useState } from 'react'
 
@@ -228,6 +231,13 @@ export default function LearningPath() {
   const generatePath = useGeneratePath()
   const { data: adaptiveDecision } = useAdaptiveDecision(courseId)
   const { data: ktStatus } = useKnowledgeTestStatus(courseId)
+  // Pilar 5 — Dashboard de investigación: la traza real de ESTA sesión
+  // (mismo session_id determinista que ya usa la espera en vivo del
+  // diagnóstico), narrada en lenguaje natural — colapsada por defecto para
+  // no competir con la tarjeta de estrategia, siempre disponible para quien
+  // quiera ver la evidencia detrás de la decisión.
+  const studentId = useAuthStore(s => s.user?.id)
+  const [showTimeline, setShowTimeline] = useState(false)
 
   // Cuenta regresivasegundos para autostart
   // RC-FINAL: 8 s — la ruta que el swarm construyó es evidencia de la tesis;
@@ -385,6 +395,20 @@ export default function LearningPath() {
             <p className="text-[11px] text-neural-muted/40 mt-1">
               Temas prioritarios: {adaptiveDecision.emphasis_topic_labels.join(', ')}.
             </p>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowTimeline(v => !v)}
+            className="mt-3 flex items-center gap-1.5 text-[11px] font-mono text-neural-violet/70 hover:text-neural-violet transition-colors"
+          >
+            <Sparkles className="h-3 w-3" />
+            {showTimeline ? 'Ocultar' : 'Ver'} cómo decidió el sistema
+            <ChevronDown className={`h-3 w-3 transition-transform ${showTimeline ? 'rotate-180' : ''}`} />
+          </button>
+          {showTimeline && courseId && studentId && (
+            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+              <AgentDecisionTimeline sessionId={sesionDelCurso(courseId, studentId)} />
+            </div>
           )}
         </div>
       )}
