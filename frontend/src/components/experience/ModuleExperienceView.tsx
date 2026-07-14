@@ -40,10 +40,15 @@ type Phase =
 
 // A1 — persistencia temporal del cursor en localStorage: reanuda tras recarga o
 // salida sin perder el avance. Provisional (S1); migrará a Misión Activa backend
-// en S3. Solo se persiste el estado reconstruible; las fases transitorias
-// (practice/decision/reinforcement) dependen de estado en memoria del paso, por
-// lo que al reanudar se vuelve al inicio del ciclo actual conservando el dominio.
-const RESUMABLE_PHASES: Phase[] = ['opening', 'reveal', 'concept', 'slice_end']
+// en S3. Solo se persiste el estado reconstruible.
+// 'practice' y 'decision' SÍ reanudan directo: ninguno de los dos depende de
+// estado efímero para renderizar (practice arranca limpia; decision solo
+// necesita `mastery`, ya persistido). 'reinforcement' y 'remediation' no —
+// dependen de qué refuerzo/peldaño estaba activo (estado en memoria, no
+// persistido) y resumir ahí en blanco rompería la pantalla; caen al concepto
+// del ciclo actual, conservando el dominio (refinamiento de experiencia, jul
+// 2026 — "si regreso atrás me reinicia la sesión" rompía la inmersión).
+const RESUMABLE_PHASES: Phase[] = ['opening', 'reveal', 'concept', 'practice', 'decision', 'slice_end']
 
 interface ExperienceCursor {
   phase: Phase
