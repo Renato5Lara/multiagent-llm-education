@@ -437,6 +437,24 @@ def seed():
             db.add(estudiante_e2e2)
             print("[OK] Estudiante E2E 2 (sin historial): estudiante.e2e2@upao.edu.pe / Student2026!")
 
+        # Tercera cuenta aislada y desechable — valida la deliberación en vivo
+        # real (useLiveDeliberation, RFC-0007 §2.1) durante el diagnóstico, el
+        # tramo de espera más largo (5 agentes LLM en cadena, 30-45s reales).
+        estudiante_e2e3 = db.query(User).filter(User.email == "estudiante.e2e3@upao.edu.pe").first()
+        if not estudiante_e2e3:
+            estudiante_e2e3 = User(
+                email="estudiante.e2e3@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Tres",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399997",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e3)
+            print("[OK] Estudiante E2E 3 (sin historial): estudiante.e2e3@upao.edu.pe / Student2026!")
+
         db.commit()
 
         # ===== COMPETENCIAS INSTITUCIONALES UPAO =====
@@ -578,7 +596,7 @@ def seed():
         # ciclo 3 — este estudiante existe únicamente para validar el
         # recorrido completo del Runtime, no para simular una carga real.
         is301 = course_map.get("IS301")
-        for e2e_student in (estudiante_e2e, estudiante_e2e2):
+        for e2e_student in (estudiante_e2e, estudiante_e2e2, estudiante_e2e3):
             if not is301 or not e2e_student:
                 continue
             existing_enroll = (

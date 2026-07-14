@@ -7,6 +7,8 @@ import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
 import { useToast } from '@/hooks/use-toast'
 import api from '@/lib/api'
 import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -261,6 +263,7 @@ export default function DiagnosticTest() {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const studentId = useAuthStore(s => s.user?.id)
 
   const submitDiagnostic = useSubmitDiagnostic()
   const generatePath = useGeneratePath()
@@ -383,6 +386,7 @@ export default function DiagnosticTest() {
           mode="diagnostic"
           diagnosticProfile={swarmProfile}
           isBackendReady={apiReady}
+          sessionId={courseId && studentId ? sesionDelCurso(courseId, studentId) : undefined}
           onComplete={handleSwarmComplete}
         />
       </div>

@@ -24,6 +24,8 @@ import { TutorPresence } from '@/components/tutor/TutorPresence'
 import type { LearningModality } from '@/types/modality'
 import { getModuleExperience } from '@/lib/experiences'
 import { ModuleExperienceView } from '@/components/experience/ModuleExperienceView'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
 
 const USE_LEARNING_JOURNEY = true
 
@@ -150,6 +152,7 @@ export default function ModuleLearningView() {
   const courseId = searchParams.get('courseId') || undefined
   const moduleTitleParam = searchParams.get('title') || undefined
   const navigate = useNavigate()
+  const studentId = useAuthStore(s => s.user?.id)
   const { toast } = useToast()
 
   // Experiencia de Módulo (patrón jul 2026): si el módulo tiene experiencia
@@ -333,6 +336,7 @@ export default function ModuleLearningView() {
           mode="module"
           moduleContext={data ? moduleContext : undefined}
           isBackendReady={!!data}
+          sessionId={courseId && studentId ? sesionDelCurso(courseId, studentId) : undefined}
           onComplete={() => setAppPhase('content')}
         />
       </div>

@@ -8,6 +8,9 @@ import PageHeader from '@/components/common/PageHeader'
 import { useToast } from '@/hooks/use-toast'
 import api from '@/lib/api'
 import { useMutation } from '@tanstack/react-query'
+import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
 
 interface Question {
     question: string
@@ -33,6 +36,7 @@ export default function Evaluation() {
     const { courseId } = useParams<{ courseId: string }>()
     const navigate = useNavigate()
     const { toast } = useToast()
+    const studentId = useAuthStore(s => s.user?.id)
 
     const [currentQuestion, setCurrentQuestion] = useState(0)
     const [answers, setAnswers] = useState<Record<number, number>>({})
@@ -165,6 +169,22 @@ export default function Evaluation() {
             <div className="max-w-2xl mx-auto text-center py-16">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto" />
                 <p className="mt-4 text-muted-foreground">Preparando preguntas...</p>
+            </div>
+        )
+    }
+
+    // Diagnosticar → Remediar/Orientar → Consenso corren en vivo tras enviar
+    // (30-45s reales): antes esto era solo un botón deshabilitado con
+    // "Enviando...", pantalla estática durante toda la espera.
+    if (submitMutation.isPending) {
+        return (
+            <div className="max-w-2xl mx-auto pt-4 pb-16 animate-in fade-in duration-500">
+                <AgentActivityPanel
+                    mode="evaluation"
+                    isBackendReady={false}
+                    sessionId={courseId && studentId ? sesionDelCurso(courseId, studentId) : undefined}
+                    onComplete={() => {}}
+                />
             </div>
         )
     }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2 } from 'lucide-react'
+import { useLiveDeliberation } from '@/hooks/useLiveDeliberation'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -40,11 +41,16 @@ export interface PathContext {
 }
 
 interface AgentActivityPanelProps {
-  mode: 'diagnostic' | 'module' | 'path'
+  mode: 'diagnostic' | 'module' | 'path' | 'evaluation'
   diagnosticProfile?: DiagnosticProfile
   moduleContext?: ModuleContext
   pathContext?: PathContext
   isBackendReady?: boolean
+  /** session_id determinista (curso:{courseId}:estudiante:{studentId}) —
+   *  habilita la deliberación en vivo real durante la cola de espera
+   *  (RFC-0007 §2.1), en vez de dejar una sola frase estática mientras dura
+   *  la petición real (30-45s: Diagnosticar → Remediar/Orientar → Consenso). */
+  sessionId?: string
   onComplete: () => void
 }
 
@@ -93,11 +99,13 @@ const MODALITY_DEFAULT_STRATEGIES: Record<string, string[]> = {
 
 /** Color de identidad por agente en la deliberación (RC-FINAL). */
 const AGENT_DOT: Record<string, string> = {
-  'Agente Diagnóstico': 'bg-neural-glow',
-  'Agente Perfil':      'bg-purple-400',
-  'Agente Adaptación':  'bg-violet-400',
-  'Agente Tutor':       'bg-orange-300',
-  'Motor de Consenso':  'bg-neural-pulse',
+  'Agente Diagnóstico':  'bg-neural-glow',
+  'Agente Perfil':       'bg-purple-400',
+  'Agente Adaptación':   'bg-violet-400',
+  'Agente Tutor':        'bg-orange-300',
+  'Agente Remediación':  'bg-amber-400',
+  'Agente Orientador':   'bg-cyan-300',
+  'Motor de Consenso':   'bg-neural-pulse',
 }
 
 const LEVEL_LABEL: Record<string, string> = {
@@ -133,6 +141,20 @@ function getDiagnosticMessages(p: DiagnosticProfile) {
     { agent: 'Agente Adaptación',  text: strategyMsg[p.dominant] || 'Seleccionando estrategia de contenido adaptativo.' },
     { agent: 'Agente Tutor',       text: tutorMsg[p.dominant] || 'Ajustando parámetros del tutor IA.' },
     { agent: 'Motor de Consenso',  text: 'Consenso alcanzado. Ruta multimodal aprobada. Iniciando generación de contenido adaptativo.' },
+  ]
+}
+
+/** Modo 'evaluation' — mientras se corrige el intento real: Diagnosticar
+ *  interpreta las respuestas, Remediar u Orientar deciden la estrategia según
+ *  el resultado, y Consenso aprueba la decisión (mismo flujo real que ya
+ *  corre en el submit — no es un modo nuevo del dominio, solo su narración). */
+function getEvaluationMessages() {
+  return [
+    { agent: 'Agente Diagnóstico', text: 'Interpretando tus respuestas: cuántas fueron correctas y en qué tema.' },
+    { agent: 'Agente Remediación', text: 'Si el resultado muestra vacíos, preparo un refuerzo antes de seguir.' },
+    { agent: 'Agente Orientador',  text: 'Si el resultado es sólido, propongo avanzar al siguiente contenido.' },
+    { agent: 'Agente Tutor',       text: 'Actualizando qué explicarte según lo que acabas de demostrar.' },
+    { agent: 'Motor de Consenso',  text: 'Comparando las propuestas y aprobando la estrategia definitiva.' },
   ]
 }
 
@@ -183,13 +205,16 @@ export function AgentActivityPanel({
   moduleContext,
   pathContext,
   isBackendReady = true,
+  sessionId,
   onComplete,
 }: AgentActivityPanelProps) {
   const messages = mode === 'diagnostic' && diagnosticProfile
     ? getDiagnosticMessages(diagnosticProfile)
     : mode === 'path'
       ? getPathMessages(pathContext)
-      : getModuleMessages(moduleContext)
+      : mode === 'evaluation'
+        ? getEvaluationMessages()
+        : getModuleMessages(moduleContext)
 
   const [agents, setAgents] = useState<AgentState[]>(
     AGENT_DEFS.map(d => ({ id: d.id, name: d.name, status: 'waiting' as AgentStatus, progress: 0, duration: d.duration }))
@@ -200,6 +225,11 @@ export function AgentActivityPanel({
   const timersRef    = useRef<ReturnType<typeof setTimeout>[]>([])
   const onCompleteRef = useRef(onComplete)
   useEffect(() => { onCompleteRef.current = onComplete }, [onComplete])
+
+  // Deliberación en vivo real (RFC-0007 §2.1): solo sondea mientras la
+  // narración local ya terminó y la petición real sigue en curso — es
+  // exactamente el tramo que antes quedaba con una sola frase estática.
+  const liveEvents = useLiveDeliberation(sessionId, animationDone && !isBackendReady)
 
   // Run agent animation timeline once on mount
   useEffect(() => {
@@ -349,14 +379,18 @@ export function AgentActivityPanel({
             ? 'Preparando tu experiencia de aprendizaje'
             : mode === 'path'
               ? 'Los agentes están construyendo tu ruta'
-              : 'Analizando tu perfil de aprendizaje'}
+              : mode === 'evaluation'
+                ? 'Corrigiendo tu evaluación'
+                : 'Analizando tu perfil de aprendizaje'}
         </h2>
         <p className="text-neural-muted/70 text-sm mt-1">
           {mode === 'module'
             ? 'Los agentes están adaptando este módulo para ti'
             : mode === 'path'
               ? 'Debaten tu diagnóstico hasta llegar a un consenso'
-              : 'Los agentes están procesando tu diagnóstico'}
+              : mode === 'evaluation'
+                ? 'Los agentes deciden si reforzar o avanzar según tu resultado'
+                : 'Los agentes están procesando tu diagnóstico'}
         </p>
       </div>
 
@@ -436,19 +470,40 @@ export function AgentActivityPanel({
         ))}
       </div>
 
-      {/* Waiting for backend indicator (module mode only, after animation) */}
+      {/* Tramo de espera real (la petición sigue en curso tras la narración
+          local): si hay traza real disponible, se muestra en vivo — nunca
+          una frase estática repitiéndose durante 30-40s. */}
       {animationDone && !isBackendReady && (
-        <div className="glass-panel rounded-xl px-5 py-3 flex items-center gap-3">
-          <span className="relative flex h-1.5 w-1.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-glow" />
-          </span>
-          <p className="text-xs text-neural-muted">
-            {mode === 'path'
-              ? 'Materializando la ruta que los agentes acordaron...'
-              : 'Optimizando el contenido final para tu perfil...'}
-          </p>
-        </div>
+        liveEvents.length > 0 ? (
+          <div className="glass-panel rounded-xl p-4 space-y-2 max-h-[180px] overflow-y-auto">
+            <p className="text-[9px] font-mono text-neural-muted/40 tracking-[0.2em] uppercase mb-1">
+              Sigue en curso — traza real del runtime
+            </p>
+            {liveEvents.map(ev => (
+              <div key={ev.key} className="flex items-start gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                <span className={`mt-1.5 inline-flex rounded-full h-1.5 w-1.5 shrink-0 ${
+                  ev.isConsensus ? 'bg-neural-pulse' : AGENT_DOT[ev.agent] ?? 'bg-neural-glow'
+                }`} />
+                <p className="text-xs text-neural-muted/80 leading-snug">
+                  <span className="text-neural-glow/70 font-mono text-[10px] uppercase mr-1">{ev.agent}</span>
+                  {ev.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="glass-panel rounded-xl px-5 py-3 flex items-center gap-3">
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-glow" />
+            </span>
+            <p className="text-xs text-neural-muted">
+              {mode === 'path'
+                ? 'Materializando la ruta que los agentes acordaron...'
+                : 'Optimizando el contenido final para tu perfil...'}
+            </p>
+          </div>
+        )
       )}
     </div>
   )
