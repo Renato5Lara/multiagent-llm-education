@@ -136,11 +136,11 @@ function getDiagnosticMessages(p: DiagnosticProfile) {
   }
 
   return [
-    { agent: 'Agente Diagnóstico', text: `Diagnóstico completado. ${p.knownCount}/8 temas dominados. Nivel previo: ${level}.` },
-    { agent: 'Agente Perfil',      text: `Perfil ${style} detectado (conf. ${confPct}%)${p.secondary ? `. Modalidad secundaria: ${MODALITY_LABEL_ADJ[p.secondary] ?? p.secondary}` : ''}.` },
-    { agent: 'Agente Adaptación',  text: strategyMsg[p.dominant] || 'Seleccionando estrategia de contenido adaptativo.' },
-    { agent: 'Agente Tutor',       text: tutorMsg[p.dominant] || 'Ajustando parámetros del tutor IA.' },
-    { agent: 'Motor de Consenso',  text: 'Consenso alcanzado. Ruta multimodal aprobada. Iniciando generación de contenido adaptativo.' },
+    { agent: 'Agente Diagnóstico', text: `Terminé de leer tus respuestas: ${p.knownCount}/8 temas dominados, nivel previo ${level}.` },
+    { agent: 'Agente Perfil',      text: `Yo me fijé en CÓMO respondiste, no en cuánto sabías: perfil ${style} (conf. ${confPct}%)${p.secondary ? `, con ${MODALITY_LABEL_ADJ[p.secondary] ?? p.secondary} como apoyo` : ''}.` },
+    { agent: 'Agente Adaptación',  text: `Con esos dos datos, propongo la estrategia: ${(strategyMsg[p.dominant] || 'contenido adaptativo').toLowerCase()}` },
+    { agent: 'Agente Tutor',       text: `De acuerdo — yo me encargo de que se sienta así: ${(tutorMsg[p.dominant] || 'ajusto mis explicaciones a ese perfil').toLowerCase()}` },
+    { agent: 'Motor de Consenso',  text: 'Las cuatro propuestas son consistentes entre sí. Consenso alcanzado — generando tu ruta ahora.' },
   ]
 }
 
@@ -150,11 +150,11 @@ function getDiagnosticMessages(p: DiagnosticProfile) {
  *  corre en el submit — no es un modo nuevo del dominio, solo su narración). */
 function getEvaluationMessages() {
   return [
-    { agent: 'Agente Diagnóstico', text: 'Interpretando tus respuestas: cuántas fueron correctas y en qué tema.' },
-    { agent: 'Agente Remediación', text: 'Si el resultado muestra vacíos, preparo un refuerzo antes de seguir.' },
-    { agent: 'Agente Orientador',  text: 'Si el resultado es sólido, propongo avanzar al siguiente contenido.' },
-    { agent: 'Agente Tutor',       text: 'Actualizando qué explicarte según lo que acabas de demostrar.' },
-    { agent: 'Motor de Consenso',  text: 'Comparando las propuestas y aprobando la estrategia definitiva.' },
+    { agent: 'Agente Diagnóstico', text: 'Ya interpreté tus respuestas: reviso cuántas fueron correctas y en qué tema, para pasarles el resultado a los demás.' },
+    { agent: 'Agente Remediación', text: 'Yo reviso ese resultado por si hay vacíos — si los hay, ya tengo listo un refuerzo antes de que sigas.' },
+    { agent: 'Agente Orientador',  text: 'Y yo reviso lo contrario: si el resultado es sólido, propongo saltar directo al siguiente contenido, sin repetir lo que ya dominas.' },
+    { agent: 'Agente Tutor',       text: 'Con lo que decidan entre ustedes dos, yo actualizo qué y cómo explicarte de ahora en adelante.' },
+    { agent: 'Motor de Consenso',  text: 'Solo una de las dos propuestas puede ganar — comparando evidencia y aprobando la estrategia definitiva.' },
   ]
 }
 
@@ -165,11 +165,11 @@ function getModuleMessages(ctx?: ModuleContext) {
     ?? 'actividades adaptativas'
 
   return [
-    { agent: 'Agente Diagnóstico', text: 'Recuperando tu perfil de aprendizaje.' },
-    { agent: 'Agente Perfil',      text: `Detectando modalidad dominante: ${modLabel}.` },
-    { agent: 'Agente Adaptación',  text: `Priorizando ${strats}.` },
-    { agent: 'Agente Tutor',       text: 'Preparando ejemplos personalizados.' },
-    { agent: 'Motor de Consenso',  text: 'Estrategia de aprendizaje aprobada.' },
+    { agent: 'Agente Diagnóstico', text: 'Recuperando tu perfil de aprendizaje para preparar este módulo.' },
+    { agent: 'Agente Perfil',      text: `Con ese perfil, la modalidad dominante sigue siendo ${modLabel} — mantengo la misma lectura.` },
+    { agent: 'Agente Adaptación',  text: `Entonces priorizo ${strats} para este contenido específico.` },
+    { agent: 'Agente Tutor',       text: 'Recibido — preparo los ejemplos de este módulo con ese mismo criterio.' },
+    { agent: 'Motor de Consenso',  text: 'Todo consistente con tu ruta ya aprobada. Estrategia confirmada para este módulo.' },
   ]
 }
 

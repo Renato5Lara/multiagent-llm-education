@@ -252,6 +252,15 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
   const advanceCycle = useCallback((pendingGain = 0) => {
     if (!cycle) return
     const finalMastery = Math.min(1, Math.max(0, (mastery[cycle.conceptId] ?? 0) + pendingGain))
+    // PUNTO DE INTEGRACIÓN FUTURA (evaluación continua, sin implementar
+    // todavía): este es el momento exacto en que un ciclo cierra con un
+    // dominio real medido (intentos, pistas, tiempo — no un puntaje
+    // inventado). Hoy `recordEvidence` solo persiste en localStorage y
+    // alimenta el mapa de dominio local del estudiante. El día que se decida
+    // conectar esta señal al Runtime real, el destino es
+    // `runtime_bridge.registrar_evidencia_evaluacion` (mismo contrato que ya
+    // usa la evaluación de módulo) — la cadencia (cada ciclo vs. acumulado)
+    // es una decisión de diseño pendiente, no una que deba resolverse aquí.
     recordEvidence({
       type: 'cycle_completed',
       moduleId,

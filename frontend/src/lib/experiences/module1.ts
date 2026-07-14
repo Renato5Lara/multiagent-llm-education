@@ -53,6 +53,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
       },
       concept: {
         title: '¿Qué hace precisa a una instrucción?',
+        pythonBridge: {
+          label: 'Esto ya es Python',
+          code: 'untar(herramienta="cuchillo", ingrediente="mantequilla", gramos=10, lado="superior")',
+          explanation:
+            'Fíjate: la instrucción precisa del pan («toma el cuchillo, unta 10 gramos...») y esta línea de Python dicen exactamente lo mismo — qué hacer, con qué, cuánto y dónde. Una función en Python es, ni más ni menos, una instrucción precisa con nombre.',
+        },
         variants: {
           visual: {
             medium: 'infografia',

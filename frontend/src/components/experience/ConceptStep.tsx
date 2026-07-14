@@ -6,6 +6,7 @@ import { useRef } from 'react'
 import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
+import { PythonBridge } from './PythonBridge'
 import type { CycleConcept, ConceptVariant, TheoryMedium } from '@/types/moduleExperience'
 import type { LearningModality } from '@/types/modality'
 
@@ -102,6 +103,10 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
       {variant.sourceNote && (
         <p className="text-xs text-neural-muted/60 italic px-1">{variant.sourceNote}</p>
       )}
+
+      {/* Puente a Python del propio ejemplo de la teoría — el estudiante ve
+          código real mientras aprende el concepto, no solo al final. */}
+      {concept.pythonBridge && <PythonBridge bridge={concept.pythonBridge} />}
 
       <div className="flex justify-end">
         <Button onClick={() => onContinue(Date.now() - startRef.current)} className="gap-2">

@@ -48,6 +48,12 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
       },
       concept: {
         title: '¿Qué hace evaluable a una condición?',
+        pythonBridge: {
+          label: 'Esto ya es Python',
+          code: 'if temperatura > 24:\n    apagar_calefaccion()\nelse:\n    mantener_calefaccion()',
+          explanation:
+            'El termostato de 1883 que acabas de leer y el paraguas de esta lección resuelven el mismo problema que esta línea: una condición medible (temperatura > 24) y una acción para cada resultado. Eso es un `if`/`else` — nada más.',
+        },
         variants: {
           visual: {
             medium: 'infografia',

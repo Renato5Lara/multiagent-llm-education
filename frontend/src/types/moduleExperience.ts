@@ -48,6 +48,9 @@ export interface ConceptVariant {
 export interface CycleConcept {
   title: string
   variants: Record<LearningModality, ConceptVariant>
+  /** Puente a Python del PROPIO ejemplo de la teoría (no el de la práctica) —
+   *  aparece durante el desarrollo del concepto, antes de la actividad. */
+  pythonBridge?: PythonBridge
 }
 
 // ── Práctica universal (idéntica para todas las modalidades) ──────────────────
