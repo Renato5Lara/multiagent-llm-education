@@ -175,7 +175,12 @@ function TransitionScreen({ onContinue }: { onContinue: () => void }) {
 // DoneScreen — tras el diagnóstico:
 //   sin pretestNext → va a la ruta con ?autostart (el estudiante la VE y
 //   la lanzadera la lleva al Módulo 1 automáticamente desde el backend).
-//   con pretestNext → va al KnowledgeTest.
+//   con pretestNext → continúa AUTOMÁTICAMENTE al KnowledgeTest (Pilar 4 —
+//   diagnóstico único, jul 2026): antes exigía un clic de "Continuar con la
+//   evaluación diagnóstica →" que partía la experiencia en dos cuestionarios
+//   separados; ahora es la misma conversación continua, sin botón redundante.
+const CONTINUOUS_TRANSITION_MS = 1400
+
 function DoneScreen({
   courseId, navigate, pretestNext,
 }: {
@@ -196,6 +201,14 @@ function DoneScreen({
     })
   }
 
+  useEffect(() => {
+    if (!pretestNext) return
+    const t = setTimeout(() => {
+      navigate(`/estudiante/knowledge-test/${courseId}?continuous=true`, { replace: true })
+    }, CONTINUOUS_TRANSITION_MS)
+    return () => clearTimeout(t)
+  }, [pretestNext, courseId, navigate])
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
@@ -208,13 +221,13 @@ function DoneScreen({
         </h2>
         <p className="text-neural-muted text-sm mb-6 leading-relaxed">
           {pretestNext
-            ? 'Falta un paso: una evaluación diagnóstica de conocimientos para que tu ruta parta exactamente de lo que ya sabes.'
+            ? 'Ahora unas preguntas sobre lo que ya sabes, para que tu ruta parta exactamente de ahí.'
             : 'El swarm analizó tu perfil y construyó una ruta personalizada. Vas a verla antes de comenzar.'}
         </p>
         {pretestNext ? (
-          <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/knowledge-test/${courseId}`)}>
-            Continuar con la evaluación diagnóstica →
-          </Button>
+          <div className="flex items-center justify-center gap-2 text-sm text-neural-muted">
+            <Loader2 className="h-4 w-4 animate-spin" /> Continuando…
+          </div>
         ) : (
           <Button
             className="w-full gap-2"

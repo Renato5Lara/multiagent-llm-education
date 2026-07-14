@@ -455,6 +455,61 @@ def seed():
             db.add(estudiante_e2e3)
             print("[OK] Estudiante E2E 3 (sin historial): estudiante.e2e3@upao.edu.pe / Student2026!")
 
+        # Cuarta cuenta aislada y desechable — valida el diagnóstico único
+        # (Pilar 4, jul 2026): Onboarding → DiagnosticTest → KnowledgeTest sin
+        # el clic redundante entre ambos. Necesita estar 100% sin historial
+        # (ni diagnóstico ni pretest), por eso nunca se reutiliza e2e/e2e2/e2e3.
+        estudiante_e2e4 = db.query(User).filter(User.email == "estudiante.e2e4@upao.edu.pe").first()
+        if not estudiante_e2e4:
+            estudiante_e2e4 = User(
+                email="estudiante.e2e4@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Cuatro",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399996",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e4)
+            print("[OK] Estudiante E2E 4 (sin historial): estudiante.e2e4@upao.edu.pe / Student2026!")
+
+        # Quinta cuenta aislada y desechable — e2e4 ya no está "sin historial"
+        # después de validar el diagnóstico único una vez; esta reemplaza ese
+        # rol para la siguiente pasada, sin mutar ninguna cuenta ya usada.
+        estudiante_e2e5 = db.query(User).filter(User.email == "estudiante.e2e5@upao.edu.pe").first()
+        if not estudiante_e2e5:
+            estudiante_e2e5 = User(
+                email="estudiante.e2e5@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Cinco",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399995",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e5)
+            print("[OK] Estudiante E2E 5 (sin historial): estudiante.e2e5@upao.edu.pe / Student2026!")
+
+        # Sexta cuenta — e2e5 se usó para una pasada con el backend todavía
+        # sin reiniciar (código viejo, sin --reload); esta es la primera
+        # prueba real contra el fix ya cargado.
+        estudiante_e2e6 = db.query(User).filter(User.email == "estudiante.e2e6@upao.edu.pe").first()
+        if not estudiante_e2e6:
+            estudiante_e2e6 = User(
+                email="estudiante.e2e6@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Seis",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399994",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e6)
+            print("[OK] Estudiante E2E 6 (sin historial): estudiante.e2e6@upao.edu.pe / Student2026!")
+
         db.commit()
 
         # ===== COMPETENCIAS INSTITUCIONALES UPAO =====
@@ -596,7 +651,7 @@ def seed():
         # ciclo 3 — este estudiante existe únicamente para validar el
         # recorrido completo del Runtime, no para simular una carga real.
         is301 = course_map.get("IS301")
-        for e2e_student in (estudiante_e2e, estudiante_e2e2, estudiante_e2e3):
+        for e2e_student in (estudiante_e2e, estudiante_e2e2, estudiante_e2e3, estudiante_e2e4, estudiante_e2e5, estudiante_e2e6):
             if not is301 or not e2e_student:
                 continue
             existing_enroll = (

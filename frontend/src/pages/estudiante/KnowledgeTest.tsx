@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -83,6 +83,12 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  // Diagnóstico único (Pilar 4): cuando se llega desde DiagnosticTest en el
+  // mismo recorrido inicial, ?continuous=true salta la pantalla "listo para
+  // empezar" — mismo componente, mismas preguntas, mismo backend, solo sin
+  // el clic redundante que partía la experiencia en dos cuestionarios.
+  const [searchParams] = useSearchParams()
+  const continuous = searchParams.get('continuous') === 'true'
 
   const isPre = kind === 'pre'
   const title = isPre ? 'Evaluación Diagnóstica' : 'Post-Test'
@@ -122,6 +128,18 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
       },
     )
   }
+
+  // Auto-inicio del recorrido continuo: espera a que status.data cargue para
+  // no saltar por delante de `alreadyCompleted`/`bank_available` (mismos
+  // guardas que ya protegen el flujo manual, sin duplicarlos). Un solo
+  // intento — si el estudiante vuelve a 'intro' después (back button), el
+  // botón manual de IntroScreen sigue disponible, nunca reintenta solo.
+  useEffect(() => {
+    if (!continuous || phase !== 'intro' || !status.data) return
+    if (alreadyCompleted || !status.data.bank_available || startTest.isPending) return
+    handleStart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [continuous, phase, status.data, alreadyCompleted])
 
   const handleSubmit = () => {
     if (!attemptId) return
@@ -187,6 +205,19 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   }
 
   if (phase === 'intro') {
+    // Recorrido continuo: la pantalla "lista para empezar" nunca aparece —
+    // el useEffect de arriba ya llamó a handleStart(). Este loader solo
+    // cubre el instante real de espera (status.data / startTest en curso),
+    // nunca reemplaza el guion manual (IntroScreen sigue siendo la puerta
+    // de entrada normal fuera del recorrido continuo).
+    if (continuous) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <Loader2 className="h-6 w-6 animate-spin text-neural-glow mb-3" />
+          <p className="text-sm text-neural-muted">Continuando con tu evaluación diagnóstica…</p>
+        </div>
+      )
+    }
     return (
       <IntroScreen
         kind={kind}
