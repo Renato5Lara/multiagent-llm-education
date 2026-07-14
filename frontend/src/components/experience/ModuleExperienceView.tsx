@@ -71,17 +71,31 @@ const REINFORCEMENT_OFFER: Record<ReinforcementKind, string> = {
 /** Frase que acompaña la transición entre ciclos — nunca jerga técnica.
  *  `reinforcement` ya viene filtrado por "no visitado"; su sola presencia
  *  significa que el Runtime decidió reforzar (profundidad=fundamentos). */
-function describeAdaptation(profundidad: string | undefined, reinforcement: Reinforcement | undefined): string {
+/** Conversación pedagógica de la transición (Pilar 3 — continuidad): nombra
+ *  el concepto que el estudiante acaba de dominar y, cuando lo hay, el
+ *  siguiente — nunca "esta parte" genérico. `conceptLabel`/`nextConceptLabel`
+ *  ya existen en `LearningCycle` para otros fines (mapa de dominio); esto
+ *  solo los reutiliza en la frase, ningún dato nuevo. */
+function describeAdaptation(
+  profundidad: string | undefined,
+  reinforcement: Reinforcement | undefined,
+  conceptLabel: string,
+  nextConceptLabel: string | undefined,
+): string {
+  const concept = conceptLabel.toLowerCase()
   if (profundidad === 'aplicacion' && reinforcement) {
-    return `Ya dominaste esta parte — ${REINFORCEMENT_OFFER[reinforcement.kind]}`
+    return `Ya dominas ${concept} — ${REINFORCEMENT_OFFER[reinforcement.kind]}`
   }
   if (reinforcement) {
-    return `Veo que todavía necesitas un poco más de práctica con esto. ${REINFORCEMENT_OFFER[reinforcement.kind]}`
+    return `Veo que ${concept} todavía te está costando un poco. ${REINFORCEMENT_OFFER[reinforcement.kind]}`
   }
   if (profundidad === 'fundamentos') {
-    return 'Vamos a reforzar esta idea un poco más antes de seguir.'
+    return `Vamos a reforzar ${concept} un poco más antes de seguir.`
   }
-  return 'Perfecto, ya dominaste esta parte. Continuemos con el siguiente desafío.'
+  if (nextConceptLabel) {
+    return `Ya dominas ${concept}. No cambiamos de tema — vamos a construir sobre esa misma idea: ${nextConceptLabel.toLowerCase()}.`
+  }
+  return `Perfecto, ya dominas ${concept}. Continuemos con el siguiente desafío.`
 }
 
 /** Cuánto queda visible la frase de adaptación antes de transicionar — tiempo
@@ -533,7 +547,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
           // pausa de lectura breve antes de transicionar, nunca un toast aparte.
-          setAdaptationMessage(describeAdaptation(profundidad, reinforcement))
+          setAdaptationMessage(describeAdaptation(
+            profundidad, reinforcement, cycle.conceptLabel,
+            definition.cycles[cycleIndex + 1]?.conceptLabel,
+          ))
           adaptationTimeoutRef.current = setTimeout(() => {
             if (reinforcement) {
               setAutoReinforcement(true)
@@ -547,7 +564,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         onError: () => commitAdvance(),
       },
     )
-  }, [commitAdvance, courseId, cycle, mastery, moduleId, practiceOutcome, pythonOutcome, remediationLevel, submitCycleEvidence, visitedReinforcements])
+  }, [commitAdvance, courseId, cycle, cycleIndex, definition, mastery, moduleId, practiceOutcome, pythonOutcome, remediationLevel, submitCycleEvidence, visitedReinforcements])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────
