@@ -72,6 +72,9 @@ const REINFORCEMENT_OFFER: Record<ReinforcementKind, string> = {
  *  `reinforcement` ya viene filtrado por "no visitado"; su sola presencia
  *  significa que el Runtime decidió reforzar (profundidad=fundamentos). */
 function describeAdaptation(profundidad: string | undefined, reinforcement: Reinforcement | undefined): string {
+  if (profundidad === 'aplicacion' && reinforcement) {
+    return `Ya dominaste esta parte — ${REINFORCEMENT_OFFER[reinforcement.kind]}`
+  }
   if (reinforcement) {
     return `Veo que todavía necesitas un poco más de práctica con esto. ${REINFORCEMENT_OFFER[reinforcement.kind]}`
   }
@@ -490,9 +493,19 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
           const diseno = data?.runtime_decision?.diseno
           const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
+          // La adaptación ya no responde solo a la dificultad: "aplicacion"
+          // es la propuesta REAL de Orientar cuando Diagnosticar marcó el
+          // concepto como dominado (runtime/domain/orientar/productor.py) —
+          // antes se descartaba en silencio. Ahora, igual que "fundamentos"
+          // inserta refuerzo por dificultad, "aplicacion" inserta el reto
+          // (el único refuerzo pensado como desafío, nunca como repaso) —
+          // mismo mecanismo de auto-refuerzo ya existente, ninguna decisión
+          // ni concepto nuevo en el Runtime.
           const reinforcement = profundidad === 'fundamentos'
             ? cycle.decision?.reinforcements.find(r => !visitedReinforcements.has(r.kind))
-            : undefined
+            : profundidad === 'aplicacion'
+              ? cycle.decision?.reinforcements.find(r => r.kind === 'reto' && !visitedReinforcements.has(r.kind))
+              : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
           // pausa de lectura breve antes de transicionar, nunca un toast aparte.
