@@ -137,6 +137,12 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
           'Acabas de descubrir una idea central: una máquina hace exactamente lo que le indicas — ni más, ni menos. Cuando escribas tus primeras líneas en Python, estarás haciendo lo mismo que hiciste aquí: darle instrucciones claras para que pueda ejecutarlas.',
         ],
       },
+      pythonBridge: {
+        label: 'Esto ya es Python',
+        code: 'avanzar(pasos=4)\ngirar(grados=90, direccion="izquierda")\ndetenerse()\nextender_mano()\ngirar_manija()',
+        explanation:
+          'La secuencia que acabas de construir es, literalmente, un programa: cada línea es una instrucción precisa que Python ejecuta de arriba hacia abajo, exactamente en el orden en que la escribiste — ni una línea más, ni una menos de lo que dijiste.',
+      },
       decision: {
         question: 'Ya entiendes lo que hace precisa una instrucción — y por qué eso mismo aplica cuando programas. ¿Cómo quieres consolidarlo?',
         reinforcements: [

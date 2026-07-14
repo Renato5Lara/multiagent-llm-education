@@ -129,6 +129,12 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
           'Acabas de construir tu primera estructura de control: una condición evaluable con una acción para cada resultado. Eso es exactamente un `if`/`else` en Python.',
         ],
       },
+      pythonBridge: {
+        label: 'Esto ya es Python',
+        code: 'if sensor_lluvia.detecta_gotas():\n    abrir_paraguas()\nelse:\n    mantener_cerrado()',
+        explanation:
+          'La condición que acabas de evaluar es exactamente lo que Python llama `if`: una pregunta que solo puede ser verdadera o falsa. `else` es lo que hiciste con «si el sensor marca NO» — la acción para el otro caso.',
+      },
       decision: {
         question:
           'Ya entiendes qué hace evaluable a una condición — y por qué eso mismo aplica cuando programas con `if`. ¿Cómo quieres consolidarlo?',

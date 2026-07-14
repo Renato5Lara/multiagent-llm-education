@@ -140,6 +140,21 @@ export interface RemediationLadder {
   steps: RemediationStep[]
 }
 
+// ── Puente a Python ─────────────────────────────────────────────────────────────
+// El estudiante resuelve la analogía (robot, sensor, etc.) pero pasa buena
+// parte del módulo sin sentir que está aprendiendo Python. El puente conecta
+// EXACTAMENTE lo que acaba de construir con su forma real en Python, en el
+// momento en que la analogía ya está resuelta (refinamiento de experiencia,
+// jul 2026 — prioridad del usuario, no un concepto nuevo del dominio).
+export interface PythonBridge {
+  /** Ej. "Esto ya es Python". */
+  label: string
+  /** Código real, ejecutable — nunca pseudocódigo disfrazado. */
+  code: string
+  /** Une la analogía recién resuelta con el fragmento de arriba. */
+  explanation: string
+}
+
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
 
 export interface LearningCycle {
@@ -154,6 +169,8 @@ export interface LearningCycle {
   /** Escalera de remediación del ciclo. Sin ella, agotar los intentos revela la
    *  solución en la propia práctica (comportamiento previo a la política). */
   remediation?: RemediationLadder
+  /** Se muestra justo al resolver la práctica — el momento "esto era Python". */
+  pythonBridge?: PythonBridge
 }
 
 // ── Apertura de curiosidad ─────────────────────────────────────────────────────

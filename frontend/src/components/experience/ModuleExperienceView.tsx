@@ -12,6 +12,7 @@ import { CuriosityOpening } from './CuriosityOpening'
 import { ConceptStep } from './ConceptStep'
 import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
+import { PythonBridge } from './PythonBridge'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
@@ -622,6 +623,9 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             revealOnExhaust={!cycle.remediation}
             onExhausted={handlePracticeExhausted}
           />
+          {practiceOutcome && cycle.pythonBridge && (
+            <PythonBridge bridge={cycle.pythonBridge} />
+          )}
           {practiceOutcome && (
             <div className="flex justify-end animate-in fade-in duration-300">
               <Button onClick={handlePracticeContinue} className="gap-2">
