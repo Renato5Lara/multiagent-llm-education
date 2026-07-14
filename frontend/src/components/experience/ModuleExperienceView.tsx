@@ -38,9 +38,21 @@ type Phase =
   | 'concept'
   | 'practice'
   | 'decision'
+  | 'adapting'
   | 'reinforcement'
   | 'remediation'
   | 'slice_end'
+
+// Narración real (no agentes inventados, sin cifras de confianza fabricadas):
+// describe el mismo tramo Adaptar que ya corre en el backend mientras la
+// mutación de cycle-evidence está en vuelo. Si la respuesta llega rápido,
+// esta fase apenas se ve — si tarda, el tiempo de espera se siente como
+// parte del aprendizaje, no como una pantalla de carga vacía.
+const ADAPTING_STEPS = [
+  'Analizando cómo resolviste el reto',
+  'Detectando qué tanto dominas el concepto',
+  'Eligiendo la mejor forma de continuar',
+] as const
 
 // A1 — persistencia temporal del cursor en localStorage: reanuda tras recarga o
 // salida sin perder el avance. Provisional (S1); migrará a Misión Activa backend
@@ -186,6 +198,13 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // Desenlace de la práctica del ciclo actual — habilita Continuar SIEMPRE
   // (nunca-bloquear), incluso cuando se mostró la solución.
   const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(null)
+  // La UI obedece al Runtime (no solo lo notifica): cuando `profundidad`
+  // devuelta por cycle-evidence es "fundamentos", se inserta automáticamente
+  // un refuerzo del propio ciclo (mismo mecanismo que el menú de decisión, sin
+  // agente ni fase nueva) antes de continuar. Esta bandera distingue ese
+  // origen del refuerzo elegido voluntariamente, para que al terminar continúe
+  // el ciclo en vez de volver al menú.
+  const [autoReinforcement, setAutoReinforcement] = useState(false)
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
@@ -255,6 +274,24 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     }
   }, [moduleId, definition, mastery, onFinish, onExit])
 
+  // Limpia TODO el estado del ciclo completado y avanza al siguiente (o al
+  // cierre). Separado de `advanceCycle` para que insertar un refuerzo
+  // automático (decisión del Runtime) pueda posponer este commit sin
+  // duplicar la lógica de transición.
+  const commitAdvance = useCallback(() => {
+    setActiveReinforcement(null)
+    setVisitedReinforcements(new Set())
+    setRemediationLevel(0)
+    setPracticeOutcome(null)   // ← crítico: reset entre ciclos
+    setAutoReinforcement(false)
+    if (cycleIndex + 1 < definition.cycles.length) {
+      setCycleIndex(i => i + 1)
+      setPhase('concept')
+    } else {
+      setPhase('slice_end')
+    }
+  }, [cycleIndex, definition.cycles.length])
+
   /** @param pendingGain ganancia que el llamador acaba de aplicar con bumpMastery.
    *  El estado `mastery` de este closure es el ANTERIOR al bump (React agrupa las
    *  actualizaciones), así que sin sumarla aquí el evento `cycle_completed`
@@ -268,6 +305,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       conceptId: cycle.conceptId,
       detail: { cycleId: cycle.id, mastery: Math.round(finalMastery * 100) / 100 },
     })
+    if (!courseId) {
+      commitAdvance()
+      return
+    }
     // Evaluación continua (refinamiento de experiencia, jul 2026): el cierre
     // de CADA ciclo entra al Runtime real, no solo al mapa de dominio local
     // — mismo contrato que ya usa la Evaluación de Módulo
@@ -276,50 +317,51 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     // necesitado la escalera de remediación (remediationLevel > 0) cuenta
     // como la práctica agotada sin ayuda — el crédito reducido que ya
     // reconoce LEVEL_GAIN_FACTOR localmente es la misma señal que el
-    // Runtime necesita ver como "no dominada". Fire-and-forget: nunca
-    // bloquea el avance del estudiante.
-    if (courseId) {
-      const solved = remediationLevel === 0 && !!practiceOutcome && !practiceOutcome.solutionShown
-      const attempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
-      submitCycleEvidence.mutate(
-        { courseId, competencia: cycle.conceptId, attempts, solved },
-        {
-          // Capa de presentación pedagógica (no un agente nuevo): reutiliza
-          // la MISMA Entrega real que el Runtime acaba de devolver — nunca
-          // texto inventado. Sin esto, la evaluación continua era invisible:
-          // el estudiante nunca sabía que el sistema lo observó al cerrar el
-          // ciclo. No bloquea el avance — llega después, como confirmación.
-          onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
-            const diseno = data?.runtime_decision?.diseno
-            if (!diseno) return
+    // Runtime necesita ver como "no dominada".
+    //
+    // La UI ahora OBEDECE la decisión, no solo la notifica: la fase
+    // 'adapting' espera la respuesta real (nunca bloquea de forma
+    // permanente — un error también resuelve el avance). Si `profundidad`
+    // es "fundamentos" (mismo vocabulario que ya usan bloom_target_desde_
+    // entrega/decision_adaptativa en el backend), se inserta un refuerzo
+    // del propio ciclo antes de continuar — reutiliza el mecanismo de
+    // refuerzos ya existente (PED-005), nunca uno nuevo.
+    const solved = remediationLevel === 0 && !!practiceOutcome && !practiceOutcome.solutionShown
+    const attempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
+    setPhase('adapting')
+    submitCycleEvidence.mutate(
+      { courseId, competencia: cycle.conceptId, attempts, solved },
+      {
+        onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+          const diseno = data?.runtime_decision?.diseno
+          const profundidad = diseno?.profundidad
+          if (diseno) {
             const modalidad = String(diseno.modalidad ?? '')
-            const profundidad = diseno.profundidad === 'fundamentos'
+            const profundidadLabel = profundidad === 'fundamentos'
               ? 'reforzando fundamentos antes de seguir'
               : 'avanzando con práctica'
             toast({
               title: '🧠 El sistema ajustó tu estrategia',
               description: modalidad
-                ? `Modalidad: ${modalidad} · ${profundidad}`
-                : profundidad,
+                ? `Modalidad: ${modalidad} · ${profundidadLabel}`
+                : profundidadLabel,
             })
-          },
+          }
+          const reinforcement = profundidad === 'fundamentos'
+            ? cycle.decision?.reinforcements.find(r => !visitedReinforcements.has(r.kind))
+            : undefined
+          if (reinforcement) {
+            setAutoReinforcement(true)
+            setActiveReinforcement(reinforcement)
+            setPhase('reinforcement')
+          } else {
+            commitAdvance()
+          }
         },
-      )
-    }
-    // Limpia TODO el estado del ciclo completado antes de avanzar.
-    // Sin esto, practiceOutcome del ciclo anterior puede hacer que el
-    // botón "Continuar" aparezca instantáneamente al montar el siguiente ciclo.
-    setActiveReinforcement(null)
-    setVisitedReinforcements(new Set())
-    setRemediationLevel(0)
-    setPracticeOutcome(null)   // ← crítico: reset entre ciclos
-    if (cycleIndex + 1 < definition.cycles.length) {
-      setCycleIndex(i => i + 1)
-      setPhase('concept')
-    } else {
-      setPhase('slice_end')
-    }
-  }, [courseId, cycle, cycleIndex, definition.cycles.length, mastery, moduleId, practiceOutcome, remediationLevel, submitCycleEvidence, toast])
+        onError: () => commitAdvance(),
+      },
+    )
+  }, [commitAdvance, courseId, cycle, mastery, moduleId, practiceOutcome, remediationLevel, submitCycleEvidence, toast, visitedReinforcements])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────
@@ -470,8 +512,15 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     if (firstView) bumpMastery(cycle.conceptId, REINFORCEMENT_GAIN)
     setVisitedReinforcements(prev => new Set(prev).add(kind))
     setActiveReinforcement(null)
-    setPhase('decision')
-  }, [activeReinforcement, bumpMastery, cycle, moduleId, visitedReinforcements])
+    // Refuerzo auto-insertado por la decisión del Runtime (profundidad =
+    // fundamentos): a diferencia del refuerzo voluntario del menú, aquí no
+    // hay a qué menú volver — el ciclo ya se cerró, así que continúa.
+    if (autoReinforcement) {
+      commitAdvance()
+    } else {
+      setPhase('decision')
+    }
+  }, [activeReinforcement, autoReinforcement, bumpMastery, commitAdvance, cycle, moduleId, visitedReinforcements])
 
   // ── Escalera de remediación ──────────────────────────────────────────────────
 
@@ -533,6 +582,34 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           <Button className="w-full gap-2" onClick={() => setPhase('concept')}>
             Comenzar →
           </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'adapting') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 animate-in fade-in duration-300">
+        <div className="glass-panel rounded-2xl p-8 max-w-md w-full text-center space-y-5">
+          <span className="relative flex h-2.5 w-2.5 mx-auto">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-pulse opacity-60" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-neural-pulse" />
+          </span>
+          <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-pulse">
+            Personalizando tu siguiente paso
+          </p>
+          <ul className="space-y-2.5 text-left">
+            {ADAPTING_STEPS.map((step, i) => (
+              <li
+                key={step}
+                className="text-sm text-neural-text/80 flex items-center gap-2.5 animate-in fade-in slide-in-from-left-1"
+                style={{ animationDelay: `${i * 450}ms`, animationDuration: '400ms', animationFillMode: 'both' }}
+              >
+                <span className="text-neural-glow shrink-0">✓</span>
+                {step}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     )
