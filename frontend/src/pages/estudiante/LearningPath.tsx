@@ -24,6 +24,22 @@ function getLevelLabel(xp: number) {
   return [...XP_LEVELS].reverse().find(l => xp >= l.min)?.label ?? 'Principiante'
 }
 
+/** Misma clave que `experience-cursor:${moduleId}` en ModuleExperienceView —
+ *  auditoría de continuidad, jul 2026: esta tarjeta decía "Comenzar misión"
+ *  incluso con progreso real guardado, mientras el Dashboard (para la MISMA
+ *  misión) decía "Continuar misión" — un estudiante que ya avanzó veía
+ *  "Comenzar" y pensaba que perdió su trabajo. Lectura, nunca escritura. */
+function hasSavedProgress(moduleId: string): boolean {
+  try {
+    const raw = localStorage.getItem(`experience-cursor:${moduleId}`)
+    if (!raw) return false
+    const saved = JSON.parse(raw) as { phase?: string }
+    return !!saved.phase && saved.phase !== 'opening'
+  } catch {
+    return false
+  }
+}
+
 const MODALITY_DARK: Record<string, string> = {
   visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
   reading:     'border-green-400/40  text-green-300  bg-green-400/10',
@@ -88,6 +104,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
   const isCompleted = item.status === 'completed'
   const isAvailable = item.status === 'available'
   const isLocked = item.status === 'locked'
+  const inProgress = isAvailable && hasSavedProgress(item.id)
 
   // Una misión disponible o completada puede abrirse; una completada se
   // reingresa como repaso. Solo las bloqueadas no son navegables.
@@ -171,7 +188,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
                 className="gap-1.5 h-8 text-xs"
                 onClick={handleClick}
               >
-                Comenzar misión
+                {inProgress ? 'Continuar misión' : 'Comenzar misión'}
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
