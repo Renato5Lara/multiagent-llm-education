@@ -27,6 +27,7 @@ from typing import Mapping
 
 from runtime.domain.shared.causal import (
     competencia_de_decision,
+    modalidad_estudiante_de_decision,
     senal_tutorizar_de_decision,
 )
 from runtime.kernel.state.entries import (
@@ -55,6 +56,14 @@ DISENO_POR_ACCION: Mapping[str, Mapping] = {
         ),
     },
 }
+
+# Vocabulario ya existente (diagnostic_results.dominant_modality, frontend
+# LearningModality) — reforzar honra la modalidad REAL del estudiante
+# cuando el Boundary la adjuntó al fact original (RFC-0002 §3: Adaptar lee
+# "modelo del estudiante"); "visual" en DISENO_POR_ACCION sigue siendo el
+# valor por defecto cuando no hay dato (estudiante legacy, fact anterior a
+# esta pieza) — nunca un vocabulario nuevo, nunca inventado.
+_MODALIDADES_DIAGNOSTICADAS = frozenset({"visual", "reading", "audio", "kinesthetic"})
 
 # Refina las alternativas EMBEBIDAS cuando ya existe una señal de sesión
 # (Tutorizar) causalmente ligada al mismo fact que originó la decisión —
@@ -102,6 +111,10 @@ def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
         if competencia is None:
             continue
         diseno = dict(diseno)
+        if accion == "reforzar":
+            modalidad_real = modalidad_estudiante_de_decision(estado, decision)
+            if modalidad_real in _MODALIDADES_DIAGNOSTICADAS:
+                diseno["modalidad"] = modalidad_real
         respaldo: tuple = (decision.id,)
         senal_fact = senal_tutorizar_de_decision(estado, decision)
         if senal_fact is not None:

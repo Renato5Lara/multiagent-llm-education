@@ -48,6 +48,15 @@ def competencia_de_decision(estado: LearningState, decision: DecisionEntry) -> s
     return None if fact is None else fact.contenido.get("competencia")
 
 
+def modalidad_estudiante_de_decision(estado: LearningState, decision: DecisionEntry) -> str | None:
+    """Modalidad diagnosticada del estudiante (visual/reading/audio/
+    kinesthetic), cuando el Boundary la adjuntó al fact original —
+    mismo recorrido causal que `competencia_de_decision`, nunca por
+    posición ni por "último fact"."""
+    fact = _fact_original_de_decision(estado, decision)
+    return None if fact is None else fact.contenido.get("modalidad_estudiante")
+
+
 def senal_tutorizar_de_decision(
     estado: LearningState, decision: DecisionEntry
 ) -> FactEntry | None:
