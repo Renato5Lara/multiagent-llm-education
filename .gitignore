@@ -137,3 +137,6 @@ outputs/pptx-audit/
 # ===== LOCAL TOOLING =====
 .claude/settings.local.json
 .codegraph/daemon.pid
+
+# ===== PAQUETE DE INVESTIGACIÓN (snapshot regenerable, no versionar) =====
+/research/
