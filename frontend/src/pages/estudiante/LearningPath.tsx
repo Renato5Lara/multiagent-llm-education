@@ -44,6 +44,40 @@ function hasSavedProgress(moduleId: string): boolean {
   }
 }
 
+// Dashboard de Aprendizaje (arquitectura de dashboards congelada, jul 2026):
+// "¿cómo voy?" a nivel de CONCEPTO, no solo de misión — reutiliza el mismo
+// `mastery` que ModuleExperienceView ya persiste por ciclo (nunca un cálculo
+// nuevo ni una segunda fuente de dominio). 0.6 es el mismo espíritu que
+// AUTONOMY_LOW=0.4 (el piso donde la remediación decide): suficientemente
+// por encima de ese piso para llamarlo "dominado" frente al estudiante.
+const CONCEPT_MASTERY_THRESHOLD = 0.6
+
+interface ConceptMasteryRow {
+  conceptLabel: string
+  mastered: boolean
+}
+
+function collectConceptMastery(items: LearningPathItem[]): ConceptMasteryRow[] {
+  const rows: ConceptMasteryRow[] = []
+  for (const item of items) {
+    const definition = getModuleExperience(item.title)
+    if (!definition) continue
+    let mastery: Record<string, number> = {}
+    try {
+      const raw = localStorage.getItem(`experience-cursor:${item.id}`)
+      if (raw) mastery = (JSON.parse(raw) as { mastery?: Record<string, number> }).mastery ?? {}
+    } catch {
+      mastery = {}
+    }
+    for (const cycle of definition.cycles) {
+      const value = mastery[cycle.conceptId]
+      if (value === undefined) continue
+      rows.push({ conceptLabel: cycle.conceptLabel, mastered: value >= CONCEPT_MASTERY_THRESHOLD })
+    }
+  }
+  return rows
+}
+
 const MODALITY_DARK: Record<string, string> = {
   visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
   reading:     'border-green-400/40  text-green-300  bg-green-400/10',
@@ -296,6 +330,8 @@ export default function LearningPath() {
   const xp = completedCount * XP_PER_MISSION
   const maxXp = totalCount * XP_PER_MISSION
   const levelLabel = getLevelLabel(xp)
+  const conceptMastery = collectConceptMastery(items)
+  const nextConcept = conceptMastery.find(c => !c.mastered)?.conceptLabel
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -366,6 +402,32 @@ export default function LearningPath() {
           <span className="text-xs text-neural-muted/60">{levelLabel}</span>
         </div>
       </div>
+
+      {/* ── Mis conceptos — Dashboard de Aprendizaje congelado, jul 2026 ── */}
+      {conceptMastery.length > 0 && (
+        <div className="glass-panel rounded-2xl p-5 mb-6">
+          <p className="text-[9px] font-mono text-neural-muted/50 tracking-[0.2em] uppercase mb-3">
+            Mis conceptos
+          </p>
+          <div className="space-y-1.5 mb-3">
+            {conceptMastery.map(c => (
+              <div key={c.conceptLabel} className="flex items-center gap-2 text-sm">
+                <span className={c.mastered ? 'text-neural-pulse' : 'text-amber-400'}>
+                  {c.mastered ? '✓' : '⚠'}
+                </span>
+                <span className={c.mastered ? 'text-neural-text/80' : 'text-neural-text'}>
+                  {c.conceptLabel}
+                </span>
+              </div>
+            ))}
+          </div>
+          {nextConcept && (
+            <p className="text-xs text-neural-muted/60 pt-2 border-t border-white/[0.06]">
+              Próximo objetivo: <span className="text-neural-text/80">reforzar {nextConcept.toLowerCase()}</span>.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ── Adaptive strategy card ──────────────────────────── */}
       {adaptiveDecision && (
