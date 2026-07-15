@@ -7,7 +7,7 @@ import { useRuntimeTrace, type RuntimeEvento, type RuntimePasoTraza } from './us
 // Console). Usado para llenar la espera real de Diagnosticar/Remediar/
 // Orientar/Consenso con lo que el sistema REALMENTE está haciendo, en vez de
 // una pantalla estática.
-const CAPACIDAD_LABEL: Record<string, string> = {
+export const CAPACIDAD_LABEL: Record<string, string> = {
   diagnosticar: 'Agente Diagnóstico',
   orientar: 'Agente Orientador',
   adaptar: 'Agente Adaptación',

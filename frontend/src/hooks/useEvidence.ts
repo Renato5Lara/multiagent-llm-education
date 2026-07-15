@@ -103,6 +103,23 @@ export interface StudentTrajectory {
     // (asunto dominio(concepto)/modalidad(concepto)); nunca texto generado
     // en el frontend.
     concept_narratives: ConceptNarrative[]
+    // Observabilidad Pedagógica (orden 2026-07-15) — evolución real de cada
+    // agente (confianza de sus claims en el tiempo) y del consenso (confianza
+    // de cada decisión derivada). Cada punto es un valor real de ClaimEntry/
+    // DecisionEntry, nunca una métrica inventada.
+    agent_series: AgentSeries[]
+    consensus_series: SeriesPoint[]
+}
+
+export interface SeriesPoint {
+    transicion: number
+    confianza: number
+    asunto: string
+}
+
+export interface AgentSeries {
+    agente: string
+    puntos: SeriesPoint[]
 }
 
 export interface ConceptNarrativeClaim {

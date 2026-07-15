@@ -128,6 +128,47 @@ def test_narrativa_por_concepto_usa_razonamiento_real_del_claim(db):
     assert all(n["concepto"] != "sesion" for n in narrativas)
 
 
+def test_series_por_agente_y_consenso_son_reales(db):
+    """Observabilidad Pedagógica (orden del usuario, 2026-07-15): cada
+    punto viene de `confianza` real de ClaimEntry/DecisionEntry (INV-5,
+    INV-6) — nunca un valor inventado."""
+    from app.services import evidence_service
+    from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+    student_id = "estudiante-series-agente"
+    course_id = "curso-series-agente"
+    db.add(User(
+        id=student_id, email="series@upao.edu.pe", hashed_password="x",
+        first_name="Series", last_name="Agente", role=UserRole.ESTUDIANTE,
+    ))
+    db.commit()
+
+    registrar_evidencia_evaluacion(
+        student_id=student_id,
+        course_id=course_id,
+        titulo_modulo="Condicionales",
+        items_incorrectos=[0, 1],
+        items_totales=3,
+    )
+
+    trajectory = evidence_service.get_student_trajectory(db, student_id, course_id)
+
+    agent_series = trajectory["agent_series"]
+    assert len(agent_series) > 0
+    diagnosticar = next(s for s in agent_series if s["agente"] == "diagnosticar")
+    assert len(diagnosticar["puntos"]) > 0
+    punto = diagnosticar["puntos"][0]
+    assert 0.0 <= punto["confianza"] <= 1.0
+    assert isinstance(punto["transicion"], int)
+    # Ordenada por transición, no por orden de inserción.
+    transiciones = [p["transicion"] for p in diagnosticar["puntos"]]
+    assert transiciones == sorted(transiciones)
+
+    consensus_series = trajectory["consensus_series"]
+    assert len(consensus_series) > 0
+    assert all(0.0 <= p["confianza"] <= 1.0 for p in consensus_series)
+
+
 def test_trayectoria_sin_curso_no_falla_por_la_traza(db):
     """`_leer_traza_real` es best-effort: sin course_id resoluble, la
     trayectoria legacy debe seguir devolviéndose (traza vacía, no error)."""
@@ -144,3 +185,5 @@ def test_trayectoria_sin_curso_no_falla_por_la_traza(db):
 
     assert trajectory is not None
     assert trajectory["runtime_trace"] == []
+    assert trajectory["agent_series"] == []
+    assert trajectory["consensus_series"] == []

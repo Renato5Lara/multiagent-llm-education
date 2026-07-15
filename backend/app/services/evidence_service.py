@@ -88,19 +88,60 @@ def _leer_traza_real(student_id: str, course_id: str | None) -> list[dict]:
 _ASUNTO_CONCEPTO = re.compile(r"^(dominio|modalidad)\((.+)\)$")
 
 
-def _leer_narrativa_por_concepto(student_id: str, course_id: str | None) -> list[dict]:
+def _leer_estado_real(student_id: str, course_id: str | None):
+    """S1 (RFC-0010) — el LearningState completo de la sesión, fuente
+    compartida de `_leer_narrativa_por_concepto` y `_leer_series_por_agente`
+    (una sola lectura, nunca una por consumidor). Best-effort, igual que
+    `_leer_traza_real`."""
+    if not course_id:
+        return None
+    try:
+        almacen, almacen_memoria = almacenes()
+        return consultar_estado(_peticion(student_id, course_id), almacen, almacen_memoria)
+    except Exception:  # noqa: BLE001
+        logger.warning("No se pudo leer el estado real para %s/%s", student_id, course_id, exc_info=True)
+        return None
+
+
+def _leer_series_por_agente(estado) -> tuple[list[dict], list[dict]]:
+    """Observabilidad Pedagógica (orden del usuario 2026-07-15): evolución
+    REAL de cada agente en el tiempo — confianza de cada claim que autoró,
+    ordenada por transición — y la serie de consenso (confianza de cada
+    decisión derivada). Ningún indicador inventado: `confianza` ya es un
+    campo real de ClaimEntry/DecisionEntry (INV-5, INV-6, ADR-0001 §4)."""
+    if estado is None:
+        return [], []
+
+    por_agente: dict[str, list[dict]] = {}
+    for claim in estado.claims:
+        autor = valor_json(claim.autor)
+        por_agente.setdefault(autor, []).append({
+            "transicion": claim.id.transicion,
+            "confianza": float(claim.confianza),
+            "asunto": claim.asunto,
+        })
+    agent_series = [
+        {"agente": autor, "puntos": sorted(puntos, key=lambda p: p["transicion"])}
+        for autor, puntos in por_agente.items()
+    ]
+
+    consensus_series = sorted(
+        (
+            {"transicion": d.id.transicion, "confianza": float(d.confianza), "asunto": d.asunto}
+            for d in estado.decisiones
+        ),
+        key=lambda p: p["transicion"],
+    )
+    return agent_series, consensus_series
+
+
+def _leer_narrativa_por_concepto(estado) -> list[dict]:
     """Narrativa causal por concepto (RFC-0007 §5 + orden del usuario
     2026-07-15): evidencia observada → decisión del Runtime → resultado
     → acción siguiente, construida ÚNICAMENTE con `afirmacion`/`razonamiento`
     reales de los claims ya persistidos (S1, RFC-0010) — nunca texto
-    generado por esta función. Best-effort, igual que `_leer_traza_real`."""
-    if not course_id:
-        return []
-    try:
-        almacen, almacen_memoria = almacenes()
-        estado = consultar_estado(_peticion(student_id, course_id), almacen, almacen_memoria)
-    except Exception:  # noqa: BLE001
-        logger.warning("No se pudo leer el estado real para %s/%s", student_id, course_id, exc_info=True)
+    generado por esta función."""
+    if estado is None:
         return []
 
     por_concepto: dict[str, dict] = {}
@@ -278,7 +319,9 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
     # tablas v1 legacy leídas arriba. `consultar_traza` la documenta como
     # su primer consumidor previsto, hasta ahora pendiente.
     runtime_trace = _leer_traza_real(student_id, resolved_course_id)
-    concept_narratives = _leer_narrativa_por_concepto(student_id, resolved_course_id)
+    estado_real = _leer_estado_real(student_id, resolved_course_id)
+    concept_narratives = _leer_narrativa_por_concepto(estado_real)
+    agent_series, consensus_series = _leer_series_por_agente(estado_real)
     trace_events = [e for paso in runtime_trace for e in paso["eventos"]]
     has_real_consensus = any(e["tipo"] == "DecisionRegistrada" for e in trace_events)
     trace_agents = sorted({
@@ -365,4 +408,6 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
         "runtime_trace": runtime_trace,
         "concept_narratives": concept_narratives,
         "outcome": outcome_payload,
+        "agent_series": agent_series,
+        "consensus_series": consensus_series,
     }
