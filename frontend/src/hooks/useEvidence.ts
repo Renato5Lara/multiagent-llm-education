@@ -97,6 +97,26 @@ export interface StudentTrajectory {
         pre_level: string | null
         post_level: string | null
     }
+    // Orden 2026-07-15 "adaptación dinámica narrada" — narrativa causal por
+    // concepto (evidencia observada → decisión del Runtime → resultado →
+    // acción siguiente), construida en el backend a partir de claims REALES
+    // (asunto dominio(concepto)/modalidad(concepto)); nunca texto generado
+    // en el frontend.
+    concept_narratives: ConceptNarrative[]
+}
+
+export interface ConceptNarrativeClaim {
+    autor: string
+    afirmacion: Record<string, unknown>
+    confianza: number
+}
+
+export interface ConceptNarrative {
+    concepto: string
+    evidencia_observada: ConceptNarrativeClaim[]
+    decision_runtime: ConceptNarrativeClaim[]
+    resultado: boolean | null
+    accion_siguiente: string | null
 }
 
 // Única fuente de datos del Modo Evidencia — ver evidence_service.py.

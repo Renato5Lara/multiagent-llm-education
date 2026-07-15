@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import PageHeader from '@/components/common/PageHeader'
 import { DeliberationEventList } from '@/components/observability/DeliberationEventList'
+import { ConceptCausalStory } from '@/components/observability/ConceptCausalStory'
 import { useUsers } from '@/hooks/useUsers'
 import { useStudentTrajectory } from '@/hooks/useEvidence'
 import { traducirTraza } from '@/hooks/useLiveDeliberation'
@@ -104,6 +105,28 @@ export default function StudentTrajectoryPage() {
                                     <Badge key={a} variant="outline">{a}</Badge>
                                 ))}
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                                Historia del aprendizaje por concepto
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {trajectory.concept_narratives.length === 0 ? (
+                                <p className="text-muted-foreground text-sm">Sin evidencia de conceptos registrada en el runtime todavía.</p>
+                            ) : (
+                                <div className="grid md:grid-cols-2 gap-3">
+                                    {[...trajectory.concept_narratives]
+                                        .sort((a, b) =>
+                                            (b.evidencia_observada.length + b.decision_runtime.length) -
+                                            (a.evidencia_observada.length + a.decision_runtime.length))
+                                        .map(n => <ConceptCausalStory key={n.concepto} narrative={n} />)}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

@@ -91,6 +91,43 @@ def test_trayectoria_incluye_la_traza_real_y_detecta_consenso(db):
     assert consenso_item["available"] is True
 
 
+def test_narrativa_por_concepto_usa_razonamiento_real_del_claim(db):
+    """Orden del usuario (2026-07-15, 'adaptación dinámica narrada'):
+    evidencia observada → decisión → resultado → acción siguiente, con
+    el `razonamiento` REAL del claim, nunca texto generado por esta capa."""
+    from app.services import evidence_service
+    from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+    student_id = "estudiante-narrativa-real"
+    course_id = "curso-narrativa-real"
+    db.add(User(
+        id=student_id, email="narrativa@upao.edu.pe", hashed_password="x",
+        first_name="Narrativa", last_name="Real", role=UserRole.ESTUDIANTE,
+    ))
+    db.commit()
+
+    registrar_evidencia_evaluacion(
+        student_id=student_id,
+        course_id=course_id,
+        titulo_modulo="Condicionales",
+        items_incorrectos=[0, 1],
+        items_totales=3,
+    )
+
+    trajectory = evidence_service.get_student_trajectory(db, student_id, course_id)
+
+    narrativas = trajectory["concept_narratives"]
+    assert len(narrativas) > 0
+    concepto = next(n for n in narrativas if n["evidencia_observada"])
+    assert concepto["resultado"] in (True, False)
+    primera_evidencia = concepto["evidencia_observada"][0]
+    assert "razonamiento" in primera_evidencia["afirmacion"]
+    assert len(primera_evidencia["afirmacion"]["razonamiento"]) > 0
+    # "siguiente-paso(sesion)" es de sesión, no de concepto — nunca debe
+    # colarse como si fuera un concepto propio.
+    assert all(n["concepto"] != "sesion" for n in narrativas)
+
+
 def test_trayectoria_sin_curso_no_falla_por_la_traza(db):
     """`_leer_traza_real` es best-effort: sin course_id resoluble, la
     trayectoria legacy debe seguir devolviéndose (traza vacía, no error)."""

@@ -14,6 +14,7 @@ lo que sí existe — nunca al revés.
 """
 
 import logging
+import re
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -33,8 +34,8 @@ from app.services.runtime_connection import (
     VERSION_POLITICA,
     almacenes,
 )
-from app.services.runtime_trace_serialization import traza_a_pasos_dict
-from runtime.boundary import PeticionAbrirSesion, consultar_traza
+from app.services.runtime_trace_serialization import traza_a_pasos_dict, valor_json
+from runtime.boundary import PeticionAbrirSesion, consultar_estado, consultar_traza
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,16 @@ def _sesion_del_curso(student_id: str, course_id: str) -> str:
     return f"curso:{course_id}:estudiante:{student_id}"
 
 
+def _peticion(student_id: str, course_id: str) -> PeticionAbrirSesion:
+    return PeticionAbrirSesion(
+        session_id=_sesion_del_curso(student_id, course_id),
+        student_id=student_id,
+        version_banco=VERSION_BANCO,
+        version_politica=VERSION_POLITICA,
+        spec_version=SPEC_VERSION,
+    )
+
+
 def _leer_traza_real(student_id: str, course_id: str | None) -> list[dict]:
     """Traza real del runtime (RFC-0007 §5, Modo Evidencia v2) — best-effort:
     un estudiante sin sesión de runtime todavía (p. ej. diagnóstico previo
@@ -61,18 +72,69 @@ def _leer_traza_real(student_id: str, course_id: str | None) -> list[dict]:
         return []
     try:
         almacen, almacen_memoria = almacenes()
-        peticion = PeticionAbrirSesion(
-            session_id=_sesion_del_curso(student_id, course_id),
-            student_id=student_id,
-            version_banco=VERSION_BANCO,
-            version_politica=VERSION_POLITICA,
-            spec_version=SPEC_VERSION,
-        )
-        traza = consultar_traza(peticion, almacen, almacen_memoria)
+        traza = consultar_traza(_peticion(student_id, course_id), almacen, almacen_memoria)
         return traza_a_pasos_dict(traza)
     except Exception:  # noqa: BLE001
         logger.warning("No se pudo leer la traza real para %s/%s", student_id, course_id, exc_info=True)
         return []
+
+
+# asunto = "dominio(concepto)" (interpretación de Diagnosticar) o
+# "modalidad(concepto)" (propuesta de Adaptar) — INV-5 exige que todo
+# claim declare su asunto; "siguiente-paso(sesion)" existe pero es de
+# alcance de SESIÓN, no de concepto, así que queda fuera de esta
+# agrupación a propósito (correlacionarlo a un concepto por cercanía de
+# transición sería inventar una relación que el runtime no declara).
+_ASUNTO_CONCEPTO = re.compile(r"^(dominio|modalidad)\((.+)\)$")
+
+
+def _leer_narrativa_por_concepto(student_id: str, course_id: str | None) -> list[dict]:
+    """Narrativa causal por concepto (RFC-0007 §5 + orden del usuario
+    2026-07-15): evidencia observada → decisión del Runtime → resultado
+    → acción siguiente, construida ÚNICAMENTE con `afirmacion`/`razonamiento`
+    reales de los claims ya persistidos (S1, RFC-0010) — nunca texto
+    generado por esta función. Best-effort, igual que `_leer_traza_real`."""
+    if not course_id:
+        return []
+    try:
+        almacen, almacen_memoria = almacenes()
+        estado = consultar_estado(_peticion(student_id, course_id), almacen, almacen_memoria)
+    except Exception:  # noqa: BLE001
+        logger.warning("No se pudo leer el estado real para %s/%s", student_id, course_id, exc_info=True)
+        return []
+
+    por_concepto: dict[str, dict] = {}
+    for claim in estado.claims:
+        match = _ASUNTO_CONCEPTO.match(claim.asunto)
+        if not match:
+            continue
+        tipo_asunto, concepto = match.group(1), match.group(2)
+        entrada = por_concepto.setdefault(
+            concepto, {"concepto": concepto, "evidencia_observada": [], "decision_runtime": []}
+        )
+        item = {
+            "autor": valor_json(claim.autor),
+            "afirmacion": valor_json(claim.afirmacion),
+            "confianza": float(claim.confianza),
+        }
+        if tipo_asunto == "dominio":
+            entrada["evidencia_observada"].append(item)
+        else:
+            entrada["decision_runtime"].append(item)
+
+    narrativas = []
+    for concepto, datos in por_concepto.items():
+        ultima_evidencia = datos["evidencia_observada"][-1] if datos["evidencia_observada"] else None
+        ultima_decision = datos["decision_runtime"][-1] if datos["decision_runtime"] else None
+        dominada = ultima_evidencia["afirmacion"].get("dominada") if ultima_evidencia else None
+        narrativas.append({
+            "concepto": concepto,
+            "evidencia_observada": datos["evidencia_observada"],
+            "decision_runtime": datos["decision_runtime"],
+            "resultado": dominada,
+            "accion_siguiente": ultima_decision["afirmacion"].get("profundidad") if ultima_decision else None,
+        })
+    return narrativas
 
 
 def _resolve_thesis_course_id(db: Session) -> str | None:
@@ -216,6 +278,7 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
     # tablas v1 legacy leídas arriba. `consultar_traza` la documenta como
     # su primer consumidor previsto, hasta ahora pendiente.
     runtime_trace = _leer_traza_real(student_id, resolved_course_id)
+    concept_narratives = _leer_narrativa_por_concepto(student_id, resolved_course_id)
     trace_events = [e for paso in runtime_trace for e in paso["eventos"]]
     has_real_consensus = any(e["tipo"] == "DecisionRegistrada" for e in trace_events)
     trace_agents = sorted({
@@ -300,5 +363,6 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
         "evaluations": evaluations_payload,
         "evidence": evidence_payload,
         "runtime_trace": runtime_trace,
+        "concept_narratives": concept_narratives,
         "outcome": outcome_payload,
     }
