@@ -21,6 +21,7 @@ jamás rompe el flujo del estudiante.
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -142,6 +143,45 @@ def complete_mission(db: Session, student: User, module_id: str) -> None:
     except SQLAlchemyError:
         db.rollback()
         logger.warning("active_mission: no se pudo cerrar la misión (best-effort)", exc_info=True)
+
+
+def record_completed_session(
+    db: Session,
+    student: User,
+    course_id: str | None,
+    module_id: str,
+    duration_minutes: float | None,
+) -> None:
+    """Fase de cierre del producto (jul 2026): el flujo continuo de ciclos
+    (ModuleExperienceView) nunca llama `save_snapshot`, así que
+    `get_mission()` siempre devuelve None para esas misiones y
+    `complete_mission()` no tenía ningún LearningSession que cerrar —
+    "¿se registra el tiempo?" respondía NO para el 100% del flujo real.
+    Cuando no existe una misión (best-effort igual que el resto de este
+    módulo), se crea una ya cerrada con la duración real que el cliente
+    midió — nunca se inventa un tiempo, se usa el que el estudiante vivió."""
+    if duration_minutes is None or duration_minutes <= 0 or not course_id:
+        return
+    try:
+        mission = get_mission(db, student, module_id)
+        if mission is not None:
+            return  # ya cubierto por complete_mission (flujo con snapshot)
+        now = datetime.now(timezone.utc)
+        started = now - timedelta(minutes=duration_minutes)
+        db.add(LearningSession(
+            student_id=student.id,
+            course_id=course_id,
+            module_id=module_id,
+            status="completed",
+            started_at=started,
+            ended_at=now,
+            duration_minutes=round(duration_minutes, 2),
+            context_key=f"ctx:{student.id}:{course_id}",
+        ))
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        logger.warning("active_mission: no se pudo registrar la duración real (best-effort)", exc_info=True)
 
 
 def annotate(result: dict[str, Any], mission: LearningSession | None, resumed: bool) -> dict[str, Any]:

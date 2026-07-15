@@ -475,6 +475,14 @@ def update_module(
             _course_id = _path.course_id if _path else None
         except Exception:
             pass
+
+        # Fase de cierre del producto: el flujo continuo de ciclos nunca abre
+        # una misión con snapshot, así que complete_mission() de arriba no
+        # tiene nada que cerrar — sin esto, "¿se registra el tiempo?" era NO
+        # para el 100% del flujo real (bug encontrado en la verificación).
+        active_mission_service.record_completed_session(
+            db, current_user, _course_id, module_id, data.duration_minutes,
+        )
         research_metrics_service.record_metric(
             db,
             metric_type=research_metrics_service.MISSION_COMPLETED,

@@ -16,7 +16,7 @@ import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
 import type { ModuleContext } from '@/components/swarm/AgentActivityPanel'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useStartEngagement } from '@/hooks/useEngagement'
 import { LearningJourney } from '@/components/learningJourney/LearningJourney'
 import { buildJourneyFromLegacy } from '@/lib/learningJourneyBuilder'
@@ -161,6 +161,18 @@ export default function ModuleLearningView() {
 
   const { mutate: orchestrateModule, isPending: isOrchestrating, isError: orchestrationFailed } = useModuleOrchestration()
   const updateModule = useUpdateModule()
+  // Fase de cierre del producto (jul 2026): tiempo real vivido en el módulo,
+  // desde que se entra hasta doComplete() — el flujo continuo de ciclos
+  // nunca abría un LearningSession en el backend, así que "¿se registra el
+  // tiempo?" respondía NO para el 100% del flujo real (bug real encontrado
+  // en la verificación de preparación experimental, no una funcionalidad
+  // nueva). ModuleLearningView NO se remonta al navegar entre módulos
+  // (misma ruta, distinto param) — se reinicia explícitamente por efecto,
+  // nunca asumiendo un remount que React Router no garantiza aquí.
+  const moduleStartRef = useRef(Date.now())
+  useEffect(() => {
+    moduleStartRef.current = Date.now()
+  }, [moduleId])
   const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(experience ? undefined : moduleId)
   // Modalidad del APRENDIZ (diagnóstico → learning path). No confundir con
   // multimodal_prompts[].modality, que son modalidades de MEDIOS (image/video/
@@ -220,9 +232,10 @@ export default function ModuleLearningView() {
 
   const doComplete = useCallback((score?: number) => {
     if (!moduleId) return
+    const durationMinutes = (Date.now() - moduleStartRef.current) / 60000
     // A2 — score (dominio agregado) llega al evaluador via ResearchMetric.
     updateModule.mutate(
-      { moduleId, courseId, status: 'completed', score },
+      { moduleId, courseId, status: 'completed', score, durationMinutes },
       {
         onSuccess: async () => {
           toast({ title: 'Misión completada', description: 'Tu progreso quedó guardado.' })

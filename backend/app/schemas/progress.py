@@ -36,6 +36,13 @@ class LearningPathResponse(BaseModel):
 class ModuleUpdate(BaseModel):
     status: str
     score: Optional[float] = None
+    # Fase de cierre del producto (jul 2026) — bug real encontrado en la
+    # verificación de preparación experimental: el flujo continuo de ciclos
+    # (ModuleExperienceView) nunca abría un LearningSession, así que
+    # `duration_minutes` quedaba en 0 para el 100% de los estudiantes reales.
+    # El cliente sí conoce el tiempo real transcurrido (desde que se montó
+    # el módulo); se envía explícito en vez de intentar reconstruirlo aquí.
+    duration_minutes: Optional[float] = None
 
 
 class StudentProgressCreate(BaseModel):

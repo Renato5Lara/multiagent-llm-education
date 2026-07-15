@@ -181,8 +181,13 @@ export function useUpdateModule() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ moduleId, status, score }: { moduleId: string; status: string; score?: number; courseId?: string }) => {
-      const resp = await api.patch<PathModule>(`/api/students/module/${moduleId}`, { status, score })
+    mutationFn: async (
+      { moduleId, status, score, durationMinutes }:
+      { moduleId: string; status: string; score?: number; courseId?: string; durationMinutes?: number },
+    ) => {
+      const resp = await api.patch<PathModule>(`/api/students/module/${moduleId}`, {
+        status, score, duration_minutes: durationMinutes,
+      })
       return resp.data
     },
     onSuccess: (_data, variables) => {
