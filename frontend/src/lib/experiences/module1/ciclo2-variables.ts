@@ -150,26 +150,28 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         kind: 'reto',
         label: 'Resolver un reto rápido',
         title: 'Reto: el marcador del videojuego',
-        body: ['Misma regla: crea la caja, guarda el valor, y solo entonces úsalo. Hay un impostor.'],
+        body: ['Misma regla: crea la caja, guarda el valor, y solo entonces úsalo. Ahora en vez de ordenar los pasos, predice qué muestra la pantalla.'],
+        // Multimodalidad profunda (jul 2026): mismo concepto (marcador de
+        // videojuego) que antes se practicaba ordenando pasos, ahora exige
+        // simular mentalmente la ejecución — una mecánica de interacción
+        // genuinamente distinta, no el mismo ejercicio con otro disfraz.
         practice: {
-          kind: 'ordering',
-          prompt: 'Ordena las instrucciones para que el robot lleve el marcador de un videojuego. Descarta la que sea la meta, no un paso.',
-          items: [
-            { id: 'm1', text: 'Crea una caja llamada puntos', position: 1 },
-            { id: 'm2', text: 'Guarda el número 0 dentro de la caja puntos', position: 2 },
-            { id: 'm3', text: 'Súmale 10 al valor guardado en puntos', position: 3 },
-            {
-              id: 'md1',
-              text: 'Gana la partida',
-              position: null,
-              whyWrong: '«Gana la partida» es el resultado que quieres, no una instrucción sobre la caja puntos.',
-            },
+          kind: 'predict_output',
+          prompt: '¿Qué imprime este código?',
+          code: 'puntos = 0\npuntos = puntos + 10\nprint(puntos)',
+          options: [
+            { id: 'a', text: '0' },
+            { id: 'b', text: '10' },
+            { id: 'c', text: 'puntos' },
+            { id: 'd', text: 'Error' },
           ],
-          successFeedback: 'Exacto — actualizaste el marcador sin perder su nombre. Así funciona un contador en cualquier programa.',
-          orderFeedback: 'No puedes sumarle puntos a una caja que todavía no existe.',
-          generalHint: 'Una de las frases describe el resultado que quieres, no un paso con la caja puntos.',
+          correctOptionId: 'b',
+          successFeedback: 'Exacto — «puntos» empezó en 0, pero «puntos = puntos + 10» lo actualizó antes del print().',
+          wrongFeedback: 'Revisa: print(puntos) muestra lo que HAY en la caja en ESE momento, no su valor inicial.',
           solutionExplanation: [
-            'Crear, guardar y solo después sumar — cada paso necesita que el anterior ya haya ocurrido. «Gana la partida» era la meta, no una instrucción sobre la caja.',
+            'Línea 1: puntos = 0 — crea la caja con el valor 0.',
+            'Línea 2: puntos = puntos + 10 — lee el 0 que había, le suma 10, y guarda 10 en la misma caja.',
+            'Línea 3: print(puntos) — muestra lo que hay AHORA en la caja: 10, no el 0 inicial.',
           ],
         },
       },

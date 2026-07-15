@@ -90,7 +90,31 @@ export interface OrderingPracticeDef {
   solutionExplanation?: string[]
 }
 
-export type PracticeDef = OrderingPracticeDef
+// Multimodalidad profunda (jul 2026): el tipo de interacción también cambia
+// con el estudiante, no solo el recurso mostrado. `predict_output` ya estaba
+// anunciado en la cabecera de este archivo desde S1 ("los demás tipos de
+// práctica... amplían PracticeDef en S3") — "elegir respuestas" que exige
+// simular mentalmente la ejecución, no solo reconocer un patrón visual.
+export interface PredictOutputOption {
+  id: string
+  text: string
+}
+
+export interface PredictOutputPracticeDef {
+  kind: 'predict_output'
+  prompt: string
+  /** Fragmento real de Python — nunca pseudocódigo. */
+  code: string
+  options: PredictOutputOption[]
+  correctOptionId: string
+  successFeedback: string
+  /** Feedback tras una opción incorrecta — señala QUÉ se confundió, no solo que falló. */
+  wrongFeedback: string
+  /** Explicación paso a paso de la ejecución — se muestra tras agotar los intentos. */
+  solutionExplanation: string[]
+}
+
+export type PracticeDef = OrderingPracticeDef | PredictOutputPracticeDef
 
 // ── Momento de Decisión (autonomía con barandas) ───────────────────────────────
 
@@ -110,8 +134,9 @@ export interface Reinforcement {
    *  presenta como audio: «Escuchar» debe cumplirse con voz real, nunca con
    *  un guion de texto (PED-003). Texto plano — sin emojis ni comillas. */
   narrationText?: string
-  /** Solo para kind 'reto': una variante corta de práctica. */
-  practice?: OrderingPracticeDef
+  /** Solo para kind 'reto': una variante corta de práctica — cualquier
+   *  PracticeDef, no solo ordering (multimodalidad profunda, jul 2026). */
+  practice?: PracticeDef
   /** Solo para kind 'ejemplo': su propio puente a Python — si el estudiante
    *  explora un ejemplo adicional, también ve su código, no solo el del
    *  ejemplo principal del ciclo. */

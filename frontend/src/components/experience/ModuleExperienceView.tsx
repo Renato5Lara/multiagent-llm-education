@@ -17,6 +17,7 @@ import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
 import { CuriosityFactCard } from './CuriosityFactCard'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
+import { PredictOutputPractice } from './PredictOutputPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
@@ -1159,39 +1160,56 @@ function ReinforcementPractice({
 }) {
   const [outcome, setOutcome] = useState<PracticeOutcome | null>(null)
 
+  const finish = (result: PracticeOutcome) => {
+    recordEvidence({
+      type: 'practice_attempt',
+      moduleId,
+      conceptId,
+      detail: {
+        practice: practice.kind,
+        context: 'reinforcement',
+        attempts: result.attempts,
+        timeMs: result.timeMs,
+        solutionShown: result.solutionShown,
+        outcome: outcomeLabel(result),
+        final: true,
+      },
+    })
+    setOutcome(result)
+  }
+
   // Refuerzo VOLUNTARIO: el estudiante ya superó la baranda de autonomía y eligió
   // profundizar. Terminar la práctica —resolviéndola o viendo la solución— basta
   // para continuar. La exigencia de acertar vive en la escalera, no aquí.
   return (
     <div className="space-y-5">
-      <OrderingPractice
-        practice={practice}
-        onAttempt={({ attempt, status }) => {
-          recordEvidence({
-            type: 'practice_attempt',
-            moduleId,
-            conceptId,
-            detail: { practice: 'ordering', context: 'reinforcement', attempt, status, correct: status === 'correct' },
-          })
-        }}
-        onFinished={result => {
-          recordEvidence({
-            type: 'practice_attempt',
-            moduleId,
-            conceptId,
-            detail: {
-              practice: 'ordering',
-              context: 'reinforcement',
-              attempts: result.attempts,
-              timeMs: result.timeMs,
-              solutionShown: result.solutionShown,
-              outcome: outcomeLabel(result),
-              final: true,
-            },
-          })
-          setOutcome(result)
-        }}
-      />
+      {practice.kind === 'ordering' ? (
+        <OrderingPractice
+          practice={practice}
+          onAttempt={({ attempt, status }) => {
+            recordEvidence({
+              type: 'practice_attempt',
+              moduleId,
+              conceptId,
+              detail: { practice: 'ordering', context: 'reinforcement', attempt, status, correct: status === 'correct' },
+            })
+          }}
+          onFinished={finish}
+        />
+      ) : (
+        <PredictOutputPractice
+          practice={practice}
+          onAttempt={({ attempt, correct }) => {
+            recordEvidence({
+              type: 'practice_attempt',
+              moduleId,
+              conceptId,
+              detail: { practice: 'predict_output', context: 'reinforcement', attempt, correct },
+            })
+          }}
+          onFinished={finish}
+        />
+      )}
       {outcome && (
         <div className="flex justify-end animate-in fade-in duration-300">
           <Button onClick={onDone} className="gap-2">
