@@ -665,6 +665,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       advanceCycle()
       return
     }
+    // Ya pasó por la escalera en este ciclo: no se remedia dos veces — va
+    // directo al menú de consolidación, igual que cualquier otro cierre.
+    if (remediationLevel > 0) {
+      setPhase('decision')
+      return
+    }
     const current = mastery[cycle.conceptId] ?? 0
     const needsSupport = current < AUTONOMY_LOW
     // Resolvió, pero el dominio no alcanza la baranda: se refuerza antes de
@@ -675,7 +681,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     } else {
       setPhase('decision')
     }
-  }, [advanceCycle, cycle, effectiveModality, enterRemediation, mastery, practiceOutcome, recordRemediation])
+  }, [advanceCycle, cycle, effectiveModality, enterRemediation, mastery, practiceOutcome, recordRemediation, remediationLevel])
 
   const handleDecision = useCallback((choice: DecisionChoice) => {
     if (!cycle) return
@@ -735,14 +741,18 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   const stepModality: LearningModality =
     step?.conceptModality === 'alternate' ? alternateModality(effectiveModality) : effectiveModality
 
-  /** Resolvió en este peldaño: acredita dominio reducido y sigue. */
+  /** Resolvió en este peldaño: acredita dominio reducido y vuelve al cierre
+   *  normal del ciclo (puente a Python si lo trae, luego menú de consolidación)
+   *  — antes saltaba directo a advanceCycle() y ambos quedaban inalcanzables
+   *  para cualquier estudiante que hubiera necesitado la escalera. */
   const handleStepSolved = useCallback((outcome: PracticeOutcome) => {
     if (!cycle || remediationLevel === 0) return
     const gain = masteryGain(outcome, remediationLevel)
     recordRemediation(remediationLevel, outcome, true, stepModality, gain)
     bumpMastery(cycle.conceptId, gain)
-    advanceCycle(gain)
-  }, [advanceCycle, bumpMastery, cycle, recordRemediation, remediationLevel, stepModality])
+    setPracticeOutcome(outcome)
+    setPhase('practice')
+  }, [bumpMastery, cycle, recordRemediation, remediationLevel, stepModality])
 
   /** Agotó este peldaño: escala al siguiente. El Nivel 3 no tiene práctica, así
    *  que la escalera termina siempre — el bloqueo es imposible por construcción. */
@@ -752,12 +762,16 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     enterRemediation((remediationLevel + 1) as RemediationLevel)
   }, [cycle, enterRemediation, recordRemediation, remediationLevel, stepModality])
 
-  /** Nivel 3 — ayuda máxima registrada, se continúa siempre. */
+  /** Nivel 3 — ayuda máxima registrada. Vuelve al cierre normal del ciclo, igual
+   *  que handleStepSolved: el puente a Python y el menú de consolidación siguen
+   *  siendo parte del ciclo aunque la ayuda haya sido máxima. */
   const handleMaxSupportContinue = useCallback(() => {
     if (!cycle) return
-    recordRemediation(3, { attempts: MAX_SUPPORT_ATTEMPTS, timeMs: 0, solutionShown: true }, false, stepModality)
-    advanceCycle()
-  }, [advanceCycle, cycle, recordRemediation, stepModality])
+    const outcome: PracticeOutcome = { attempts: MAX_SUPPORT_ATTEMPTS, timeMs: 0, solutionShown: true }
+    recordRemediation(3, outcome, false, stepModality)
+    setPracticeOutcome(outcome)
+    setPhase('practice')
+  }, [cycle, recordRemediation, stepModality])
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -978,25 +992,31 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
       {phase === 'practice' && cycle && resolvedPractice && (
         <div className="space-y-5">
-          {resolvedPractice.kind === 'ordering' ? (
-            <OrderingPractice
-              key={`${cycle.id}-practice`}
-              practice={resolvedPractice}
-              onAttempt={handlePracticeAttempt}
-              onFinished={handlePracticeFinished}
-              // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
-              revealOnExhaust={!cycle.remediation}
-              onExhausted={handlePracticeExhausted}
-            />
-          ) : (
-            <PredictOutputPractice
-              key={`${cycle.id}-practice`}
-              practice={resolvedPractice}
-              onAttempt={handlePredictOutputAttempt}
-              onFinished={handlePracticeFinished}
-              revealOnExhaust={!cycle.remediation}
-              onExhausted={handlePracticeExhausted}
-            />
+          {/* remediationLevel > 0 significa que se volvió aquí YA resuelto por
+           *  la escalera (handleStepSolved/handleMaxSupportContinue) — no se
+           *  repite la actividad, solo se completa el cierre normal del ciclo
+           *  (puente a Python, menú de consolidación) que antes se saltaba. */}
+          {remediationLevel === 0 && (
+            resolvedPractice.kind === 'ordering' ? (
+              <OrderingPractice
+                key={`${cycle.id}-practice`}
+                practice={resolvedPractice}
+                onAttempt={handlePracticeAttempt}
+                onFinished={handlePracticeFinished}
+                // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
+                revealOnExhaust={!cycle.remediation}
+                onExhausted={handlePracticeExhausted}
+              />
+            ) : (
+              <PredictOutputPractice
+                key={`${cycle.id}-practice`}
+                practice={resolvedPractice}
+                onAttempt={handlePredictOutputAttempt}
+                onFinished={handlePracticeFinished}
+                revealOnExhaust={!cycle.remediation}
+                onExhausted={handlePracticeExhausted}
+              />
+            )
           )}
           {practiceOutcome && cycle.pythonBridge && (
             <PythonBridge
