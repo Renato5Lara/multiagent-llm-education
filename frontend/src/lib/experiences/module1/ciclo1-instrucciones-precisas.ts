@@ -121,7 +121,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
   },
   pythonBridge: {
     label: 'Esto ya es Python',
-    code: 'avanzar(pasos=4)\ngirar(grados=90, direccion="izquierda")\ndetenerse()\nextender_mano()\ngirar_manija()',
+    code: 'girar(grados=90, direccion="izquierda")\navanzar(pasos=4)\ndetenerse()\nextender_mano()\ngirar_manija()',
     explanation:
       'La secuencia que acabas de construir es, literalmente, un programa: cada línea es una instrucción precisa que Python ejecuta de arriba hacia abajo, exactamente en el orden en que la escribiste — ni una línea más, ni una menos de lo que dijiste.',
     practice: {
