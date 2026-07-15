@@ -181,7 +181,7 @@ export const CICLO_3_INPUT: LearningCycle = {
           explanation:
             'input() SIEMPRE entrega texto, incluso si escribes un número — por eso hace falta float(...) para convertirlo antes de multiplicarlo. Sin ese casting, Python no puede calcular el 10% de un texto.',
           practice: {
-            prompt: 'Ahora hazlo tú: pide la edad con input(), conviértela a número entero con int(), y muestra cuántos años faltan para llegar a 100',
+            prompt: 'Ahora hazlo tú: pide la edad con input("¿Cuántos años tienes? "), conviértela a número entero con int(), y muestra cuántos años faltan para llegar a 100',
             starterCode: '# escribe tu código aquí\n',
             expectedOutput: '¿Cuántos años tienes? 80',
             simulatedInputs: ['20'],
@@ -238,7 +238,7 @@ export const CICLO_3_INPUT: LearningCycle = {
           explanation:
             'La secuencia que armaste es, en Python, dos líneas: input() pregunta y guarda; buscar(termino) usa esa respuesta. Nada de "encuentra lo que buscas" — eso no es una instrucción.',
           practice: {
-            prompt: 'Ahora hazlo tú: pide la comida favorita con input() y únela al texto "Tu comida favorita es " usando el operador + antes de mostrarla con print()',
+            prompt: 'Ahora hazlo tú: pide la comida favorita con input("¿Cuál es tu comida favorita? ") y únela al texto "Tu comida favorita es " usando el operador + antes de mostrarla con print()',
             starterCode: '# escribe tu código aquí\n',
             expectedOutput: '¿Cuál es tu comida favorita? Tu comida favorita es pizza',
             simulatedInputs: ['pizza'],
