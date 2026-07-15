@@ -19,8 +19,10 @@ from app.models.learning_session import LearningSession
 from app.models.research import ExperimentResult, ResearchMetric
 from app.models.student_profile import StudentProfile
 from app.models.student_progress import LearningPath
+from app.models.user import User
 from app.services.research_metrics_service import (
     AI_ORCHESTRATION_MS,
+    CYCLE_EVIDENCE,
     PATH_GENERATION_MS,
     TUTOR_LATENCY_MS,
     TUTOR_MESSAGE,
@@ -258,3 +260,83 @@ def get_student_result_rows(db: Session, course_id: Optional[str] = None) -> lis
             }
         )
     return rows
+
+
+def get_cycle_evidence_rows(db: Session, course_id: Optional[str] = None) -> list[dict]:
+    """Una fila por ciclo de aprendizaje real (submit_cycle_evidence) — el
+    detalle que get_student_result_rows no cubre: modalidad diagnosticada
+    vs. modalidad de refuerzo decidida por Adaptar, concepto, intentos,
+    ayudas y tiempo. Misma tabla research_metrics ya usada para el resto
+    del dashboard, ningún dato nuevo."""
+    q = db.query(ResearchMetric, User.email).join(
+        User, User.id == ResearchMetric.student_id
+    ).filter(ResearchMetric.metric_type == CYCLE_EVIDENCE)
+    if course_id:
+        q = q.filter(ResearchMetric.course_id == course_id)
+    q = q.order_by(ResearchMetric.student_id, ResearchMetric.recorded_at)
+
+    rows: list[dict] = []
+    for metric, email in q.all():
+        payload = metric.payload or {}
+        rows.append(
+            {
+                "student_id": metric.student_id,
+                "email": email,
+                "concepto": payload.get("competencia"),
+                "intentos": payload.get("attempts"),
+                "resultado": payload.get("solved"),
+                "ayudas": payload.get("hints_used"),
+                "tiempo_ms": payload.get("time_ms"),
+                "modalidad_diagnosticada": payload.get("modalidad_diagnosticada"),
+                "modalidad_refuerzo": payload.get("modalidad_refuerzo"),
+                "profundidad": payload.get("profundidad"),
+                "fecha": metric.recorded_at.isoformat() if metric.recorded_at else None,
+            }
+        )
+    return rows
+
+
+def get_experiment_statistics(db: Session, course_id: Optional[str] = None) -> dict:
+    """Estadísticas descriptivas del experimento completo — resumen para
+    quien no va a abrir SPSS: n, medias, y la comprobación central de la
+    tesis (¿la modalidad de refuerzo coincide con la diagnosticada?)."""
+    summary_rows = get_student_result_rows(db, course_id)
+    cycle_rows = get_cycle_evidence_rows(db, course_id)
+
+    def _mean(values: list[float]) -> Optional[float]:
+        values = [v for v in values if v is not None]
+        return round(sum(values) / len(values), 2) if values else None
+
+    pre_values = [r["pre_pct"] for r in summary_rows]
+    post_values = [r["post_pct"] for r in summary_rows if r["post_pct"] is not None]
+    gain_values = [r["absolute_gain"] for r in summary_rows if r["absolute_gain"] is not None]
+
+    profile_counts: dict[str, int] = {}
+    for r in summary_rows:
+        profile = r["profile"] or "sin_diagnostico"
+        profile_counts[profile] = profile_counts.get(profile, 0) + 1
+
+    cycles_with_modalidad = [
+        r for r in cycle_rows
+        if r["modalidad_diagnosticada"] and r["modalidad_refuerzo"]
+    ]
+    coincidencia = sum(
+        1 for r in cycles_with_modalidad
+        if r["modalidad_diagnosticada"] == r["modalidad_refuerzo"]
+    )
+
+    return {
+        "n_estudiantes_con_pretest": len(summary_rows),
+        "n_estudiantes_con_postest": len(post_values),
+        "n_ciclos_registrados": len(cycle_rows),
+        "pretest_promedio_pct": _mean(pre_values),
+        "postest_promedio_pct": _mean(post_values),
+        "ganancia_promedio_pts": _mean(gain_values),
+        "distribucion_por_perfil": profile_counts,
+        "ciclos_con_ambas_modalidades": len(cycles_with_modalidad),
+        "ciclos_modalidad_refuerzo_coincide_con_diagnostico": coincidencia,
+        "porcentaje_coincidencia_modalidad": (
+            round(100 * coincidencia / len(cycles_with_modalidad), 1)
+            if cycles_with_modalidad else None
+        ),
+    }

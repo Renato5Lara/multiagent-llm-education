@@ -116,6 +116,12 @@ export default function ResearchDashboard() {
               Exportar Excel
             </a>
           </Button>
+          <Button asChild size="sm" className="gap-2">
+            <a href={`${API_BASE_URL}/api/research/export-experiment`} download>
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              Exportar experimento
+            </a>
+          </Button>
         </div>
       </div>
 

@@ -131,3 +131,79 @@ def test_export_xlsx_when_available(client, estudiante_token, curso_publicado, d
 def test_export_rejects_unknown_format(client):
     resp = client.get("/api/research/export?fmt=pdf")
     assert resp.status_code == 422
+
+
+def test_export_experiment_has_three_sheets(
+    client, estudiante_token, curso_publicado, db, estudiante_user
+):
+    """Exportar experimento: un archivo, tres hojas — resumen, ciclos y
+    estadísticas — sin recalcular nada que /students o /export ya cubran."""
+    seed_knowledge_test_bank(db)
+
+    # Orden real garantizado por la UI (Dashboard.tsx: !has_diagnostic
+    # bloquea "Ver ruta adaptativa"): el diagnóstico Likert siempre existe
+    # ANTES del pre-test — de lo contrario, el pre-test es el primer hecho
+    # de la sesión y fija la única decisión "reforzar" por sesión con el
+    # valor por defecto, no con la modalidad real.
+    from app.models.diagnostic_result import DiagnosticResult
+
+    db.add(
+        DiagnosticResult(
+            student_id=estudiante_user.id,
+            course_id=curso_publicado.id,
+            answers={},
+            profile={},
+            modality_scores={"kinesthetic": 5.0},
+            dominant_modality="kinesthetic",
+        )
+    )
+    db.commit()
+
+    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db)
+
+    # attempts>=2 y solved=False fuerza "reforzar" (scoring-v1: errores>=2 ⇒
+    # no dominada) — el caso donde Adaptar debe honrar la modalidad
+    # diagnosticada; "avanzar-con-andamiaje" usa "mixta" a propósito, que
+    # nunca coincide con ninguna de las 4 modalidades VARK.
+    resp = client.post(
+        "/api/students/cycle-evidence",
+        headers=auth_header(estudiante_token),
+        json={
+            "course_id": curso_publicado.id,
+            "competencia": "variables",
+            "attempts": 3,
+            "solved": False,
+            "hints_used": 1,
+            "time_ms": 12345,
+        },
+    )
+    assert resp.status_code == 200
+
+    resp = client.get("/api/research/export-experiment")
+    assert resp.status_code == 200
+    assert "spreadsheetml" in resp.headers["content-type"]
+
+    from openpyxl import load_workbook
+
+    wb = load_workbook(io.BytesIO(resp.content))
+    assert wb.sheetnames == ["Resumen", "Ciclos", "Estadisticas"]
+
+    ws_resumen = wb["Resumen"]
+    assert ws_resumen.max_row == 2  # cabecera + 1 estudiante
+
+    ws_ciclos = wb["Ciclos"]
+    assert ws_ciclos.max_row == 2  # cabecera + 1 ciclo
+    ciclo_row = dict(zip(
+        [c.value for c in ws_ciclos[1]],
+        [c.value for c in ws_ciclos[2]],
+    ))
+    assert ciclo_row["concepto"] == "variables"
+    assert ciclo_row["modalidad_diagnosticada"] == "kinesthetic"
+    assert ciclo_row["ayudas_utilizadas"] == 1
+
+    ws_stats = wb["Estadisticas"]
+    stats = dict(
+        (row[0].value, row[1].value) for row in ws_stats.iter_rows(min_row=2)
+    )
+    assert stats["n_ciclos_registrados"] == 1
+    assert stats["porcentaje_coincidencia_modalidad"] in (100, 100.0)
