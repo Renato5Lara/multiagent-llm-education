@@ -23,7 +23,10 @@ import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
-import { orderingFallbackOf, resolveCyclePractice } from '@/lib/experiences/practiceVariants'
+import {
+  alternateModality, describeAdaptation, describeResourceFraming,
+  MODALITY_ORDER, orderingFallbackOf, resolveCyclePractice, selectReinforcement,
+} from '@/lib/experiences/experienceOrchestrator'
 import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
@@ -68,62 +71,6 @@ const ADAPTING_STEPS = [
   'Detectando qué tanto dominas el concepto',
   'Eligiendo la mejor forma de continuar',
 ] as const
-
-// Capa conversacional de la adaptación (refinamiento de experiencia, jul
-// 2026): lo que antes era un toast técnico ("Modalidad: visual · reforzando
-// fundamentos") pasa a ser una frase en primera persona, sin mencionar
-// Runtime/agentes/modalidad — el estudiante nunca "abre otra herramienta",
-// el sistema simplemente le ofrece la ayuda que ya decidió. Extensible por
-// diseño: cuando existan más ReinforcementKind (video, imagen, podcast,
-// simulación), esos casos solo agregan una entrada aquí — la mecánica
-// (mensaje → pausa breve → transición) no cambia.
-const REINFORCEMENT_OFFER: Record<ReinforcementKind, string> = {
-  ejemplo: 'Creo que un ejemplo diferente puede ayudarte a entenderlo mejor.',
-  animacion: 'Vamos a probar otra forma de explicarlo.',
-  audio: 'Si prefieres, escuchemos otra explicación antes de continuar.',
-  reto: 'Antes de seguir, resolvamos un reto más para afianzarlo.',
-}
-
-/** Frase que acompaña la transición entre ciclos — nunca jerga técnica.
- *  `reinforcement` ya viene filtrado por "no visitado"; su sola presencia
- *  significa que el Runtime decidió reforzar (profundidad=fundamentos). */
-/** Conversación pedagógica de la transición (Pilar 3 — continuidad): nombra
- *  el concepto que el estudiante acaba de dominar y, cuando lo hay, el
- *  siguiente — nunca "esta parte" genérico. `conceptLabel`/`nextConceptLabel`
- *  ya existen en `LearningCycle` para otros fines (mapa de dominio); esto
- *  solo los reutiliza en la frase, ningún dato nuevo. */
-function describeAdaptation(
-  profundidad: string | undefined,
-  reinforcement: Reinforcement | undefined,
-  conceptLabel: string,
-  nextConceptLabel: string | undefined,
-): string {
-  const concept = conceptLabel.toLowerCase()
-  if (profundidad === 'aplicacion' && reinforcement) {
-    return `Ya dominas ${concept} — ${REINFORCEMENT_OFFER[reinforcement.kind]}`
-  }
-  if (reinforcement) {
-    return `Veo que ${concept} todavía te está costando un poco. ${REINFORCEMENT_OFFER[reinforcement.kind]}`
-  }
-  if (profundidad === 'fundamentos') {
-    return `Vamos a reforzar ${concept} un poco más antes de seguir.`
-  }
-  if (nextConceptLabel) {
-    return `Ya dominas ${concept}. No cambiamos de tema — vamos a construir sobre esa misma idea: ${nextConceptLabel.toLowerCase()}.`
-  }
-  return `Perfecto, ya dominas ${concept}. Continuemos con el siguiente desafío.`
-}
-
-/** Framing conversacional de un recurso REAL del repositorio (nunca un
- *  enlace suelto): nombra el concepto y por qué esa modalidad ayuda —
- *  mismo espíritu que describeAdaptation, mismo vocabulario de modalidad
- *  que el resto del componente. */
-function describeResourceFraming(modality: LearningModality, conceptLabel: string): string {
-  const concept = conceptLabel.toLowerCase()
-  if (modality === 'visual') return `Creo que ${concept} se entiende mejor con una representación visual. Mira esto:`
-  if (modality === 'audio') return `Escuchemos ${concept} explicado de otra forma:`
-  return `Probemos ${concept} de otra manera:`
-}
 
 /** Cuánto queda visible la frase de adaptación antes de transicionar — tiempo
  *  de lectura, no una espera técnica (nunca bloquea: el "Continuar" ya quedó
@@ -298,47 +245,6 @@ const PYTHON_PRACTICE_GAIN = 0.05
  *  del Nivel 3, donde ya no hay actividad que los cuente. */
 const MAX_SUPPORT_ATTEMPTS = 3
 
-const MODALITY_ORDER: LearningModality[] = ['visual', 'reading', 'audio', 'kinesthetic']
-
-/** Otra representación del mismo concepto (Nivel 2): la primera modalidad
- *  disponible distinta a la del perfil del estudiante. */
-function alternateModality(current: LearningModality): LearningModality {
-  return MODALITY_ORDER.find(m => m !== current) ?? current
-}
-
-/** Motor de selección de experiencias (Pilar 1 + Pilar 2 integrados):
- *  el refuerzo automático ya no es "el primero sin visitar" — es el tipo de
- *  ACTIVIDAD (interactiva/guiada/visual/auditiva) que mejor corresponde a
- *  cómo aprende el estudiante, entre los que el propio ciclo ya trae
- *  autorados. Nunca genera nada: si el tipo ideal no está en este ciclo
- *  (p. ej. módulo 2 sin 'animacion' todavía), cae al siguiente de la lista
- *  — reutilización con prioridad, exactamente como se pidió, cero recursos
- *  inventados. `reto` siempre encabeza cuando `preferChallenge` (Orientar/
- *  "aplicacion"): un desafío es interactivo por naturaleza, no depende de
- *  la modalidad de consumo. */
-const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> = {
-  visual: ['animacion', 'ejemplo', 'reto', 'audio'],
-  reading: ['ejemplo', 'animacion', 'reto', 'audio'],
-  audio: ['audio', 'ejemplo', 'animacion', 'reto'],
-  kinesthetic: ['reto', 'ejemplo', 'animacion', 'audio'],
-}
-
-function selectReinforcement(
-  reinforcements: Reinforcement[] | undefined,
-  visited: Set<ReinforcementKind>,
-  modality: LearningModality,
-  preferChallenge: boolean,
-): Reinforcement | undefined {
-  if (!reinforcements?.length) return undefined
-  const priority = preferChallenge
-    ? (['reto', ...REINFORCEMENT_BY_MODALITY[modality].filter(k => k !== 'reto')] as ReinforcementKind[])
-    : REINFORCEMENT_BY_MODALITY[modality]
-  for (const kind of priority) {
-    const match = reinforcements.find(r => r.kind === kind && !visited.has(r.kind))
-    if (match) return match
-  }
-  return reinforcements.find(r => !visited.has(r.kind))
-}
 
 /** Clasificación del desenlace — vale más que una nota para el evaluador. */
 function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 'solucion_mostrada' {
