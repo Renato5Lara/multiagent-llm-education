@@ -326,7 +326,16 @@ def submit_attempt(
         # la primera evaluación de módulo. Best-effort: jamás rompe el
         # submit del estudiante.
         try:
+            from app.services import student_service
             from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+            # Modelo del estudiante ya diagnosticado, si el Likert (VARK) ya
+            # se completó — el flujo real siempre lo exige antes del
+            # pre-test (Dashboard.tsx: !has_diagnostic bloquea "Ver ruta
+            # adaptativa"), pero este hecho no debe asumirlo: sin él, cae
+            # al valor por defecto de siempre (ver productor.py).
+            diagnostico = student_service.get_diagnostic(db, student_id, attempt.course_id)
+            modalidad_estudiante = diagnostico.dominant_modality if diagnostico else None
 
             # Orden alfabético: determinista para replay/reconstrucción
             # (el orden del intento es aleatorio por estudiante) — es un
@@ -338,6 +347,7 @@ def submit_attempt(
                     titulo_modulo=topic,
                     items_incorrectos=celda["incorrectos"],
                     items_totales=celda["total"],
+                    modalidad_estudiante=modalidad_estudiante,
                 )
         except Exception:
             logger.warning("No se pudo registrar el pre-test en el runtime", exc_info=True)
