@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
+import type { RuntimePasoTraza } from '@/hooks/useRuntimeTrace'
 
 export interface StudentTrajectoryDiagnostic {
     dominant_modality: string | null
@@ -83,6 +84,19 @@ export interface StudentTrajectory {
     modules: StudentTrajectoryModule[]
     evaluations: StudentTrajectoryEvaluation[]
     evidence: StudentTrajectoryEvidence[]
+    // RFC-0007 §5 (Modo Evidencia v2) — traza real del runtime (RFC-0010 S3),
+    // misma forma que /api/runtime/sessions/{id}/traza; se traduce con la
+    // MISMA función que ya usa AgentDecisionTimeline (traducirTraza), nunca
+    // una segunda narración.
+    runtime_trace: RuntimePasoTraza[]
+    outcome: {
+        pre_percentage: number | null
+        post_percentage: number | null
+        absolute_gain: number | null
+        normalized_gain: number | null
+        pre_level: string | null
+        post_level: string | null
+    }
 }
 
 // Única fuente de datos del Modo Evidencia — ver evidence_service.py.

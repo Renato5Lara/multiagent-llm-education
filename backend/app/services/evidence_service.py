@@ -4,11 +4,16 @@ Trayectoria del estudiante — Modo Evidencia.
 Este servicio constituye la única fuente de verdad del Modo Evidencia.
 Todos los datos provienen exclusivamente del recorrido real del
 estudiante y de registros persistidos (DiagnosticResult, LearningPath,
-PathModule, EvaluationAttempt, SharedMemoryRecord). No incorpora
-simulaciones, datos sintéticos ni reconstrucciones de deliberaciones
-inexistentes. Cuando una evidencia no está disponible, la interfaz debe
-adaptarse a lo que sí existe — nunca al revés.
+PathModule, EvaluationAttempt, SharedMemoryRecord) más, desde RFC-0007
+§5 ("Modo Evidencia v2"), la Traza real del runtime (RFC-0010 S3) — el
+propio `consultar_traza` documenta este consumo como su primer
+consumidor previsto, pendiente hasta ahora. No incorpora simulaciones,
+datos sintéticos ni reconstrucciones de deliberaciones inexistentes.
+Cuando una evidencia no está disponible, la interfaz debe adaptarse a
+lo que sí existe — nunca al revés.
 """
+
+import logging
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -16,16 +21,58 @@ from sqlalchemy.orm import Session
 from app.models.course import Course
 from app.models.diagnostic_result import DiagnosticResult
 from app.models.evaluation_attempt import EvaluationAttempt
+from app.models.knowledge_test import KnowledgeTestAttempt
+from app.models.research import ExperimentResult
 from app.models.shared_memory_record import SharedMemoryRecord
 from app.models.student_progress import LearningPath, PathModule
 from app.models.user import User
 from app.services.pedagogical_explanations import get_modality_explanation
+from app.services.runtime_connection import (
+    SPEC_VERSION,
+    VERSION_BANCO,
+    VERSION_POLITICA,
+    almacenes,
+)
+from app.services.runtime_trace_serialization import traza_a_pasos_dict
+from runtime.boundary import PeticionAbrirSesion, consultar_traza
+
+logger = logging.getLogger(__name__)
 
 # El scope de la tesis es un solo curso (THESIS_SCOPE_FREEZE.md). Sin este
 # filtro, un estudiante inscrito en varios de los 64 cursos de la malla
 # curricular (demo) puede resolver a un curso equivocado — mismo bug que
 # F9 en el panel Docente, aquí en backend.
 THESIS_COURSE_CODE = "IS301"
+
+
+def _sesion_del_curso(student_id: str, course_id: str) -> str:
+    """`session_id` determinista por estudiante+curso — misma derivación
+    que `runtime_bridge._sesion_del_curso`: RFC-0010 no fija ningún
+    esquema, siempre reconstruible igual, sin tabla adicional que
+    mantener sincronizada."""
+    return f"curso:{course_id}:estudiante:{student_id}"
+
+
+def _leer_traza_real(student_id: str, course_id: str | None) -> list[dict]:
+    """Traza real del runtime (RFC-0007 §5, Modo Evidencia v2) — best-effort:
+    un estudiante sin sesión de runtime todavía (p. ej. diagnóstico previo
+    a la migración) no debe romper el resto de la trayectoria legacy."""
+    if not course_id:
+        return []
+    try:
+        almacen, almacen_memoria = almacenes()
+        peticion = PeticionAbrirSesion(
+            session_id=_sesion_del_curso(student_id, course_id),
+            student_id=student_id,
+            version_banco=VERSION_BANCO,
+            version_politica=VERSION_POLITICA,
+            spec_version=SPEC_VERSION,
+        )
+        traza = consultar_traza(peticion, almacen, almacen_memoria)
+        return traza_a_pasos_dict(traza)
+    except Exception:  # noqa: BLE001
+        logger.warning("No se pudo leer la traza real para %s/%s", student_id, course_id, exc_info=True)
+        return []
 
 
 def _resolve_thesis_course_id(db: Session) -> str | None:
@@ -163,14 +210,54 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
     completed_modules = sum(1 for m in modules if m.status == "completed")
     ratios = [e.score / e.max_score for e in evaluations if e.max_score]
     avg_evaluation_score = round(sum(ratios) / len(ratios) * 100) if ratios else None
-    agents_involved = sorted({r.voter_name for r in memory_records})
     has_bloom_progression = any(m.bloom_level is not None for m in modules)
 
-    # Q5 — puente hacia la hipótesis. Solo se listan como "demostrado" los
-    # componentes con datos persistidos verificables. "Consenso determinista"
-    # y "comparación contra agente único" NO se muestran como demostrados
-    # porque no existe ningún registro de eso en el flujo real — pertenecen
-    # al capítulo de resultados de la tesis, no a esta pantalla.
+    # RFC-0007 §5 (Modo Evidencia v2) — traza real del runtime, no las
+    # tablas v1 legacy leídas arriba. `consultar_traza` la documenta como
+    # su primer consumidor previsto, hasta ahora pendiente.
+    runtime_trace = _leer_traza_real(student_id, resolved_course_id)
+    trace_events = [e for paso in runtime_trace for e in paso["eventos"]]
+    has_real_consensus = any(e["tipo"] == "DecisionRegistrada" for e in trace_events)
+    trace_agents = sorted({
+        str(e["datos"]["autor"]) for e in trace_events
+        if isinstance(e["datos"].get("autor"), str)
+    })
+    agents_involved = sorted({r.voter_name for r in memory_records} | set(trace_agents))
+
+    # Cierra la cadena causal (RFC-0007 §5): mismo dato que ya usa el
+    # Dashboard del Investigador (research_dashboard_service), reutilizado
+    # aquí en vez de recalculado — una sola fuente de pre/post/ganancia.
+    pretest_q = db.query(KnowledgeTestAttempt).filter(
+        KnowledgeTestAttempt.student_id == student_id,
+        KnowledgeTestAttempt.kind == "pre",
+        KnowledgeTestAttempt.status == "completed",
+    )
+    posttest_q = db.query(KnowledgeTestAttempt).filter(
+        KnowledgeTestAttempt.student_id == student_id,
+        KnowledgeTestAttempt.kind == "post",
+        KnowledgeTestAttempt.status == "completed",
+    )
+    result_q = db.query(ExperimentResult).filter(ExperimentResult.student_id == student_id)
+    if resolved_course_id:
+        pretest_q = pretest_q.filter(KnowledgeTestAttempt.course_id == resolved_course_id)
+        posttest_q = posttest_q.filter(KnowledgeTestAttempt.course_id == resolved_course_id)
+        result_q = result_q.filter(ExperimentResult.course_id == resolved_course_id)
+    pretest = pretest_q.first()
+    posttest = posttest_q.first()
+    experiment_result = result_q.first()
+    outcome_payload = {
+        "pre_percentage": pretest.percentage if pretest else None,
+        "post_percentage": posttest.percentage if posttest else None,
+        "absolute_gain": experiment_result.absolute_gain if experiment_result else None,
+        "normalized_gain": experiment_result.normalized_gain if experiment_result else None,
+        "pre_level": pretest.level if pretest else None,
+        "post_level": posttest.level if posttest else None,
+    }
+
+    # Q5 — puente hacia la hipótesis. "Consenso determinista" ahora se
+    # verifica contra la traza real (¿hubo un DecisionRegistrada?), no un
+    # `False` fijo — antes de esta conexión el sistema sí delibera y llega
+    # a consenso (RFC-0006), solo que esta pantalla nunca lo leía.
     hypothesis_bridge = {
         "demonstrated": [
             {"label": "Perfil de aprendizaje detectado", "available": diagnostic is not None},
@@ -179,12 +266,9 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
             {"label": "Resultados de evaluación", "available": len(evaluations) > 0},
             {"label": "Registros de memoria compartida", "available": len(memory_records) > 0},
             {"label": "Trayectoria completa del estudiante", "available": len(modules) > 0},
+            {"label": "Consenso determinista del enjambre", "available": has_real_consensus},
         ],
         "out_of_scope": [
-            {
-                "label": "Consenso determinista",
-                "reason": "No forma parte del flujo persistido que utiliza actualmente la plataforma. Su evaluación corresponde al capítulo experimental de la investigación.",
-            },
             {
                 "label": "Comparación contra agente único",
                 "reason": "No se registra durante el uso de la plataforma. La comparación se realiza mediante el diseño experimental de la tesis.",
@@ -215,4 +299,6 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
         "modules": modules_payload,
         "evaluations": evaluations_payload,
         "evidence": evidence_payload,
+        "runtime_trace": runtime_trace,
+        "outcome": outcome_payload,
     }

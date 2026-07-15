@@ -13,8 +13,6 @@ BaseAgent es una épica posterior.
 
 from __future__ import annotations
 
-import dataclasses
-from decimal import Decimal
 from typing import Any, Mapping
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -28,6 +26,7 @@ from app.services.runtime_connection import (
     VERSION_POLITICA,
     almacenes,
 )
+from app.services.runtime_trace_serialization import evento_a_dict, valor_json
 from runtime.boundary import (
     Identidad,
     PeticionAbrirSesion,
@@ -119,31 +118,15 @@ class PasoTrazaOut(BaseModel):
     eventos: list[EventoOut]
 
 
-def _valor_json(valor: Any) -> Any:
-    """RFC-0010 regla 2: vocabulario del runtime, sin traducir — recorre
-    cualquier valor del kernel (eventos, entradas del estado, uniones
-    como `ResultadoDeliberacion`) hasta que solo queden tipos JSON-nativos.
-    Los enum de vocabulario ya son `str, Enum`; `EntryId` y `Decimal`
-    (ADR-0001 §4, exactitud decimal) son los únicos que se stringifican."""
-    if isinstance(valor, (EntryId, Decimal)):
-        return str(valor)
-    if dataclasses.is_dataclass(valor) and not isinstance(valor, type):
-        return {
-            campo.name: _valor_json(getattr(valor, campo.name))
-            for campo in dataclasses.fields(valor)
-        }
-    if isinstance(valor, (tuple, list)):
-        return [_valor_json(v) for v in valor]
-    return valor
+#: RFC-0010 regla 2 (vocabulario del runtime, sin traducir) — implementación
+#: compartida en runtime_trace_serialization.py; `evidence_service.py` (Modo
+#: Evidencia v2, RFC-0007 §5) sirve la misma forma sin duplicar esta lógica.
+_valor_json = valor_json
 
 
 def _evento_out(evento: DomainEvent) -> EventoOut:
-    datos = {
-        campo.name: _valor_json(getattr(evento, campo.name))
-        for campo in dataclasses.fields(evento)
-        if campo.name != "transicion"
-    }
-    return EventoOut(tipo=type(evento).__name__, datos=datos)
+    d = evento_a_dict(evento)
+    return EventoOut(tipo=d["tipo"], datos=d["datos"])
 
 
 class EstadoOut(BaseModel):
