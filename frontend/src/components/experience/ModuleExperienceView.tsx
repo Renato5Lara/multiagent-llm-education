@@ -490,9 +490,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     const solved = remediationLevel === 0 && orderingSolved && pythonSolved
     const orderingAttempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
     const attempts = orderingAttempts + (pythonOutcome?.attempts ?? 0)
+    const timeMs = (practiceOutcome?.timeMs ?? 0) + (pythonOutcome?.timeMs ?? 0)
     setPhase('adapting')
     submitCycleEvidence.mutate(
-      { courseId, competencia: cycle.conceptId, attempts, solved },
+      { courseId, competencia: cycle.conceptId, attempts, solved, hintsUsed: remediationLevel, timeMs },
       {
         onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
           const diseno = data?.runtime_decision?.diseno

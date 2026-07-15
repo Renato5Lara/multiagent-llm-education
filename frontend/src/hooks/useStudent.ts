@@ -349,6 +349,11 @@ export interface CycleEvidencePayload {
   competencia: string
   attempts: number
   solved: boolean
+  /** Nivel de la escalera de remediación alcanzado (0 = ninguna ayuda) —
+   *  dataset de investigación (RESEARCH_ITERATIONS.md): "ayudas utilizadas". */
+  hintsUsed?: number
+  /** Suma de práctica + puente Python, en ms — dataset: "tiempo por ciclo". */
+  timeMs?: number
 }
 
 /** Evaluación continua (refinamiento de experiencia, jul 2026): la
@@ -364,6 +369,8 @@ export function useSubmitCycleEvidence() {
         competencia: payload.competencia,
         attempts: payload.attempts,
         solved: payload.solved,
+        hints_used: payload.hintsUsed,
+        time_ms: payload.timeMs,
       }, { timeout: 120_000 })
       return resp.data
     },

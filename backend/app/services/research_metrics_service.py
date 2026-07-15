@@ -26,6 +26,7 @@ MISSION_COMPLETED = "mission_completed"
 MODULE_PROGRESS = "module_progress"
 PRETEST_COMPLETED = "pretest_completed"
 POSTTEST_COMPLETED = "posttest_completed"
+CYCLE_EVIDENCE = "cycle_evidence"
 
 
 def record_metric(

@@ -170,3 +170,5 @@ class CycleEvidenceSubmit(BaseModel):
     competencia: str
     attempts: int = Field(..., ge=1)
     solved: bool
+    hints_used: int | None = Field(None, ge=0)
+    time_ms: int | None = Field(None, ge=0)

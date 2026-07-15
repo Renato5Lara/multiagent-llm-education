@@ -570,6 +570,28 @@ def submit_cycle_evidence(
             modalidad_estudiante=diagnostico.dominant_modality if diagnostico else None,
         )
         runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+        # Dataset de investigación (RESEARCH_ITERATIONS.md): un registro por
+        # ciclo — modalidad diagnosticada vs. modalidad de refuerzo
+        # realmente decidida por Adaptar, nunca solo el agregado pre/post
+        # que ya cubre research_export_service. Misma infraestructura de
+        # métricas existente (research_metrics), ningún esquema nuevo.
+        diseno = entrega.diseno or {}
+        research_metrics_service.record_metric(
+            db,
+            metric_type=research_metrics_service.CYCLE_EVIDENCE,
+            student_id=current_user.id,
+            course_id=data.course_id,
+            payload={
+                "competencia": data.competencia,
+                "attempts": data.attempts,
+                "solved": data.solved,
+                "hints_used": data.hints_used,
+                "time_ms": data.time_ms,
+                "modalidad_diagnosticada": diagnostico.dominant_modality if diagnostico else None,
+                "modalidad_refuerzo": diseno.get("modalidad"),
+                "profundidad": diseno.get("profundidad"),
+            },
+        )
     except Exception as e:  # noqa: BLE001
         logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
     return {"ok": True, "runtime_decision": runtime_decision}
