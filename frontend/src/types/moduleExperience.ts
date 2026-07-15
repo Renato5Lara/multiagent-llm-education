@@ -262,6 +262,20 @@ export interface PythonMicroPracticeDef {
   nextStage?: PythonMicroPracticeDef
 }
 
+// Multimodalidad profunda (jul 2026, primer paso de arquitectura): la
+// práctica PRINCIPAL del ciclo —no solo el refuerzo opcional— puede variar
+// según la modalidad efectiva. `default` es obligatorio (comportamiento
+// previo, cero autores rotos); las demás claves son variantes explícitas —
+// nunca un fallback implícito entre modalidades, para no atribuirle a una
+// modalidad una mecánica pensada para otra.
+export interface ModalityPracticeVariants {
+  default: PracticeDef
+  visual?: PracticeDef
+  reading?: PracticeDef
+  audio?: PracticeDef
+  kinesthetic?: PracticeDef
+}
+
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
 
 export interface LearningCycle {
@@ -271,7 +285,10 @@ export interface LearningCycle {
   /** Prior de dominio (en S4 lo carga el evaluador desde el pre-test). */
   priorMastery: number
   concept: CycleConcept
-  practice: PracticeDef
+  /** PracticeDef único (comportamiento previo) o ModalityPracticeVariants —
+   *  cuándo la mecánica de la práctica principal, no solo el refuerzo, debe
+   *  cambiar completamente según cómo aprende el estudiante. */
+  practice: PracticeDef | ModalityPracticeVariants
   decision?: DecisionMenuDef
   /** Escalera de remediación del ciclo. Sin ella, agotar los intentos revela la
    *  solución en la propia práctica (comportamiento previo a la política). */

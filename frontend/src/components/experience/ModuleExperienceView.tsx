@@ -23,6 +23,7 @@ import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
+import { orderingFallbackOf, resolveCyclePractice } from '@/lib/experiences/practiceVariants'
 import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
@@ -33,6 +34,18 @@ import type { LearningModality } from '@/types/modality'
 // Barandas de la autonomía: bajo este dominio, la remediación decide (no hay menú);
 // sobre AUTONOMY_HIGH el menú sugiere continuar.
 const AUTONOMY_LOW = 0.4
+
+// Último respaldo, tipo-seguro, para fallbackSolutionOf (Nivel 3 de la
+// escalera): en la práctica nunca se renderiza — todo ciclo con escalera
+// define practice en su peldaño de Nivel 2 — pero TypeScript exige un valor
+// total. Documentado aquí en vez de silenciado con un cast.
+const EMPTY_ORDERING_FALLBACK: OrderingPracticeDef = {
+  kind: 'ordering',
+  prompt: '',
+  items: [],
+  successFeedback: '',
+  orderFeedback: '',
+}
 
 type Phase =
   | 'opening'
@@ -419,6 +432,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
+  // Multimodalidad profunda: la mecánica de la práctica principal, no solo
+  // el refuerzo, puede variar por modalidad — resuelta una vez por render,
+  // reutilizada en los handlers y en el propio render de la fase 'practice'.
+  const resolvedPractice = cycle ? resolveCyclePractice(cycle.practice, effectiveModality) : undefined
 
   // LEARN-002 — recuperar la hipótesis registrada en la apertura para
   // devolverle su veredicto en el cierre. Se lee solo al llegar al cierre.
@@ -653,14 +670,24 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   }, [cycle, effectiveModality, moduleId])
 
   const handlePracticeAttempt = useCallback(({ attempt, status }: { attempt: number; status: string }) => {
-    if (!cycle) return
+    if (!cycle || !resolvedPractice) return
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
       conceptId: cycle.conceptId,
-      detail: { practice: cycle.practice.kind, attempt, status, correct: status === 'correct' },
+      detail: { practice: resolvedPractice.kind, attempt, status, correct: status === 'correct' },
     })
-  }, [cycle, moduleId])
+  }, [cycle, moduleId, resolvedPractice])
+
+  const handlePredictOutputAttempt = useCallback(({ attempt, correct }: { attempt: number; correct: boolean }) => {
+    if (!cycle || !resolvedPractice) return
+    recordEvidence({
+      type: 'practice_attempt',
+      moduleId,
+      conceptId: cycle.conceptId,
+      detail: { practice: resolvedPractice.kind, attempt, correct },
+    })
+  }, [cycle, moduleId, resolvedPractice])
 
   /** Evidencia para el agente evaluador — contrato RemediationEvidence.
    *  Se emite en CADA peldaño, se resuelva o se agote. */
@@ -699,13 +726,13 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   }, [advanceCycle, cycle])
 
   const handlePracticeFinished = useCallback((outcome: PracticeOutcome) => {
-    if (!cycle) return
+    if (!cycle || !resolvedPractice) return
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
       conceptId: cycle.conceptId,
       detail: {
-        practice: cycle.practice.kind,
+        practice: resolvedPractice.kind,
         attempts: outcome.attempts,
         timeMs: outcome.timeMs,
         solutionShown: outcome.solutionShown,
@@ -715,7 +742,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     })
     bumpMastery(cycle.conceptId, masteryGain(outcome, 0))
     setPracticeOutcome(outcome)
-  }, [bumpMastery, cycle, moduleId])
+  }, [bumpMastery, cycle, moduleId, resolvedPractice])
 
   /** Nivel 0 agotado: no se revela la solución — escala al Nivel 1. */
   const handlePracticeExhausted = useCallback((outcome: PracticeOutcome) => {
@@ -1041,17 +1068,28 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         </div>
       )}
 
-      {phase === 'practice' && cycle && (
+      {phase === 'practice' && cycle && resolvedPractice && (
         <div className="space-y-5">
-          <OrderingPractice
-            key={`${cycle.id}-practice`}
-            practice={cycle.practice}
-            onAttempt={handlePracticeAttempt}
-            onFinished={handlePracticeFinished}
-            // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
-            revealOnExhaust={!cycle.remediation}
-            onExhausted={handlePracticeExhausted}
-          />
+          {resolvedPractice.kind === 'ordering' ? (
+            <OrderingPractice
+              key={`${cycle.id}-practice`}
+              practice={resolvedPractice}
+              onAttempt={handlePracticeAttempt}
+              onFinished={handlePracticeFinished}
+              // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
+              revealOnExhaust={!cycle.remediation}
+              onExhausted={handlePracticeExhausted}
+            />
+          ) : (
+            <PredictOutputPractice
+              key={`${cycle.id}-practice`}
+              practice={resolvedPractice}
+              onAttempt={handlePredictOutputAttempt}
+              onFinished={handlePracticeFinished}
+              revealOnExhaust={!cycle.remediation}
+              onExhausted={handlePracticeExhausted}
+            />
+          )}
           {practiceOutcome && cycle.pythonBridge && (
             <PythonBridge
               bridge={cycle.pythonBridge}
@@ -1093,7 +1131,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           modality={stepModality}
           moduleId={moduleId}
           conceptId={cycle.conceptId}
-          fallbackSolutionOf={cycle.remediation?.steps.find(s => s.level === 2)?.practice ?? cycle.practice}
+          fallbackSolutionOf={
+            cycle.remediation?.steps.find(s => s.level === 2)?.practice ??
+            orderingFallbackOf(cycle.practice) ??
+            EMPTY_ORDERING_FALLBACK
+          }
           onSolved={handleStepSolved}
           onExhausted={handleStepExhausted}
           onContinue={handleMaxSupportContinue}

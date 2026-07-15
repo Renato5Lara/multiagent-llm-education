@@ -87,33 +87,59 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       },
     },
   },
+  // Multimodalidad profunda (jul 2026): la práctica PRINCIPAL, no solo el
+  // refuerzo opcional, cambia de mecánica según la modalidad efectiva.
+  // 'default' preserva exactamente el comportamiento previo (ordenar pasos);
+  // 'reading' exige simular mentalmente la ejecución — otra forma genuina de
+  // demostrar el mismo dominio de "variable como caja reasignable".
   practice: {
-    kind: 'ordering',
-    prompt:
-      'El robot necesita recordar tu edad para calcular en cuántos años cumplirás 100. Construye la secuencia usando SOLO instrucciones precisas sobre la caja — una de la lista es la meta, no un paso.',
-    items: [
-      { id: 'v1', text: 'Crea una caja llamada edad', position: 1 },
-      { id: 'v2', text: 'Guarda el número 20 dentro de la caja edad', position: 2 },
-      { id: 'v3', text: 'Lee el valor guardado en la caja edad', position: 3 },
-      { id: 'v4', text: 'Usa ese valor para calcular 100 menos edad', position: 4 },
-      {
-        id: 'vd1',
-        text: 'Recuerda cuántos años tienes',
-        position: null,
-        whyWrong: '«Recuerda cuántos años tienes» es la meta, no una instrucción: no dice cómo crear la caja, ni cómo guardar o leer el valor.',
-      },
-    ],
-    successFeedback:
-      'Exacto. Le diste al robot una caja con nombre para guardar un valor y volver a usarlo — eso es exactamente lo que hace una variable. Pronto escribirás esta misma secuencia en Python, en una sola línea por paso.',
-    orderFeedback:
-      'El robot no puede leer una caja que todavía no llenaste, ni calcular con un valor que no leyó.',
-    generalHint:
-      'El robot se detuvo: una de las frases describe el resultado que quieres, no un paso sobre la caja edad.',
-    solutionExplanation: [
-      'Crear la caja, guardar el valor, leer el valor y usarlo — cuatro pasos, cada uno dejando al robot listo para el siguiente. «Recuerda cuántos años tienes» era la meta: no dice cómo guardar ni cómo leer nada.',
-      'Fíjate en el patrón: primero se crea el lugar donde vivirá el valor, después se guarda algo ahí, y solo entonces se puede leer o usar. Sin ese orden, no hay nada que leer.',
-      'Eso es exactamente una variable: una caja con nombre que guarda un valor, y que puedes volver a leer o cambiar más adelante — sin tener que reescribir el valor cada vez.',
-    ],
+    default: {
+      kind: 'ordering',
+      prompt:
+        'El robot necesita recordar tu edad para calcular en cuántos años cumplirás 100. Construye la secuencia usando SOLO instrucciones precisas sobre la caja — una de la lista es la meta, no un paso.',
+      items: [
+        { id: 'v1', text: 'Crea una caja llamada edad', position: 1 },
+        { id: 'v2', text: 'Guarda el número 20 dentro de la caja edad', position: 2 },
+        { id: 'v3', text: 'Lee el valor guardado en la caja edad', position: 3 },
+        { id: 'v4', text: 'Usa ese valor para calcular 100 menos edad', position: 4 },
+        {
+          id: 'vd1',
+          text: 'Recuerda cuántos años tienes',
+          position: null,
+          whyWrong: '«Recuerda cuántos años tienes» es la meta, no una instrucción: no dice cómo crear la caja, ni cómo guardar o leer el valor.',
+        },
+      ],
+      successFeedback:
+        'Exacto. Le diste al robot una caja con nombre para guardar un valor y volver a usarlo — eso es exactamente lo que hace una variable. Pronto escribirás esta misma secuencia en Python, en una sola línea por paso.',
+      orderFeedback:
+        'El robot no puede leer una caja que todavía no llenaste, ni calcular con un valor que no leyó.',
+      generalHint:
+        'El robot se detuvo: una de las frases describe el resultado que quieres, no un paso sobre la caja edad.',
+      solutionExplanation: [
+        'Crear la caja, guardar el valor, leer el valor y usarlo — cuatro pasos, cada uno dejando al robot listo para el siguiente. «Recuerda cuántos años tienes» era la meta: no dice cómo guardar ni cómo leer nada.',
+        'Fíjate en el patrón: primero se crea el lugar donde vivirá el valor, después se guarda algo ahí, y solo entonces se puede leer o usar. Sin ese orden, no hay nada que leer.',
+        'Eso es exactamente una variable: una caja con nombre que guarda un valor, y que puedes volver a leer o cambiar más adelante — sin tener que reescribir el valor cada vez.',
+      ],
+    },
+    reading: {
+      kind: 'predict_output',
+      prompt: '¿Qué imprime este código?',
+      code: 'edad = 20\nedad = edad + 1\nprint(edad)',
+      options: [
+        { id: 'a', text: '20' },
+        { id: 'b', text: '21' },
+        { id: 'c', text: 'edad' },
+        { id: 'd', text: 'Error' },
+      ],
+      correctOptionId: 'b',
+      successFeedback: 'Exacto — «edad» empezó en 20, pero «edad = edad + 1» la reasignó antes del print(). La caja guarda lo último que se le pidió guardar.',
+      wrongFeedback: 'Revisa: print(edad) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+      solutionExplanation: [
+        'Línea 1: edad = 20 — crea la caja con el valor 20.',
+        'Línea 2: edad = edad + 1 — lee el 20 que había, le suma 1, y guarda 21 en la misma caja.',
+        'Línea 3: print(edad) — muestra lo que hay AHORA en la caja: 21, no el 20 inicial.',
+      ],
+    },
   },
   pythonBridge: {
     label: 'Esto ya es Python',

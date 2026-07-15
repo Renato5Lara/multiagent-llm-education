@@ -4,7 +4,7 @@
 // genuinamente distinta a OrderingPractice, no el mismo ejercicio con otro
 // disfraz. Mismo contrato de salida (PracticeOutcome) para componer con la
 // evidencia y el dominio ya existentes sin tocar esa maquinaria.
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { CheckCircle2, GraduationCap, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -14,12 +14,19 @@ import type { PracticeOutcome } from './OrderingPractice'
 interface Props {
   practice: PredictOutputPracticeDef
   onAttempt?: (info: { attempt: number; correct: boolean }) => void
+  /** Se dispara al resolver o al mostrar la solución (nunca-bloquear). */
   onFinished: (outcome: PracticeOutcome) => void
+  /** Mismo contrato que OrderingPractice: quién decide revelar la solución
+   *  al agotar los intentos. true (default) — la actividad la revela. false
+   *  — cede el control a la escalera vía onExhausted, sin mostrar nada aquí. */
+  revealOnExhaust?: boolean
+  /** Intentos agotados sin resolver y sin revelar (revealOnExhaust=false). */
+  onExhausted?: (outcome: PracticeOutcome) => void
 }
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 2
 
-export function PredictOutputPractice({ practice, onAttempt, onFinished }: Props) {
+export function PredictOutputPractice({ practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted }: Props) {
   const [selected, setSelected] = useState<string | null>(null)
   const [attempts, setAttempts] = useState(0)
   const [status, setStatus] = useState<'idle' | 'wrong' | 'correct' | 'exhausted'>('idle')
@@ -45,6 +52,11 @@ export function PredictOutputPractice({ practice, onAttempt, onFinished }: Props
       return
     }
     if (nextAttempts >= MAX_ATTEMPTS_BEFORE_SOLUTION) {
+      if (!revealOnExhaust) {
+        finishedRef.current = true
+        onExhausted?.({ attempts: nextAttempts, timeMs: Date.now() - startRef.current, solutionShown: false })
+        return
+      }
       setStatus('exhausted')
       finish(true)
       return
