@@ -10,18 +10,48 @@
 // qué práctica, qué refuerzo y qué frase de transición corresponden — sin
 // invocar ninguna decisión nueva del Runtime ni inventar contenido propio.
 //
-// Estado actual (deliberado, ver feedback_experience_orchestrator_spec):
-// compone PIEZAS de un mismo ciclo (práctica principal + refuerzo +
-// transición). Componer RECORRIDOS completos alternativos por concepto
-// (intro→interacción→práctica→python→reto→cierre como unidad) y que el
-// Runtime elija entre ellos son los dos escalones siguientes, explícitamente
-// diferidos — no construir sin que el usuario lo autorice primero.
+// Etapa 2 (jul 2026, feedback_experience_recipe_model): cuando un ciclo
+// define `recipes`, este módulo ya no resuelve teoría/práctica/prioridad de
+// refuerzo por separado — las toma de la RECETA de la modalidad efectiva,
+// una unidad componible ("la experiencia visual completa de este
+// concepto"), no piezas sueltas. Sin receta para esa modalidad, cae
+// exactamente al comportamiento de la Etapa 1 (concept.variants +
+// ModalityPracticeVariants + prioridad global) — ningún contenido existente
+// se reescribe para adoptar este modelo.
+//
+// Todavía diferido, sin autorización: recorridos completos alternativos
+// como archivos separados por concepto (recipes/visual.ts, etc.) y que el
+// Runtime elija entre ellos — esto sigue resolviendo con las señales que
+// YA llegan del Runtime (profundidad, modalidad recomendada), nunca invoca
+// una decisión nueva.
 
 import type { LearningModality } from '@/types/modality'
-import type { Reinforcement, ReinforcementKind } from '@/types/moduleExperience'
+import type {
+  CycleConcept, ExperienceRecipe, LearningCycle, PracticeDef, Reinforcement, ReinforcementKind,
+} from '@/types/moduleExperience'
 import { orderingFallbackOf, resolveCyclePractice } from './practiceVariants'
 
 export { orderingFallbackOf, resolveCyclePractice }
+
+/** La receta de la modalidad efectiva, si el ciclo la define. */
+export function resolveRecipe(cycle: LearningCycle, modality: LearningModality): ExperienceRecipe | undefined {
+  return cycle.recipes?.[modality]
+}
+
+/** CycleConcept listo para ConceptStep: si hay receta, su `concept`
+ *  reemplaza solo la variante de esa modalidad — secondExample/pythonBridge
+ *  del ciclo se conservan intactos, nunca se inventan de la receta. */
+export function resolveConceptForRender(cycle: LearningCycle, modality: LearningModality): CycleConcept {
+  const recipe = resolveRecipe(cycle, modality)
+  if (!recipe) return cycle.concept
+  return { ...cycle.concept, variants: { ...cycle.concept.variants, [modality]: recipe.concept } }
+}
+
+/** Práctica principal: la de la receta si existe, si no la resolución de
+ *  Etapa 1 (ModalityPracticeVariants / PracticeDef único). */
+export function resolvePractice(cycle: LearningCycle, modality: LearningModality): PracticeDef {
+  return resolveRecipe(cycle, modality)?.practice ?? resolveCyclePractice(cycle.practice, modality)
+}
 
 export const MODALITY_ORDER: LearningModality[] = ['visual', 'reading', 'audio', 'kinesthetic']
 
@@ -31,14 +61,11 @@ export function alternateModality(current: LearningModality): LearningModality {
   return MODALITY_ORDER.find(m => m !== current) ?? current
 }
 
-/** Motor de selección de refuerzo (Pilar 1 + Pilar 2 integrados): el
- *  refuerzo automático es el tipo de ACTIVIDAD (interactiva/guiada/visual/
- *  auditiva) que mejor corresponde a cómo aprende el estudiante, entre los
- *  que el propio ciclo ya trae autorados. Nunca genera nada: si el tipo
- *  ideal no está en este ciclo, cae al siguiente de la lista — reutilización
- *  con prioridad, cero recursos inventados. `reto` siempre encabeza cuando
- *  `preferChallenge` (Orientar/"aplicacion"): un desafío es interactivo por
- *  naturaleza, no depende de la modalidad de consumo. */
+/** Motor de selección de refuerzo, prioridad de Etapa 1 (Pilar 1 + Pilar 2
+ *  integrados): el tipo de ACTIVIDAD que mejor corresponde a cómo aprende
+ *  el estudiante en general, cuando el ciclo no define una receta con su
+ *  propia prioridad. Nunca genera nada: si el tipo ideal no está en este
+ *  ciclo, cae al siguiente de la lista. */
 const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> = {
   visual: ['animacion', 'ejemplo', 'reto', 'audio'],
   reading: ['ejemplo', 'animacion', 'reto', 'audio'],
@@ -46,16 +73,28 @@ const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> =
   kinesthetic: ['reto', 'ejemplo', 'animacion', 'audio'],
 }
 
+/** Prioridad de refuerzo: la de la receta si el ciclo la define para esta
+ *  modalidad, si no la global de Etapa 1. */
+export function resolveReinforcementPriority(cycle: LearningCycle, modality: LearningModality): ReinforcementKind[] {
+  return resolveRecipe(cycle, modality)?.reinforcementPriority ?? REINFORCEMENT_BY_MODALITY[modality]
+}
+
 export function selectReinforcement(
   reinforcements: Reinforcement[] | undefined,
   visited: Set<ReinforcementKind>,
   modality: LearningModality,
   preferChallenge: boolean,
+  /** Prioridad a usar en vez de la global — resolveReinforcementPriority()
+   *  cuando el llamador ya tiene el ciclo a mano. `reto` siempre encabeza
+   *  cuando `preferChallenge` (Orientar/"aplicacion"): un desafío es
+   *  interactivo por naturaleza, no depende de la modalidad de consumo. */
+  priorityOverride?: ReinforcementKind[],
 ): Reinforcement | undefined {
   if (!reinforcements?.length) return undefined
+  const basePriority = priorityOverride ?? REINFORCEMENT_BY_MODALITY[modality]
   const priority = preferChallenge
-    ? (['reto', ...REINFORCEMENT_BY_MODALITY[modality].filter(k => k !== 'reto')] as ReinforcementKind[])
-    : REINFORCEMENT_BY_MODALITY[modality]
+    ? (['reto', ...basePriority.filter(k => k !== 'reto')] as ReinforcementKind[])
+    : basePriority
   for (const kind of priority) {
     const match = reinforcements.find(r => r.kind === kind && !visited.has(r.kind))
     if (match) return match

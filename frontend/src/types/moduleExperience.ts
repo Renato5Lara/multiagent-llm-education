@@ -276,6 +276,28 @@ export interface ModalityPracticeVariants {
   kinesthetic?: PracticeDef
 }
 
+// Experience Recipe (jul 2026, Etapa 2 del Experience Orchestrator): hasta
+// aquí, cada pieza de la experiencia (teoría, práctica, orden de refuerzo)
+// se resolvía por separado para la misma modalidad — sin que existiera un
+// objeto que representara "la experiencia visual completa de este
+// concepto". Una receta agrupa esas piezas en una sola unidad componible.
+// Opcional y aditivo: un ciclo sin `recipes` sigue resolviendo pieza por
+// pieza exactamente como antes (concept.variants + ModalityPracticeVariants
+// + prioridad global de refuerzo) — ningún contenido existente se reescribe
+// para adoptar este modelo.
+export interface ExperienceRecipe {
+  /** Presentación teórica de esta receta — mismo tipo que ya usa
+   *  CycleConcept.variants[modalidad], reutilizado sin cambios. */
+  concept: ConceptVariant
+  /** Mecánica de interacción principal de esta receta. */
+  practice: PracticeDef
+  /** Orden de refuerzo preferido de ESTA receta — reemplaza la entrada de
+   *  esa modalidad en la prioridad global cuando la receta existe. */
+  reinforcementPriority: ReinforcementKind[]
+}
+
+export type ExperienceRecipeBook = Partial<Record<LearningModality, ExperienceRecipe>>
+
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
 
 export interface LearningCycle {
@@ -297,6 +319,11 @@ export interface LearningCycle {
   pythonBridge?: PythonBridge
   /** Se muestra antes del concepto — la pausa "¿Sabías que...?". */
   curiosityFact?: CuriosityFact
+  /** Experiencias completas por modalidad (Etapa 2 del Experience
+   *  Orchestrator) — cuando existe una receta para la modalidad efectiva,
+   *  gobierna teoría+práctica+prioridad de refuerzo como una sola unidad,
+   *  en vez de resolverlas por separado desde `concept`/`practice`. */
+  recipes?: ExperienceRecipeBook
 }
 
 // ── Apertura de curiosidad ─────────────────────────────────────────────────────

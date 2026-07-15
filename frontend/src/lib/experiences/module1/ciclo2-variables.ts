@@ -1,7 +1,44 @@
 // Módulo 1 · Ciclo 2 — Variables.
 // Extraído de module1.ts (refactor mecánico, sin cambio de comportamiento).
 
-import type { LearningCycle } from '@/types/moduleExperience'
+import type { ConceptVariant, LearningCycle, PredictOutputPracticeDef } from '@/types/moduleExperience'
+
+// Experience Recipe — Etapa 2 del Experience Orchestrator (jul 2026): la
+// experiencia "lectora" completa de Variables (teoría + práctica) se define
+// UNA vez aquí y se referencia tanto desde concept.variants.reading (Etapa 1,
+// piezas sueltas) como desde recipes.reading (Etapa 2, unidad completa) —
+// nunca se duplica el contenido, solo se agrupa.
+const READING_CONCEPT_VARIANT: ConceptVariant = {
+  medium: 'texto',
+  mediumLabel: 'Texto estructurado',
+  sourceNote: 'Elegido para ti — tu perfil profundiza mejor leyendo a su ritmo.',
+  body: [
+    'Imagina un programa que usa el precio de una compra tres veces: una para mostrarlo, otra para guardarlo en el recibo, otra para avisar si alcanza el saldo. Si escribes el precio suelto las tres veces y el precio cambia, tienes que corregirlo en las tres.',
+    'Una variable resuelve exactamente ese problema: le pones nombre a un valor UNA vez — precio = 4.50 — y usas ese nombre las veces que necesites. Si el precio cambia, cambias una sola línea.',
+    'Por eso una variable no es solo «guardar un dato»: es guardar un dato con un nombre que el resto del programa puede reutilizar sin repetir el valor.',
+    'Python usa la forma más simple posible para esto: nombre = valor. A la izquierda, el nombre que eliges; a la derecha, lo que guarda.',
+  ],
+}
+
+const READING_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: '¿Qué imprime este código?',
+  code: 'edad = 20\nedad = edad + 1\nprint(edad)',
+  options: [
+    { id: 'a', text: '20' },
+    { id: 'b', text: '21' },
+    { id: 'c', text: 'edad' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'b',
+  successFeedback: 'Exacto — «edad» empezó en 20, pero «edad = edad + 1» la reasignó antes del print(). La caja guarda lo último que se le pidió guardar.',
+  wrongFeedback: 'Revisa: print(edad) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  solutionExplanation: [
+    'Línea 1: edad = 20 — crea la caja con el valor 20.',
+    'Línea 2: edad = edad + 1 — lee el 20 que había, le suma 1, y guarda 21 en la misma caja.',
+    'Línea 3: print(edad) — muestra lo que hay AHORA en la caja: 21, no el 20 inicial.',
+  ],
+}
 
 export const CICLO_2_VARIABLES: LearningCycle = {
   id: 'ciclo-2',
@@ -51,17 +88,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
           'Python crea esa caja con una sola línea: nombre = valor. Después de esa línea, escribir el nombre es exactamente lo mismo que escribir el valor que guarda.',
         ],
       },
-      reading: {
-        medium: 'texto',
-        mediumLabel: 'Texto estructurado',
-        sourceNote: 'Elegido para ti — tu perfil profundiza mejor leyendo a su ritmo.',
-        body: [
-          'Imagina un programa que usa el precio de una compra tres veces: una para mostrarlo, otra para guardarlo en el recibo, otra para avisar si alcanza el saldo. Si escribes el precio suelto las tres veces y el precio cambia, tienes que corregirlo en las tres.',
-          'Una variable resuelve exactamente ese problema: le pones nombre a un valor UNA vez — precio = 4.50 — y usas ese nombre las veces que necesites. Si el precio cambia, cambias una sola línea.',
-          'Por eso una variable no es solo «guardar un dato»: es guardar un dato con un nombre que el resto del programa puede reutilizar sin repetir el valor.',
-          'Python usa la forma más simple posible para esto: nombre = valor. A la izquierda, el nombre que eliges; a la derecha, lo que guarda.',
-        ],
-      },
+      reading: READING_CONCEPT_VARIANT,
       audio: {
         medium: 'clip_narrado',
         mediumLabel: 'Clip narrado',
@@ -121,25 +148,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         'Eso es exactamente una variable: una caja con nombre que guarda un valor, y que puedes volver a leer o cambiar más adelante — sin tener que reescribir el valor cada vez.',
       ],
     },
-    reading: {
-      kind: 'predict_output',
-      prompt: '¿Qué imprime este código?',
-      code: 'edad = 20\nedad = edad + 1\nprint(edad)',
-      options: [
-        { id: 'a', text: '20' },
-        { id: 'b', text: '21' },
-        { id: 'c', text: 'edad' },
-        { id: 'd', text: 'Error' },
-      ],
-      correctOptionId: 'b',
-      successFeedback: 'Exacto — «edad» empezó en 20, pero «edad = edad + 1» la reasignó antes del print(). La caja guarda lo último que se le pidió guardar.',
-      wrongFeedback: 'Revisa: print(edad) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
-      solutionExplanation: [
-        'Línea 1: edad = 20 — crea la caja con el valor 20.',
-        'Línea 2: edad = edad + 1 — lee el 20 que había, le suma 1, y guarda 21 en la misma caja.',
-        'Línea 3: print(edad) — muestra lo que hay AHORA en la caja: 21, no el 20 inicial.',
-      ],
-    },
+    reading: READING_PRACTICE,
   },
   pythonBridge: {
     label: 'Esto ya es Python',
@@ -373,5 +382,19 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         ],
       },
     ],
+  },
+  // Experience Recipe — Etapa 2 (jul 2026): la experiencia "lectora" de
+  // Variables como UNA unidad (teoría + práctica), no piezas resueltas por
+  // separado. Primera receta real del sistema — reutiliza exactamente el
+  // mismo contenido que concept.variants.reading/practice.reading (ver los
+  // const al inicio del archivo), nunca lo duplica. La prioridad de refuerzo
+  // reutiliza los mismos valores que ya tenía REINFORCEMENT_BY_MODALITY.reading
+  // en el Orchestrator (Etapa 1) — formalizada aquí, no reinventada.
+  recipes: {
+    reading: {
+      concept: READING_CONCEPT_VARIANT,
+      practice: READING_PRACTICE,
+      reinforcementPriority: ['ejemplo', 'animacion', 'reto', 'audio'],
+    },
   },
 }

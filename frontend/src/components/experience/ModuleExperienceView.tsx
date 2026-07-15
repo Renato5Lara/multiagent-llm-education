@@ -25,7 +25,8 @@ import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
 import {
   alternateModality, describeAdaptation, describeResourceFraming,
-  MODALITY_ORDER, orderingFallbackOf, resolveCyclePractice, selectReinforcement,
+  MODALITY_ORDER, orderingFallbackOf, resolveConceptForRender, resolvePractice,
+  resolveReinforcementPriority, selectReinforcement,
 } from '@/lib/experiences/experienceOrchestrator'
 import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
 import type {
@@ -341,7 +342,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // Multimodalidad profunda: la mecánica de la práctica principal, no solo
   // el refuerzo, puede variar por modalidad — resuelta una vez por render,
   // reutilizada en los handlers y en el propio render de la fase 'practice'.
-  const resolvedPractice = cycle ? resolveCyclePractice(cycle.practice, effectiveModality) : undefined
+  const resolvedPractice = cycle ? resolvePractice(cycle, effectiveModality) : undefined
 
   // LEARN-002 — recuperar la hipótesis registrada en la apertura para
   // devolverle su veredicto en el cierre. Se lee solo al llegar al cierre.
@@ -520,10 +521,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // Mismo mecanismo de auto-refuerzo ya existente, ningún concepto
           // nuevo en el Runtime ni recurso inventado en el frontend.
           const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
+          const reinforcementPriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
           const reinforcement = profundidad === 'fundamentos'
-            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false)
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false, reinforcementPriority)
             : profundidad === 'aplicacion'
-              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true)
+              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, reinforcementPriority)
               : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
@@ -970,7 +972,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       {phase === 'concept' && cycle && (
         <div className="space-y-5">
           {cycle.curiosityFact && <CuriosityFactCard fact={cycle.curiosityFact} />}
-          <ConceptStep concept={cycle.concept} modality={effectiveModality} onContinue={handleConceptDone} />
+          <ConceptStep concept={resolveConceptForRender(cycle, effectiveModality)} modality={effectiveModality} onContinue={handleConceptDone} />
         </div>
       )}
 
