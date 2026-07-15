@@ -1,11 +1,16 @@
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, BarChart3, GitCompare, FlaskConical } from 'lucide-react'
+import { LayoutDashboard, BookOpen, BarChart3, GitCompare, FlaskConical, GraduationCap } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
+// "Modo Evidencia" (EvidenceHub/ResearchDashboard/RuntimeConsole sueltos) se
+// conserva por ahora — el Panel Pedagógico reutiliza esas mismas páginas
+// como pestañas, no las reemplaza todavía. Retirar el enlace suelto es una
+// limpieza de navegación separada, no parte de esta pieza.
 const docenteItems: SidebarItem[] = [
   { label: 'Dashboard', href: '/docente', icon: LayoutDashboard },
   { label: 'Mis Cursos', href: '/docente/courses', icon: BookOpen },
+  { label: 'Panel Pedagógico', href: '/docente/panel-pedagogico', icon: GraduationCap },
   { label: 'Analítica IA', href: '/docente/analytics', icon: BarChart3 },
   { label: 'Comparación Swarm', href: '/docente/swarm-comparison', icon: GitCompare },
   { label: 'Modo Evidencia', href: '/evidencia', icon: FlaskConical, sectionBefore: true },

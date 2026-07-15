@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import PageHeader from '@/components/common/PageHeader'
 import { DeliberationEventList } from '@/components/observability/DeliberationEventList'
 import { ConceptCausalStory } from '@/components/observability/ConceptCausalStory'
-import { AgentSeriesCharts } from '@/components/observability/AgentSeriesCharts'
 import { useUsers } from '@/hooks/useUsers'
 import { useStudentTrajectory } from '@/hooks/useEvidence'
 import { traducirTraza } from '@/hooks/useLiveDeliberation'
@@ -131,17 +130,9 @@ export default function StudentTrajectoryPage() {
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                <Sparkles className="h-4 w-4 text-primary" />
-                                Observabilidad Pedagógica
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <AgentSeriesCharts agentSeries={trajectory.agent_series} consensusSeries={trajectory.consensus_series} />
-                        </CardContent>
-                    </Card>
+                    {/* Observabilidad Pedagógica se movió a su propia pestaña dentro del
+                        Panel Pedagógico (arquitectura de dashboards congelada, jul 2026) —
+                        AgentSeriesCharts se reutiliza ahí, nunca una segunda copia. */}
 
                     <Card>
                         <CardHeader>
