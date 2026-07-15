@@ -538,6 +538,7 @@ def update_mission_progress(
 @router.post("/cycle-evidence")
 def submit_cycle_evidence(
     data: CycleEvidenceSubmit,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
     """Evaluación continua (refinamiento de experiencia, jul 2026): la
@@ -557,12 +558,16 @@ def submit_cycle_evidence(
         # No resuelto (solución revelada) → todos los intentos cuentan como
         # incorrectos, igual que una pregunta sin responder correctamente.
         errores = max(0, data.attempts - 1) if data.solved else data.attempts
+        # Modelo del estudiante ya diagnosticado (RFC-0002 §3: Adaptar debe
+        # leerlo) — se adjunta al mismo hecho, nunca se inventa uno nuevo.
+        diagnostico = student_service.get_diagnostic(db, current_user.id, data.course_id)
         entrega = registrar_evidencia_evaluacion(
             student_id=current_user.id,
             course_id=data.course_id,
             titulo_modulo=data.competencia,
             items_incorrectos=list(range(errores)),
             items_totales=data.attempts,
+            modalidad_estudiante=diagnostico.dominant_modality if diagnostico else None,
         )
         runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
     except Exception as e:  # noqa: BLE001

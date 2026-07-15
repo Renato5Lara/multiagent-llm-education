@@ -59,6 +59,7 @@ def registrar_evidencia_evaluacion(
     titulo_modulo: str,
     items_incorrectos: list[int],
     items_totales: int | None = None,
+    modalidad_estudiante: str | None = None,
 ) -> Entrega:
     """El primer hecho real del flujo del estudiante que entra por el
     Boundary. `titulo_modulo` se traduce a `competencia` vía ADR-0010
@@ -67,7 +68,12 @@ def registrar_evidencia_evaluacion(
     `items_totales` activa la señal de sesión de Tutorizar (RFC-0002
     R4: fluidez/confusión/frustración) — su productor exige el total
     para clasificar; sin él la evidencia sigue siendo válida pero la
-    señal conductual no se produce."""
+    señal conductual no se produce.
+
+    `modalidad_estudiante` (visual/reading/audio/kinesthetic, ya
+    diagnosticada) permite que Adaptar honre la modalidad real en el
+    caso "reforzar" (RFC-0002 §3: Adaptar lee "modelo del estudiante") —
+    sin ella, el diseño usa su valor por defecto de siempre."""
     almacen, almacen_memoria = almacenes()
     identidad = abrir_sesion(_peticion(student_id, course_id), almacen, almacen_memoria)
     contenido: dict[str, Any] = {
@@ -76,6 +82,8 @@ def registrar_evidencia_evaluacion(
     }
     if items_totales is not None:
         contenido["items_totales"] = items_totales
+    if modalidad_estudiante is not None:
+        contenido["modalidad_estudiante"] = modalidad_estudiante
     return registrar_hecho(
         PeticionHechoDelMundo(
             identidad=identidad,

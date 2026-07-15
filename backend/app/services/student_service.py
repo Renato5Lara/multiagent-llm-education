@@ -125,7 +125,7 @@ def compute_prior_knowledge(answers: dict) -> tuple[str, list[str]]:
 
 
 def _registrar_diagnostico_en_runtime(
-    student_id: str, course_id: str, answers: dict
+    student_id: str, course_id: str, answers: dict, modalidad_estudiante: str | None = None
 ) -> None:
     """El diagnóstico inicial entra al Runtime como evidencia — la
     primera decisión adaptativa la toma el Runtime, no una tabla local.
@@ -134,7 +134,14 @@ def _registrar_diagnostico_en_runtime(
     Preserva exactamente el umbral del instrumento (≥4 = dominado) bajo
     scoring-v1 (≥2 errores ⇒ no dominada): 4/5 → 1 error → dominada;
     3/5 → 2 errores → no dominada. Mismo patrón que el pre-test
-    (knowledge_test_service): una competencia por hecho, best-effort."""
+    (knowledge_test_service): una competencia por hecho, best-effort.
+
+    `modalidad_estudiante` (ya calculada en `save_diagnostic`, antes de
+    esta llamada) viaja con CADA hecho: la primera decisión "reforzar"
+    de la sesión suele derivarse del primer tema de conocimiento previo
+    (RFC-0002 §3, Adaptar debe leer el modelo del estudiante) — sin
+    esto, esa primera adaptación quedaba fija en el valor por defecto
+    para toda la sesión, sin importar el perfil VARK real."""
     from app.services.runtime_bridge import registrar_evidencia_evaluacion
 
     for q_id_str, value in sorted(answers.items(), key=lambda kv: str(kv[0])):
@@ -151,6 +158,7 @@ def _registrar_diagnostico_en_runtime(
             titulo_modulo=topic,
             items_incorrectos=list(range(5 - score)),
             items_totales=5,
+            modalidad_estudiante=modalidad_estudiante,
         )
 
 
@@ -239,7 +247,7 @@ def save_diagnostic(
                 db.refresh(existing)
                 result = existing
     try:
-        _registrar_diagnostico_en_runtime(student_id, course_id, answers)
+        _registrar_diagnostico_en_runtime(student_id, course_id, answers, modalidad_estudiante=dominant)
     except Exception:  # noqa: BLE001
         logger.warning("No se pudo registrar el diagnóstico en el runtime", exc_info=True)
     return result
