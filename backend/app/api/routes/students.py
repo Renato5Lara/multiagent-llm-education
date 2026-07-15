@@ -37,10 +37,12 @@ from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service, learning_experience_service
 from app.services.audit_service import log_action_sync
-from app.services import research_metrics_service
+from app.services import research_metrics_service, resource_lookup_service
 from app.services.module_orchestration_service import module_orchestration_service
 from app.models.student_progress import PathModule, LearningPath
+from app.models.resource import ResourceType
 from app.schemas.progress import ModuleOrchestrationResponse
+from app.schemas.resource import ResourceResponse
 
 logger = logging.getLogger(__name__)
 
@@ -558,6 +560,22 @@ def submit_cycle_evidence(
     except Exception as e:  # noqa: BLE001
         logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
     return {"ok": True, "runtime_decision": runtime_decision}
+
+
+@router.get("/course-resource/{course_id}", response_model=ResourceResponse | None)
+def get_course_resource(
+    course_id: str,
+    resource_type: ResourceType,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Multimodalidad real: recurso del repositorio del curso para la
+    modalidad recomendada por el Runtime — repositorio primero, contenido
+    ya autorado como respaldo (ver resource_lookup_service). Devuelve null
+    con 200 cuando el curso no tiene recursos de ese tipo (hoy siempre,
+    para IS301): la UI cae al refuerzo ya autorado, nunca se inventa un
+    recurso."""
+    return resource_lookup_service.find_resource_for_modality(db, course_id, resource_type)
 
 
 @router.post("/progress/{course_id}", response_model=StudentProgressResponse)

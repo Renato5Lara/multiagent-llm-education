@@ -18,9 +18,11 @@ import { PythonBridge } from './PythonBridge'
 import { CuriosityFactCard } from './CuriosityFactCard'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
+import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
+import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
   Reinforcement, ReinforcementKind, RemediationLevel, RemediationStep,
@@ -96,6 +98,17 @@ function describeAdaptation(
     return `Ya dominas ${concept}. No cambiamos de tema — vamos a construir sobre esa misma idea: ${nextConceptLabel.toLowerCase()}.`
   }
   return `Perfecto, ya dominas ${concept}. Continuemos con el siguiente desafío.`
+}
+
+/** Framing conversacional de un recurso REAL del repositorio (nunca un
+ *  enlace suelto): nombra el concepto y por qué esa modalidad ayuda —
+ *  mismo espíritu que describeAdaptation, mismo vocabulario de modalidad
+ *  que el resto del componente. */
+function describeResourceFraming(modality: LearningModality, conceptLabel: string): string {
+  const concept = conceptLabel.toLowerCase()
+  if (modality === 'visual') return `Creo que ${concept} se entiende mejor con una representación visual. Mira esto:`
+  if (modality === 'audio') return `Escuchemos ${concept} explicado de otra forma:`
+  return `Probemos ${concept} de otra manera:`
 }
 
 /** Cuánto queda visible la frase de adaptación antes de transicionar — tiempo
@@ -335,6 +348,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     const savedCycle = definition.cycles[initialCursor.cycleIndex]
     return savedCycle?.decision?.reinforcements.find(r => r.kind === initialCursor.activeReinforcementKind) ?? null
   })
+  // Multimodalidad real: recurso REAL del repositorio del curso para la
+  // modalidad recomendada, consultado justo antes de entrar a 'reinforcement'
+  // — null casi siempre hoy (repositorio vacío para IS301), nunca persistido
+  // en el cursor porque es un intento de red, no estado de progreso.
+  const [externalResource, setExternalResource] = useState<CourseResource | null>(null)
   // PED-005 — refuerzos ya explorados en el ciclo actual: al terminar uno se
   // vuelve al menú (elegir nunca es un callejón) y el dominio del refuerzo se
   // acredita solo la primera vez por tipo.
@@ -590,6 +608,15 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             profundidad, reinforcement, cycle.conceptLabel,
             definition.cycles[cycleIndex + 1]?.conceptLabel,
           ))
+          // Multimodalidad real: antes de mostrar el refuerzo ya autorado,
+          // se consulta si el repositorio del curso tiene un recurso real
+          // para la modalidad recomendada — best-effort, nunca bloquea la
+          // transición (setExternalResource llega después si acaso).
+          setExternalResource(null)
+          const resourceType = resourceTypeForModality(modalidadParaRefuerzo)
+          if (reinforcement && resourceType) {
+            fetchCourseResource(courseId, resourceType).then(setExternalResource)
+          }
           adaptationTimeoutRef.current = setTimeout(() => {
             if (reinforcement) {
               setAutoReinforcement(true)
@@ -1074,6 +1101,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
       {phase === 'reinforcement' && activeReinforcement && (
         <div className="space-y-5 animate-in fade-in duration-500">
+          {externalResource && cycle && (
+            <ExternalResourceCard
+              resource={externalResource}
+              framing={describeResourceFraming(effectiveModality, cycle.conceptLabel)}
+            />
+          )}
           <div className="glass-panel rounded-2xl p-6 space-y-4">
             <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>
             {activeReinforcement.sceneId && <AnimatedScene sceneId={activeReinforcement.sceneId} />}
