@@ -110,9 +110,9 @@ export const CICLO_3_INPUT: LearningCycle = {
         mediumLabel: 'Simulación',
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
-          '🎤 El robot pregunta «¿Cuántas manzanas quieres?» y espera. Respondes «3»: el robot lo guarda en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular el precio.',
-          'Ahora predice con esto: el robot pregunta «¿Cómo te llamas?» pero el programa NO tiene ninguna caja donde guardar tu respuesta. ¿Qué pasa con lo que escribiste?',
-          'Respuesta: se pierde — una respuesta sin caja donde guardarse desaparece apenas el programa sigue. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
+          '🎤 Antes de leer nada, predice: el robot pregunta «¿Cuántas manzanas quieres?» y espera. Respondes «3». ¿Qué hace el robot con esa respuesta?',
+          'Antes de revisar tu respuesta, predice también esta otra: el robot pregunta «¿Cómo te llamas?» pero el programa NO tiene ninguna caja donde guardar tu respuesta. ¿Qué pasa con lo que escribiste?',
+          'En el primer caso, el robot guarda tu «3» en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular el precio. En el segundo, la respuesta se pierde: sin una caja donde guardarse, desaparece apenas el programa sigue. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
         ],
       },
     },

@@ -113,9 +113,8 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
             body: [
               '🤖 Antes de leer nada, predice: le dices al robot «si hace mal tiempo, abre el paraguas». Empieza a llover. ¿Qué hace?',
-              'Respuesta: nada — se queda inmóvil con error. «Mal tiempo» no es una condición que pueda evaluar: no sabe qué medir.',
-              'Ahora predice con esta otra: «si el sensor detecta gotas, abre el paraguas; si no, mantenlo cerrado». Empieza a llover. ¿Qué hace? Sí: abre el paraguas — el sensor respondió SÍ, y esa respuesta activa una acción exacta.',
-              'Ese mismo robot mental es el que usarás con `if` en Python: una condición que se responde con SÍ o NO, y una acción para cada resultado.',
+              'Antes de revisar tu respuesta, predice también esta otra: le dices «si el sensor detecta gotas, abre el paraguas; si no, mantenlo cerrado». Empieza a llover. ¿Qué hace?',
+              'Con «mal tiempo» el robot no hace nada — se queda inmóvil con error, porque no es una condición que pueda evaluar: no sabe qué medir. Con el sensor, en cambio, abre el paraguas: el sensor respondió SÍ, y esa respuesta activa una acción exacta.',
             ],
           },
         },

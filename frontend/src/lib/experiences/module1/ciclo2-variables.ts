@@ -111,8 +111,8 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
           '📦 Antes de leer nada, predice: el robot ejecuta «caja_puntos = 0» y luego «caja_puntos = caja_puntos + 10». ¿Qué guarda la caja al final?',
-          'Respuesta: 10. Primero crea la caja con 0 adentro; después LEE lo que tenía (0), le suma 10, y guarda el resultado en la MISMA caja.',
-          'Ahora predice con esto: «vidas = 3» y después «vidas = vidas - 1». ¿Qué guarda vidas al final? Respuesta: 2 — perdiste una vida, y el nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta.',
+          'Antes de revisar tu respuesta, predice también esta otra: el robot ejecuta «vidas = 3» y después «vidas = vidas - 1». ¿Qué guarda vidas al final?',
+          'La primera caja guarda 10: crea la caja con 0 adentro, LEE lo que tenía, le suma 10, y guarda el resultado en la MISMA caja. La segunda guarda 2 — perdiste una vida, y el nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta.',
         ],
       },
     },
