@@ -39,6 +39,19 @@ import type { LearningModality } from '@/types/modality'
 // sobre AUTONOMY_HIGH el menú sugiere continuar.
 const AUTONOMY_LOW = 0.4
 
+/** Semilla de `mastery` para el PRIMER ciclo del módulo, a partir del mismo
+ *  `initialProfundidad` que ya siembra `profundidad` (Sprint "Coherencia del
+ *  estado interno", jul 2026 — corrige una contradicción, no es todavía
+ *  adaptación de contenido: ver Fase B). Antes, `mastery` arrancaba en el
+ *  mismo `priorMastery` fijo (0.2) para cualquier estudiante, sin importar
+ *  el pre-test — un estudiante "aplicacion" que necesitaba una pista en la
+ *  práctica principal caía por debajo de AUTONOMY_LOW exactamente igual que
+ *  uno "fundamentos", y el menú de decisión nunca sugería "ya dominas esto"
+ *  en el primer ciclo. Los valores no pretenden ser exactos — solo dejar de
+ *  ser el MISMO número para perfiles opuestos. */
+const MASTERY_SEED_APLICACION = 0.7
+const MASTERY_SEED_FUNDAMENTOS = 0.15
+
 // Último respaldo, tipo-seguro, para fallbackSolutionOf (Nivel 3 de la
 // escalera): en la práctica nunca se renderiza — todo ciclo con escalera
 // define practice en su peldaño de Nivel 2 — pero TypeScript exige un valor
@@ -317,7 +330,25 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     if (cycleEvidenceAppliedRef.current) return
     if (initialProfundidad === undefined) return
     setProfundidad(initialProfundidad)
-  }, [initialProfundidad])
+    // Misma siembra tardía, ahora también para `mastery` — antes esta
+    // variable nunca se enteraba del pre-test y arrancaba en el mismo
+    // priorMastery fijo para cualquier estudiante (ver MASTERY_SEED_* más
+    // arriba). Solo toca el conceptId del PRIMER ciclo, y solo si `mastery`
+    // sigue en su valor de arranque intacto — si el estudiante ya generó
+    // progreso real en este ciclo (Python, refuerzo) antes de que esta
+    // siembra tardía llegara, ese progreso real nunca se pisa.
+    const firstCycle = definition.cycles[0]
+    if (firstCycle) {
+      const seeded = initialProfundidad === 'aplicacion' ? MASTERY_SEED_APLICACION
+        : initialProfundidad === 'fundamentos' ? MASTERY_SEED_FUNDAMENTOS
+          : firstCycle.priorMastery
+      setMastery(prev => (
+        prev[firstCycle.conceptId] === firstCycle.priorMastery
+          ? { ...prev, [firstCycle.conceptId]: seeded }
+          : prev
+      ))
+    }
+  }, [initialProfundidad, definition.cycles])
   // Desenlace de la práctica del ciclo actual — habilita Continuar SIEMPRE
   // (nunca-bloquear), incluso cuando se mostró la solución.
   const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(initialCursor.practiceOutcome)
