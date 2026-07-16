@@ -53,6 +53,11 @@ export const CICLO_2_VARIABLES: LearningCycle = {
   },
   concept: {
     title: '¿Qué es una variable?',
+    quickRecap: {
+      body: [
+        'Recordatorio rápido: una variable es una caja con nombre que guarda un valor — nombre = valor — para que puedas reutilizarlo o cambiarlo después sin repetirlo. Leer el nombre siempre te da el último valor guardado.',
+      ],
+    },
     secondExample: {
       label: 'Otro caso — el casillero del gimnasio',
       body: [

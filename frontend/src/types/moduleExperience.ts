@@ -64,6 +64,14 @@ export interface CycleConcept {
   /** Puente a Python del PROPIO ejemplo de la teoría (no el de la práctica) —
    *  aparece durante el desarrollo del concepto, antes de la actividad. */
   pythonBridge?: PythonBridge
+  /** Recordatorio breve del MISMO concepto (no un concepto distinto) para un
+   *  estudiante que el pre-test ya mostró que domina el tema — Adaptar
+   *  (profundidad="aplicacion") condensa en vez de repetir la explicación
+   *  completa + segundo ejemplo + puente pasivo, que son refuerzo por
+   *  repetición: apropiado para quien recién lo ve, redundante para quien
+   *  ya lo demostró. Sin este campo, el ciclo se comporta exactamente igual
+   *  que antes (resolveConceptForRender cae al comportamiento de siempre). */
+  quickRecap?: { body: string[] }
 }
 
 // ── Práctica universal (idéntica para todas las modalidades) ──────────────────

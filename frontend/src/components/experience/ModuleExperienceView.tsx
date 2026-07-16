@@ -292,6 +292,32 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   )
   // Peldaño activo de la escalera. 0 = actividad principal (sin remediación).
   const [remediationLevel, setRemediationLevel] = useState<RemediationLevel>(initialCursor.remediationLevel)
+  // Profundidad VIGENTE de la misión (jul 2026, Sprint "Adaptación desde el
+  // primer segundo"): antes solo se leía dentro del closure de advanceCycle
+  // para el mensaje de transición y se descartaba — el siguiente ciclo
+  // siempre arrancaba en el valor por defecto, sin importar la decisión real
+  // del ciclo anterior. Ahora se persiste: nace de `initialProfundidad`
+  // (pre-test, primer ciclo) y cada cycle-evidence real la actualiza — la
+  // MISMA fuente de verdad que ya gobierna el refuerzo automático y el
+  // mensaje de adaptación, ahora también gobierna la teoría del ciclo
+  // siguiente (resolveConceptForRender) y la micropráctica de Python
+  // (PythonBridge.initialProfundidad). Ningún concepto nuevo, ninguna
+  // llamada nueva al Runtime.
+  const [profundidad, setProfundidad] = useState<string | undefined>(initialProfundidad)
+  // `initialProfundidad` depende de useKnowledgeTestResult/useLearningPath
+  // (React Query, asíncronas): en el primer render del padre casi siempre
+  // llegan como `undefined` porque la consulta todavía no resuelve, y el
+  // inicializador de useState solo se evalúa una vez al montar — sin este
+  // efecto, la profundidad sembrada por el pre-test nunca llega a aplicarse
+  // cuando la carga es más lenta que el montaje. `cycleEvidenceAppliedRef`
+  // evita que esta siembra tardía pise una decisión real ya recibida de
+  // cycle-evidence (esa es siempre la fuente de verdad más reciente).
+  const cycleEvidenceAppliedRef = useRef(false)
+  useEffect(() => {
+    if (cycleEvidenceAppliedRef.current) return
+    if (initialProfundidad === undefined) return
+    setProfundidad(initialProfundidad)
+  }, [initialProfundidad])
   // Desenlace de la práctica del ciclo actual — habilita Continuar SIEMPRE
   // (nunca-bloquear), incluso cuando se mostró la solución.
   const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(initialCursor.practiceOutcome)
@@ -508,6 +534,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
           const diseno = data?.runtime_decision?.diseno
           const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
+          // Persiste para el SIGUIENTE ciclo (teoría + micropráctica de
+          // Python) — antes solo vivía en este closure para el mensaje de
+          // transición y se perdía al desmontar.
+          setProfundidad(profundidad)
+          cycleEvidenceAppliedRef.current = true
           // Adaptar también recomienda una modalidad real
           // (runtime/domain/adaptar/productor.py: DISENO_POR_ACCION) — antes
           // se recibía y se descartaba igual que profundidad. Solo se honra
@@ -997,7 +1028,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       {phase === 'concept' && cycle && (
         <div className="space-y-5">
           {cycle.curiosityFact && <CuriosityFactCard fact={cycle.curiosityFact} />}
-          <ConceptStep concept={resolveConceptForRender(cycle, effectiveModality)} modality={effectiveModality} onContinue={handleConceptDone} />
+          <ConceptStep concept={resolveConceptForRender(cycle, effectiveModality, profundidad)} modality={effectiveModality} onContinue={handleConceptDone} />
         </div>
       )}
 
@@ -1035,7 +1066,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               moduleId={moduleId}
               conceptId={cycle.conceptId}
               courseId={courseId}
-              initialProfundidad={cycleIndex === 0 ? initialProfundidad : undefined}
+              initialProfundidad={profundidad}
               onPracticeDone={outcome => {
                 setPythonPracticeDone(true)
                 setPythonOutcome(outcome)

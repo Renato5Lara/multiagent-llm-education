@@ -40,11 +40,38 @@ export function resolveRecipe(cycle: LearningCycle, modality: LearningModality):
 
 /** CycleConcept listo para ConceptStep: si hay receta, su `concept`
  *  reemplaza solo la variante de esa modalidad — secondExample/pythonBridge
- *  del ciclo se conservan intactos, nunca se inventan de la receta. */
-export function resolveConceptForRender(cycle: LearningCycle, modality: LearningModality): CycleConcept {
+ *  del ciclo se conservan intactos, nunca se inventan de la receta.
+ *
+ *  `profundidad` (jul 2026, Sprint "Adaptación desde el primer segundo"):
+ *  mismo valor real que Adaptar ya decide (fundamentos/aplicacion, sembrado
+ *  desde el pre-test o actualizado por cycle-evidence — nunca una señal
+ *  nueva). "aplicacion" con `quickRecap` disponible reemplaza la variante
+ *  de la modalidad por el recordatorio corto y retira secondExample/
+ *  pythonBridge pasivo (refuerzo por repetición del MISMO concepto, no
+ *  contenido distinto) — sin `quickRecap` o sin profundidad, el ciclo se
+ *  comporta exactamente igual que antes. */
+export function resolveConceptForRender(
+  cycle: LearningCycle,
+  modality: LearningModality,
+  profundidad?: string,
+): CycleConcept {
   const recipe = resolveRecipe(cycle, modality)
-  if (!recipe) return cycle.concept
-  return { ...cycle.concept, variants: { ...cycle.concept.variants, [modality]: recipe.concept } }
+  const base = recipe
+    ? { ...cycle.concept, variants: { ...cycle.concept.variants, [modality]: recipe.concept } }
+    : cycle.concept
+
+  if (profundidad !== 'aplicacion' || !cycle.concept.quickRecap) return base
+
+  const variant = base.variants[modality]
+  return {
+    ...base,
+    variants: {
+      ...base.variants,
+      [modality]: { ...variant, body: cycle.concept.quickRecap.body, infographic: undefined },
+    },
+    secondExample: undefined,
+    pythonBridge: undefined,
+  }
 }
 
 /** Práctica principal: la de la receta si existe, si no la resolución de

@@ -19,6 +19,11 @@ export const CICLO_3_INPUT: LearningCycle = {
   },
   concept: {
     title: '¿Cómo escucha un programa a quien lo usa?',
+    quickRecap: {
+      body: [
+        'Recordatorio rápido: input() pausa el programa, muestra una pregunta, y guarda lo que la persona responde en una variable — el mismo mecanismo de nombre = valor que ya dominas, solo que ahora el valor lo decide quien usa el programa, no tú en el código.',
+      ],
+    },
     secondExample: {
       label: 'Otro caso — el cajero automático',
       body: [

@@ -16,6 +16,11 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
   },
   concept: {
     title: '¿Qué hace precisa a una instrucción?',
+    quickRecap: {
+      body: [
+        'Recordatorio rápido: una instrucción es precisa cuando no deja nada a la imaginación de quien la ejecuta — qué hacer, con qué, cuánto y hacia dónde. Una computadora funciona igual: Python ejecuta exactamente lo que escribes, ni más ni menos.',
+      ],
+    },
     secondExample: {
       label: 'Otro caso — el manual de una silla',
       body: [
