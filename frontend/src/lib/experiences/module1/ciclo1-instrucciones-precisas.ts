@@ -153,7 +153,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         hint: 'Solo cambia el texto entre comillas — el resto de la línea no necesita tocarse: print("Misión cumplida")',
         hintsByCategory: {
           sintaxis: 'Revisa que las comillas sigan completas después de cambiar el texto.',
-          variables: 'No necesitas ninguna variable — sigue siendo un texto directo entre comillas.',
+          variables: 'Si borraste alguna comilla, Python deja de ver "Misión cumplida" como texto y busca variables llamadas Misión y cumplida — y ninguna existe.',
           logica: 'Solo cambia lo que está entre comillas; print() no cambia.',
           salida: 'Revisa que el texto sea exactamente "Misión cumplida" — mayúscula inicial, sin comillas de más.',
         },
@@ -207,7 +207,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
               hint: 'Escribe tu propia línea con print("Sala superada") — el comentario de arriba no cuenta como código, solo te recuerda el patrón.',
               hintsByCategory: {
                 sintaxis: 'Revisa que tu línea (no el comentario) tenga comillas y paréntesis completos.',
-                variables: 'No necesitas ninguna variable — sigue siendo un texto directo entre comillas.',
+                variables: 'Si escribes Sala superada sin comillas, Python busca variables llamadas Sala y superada — y ninguna existe.',
                 logica: 'El comentario que empieza con # no se ejecuta — necesitas escribir una línea nueva sin el #.',
                 salida: 'Revisa que el texto sea exactamente "Sala superada".',
               },
@@ -225,7 +225,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
                 hint: 'Usa la función print() con el texto exacto entre comillas: print("Recorrido terminado")',
                 hintsByCategory: {
                   sintaxis: 'Revisa que las comillas y los paréntesis estén completos: print("texto") necesita abrir y cerrar ambos.',
-                  variables: 'No necesitas ninguna variable aquí — escribe el texto directamente entre comillas, dentro de print(...).',
+                  variables: 'Si escribes Recorrido terminado sin comillas, Python busca variables llamadas Recorrido y terminado — y ninguna existe.',
                   logica: 'print() solo necesita el texto entre paréntesis — no hace falta llamar a ninguna otra función.',
                   salida: 'Revisa mayúsculas, espacios y signos: debe coincidir letra por letra con "Recorrido terminado".',
                 },
