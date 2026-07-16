@@ -30,9 +30,16 @@ interface Props {
   concept: CycleConcept
   modality: LearningModality
   onContinue: (dwellMs: number) => void
+  /** Refuerzo previo a la práctica cuando el pre-test ya marcó "fundamentos"
+   *  para este ciclo (Sprint "Adaptación real", Fase B item 1): reutiliza el
+   *  MISMO ejemplo resuelto que ya existe en remediation.steps[0].illustration
+   *  — antes solo se mostraba reactivamente, después de fallar la práctica;
+   *  ahora también se ofrece proactivamente, antes de intentarla. Ningún
+   *  campo ni componente nuevo — mismo contenido, mostrado antes. */
+  earlyReinforcement?: { mediumLabel: string; body: string[] }
 }
 
-export function ConceptStep({ concept, modality, onContinue }: Props) {
+export function ConceptStep({ concept, modality, onContinue, earlyReinforcement }: Props) {
   const startRef = useRef(Date.now())
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
@@ -112,6 +119,19 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
             {concept.secondExample.label}
           </p>
           {concept.secondExample.body.map((paragraph, i) => (
+            <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {earlyReinforcement && (
+        <div className="glass-panel rounded-2xl p-5 space-y-3">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+            {earlyReinforcement.mediumLabel} — repaso antes de practicar
+          </p>
+          {earlyReinforcement.body.map((paragraph, i) => (
             <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
               {paragraph}
             </p>

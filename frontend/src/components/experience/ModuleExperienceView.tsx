@@ -1059,7 +1059,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       {phase === 'concept' && cycle && (
         <div className="space-y-5">
           {cycle.curiosityFact && <CuriosityFactCard fact={cycle.curiosityFact} />}
-          <ConceptStep concept={resolveConceptForRender(cycle, effectiveModality, profundidad)} modality={effectiveModality} onContinue={handleConceptDone} />
+          <ConceptStep
+            concept={resolveConceptForRender(cycle, effectiveModality, profundidad)}
+            modality={effectiveModality}
+            onContinue={handleConceptDone}
+            earlyReinforcement={profundidad === 'fundamentos' ? cycle.remediation?.steps[0]?.illustration : undefined}
+          />
         </div>
       )}
 
