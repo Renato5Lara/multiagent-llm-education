@@ -13,7 +13,7 @@ from typing import Optional
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.data.knowledge_test_bank import BANK_COURSE_CODE, BANK_VERSION
+from app.data.knowledge_test_bank import BANK_COURSE_CODE, BANK_VERSION, COMPETENCY_LABELS
 from app.models.knowledge_test import (
     KnowledgeTestAnswer,
     KnowledgeTestAttempt,
@@ -340,11 +340,23 @@ def submit_attempt(
             # Orden alfabético: determinista para replay/reconstrucción
             # (el orden del intento es aleatorio por estudiante) — es un
             # detalle de transporte, no una priorización pedagógica.
+            #
+            # `titulo_modulo` recibe la ETIQUETA humana, nunca el slug
+            # COMP_0.."COMP_5 del catálogo del pre-test: normalizar_asunto
+            # (ADR-0010, runtime/boundary/inbound/asunto.py) documenta
+            # explícitamente "nunca un valor del catálogo COMP-0..5" — ese
+            # slug ya tiene guion bajo (scoring-v1), normalizar_asunto lo
+            # convierte a guion medio, y la traducción de vuelta a la UI
+            # (runtime_bridge._etiqueta) nunca lo reconocía: el estudiante
+            # veía el identificador interno tal cual ("Comp 0 problema").
+            # Con la etiqueta humana como entrada, el slug determinista que
+            # produce normalizar_asunto es legible por sí mismo incluso sin
+            # traducción (mismo criterio que el resto de temas del curso).
             for topic, celda in sorted(_evidencia_por_competencia(ordered, answers).items()):
                 registrar_evidencia_evaluacion(
                     student_id=student_id,
                     course_id=attempt.course_id,
-                    titulo_modulo=topic,
+                    titulo_modulo=COMPETENCY_LABELS.get(topic, topic),
                     items_incorrectos=celda["incorrectos"],
                     items_totales=celda["total"],
                     modalidad_estudiante=modalidad_estudiante,

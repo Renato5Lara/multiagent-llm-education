@@ -271,7 +271,16 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
     )
 
     def _etiqueta(slug: str) -> str:
-        return slug.replace("-", " ").replace("_", " ").capitalize()
+        # Las 6 competencias del pre-test usan slugs internos con prefijo de
+        # índice ("comp_0_problema") — el humanizador genérico los mostraba
+        # tal cual ("Comp 0 problema"), un identificador interno filtrado a
+        # la UI del estudiante. `COMPETENCY_LABELS` (app/data/knowledge_test_
+        # bank.py) ya es la fuente de verdad para su nombre pedagógico; los
+        # slugs de temas de curso (p. ej. "loops", "variables") no están ahí
+        # y siguen el humanizador genérico de siempre.
+        from app.data.knowledge_test_bank import COMPETENCY_LABELS
+
+        return COMPETENCY_LABELS.get(slug, slug.replace("-", " ").replace("_", " ").capitalize())
 
     return {
         "content_order": orden,
