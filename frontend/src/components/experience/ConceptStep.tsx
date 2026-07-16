@@ -2,7 +2,7 @@
 // En S1 el medio es un guion mock enmarcado; en S2 el Content Discovery Agent
 // lo reemplaza por el recurso curado real sin tocar este componente.
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, HelpCircle, CheckCircle2, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
@@ -41,6 +41,7 @@ interface Props {
 
 export function ConceptStep({ concept, modality, onContinue, earlyReinforcement }: Props) {
   const startRef = useRef(Date.now())
+  const [showTranscript, setShowTranscript] = useState(false)
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
   const framed = FRAMED_MEDIA.includes(variant.medium)
@@ -113,11 +114,42 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
             {/* RC-FINAL: la variante de audio SUENA — narración con voz real */}
             {variant.narrationText && <AudioNarration text={variant.narrationText} />}
 
-            {variant.body.map((paragraph, i) => (
-              <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
-                {paragraph}
-              </p>
-            ))}
+            {/* Perfil auditivo: "escucha, no leas" — el texto completo ya no
+                queda visible de entrada debajo del reproductor (eso invitaba
+                a leer en vez de escuchar); se oculta tras una transcripción
+                colapsada, igual que exige la accesibilidad real. */}
+            {variant.narrationText ? (
+              showTranscript ? (
+                <div className="space-y-4">
+                  {variant.body.map((paragraph, i) => (
+                    <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowTranscript(false)}
+                    className="text-xs text-neural-muted underline underline-offset-2"
+                  >
+                    Ocultar transcripción
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowTranscript(true)}
+                  className="text-xs text-neural-muted underline underline-offset-2"
+                >
+                  Ver transcripción
+                </button>
+              )
+            ) : (
+              variant.body.map((paragraph, i) => (
+                <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))
+            )}
           </div>
         </div>
       </div>
