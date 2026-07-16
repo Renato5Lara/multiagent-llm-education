@@ -199,6 +199,16 @@ interface Props {
    *  A2 — recibe el dominio agregado (0-1) derivado de la evidencia para que el
    *  mecanismo existente (ResearchMetric vía record_metric) lo registre. */
   onFinish?: (score?: number) => void
+  /** Profundidad que Adaptar ya decidió a partir del pre-test para el módulo
+   *  de este curso (misma cadena real Diagnosticar→Remediar/Orientar→Adaptar
+   *  de RFC-0002 §3 que decide entre ciclos — el pre-test registra evidencia
+   *  real desde el día uno, pero quedaba atada a la competencia del pre-test,
+   *  sin conectar nunca con el Ciclo 1 del módulo). Solo se siembra en el
+   *  PRIMER ciclo (cycleIndex === 0): del segundo en adelante ya existe
+   *  evidencia real de este módulo y el mecanismo de siempre (cycle-evidence
+   *  entre etapas) manda. `undefined` conserva el comportamiento previo
+   *  exacto (arranque siempre en "más apoyo", sin importar el pre-test). */
+  initialProfundidad?: string
 }
 
 /** A4 — Ganancia de dominio que refleja el aprendizaje REAL, no solo el acierto.
@@ -253,7 +263,7 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
   return outcome.attempts <= 1 ? 'domino_solo' : 'con_pistas'
 }
 
-export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish }: Props) {
+export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish, initialProfundidad }: Props) {
   const submitCycleEvidence = useSubmitCycleEvidence()
 
   // A1 — rehidratar el cursor persistido una sola vez al montar. Ya no es solo
@@ -1025,6 +1035,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               moduleId={moduleId}
               conceptId={cycle.conceptId}
               courseId={courseId}
+              initialProfundidad={cycleIndex === 0 ? initialProfundidad : undefined}
               onPracticeDone={outcome => {
                 setPythonPracticeDone(true)
                 setPythonOutcome(outcome)

@@ -46,9 +46,19 @@ interface Props {
    *  (`PracticeOutcome`) que la práctica de ordenamiento, para que el llamador
    *  pueda combinar ambas señales en la evidencia que recibe el Runtime. */
   onPracticeDone?: (outcome: PracticeOutcome) => void
+  /** Profundidad ya decidida por Adaptar ANTES de esta micropráctica (RFC-0002
+   *  §3): el pre-test registra evidencia real por competencia desde el primer
+   *  día (Diagnosticar→Remediar/Orientar→Adaptar, sin capacidad nueva), pero
+   *  esa cadena queda atada a la competencia del pre-test — la primera etapa
+   *  de un módulo nunca la había leído y arrancaba siempre en el valor por
+   *  defecto (más apoyo), sin importar el resultado real. Mismo vocabulario y
+   *  mismo efecto que `applyStage` ya aplica ENTRE etapas — aquí solo siembra
+   *  el mismo criterio en la etapa inicial. `undefined` conserva el
+   *  comportamiento previo exacto (starterCode + sin aviso). */
+  initialProfundidad?: string
 }
 
-export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone }: Props) {
+export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone, initialProfundidad }: Props) {
   return (
     <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
@@ -70,6 +80,7 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
           conceptId={conceptId}
           courseId={courseId}
           onDone={onPracticeDone}
+          initialProfundidad={initialProfundidad}
         />
       )}
     </div>
@@ -86,12 +97,13 @@ function describeStageAdaptation(profundidad: string | undefined): string | null
   return null
 }
 
-function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }: {
+function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, initialProfundidad }: {
   practice: PythonMicroPracticeDef
   moduleId: string
   conceptId: string
   courseId?: string
   onDone?: (outcome: PracticeOutcome) => void
+  initialProfundidad?: string
 }) {
   const { ready, loadError, run } = usePyodide()
   const submitCycleEvidence = useSubmitCycleEvidence()
@@ -100,7 +112,10 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   // tarjeta que va cambiando de prompt/código a medida que profundiza en el
   // mismo concepto. `practice` (el prop) sigue siendo la primera etapa.
   const [stage, setStage] = useState<PythonMicroPracticeDef>(practice)
-  const [code, setCode] = useState(practice.starterCode)
+  // Mismo criterio que applyStage: "aplicacion" retira el andamiaje desde el
+  // arranque (reto en blanco), "fundamentos"/sin dato conserva el starter
+  // precargado de siempre.
+  const [code, setCode] = useState(initialProfundidad === 'aplicacion' ? '' : practice.starterCode)
   const [attempts, setAttempts] = useState(0)
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -120,8 +135,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   const [priorSolutionShown, setPriorSolutionShown] = useState(false)
   // Nota real de adaptación entre etapas (Pilar 2 — adaptación no solo entre
   // ciclos): se llena con la respuesta REAL de cycle-evidence, nunca un
-  // texto fijo; `null` mientras no hay nada que decir todavía.
-  const [stageNote, setStageNote] = useState<string | null>(null)
+  // texto fijo; `null` mientras no hay nada que decir todavía. En la etapa
+  // inicial, si el pre-test ya decidió una profundidad para este módulo, se
+  // siembra con el mismo mensaje que usaría applyStage entre etapas — nunca
+  // texto nuevo, misma función.
+  const [stageNote, setStageNote] = useState<string | null>(describeStageAdaptation(initialProfundidad))
   // Espera breve mientras el Runtime real decide la siguiente etapa — nunca
   // más de una llamada real (best-effort, ver applyStage/goToStage).
   const [deciding, setDeciding] = useState(false)
@@ -130,7 +148,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   // "aplicacion" retira el andamiaje (arranca en blanco, sin la respuesta
   // anterior precargada) — mismo criterio de la escalera de remediación
   // (más o menos acompañamiento), aplicado ahora dentro de la progresión.
-  const [earlyHelp, setEarlyHelp] = useState(false)
+  const [earlyHelp, setEarlyHelp] = useState(initialProfundidad === 'fundamentos')
 
   // Mostrar la solución de una etapa intermedia NO termina la cadena de
   // golpe: el estudiante pidió verla, se queda visible hasta que decide

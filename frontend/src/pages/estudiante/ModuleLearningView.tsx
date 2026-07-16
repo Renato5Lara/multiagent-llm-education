@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useModuleOrchestration, useUpdateMissionProgress } from '@/hooks/useStudent'
 import { useUpdateModule, useLearningPath } from '@/hooks/useStudent'
+import { useKnowledgeTestResult } from '@/hooks/useKnowledgeTest'
 import { useQueryClient } from '@tanstack/react-query'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
@@ -179,6 +180,22 @@ export default function ModuleLearningView() {
   // audio) y nunca valen 'kinesthetic' — usarlas rompía la puerta del Code Lab.
   const { data: learningPath } = useLearningPath(courseId)
   const learnerModality = (learningPath?.dominant_modality ?? undefined) as LearningModality | undefined
+  // Pre-Test → Ciclo 1 (jul 2026): Adaptar ya decide profundidad real desde
+  // el pre-test (Diagnosticar→Remediar/Orientar→Adaptar, RFC-0002 §3), pero
+  // esa cadena queda anclada a la competencia del pre-test — nunca llegaba
+  // al primer ciclo del módulo, que arrancaba igual sin importar el
+  // resultado. `module_breakdown` (por módulo del curso) ya existe y ya se
+  // usa para desbloquear módulos (mastery_threshold); se reutiliza aquí para
+  // sembrar la profundidad inicial del PRIMER ciclo — mismo umbral (70%) y
+  // mismo vocabulario ("fundamentos"/"aplicacion") que Adaptar ya produce.
+  const { data: pretestResult } = useKnowledgeTestResult(courseId, 'pre')
+  const currentModuleOrder = learningPath?.items?.find(i => i.id === moduleId)?.order
+  const currentModulePct = currentModuleOrder != null
+    ? pretestResult?.module_breakdown?.[String(currentModuleOrder)]?.pct
+    : undefined
+  const initialProfundidad = currentModulePct === undefined
+    ? undefined
+    : currentModulePct >= 70 ? 'aplicacion' : 'fundamentos'
   const queryClient = useQueryClient()
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
@@ -303,6 +320,7 @@ export default function ModuleLearningView() {
         moduleId={moduleId}
         courseId={courseId}
         modality={learnerModality}
+        initialProfundidad={initialProfundidad}
         onExit={handleBack}
         onFinish={doComplete}
       />
