@@ -159,7 +159,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
     label: 'Esto ya es Python',
     code: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
     explanation:
-      'Cada caja de tu secuencia es una variable en Python: «edad = 20» crea la caja y guarda el valor en un solo paso; «faltan_para_100 = 100 - edad» lee el valor de edad para calcular otro; print(...) lo muestra. Ni una caja más, ni una menos de las que armaste.',
+      'Cada caja de tu secuencia es una variable en Python: «edad = 20» crea la caja y guarda el valor en un solo paso; «faltan_para_100 = 100 - edad» lee el valor de edad para calcular otro; print(...) lo muestra. Cada caja aparece exactamente una vez, tal como la armaste — ninguna de más, ninguna de menos.',
     practice: {
       prompt: 'Ahora hazlo tú: crea una variable llamada mensaje que guarde el texto Hola Python, y muéstrala con print()',
       starterCode: '# escribe tu código aquí\n',
@@ -223,7 +223,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         body: [
           'Tu billetera digital no recalcula tu saldo revisando cada transacción cada vez que abres la app: guarda un número — saldo — y lo actualiza cada vez que compras o recibes dinero.',
           '«saldo = 50» crea la variable. «saldo = saldo - 12» la actualiza: lee lo que tenía, resta 12, guarda el resultado con el mismo nombre.',
-          'Ahora hazlo tú: arma la secuencia que actualiza el saldo después de una compra.',
+          'Tu turno: ordena los pasos que actualizan el saldo después de una compra.',
         ],
         practice: {
           kind: 'ordering',
@@ -240,7 +240,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
             },
           ],
           successFeedback: 'Exacto — así se actualiza un saldo real: sin perder el nombre de la variable en ningún paso.',
-          orderFeedback: 'No puedes restarle a un saldo que todavía no guardaste.',
+          orderFeedback: 'Restar de un saldo vacío no tiene sentido: primero debe existir el valor guardado.',
           generalHint: 'Una de las frases pregunta el resultado, no dice qué hacer con la caja saldo.',
           solutionExplanation: [
             'Crear la caja, guardar 50, y solo después restar 12 — el mismo orden que necesita cualquier actualización de saldo real.',
@@ -285,12 +285,12 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       {
         kind: 'audio',
         label: 'Escuchar otra explicación',
-        title: 'Escúchalo de otra forma',
+        title: 'Óyelo de otro modo',
         medium: 'clip_narrado',
         narrationText:
-          'Piensa en una libreta con una sola hoja con tu nombre escrito arriba. Cada vez que anotas algo nuevo, tachas lo anterior y escribes el valor nuevo — pero la hoja sigue siendo tuya, con el mismo nombre arriba. Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que anotaste, nunca los anteriores.',
+          'Imagina una libreta con una sola hoja con tu nombre escrito arriba. Cada vez que anotas algo nuevo, tachas lo anterior y escribes el valor nuevo — pero la hoja sigue siendo tuya, con el mismo nombre arriba. Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que anotaste, nunca los anteriores.',
         body: [
-          'Piensa en una libreta con una sola hoja con tu nombre escrito arriba. Cada vez que anotas algo nuevo, tachas lo anterior y escribes el valor nuevo — pero la hoja sigue siendo tuya, con el mismo nombre arriba.',
+          'Imagina una libreta con una sola hoja con tu nombre escrito arriba. Cada vez que anotas algo nuevo, tachas lo anterior y escribes el valor nuevo — pero la hoja sigue siendo tuya, con el mismo nombre arriba.',
           'Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que anotaste, nunca los anteriores.',
         ],
       },
@@ -302,7 +302,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
     steps: [
       {
         level: 1,
-        title: 'Volvamos sobre la regla, con un caso resuelto',
+        title: 'Repasemos la idea con un ejemplo ya resuelto',
         conceptModality: 'same',
         body: [
           'Una variable es una caja con nombre. Crear la caja, guardar un valor y leerlo son tres pasos distintos — y el robot no puede leer una caja que todavía no llenaste. Python te exigirá el mismo orden.',
@@ -339,7 +339,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       },
       {
         level: 2,
-        title: 'Probemos con otra representación, y más despacio',
+        title: 'Otra forma de verlo, con más calma',
         conceptModality: 'alternate',
         body: [
           'Piensa en una etiqueta pegada a una caja vacía. Primero pegas la etiqueta (el nombre); después metes algo adentro (el valor). Sin la etiqueta, no sabrías qué caja es; sin el valor, la caja está vacía y no hay nada que leer.',
@@ -382,8 +382,8 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         title: 'Te acompaño con la solución completa',
         conceptModality: 'alternate',
         body: [
-          'Necesitaste ayuda máxima en este concepto, y eso queda registrado — no como una falta, sino para que el sistema sepa qué reforzar contigo más adelante.',
-          'Revisa la secuencia resuelta y su explicación. La misión continúa.',
+          'Este concepto necesitó el máximo de apoyo, y eso también es información valiosa: le indica al sistema dónde reforzar contigo en el camino.',
+          'Revisa la secuencia resuelta con calma — la misión sigue.',
         ],
       },
     ],

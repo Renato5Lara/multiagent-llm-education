@@ -139,7 +139,7 @@ export const CICLO_3_INPUT: LearningCycle = {
       successFeedback:
         'Exacto. Preguntar, esperar, guardar y recién ahí usar la respuesta — eso es exactamente lo que hace input() en Python. Pronto escribirás esta misma secuencia en una sola línea.',
       orderFeedback:
-        'El robot no puede saludarte con un nombre que todavía no escribiste, ni guardar una respuesta que todavía no diste.',
+        'Sin haber preguntado ni guardado nada, el robot no tiene con qué saludarte.',
       generalHint:
         'El robot se detuvo: una de las frases no dice qué hacer con la respuesta de la persona — dice el resultado que quieres.',
       solutionExplanation: [
@@ -154,7 +154,7 @@ export const CICLO_3_INPUT: LearningCycle = {
     label: 'Esto ya es Python',
     code: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
     explanation:
-      'Cada paso de tu secuencia es esta línea de Python: input("¿Cómo te llamas? ") muestra la pregunta y espera; lo que la persona escribe queda guardado en nombre; print("Hola,", nombre) lo usa para saludar. Ni un paso más, ni uno menos de los que armaste.',
+      'Cada paso de tu secuencia es esta línea de Python: input("¿Cómo te llamas? ") muestra la pregunta y espera; lo que la persona escribe queda guardado en nombre; print("Hola,", nombre) lo usa para saludar. La secuencia se ejecuta completa, sin saltarse ni repetir ningún paso de los que armaste.',
     practice: {
       prompt: 'Ahora hazlo tú: pide el nombre con input() y saluda con el patrón exacto Hola, <nombre>',
       starterCode: '# escribe tu código aquí\n',
@@ -201,7 +201,7 @@ export const CICLO_3_INPUT: LearningCycle = {
             },
           ],
           successFeedback: 'Exacto — preguntaste, guardaste y recién ahí calculaste. Así funciona cualquier programa que depende de lo que el usuario responde.',
-          orderFeedback: 'No puedes calcular el 10% de una cuenta que todavía no guardaste.',
+          orderFeedback: 'El 10% de una cuenta vacía no existe — primero hay que guardar el monto.',
           generalHint: 'Una de las frases describe el resultado que quieres, no un paso con la caja cuenta.',
           solutionExplanation: [
             'Preguntar, guardar y solo después calcular — el mismo orden que necesita cualquier input() real. «Decide cuánta propina dejar» era la meta, no una instrucción sobre la caja.',
@@ -241,7 +241,7 @@ export const CICLO_3_INPUT: LearningCycle = {
         body: [
           'Un buscador no muestra siempre los mismos resultados: pregunta «¿Qué buscas?», espera lo que escribes, y solo entonces busca.',
           'termino = input("¿Qué buscas? ") guarda tu búsqueda. buscar(termino) la usa. Sin esa pregunta, el buscador no tendría nada que buscar.',
-          'Ahora hazlo tú: arma la secuencia que sigue el buscador.',
+          'Tu turno: ordena los pasos que sigue el buscador antes de mostrar resultados.',
         ],
         practice: {
           kind: 'ordering',
@@ -258,7 +258,7 @@ export const CICLO_3_INPUT: LearningCycle = {
             },
           ],
           successFeedback: 'Exacto — sin la pregunta inicial, el buscador no tendría ningún término que usar.',
-          orderFeedback: 'No puedes buscar con un término que todavía no guardaste.',
+          orderFeedback: 'Buscar sin haber guardado el término no tiene con qué trabajar.',
           generalHint: 'Una de las frases describe el resultado, no un paso con la caja termino.',
           solutionExplanation: [
             'Preguntar, guardar y solo después buscar — el mismo orden que necesita cualquier programa que depende del usuario.',
@@ -304,12 +304,12 @@ export const CICLO_3_INPUT: LearningCycle = {
       {
         kind: 'audio',
         label: 'Escuchar otra explicación',
-        title: 'Escúchalo de otra forma',
+        title: 'Una última explicación',
         medium: 'clip_narrado',
         narrationText:
-          'Piensa en cuando alguien te hace una pregunta y, sin esperar tu respuesta, sigue hablando de otra cosa. Se siente raro, ¿verdad? Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas. Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
+          '¿Sabes lo incómodo que es cuando alguien te hace una pregunta y, sin esperar tu respuesta, sigue hablando de otra cosa? Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas. Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
         body: [
-          'Piensa en cuando alguien te hace una pregunta y, sin esperar tu respuesta, sigue hablando de otra cosa. Se siente raro, ¿verdad?',
+          '¿Sabes lo incómodo que es cuando alguien te hace una pregunta y, sin esperar tu respuesta, sigue hablando de otra cosa? Se siente raro, ¿verdad?',
           'Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas.',
           'Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
         ],
@@ -322,7 +322,7 @@ export const CICLO_3_INPUT: LearningCycle = {
     steps: [
       {
         level: 1,
-        title: 'Volvamos sobre la regla, con un caso resuelto',
+        title: 'Un paso atrás: veamos un caso ya resuelto',
         conceptModality: 'same',
         body: [
           'input() tiene tres momentos: pregunta, espera y guarda. Si te saltas alguno, el robot no tiene con qué continuar. Python exige exactamente ese orden.',
@@ -353,13 +353,13 @@ export const CICLO_3_INPUT: LearningCycle = {
             },
           ],
           successFeedback: 'Eso es — separaste la meta de los pasos que la hacen posible, en el mismo orden que necesita input().',
-          orderFeedback: 'El robot no puede guardar una respuesta que todavía no diste.',
+          orderFeedback: 'Guardar una respuesta que nunca llegó no es posible — primero hace falta preguntarla y esperarla.',
           generalHint: 'Una de esas frases dice QUÉ quieres que pase, no qué debe hacer el robot paso a paso.',
         },
       },
       {
         level: 2,
-        title: 'Probemos con otra representación, y más despacio',
+        title: 'Vamos más despacio, con otra imagen',
         conceptModality: 'alternate',
         body: [
           'Piensa en un formulario en papel. Primero hay una pregunta impresa («Nombre: _____»); recién cuando TÚ escribes algo en la línea, el formulario tiene un dato. Sin tu letra, la línea sigue vacía.',
@@ -389,7 +389,7 @@ export const CICLO_3_INPUT: LearningCycle = {
             },
           ],
           successFeedback: 'Exacto. Primero la pregunta, después la caja — y «registra tu edad» era la meta.',
-          orderFeedback: 'No puedes guardar una respuesta que todavía no preguntaste.',
+          orderFeedback: 'Sin preguntar primero, no hay ninguna respuesta que guardar.',
           generalHint: 'Solo una de las frases NO le dice al robot qué hacer con la pregunta o la caja.',
           solutionExplanation: [
             'Primero «muestra la pregunta»: sin ella nadie sabe qué responder. Después «guarda la respuesta»: recién ahí hay algo que usar.',
@@ -402,8 +402,8 @@ export const CICLO_3_INPUT: LearningCycle = {
         title: 'Te acompaño con la solución completa',
         conceptModality: 'alternate',
         body: [
-          'Necesitaste ayuda máxima en este concepto, y eso queda registrado — no como una falta, sino para que el sistema sepa qué reforzar contigo más adelante.',
-          'Revisa la secuencia resuelta y su explicación. La misión continúa.',
+          'Llegaste hasta el final de esta ayuda, y eso no es un tropiezo: es una señal que el sistema usará para acompañarte mejor más adelante.',
+          'Repasa la secuencia resuelta y continúa cuando estés listo.',
         ],
       },
     ],
