@@ -33,13 +33,32 @@ interface Props {
   revealOnExhaust?: boolean
   /** Intentos agotados sin resolver y sin revelar (revealOnExhaust=false). */
   onExhausted?: (outcome: PracticeOutcome) => void
+  /** Profundidad VIGENTE de la misión (pre-test o última cycle-evidence real,
+   *  jul 2026): gobierna cuántos intentos concede esta actividad ANTES de
+   *  agotarse — el mismo criterio "earlyHelp" que ya usa PythonBridge
+   *  (fundamentos adelanta el apoyo, ve la solución explicada antes) aplicado
+   *  aquí a la práctica principal, no solo al editor. Solo se usa cuando el
+   *  llamador la pasa explícitamente (la escalera de remediación y el
+   *  refuerzo voluntario NO la pasan a propósito: dentro de la escalera, la
+   *  exigencia es siempre la misma sin importar el pre-test). */
+  profundidad?: string
 }
 
 type Feedback =
   | { tone: 'diagnostic'; text: string }
   | { tone: 'success'; text: string }
 
-const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
+const DEFAULT_MAX_ATTEMPTS_BEFORE_SOLUTION = 3
+
+/** Mismo criterio que earlyHelp en PythonBridge: "fundamentos" adelanta el
+ *  apoyo (un intento menos antes de ver la solución explicada, para no
+ *  frustrar a quien recién llega). "aplicacion" y cualquier otro valor
+ *  (incluido undefined) mantienen el número histórico — ya domina el
+ *  patrón, no necesita menos intentos para demostrarlo. */
+function maxAttemptsFor(profundidad: string | undefined): number {
+  if (profundidad === 'fundamentos') return DEFAULT_MAX_ATTEMPTS_BEFORE_SOLUTION - 1
+  return DEFAULT_MAX_ATTEMPTS_BEFORE_SOLUTION
+}
 
 function generalHint(evaluation: SequenceEvaluation, practice: OrderingPracticeDef): string {
   switch (evaluation.status) {
@@ -87,10 +106,11 @@ function specificHint(
 }
 
 export function OrderingPractice({
-  practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted,
+  practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted, profundidad,
 }: Props) {
   const startRef = useRef(Date.now())
   const attemptsRef = useRef(0)
+  const maxAttempts = useMemo(() => maxAttemptsFor(profundidad), [profundidad])
   const [sequence, setSequence] = useState<string[]>([])
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [flaggedId, setFlaggedId] = useState<string | null>(null)
@@ -165,7 +185,7 @@ export function OrderingPractice({
       return
     }
 
-    if (attempt >= MAX_ATTEMPTS_BEFORE_SOLUTION) {
+    if (attempt >= maxAttempts) {
       const timeMs = Date.now() - startRef.current
       if (!revealOnExhaust) {
         // La escalera decide: otra explicación y otra actividad, no la solución.

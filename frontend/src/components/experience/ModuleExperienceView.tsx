@@ -1048,6 +1048,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
                 // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
                 revealOnExhaust={!cycle.remediation}
                 onExhausted={handlePracticeExhausted}
+                // Pretest gobierna también la práctica principal, no solo el
+                // editor (Sprint pedagógico Fase 2, prioridad 1): mismo
+                // criterio earlyHelp que ya usa PythonBridge.
+                profundidad={profundidad}
               />
             ) : (
               <PredictOutputPractice
@@ -1057,6 +1061,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
                 onFinished={handlePracticeFinished}
                 revealOnExhaust={!cycle.remediation}
                 onExhausted={handlePracticeExhausted}
+                profundidad={profundidad}
               />
             )
           )}

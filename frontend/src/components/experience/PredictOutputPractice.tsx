@@ -4,7 +4,7 @@
 // genuinamente distinta a OrderingPractice, no el mismo ejercicio con otro
 // disfraz. Mismo contrato de salida (PracticeOutcome) para componer con la
 // evidencia y el dominio ya existentes sin tocar esa maquinaria.
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { CheckCircle2, GraduationCap, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -22,13 +22,23 @@ interface Props {
   revealOnExhaust?: boolean
   /** Intentos agotados sin resolver y sin revelar (revealOnExhaust=false). */
   onExhausted?: (outcome: PracticeOutcome) => void
+  /** Mismo criterio "earlyHelp" que PythonBridge/OrderingPractice: fundamentos
+   *  adelanta el apoyo (ve la solución explicada un intento antes). Solo se
+   *  usa cuando el llamador la pasa explícitamente. */
+  profundidad?: string
 }
 
-const MAX_ATTEMPTS_BEFORE_SOLUTION = 2
+const DEFAULT_MAX_ATTEMPTS_BEFORE_SOLUTION = 2
 
-export function PredictOutputPractice({ practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted }: Props) {
+function maxAttemptsFor(profundidad: string | undefined): number {
+  if (profundidad === 'fundamentos') return DEFAULT_MAX_ATTEMPTS_BEFORE_SOLUTION - 1
+  return DEFAULT_MAX_ATTEMPTS_BEFORE_SOLUTION
+}
+
+export function PredictOutputPractice({ practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted, profundidad }: Props) {
   const [selected, setSelected] = useState<string | null>(null)
   const [attempts, setAttempts] = useState(0)
+  const maxAttempts = useMemo(() => maxAttemptsFor(profundidad), [profundidad])
   const [status, setStatus] = useState<'idle' | 'wrong' | 'correct' | 'exhausted'>('idle')
   const startRef = useRef<number>(Date.now())
   const finishedRef = useRef(false)
@@ -51,7 +61,7 @@ export function PredictOutputPractice({ practice, onAttempt, onFinished, revealO
       finish(false)
       return
     }
-    if (nextAttempts >= MAX_ATTEMPTS_BEFORE_SOLUTION) {
+    if (nextAttempts >= maxAttempts) {
       if (!revealOnExhaust) {
         finishedRef.current = true
         onExhausted?.({ attempts: nextAttempts, timeMs: Date.now() - startRef.current, solutionShown: false })
