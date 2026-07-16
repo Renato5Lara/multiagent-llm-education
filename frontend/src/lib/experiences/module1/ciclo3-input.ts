@@ -4,7 +4,31 @@
 // ordenamiento → puente a Python con micropráctica real en Pyodide →
 // decisión → escalera de remediación.
 
-import type { LearningCycle } from '@/types/moduleExperience'
+import type { LearningCycle, PredictOutputPracticeDef } from '@/types/moduleExperience'
+
+// Multimodalidad profunda (jul 2026, Sprint 3 — "consolidar antes de
+// ampliar catálogo", mismo patrón ya probado en Ciclo 2/READING_PRACTICE):
+// el lector no arrastra para ordenar — predice la ejecución completa,
+// incluida la pausa real de input(), antes de ver el resultado.
+const READING_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: '¿Qué muestra la pantalla completa? (el usuario escribe: Luna)',
+  code: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
+  options: [
+    { id: 'a', text: '¿Cómo te llamas? Hola, nombre' },
+    { id: 'b', text: 'Hola, Luna' },
+    { id: 'c', text: '¿Cómo te llamas? Hola, Luna' },
+    { id: 'd', text: 'nombre' },
+  ],
+  correctOptionId: 'c',
+  successFeedback: 'Exacto — input() primero muestra su pregunta en pantalla y espera; recién cuando la persona responde, print() usa esa respuesta guardada, nunca la palabra "nombre" en sí.',
+  wrongFeedback: 'Revisa dos cosas: la pregunta de input() SÍ aparece en pantalla (no se oculta), y lo que se guarda en nombre es la respuesta escrita, no la palabra "nombre".',
+  solutionExplanation: [
+    'Línea 1: input("¿Cómo te llamas? ") muestra la pregunta y se detiene. El usuario escribió Luna — ese texto queda guardado en nombre.',
+    'Línea 2: print("Hola,", nombre) usa el valor guardado — Luna — no la palabra "nombre".',
+    'La pantalla completa muestra ambas cosas en orden: primero la pregunta de input(), después el saludo de print().',
+  ],
+}
 
 export const CICLO_3_INPUT: LearningCycle = {
   id: 'ciclo-3',
@@ -96,32 +120,35 @@ export const CICLO_3_INPUT: LearningCycle = {
     },
   },
   practice: {
-    kind: 'ordering',
-    prompt:
-      'El robot debe saludar a quien tiene enfrente, pero no sabe su nombre todavía. Construye la secuencia usando SOLO instrucciones precisas — una de la lista es la meta, no un paso.',
-    items: [
-      { id: 'i1', text: 'Muestra la pregunta ¿Cómo te llamas?', position: 1 },
-      { id: 'i2', text: 'Espera a que la persona escriba su respuesta', position: 2 },
-      { id: 'i3', text: 'Guarda la respuesta en la caja llamada nombre', position: 3 },
-      { id: 'i4', text: 'Usa el valor guardado en nombre para saludar', position: 4 },
-      {
-        id: 'id1',
-        text: 'Saluda a la persona por su nombre',
-        position: null,
-        whyWrong: '«Saluda a la persona por su nombre» es la meta, no una instrucción: no dice cómo el robot se entera de cuál es ese nombre.',
-      },
-    ],
-    successFeedback:
-      'Exacto. Preguntar, esperar, guardar y recién ahí usar la respuesta — eso es exactamente lo que hace input() en Python. Pronto escribirás esta misma secuencia en una sola línea.',
-    orderFeedback:
-      'El robot no puede saludarte con un nombre que todavía no escribiste, ni guardar una respuesta que todavía no diste.',
-    generalHint:
-      'El robot se detuvo: una de las frases no dice qué hacer con la respuesta de la persona — dice el resultado que quieres.',
-    solutionExplanation: [
-      'Preguntar, esperar, guardar y usar — cuatro pasos, cada uno necesitando que el anterior ya haya ocurrido. «Saluda a la persona por su nombre» era la meta: no dice cómo conseguir ese nombre.',
-      'Fíjate en el paso «espera»: sin él, el robot seguiría de inmediato sin darle tiempo a la persona de responder. Un programa real hace lo mismo — input() se detiene hasta que llega una respuesta.',
-      'Eso es exactamente lo que hace input(): pregunta, espera, y guarda la respuesta en una variable — la misma variable que ya sabes crear y leer desde el ciclo anterior.',
-    ],
+    default: {
+      kind: 'ordering',
+      prompt:
+        'El robot debe saludar a quien tiene enfrente, pero no sabe su nombre todavía. Construye la secuencia usando SOLO instrucciones precisas — una de la lista es la meta, no un paso.',
+      items: [
+        { id: 'i1', text: 'Muestra la pregunta ¿Cómo te llamas?', position: 1 },
+        { id: 'i2', text: 'Espera a que la persona escriba su respuesta', position: 2 },
+        { id: 'i3', text: 'Guarda la respuesta en la caja llamada nombre', position: 3 },
+        { id: 'i4', text: 'Usa el valor guardado en nombre para saludar', position: 4 },
+        {
+          id: 'id1',
+          text: 'Saluda a la persona por su nombre',
+          position: null,
+          whyWrong: '«Saluda a la persona por su nombre» es la meta, no una instrucción: no dice cómo el robot se entera de cuál es ese nombre.',
+        },
+      ],
+      successFeedback:
+        'Exacto. Preguntar, esperar, guardar y recién ahí usar la respuesta — eso es exactamente lo que hace input() en Python. Pronto escribirás esta misma secuencia en una sola línea.',
+      orderFeedback:
+        'El robot no puede saludarte con un nombre que todavía no escribiste, ni guardar una respuesta que todavía no diste.',
+      generalHint:
+        'El robot se detuvo: una de las frases no dice qué hacer con la respuesta de la persona — dice el resultado que quieres.',
+      solutionExplanation: [
+        'Preguntar, esperar, guardar y usar — cuatro pasos, cada uno necesitando que el anterior ya haya ocurrido. «Saluda a la persona por su nombre» era la meta: no dice cómo conseguir ese nombre.',
+        'Fíjate en el paso «espera»: sin él, el robot seguiría de inmediato sin darle tiempo a la persona de responder. Un programa real hace lo mismo — input() se detiene hasta que llega una respuesta.',
+        'Eso es exactamente lo que hace input(): pregunta, espera, y guarda la respuesta en una variable — la misma variable que ya sabes crear y leer desde el ciclo anterior.',
+      ],
+    },
+    reading: READING_PRACTICE,
   },
   pythonBridge: {
     label: 'Esto ya es Python',
