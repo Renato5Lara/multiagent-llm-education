@@ -7,7 +7,7 @@
 // el estudiante escribe Python real, ejecutado con Pyodide en el propio
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
@@ -153,8 +153,31 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   // progresión completa (cycle-evidence de cierre de ciclo, sin cambios).
   // Lo nuevo es la llamada ADICIONAL por etapa, abajo: evidencia real ENTRE
   // etapas del mismo concepto, no solo al final.
+  //
+  // `priorAttempts` acumula ERRORES reales, no intentos ni peldaños (bug
+  // real de la escalera, jul 2026): un peldaño resuelto al primer intento
+  // aporta 0, nunca 1 — de lo contrario, superar los 6 peldaños de la
+  // escalera sin ningún error se reportaba como "6 intentos" y el Runtime
+  // (que resta 1 y compara contra un umbral de 2) marcaba erróneamente al
+  // estudiante como "no dominada" solo por haber recorrido más pantallas.
+  // La escalera es un mecanismo de aprendizaje, no de evaluación: superarla
+  // completa sin errores debe seguir significando cero errores.
   const [priorAttempts, setPriorAttempts] = useState(0)
   const [priorSolutionShown, setPriorSolutionShown] = useState(false)
+  // Regla 6 (jul 2026) — conteo informativo de peldaños, solo evidencia
+  // local (recordEvidence, nunca cycle-evidence): no cambia ninguna decisión
+  // del Runtime hoy, pero preserva la señal para una futura adaptación más
+  // rica sin romper compatibilidad con `attempts`.
+  const totalSteps = useMemo(() => {
+    let n = 1
+    let cur: PythonMicroPracticeDef | undefined = practice
+    while (cur?.nextStage) {
+      n += 1
+      cur = cur.nextStage
+    }
+    return n
+  }, [practice])
+  const [stepIndex, setStepIndex] = useState(1)
   // Nota real de adaptación entre etapas (Pilar 2 — adaptación no solo entre
   // ciclos): se llena con la respuesta REAL de cycle-evidence, nunca un
   // texto fijo; `null` mientras no hay nada que decir todavía. En la etapa
@@ -198,10 +221,19 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
    *  closure: cuando se llama justo tras `setAttempts(nextAttempts)` en el
    *  mismo evento (handleRun), React todavía no aplicó ese update — leerlo
    *  del closure enviaba `attempts: 0` al backend, que exige `ge=1` (bug
-   *  real encontrado validando en navegador, no en revisión de código). */
+   *  real encontrado validando en navegador, no en revisión de código).
+   *
+   *  `stageAttempts` sigue siendo el conteo crudo de intentos de ESTA etapa
+   *  (se envía tal cual al cycle-evidence POR ETAPA, abajo — el backend ya
+   *  resta 1 correctamente ahí). Lo que se ACUMULA en `priorAttempts` es
+   *  distinto: los ERRORES reales de esta etapa (0 si se resolvió al primer
+   *  intento), para que la suma final entre etapas siga significando
+   *  "errores totales", nunca "intentos" ni "peldaños recorridos". */
   const goToStage = (next: PythonMicroPracticeDef, solutionShownHere: boolean, stageAttempts: number) => {
-    setPriorAttempts(prev => prev + stageAttempts)
+    const stageErrors = solutionShownHere ? stageAttempts : Math.max(0, stageAttempts - 1)
+    setPriorAttempts(prev => prev + stageErrors)
     setPriorSolutionShown(prev => prev || solutionShownHere)
+    setStepIndex(prev => prev + 1)
     setStageNote(null)
     // Evidencia real de ESTA etapa (no la acumulada) hacia el mismo Runtime
     // que ya evalúa el ciclo completo — misma competencia, mismo endpoint,
@@ -238,7 +270,10 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       type: 'practice_attempt',
       moduleId,
       conceptId,
-      detail: { practice: 'python', attempt: nextAttempts, status: correct ? 'correct' : 'incorrect', correct },
+      detail: {
+        practice: 'python', attempt: nextAttempts, status: correct ? 'correct' : 'incorrect', correct,
+        stepIndex, stepsTotal: totalSteps,
+      },
     })
     if (!correct) {
       setLastCategory(classifyPythonError(result.error))
@@ -249,7 +284,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       goToStage(stage.nextStage, false, nextAttempts)
     } else {
       setSolved(true)
-      onDone?.({ attempts: priorAttempts + nextAttempts, timeMs: 0, solutionShown: priorSolutionShown })
+      // Última etapa: solo los intentos FALLIDOS de esta etapa son errores
+      // (Regla 1) — el intento que acaba de acertar no se cuenta.
+      onDone?.({ attempts: priorAttempts + Math.max(0, nextAttempts - 1), timeMs: 0, solutionShown: priorSolutionShown })
     }
   }
 
@@ -258,10 +295,12 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       type: 'practice_attempt',
       moduleId,
       conceptId,
-      detail: { practice: 'python', attempts, solutionShown: true, final: true },
+      detail: { practice: 'python', attempts, solutionShown: true, final: true, stepIndex, stepsTotal: totalSteps },
     })
     setShowSolution(true)
     if (!stage.nextStage) {
+      // Nunca se resolvió esta etapa: todos los intentos fueron errores
+      // reales (mismo criterio que ya usaba el backend para este caso).
       onDone?.({ attempts: priorAttempts + attempts, timeMs: 0, solutionShown: true })
     }
   }
