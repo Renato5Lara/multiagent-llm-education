@@ -224,7 +224,25 @@ export interface PythonBridge {
   practice?: PythonMicroPracticeDef
 }
 
+// Andamiaje de Python (jul 2026, Sprint "Andamiaje completo"): cada peldaño
+// de la MISMA escalera que ya describía el comentario de `nextStage` más
+// abajo ("arrastrar → completar → escribir → modificar → aplicar"), ahora
+// nombrada explícitamente para que la UI pueda variar su interacción sin
+// inventar un componente nuevo por peldaño. `undefined` = comportamiento
+// previo exacto (editor libre, con o sin starterCode según `profundidad`).
+export type PythonPracticeMode =
+  | 'observar' // el código YA está completo y es correcto: el estudiante solo lo ejecuta y ve qué hace, sin escribir nada.
+  | 'manipular' // el código funciona; el estudiante cambia SOLO el detalle que el prompt señala (un valor, un texto).
+  | 'completar' // el código tiene un hueco explícito (ej. una línea con ____); el estudiante completa esa parte.
+  | 'corregir' // el código tiene un error deliberado; el estudiante lo encuentra y lo corrige.
+  | 'escribir_parcial' // el estudiante escribe desde un scaffold (starterCode no vacío).
+  | 'escribir_completo' // el estudiante escribe todo, sin scaffold (starterCode vacío).
+
 export interface PythonMicroPracticeDef {
+  /** Peldaño de la escalera de andamiaje — gobierna cómo se presenta el
+   *  editor (solo lectura en 'observar', libre en el resto). Ausente =
+   *  comportamiento previo (editor libre siempre). */
+  mode?: PythonPracticeMode
   /** Qué debe lograr el código que escriba (consigna corta, 1-2 líneas). */
   prompt: string
   /** Scaffold inicial del editor — nunca la solución. */
@@ -264,7 +282,9 @@ export interface PythonMicroPracticeDef {
    *  mínima, no el diseño final del flujo adaptativo): al resolver esta etapa,
    *  si existe nextStage se muestra en el mismo componente, sin pantalla
    *  nueva ni "Etapa X de Y" — el estudiante nunca cambia de actividad, solo
-   *  profundiza (arrastrar → completar → escribir → modificar → aplicar).
+   *  profundiza. Con `mode` (Sprint "Andamiaje completo"), la cadena
+   *  encadena los peldaños reales: observar → manipular → completar →
+   *  corregir → escribir parcial → escribir completo.
    *  Cadena lineal por ahora: decidir cuándo reforzar, repetir o saltar una
    *  etapa según evidencia queda para una iteración futura, no esta. */
   nextStage?: PythonMicroPracticeDef

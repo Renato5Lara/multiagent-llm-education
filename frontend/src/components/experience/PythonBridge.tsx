@@ -13,10 +13,32 @@ import { Button } from '@/components/ui/button'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
-import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef } from '@/types/moduleExperience'
+import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef, PythonPracticeMode } from '@/types/moduleExperience'
 import type { PracticeOutcome } from './OrderingPractice'
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
+
+/** Encabezado de la tarjeta por peldaño — nombra la actividad real (nunca
+ *  "Etapa X de Y"), mismo espíritu que `describeStageAdaptation`. Ausente
+ *  `mode` (contenido previo al Sprint "Andamiaje completo") conserva el
+ *  título original. */
+const MODE_LABEL: Record<PythonPracticeMode, string> = {
+  observar: 'Obsérvalo',
+  manipular: 'Ahora tú: cambia un detalle',
+  completar: 'Completa el código',
+  corregir: 'Encuentra y corrige el error',
+  escribir_parcial: 'Ahora hazlo tú',
+  escribir_completo: 'Ahora profundiza',
+}
+
+/** Solo los peldaños de ESCRITURA (o contenido previo al andamiaje, sin
+ *  `mode`) ceden ante "aplicacion" y arrancan en blanco — observar/
+ *  manipular/completar/corregir dependen de que el scaffold autorado esté
+ *  presente: es el ejercicio en sí, no un apoyo que un buen desempeño deba
+ *  retirar. */
+function shouldStartBlank(mode: PythonPracticeMode | undefined, profundidad: string | undefined): boolean {
+  return profundidad === 'aplicacion' && (mode === undefined || mode === 'escribir_parcial' || mode === 'escribir_completo')
+}
 
 /** Diagnóstico genérico por categoría — verdadero para cualquier ejercicio,
  *  no autorado por contenido (a diferencia de `hintsByCategory`, que sí lo
@@ -115,7 +137,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   // Mismo criterio que applyStage: "aplicacion" retira el andamiaje desde el
   // arranque (reto en blanco), "fundamentos"/sin dato conserva el starter
   // precargado de siempre.
-  const [code, setCode] = useState(initialProfundidad === 'aplicacion' ? '' : practice.starterCode)
+  const [code, setCode] = useState(shouldStartBlank(practice.mode, initialProfundidad) ? '' : practice.starterCode)
   const [attempts, setAttempts] = useState(0)
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -160,9 +182,8 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   const exhausted = attempts >= attemptsBeforeSolution
 
   const applyStage = (next: PythonMicroPracticeDef, profundidad: string | undefined) => {
-    const openChallenge = profundidad === 'aplicacion'
     setStage(next)
-    setCode(openChallenge ? '' : next.starterCode)
+    setCode(shouldStartBlank(next.mode, profundidad) ? '' : next.starterCode)
     setEarlyHelp(profundidad === 'fundamentos')
     setAttempts(0)
     setOutput(null)
@@ -253,7 +274,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   return (
     <div className="border-t border-neural-glow/15 px-5 py-4 space-y-3">
       <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-        Ahora hazlo tú
+        {MODE_LABEL[stage.mode ?? 'escribir_parcial']}
       </p>
       {/* Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
           de mostrar la siguiente — breve (best-effort, nunca más de una
@@ -291,7 +312,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       <textarea
         value={code}
         onChange={e => setCode(e.target.value)}
-        disabled={done || showSolution}
+        disabled={done || showSolution || stage.mode === 'observar'}
         rows={3}
         spellCheck={false}
         className="w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70"

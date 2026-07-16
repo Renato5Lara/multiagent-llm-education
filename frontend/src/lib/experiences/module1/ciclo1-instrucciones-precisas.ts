@@ -129,28 +129,21 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
     code: 'girar(grados=90, direccion="izquierda")\navanzar(pasos=4)\ndetenerse()\nextender_mano()\ngirar_manija()',
     explanation:
       'La secuencia que acabas de construir es, literalmente, un programa: cada línea es una instrucción precisa que Python ejecuta de arriba hacia abajo, exactamente en el orden en que la escribiste — ni una línea más, ni una menos de lo que dijiste.',
+    // Andamiaje completo (jul 2026, Sprint 2): la MISMA tarjeta encadena los
+    // seis peldaños reales — nunca "Etapa X de 6", el estudiante solo ve una
+    // consigna que cambia. Cada peldaño reutiliza el tema del robot que ya
+    // resolvió arriba (instrucción precisa → print()), nunca contenido nuevo
+    // sin relación.
     practice: {
-      prompt: 'Ahora hazlo tú: escribe una instrucción precisa en Python real para que la consola muestre exactamente Robot listo',
-      starterCode: '# escribe tu instrucción aquí\n',
+      mode: 'observar',
+      prompt: 'Obsérvalo: presiona Ejecutar y mira exactamente qué hace esta instrucción.',
+      starterCode: 'print("Robot listo")\n',
       expectedOutput: 'Robot listo',
-      hint: 'Usa la función print() con el texto exacto entre comillas: print("Robot listo")',
-      hintsByCategory: {
-        sintaxis: 'Revisa que las comillas y los paréntesis estén completos: print("texto") necesita abrir y cerrar ambos.',
-        variables: 'No necesitas ninguna variable aquí — escribe el texto directamente entre comillas, dentro de print(...).',
-        logica: 'print() solo necesita el texto entre paréntesis — no hace falta llamar a ninguna otra función.',
-        salida: 'Revisa mayúsculas, espacios y signos: debe coincidir letra por letra con "Robot listo".',
-      },
-      workedExample: {
-        code: 'print("Hola")',
-        output: 'Hola',
-        explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Robot listo".',
-      },
+      hint: 'El código ya está completo — solo presiona Ejecutar para ver qué muestra.',
       solutionCode: 'print("Robot listo")',
-      // Progresión pedagógica v1 (misma tarjeta, sin pantalla nueva): tras
-      // acertar, profundiza el MISMO concepto — modificar el mensaje —
-      // en vez de terminar aquí.
       nextStage: {
-        prompt: 'Ahora profundiza: cambia el mensaje para que la consola muestre exactamente Sistema listo',
+        mode: 'manipular',
+        prompt: 'Ahora tú: cambia SOLO el texto entre comillas para que muestre exactamente Sistema listo',
         starterCode: 'print("Robot listo")\n',
         expectedOutput: 'Sistema listo',
         hint: 'Solo cambia el texto entre comillas — el resto de la línea no necesita tocarse: print("Sistema listo")',
@@ -166,6 +159,82 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
           explanation: 'Cambiar el mensaje es escribir un texto distinto entre las mismas comillas — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Sistema listo".',
         },
         solutionCode: 'print("Sistema listo")',
+        nextStage: {
+          mode: 'completar',
+          prompt: 'Completa el código: falta la función que muestra texto en pantalla. Reemplaza el espacio en blanco para que muestre exactamente Motor listo',
+          starterCode: '_____("Motor listo")\n',
+          expectedOutput: 'Motor listo',
+          hint: 'La función que muestra texto en pantalla es print — reemplaza los guiones bajos por esa palabra exacta, sin dejar nada de ellos.',
+          hintsByCategory: {
+            sintaxis: 'Revisa que no queden guiones bajos ni espacios de más antes del paréntesis.',
+            variables: 'Python busca algo llamado "_____" porque todavía no reemplazaste el espacio en blanco por print.',
+            logica: 'Solo falta el nombre de la función — el paréntesis y el texto entre comillas ya están completos.',
+            salida: 'Revisa que el texto siga siendo exactamente "Motor listo".',
+          },
+          workedExample: {
+            code: '_____("Hola")\n# se completa así:\nprint("Hola")',
+            output: 'Hola',
+            explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, print. Fíjate en el patrón: el texto entre comillas no cambia, solo el espacio en blanco.',
+          },
+          solutionCode: 'print("Motor listo")',
+          nextStage: {
+            mode: 'corregir',
+            prompt: 'Este código tiene un error: le falta algo para que "Sensor listo" sea reconocido como texto. Encuéntralo y corrígelo.',
+            starterCode: 'print(Sensor listo)\n',
+            expectedOutput: 'Sensor listo',
+            hint: 'A "Sensor listo" le faltan las comillas — sin ellas, Python cree que son nombres de variables que no existen.',
+            hintsByCategory: {
+              sintaxis: 'Python no reconoce Sensor listo como texto porque no está entre comillas.',
+              variables: 'Sin comillas, Python busca dos variables llamadas Sensor y listo — y ninguna existe.',
+              logica: 'La estructura print(...) ya es correcta; el problema es lo que hay dentro del paréntesis.',
+              salida: 'Una vez corregido, debe mostrar exactamente "Sensor listo".',
+            },
+            workedExample: {
+              code: 'print(Robot listo)\n# el error es la falta de comillas:\nprint("Robot listo")',
+              output: 'Robot listo',
+              explanation: 'Sin comillas, Python interpreta las palabras como nombres de variables — con comillas, las reconoce como texto. Ese es el mismo error que debes corregir aquí.',
+            },
+            solutionCode: 'print("Sensor listo")',
+            nextStage: {
+              mode: 'escribir_parcial',
+              prompt: 'Ahora hazlo tú: usa print() para mostrar exactamente Cámara lista. El comentario de abajo es solo un recordatorio del patrón, no se ejecuta.',
+              starterCode: '# print("texto entre comillas")\n',
+              expectedOutput: 'Cámara lista',
+              hint: 'Escribe tu propia línea con print("Cámara lista") — el comentario de arriba no cuenta como código, solo te recuerda el patrón.',
+              hintsByCategory: {
+                sintaxis: 'Revisa que tu línea (no el comentario) tenga comillas y paréntesis completos.',
+                variables: 'No necesitas ninguna variable — sigue siendo un texto directo entre comillas.',
+                logica: 'El comentario que empieza con # no se ejecuta — necesitas escribir una línea nueva sin el #.',
+                salida: 'Revisa que el texto sea exactamente "Cámara lista".',
+              },
+              workedExample: {
+                code: '# print("texto entre comillas")\nprint("Puerta lista")',
+                output: 'Puerta lista',
+                explanation: 'El comentario (la línea con #) es solo una nota para ti — Python la ignora. La línea real que se ejecuta es la que escribes debajo, sin el #.',
+              },
+              solutionCode: 'print("Cámara lista")',
+              nextStage: {
+                mode: 'escribir_completo',
+                prompt: 'Ahora profundiza: escribe tú mismo, desde cero, una instrucción que muestre exactamente Sistema completo',
+                starterCode: '',
+                expectedOutput: 'Sistema completo',
+                hint: 'Usa la función print() con el texto exacto entre comillas: print("Sistema completo")',
+                hintsByCategory: {
+                  sintaxis: 'Revisa que las comillas y los paréntesis estén completos: print("texto") necesita abrir y cerrar ambos.',
+                  variables: 'No necesitas ninguna variable aquí — escribe el texto directamente entre comillas, dentro de print(...).',
+                  logica: 'print() solo necesita el texto entre paréntesis — no hace falta llamar a ninguna otra función.',
+                  salida: 'Revisa mayúsculas, espacios y signos: debe coincidir letra por letra con "Sistema completo".',
+                },
+                workedExample: {
+                  code: 'print("Hola")',
+                  output: 'Hola',
+                  explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Sistema completo".',
+                },
+                solutionCode: 'print("Sistema completo")',
+              },
+            },
+          },
+        },
       },
     },
   },
