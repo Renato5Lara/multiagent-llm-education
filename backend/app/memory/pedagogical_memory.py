@@ -160,43 +160,66 @@ class PedagogicalMemoryService:
     # ------------------------------------------------------------------
 
     def build_student_profile(self, student_id: str) -> StudentProfile:
+        """Aggregate pedagogical observations into a single StudentProfile dict.
+
+        Uses ``query_sync`` (synchronous) so this method is safe to call from
+        both sync FastAPI route handlers and async contexts that explicitly
+        run it via ``run_in_executor``.  Calling the async ``query_by_key_pattern``
+        without ``await`` was the root cause of the 500 error on
+        ``GET /api/swarm/memory/profile/{student_id}``.
+        """
         profile: StudentProfile = {"student_id": student_id}
 
-        ls = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["learning_style"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        def _q(key_prefix: str, limit: int = 1) -> list:
+            """Sync query helper: returns records whose key starts with key_prefix."""
+            try:
+                return [
+                    r for r in self._store.query_sync(
+                        student_id=student_id,
+                        memory_type="pedagogical_profile",
+                        limit=limit,
+                        include_stale=False,
+                    )
+                    if isinstance(r.key, str) and r.key.startswith(key_prefix)
+                ]
+            except Exception:  # noqa: BLE001
+                return []
+
+        ls = _q(PEDAGOGICAL_KEYS["learning_style"])
         if ls:
             profile["learning_style"] = str(ls[0].value.get("learning_style", "visual"))
 
-        mod = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["modality_preference"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        mod = _q(PEDAGOGICAL_KEYS["modality_preference"])
         if mod:
             profile["preferred_modality"] = str(mod[0].value.get("modality", "image"))
 
-        ad = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["analogy_domain"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        ad = _q(PEDAGOGICAL_KEYS["analogy_domain"])
         if ad:
             profile["preferred_analogies"] = list(ad[0].value.get("domains", []))
 
-        pc = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["pacing"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        pc = _q(PEDAGOGICAL_KEYS["pacing"])
         if pc:
             profile["pacing"] = str(pc[0].value.get("pacing", "moderate"))
 
-        cl = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["cognitive_load"], student_id=student_id, memory_type="pedagogical_profile", limit=3)
+        cl = _q(PEDAGOGICAL_KEYS["cognitive_load"], limit=3)
         if cl:
             signals = [r.value.get("signal", 0.5) for r in cl if isinstance(r.value, dict)]
             avg_signal = sum(signals) / len(signals) if signals else 0.5
             profile["cognitive_load_trend"] = "increasing" if avg_signal > 0.7 else "stable" if avg_signal > 0.4 else "decreasing"
 
-        bp = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["bloom_progress"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        bp = _q(PEDAGOGICAL_KEYS["bloom_progress"])
         if bp:
             profile["bloom_level_reached"] = int(bp[0].value.get("bloom_level", 3))
 
-        en = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["engagement"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        en = _q(PEDAGOGICAL_KEYS["engagement"])
         if en:
             profile["engagement_pattern"] = str(en[0].value.get("pattern", "consistent"))
 
-        ex = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["successful_example"], student_id=student_id, memory_type="pedagogical_profile", limit=3)
+        ex = _q(PEDAGOGICAL_KEYS["successful_example"], limit=3)
         if ex:
             profile["successful_example_types"] = [str(r.value.get("example_type", "")) for r in ex if isinstance(r.value, dict)]
 
-        vc = self._store.query_by_key_pattern(key_prefix=PEDAGOGICAL_KEYS["visual_continuity"], student_id=student_id, memory_type="pedagogical_profile", limit=1)
+        vc = _q(PEDAGOGICAL_KEYS["visual_continuity"])
         if vc:
             profile["visual_continuity"] = dict(vc[0].value) if isinstance(vc[0].value, dict) else {}
 
@@ -207,10 +230,26 @@ class PedagogicalMemoryService:
     # ------------------------------------------------------------------
 
     def compute_metrics(self, student_id: str, weeks: int = 1) -> AdaptationMetrics:
-        total_pedagogical = self._store.count(student_id=student_id, memory_type="pedagogical_profile")
-        total_narrative = self._store.count(student_id=student_id, memory_type="narrative_continuity")
-        total_decision = self._store.count(student_id=student_id, memory_type="pedagogical_decision")
-        total_research = self._store.count(student_id=student_id, memory_type="research")
+        """Compute adaptation quality metrics using synchronous DB queries.
+
+        Replaces the previous async ``count()`` calls (which returned unawaited
+        coroutines in sync contexts) with sync ``query_sync`` counts.
+        """
+        def _count_sync(memory_type: str) -> int:
+            try:
+                return len(self._store.query_sync(
+                    student_id=student_id,
+                    memory_type=memory_type,
+                    limit=500,
+                    include_stale=False,
+                ))
+            except Exception:  # noqa: BLE001
+                return 0
+
+        total_pedagogical = _count_sync("pedagogical_profile")
+        total_narrative = _count_sync("narrative_continuity")
+        total_decision = _count_sync("pedagogical_decision")
+        total_research = _count_sync("research")
         memory_used = total_pedagogical + total_narrative + total_decision + total_research
 
         profile = self.build_student_profile(student_id)
@@ -221,7 +260,7 @@ class PedagogicalMemoryService:
         has_personalization = bool(profile.get("learning_style") or profile.get("preferred_analogies") or profile.get("preferred_modality"))
         personalization_strength = 0.8 if has_personalization else 0.0
 
-        narrative_count = self._store.count(student_id=student_id, memory_type="narrative_continuity")
+        narrative_count = total_narrative
         continuity_score = min(1.0, narrative_count / max(1, weeks))
 
         reuse = min(1.0, (total_decision + total_pedagogical) / max(1, weeks * 3))
