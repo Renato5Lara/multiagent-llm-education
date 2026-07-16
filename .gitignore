@@ -140,3 +140,6 @@ outputs/pptx-audit/
 
 # ===== PAQUETE DE INVESTIGACIÓN (snapshot regenerable, no versionar) =====
 /research/
+
+# ===== REPORTES AUTOGENERADOS DE LA DEMO SWARM (regenerables, no versionar) =====
+backend/docs/bug_reports/
