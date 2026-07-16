@@ -35,12 +35,8 @@ export const CICLO_3_INPUT: LearningCycle = {
   conceptId: 'input',
   conceptLabel: 'Entrada de datos (input)',
   priorMastery: 0.2,
-  curiosityFact: {
-    fact:
-      'En 1966, en el MIT, Joseph Weizenbaum creó ELIZA, uno de los primeros programas capaces de sostener una "conversación": nunca decía lo mismo dos veces, porque cada respuesta dependía de lo que la persona escribía primero. Sin ese texto de entrada, ELIZA no tenía nada de qué hablar.',
-    connection:
-      'Hasta ahora tu robot solo ejecutó lo que TÚ decidiste de antemano, en el código o en las cajas. Hoy le vas a dar la misma capacidad que tenía ELIZA hace más de 55 años: la de esperar lo que el USUARIO escribe, y recién entonces continuar.',
-  },
+  // "¿Sabías qué?" solo vive en Ciclo 1 del módulo (Sprint "Auditoría
+  // pedagógica", Hallazgo B) — ver la misma nota en ciclo2-variables.ts.
   concept: {
     title: '¿Cómo escucha un programa a quien lo usa?',
     quickRecap: {

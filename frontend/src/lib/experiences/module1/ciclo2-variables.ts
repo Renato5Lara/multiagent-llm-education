@@ -44,12 +44,10 @@ export const CICLO_2_VARIABLES: LearningCycle = {
   conceptId: 'variables',
   conceptLabel: 'Variables',
   priorMastery: 0.2,
-  curiosityFact: {
-    fact:
-      'En sus notas de 1843 sobre la máquina analítica de Babbage, Ada Lovelace ya usaba columnas numeradas para guardar resultados intermedios de un cálculo — cada columna tenía un valor que se podía leer y actualizar más adelante.',
-    connection:
-      'Casi 200 años antes de Python, ya existía la idea central de este ciclo: ponerle un nombre a un valor para poder reusarlo después, sin recalcularlo ni repetirlo.',
-  },
+  // "¿Sabías qué?" solo vive en Ciclo 1 del módulo (Sprint "Auditoría
+  // pedagógica", Hallazgo B) — CuriosityFactCard no dedupe entre ciclos por
+  // su cuenta, así que definir curiosityFact aquí lo repetía una vez por
+  // ciclo en vez de una vez por módulo. Se retira el campo, no el componente.
   concept: {
     title: '¿Qué es una variable?',
     quickRecap: {
