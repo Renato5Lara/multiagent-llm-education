@@ -155,27 +155,118 @@ export const CICLO_3_INPUT: LearningCycle = {
     code: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
     explanation:
       'Cada paso de tu secuencia es esta línea de Python: input("¿Cómo te llamas? ") muestra la pregunta y espera; lo que la persona escribe queda guardado en nombre; print("Hola,", nombre) lo usa para saludar. La secuencia se ejecuta completa, sin saltarse ni repetir ningún paso de los que armaste.',
+    // Andamiaje completo (jul 2026, consolidación Sprint 2): mismos seis
+    // peldaños que Ciclo 1 y Ciclo 2 (mismo campo `mode`, mismo componente
+    // PythonBridge.tsx), continuando AQUÍ la misma pregunta-y-saludo que el
+    // estudiante ya armó arriba — nunca un tema nuevo sin relación.
     practice: {
-      prompt: 'Ahora hazlo tú: pide el nombre con input() y saluda con el patrón exacto Hola, <nombre>',
-      starterCode: '# escribe tu código aquí\n',
+      mode: 'observar',
+      prompt: 'Obsérvalo: ejecuta este código — el usuario simulado escribe Ana — y mira cómo el robot saluda.',
+      starterCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)\n',
       expectedOutput: '¿Cómo te llamas? Hola, Ana',
-      // Sin terminal real en el navegador: el usuario simulado "escribe" Ana,
-      // y ese valor se muestra explícitamente en la UI antes de ejecutar
-      // (ver PythonBridge.tsx) — nunca es un dato que aparece de la nada.
       simulatedInputs: ['Ana'],
-      hint: 'Usa input() para preguntar y guardar la respuesta en una variable, y print() para saludar con esa variable: nombre = input("¿Cómo te llamas? ") y luego print("Hola,", nombre)',
-      hintsByCategory: {
-        sintaxis: 'Revisa que input() tenga sus paréntesis y comillas completos, igual que print(): input("¿Cómo te llamas? ")',
-        variables: 'Python no encuentra esa variable porque nunca se creó — recuerda: nombre = input(...) crea la variable Y guarda la respuesta en el mismo paso.',
-        logica: 'Revisa el orden: primero input() pregunta y guarda la respuesta, y solo después print() puede usar esa variable.',
-        salida: 'print("Hola,", nombre) debe mostrar exactamente Hola, seguido del nombre que escribió el usuario simulado — revisa la coma y el espacio.',
-      },
-      workedExample: {
-        code: 'ciudad = input("¿En qué ciudad vives? ")\nprint("Vives en", ciudad)',
-        output: '¿En qué ciudad vives? Vives en Trujillo',
-        explanation: 'input() muestra la pregunta y espera — el usuario simulado escribió Trujillo. Esa respuesta quedó guardada en ciudad, y print("Vives en", ciudad) la usó de inmediato. Fíjate en el patrón, no copies el mensaje: el tuyo pregunta el nombre, no la ciudad.',
-      },
+      hint: 'El código ya está completo — solo presiona Ejecutar para ver qué pasa.',
       solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
+      nextStage: {
+        mode: 'manipular',
+        prompt: 'Ahora tú: cambia SOLO la palabra de saludo para que el robot diga Bienvenido en vez de Hola',
+        starterCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)\n',
+        expectedOutput: '¿Cómo te llamas? Bienvenido, Ana',
+        simulatedInputs: ['Ana'],
+        hint: 'Solo cambia la palabra "Hola" por "Bienvenido" — la coma y el resto de la línea no necesitan tocarse: print("Bienvenido,", nombre)',
+        hintsByCategory: {
+          sintaxis: 'Revisa que las comillas alrededor de "Bienvenido," sigan completas.',
+          variables: 'No necesitas ninguna variable nueva — nombre ya guarda la respuesta.',
+          logica: 'Solo cambia el texto fijo antes de la coma; nombre no cambia.',
+          salida: 'Revisa que diga exactamente "Bienvenido, Ana", con mayúscula inicial.',
+        },
+        workedExample: {
+          code: 'ciudad = input("¿En qué ciudad vives? ")\nprint("Vives en", ciudad)',
+          output: '¿En qué ciudad vives? Vives en Trujillo',
+          explanation: 'Cambiar el saludo es escribir un texto distinto antes de la coma — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Bienvenido,".',
+        },
+        solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Bienvenido,", nombre)',
+        nextStage: {
+          mode: 'completar',
+          prompt: 'Completa el código: falta la función que pausa el programa y espera tu respuesta. Reemplaza el espacio en blanco',
+          starterCode: 'nombre = _____("¿Cómo te llamas? ")\nprint("Hola,", nombre)\n',
+          expectedOutput: '¿Cómo te llamas? Hola, Ana',
+          simulatedInputs: ['Ana'],
+          hint: 'La función que pregunta y espera una respuesta es input — reemplaza los guiones bajos por esa palabra exacta.',
+          hintsByCategory: {
+            sintaxis: 'Revisa que no queden guiones bajos ni espacios de más antes del paréntesis.',
+            variables: 'nombre no puede guardar nada todavía porque la función que pregunta y espera sigue sin nombre.',
+            logica: 'La pregunta y las comillas ya están completas; solo falta el nombre de la función.',
+            salida: 'Una vez completado, debe mostrar exactamente "¿Cómo te llamas? Hola, Ana".',
+          },
+          workedExample: {
+            code: 'ciudad = _____("¿En qué ciudad vives? ")\nprint("Vives en", ciudad)\n# se completa así:\nciudad = input("¿En qué ciudad vives? ")',
+            output: '¿En qué ciudad vives? Vives en Trujillo',
+            explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, input. Fíjate en el patrón: la pregunta entre comillas no cambia, solo el espacio en blanco.',
+          },
+          solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
+          nextStage: {
+            mode: 'corregir',
+            prompt: 'Este código tiene un error: a la pregunta de input() le faltan las comillas. Encuéntralo y corrígelo.',
+            starterCode: 'nombre = input(¿Cómo te llamas? )\nprint("Hola,", nombre)\n',
+            expectedOutput: '¿Cómo te llamas? Hola, Ana',
+            simulatedInputs: ['Ana'],
+            hint: 'A la pregunta ¿Cómo te llamas? le faltan las comillas — sin ellas, Python no puede leerla como texto.',
+            hintsByCategory: {
+              sintaxis: 'Python no reconoce ¿Cómo te llamas? como texto porque no está entre comillas — por eso ni siquiera puede ejecutar la línea.',
+              variables: 'El problema no es una variable — es que la pregunta de input() necesita comillas para ser texto.',
+              logica: 'La estructura input(...) ya es correcta; el problema es lo que hay dentro del paréntesis.',
+              salida: 'Una vez corregido, debe mostrar exactamente "¿Cómo te llamas? Hola, Ana".',
+            },
+            workedExample: {
+              code: 'ciudad = input(¿En qué ciudad vives? )\nprint("Vives en", ciudad)\n# el error es la falta de comillas:\nciudad = input("¿En qué ciudad vives? ")',
+              output: '¿En qué ciudad vives? Vives en Trujillo',
+              explanation: 'Sin comillas, Python no puede interpretar la pregunta como texto — con comillas, la reconoce y la muestra. Ese es el mismo error que debes corregir aquí.',
+            },
+            solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
+            nextStage: {
+              mode: 'escribir_parcial',
+              prompt: 'Ahora hazlo tú: pregunta ¿Cuál es tu apodo? con input() y saluda con el patrón exacto Hola, <apodo>. El comentario de abajo es solo un recordatorio del patrón, no se ejecuta.',
+              starterCode: '# apodo = input("texto de la pregunta")\n# print("Hola,", apodo)\n',
+              expectedOutput: '¿Cuál es tu apodo? Hola, Nico',
+              simulatedInputs: ['Nico'],
+              hint: 'Escribe tus propias dos líneas con apodo = input("¿Cuál es tu apodo? ") y print("Hola,", apodo) — el comentario de arriba no cuenta como código.',
+              hintsByCategory: {
+                sintaxis: 'Revisa que tus líneas (no el comentario) tengan comillas y paréntesis completos.',
+                variables: 'Necesitas crear apodo con input() antes de que print() pueda usarla.',
+                logica: 'El comentario que empieza con # no se ejecuta — necesitas escribir tus propias líneas, sin el #.',
+                salida: 'Revisa que el resultado sea exactamente "¿Cuál es tu apodo? Hola, Nico".',
+              },
+              workedExample: {
+                code: '# apodo = input("texto de la pregunta")\n# print("Hola,", apodo)\nciudad = input("¿En qué ciudad vives? ")\nprint("Vives en", ciudad)',
+                output: '¿En qué ciudad vives? Vives en Trujillo',
+                explanation: 'El comentario (las líneas con #) es solo una nota para ti — Python la ignora. Las líneas reales que se ejecutan son las que escribes debajo, sin el #.',
+              },
+              solutionCode: 'apodo = input("¿Cuál es tu apodo? ")\nprint("Hola,", apodo)',
+              nextStage: {
+                mode: 'escribir_completo',
+                prompt: 'Ahora profundiza: escribe tú mismo, desde cero, el código que pregunte ¿Cómo te llamas? y salude exactamente con el patrón Mucho gusto, <nombre>',
+                starterCode: '',
+                expectedOutput: '¿Cómo te llamas? Mucho gusto, Camila',
+                simulatedInputs: ['Camila'],
+                hint: 'Usa las mismas dos líneas de siempre: nombre = input("¿Cómo te llamas? ") y print("Mucho gusto,", nombre)',
+                hintsByCategory: {
+                  sintaxis: 'Revisa que input() y print() tengan sus paréntesis y comillas completos.',
+                  variables: 'Necesitas crear nombre con input() antes de que print() pueda usarla.',
+                  logica: 'El orden es: primero input() pregunta y guarda, y solo después print() saluda.',
+                  salida: 'Revisa que diga exactamente "Mucho gusto, Camila".',
+                },
+                workedExample: {
+                  code: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
+                  output: '¿Cómo te llamas? Hola, Ana',
+                  explanation: 'Las mismas dos líneas de siempre — solo cambia la palabra de saludo. Fíjate en el patrón, no copies el mensaje: el tuyo dice "Mucho gusto,".',
+                },
+                solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Mucho gusto,", nombre)',
+              },
+            },
+          },
+        },
+      },
     },
   },
   decision: {

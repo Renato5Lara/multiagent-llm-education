@@ -160,27 +160,113 @@ export const CICLO_2_VARIABLES: LearningCycle = {
     code: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
     explanation:
       'Cada caja de tu secuencia es una variable en Python: «edad = 20» crea la caja y guarda el valor en un solo paso; «faltan_para_100 = 100 - edad» lee el valor de edad para calcular otro; print(...) lo muestra. Cada caja aparece exactamente una vez, tal como la armaste — ninguna de más, ninguna de menos.',
+    // Andamiaje completo (jul 2026, consolidación Sprint 2): mismos seis
+    // peldaños que Ciclo 1 (mismo campo `mode`, mismo componente
+    // PythonBridge.tsx), continuando AQUÍ el cálculo que el estudiante ya
+    // armó arriba (edad → cuántos años faltan para 100) — nunca un tema
+    // nuevo sin relación, el error que auditamos en Ciclo 1.
     practice: {
-      prompt: 'Ahora hazlo tú: crea una variable llamada mensaje que guarde el texto Hola Python, y muéstrala con print()',
-      starterCode: '# escribe tu código aquí\n',
-      expectedOutput: 'Hola Python',
-      hint: 'Primero crea la variable con mensaje = "Hola Python", y en otra línea usa print(mensaje) — sin comillas alrededor del nombre.',
-      hintsByCategory: {
-        sintaxis: 'Revisa el signo = y que el texto tenga sus comillas completas: mensaje = "Hola Python"',
-        variables: 'Python no encuentra esa variable porque nunca se creó con = antes de usarla, o el nombre no coincide exactamente.',
-        logica: 'Revisa el orden: primero se crea la variable con =, y solo después se puede mostrar con print(...).',
-        // «print("mensaje")» corre sin errores pero muestra la palabra
-        // literal, no el valor guardado — un error de SALIDA (sin
-        // excepción), no de sintaxis ni de lógica: por eso la pista sobre
-        // comillas vive aquí, donde el clasificador realmente la usa.
-        salida: 'print(mensaje) muestra el VALOR de la variable — nunca escribas print("mensaje") entre comillas: eso muestra la palabra "mensaje", no lo que guardaste. Revisa también mayúsculas y espacios.',
+      mode: 'observar',
+      prompt: 'Obsérvalo: presiona Ejecutar y mira cuántos años le faltan al robot para llegar a 100.',
+      starterCode: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)\n',
+      expectedOutput: '80',
+      hint: 'El código ya está completo — solo presiona Ejecutar para ver qué muestra.',
+      solutionCode: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+      nextStage: {
+        mode: 'manipular',
+        prompt: 'Ahora tú: cambia SOLO el valor de edad a 30 para que el robot calcule cuántos años le faltan ahora',
+        starterCode: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)\n',
+        expectedOutput: '70',
+        hint: 'Solo cambia el número junto a edad = — el resto de las líneas no necesita tocarse: edad = 30',
+        hintsByCategory: {
+          sintaxis: 'Revisa que el número siga sin comillas — es un valor numérico, no texto.',
+          variables: 'No necesitas crear ninguna variable nueva — sigue siendo edad, solo con otro valor.',
+          logica: 'Solo cambia el número junto a edad =; las otras dos líneas ya calculan y muestran solas.',
+          salida: 'Revisa que el resultado sea exactamente 70 — 100 menos el nuevo valor de edad.',
+        },
+        workedExample: {
+          code: 'edad = 45\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+          output: '55',
+          explanation: 'Cambiar solo el número junto a edad = 45 hace que faltan_para_100 se recalcule solo — la fórmula no cambia, solo el dato de entrada. Fíjate en el patrón: tu edad debe ser 30, y el resultado 70.',
+        },
+        solutionCode: 'edad = 30\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+        nextStage: {
+          mode: 'completar',
+          prompt: 'Completa el código: falta la función que muestra el resultado en pantalla. Reemplaza el espacio en blanco para que el robot calcule con edad = 40',
+          starterCode: 'edad = 40\nfaltan_para_100 = 100 - edad\n_____(faltan_para_100)\n',
+          expectedOutput: '60',
+          hint: 'La función que muestra un valor en pantalla es print — reemplaza los guiones bajos por esa palabra exacta, sin dejar nada de ellos.',
+          hintsByCategory: {
+            sintaxis: 'Revisa que no queden guiones bajos ni espacios de más antes del paréntesis.',
+            variables: 'faltan_para_100 ya existe — el hueco no es una variable, es el nombre de una función.',
+            logica: 'Las dos primeras líneas ya calculan el valor; solo falta la función que lo muestra.',
+            salida: 'Revisa que el resultado siga siendo exactamente 60.',
+          },
+          workedExample: {
+            code: 'edad = 45\nfaltan_para_100 = 100 - edad\n_____(faltan_para_100)\n# se completa así:\nprint(faltan_para_100)',
+            output: '55',
+            explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, print. Fíjate en el patrón: el cálculo no cambia, solo el espacio en blanco.',
+          },
+          solutionCode: 'edad = 40\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+          nextStage: {
+            mode: 'corregir',
+            prompt: 'Este código tiene un error: escribieron mal el nombre de la variable edad. Encuéntralo y corrígelo para que calcule con edad = 40',
+            starterCode: 'edad = 40\nfaltan_para_100 = 100 - eda\nprint(faltan_para_100)\n',
+            expectedOutput: '60',
+            hint: 'En la segunda línea dice "eda" en vez de "edad" — Python busca una variable que nunca se creó con ese nombre.',
+            hintsByCategory: {
+              sintaxis: 'La línea en sí está bien escrita — el problema es el nombre, no los signos.',
+              variables: 'Python no encuentra "eda" porque la variable se llama edad, con "d" antes de la "a" final.',
+              logica: 'La fórmula 100 - edad ya es correcta; solo hay que escribir bien el nombre de la variable.',
+              salida: 'Una vez corregido, debe mostrar exactamente 60.',
+            },
+            workedExample: {
+              code: 'edad = 45\nfaltan_para_100 = 100 - eda\nprint(faltan_para_100)\n# el error es el nombre incompleto:\nfaltan_para_100 = 100 - edad',
+              output: '55',
+              explanation: 'Python distingue "eda" de "edad" — son nombres distintos, y solo uno de ellos fue creado. Ese es el mismo error que debes corregir aquí.',
+            },
+            solutionCode: 'edad = 40\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+            nextStage: {
+              mode: 'escribir_parcial',
+              prompt: 'Ahora hazlo tú: calcula cuántos años le faltan a alguien de 50 años para llegar a 100. El comentario de abajo es solo un recordatorio del patrón, no se ejecuta.',
+              starterCode: '# edad = ___\n# faltan_para_100 = 100 - edad\n# print(faltan_para_100)\n',
+              expectedOutput: '50',
+              hint: 'Escribe tus propias tres líneas con edad = 50, seguido de faltan_para_100 = 100 - edad, y print(faltan_para_100) — el comentario de arriba no cuenta como código.',
+              hintsByCategory: {
+                sintaxis: 'Revisa que tus líneas (no el comentario) tengan el signo = completo en cada una.',
+                variables: 'Necesitas crear edad primero, y solo después faltan_para_100 puede leerla.',
+                logica: 'El comentario que empieza con # no se ejecuta — necesitas escribir las tres líneas de nuevo, sin el #.',
+                salida: 'Revisa que el resultado sea exactamente 50.',
+              },
+              workedExample: {
+                code: '# edad = ___\n# faltan_para_100 = 100 - edad\n# print(faltan_para_100)\nedad = 45\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+                output: '55',
+                explanation: 'El comentario (las líneas con #) es solo una nota para ti — Python la ignora. Las líneas reales que se ejecutan son las que escribes debajo, sin el #.',
+              },
+              solutionCode: 'edad = 50\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+              nextStage: {
+                mode: 'escribir_completo',
+                prompt: 'Ahora profundiza: escribe tú mismo, desde cero, el código que calcule cuántos años le faltan a alguien de 64 años para llegar a 100',
+                starterCode: '',
+                expectedOutput: '36',
+                hint: 'Usa las mismas tres líneas de siempre: edad = 64, faltan_para_100 = 100 - edad, print(faltan_para_100)',
+                hintsByCategory: {
+                  sintaxis: 'Revisa que cada línea tenga su signo = completo, sin comillas — son números.',
+                  variables: 'Necesitas crear edad primero; faltan_para_100 no puede leerla si no existe todavía.',
+                  logica: 'El orden es: crear edad, calcular faltan_para_100, y solo después mostrarlo con print(...).',
+                  salida: 'Revisa que el resultado sea exactamente 36 — 100 menos 64.',
+                },
+                workedExample: {
+                  code: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+                  output: '80',
+                  explanation: 'Las mismas tres líneas de siempre — solo cambia el valor de edad. Fíjate en el patrón, no copies el número: el tuyo es 64, y el resultado 36.',
+                },
+                solutionCode: 'edad = 64\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
+              },
+            },
+          },
+        },
       },
-      workedExample: {
-        code: 'nombre = "Ana"\nprint(nombre)',
-        output: 'Ana',
-        explanation: 'nombre = "Ana" crea la variable y guarda el texto. print(nombre) — SIN comillas alrededor de nombre — muestra lo que guarda. Con comillas, print("nombre"), Python mostraría literalmente la palabra nombre.',
-      },
-      solutionCode: 'mensaje = "Hola Python"\nprint(mensaje)',
     },
   },
   decision: {
