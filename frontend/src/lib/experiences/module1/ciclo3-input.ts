@@ -90,8 +90,7 @@ export const CICLO_3_INPUT: LearningCycle = {
         body: [
           'Imagina un programa que saluda a quien lo use. Si escribes print("Hola, Ana") el programa SIEMPRE saluda a Ana, sin importar quién lo ejecute — porque "Ana" quedó fijo en el código.',
           'Eso no sirve para un programa real: la próxima persona que lo use no se llama Ana. Necesitas que el programa PREGUNTE el nombre, en lugar de asumirlo.',
-          'input() resuelve exactamente eso: pausa el programa, muestra una pregunta, y guarda lo que la persona responde en una variable — la misma variable que ya sabes crear y leer.',
-          'Por eso input() y las variables trabajan juntos: input() consigue el dato, la variable lo recuerda para el resto del programa.',
+          'input() resuelve exactamente eso: pausa el programa, pregunta, y guarda la respuesta en una variable — la misma que ya sabes crear y leer. Por eso trabajan juntos: input() consigue el dato, la variable lo recuerda para el resto del programa.',
         ],
       },
       audio: {
@@ -111,8 +110,7 @@ export const CICLO_3_INPUT: LearningCycle = {
         mediumLabel: 'Simulación',
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
-          '🎤 Antes de leer nada, predice: el robot pregunta «¿Cuántas manzanas quieres?» y espera. Tú respondes «3». ¿Qué hace el robot con ese 3?',
-          'Respuesta: lo guarda en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular el precio o confirmar el pedido.',
+          '🎤 El robot pregunta «¿Cuántas manzanas quieres?» y espera. Respondes «3»: el robot lo guarda en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular el precio.',
           'Ahora predice con esto: el robot pregunta «¿Cómo te llamas?» pero el programa NO tiene ninguna caja donde guardar tu respuesta. ¿Qué pasa con lo que escribiste?',
           'Respuesta: se pierde — una respuesta sin caja donde guardarse desaparece apenas el programa sigue. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
         ],

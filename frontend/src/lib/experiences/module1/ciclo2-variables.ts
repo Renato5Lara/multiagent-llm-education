@@ -16,7 +16,6 @@ const READING_CONCEPT_VARIANT: ConceptVariant = {
     'Imagina un programa que usa el precio de una compra tres veces: una para mostrarlo, otra para guardarlo en el recibo, otra para avisar si alcanza el saldo. Si escribes el precio suelto las tres veces y el precio cambia, tienes que corregirlo en las tres.',
     'Una variable resuelve exactamente ese problema: le pones nombre a un valor UNA vez — precio = 4.50 — y usas ese nombre las veces que necesites. Si el precio cambia, cambias una sola línea.',
     'Por eso una variable no es solo «guardar un dato»: es guardar un dato con un nombre que el resto del programa puede reutilizar sin repetir el valor.',
-    'Python usa la forma más simple posible para esto: nombre = valor. A la izquierda, el nombre que eliges; a la derecha, lo que guarda.',
   ],
 }
 
@@ -113,8 +112,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         body: [
           '📦 Antes de leer nada, predice: el robot ejecuta «caja_puntos = 0» y luego «caja_puntos = caja_puntos + 10». ¿Qué guarda la caja al final?',
           'Respuesta: 10. Primero crea la caja con 0 adentro; después LEE lo que tenía (0), le suma 10, y guarda el resultado en la MISMA caja.',
-          'Ahora predice con esto: «vidas = 3» y después «vidas = vidas - 1». ¿Qué guarda vidas al final? Respuesta: 2 — perdiste una vida, y el nombre sigue siendo el mismo.',
-          'Ese es el modelo que usarás siempre: una variable no es un valor fijo, es una caja con nombre que puedes volver a llenar — leyendo primero lo que tenía, si hace falta.',
+          'Ahora predice con esto: «vidas = 3» y después «vidas = vidas - 1». ¿Qué guarda vidas al final? Respuesta: 2 — perdiste una vida, y el nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta.',
         ],
       },
     },
