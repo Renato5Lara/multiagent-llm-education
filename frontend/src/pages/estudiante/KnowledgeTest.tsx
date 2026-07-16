@@ -526,7 +526,8 @@ function CompetencyClosingScreen({
           </div>
           <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3">
             <p className="text-[10px] font-mono tracking-wider uppercase text-amber-300 mb-1">
-              A reforzar primero
+              {/* Si el foco ya está dominado (>=70%), no contradecir "Base sólida" llamándolo "a reforzar" */}
+              {profile.focus_percentage >= 70 ? 'Siguiente reto' : 'A reforzar primero'}
             </p>
             <p className="text-sm font-medium text-neural-text">{profile.focus_label}</p>
             <p className="text-xs text-neural-muted mt-0.5">{profile.focus_percentage.toFixed(0)}%</p>
