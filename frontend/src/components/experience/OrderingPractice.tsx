@@ -1,4 +1,18 @@
-// Práctica universal de ordenamiento — idéntica para todas las modalidades.
+// Práctica de ordenamiento — la mecánica (arrastrar/tocar, evaluar la
+// SECUENCIA COMPLETA) es la misma para las 4 modalidades a propósito: seguía
+// siendo drag & drop para todos. Auditoría pedagógica (jul 2026, Hallazgo A):
+// lo que SÍ difiere ahora es la forma en que cada perfil recibe la misma
+// información — nunca solo color/iconos (ese error ya se cometió una vez con
+// la infografía visual, no se repite):
+//   auditivo → el enunciado de la práctica también puede escucharse
+//              (AudioNarration, mismo componente ya validado en ConceptStep).
+//   visual   → la secuencia se ve como una cadena conectada (mismo lenguaje
+//              visual ya aprobado en ConceptStep.infographic: nodos + flecha
+//              de transformación), no como una lista plana — el orden y el
+//              encadenamiento SON el concepto que se evalúa aquí.
+//   kinestésico/lector → sin cambios: drag & drop real ya sirve bien al
+//              primero, y la lectura+decisión ya es una interacción válida
+//              para el segundo.
 // Evalúa la SECUENCIA COMPLETA (lib/experiences/ordering.ts) y comunica el
 // resultado con retroalimentación progresiva:
 //   intento 1 → pista general (algo falla, no dice qué)
@@ -7,11 +21,13 @@
 // Necesitar la solución no es castigo: es evidencia para el evaluador.
 
 import { useMemo, useRef, useState } from 'react'
-import { CheckCircle2, GraduationCap, Lightbulb, RotateCcw } from 'lucide-react'
+import { ArrowDown, CheckCircle2, GraduationCap, Lightbulb, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { correctSequence, evaluateSequence, type SequenceEvaluation } from '@/lib/experiences/ordering'
 import type { OrderingPracticeDef } from '@/types/moduleExperience'
+import type { LearningModality } from '@/types/modality'
+import { AudioNarration } from './AudioNarration'
 
 export interface PracticeOutcome {
   attempts: number
@@ -42,6 +58,10 @@ interface Props {
    *  refuerzo voluntario NO la pasan a propósito: dentro de la escalera, la
    *  exigencia es siempre la misma sin importar el pre-test). */
   profundidad?: string
+  /** Modalidad efectiva del estudiante — gobierna CÓMO se presenta esta
+   *  misma práctica (narración auditiva, secuencia como cadena visual),
+   *  nunca QUÉ se evalúa. `undefined` conserva el render previo exacto. */
+  modality?: LearningModality
 }
 
 type Feedback =
@@ -106,8 +126,10 @@ function specificHint(
 }
 
 export function OrderingPractice({
-  practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted, profundidad,
+  practice, onAttempt, onFinished, revealOnExhaust = true, onExhausted, profundidad, modality,
 }: Props) {
+  const isVisual = modality === 'visual'
+  const isAudio = modality === 'audio'
   const startRef = useRef(Date.now())
   const attemptsRef = useRef(0)
   const maxAttempts = useMemo(() => maxAttemptsFor(profundidad), [profundidad])
@@ -218,6 +240,11 @@ export function OrderingPractice({
 
       <p className="text-sm md:text-base text-neural-text/90 leading-relaxed">{practice.prompt}</p>
 
+      {/* Auditivo: el enunciado también puede escucharse, no solo leerse
+       *  (Auditoría pedagógica, Hallazgo A) — mismo componente ya validado
+       *  en ConceptStep, botón manual, sin autoplay. */}
+      {isAudio && <AudioNarration text={practice.prompt} />}
+
       {/* Secuencia construida */}
       {!solutionShown && (
         <div>
@@ -237,30 +264,41 @@ export function OrderingPractice({
             {sequence.map((id, i) => {
               const isFlagged = flaggedId === id || flaggedIndex === i
               return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => toggle(id)}
-                  disabled={finished}
-                  draggable={!finished}
-                  onDragStart={handleDragStart(id)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverIndex(i) }}
-                  onDrop={handleDropAt(i)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors cursor-grab active:cursor-grabbing disabled:cursor-default',
-                    dragOverIndex === i && draggedId && draggedId !== id
-                      ? 'border-neural-glow/60 bg-neural-glow/20'
-                      : isFlagged
-                        ? 'bg-amber-500/10 border-amber-500/40'
-                        : 'bg-neural-glow/10 border-neural-glow/30 hover:bg-neural-glow/15',
+                <div key={id}>
+                  {/* Visual: la secuencia SE VE como una cadena conectada, no
+                   *  una lista plana — mismo lenguaje de "nodo → flecha →
+                   *  nodo" ya validado en el diagrama de ConceptStep. El
+                   *  orden y el encadenamiento son el concepto evaluado aquí,
+                   *  no un adorno. */}
+                  {isVisual && i > 0 && (
+                    <div className="flex justify-center py-0.5">
+                      <ArrowDown className="h-3.5 w-3.5 text-neural-glow/70" />
+                    </div>
                   )}
-                >
-                  <span className={cn('text-[11px] font-mono shrink-0 w-5', isFlagged ? 'text-amber-400' : 'text-neural-glow')}>
-                    {i + 1}.
-                  </span>
-                  <span className="text-sm text-neural-text">{itemById.get(id)?.text}</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => toggle(id)}
+                    disabled={finished}
+                    draggable={!finished}
+                    onDragStart={handleDragStart(id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={e => { e.preventDefault(); e.stopPropagation(); setDragOverIndex(i) }}
+                    onDrop={handleDropAt(i)}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-colors cursor-grab active:cursor-grabbing disabled:cursor-default',
+                      dragOverIndex === i && draggedId && draggedId !== id
+                        ? 'border-neural-glow/60 bg-neural-glow/20'
+                        : isFlagged
+                          ? 'bg-amber-500/10 border-amber-500/40'
+                          : 'bg-neural-glow/10 border-neural-glow/30 hover:bg-neural-glow/15',
+                    )}
+                  >
+                    <span className={cn('text-[11px] font-mono shrink-0 w-5', isFlagged ? 'text-amber-400' : 'text-neural-glow')}>
+                      {i + 1}.
+                    </span>
+                    <span className="text-sm text-neural-text">{itemById.get(id)?.text}</span>
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -329,11 +367,18 @@ export function OrderingPractice({
             </p>
           </div>
 
-          <ol className="space-y-1.5">
+          <ol className="space-y-0">
             {solution.map((item, i) => (
-              <li key={item.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                <span className="text-[11px] font-mono text-neural-violet shrink-0 w-5">{i + 1}.</span>
-                <span className="text-sm text-neural-text">{item.text}</span>
+              <li key={item.id}>
+                {isVisual && i > 0 && (
+                  <div className="flex justify-center py-0.5">
+                    <ArrowDown className="h-3.5 w-3.5 text-neural-violet/70" />
+                  </div>
+                )}
+                <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                  <span className="text-[11px] font-mono text-neural-violet shrink-0 w-5">{i + 1}.</span>
+                  <span className="text-sm text-neural-text">{item.text}</span>
+                </div>
               </li>
             ))}
           </ol>

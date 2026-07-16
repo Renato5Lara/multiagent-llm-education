@@ -1088,6 +1088,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
                 // editor (Sprint pedagógico Fase 2, prioridad 1): mismo
                 // criterio earlyHelp que ya usa PythonBridge.
                 profundidad={profundidad}
+                // Auditoría pedagógica (Hallazgo A): la misma práctica ahora
+                // se presenta distinto por modalidad (narración auditiva,
+                // secuencia como cadena visual) — nunca cambia QUÉ se evalúa.
+                modality={effectiveModality}
               />
             ) : (
               <PredictOutputPractice
@@ -1187,6 +1191,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               practice={activeReinforcement.practice}
               moduleId={moduleId}
               conceptId={cycle?.conceptId ?? ''}
+              modality={effectiveModality}
               onDone={handleReinforcementDone}
             />
           ) : (
@@ -1205,11 +1210,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 // ── Reto rápido dentro del refuerzo ─────────────────────────────────────────────
 
 function ReinforcementPractice({
-  practice, moduleId, conceptId, onDone,
+  practice, moduleId, conceptId, modality, onDone,
 }: {
   practice: NonNullable<Reinforcement['practice']>
   moduleId: string
   conceptId: string
+  modality?: LearningModality
   onDone: () => void
 }) {
   const [outcome, setOutcome] = useState<PracticeOutcome | null>(null)
@@ -1240,6 +1246,7 @@ function ReinforcementPractice({
       {practice.kind === 'ordering' ? (
         <OrderingPractice
           practice={practice}
+          modality={modality}
           onAttempt={({ attempt, status }) => {
             recordEvidence({
               type: 'practice_attempt',
@@ -1405,6 +1412,7 @@ function StepPractice({
     <div className="space-y-5">
       <OrderingPractice
         practice={practice}
+        modality={modality}
         revealOnExhaust={false}
         onAttempt={({ attempt, status }) => {
           recordEvidence({
