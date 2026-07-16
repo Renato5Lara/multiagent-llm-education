@@ -3,7 +3,7 @@
 // lo reemplaza por el recurso curado real sin tocar este componente.
 
 import { useRef } from 'react'
-import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText } from 'lucide-react'
+import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, HelpCircle, CheckCircle2, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
@@ -62,11 +62,17 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
 
         <div className={framed ? 'bg-neural-lowest/60 px-6 py-6' : 'px-6 py-6'}>
           <div className="space-y-4">
-            {/* RC-FINAL: la variante visual ES visual — comparación gráfica real */}
+            {/* RC-FINAL: la variante visual ES visual — diagrama real, no solo texto
+                coloreado. El nodo "ambigua" usa borde punteado (forma = idea difusa);
+                el nodo "precisa" usa borde sólido con ícono de verificación (forma =
+                idea resuelta), conectados por una flecha de transformación. */}
             {variant.infographic && (
-              <div className="space-y-3">
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
-                  <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-amber-400">✗ Ambigua</p>
+              <div className="space-y-0">
+                <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <HelpCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                    <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-amber-400">Ambigua</p>
+                  </div>
                   <p className="text-sm md:text-base text-neural-text font-medium">
                     «{variant.infographic.vague.instruction}»
                   </p>
@@ -78,8 +84,17 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
                     ))}
                   </div>
                 </div>
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
-                  <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-emerald-400">✓ Precisa</p>
+
+                <div className="flex flex-col items-center py-1.5">
+                  <ArrowDown className="h-4 w-4 text-neural-glow" />
+                  <p className="text-[10px] text-neural-muted uppercase tracking-wide">se vuelve evaluable</p>
+                </div>
+
+                <div className="rounded-xl border border-solid border-emerald-500/40 bg-emerald-500/5 p-4 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-emerald-400">Precisa</p>
+                  </div>
                   <p className="text-sm md:text-base text-neural-text font-medium">
                     «{variant.infographic.precise.instruction}»
                   </p>
@@ -91,7 +106,7 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-neural-muted italic px-1">{variant.infographic.caption}</p>
+                <p className="text-xs text-neural-muted italic px-1 pt-3">{variant.infographic.caption}</p>
               </div>
             )}
 
