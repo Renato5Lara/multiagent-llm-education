@@ -61,9 +61,10 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         mediumLabel: 'Texto estructurado',
         sourceNote: 'Elegido para ti — tu perfil profundiza mejor leyendo a su ritmo.',
         body: [
-          'En 2018, un profesor pidió a sus estudiantes instrucciones escritas para preparar un sándwich, y las ejecutó al pie de la letra. Untó la mantequilla con la mano (nadie mencionó el cuchillo), apiló el pan sin abrir la bolsa y colocó el jamón sellado en su empaque.',
-          'No estaba saboteando: estaba ejecutando. Cada instrucción que asumía algo — «unta la mantequilla», ¿con qué? — dejaba una decisión en manos del ejecutor. Y una máquina no decide: se detiene o hace algo absurdo.',
-          'Una instrucción es precisa cuando no requiere que el ejecutor adivine nada: qué objeto usar, cuánto, dónde, en qué orden. Ese es el primer hábito mental de la programación.',
+          'Idea: una instrucción es precisa cuando no requiere que el ejecutor adivine nada — qué objeto usar, cuánto, dónde, en qué orden.',
+          'Ejemplo: en 2018, un profesor pidió a sus estudiantes instrucciones escritas para preparar un sándwich, y las ejecutó al pie de la letra. Untó la mantequilla con la mano (nadie mencionó el cuchillo), apiló el pan sin abrir la bolsa y colocó el jamón sellado en su empaque.',
+          'Explicación: no estaba saboteando — estaba ejecutando. Cada instrucción que asumía algo («unta la mantequilla», ¿con qué?) dejaba una decisión en manos del ejecutor. Y una máquina no decide: se detiene o hace algo absurdo.',
+          'En resumen: si tu instrucción necesita que alguien adivine algo, no es una instrucción — es un deseo. Python solo ejecuta instrucciones, nunca deseos. Ese es el primer hábito mental de la programación.',
         ],
       },
       audio: {
