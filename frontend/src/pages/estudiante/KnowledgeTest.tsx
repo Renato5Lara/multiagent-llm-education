@@ -100,6 +100,22 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   const [current, setCurrent] = useState(0)
   const [result, setResult] = useState<KnowledgeTestResult | null>(null)
 
+  // Progreso local del intento en curso: el backend recuerda el intento
+  // (mismo attempt_id, mismo orden de preguntas al reanudar), pero las
+  // respuestas marcadas y la pregunta actual solo existían en memoria de
+  // React — un cierre de pestaña a mitad del test las perdía aunque el
+  // intento seguía intacto en el servidor. Se guardan por attempt_id
+  // porque ese id es estable entre reanudaciones.
+  const draftKey = (id: string) => `knowledge-test-draft:${id}`
+
+  const saveDraft = (id: string, draftAnswers: Record<string, number>, draftCurrent: number) => {
+    localStorage.setItem(draftKey(id), JSON.stringify({ answers: draftAnswers, current: draftCurrent }))
+  }
+
+  const clearDraft = (id: string) => {
+    localStorage.removeItem(draftKey(id))
+  }
+
   const status = useKnowledgeTestStatus(courseId)
   const startTest = useStartKnowledgeTest()
   const submitTest = useSubmitKnowledgeTest()
@@ -116,6 +132,16 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
         onSuccess: (data) => {
           setAttemptId(data.attempt_id)
           setQuestions(data.questions)
+          const draftRaw = localStorage.getItem(draftKey(data.attempt_id))
+          if (draftRaw) {
+            try {
+              const draft = JSON.parse(draftRaw) as { answers: Record<string, number>; current: number }
+              setAnswers(draft.answers)
+              setCurrent(draft.current)
+            } catch {
+              clearDraft(data.attempt_id)
+            }
+          }
           setPhase('questions')
         },
         onError: (error) => {
@@ -147,6 +173,7 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
       { attemptId, answers },
       {
         onSuccess: (data) => {
+          clearDraft(attemptId)
           setResult(data)
           setPhase('result')
         },
@@ -283,7 +310,11 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
                   className="hidden"
                   name={`q-${question.id}`}
                   checked={selected}
-                  onChange={() => setAnswers((prev) => ({ ...prev, [question.id]: idx }))}
+                  onChange={() => {
+                    const next = { ...answers, [question.id]: idx }
+                    setAnswers(next)
+                    if (attemptId) saveDraft(attemptId, next, current)
+                  }}
                 />
                 <span className="text-sm text-neural-text">{option}</span>
               </label>
@@ -295,7 +326,11 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+          onClick={() => {
+            const next = Math.max(0, current - 1)
+            setCurrent(next)
+            if (attemptId) saveDraft(attemptId, answers, next)
+          }}
           disabled={current === 0}
         >
           Anterior
@@ -303,7 +338,11 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
         {current < questions.length - 1 ? (
           <Button
             className="gap-2"
-            onClick={() => setCurrent((c) => c + 1)}
+            onClick={() => {
+              const next = current + 1
+              setCurrent(next)
+              if (attemptId) saveDraft(attemptId, answers, next)
+            }}
             disabled={answers[question.id] === undefined}
           >
             Siguiente
