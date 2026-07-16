@@ -80,12 +80,10 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
       },
       kinesthetic: {
         medium: 'simulacion',
-        mediumLabel: 'Simulación',
-        sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
+        mediumLabel: 'Manos a la obra',
+        sourceNote: 'Elegido para ti — tu perfil aprende haciendo, no leyendo.',
         body: [
-          '🤖 Antes de leer nada, predice: el robot recibe «pon la mantequilla en el pan». Tiene un cuchillo, una cuchara y sus pinzas metálicas. ¿Qué usará?',
-          'Antes de revisar tu respuesta, predice también esta otra: le dan «toma el cuchillo con la pinza derecha y unta la mantequilla sobre la cara superior de la rebanada». ¿Se detiene, o ejecuta?',
-          'La primera instrucción detiene al robot con error — no dice QUÉ usar, y el robot no elige por ti. La segunda se ejecuta sin problema: nada quedó a su imaginación, y eso es justamente lo que hace precisa a una instrucción.',
+          'Nada de teoría por ahora: abajo tú mismo le vas a dar al robot la secuencia de instrucciones para cruzar la habitación. Si alguna es ambigua, el robot se detiene con error — pruébalo.',
         ],
       },
     },
