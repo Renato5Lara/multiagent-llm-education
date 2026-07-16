@@ -15,6 +15,15 @@ import type {
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useToast } from '@/hooks/use-toast'
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+// instrumentación para el loop intermitente de carga infinita reportado en
+// /estudiante/diagnostic tras "Comenzar diagnóstico" en cuentas nuevas.
+// No cambia comportamiento ni agrega reintentos — solo registra en consola.
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} ${event}`, extra ?? '')
+}
+
 export function useSubmitDiagnostic() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
@@ -83,8 +92,15 @@ export function useStudentProfile() {
   return useQuery({
     queryKey: ['student-profile'],
     queryFn: async () => {
-      const resp = await api.get<StudentProfile>('/api/students/profile')
-      return resp.data
+      debugDiagLog('useStudentProfile:request')
+      try {
+        const resp = await api.get<StudentProfile>('/api/students/profile')
+        debugDiagLog('useStudentProfile:success', { status: resp.status })
+        return resp.data
+      } catch (err) {
+        debugDiagLog('useStudentProfile:error', { message: getErrorMessage(err) })
+        throw err
+      }
     },
   })
 }
@@ -112,8 +128,15 @@ export function useMyCourses() {
   return useQuery({
     queryKey: ['my-courses'],
     queryFn: async () => {
-      const resp = await api.get<CourseProgress[]>('/api/students/my-courses')
-      return resp.data
+      debugDiagLog('useMyCourses:request')
+      try {
+        const resp = await api.get<CourseProgress[]>('/api/students/my-courses')
+        debugDiagLog('useMyCourses:success', { count: resp.data?.length })
+        return resp.data
+      } catch (err) {
+        debugDiagLog('useMyCourses:error', { message: getErrorMessage(err) })
+        throw err
+      }
     },
   })
 }
@@ -135,8 +158,15 @@ export function useActiveExperience() {
   return useQuery({
     queryKey: ['active-experience'],
     queryFn: async () => {
-      const resp = await api.get<ActiveExperience>('/api/students/experience')
-      return resp.data
+      debugDiagLog('useActiveExperience:request')
+      try {
+        const resp = await api.get<ActiveExperience>('/api/students/experience')
+        debugDiagLog('useActiveExperience:success', { state: resp.data?.state })
+        return resp.data
+      } catch (err) {
+        debugDiagLog('useActiveExperience:error', { message: getErrorMessage(err) })
+        throw err
+      }
     },
     retry: false,
     staleTime: 30000,
@@ -167,11 +197,18 @@ export function useLearningPath(courseId: string | undefined) {
   return useQuery({
     queryKey: ['learning-path', courseId],
     queryFn: async () => {
-      const resp = await api.get<LearningPathDetail>(`/api/students/learning-path/${courseId}`)
-      // PED-004 — modo módulo de referencia: los módulos legacy no se muestran
-      // ni se alcanzan. Filtrar aquí cubre TODAS las superficies que consumen
-      // la ruta (página de ruta, dashboard y la navegación post-completado).
-      return { ...resp.data, items: filterToReferenceModules(resp.data.items) }
+      debugDiagLog('useLearningPath:request', { courseId })
+      try {
+        const resp = await api.get<LearningPathDetail>(`/api/students/learning-path/${courseId}`)
+        debugDiagLog('useLearningPath:success', { courseId, itemCount: resp.data?.items?.length })
+        // PED-004 — modo módulo de referencia: los módulos legacy no se muestran
+        // ni se alcanzan. Filtrar aquí cubre TODAS las superficies que consumen
+        // la ruta (página de ruta, dashboard y la navegación post-completado).
+        return { ...resp.data, items: filterToReferenceModules(resp.data.items) }
+      } catch (err) {
+        debugDiagLog('useLearningPath:error', { courseId, message: getErrorMessage(err) })
+        throw err
+      }
     },
     enabled: !!courseId,
   })
