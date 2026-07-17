@@ -18,6 +18,21 @@ import type { PracticeOutcome } from './OrderingPractice'
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
 
+/** Progresión gradual para fluidez sostenida (ExperienceCursor.
+ *  fluencyStreak en ModuleExperienceView, "un solo slice, sin Runtime, sin
+ *  contenido nuevo"): en vez de arrancar siempre en el primer peldaño
+ *  (observar — el más trivial: mirar el código correr, sin escribir nada),
+ *  un estudiante con varios ciclos fluidos seguidos entra directamente unos
+ *  peldaños más adelante en la MISMA cadena ya autorada (practice.
+ *  nextStage...) — reutiliza exactamente el contenido existente, nunca
+ *  genera uno nuevo. `n` acotado por el propio llamador (máx. 2, nunca
+ *  aterriza en escritura libre) y por el largo real de la cadena aquí. */
+function skipAhead(practice: PythonMicroPracticeDef, n: number): PythonMicroPracticeDef {
+  let stage = practice
+  for (let i = 0; i < n && stage.nextStage; i++) stage = stage.nextStage
+  return stage
+}
+
 /** Encabezado de la tarjeta por peldaño — nombra la actividad real (nunca
  *  "Etapa X de Y"), mismo espíritu que `describeStageAdaptation`. Ausente
  *  `mode` (contenido previo al Sprint "Andamiaje completo") conserva el
@@ -78,9 +93,13 @@ interface Props {
    *  el mismo criterio en la etapa inicial. `undefined` conserva el
    *  comportamiento previo exacto (starterCode + sin aviso). */
   initialProfundidad?: string
+  /** Peldaños de la escalera a saltar antes de mostrar el primero — ver
+   *  `skipAhead()` arriba. `0`/`undefined` conserva el comportamiento previo
+   *  exacto (arranca siempre en `bridge.practice`, el peldaño "observar"). */
+  initialSkipStages?: number
 }
 
-export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone, initialProfundidad }: Props) {
+export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone, initialProfundidad, initialSkipStages = 0 }: Props) {
   return (
     <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
@@ -97,7 +116,7 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
       </p>
       {bridge.practice && (
         <PythonMicroPractice
-          practice={bridge.practice}
+          practice={skipAhead(bridge.practice, initialSkipStages)}
           moduleId={moduleId}
           conceptId={conceptId}
           courseId={courseId}

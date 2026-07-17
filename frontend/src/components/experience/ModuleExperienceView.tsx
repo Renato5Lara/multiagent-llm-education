@@ -134,6 +134,16 @@ interface ExperienceCursor {
    *  y se descartaba en silencio. `null` = sin recomendación aplicada todavía,
    *  se usa la modalidad diagnosticada del estudiante. */
   modalityOverride: LearningModality | null
+  /** Ciclos CONSECUTIVOS cerrados con andamiaje="reto" (fluidez real,
+   *  confirmada por Tutorizar con tiempo/ayudas — no solo un acierto
+   *  aislado). Nunca decidido por el Runtime: es progresión local pura
+   *  (RFC-0002 §3 no declara "racha" como señal del dominio) — se resetea
+   *  a 0 en cualquier ciclo que NO cierre con "reto". Gobierna cuántos
+   *  peldaños de la escalera de PythonBridge se saltan al entrar al
+   *  SIGUIENTE ciclo (ver `pythonSkipStages` más abajo) — nunca contenido
+   *  nuevo, solo un punto de entrada distinto en la misma progresión ya
+   *  autorada. */
+  fluencyStreak: number
 }
 
 const cursorKey = (moduleId: string) => `experience-cursor:${moduleId}`
@@ -147,7 +157,7 @@ function emptyCursor(mastery: Record<string, number>): ExperienceCursor {
     phase: 'opening', cycleIndex: 0, mastery,
     practiceOutcome: null, pythonOutcome: null, pythonPracticeDone: false,
     remediationLevel: 0, visitedReinforcements: [], activeReinforcementKind: null,
-    autoReinforcement: false, modalityOverride: null,
+    autoReinforcement: false, modalityOverride: null, fluencyStreak: 0,
   }
 }
 
@@ -175,6 +185,7 @@ function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): E
       activeReinforcementKind: saved.activeReinforcementKind ?? null,
       autoReinforcement: saved.autoReinforcement ?? false,
       modalityOverride: saved.modalityOverride ?? null,
+      fluencyStreak: saved.fluencyStreak ?? 0,
       resumed: phase !== 'opening',
     }
   } catch {
@@ -366,6 +377,19 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // misión — null mantiene el comportamiento previo exacto.
   const [modalityOverride, setModalityOverride] = useState<LearningModality | null>(initialCursor.modalityOverride)
   const effectiveModality: LearningModality = modalityOverride ?? modality ?? 'reading'
+  // Progresión natural para fluidez sostenida (ver doc de ExperienceCursor.
+  // fluencyStreak): cuántos ciclos SEGUIDOS acaban de cerrar con
+  // andamiaje="reto". Solo cuenta racha real y reciente — un solo ciclo
+  // fluido no basta ("durante varios ciclos"), y cualquier ciclo que NO
+  // cierre en "reto" la corta a 0.
+  const [fluencyStreak, setFluencyStreak] = useState(initialCursor.fluencyStreak)
+  // Progresión gradual, no un salto: 1 ciclo fluido no altera nada (0
+  // peldaños saltados); recién a partir de DOS ciclos seguidos se salta el
+  // peldaño "observar" (el más trivial: solo mirar el código correr);
+  // cuatro o más salta también "manipular". Tope en 2 — nunca aterriza
+  // directo en los peldaños de escritura libre, que ya tienen su propio
+  // criterio (`shouldStartBlank`, ligado a `profundidad`, no a la racha).
+  const pythonSkipStages = fluencyStreak >= 4 ? 2 : fluencyStreak >= 2 ? 1 : 0
   // "Ahora hazlo tú" (PythonBridge.practice): si el puente del ciclo trae una
   // micropráctica interactiva, Continuar espera a que quede resuelta o con
   // solución mostrada — igual que el refuerzo del menú, nunca bloquea después
@@ -465,10 +489,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       activeReinforcementKind: activeReinforcement?.kind ?? null,
       autoReinforcement,
       modalityOverride,
+      fluencyStreak,
     })
   }, [
     moduleId, phase, cycleIndex, mastery, practiceOutcome, pythonOutcome, pythonPracticeDone,
     remediationLevel, visitedReinforcements, activeReinforcement, autoReinforcement, modalityOverride,
+    fluencyStreak,
   ])
 
   // Cierre de la misión: se borra el cursor (el repaso posterior parte limpio)
@@ -588,6 +614,13 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // 'alternate'`, más abajo en este archivo), ahora informado por
           // la señal real del Runtime en vez de solo el conteo de intentos.
           const andamiaje = diseno?.andamiaje ? String(diseno.andamiaje) : undefined
+          // Racha de fluidez (ver ExperienceCursor.fluencyStreak): SOLO
+          // cuenta cuando ESTE ciclo cerró con "reto" — cualquier otro
+          // desenlace (confusión, frustración, o ningún andamiaje) la
+          // corta a 0. Progresión local pura, nunca decidida por el
+          // Runtime — gobierna cuántos peldaños de PythonBridge se saltan
+          // en el PRÓXIMO ciclo (más abajo, junto al render).
+          setFluencyStreak(prev => andamiaje === 'reto' ? prev + 1 : 0)
           const modalidadHonrada =
             andamiaje === 'alternar-modalidad'
               ? alternateModality(effectiveModality)
@@ -1168,6 +1201,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               conceptId={cycle.conceptId}
               courseId={courseId}
               initialProfundidad={profundidad}
+              initialSkipStages={pythonSkipStages}
               onPracticeDone={outcome => {
                 setPythonPracticeDone(true)
                 setPythonOutcome(outcome)
