@@ -607,12 +607,21 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // nuevo en el Runtime ni recurso inventado en el frontend.
           const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
           const basePriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
-          // "ejemplo" (señal de confusión, ver ANDAMIAJE_POR_SENAL en
-          // productor.py): no repetir la misma representación — anteponer
-          // un ejemplo distinto a la prioridad de siempre, sin descartar el
-          // resto si este ciclo no trae ninguno.
+          // "ejemplo" (señal de confusión): el objetivo es cambiar la
+          // REPRESENTACIÓN del concepto, no solo repetirlo con otras
+          // palabras — pero el propio kind "ejemplo" (ver los 4 ciclos
+          // autorados) nunca trae `sceneId` ni `narrationText`, solo
+          // `body` (texto plano); es el ÚNICO kind que garantiza la misma
+          // representación de siempre, sin importar la modalidad. Antes
+          // esta línea lo forzaba justo a él al frente de la prioridad —
+          // el peor caso posible para confusión. Ahora se le resta
+          // prioridad (va al final): "animacion" (AnimatedScene,
+          // sceneId ya autorado) y "audio" (AudioNarration, narrationText
+          // ya autorado) — ambos con representación real distinta al
+          // texto — pasan primero, reutilizando exactamente lo que cada
+          // ciclo ya trae.
           const reinforcementPriority = andamiaje === 'ejemplo'
-            ? (['ejemplo', ...basePriority.filter(k => k !== 'ejemplo')] as typeof basePriority)
+            ? ([...basePriority.filter(k => k !== 'ejemplo'), 'ejemplo'] as typeof basePriority)
             : basePriority
           const preferChallenge = profundidad === 'aplicacion'
           // "reto" (señal de fluidez, ya confirmada por Tutorizar con
