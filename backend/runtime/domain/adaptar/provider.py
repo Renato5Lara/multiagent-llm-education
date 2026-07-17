@@ -51,6 +51,19 @@ class FakeLLMProvider:
                     '], "confianza": "0.75"}'
                 )
             )
+        if "senal=frustracion" in prompt:
+            # Tensión canónica #3 (RFC-0002 §4): el resultado puntual dominó
+            # ("avanzar-con-andamiaje"), pero la señal de sesión contradice —
+            # mismo criterio que la regla (`_SENAL_CONTRADICE_AVANZAR` en
+            # productor.py): profundidad retrocede a "fundamentos".
+            return LLMResponse(
+                texto=(
+                    '{"modalidad": "mixta", "profundidad": "fundamentos", '
+                    '"alternativas_descartadas": ['
+                    '{"modalidad": "mixta", "razon": "el resultado puntual dominó, pero la sesión mostró frustración real: retirar el andamiaje ahora sería prematuro"}'
+                    '], "confianza": "0.75"}'
+                )
+            )
         return LLMResponse(
             texto=(
                 '{"modalidad": "mixta", "profundidad": "aplicacion", '

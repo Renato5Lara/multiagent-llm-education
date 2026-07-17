@@ -210,3 +210,38 @@ class TestP13_AdaptarConsumeSenalDeTutorizar:
             {"modalidad": "textual", "razon": "ya insuficiente en el intento anterior"},
             {"modalidad": "ejemplo-codigo", "razon": "prematuro sin el concepto consolidado"},
         )
+
+
+class TestP13_AdaptarResuelveTensionAvanzarVsFrustracion:
+    """Tensión canónica #3 (RFC-0002 §4): el resultado puntual dominó
+    (accion="avanzar-con-andamiaje"), pero la señal de sesión de Tutorizar
+    contradice — Adaptar debe confiar en la evidencia conductual y
+    retroceder la profundidad, no solo anotar la contradicción como
+    alternativa descartada (2026-07-17, sprint "señales cambian el
+    diseño real, no solo la traza")."""
+
+    def test_avanzar_con_frustracion_retrocede_a_fundamentos(self):
+        estado = _estado_con_decision_y_senal("avanzar-con-andamiaje", "frustracion")
+        (intent_regla,) = producir(estado)
+        (intent_llm,) = producir_llm(estado, proveedor=FakeLLMProvider())
+        for intent in (intent_regla, intent_llm):
+            assert intent.argumentos["afirmacion"]["profundidad"] == "fundamentos"
+
+    def test_avanzar_con_confusion_o_fluidez_no_retrocede(self):
+        # Regresión: solo la contradicción MÁS fuerte (frustración) cambia
+        # profundidad — confusión y fluidez siguen afectando solo las
+        # alternativas descartadas, como ya hacían antes de este sprint.
+        confusion = _estado_con_decision_y_senal("avanzar-con-andamiaje", "confusion")
+        fluidez = _estado_con_decision_y_senal("avanzar-con-andamiaje", "fluidez")
+        (intent_confusion,) = producir(confusion)
+        (intent_fluidez,) = producir(fluidez)
+        assert intent_confusion.argumentos["afirmacion"]["profundidad"] == "aplicacion"
+        assert intent_fluidez.argumentos["afirmacion"]["profundidad"] == "aplicacion"
+
+    def test_reforzar_con_frustracion_ya_era_fundamentos_no_cambia_nada(self):
+        # "reforzar" ya es "fundamentos" por defecto — la tensión #3 solo
+        # es alcanzable desde "avanzar-con-andamiaje" (la única acción que
+        # puede contradecir una señal de frustración real).
+        estado = _estado_con_decision_y_senal("reforzar", "frustracion")
+        (intent,) = producir(estado)
+        assert intent.argumentos["afirmacion"]["profundidad"] == "fundamentos"

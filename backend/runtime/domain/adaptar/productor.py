@@ -88,7 +88,22 @@ ALTERNATIVAS_POR_SENAL: Mapping[tuple[str, str], tuple[Mapping, ...]] = {
     ("avanzar-con-andamiaje", "confusion"): (
         {"modalidad": "solo-texto", "razon": "el andamiaje requiere apoyo visual"},
     ),
+    ("avanzar-con-andamiaje", "frustracion"): (
+        {"modalidad": "mixta", "razon": "el resultado puntual dominó, pero la sesión mostró frustración real: retirar el andamiaje ahora sería prematuro"},
+    ),
 }
+
+# Tensión canónica #3 (RFC-0002 §4: "¿Dominó el objetivo? — el resultado
+# puntual y la trayectoria pueden contradecirse"), resuelta AQUÍ —
+# propuesta única con alternativas embebidas, sin propuesta rival que
+# convoque deliberación (P8) — nunca vía RFC-0006: cuando "avanzar-con-
+# andamiaje" (Diagnosticar marcó el resultado puntual como dominado) se
+# topa con una señal de sesión de frustración real, la profundidad
+# retrocede a "fundamentos" en vez de retirar el andamiaje — Adaptar
+# confía en la evidencia conductual por encima del resultado puntual
+# aislado. Ningún otro par (accion, señal) cambia `profundidad` todavía:
+# solo el caso donde ambas evidencias EXPLÍCITAMENTE se contradicen.
+_SENAL_CONTRADICE_AVANZAR = frozenset({"frustracion"})
 
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
@@ -118,12 +133,13 @@ def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
         respaldo: tuple = (decision.id,)
         senal_fact = senal_tutorizar_de_decision(estado, decision)
         if senal_fact is not None:
-            alternativas = ALTERNATIVAS_POR_SENAL.get(
-                (accion, senal_fact.contenido["senal"])
-            )
+            senal = senal_fact.contenido["senal"]
+            alternativas = ALTERNATIVAS_POR_SENAL.get((accion, senal))
             if alternativas is not None:
                 diseno["alternativas_descartadas"] = alternativas
                 respaldo = (decision.id, senal_fact.id)
+                if accion == "avanzar-con-andamiaje" and senal in _SENAL_CONTRADICE_AVANZAR:
+                    diseno["profundidad"] = "fundamentos"
         return (
             TransitionIntent(
                 productor=Capacidad.ADAPTAR,
