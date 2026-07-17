@@ -60,6 +60,8 @@ def registrar_evidencia_evaluacion(
     items_incorrectos: list[int],
     items_totales: int | None = None,
     modalidad_estudiante: str | None = None,
+    hints_used: int | None = None,
+    time_ms: int | None = None,
 ) -> Entrega:
     """El primer hecho real del flujo del estudiante que entra por el
     Boundary. `titulo_modulo` se traduce a `competencia` vía ADR-0010
@@ -73,7 +75,15 @@ def registrar_evidencia_evaluacion(
     `modalidad_estudiante` (visual/reading/audio/kinesthetic, ya
     diagnosticada) permite que Adaptar honre la modalidad real en el
     caso "reforzar" (RFC-0002 §3: Adaptar lee "modelo del estudiante") —
-    sin ella, el diseño usa su valor por defecto de siempre."""
+    sin ella, el diseño usa su valor por defecto de siempre.
+
+    `hints_used`/`time_ms` (ya presentes en `CycleEvidenceSubmit`, antes
+    solo llegaban al dataset de investigación — nunca al propio hecho)
+    permiten que Tutorizar deje de usar la proporción de items
+    incorrectos como único proxy de la señal conductual (RFC-0002 R4:
+    "detecta señales conductuales... a partir de la sesión") y clasifique
+    con la evidencia real de la sesión — mismo vocabulario cerrado de
+    señales, ninguna nueva."""
     almacen, almacen_memoria = almacenes()
     identidad = abrir_sesion(_peticion(student_id, course_id), almacen, almacen_memoria)
     contenido: dict[str, Any] = {
@@ -84,6 +94,10 @@ def registrar_evidencia_evaluacion(
         contenido["items_totales"] = items_totales
     if modalidad_estudiante is not None:
         contenido["modalidad_estudiante"] = modalidad_estudiante
+    if hints_used is not None:
+        contenido["hints_used"] = hints_used
+    if time_ms is not None:
+        contenido["time_ms"] = time_ms
     return registrar_hecho(
         PeticionHechoDelMundo(
             identidad=identidad,
