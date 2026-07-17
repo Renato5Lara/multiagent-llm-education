@@ -2,6 +2,7 @@
 // Extraído de module1.ts (refactor mecánico, sin cambio de comportamiento).
 
 import type { ConceptVariant, LearningCycle, PredictOutputPracticeDef } from '@/types/moduleExperience'
+import { VARIABLES_PRIMER } from '../conceptPrimers'
 
 // Experience Recipe — Etapa 2 del Experience Orchestrator (jul 2026): la
 // experiencia "lectora" completa de Variables (teoría + práctica) se define
@@ -44,6 +45,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
   conceptId: 'variables',
   conceptLabel: 'Variables',
   priorMastery: 0.2,
+  conceptPrimers: [VARIABLES_PRIMER],
   // "¿Sabías qué?" solo vive en Ciclo 1 del módulo (Sprint "Auditoría
   // pedagógica", Hallazgo B) — CuriosityFactCard no dedupe entre ciclos por
   // su cuenta, así que definir curiosityFact aquí lo repetía una vez por

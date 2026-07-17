@@ -2,12 +2,14 @@
 // Extraído de module1.ts (refactor mecánico, sin cambio de comportamiento).
 
 import type { LearningCycle } from '@/types/moduleExperience'
+import { PRINT_PRIMER } from '../conceptPrimers'
 
 export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
   id: 'ciclo-1',
   conceptId: 'instrucciones_precisas',
   conceptLabel: 'Instrucciones precisas',
   priorMastery: 0.2,
+  conceptPrimers: [PRINT_PRIMER],
   curiosityFact: {
     fact:
       'En 1801, el telar de Jacquard tejía patrones complejos usando tarjetas perforadas: cada agujero (o su ausencia) le decía a la máquina exactamente qué hilo levantar. Sin una tarjeta ambigua — el telar no sabía "interpretar", solo ejecutar.',

@@ -5,6 +5,7 @@
 // decisión → escalera de remediación.
 
 import type { LearningCycle, PredictOutputPracticeDef } from '@/types/moduleExperience'
+import { INPUT_PRIMER } from '../conceptPrimers'
 
 // Multimodalidad profunda (jul 2026, Sprint 3 — "consolidar antes de
 // ampliar catálogo", mismo patrón ya probado en Ciclo 2/READING_PRACTICE):
@@ -35,6 +36,7 @@ export const CICLO_3_INPUT: LearningCycle = {
   conceptId: 'input',
   conceptLabel: 'Entrada de datos (input)',
   priorMastery: 0.2,
+  conceptPrimers: [INPUT_PRIMER],
   // "¿Sabías qué?" solo vive en Ciclo 1 del módulo (Sprint "Auditoría
   // pedagógica", Hallazgo B) — ver la misma nota en ciclo2-variables.ts.
   concept: {

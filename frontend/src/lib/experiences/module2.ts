@@ -4,6 +4,7 @@
 // integrador entran en incrementos siguientes, igual que en Módulo 1.
 
 import type { ModuleExperienceDefinition } from '@/types/moduleExperience'
+import { ELSE_PRIMER, IF_PRIMER } from './conceptPrimers'
 
 export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
   moduleNumber: 2,
@@ -40,6 +41,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
       conceptId: 'condiciones_evaluables',
       conceptLabel: 'Condiciones evaluables',
       priorMastery: 0.2,
+      conceptPrimers: [IF_PRIMER, ELSE_PRIMER],
       curiosityFact: {
         fact:
           'En 1883, Warren Johnson inventó el primer termostato eléctrico: una tira de dos metales que se dobla con el calor. Cuando se dobla lo suficiente (la condición), cierra un circuito y corta la calefacción — si no, la mantiene encendida.',

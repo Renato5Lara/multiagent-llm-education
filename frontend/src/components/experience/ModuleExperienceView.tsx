@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
 import { ConceptStep } from './ConceptStep'
+import { ConceptPrimerCard } from './ConceptPrimerCard'
 import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
@@ -144,6 +145,12 @@ interface ExperienceCursor {
    *  nuevo, solo un punto de entrada distinto en la misma progresión ya
    *  autorada. */
   fluencyStreak: number
+  /** Cuántas microexplicaciones de cycle.conceptPrimers ya se confirmaron en
+   *  ESTE ciclo (sprint "mejora pedagógica", jul 2026) — gobierna si toca
+   *  mostrar la siguiente tarjeta o ya se pasó a curiosityFact/concept. 0 en
+   *  un ciclo sin conceptPrimers nunca se consulta (comportamiento previo
+   *  exacto). Se reinicia junto con el resto del sub-estado del ciclo. */
+  primerIndex: number
 }
 
 const cursorKey = (moduleId: string) => `experience-cursor:${moduleId}`
@@ -157,7 +164,7 @@ function emptyCursor(mastery: Record<string, number>): ExperienceCursor {
     phase: 'opening', cycleIndex: 0, mastery,
     practiceOutcome: null, pythonOutcome: null, pythonPracticeDone: false,
     remediationLevel: 0, visitedReinforcements: [], activeReinforcementKind: null,
-    autoReinforcement: false, modalityOverride: null, fluencyStreak: 0,
+    autoReinforcement: false, modalityOverride: null, fluencyStreak: 0, primerIndex: 0,
   }
 }
 
@@ -186,6 +193,7 @@ function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): E
       autoReinforcement: saved.autoReinforcement ?? false,
       modalityOverride: saved.modalityOverride ?? null,
       fluencyStreak: saved.fluencyStreak ?? 0,
+      primerIndex: saved.primerIndex ?? 0,
       resumed: phase !== 'opening',
     }
   } catch {
@@ -383,6 +391,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // fluido no basta ("durante varios ciclos"), y cualquier ciclo que NO
   // cierre en "reto" la corta a 0.
   const [fluencyStreak, setFluencyStreak] = useState(initialCursor.fluencyStreak)
+  // Microexplicaciones pendientes del ciclo actual (sprint "mejora
+  // pedagógica"): cuántas de cycle.conceptPrimers ya se confirmaron. Un
+  // ciclo sin conceptPrimers nunca la consulta (comportamiento previo
+  // intacto). Se resetea a 0 en commitAdvance, igual que el resto del
+  // sub-estado por ciclo.
+  const [primerIndex, setPrimerIndex] = useState(initialCursor.primerIndex)
   // Progresión gradual, no un salto: 1 ciclo fluido no altera nada (0
   // peldaños saltados); recién a partir de DOS ciclos seguidos se salta el
   // peldaño "observar" (el más trivial: solo mirar el código correr);
@@ -490,11 +504,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       autoReinforcement,
       modalityOverride,
       fluencyStreak,
+      primerIndex,
     })
   }, [
     moduleId, phase, cycleIndex, mastery, practiceOutcome, pythonOutcome, pythonPracticeDone,
     remediationLevel, visitedReinforcements, activeReinforcement, autoReinforcement, modalityOverride,
-    fluencyStreak,
+    fluencyStreak, primerIndex,
   ])
 
   // Cierre de la misión: se borra el cursor (el repaso posterior parte limpio)
@@ -528,6 +543,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     setPythonPracticeDone(false)
     setPythonOutcome(null)
     setAdaptationMessage(null)
+    setPrimerIndex(0)
     if (cycleIndex + 1 < definition.cycles.length) {
       setCycleIndex(i => i + 1)
       setPhase('concept')
@@ -1145,7 +1161,19 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         </div>
       )}
 
-      {phase === 'concept' && cycle && (
+      {/* Microexplicaciones del ciclo (sprint "mejora pedagógica", jul 2026):
+          una tarjeta corta por término nuevo, ANTES de curiosityFact/concept
+          — nunca junto a ellos. Un ciclo sin conceptPrimers (o ya confirmadas
+          todas) cae directo al bloque de siempre, sin cambio de comportamiento. */}
+      {phase === 'concept' && cycle && cycle.conceptPrimers && primerIndex < cycle.conceptPrimers.length && (
+        <ConceptPrimerCard
+          key={`${cycle.id}-primer-${primerIndex}`}
+          primer={cycle.conceptPrimers[primerIndex]}
+          onContinue={() => setPrimerIndex(i => i + 1)}
+        />
+      )}
+
+      {phase === 'concept' && cycle && (!cycle.conceptPrimers || primerIndex >= cycle.conceptPrimers.length) && (
         <div className="space-y-5">
           {cycle.curiosityFact && <CuriosityFactCard fact={cycle.curiosityFact} />}
           <ConceptStep

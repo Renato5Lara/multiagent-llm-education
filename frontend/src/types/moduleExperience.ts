@@ -334,6 +334,28 @@ export interface ExperienceRecipe {
 
 export type ExperienceRecipeBook = Partial<Record<LearningModality, ExperienceRecipe>>
 
+// ── Microexplicación de concepto ────────────────────────────────────────────
+// Tarjeta MUY corta (menos de un minuto) que nombra un término de Python justo
+// ANTES de que el ciclo lo use por primera vez — antes, `print`, `if`, etc.
+// aparecían directamente dentro del código de PythonBridge sin que ningún
+// lugar del recorrido dijera qué es o para qué sirve (sprint "mejora
+// pedagógica", jul 2026). No es la teoría del ciclo (eso ya lo cubre
+// CycleConcept: la analogía completa) ni parte de PythonBridge (que sigue
+// intacto): es una definición mínima y reutilizable del TÉRMINO en sí.
+export interface ConceptPrimer {
+  /** El término tal como aparece en Python, p. ej. "print". */
+  term: string
+  /** Definición de una frase — nunca un párrafo. */
+  whatIsIt: string
+  /** Para qué sirve, en una frase. */
+  whatFor: string
+  /** Ejemplo mínimo, siempre código real ejecutable — nunca pseudocódigo. */
+  example: {
+    code: string
+    result: string
+  }
+}
+
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
 
 export interface LearningCycle {
@@ -355,6 +377,11 @@ export interface LearningCycle {
   pythonBridge?: PythonBridge
   /** Se muestra antes del concepto — la pausa "¿Sabías que...?". */
   curiosityFact?: CuriosityFact
+  /** Microexplicaciones a mostrar, EN ORDEN, antes de curiosityFact/concept —
+   *  una por término nuevo que este ciclo introduce por primera vez (p. ej.
+   *  ["print"], o ["if", "else"] cuando ambos aparecen juntos). Sin este
+   *  campo, el ciclo se comporta exactamente igual que antes. */
+  conceptPrimers?: ConceptPrimer[]
   /** Experiencias completas por modalidad (Etapa 2 del Experience
    *  Orchestrator) — cuando existe una receta para la modalidad efectiva,
    *  gobierna teoría+práctica+prioridad de refuerzo como una sola unidad,
