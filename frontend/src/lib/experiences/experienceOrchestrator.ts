@@ -151,17 +151,37 @@ const REINFORCEMENT_OFFER: Record<ReinforcementKind, string> = {
 
 /** Conversación pedagógica de la transición entre ciclos (Pilar 3 —
  *  continuidad): nombra el concepto que el estudiante acaba de dominar y,
- *  cuando lo hay, el siguiente — nunca "esta parte" genérico. `reinforcement`
- *  ya viene filtrado por "no visitado"; su sola presencia significa que el
- *  Runtime decidió reforzar (profundidad=fundamentos). */
+ *  cuando lo hay, el siguiente — nunca "esta parte" genérico.
+ *
+ *  Sprint "coherencia adaptativa" (jul 2026) — corrección de un bug real
+ *  detectado en QA: `reinforcement` ya viene filtrado por "no visitado", pero
+ *  su sola presencia NO significa que el Runtime decidió reforzar. Antes,
+ *  esta función asumía justo eso (comentario previo: "su sola presencia
+ *  significa que el Runtime decidió reforzar") y caía siempre al mensaje de
+ *  "todavía te está costando" cuando `profundidad` no era exactamente
+ *  'aplicacion' — pero `profundidad` y `andamiaje` son DOS dimensiones
+ *  independientes del mismo runtime_decision.diseno (RFC-0002 §3): un ciclo
+ *  puede cerrar con `andamiaje: 'reto'` (fluidez ya confirmada por Tutorizar
+ *  con tiempo/ayudas reales) sin que `profundidad` valga 'aplicacion' en ese
+ *  mismo instante. El resultado observable: el estudiante veía "ya dominas
+ *  esto" en el menú de decisión, pulsaba Continuar, y la propia adaptación le
+ *  decía "todavía te está costando" — dos mensajes que se contradicen sobre
+ *  la MISMA decisión. `andamiaje === 'reto'` es una señal inequívoca de
+ *  dominio (nunca de dificultad): cuando el Runtime elige ese andamiaje, el
+ *  `reinforcement` resultante es SIEMPRE de kind 'reto' (ver advanceCycle en
+ *  ModuleExperienceView.tsx — nunca otro kind), así que se prioriza sobre el
+ *  fallback genérico. Ningún criterio de dominio ni cálculo de competencia
+ *  cambia aquí — solo qué frase corresponde a la decisión que el Runtime YA
+ *  tomó. */
 export function describeAdaptation(
   profundidad: string | undefined,
   reinforcement: Reinforcement | undefined,
   conceptLabel: string,
   nextConceptLabel: string | undefined,
+  andamiaje?: string,
 ): string {
   const concept = conceptLabel.toLowerCase()
-  if (profundidad === 'aplicacion' && reinforcement) {
+  if ((andamiaje === 'reto' || profundidad === 'aplicacion') && reinforcement) {
     return `Ya dominas ${concept} — ${REINFORCEMENT_OFFER[reinforcement.kind]}`
   }
   if (reinforcement) {

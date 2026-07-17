@@ -739,9 +739,18 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
           // pausa de lectura breve antes de transicionar, nunca un toast aparte.
+          // Sprint "coherencia adaptativa" (jul 2026): `andamiaje` ya se
+          // computó arriba para decidir `reinforcement` mismo — antes se
+          // descartaba al llegar aquí, así que describeAdaptation nunca
+          // sabía POR QUÉ había un reinforcement que mostrar y asumía
+          // "dificultad" por defecto. Pasarlo es lo que le permite decir
+          // "ya dominas esto" cuando `andamiaje === 'reto'`, en vez de
+          // contradecir el "sugerido — ya dominas esto" que el estudiante
+          // acaba de ver en el menú de decisión.
           setAdaptationMessage(describeAdaptation(
             profundidad, reinforcement, cycle.conceptLabel,
             definition.cycles[cycleIndex + 1]?.conceptLabel,
+            andamiaje,
           ))
           // Multimodalidad real: antes de mostrar el refuerzo ya autorado,
           // se consulta si el repositorio del curso tiene un recurso real
