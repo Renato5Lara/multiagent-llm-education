@@ -141,6 +141,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
       starterCode: 'print("Puerta abierta")\n',
       expectedOutput: 'Puerta abierta',
       hint: 'El código ya está completo — solo presiona Ejecutar para ver qué muestra.',
+      resultExplanation: 'print("Puerta abierta") le dijo a Python: muestra exactamente ese texto en pantalla. Por eso lo que ves arriba, "Puerta abierta", es lo que había entre las comillas — ni más, ni menos.',
       solutionCode: 'print("Puerta abierta")',
       nextStage: {
         mode: 'manipular',
@@ -159,6 +160,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
           output: 'Camino libre',
           explanation: 'Cambiar el reporte es escribir un texto distinto entre las mismas comillas — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Misión cumplida".',
         },
+        resultExplanation: 'Cambiaste el texto entre comillas y print() mostró exactamente ese texto nuevo — la función no cambió, solo el dato que le diste. Eso es lo que separa la instrucción (print) del valor exacto que reporta.',
         solutionCode: 'print("Misión cumplida")',
         nextStage: {
           mode: 'completar',
@@ -177,6 +179,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
             output: 'Camino libre',
             explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, print. Fíjate en el patrón: el texto entre comillas no cambia, solo el espacio en blanco.',
           },
+          resultExplanation: 'Al escribir print en el hueco, Python pudo por fin reconocer la instrucción — el texto entre comillas ya estaba bien, solo faltaba nombrar la función que lo muestra en pantalla.',
           solutionCode: 'print("Explorador listo")',
           nextStage: {
             mode: 'corregir',
@@ -195,6 +198,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
               output: 'Puerta abierta',
               explanation: 'Sin comillas, Python interpreta las palabras como nombres de variables — con comillas, las reconoce como texto. Ese es el mismo error que debes corregir aquí.',
             },
+            resultExplanation: 'Agregar las comillas fue lo que arregló el código: sin ellas Python buscaba variables llamadas Territorio y cruzado; con ellas, reconoce el mismo texto como algo que solo hay que mostrar, no buscar.',
             solutionCode: 'print("Territorio cruzado")',
             nextStage: {
               mode: 'escribir_parcial',
@@ -213,6 +217,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
                 output: 'Ruta despejada',
                 explanation: 'El comentario (la línea con #) es solo una nota para ti — Python la ignora. La línea real que se ejecuta es la que escribes debajo, sin el #.',
               },
+              resultExplanation: 'Escribiste tu propia línea con print("Sala superada") y Python la ejecutó tal cual — el comentario de arriba nunca corrió, solo tu línea real produjo esta salida.',
               solutionCode: 'print("Sala superada")',
               nextStage: {
                 mode: 'escribir_completo',
@@ -231,6 +236,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
                   output: 'Puerta abierta',
                   explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Recorrido terminado".',
                 },
+                resultExplanation: 'Desde cero, print("Recorrido terminado") volvió a producir exactamente el texto entre comillas — la misma regla de los cinco peldaños anteriores, ahora escrita enteramente por ti.',
                 solutionCode: 'print("Recorrido terminado")',
               },
             },

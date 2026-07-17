@@ -160,6 +160,7 @@ export const CICLO_3_INPUT: LearningCycle = {
       expectedOutput: '¿Cómo te llamas? Hola, Ana',
       simulatedInputs: ['Ana'],
       hint: 'El código ya está completo — solo presiona Ejecutar para ver qué pasa.',
+      resultExplanation: 'input() pausó el programa, guardó "Ana" en nombre, y print("Hola,", nombre) usó ese valor para saludar — por eso ves la pregunta seguida de "Hola, Ana", nunca solo uno de los dos.',
       solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
       nextStage: {
         mode: 'manipular',
@@ -179,6 +180,7 @@ export const CICLO_3_INPUT: LearningCycle = {
           output: '¿En qué ciudad vives? Vives en Trujillo',
           explanation: 'Cambiar el saludo es escribir un texto distinto antes de la coma — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Bienvenido,".',
         },
+        resultExplanation: 'Cambiaste solo el texto fijo antes de la coma — nombre siguió guardando lo mismo (Ana), y print() combinó tu nuevo saludo con ese valor: "Bienvenido, Ana".',
         solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Bienvenido,", nombre)',
         nextStage: {
           mode: 'completar',
@@ -198,6 +200,7 @@ export const CICLO_3_INPUT: LearningCycle = {
             output: '¿En qué ciudad vives? Vives en Trujillo',
             explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, input. Fíjate en el patrón: la pregunta entre comillas no cambia, solo el espacio en blanco.',
           },
+          resultExplanation: 'Al completar el hueco con input, Python pudo por fin pausar y preguntar — antes no existía ninguna función ahí, así que nombre nunca tenía dónde guardar la respuesta.',
           solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
           nextStage: {
             mode: 'corregir',
@@ -217,6 +220,7 @@ export const CICLO_3_INPUT: LearningCycle = {
               output: '¿En qué ciudad vives? Vives en Trujillo',
               explanation: 'Sin comillas, Python no puede interpretar la pregunta como texto — con comillas, la reconoce y la muestra. Ese es el mismo error que debes corregir aquí.',
             },
+            resultExplanation: 'Al agregar las comillas, input() pudo reconocer "¿Cómo te llamas? " como el texto de la pregunta — sin ellas, Python ni siquiera lograba ejecutar la línea.',
             solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
             nextStage: {
               mode: 'escribir_parcial',
@@ -236,6 +240,7 @@ export const CICLO_3_INPUT: LearningCycle = {
                 output: '¿En qué ciudad vives? Vives en Trujillo',
                 explanation: 'El comentario (las líneas con #) es solo una nota para ti — Python la ignora. Las líneas reales que se ejecutan son las que escribes debajo, sin el #.',
               },
+              resultExplanation: 'Escribiste tus propias dos líneas (apodo = input(...) y print("Hola,", apodo)) y Python las ejecutó tal cual — por eso ves tu propia pregunta seguida de tu propio saludo, con "Nico" en el lugar de apodo.',
               solutionCode: 'apodo = input("¿Cuál es tu apodo? ")\nprint("Hola,", apodo)',
               nextStage: {
                 mode: 'escribir_completo',
@@ -255,6 +260,7 @@ export const CICLO_3_INPUT: LearningCycle = {
                   output: '¿Cómo te llamas? Hola, Ana',
                   explanation: 'Las mismas dos líneas de siempre — solo cambia la palabra de saludo. Fíjate en el patrón, no copies el mensaje: el tuyo dice "Mucho gusto,".',
                 },
+                resultExplanation: 'Desde cero, input() y print() volvieron a trabajar juntos: uno pregunta y guarda, el otro usa lo guardado para saludar — el mismo patrón de todo el ciclo, ahora escrito enteramente por ti.',
                 solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Mucho gusto,", nombre)',
               },
             },

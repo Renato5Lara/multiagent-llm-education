@@ -188,6 +188,15 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   // Espera breve mientras el Runtime real decide la siguiente etapa — nunca
   // más de una llamada real (best-effort, ver applyStage/goToStage).
   const [deciding, setDeciding] = useState(false)
+  // Etapa intermedia recién resuelta, esperando confirmación del estudiante
+  // antes de avanzar (sprint "PythonBridge como entorno de aprendizaje
+  // real", jul 2026): antes, un acierto en una etapa con `nextStage` movía
+  // `applyStage`/`goToStage` en el MISMO ciclo síncrono que fijaba `output`,
+  // así que React nunca llegaba a renderizar la salida correcta — el
+  // estudiante avanzaba sin verla (bug real, no solo falta de explicación).
+  // Ahora la etapa siguiente queda en espera aquí y la salida permanece
+  // visible hasta que el estudiante confirma.
+  const [pendingNextStage, setPendingNextStage] = useState<{ next: PythonMicroPracticeDef; attempts: number } | null>(null)
   // La decisión real ya NO solo cambia el texto: "fundamentos" adelanta el
   // apoyo (caso resuelto visible antes, solución disponible antes) y
   // "aplicacion" retira el andamiaje (arranca en blanco, sin la respuesta
@@ -215,6 +224,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     setShowSolution(false)
     setStageNote(describeStageAdaptation(profundidad))
     setDeciding(false)
+    setPendingNextStage(null)
   }
 
   /** `stageAttempts` se recibe explícito, nunca leído de `attempts` por
@@ -281,13 +291,20 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     }
     setLastCategory(null)
     if (stage.nextStage) {
-      goToStage(stage.nextStage, false, nextAttempts)
+      // No avanzar todavía: dejar la salida real visible (código→ejecución→
+      // salida→explicación) hasta que el estudiante confirme con "Continuar".
+      setPendingNextStage({ next: stage.nextStage, attempts: nextAttempts })
     } else {
       setSolved(true)
       // Última etapa: solo los intentos FALLIDOS de esta etapa son errores
       // (Regla 1) — el intento que acaba de acertar no se cuenta.
       onDone?.({ attempts: priorAttempts + Math.max(0, nextAttempts - 1), timeMs: 0, solutionShown: priorSolutionShown })
     }
+  }
+
+  const handleContinueAfterCorrect = () => {
+    if (!pendingNextStage) return
+    goToStage(pendingNextStage.next, false, pendingNextStage.attempts)
   }
 
   const handleShowSolution = () => {
@@ -351,23 +368,28 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       <textarea
         value={code}
         onChange={e => setCode(e.target.value)}
-        disabled={done || showSolution || stage.mode === 'observar'}
+        disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
         rows={3}
         spellCheck={false}
         className="w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70"
       />
       <div className="flex items-center gap-2 flex-wrap">
-        <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running} className="gap-2">
+        <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running || !!pendingNextStage} className="gap-2">
           {running && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {ready ? 'Ejecutar →' : 'Cargando Python…'}
         </Button>
-        {!done && !showSolution && exhausted && (
+        {!done && !showSolution && !pendingNextStage && exhausted && (
           <Button size="sm" variant="ghost" onClick={handleShowSolution}>
             Ver solución
           </Button>
         )}
         {pendingContinue && (
           <Button size="sm" onClick={handleContinueAfterSolution} className="gap-2">
+            Continuar →
+          </Button>
+        )}
+        {pendingNextStage && (
+          <Button size="sm" onClick={handleContinueAfterCorrect} className="gap-2">
             Continuar →
           </Button>
         )}
@@ -379,6 +401,18 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
         </div>
       )}
       {error && !showSolution && <p className="text-sm text-amber-400">{error}</p>}
+      {/* Tras un acierto (etapa intermedia en espera de "Continuar", o la
+          última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
+          frase que conecta concepto+instrucción+resultado, cuando el
+          contenido la trae (sprint "PythonBridge como entorno de aprendizaje
+          real"). Sin `resultExplanation` autorada, el peldaño se ve igual
+          que antes de este sprint. */}
+      {(pendingNextStage || solved) && stage.resultExplanation && (
+        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 space-y-1">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-emerald-400">Por qué pasó esto</p>
+          <p className="text-sm text-neural-text/80 leading-relaxed">{stage.resultExplanation}</p>
+        </div>
+      )}
       {/* La ayuda responde a POR QUÉ falló (lastCategory), no solo a cuántas
           veces — antes, un error real (SyntaxError/NameError) nunca mostraba
           pista alguna; ahora toda categoría tiene su propio diagnóstico. */}
@@ -396,7 +430,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
           del propio ejercicio (mismo criterio que la escalera de remediación:
           más acompañamiento antes de ofrecer la respuesta, nunca en su lugar). */}
-      {!done && !showSolution && attempts >= workedExampleThreshold && stage.workedExample && (
+      {!done && !showSolution && !pendingNextStage && attempts >= workedExampleThreshold && stage.workedExample && (
         <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
           <div className="flex items-center gap-2">
             <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
@@ -412,6 +446,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       {solved && (
         <p className="text-sm text-emerald-400">
           ✓ Exacto — eso es Python real haciendo lo que pediste.
+        </p>
+      )}
+      {pendingNextStage && (
+        <p className="text-sm text-emerald-400">
+          ✓ Exacto — así se ve en pantalla.
         </p>
       )}
       {showSolution && (

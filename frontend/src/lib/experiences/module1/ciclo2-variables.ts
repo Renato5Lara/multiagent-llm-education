@@ -167,6 +167,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       starterCode: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)\n',
       expectedOutput: '80',
       hint: 'El código ya está completo — solo presiona Ejecutar para ver qué muestra.',
+      resultExplanation: 'edad guardó 20, faltan_para_100 calculó 100 - edad, y print() mostró ese resultado: 80. Cada variable guarda un valor y la operación lo usa exactamente como quedó guardado.',
       solutionCode: 'edad = 20\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
       nextStage: {
         mode: 'manipular',
@@ -185,6 +186,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
           output: '55',
           explanation: 'Cambiar solo el número junto a edad = 45 hace que faltan_para_100 se recalcule solo — la fórmula no cambia, solo el dato de entrada. Fíjate en el patrón: tu edad debe ser 30, y el resultado 70.',
         },
+        resultExplanation: 'Cambiaste solo el valor de edad a 30 y faltan_para_100 se recalculó solo — la fórmula 100 - edad no cambió, cambió el dato que entra en ella, y por eso el resultado ahora es 70.',
         solutionCode: 'edad = 30\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
         nextStage: {
           mode: 'completar',
@@ -203,6 +205,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
             output: '55',
             explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, print. Fíjate en el patrón: el cálculo no cambia, solo el espacio en blanco.',
           },
+          resultExplanation: 'Al completar el hueco con print, Python pudo mostrar faltan_para_100 — el cálculo (100 - edad) ya estaba correcto, solo faltaba la función que muestra el resultado en pantalla.',
           solutionCode: 'edad = 40\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
           nextStage: {
             mode: 'corregir',
@@ -221,6 +224,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
               output: '55',
               explanation: 'Python distingue "eda" de "edad" — son nombres distintos, y solo uno de ellos fue creado. Ese es el mismo error que debes corregir aquí.',
             },
+            resultExplanation: 'Al corregir "eda" a "edad", faltan_para_100 = 100 - edad pudo por fin encontrar la variable correcta — Python nunca "adivina" un nombre parecido, necesita que coincida exactamente.',
             solutionCode: 'edad = 40\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
             nextStage: {
               mode: 'escribir_parcial',
@@ -239,6 +243,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
                 output: '55',
                 explanation: 'El comentario (las líneas con #) es solo una nota para ti — Python la ignora. Las líneas reales que se ejecutan son las que escribes debajo, sin el #.',
               },
+              resultExplanation: 'Escribiste tus propias tres líneas (edad = 50, el cálculo, y print) y Python las ejecutó en orden — por eso el resultado es 50, exactamente 100 menos la edad que guardaste.',
               solutionCode: 'edad = 50\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
               nextStage: {
                 mode: 'escribir_completo',
@@ -257,6 +262,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
                   output: '80',
                   explanation: 'Las mismas tres líneas de siempre — solo cambia el valor de edad. Fíjate en el patrón, no copies el número: el tuyo es 64, y el resultado 36.',
                 },
+                resultExplanation: 'Desde cero, las mismas tres líneas de siempre (crear edad, calcular con 100 - edad, mostrar con print) volvieron a funcionar — 100 menos 64 es 36, y eso es justo lo que apareció.',
                 solutionCode: 'edad = 64\nfaltan_para_100 = 100 - edad\nprint(faltan_para_100)',
               },
             },

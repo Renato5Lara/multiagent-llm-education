@@ -269,6 +269,14 @@ export interface PythonMicroPracticeDef {
     output: string
     explanation: string
   }
+  /** Explicación breve que conecta, tras una ejecución CORRECTA, el
+   *  concepto con la instrucción usada y el resultado observado (sprint
+   *  "PythonBridge como entorno de aprendizaje real", jul 2026) — el
+   *  estudiante debe ver código→ejecución→salida→explicación en TODOS los
+   *  peldaños, no solo en el último. Opcional: sin ella, el peldaño sigue
+   *  mostrando código, salida y el mensaje de acierto, solo sin la frase
+   *  adicional que conecta sintaxis y concepto. */
+  resultExplanation?: string
   /** Solución — se ofrece solo tras agotar los intentos, nunca antes. */
   solutionCode: string
   /** Valor(es) que "escribe" el usuario simulado, en el mismo orden en que el

@@ -158,6 +158,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
           starterCode: 'llueve = True\nif llueve:\n    print("Abre el paraguas")\nelse:\n    print("Deja el paraguas cerrado")\n',
           expectedOutput: 'Abre el paraguas',
           hint: 'El código ya está completo — solo presiona Ejecutar para ver qué muestra.',
+          resultExplanation: 'llueve valía True, así que Python evaluó la condición del if como verdadera y ejecutó la rama de arriba — por eso ves "Abre el paraguas", no la de else.',
           solutionCode: 'llueve = True\nif llueve:\n    print("Abre el paraguas")\nelse:\n    print("Deja el paraguas cerrado")',
           nextStage: {
             mode: 'manipular',
@@ -176,6 +177,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
               output: 'No hacen falta lentes',
               explanation: 'Cambiar el valor de la variable cambia qué rama del if/else se ejecuta — el código no se toca, solo el dato de entrada.',
             },
+            resultExplanation: 'Cambiaste llueve a False, así que el if evaluó la condición como falsa y saltó directo a la rama de else — el código no cambió, solo el valor que la condición evaluó.',
             solutionCode: 'llueve = False\nif llueve:\n    print("Abre el paraguas")\nelse:\n    print("Deja el paraguas cerrado")',
             nextStage: {
               mode: 'completar',
@@ -194,6 +196,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
                 output: 'Usa lentes',
                 explanation: 'El hueco siempre se completa con la palabra clave que evalúa la condición: if.',
               },
+              resultExplanation: 'Al completar el hueco con if, Python pudo por fin reconocer la condición — llueve ya valía True, solo faltaba la palabra clave que le dice a Python "evalúa esto".',
               solutionCode: 'llueve = True\nif llueve:\n    print("Abre el paraguas")\nelse:\n    print("Deja el paraguas cerrado")',
               nextStage: {
                 mode: 'corregir',
@@ -212,6 +215,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
                   output: 'Usa lentes',
                   explanation: 'Python exige dos puntos (:) después de toda condición if — sin ellos, no reconoce dónde empieza el bloque que sigue.',
                 },
+                resultExplanation: 'Al agregar los dos puntos, Python pudo reconocer "if llueve:" como una condición completa — sin ellos, ni siquiera lograba ejecutar la línea, sin importar que llueve ya valiera True.',
                 solutionCode: 'llueve = True\nif llueve:\n    print("Abre el paraguas")\nelse:\n    print("Deja el paraguas cerrado")',
                 nextStage: {
                   mode: 'escribir_parcial',
@@ -230,6 +234,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
                     output: 'Hace calor',
                     explanation: 'El comentario (la línea con #) es solo una nota para ti — Python la ignora. Tu if/else real va debajo, sin el #.',
                   },
+                  resultExplanation: 'Escribiste tu propio if/else comparando mm_lluvia > 0 — como mm_lluvia vale 5, la condición fue verdadera y Python ejecutó "Lleva paraguas", la rama del if.',
                   solutionCode: 'mm_lluvia = 5\nif mm_lluvia > 0:\n    print("Lleva paraguas")\nelse:\n    print("No hace falta paraguas")',
                   nextStage: {
                     mode: 'escribir_completo',
@@ -248,6 +253,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
                       output: 'Abre el paraguas',
                       explanation: 'Mismo patrón de siempre: crea la variable, compara con if, una acción para cada resultado con else. Fíjate en el patrón, no copies el mensaje: el tuyo es "Frío, lleva abrigo".',
                     },
+                    resultExplanation: 'Desde cero, if/else volvió a decidir entre dos caminos: como temperatura (12) es menor a 15, Python tomó la rama del if y mostró "Frío, lleva abrigo".',
                     solutionCode: 'temperatura = 12\nif temperatura < 15:\n    print("Frío, lleva abrigo")\nelse:\n    print("Clima templado")',
                   },
                 },
