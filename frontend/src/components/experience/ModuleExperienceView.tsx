@@ -614,12 +614,22 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           const reinforcementPriority = andamiaje === 'ejemplo'
             ? (['ejemplo', ...basePriority.filter(k => k !== 'ejemplo')] as typeof basePriority)
             : basePriority
-          // "reto" (señal de fluidez): saltar el ejemplo sencillo e ir
-          // directo al desafío aunque `profundidad` no lo pida por sí sola.
-          const preferChallenge = andamiaje === 'reto' || profundidad === 'aplicacion'
-          const reinforcement = profundidad === 'fundamentos' || profundidad === 'aplicacion'
-            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, preferChallenge, reinforcementPriority)
-            : undefined
+          const preferChallenge = profundidad === 'aplicacion'
+          // "reto" (señal de fluidez, ya confirmada por Tutorizar con
+          // tiempo/ayudas reales — no solo profundidad="aplicacion"
+          // genérico, que YA fuerza preferChallenge por sí sola: sin este
+          // caso especial, "reto" nunca cambiaba nada que "aplicacion" no
+          // causara ya, con o sin la señal real — el estudiante veía
+          // exactamente el mismo reto de siempre, incluso otra práctica
+          // repetida si el ciclo no traía un refuerzo tipo "reto"). Ahora,
+          // fluidez confirmada NO ofrece ningún refuerzo — nada que
+          // reforzar, avanza directo — en vez de otra práctica que ya no
+          // hace falta.
+          const reinforcement = andamiaje === 'reto'
+            ? undefined
+            : profundidad === 'fundamentos' || profundidad === 'aplicacion'
+              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, preferChallenge, reinforcementPriority)
+              : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
           // pausa de lectura breve antes de transicionar, nunca un toast aparte.
