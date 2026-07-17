@@ -105,6 +105,25 @@ ALTERNATIVAS_POR_SENAL: Mapping[tuple[str, str], tuple[Mapping, ...]] = {
 # solo el caso donde ambas evidencias EXPLÍCITAMENTE se contradicen.
 _SENAL_CONTRADICE_AVANZAR = frozenset({"frustracion"})
 
+# "andamiaje" es la CUARTA dimensión que RFC-0002 §3/R3 declara desde el
+# principio ("modalidad × profundidad × ritmo × andamiaje") — nunca
+# implementada hasta este sprint (2026-07-17, "el Runtime decide, el
+# frontend renderiza"): antes la señal solo cambiaba la traza de
+# explicabilidad (`alternativas_descartadas`); ahora también gobierna QUÉ
+# intervención concreta corresponde. Vocabulario cerrado, deliberadamente
+# pequeño — nunca "categorías" nuevas por señal, solo tres, una por señal
+# ya existente en Tutorizar: "ejemplo" (confusión: no repetir la misma
+# representación, cambiar el ejemplo), "alternar-modalidad" (frustración:
+# cambiar la FORMA de representación, no solo el contenido — mismo
+# criterio que ya usa la escalera de remediación del frontend, ahora
+# informado por la señal real de sesión), "reto" (fluidez: retirar el
+# ejemplo sencillo, ir directo a práctica de mayor exigencia).
+ANDAMIAJE_POR_SENAL: Mapping[str, str] = {
+    "confusion": "ejemplo",
+    "frustracion": "alternar-modalidad",
+    "fluidez": "reto",
+}
+
 
 def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
     for decision in estado.decisiones:
@@ -137,9 +156,13 @@ def producir(estado: LearningState) -> tuple[TransitionIntent, ...]:
             alternativas = ALTERNATIVAS_POR_SENAL.get((accion, senal))
             if alternativas is not None:
                 diseno["alternativas_descartadas"] = alternativas
+            andamiaje = ANDAMIAJE_POR_SENAL.get(senal)
+            if andamiaje is not None:
+                diseno["andamiaje"] = andamiaje
+            if accion == "avanzar-con-andamiaje" and senal in _SENAL_CONTRADICE_AVANZAR:
+                diseno["profundidad"] = "fundamentos"
+            if alternativas is not None or andamiaje is not None:
                 respaldo = (decision.id, senal_fact.id)
-                if accion == "avanzar-con-andamiaje" and senal in _SENAL_CONTRADICE_AVANZAR:
-                    diseno["profundidad"] = "fundamentos"
         return (
             TransitionIntent(
                 productor=Capacidad.ADAPTAR,

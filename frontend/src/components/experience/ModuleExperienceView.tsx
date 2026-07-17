@@ -578,10 +578,22 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // alternativas_descartadas no tienen equivalente y se ignoran a
           // propósito, nunca se inventa una traducción).
           const modalidadRecomendada = diseno?.modalidad ? String(diseno.modalidad) : undefined
+          // `andamiaje` (RFC-0002 §3, R3 — cuarta dimensión declarada desde
+          // el inicio, sin implementar hasta este sprint): Adaptar ya
+          // gobierna QUÉ intervención concreta corresponde a la señal de
+          // sesión, no solo su explicabilidad — el frontend renderiza la
+          // decisión, no la vuelve a tomar. `alternar-modalidad` reutiliza
+          // EXACTAMENTE el mismo mecanismo que ya usa la escalera de
+          // remediación local (`alternateModality`/`conceptModality:
+          // 'alternate'`, más abajo en este archivo), ahora informado por
+          // la señal real del Runtime en vez de solo el conteo de intentos.
+          const andamiaje = diseno?.andamiaje ? String(diseno.andamiaje) : undefined
           const modalidadHonrada =
-            modalidadRecomendada && MODALITY_ORDER.includes(modalidadRecomendada as LearningModality)
-              ? (modalidadRecomendada as LearningModality)
-              : undefined
+            andamiaje === 'alternar-modalidad'
+              ? alternateModality(effectiveModality)
+              : modalidadRecomendada && MODALITY_ORDER.includes(modalidadRecomendada as LearningModality)
+                ? (modalidadRecomendada as LearningModality)
+                : undefined
           if (modalidadHonrada) setModalityOverride(modalidadHonrada)
           // Adaptación multimodal real (no solo cantidad de ayuda): el
           // refuerzo automático se elige según DOS señales reales — qué
@@ -594,12 +606,20 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // Mismo mecanismo de auto-refuerzo ya existente, ningún concepto
           // nuevo en el Runtime ni recurso inventado en el frontend.
           const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
-          const reinforcementPriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
-          const reinforcement = profundidad === 'fundamentos'
-            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false, reinforcementPriority)
-            : profundidad === 'aplicacion'
-              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, reinforcementPriority)
-              : undefined
+          const basePriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
+          // "ejemplo" (señal de confusión, ver ANDAMIAJE_POR_SENAL en
+          // productor.py): no repetir la misma representación — anteponer
+          // un ejemplo distinto a la prioridad de siempre, sin descartar el
+          // resto si este ciclo no trae ninguno.
+          const reinforcementPriority = andamiaje === 'ejemplo'
+            ? (['ejemplo', ...basePriority.filter(k => k !== 'ejemplo')] as typeof basePriority)
+            : basePriority
+          // "reto" (señal de fluidez): saltar el ejemplo sencillo e ir
+          // directo al desafío aunque `profundidad` no lo pida por sí sola.
+          const preferChallenge = andamiaje === 'reto' || profundidad === 'aplicacion'
+          const reinforcement = profundidad === 'fundamentos' || profundidad === 'aplicacion'
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, preferChallenge, reinforcementPriority)
+            : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
           // pausa de lectura breve antes de transicionar, nunca un toast aparte.
