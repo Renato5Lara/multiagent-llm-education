@@ -13,7 +13,7 @@ from typing import Optional
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.data.knowledge_test_bank import BANK_COURSE_CODE, BANK_VERSION
+from app.data.knowledge_test_bank import BANK_COURSE_CODE, BANK_VERSION, COMPETENCY_LABELS
 from app.models.knowledge_test import (
     KnowledgeTestAnswer,
     KnowledgeTestAttempt,
@@ -214,6 +214,27 @@ def _questions_in_attempt_order(
     return ordered or questions
 
 
+def _evidencia_por_competencia(
+    ordered: list[KnowledgeTestQuestion], answers: dict[str, int]
+) -> dict[str, dict]:
+    """Agrega el intento por `topic` (competencia): índices incorrectos
+    DENTRO de cada competencia + total de ítems — exactamente la forma
+    de la evidencia evaluativa que el Boundary registra
+    (`items_incorrectos`/`items_totales`). Función pura: mismo criterio
+    de corrección que `submit_attempt` (sin respuesta o tipo inválido
+    cuenta como incorrecta)."""
+    resultado: dict[str, dict] = {}
+    for question in ordered:
+        celda = resultado.setdefault(question.topic, {"incorrectos": [], "total": 0})
+        selected = answers.get(question.id)
+        if selected is not None and not isinstance(selected, int):
+            selected = None
+        if selected is None or selected != question.correct_index:
+            celda["incorrectos"].append(celda["total"])
+        celda["total"] += 1
+    return resultado
+
+
 def submit_attempt(
     db: Session, student_id: str, attempt_id: str, answers: dict[str, int]
 ) -> KnowledgeTestAttempt:
@@ -298,6 +319,50 @@ def submit_attempt(
             enrich_profile_from_pretest(db, student_id, attempt.course_id, attempt)
         except Exception:
             logger.warning("No se pudo enriquecer el perfil desde el pre-test", exc_info=True)
+        # El pre-test es la primera evidencia evaluativa REAL del
+        # estudiante: entra al Runtime por el Boundary, una competencia
+        # (topic) por hecho, con items_totales — el cerebro decide
+        # adaptación (y señal conductual) desde el día uno, sin esperar
+        # la primera evaluación de módulo. Best-effort: jamás rompe el
+        # submit del estudiante.
+        try:
+            from app.services import student_service
+            from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+            # Modelo del estudiante ya diagnosticado, si el Likert (VARK) ya
+            # se completó — el flujo real siempre lo exige antes del
+            # pre-test (Dashboard.tsx: !has_diagnostic bloquea "Ver ruta
+            # adaptativa"), pero este hecho no debe asumirlo: sin él, cae
+            # al valor por defecto de siempre (ver productor.py).
+            diagnostico = student_service.get_diagnostic(db, student_id, attempt.course_id)
+            modalidad_estudiante = diagnostico.dominant_modality if diagnostico else None
+
+            # Orden alfabético: determinista para replay/reconstrucción
+            # (el orden del intento es aleatorio por estudiante) — es un
+            # detalle de transporte, no una priorización pedagógica.
+            #
+            # `titulo_modulo` recibe la ETIQUETA humana, nunca el slug
+            # COMP_0.."COMP_5 del catálogo del pre-test: normalizar_asunto
+            # (ADR-0010, runtime/boundary/inbound/asunto.py) documenta
+            # explícitamente "nunca un valor del catálogo COMP-0..5" — ese
+            # slug ya tiene guion bajo (scoring-v1), normalizar_asunto lo
+            # convierte a guion medio, y la traducción de vuelta a la UI
+            # (runtime_bridge._etiqueta) nunca lo reconocía: el estudiante
+            # veía el identificador interno tal cual ("Comp 0 problema").
+            # Con la etiqueta humana como entrada, el slug determinista que
+            # produce normalizar_asunto es legible por sí mismo incluso sin
+            # traducción (mismo criterio que el resto de temas del curso).
+            for topic, celda in sorted(_evidencia_por_competencia(ordered, answers).items()):
+                registrar_evidencia_evaluacion(
+                    student_id=student_id,
+                    course_id=attempt.course_id,
+                    titulo_modulo=COMPETENCY_LABELS.get(topic, topic),
+                    items_incorrectos=celda["incorrectos"],
+                    items_totales=celda["total"],
+                    modalidad_estudiante=modalidad_estudiante,
+                )
+        except Exception:
+            logger.warning("No se pudo registrar el pre-test en el runtime", exc_info=True)
 
     return attempt
 

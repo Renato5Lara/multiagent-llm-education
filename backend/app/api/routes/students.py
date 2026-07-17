@@ -29,6 +29,7 @@ from app.schemas.progress import (
     LearningPathDetailResponse,
     LearningPathItem,
     MissionProgressUpdate,
+    CycleEvidenceSubmit,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.schemas.auth import MessageResponse, TutorRequest
@@ -36,10 +37,12 @@ from app.services.ai_service import ai_service
 from app.services.course_service import get_course_by_id
 from app.services import student_service, evaluation_service, learning_experience_service
 from app.services.audit_service import log_action_sync
-from app.services import research_metrics_service
+from app.services import research_metrics_service, resource_lookup_service
 from app.services.module_orchestration_service import module_orchestration_service
 from app.models.student_progress import PathModule, LearningPath
+from app.models.resource import ResourceType
 from app.schemas.progress import ModuleOrchestrationResponse
+from app.schemas.resource import ResourceResponse
 
 logger = logging.getLogger(__name__)
 
@@ -324,24 +327,24 @@ def get_adaptive_decision(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """D4.1 — Returns the adaptive content strategy for the student's diagnostic profile."""
-    diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
-    if not diagnostic:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No has completado el diagnóstico de este curso",
-        )
-    profile = diagnostic.profile or {}
-    decision = profile.get("adaptive_decision")
-    if not decision:
-        # Compute on-the-fly from stored profile (supports diagnostics created before D4.1)
-        from app.services.adaptive_engine import compute_adaptive_decision
-        sp = profile.get("student_profile", {})
-        dominant = sp.get("dominant_modality") or diagnostic.dominant_modality or "reading"
-        prior_level = sp.get("prior_knowledge", "basic")
-        known_topics = sp.get("known_topics") or profile.get("consensus_summary", {}).get("known_topics", [])
-        decision = compute_adaptive_decision(dominant, prior_level, known_topics or [])
-    return decision
+    """La estrategia de contenido del estudiante — decidida por el
+    Runtime LangGraph (`runtime_bridge.decision_adaptativa`: Entrega
+    vigente + interpretaciones reales de Diagnosticar). El diagnóstico
+    inicial ya entra al Runtime como evidencia (`save_diagnostic`), así
+    que la primera decisión también es del Runtime; sin evidencia alguna
+    se responde el default neutro de presentación — el motor D4.1
+    (tabla VARK×nivel) fue retirado."""
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        decision_adaptativa_neutra,
+    )
+
+    try:
+        decision_runtime = decision_adaptativa(current_user.id, course_id)
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for adaptive-decision: {e}")
+        decision_runtime = None
+    return decision_runtime if decision_runtime is not None else decision_adaptativa_neutra()
 
 
 @router.get("/adaptive-content/{topic_slug}", response_model=AdaptiveContentResponse)
@@ -351,19 +354,25 @@ def get_adaptive_content(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    """D4.2 — Returns multimodal content blocks for a topic, ordered by the student's modality."""
+    """Bloques multimodales de un tema, ordenados por la modalidad que
+    el Runtime decidió para este estudiante (Entrega vigente vía
+    `decision_adaptativa`) — ya no por el VARK del diagnóstico. Sin
+    decisión todavía: orden mixto neutro."""
     from app.services.content_library import get_adaptive_content as get_content, AVAILABLE_TOPICS
     if topic_slug not in AVAILABLE_TOPICS:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Tema '{topic_slug}' no disponible. Temas: {AVAILABLE_TOPICS}",
         )
-    diagnostic = student_service.get_diagnostic(db, current_user.id, course_id)
-    modality = "reading"  # safe default
-    if diagnostic:
-        profile = diagnostic.profile or {}
-        sp = profile.get("student_profile", {})
-        modality = sp.get("dominant_modality") or diagnostic.dominant_modality or "reading"
+    modality = "mixta"
+    try:
+        from app.services.runtime_bridge import decision_adaptativa
+
+        decision = decision_adaptativa(current_user.id, course_id)
+        if decision is not None:
+            modality = decision["modality_label"]
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for adaptive-content: {e}")
 
     blocks_raw = get_content(topic_slug, modality)
     blocks = [ContentBlockResponse(**b) for b in blocks_raw]
@@ -466,6 +475,14 @@ def update_module(
             _course_id = _path.course_id if _path else None
         except Exception:
             pass
+
+        # Fase de cierre del producto: el flujo continuo de ciclos nunca abre
+        # una misión con snapshot, así que complete_mission() de arriba no
+        # tiene nada que cerrar — sin esto, "¿se registra el tiempo?" era NO
+        # para el 100% del flujo real (bug encontrado en la verificación).
+        active_mission_service.record_completed_session(
+            db, current_user, _course_id, module_id, data.duration_minutes,
+        )
         research_metrics_service.record_metric(
             db,
             metric_type=research_metrics_service.MISSION_COMPLETED,
@@ -516,6 +533,86 @@ def update_mission_progress(
         },
     )
     return {"ok": True, "mission_cursor": (mission.metadata_json or {}).get("mission_cursor")}
+
+
+@router.post("/cycle-evidence")
+def submit_cycle_evidence(
+    data: CycleEvidenceSubmit,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Evaluación continua (refinamiento de experiencia, jul 2026): la
+    evidencia de resolver la práctica de UN ciclo de aprendizaje entra al
+    Runtime real en el momento en que ocurre — no espera a la Evaluación
+    de Módulo separada. Mismo puente, mismo contrato que ya usa
+    submit_evaluation y _registrar_diagnostico_en_runtime (traducción
+    fiel de intentos a items, jamás una capacidad nueva): cada intento es
+    un item; los intentos previos a resolver (o todos, si se reveló la
+    solución) son incorrectos. Best-effort — nunca bloquea al estudiante,
+    igual que las otras dos llamadas a este puente."""
+    runtime_decision = None
+    try:
+        from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+        # Resuelto → los intentos ANTERIORES al que acertó son incorrectos.
+        # No resuelto (solución revelada) → todos los intentos cuentan como
+        # incorrectos, igual que una pregunta sin responder correctamente.
+        errores = max(0, data.attempts - 1) if data.solved else data.attempts
+        # Modelo del estudiante ya diagnosticado (RFC-0002 §3: Adaptar debe
+        # leerlo) — se adjunta al mismo hecho, nunca se inventa uno nuevo.
+        diagnostico = student_service.get_diagnostic(db, current_user.id, data.course_id)
+        entrega = registrar_evidencia_evaluacion(
+            student_id=current_user.id,
+            course_id=data.course_id,
+            titulo_modulo=data.competencia,
+            items_incorrectos=list(range(errores)),
+            items_totales=data.attempts,
+            modalidad_estudiante=diagnostico.dominant_modality if diagnostico else None,
+            hints_used=data.hints_used,
+            time_ms=data.time_ms,
+        )
+        runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+        # Dataset de investigación (RESEARCH_ITERATIONS.md): un registro por
+        # ciclo — modalidad diagnosticada vs. modalidad de refuerzo
+        # realmente decidida por Adaptar, nunca solo el agregado pre/post
+        # que ya cubre research_export_service. Misma infraestructura de
+        # métricas existente (research_metrics), ningún esquema nuevo.
+        diseno = entrega.diseno or {}
+        research_metrics_service.record_metric(
+            db,
+            metric_type=research_metrics_service.CYCLE_EVIDENCE,
+            student_id=current_user.id,
+            course_id=data.course_id,
+            payload={
+                "competencia": data.competencia,
+                "attempts": data.attempts,
+                "solved": data.solved,
+                "hints_used": data.hints_used,
+                "time_ms": data.time_ms,
+                "modalidad_diagnosticada": diagnostico.dominant_modality if diagnostico else None,
+                "modalidad_refuerzo": diseno.get("modalidad"),
+                "profundidad": diseno.get("profundidad"),
+            },
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
+    return {"ok": True, "runtime_decision": runtime_decision}
+
+
+@router.get("/course-resource/{course_id}", response_model=ResourceResponse | None)
+def get_course_resource(
+    course_id: str,
+    resource_type: ResourceType,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Multimodalidad real: recurso del repositorio del curso para la
+    modalidad recomendada por el Runtime — repositorio primero, contenido
+    ya autorado como respaldo (ver resource_lookup_service). Devuelve null
+    con 200 cuando el curso no tiene recursos de ese tipo (hoy siempre,
+    para IS301): la UI cae al refuerzo ya autorado, nunca se inventa un
+    recurso."""
+    return resource_lookup_service.find_resource_for_modality(db, course_id, resource_type)
 
 
 @router.post("/progress/{course_id}", response_model=StudentProgressResponse)
@@ -798,12 +895,44 @@ def submit_evaluation(
         )
 
     log_action_sync(db, current_user.id, "completar_evaluacion", "evaluation", attempt_id)
+
+    # ── Épica 2 (ADR-0010): la evidencia de esta evaluación entra al
+    # runtime LangGraph por el Boundary — best-effort, nunca bloquea la
+    # respuesta ni el resultado ya persistido (mismo patrón que el
+    # análisis de IA del diagnóstico, arriba en este archivo).
+    runtime_decision = None
+    module = db.query(PathModule).filter(PathModule.id == attempt.module_id).first() if attempt.module_id else None
+    if module is not None:
+        try:
+            items_incorrectos = [
+                int(q_idx)
+                for q_idx, selected in data.answers.items()
+                if int(q_idx) < len(attempt.questions)
+                and selected != attempt.questions[int(q_idx)].get("correct")
+            ]
+            from app.services.runtime_bridge import registrar_evidencia_evaluacion
+
+            entrega = registrar_evidencia_evaluacion(
+                student_id=current_user.id,
+                course_id=attempt.course_id,
+                titulo_modulo=module.title,
+                items_incorrectos=items_incorrectos,
+                # Con el total, Tutorizar produce la señal conductual real
+                # (fluidez/confusión/frustración) que alimenta al tutor y a
+                # las alternativas por señal de Adaptar (RFC-0002 R4).
+                items_totales=len(attempt.questions),
+            )
+            runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"runtime_bridge failed for evaluation {attempt_id}: {e}")
+
     return {
         "attempt_id": attempt.id,
         "score": attempt.score,
         "max_score": attempt.max_score,
         "passed": bool(attempt.passed),
         "completed_at": attempt.completed_at,
+        "runtime_decision": runtime_decision,
     }
 
 
@@ -813,65 +942,50 @@ def tutor_chat(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
+    """El Tutor IA sobre el Runtime LangGraph: el contexto pedagógico
+    (adaptación vigente, señales de sesión, memoria consolidada) lo
+    decide el runtime — esta capa solo lo lee por el Boundary y redacta
+    (RFC-0002 R4: ninguna capacidad del runtime redacta mensajes; ningún
+    servicio de plataforma decide adaptación). La pregunta entra al
+    runtime como interacción de la sesión (E2), evidencia real para
+    Tutorizar y para investigación. Ambas integraciones son best-effort:
+    el chat jamás se cae porque el runtime no tenga sesión todavía."""
     course_name = ""
-    module_title = ""
-    progress = 0
-    learning_style = "visual"
-    bloom_level = 2
-
     try:
         from app.models.course import Course
-        from app.models.student_progress import LearningPath, PathModule
-        from app.services.student_service import get_student_profile
 
         course = db.query(Course).filter(Course.id == data.course_id).first()
         if course:
             course_name = course.name
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Error resolving course for tutor: {e}")
 
-        path = (
-            db.query(LearningPath)
-            .filter(
-                LearningPath.student_id == current_user.id,
-                LearningPath.course_id == data.course_id,
-            )
-            .first()
+    module_title = (data.context or {}).get("module_title", "")
+
+    contexto_runtime: dict = {"asunto": None, "diseno": None, "senales": [], "memoria": None}
+    try:
+        from app.services.runtime_bridge import (
+            contexto_pedagogico_tutor,
+            registrar_pregunta_tutor,
         )
-        if path:
-            progress = round((path.completed_modules / path.total_modules * 100)) if path.total_modules > 0 else 0
-            current_module = (
-                db.query(PathModule)
-                .filter(
-                    PathModule.path_id == path.id,
-                    PathModule.status == "available",
-                )
-                .order_by(PathModule.order)
-                .first()
-            )
-            if current_module:
-                module_title = current_module.title
-                bloom_level = current_module.bloom_level or 2
 
-        profile = get_student_profile(db, current_user.id)
-        if profile and profile.dominant_style:
-            learning_style = profile.dominant_style
-
-        context = data.context or {}
-        if context.get("module_title"):
-            module_title = context["module_title"]
-        if context.get("bloom_level"):
-            bloom_level = int(context["bloom_level"])
-
-    except Exception as e:
-        logger.warning(f"Error building tutor context: {e}")
+        registrar_pregunta_tutor(
+            student_id=current_user.id,
+            course_id=data.course_id,
+            pregunta=data.message,
+        )
+        contexto_runtime = contexto_pedagogico_tutor(
+            student_id=current_user.id, course_id=data.course_id
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"runtime_bridge failed for tutor chat: {e}")
 
     _tutor_t0 = _time.monotonic()
-    response_text = ai_service.generate_tutor_response(
+    response_text = ai_service.generate_tutor_response_desde_runtime(
         message=data.message,
         course_name=course_name,
         module_title=module_title,
-        progress=progress,
-        learning_style=learning_style,
-        bloom_level=bloom_level,
+        contexto=contexto_runtime,
     )
     _tutor_ms = round((_time.monotonic() - _tutor_t0) * 1000, 1)
     research_metrics_service.record_metric(
@@ -898,52 +1012,6 @@ def tutor_chat(
         "context": {
             "course_name": course_name,
             "module_title": module_title,
-            "progress": progress,
-            "learning_style": learning_style,
-            "bloom_level": bloom_level,
+            "runtime": contexto_runtime,
         },
     }
-
-
-@router.post("/tutor/analyze-error")
-def analyze_error(
-    data: TutorRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_estudiante),
-):
-    course_name = ""
-    try:
-        from app.models.course import Course
-        course = db.query(Course).filter(Course.id == data.course_id).first()
-        if course:
-            course_name = course.name
-    except Exception:
-        pass
-
-    _tutor_t0 = _time.monotonic()
-    response_text = ai_service.generate_tutor_response(
-        message=f"Explica por qué está mal esto y cómo corregirlo: {data.message}",
-        course_name=course_name,
-        bloom_level=2,
-    )
-    _tutor_ms = round((_time.monotonic() - _tutor_t0) * 1000, 1)
-    research_metrics_service.record_metric(
-        db,
-        metric_type=research_metrics_service.TUTOR_MESSAGE,
-        student_id=current_user.id,
-        course_id=data.course_id,
-        value=1.0,
-        unit="count",
-        payload={"endpoint": "analyze-error"},
-    )
-    research_metrics_service.record_metric(
-        db,
-        metric_type=research_metrics_service.TUTOR_LATENCY_MS,
-        student_id=current_user.id,
-        course_id=data.course_id,
-        value=_tutor_ms,
-        unit="ms",
-        payload={"endpoint": "analyze-error"},
-    )
-
-    return {"response": response_text}

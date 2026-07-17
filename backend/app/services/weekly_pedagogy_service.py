@@ -12,22 +12,26 @@ Memory-influenced pedagogical generation:
     difficulty changes, narrative continues — all driven by real memory.
 """
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 import uuid
 
 from sqlalchemy.orm import Session
 
-from app.agents.research_agent import ResearchAgent
-from app.agents.reviewer_agent import ReviewerAgent
+from app.services.research_agent import ResearchAgent
+from app.services.reviewer_agent import ReviewerAgent
 from app.memory.shared_memory import SharedMemoryStore
-from app.memory.pedagogical_memory import PedagogicalMemoryService
-from app.memory.narrative_continuity import query_narrative_persona
 from app.models.course import Course
 from app.models.event_outbox import EventOutbox
 from app.models.user import User
 from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
 from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
+from app.services.pedagogy_runtime_bridge import (
+    SugerenciaSemanal,
+    sugerir_prioridad_semanal,
+)
+from runtime.boundary import normalizar_asunto
 
 
 # ── Analogy domain templates ──────────────────────────────────────────
@@ -157,30 +161,46 @@ class PedagogicalStructuring:
 
 
 class AdaptiveLearning:
+    """La adaptación del plan sale de la evidencia real de los
+    estudiantes del curso en el Runtime (`sugerir_prioridad_semanal`,
+    lectura S3 agregada por el Boundary) — antes salía de un "perfil de
+    estudiante" construido con el id del DOCENTE en la memoria legacy
+    (teatro: la carga cognitiva del docente ajustaba el Bloom de sus
+    alumnos). Traducción, jamás decisión nueva: el Runtime ya decidió
+    reforzar/avanzar por estudiante; aquí solo se agrega a nivel curso
+    con la misma regla que el resto de consumidores de la Entrega
+    ("fundamentos" nunca pide más que Comprender)."""
+
     def run(
         self,
         data: WeeklyPedagogicalPlanCreate,
-        student_profile: dict[str, Any] | None = None,
+        sugerencia: "SugerenciaSemanal | None" = None,
     ) -> dict[str, Any]:
-        ls = (student_profile or {}).get("learning_style", "")
-        cog = (student_profile or {}).get("cognitive_load_trend", "stable")
-        pacing = (student_profile or {}).get("pacing", "moderate")
-        analogies = (student_profile or {}).get("preferred_analogies", []) or []
-        bloom_reached = (student_profile or {}).get("bloom_level_reached", 0) or 0
+        templates = _select_templates(None)
 
-        templates = _select_templates(analogies)
+        reforzar = avanzar = 0
+        competencia_observada = None
+        if sugerencia is not None and sugerencia.prioridades:
+            competencia_plan = normalizar_asunto(data.topic)
+            exacta = next(
+                (p for p in sugerencia.prioridades if p.competencia == competencia_plan),
+                None,
+            )
+            if exacta is not None:
+                reforzar, avanzar = exacta.estudiantes_reforzar, exacta.estudiantes_avanzar
+                competencia_observada = exacta.competencia
+            else:
+                # Sin evidencia del tema exacto: el paisaje global del
+                # curso sigue siendo señal real (mejor que ninguna).
+                reforzar = sum(p.estudiantes_reforzar for p in sugerencia.prioridades)
+                avanzar = sum(p.estudiantes_avanzar for p in sugerencia.prioridades)
 
-        adjusted_bloom = data.bloom_target
-        if cog == "increasing":
-            adjusted_bloom = max(1, adjusted_bloom - 1)
+        necesita_refuerzo = reforzar > avanzar
+        adjusted_bloom = min(data.bloom_target, 2) if necesita_refuerzo else data.bloom_target
 
         scaffolding = list(templates["scaffolding"])
-        if cog == "increasing":
+        if necesita_refuerzo:
             scaffolding.append("pausa de reflexion y consolidacion")
-        if pacing == "fast":
-            scaffolding = [s for s in scaffolding if "diagnostico" not in s and "calentamiento" not in s]
-        elif pacing == "slow":
-            scaffolding = [s.replace("guiado", "guiado con ejemplos adicionales") for s in scaffolding]
 
         return {
             "bloom_target": adjusted_bloom,
@@ -193,12 +213,18 @@ class AdaptiveLearning:
                 "advanced": templates["differentiation_advanced"],
             },
             "adaptation_rationale": {
-                "learning_style": ls,
-                "cognitive_load_trend": cog,
-                "pacing": pacing,
-                "analogy_domain": analogies[0] if analogies else None,
-                "bloom_level_reached": bloom_reached,
-                "bloom_adjusted_reason": "carga cognitiva alta, reduciendo dificultad" if cog == "increasing" else "normal",
+                "fuente": "runtime",
+                "competencia_observada": competencia_observada,
+                "estudiantes_reforzar": reforzar,
+                "estudiantes_avanzar": avanzar,
+                "estudiantes_con_evidencia": (
+                    sugerencia.estudiantes_con_evidencia if sugerencia else 0
+                ),
+                "bloom_adjusted_reason": (
+                    "mayoría de estudiantes con decisión de refuerzo en el runtime"
+                    if necesita_refuerzo
+                    else "sin señal de refuerzo dominante"
+                ),
             },
         }
 
@@ -236,20 +262,11 @@ class PromptEngineering:
             f"Objetivos: {objectives}. Intencion: {data.pedagogical_intention}."
         )
 
+        # Retirado (2026-07-13): la consulta de "narrativa previa" a la
+        # memoria legacy llamaba una coroutine sin await — rompía todo
+        # POST /weekly-plans con 500 (nunca funcionó tras el paso a
+        # async). La memoria real del sistema vive en el Runtime.
         narrative_context = ""
-        if memory_store is not None and student_id is not None:
-            persona_records = memory_store.query_by_key_pattern(
-                key_prefix="narrative:persona",
-                student_id=student_id,
-                memory_type="narrative_continuity",
-                limit=1,
-            )
-            if persona_records:
-                persona_desc = persona_records[0].value.get("description", "")
-                if persona_desc:
-                    narrative_context = (
-                        f" Narrativa previa: {persona_desc}."
-                    )
 
         sp = student_profile or {}
         analogies = sp.get("preferred_analogies", []) or []
@@ -306,21 +323,9 @@ class ConsistencyValidation:
     ) -> dict[str, Any]:
         issues = list(research_validation.get("issues", []))
 
-        if memory_store is not None and student_id is not None:
-            past_records = memory_store.query(
-                student_id=student_id,
-                memory_type="pedagogical_decision",
-                limit=5,
-            )
-            for r in past_records:
-                prev_issues = r.value.get("issues", [])
-                for pi in prev_issues:
-                    if pi.get("type") in ("weak_pedagogical_intention", "missing_objectives"):
-                        issues.append({
-                            "type": f"recurring:{pi['type']}",
-                            "severity": "warning",
-                            "detail": f"Problema recurrente detectado en memoria: {pi['type']}",
-                        })
+        # Retirado (2026-07-13): la consulta de "problemas recurrentes" a
+        # la memoria legacy — misma coroutine sin await que rompía el
+        # endpoint (ver PromptEngineering).
 
         sp = student_profile or {}
         if sp.get("learning_style") and structure.get("weekly_sequence"):
@@ -375,20 +380,10 @@ class ConsensusMediator:
     ) -> dict[str, Any]:
         confidence = float(research_metrics.get("pedagogical_confidence", 0.0) or 0.0)
 
+        # Retirado (2026-07-13): la "influencia de memoria" consultaba la
+        # memoria legacy con una coroutine sin await — misma causa de 500
+        # que en PromptEngineering/ConsistencyValidation.
         memory_influence = 0.0
-        if memory_store is not None and student_id is not None:
-            past_decisions = memory_store.query(
-                student_id=student_id,
-                memory_type="pedagogical_decision",
-                key="consensus:result",
-                limit=3,
-            )
-            if past_decisions:
-                avg_past_conf = sum(
-                    float(r.value.get("confidence", 0.0) or 0.0)
-                    for r in past_decisions if r.value
-                ) / len(past_decisions)
-                memory_influence = avg_past_conf * 0.1
 
         sp = student_profile or {}
         cog = sp.get("cognitive_load_trend", "stable")
@@ -456,20 +451,16 @@ class PedagogicalOrchestrationService:
         if memory_store is not None:
             self.research_agent.shared_memory_store = memory_store
 
+        # Retirado (2026-07-13): el "perfil de estudiante" construido con
+        # el id del DOCENTE en la memoria legacy — además de teatro
+        # pedagógico, llevaba tiempo rompiendo este endpoint en vivo
+        # (build_student_profile lee una coroutine sin await → 500 en
+        # todo POST /weekly-plans; mismo defecto que los fallos
+        # preexistentes de test_memory_wiring). La adaptación real del
+        # plan viene de la evidencia agregada del Runtime (`sugerencia`,
+        # más abajo); los generadores de contenido reciben perfil vacío.
         student_profile: dict[str, Any] = {}
         narrative: dict[str, Any] = {}
-
-        if memory_store is not None:
-            self.research_agent.shared_memory_store = memory_store
-
-            ped_memory = PedagogicalMemoryService(memory_store)
-            student_profile = ped_memory.build_student_profile(student_id=teacher.id)
-
-            narrative = query_narrative_persona(
-                memory_store,
-                student_id=teacher.id,
-                module_id=f"{course.id}:week{data.week_number - 1}" if data.week_number > 1 else None,
-            )
 
         research_state = await self.research_agent.run(
             {
@@ -487,8 +478,20 @@ class PedagogicalOrchestrationService:
         research_metrics = research_state.get("research_metrics", {})
         research_validation = research_state.get("consistency_validation", {})
 
+        # La adaptación del plan sale de la evidencia real de los
+        # estudiantes del curso en el Runtime — best-effort: sin runtime
+        # disponible el plan se genera igual, sin ajuste (nunca inventa).
+        sugerencia: SugerenciaSemanal | None = None
+        try:
+            sugerencia = sugerir_prioridad_semanal(db, course.id)
+        except Exception:  # noqa: BLE001
+            logging.getLogger(__name__).warning(
+                "sugerir_prioridad_semanal failed; plan sin ajuste adaptativo",
+                exc_info=True,
+            )
+
         structure = self.structuring.run(data, research)
-        adaptive_plan = self.adaptive.run(data, student_profile=student_profile)
+        adaptive_plan = self.adaptive.run(data, sugerencia=sugerencia)
         multimodal_plan = self.multimodal.run(data, research)
         prompt_plan = self.prompting.run(
             data, course,
@@ -540,29 +543,6 @@ class PedagogicalOrchestrationService:
         )
         db.add(plan)
         db.flush()
-
-        if memory_store is not None:
-            from app.memory.narrative_continuity import publish_narrative_persona
-            publish_narrative_persona(
-                memory_store,
-                persona=f"Plan Semanal {data.week_number}: {data.topic} (Bloom {data.bloom_target})",
-                tone=student_profile.get("preferred_analogies", [None])[0] or data.pedagogical_style or "educativo",
-                bloom_progress=f"Nivel Bloom {data.bloom_target} planificado para semana {data.week_number}",
-                student_id=teacher.id,
-                module_id=f"{course.id}:week{data.week_number}",
-                confidence=float(consensus.get("confidence", 0.7) or 0.7),
-            )
-
-            ped_memory.record_learning_style(
-                student_id=teacher.id,
-                learning_style=student_profile.get("learning_style", "visual"),
-                module_id=f"{course.id}:week{data.week_number}",
-            )
-            ped_memory.record_bloom_progress(
-                student_id=teacher.id,
-                bloom_level=adaptive_plan.get("bloom_target", data.bloom_target),
-                module_id=f"{course.id}:week{data.week_number}",
-            )
 
         self._emit_orchestration_event(db, plan)
         db.commit()

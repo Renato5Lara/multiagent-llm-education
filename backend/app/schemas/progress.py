@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.concept_block import ConceptBlock  # Sprint L1
 
@@ -36,6 +36,13 @@ class LearningPathResponse(BaseModel):
 class ModuleUpdate(BaseModel):
     status: str
     score: Optional[float] = None
+    # Fase de cierre del producto (jul 2026) — bug real encontrado en la
+    # verificación de preparación experimental: el flujo continuo de ciclos
+    # (ModuleExperienceView) nunca abría un LearningSession, así que
+    # `duration_minutes` quedaba en 0 para el 100% de los estudiantes reales.
+    # El cliente sí conoce el tiempo real transcurrido (desde que se montó
+    # el módulo); se envía explícito en vez de intentar reconstruirlo aquí.
+    duration_minutes: Optional[float] = None
 
 
 class StudentProgressCreate(BaseModel):
@@ -139,6 +146,11 @@ class ModuleOrchestrationResponse(BaseModel):
     resumed: bool = False
     # Posición persistida del recorrido: {current_index, completed_step_ids, total_xp}
     mission_cursor: Optional[dict] = None
+    # Épica 2 (RFC-0010 S1): la decisión completa del runtime que informó
+    # bloom_target/modalidad — incluye alternativas_descartadas, para que
+    # Modo Evidencia "enseñe el vocabulario, no lo esconda" (RFC-0010
+    # regla 2). None si no hubo decisión aplicable (o resultado degradado).
+    runtime_decision: Optional[dict] = None
 
 
 class MissionProgressUpdate(BaseModel):
@@ -146,3 +158,17 @@ class MissionProgressUpdate(BaseModel):
     current_index: int = 0
     completed_step_ids: list[str] = []
     total_xp: int = 0
+
+
+class CycleEvidenceSubmit(BaseModel):
+    """Evidencia real de haber resuelto la práctica de UN ciclo de aprendizaje
+    (ModuleExperienceView) — traducción fiel de intentos a items, mismo
+    patrón que ya usa `_registrar_diagnostico_en_runtime` para el Likert del
+    diagnóstico: cada intento es un item; los intentos antes de resolver
+    (o todos, si se reveló la solución) son incorrectos."""
+    course_id: str
+    competencia: str
+    attempts: int = Field(..., ge=1)
+    solved: bool
+    hints_used: int | None = Field(None, ge=0)
+    time_ms: int | None = Field(None, ge=0)

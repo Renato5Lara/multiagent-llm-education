@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { FlaskConical, LineChart, Route } from 'lucide-react'
+import { Activity, FlaskConical, LineChart, Route } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
@@ -11,6 +11,7 @@ const evidenceItems: SidebarItem[] = [
   { label: 'Modo Evidencia',             href: '/evidencia',               icon: FlaskConical },
   { label: 'Dashboard del Investigador', href: '/evidencia/investigacion', icon: LineChart },
   { label: 'Trayectoria del estudiante', href: '/replay',                  icon: Route },
+  { label: 'Runtime Console',            href: '/evidencia/runtime',       icon: Activity },
 ]
 
 export default function EvidenceLayout() {

@@ -29,31 +29,3 @@ class CourseAccessStatus(BaseModel):
     missing_prerequisites: list[dict] = []
     completed_prerequisites: list[dict] = []
     reason: Optional[str] = None
-
-
-class StudentRiskPrediction(BaseModel):
-    risk_level: str
-    risk_score: float
-    explanation: str
-    factors: list[str] = []
-    recommendations: list[str] = []
-
-
-class CourseAnalytics(BaseModel):
-    course_id: str
-    course_code: str
-    course_name: str
-    enrolled_count: int
-    avg_progress: float
-    at_risk_count: int
-    difficult_topics: list[str] = []
-    competency_gaps: list[str] = []
-    recommendation: Optional[str] = None
-
-
-class IAAnalyticsResponse(BaseModel):
-    student_risk: Optional[StudentRiskPrediction] = None
-    course_analytics: list[CourseAnalytics] = []
-    next_recommended_course: Optional[dict] = None
-    strengths: list[str] = []
-    warnings: list[str] = []

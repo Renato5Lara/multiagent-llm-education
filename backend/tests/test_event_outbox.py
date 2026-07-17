@@ -323,18 +323,3 @@ class TestEventQueries:
         cleared = uow.clear_events()
         assert len(cleared) == 2
         assert len(uow.pending_events) == 0
-
-
-class TestIntegrationWithMemoryService:
-    """Verifica que store_memory registra eventos en el outbox."""
-
-    def test_store_memory_has_event(self, test_uow, estudiante_user):
-        from app.services.memory_service import store_memory
-
-        store_memory(test_uow, estudiante_user.id, "preference", "modality", "visual")
-        test_uow.commit()
-
-        events = test_uow.db.query(EventOutbox).all()
-        # store_memory actualmente NO registra eventos via add_event
-        # Solo verificamos que el outbox esta integrado con UoW
-        assert test_uow.pending_events == []

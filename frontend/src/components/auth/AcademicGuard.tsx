@@ -2,6 +2,12 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { useActiveExperience } from '@/hooks/useStudent'
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} AcademicGuard:${event}`, extra ?? '')
+}
+
 /**
  * AcademicGuard — puerta de la experiencia del estudiante.
  *
@@ -11,6 +17,8 @@ import { useActiveExperience } from '@/hooks/useStudent'
  */
 export default function AcademicGuard() {
   const { data: experience, isLoading, isError } = useActiveExperience()
+
+  debugDiagLog('render', { isLoading, isError, state: experience?.state })
 
   if (isLoading) {
     return (
@@ -29,6 +37,7 @@ export default function AcademicGuard() {
   }
 
   if (experience?.state === 'NOT_STARTED') {
+    debugDiagLog('redirect-to-onboarding')
     return <Navigate to="/estudiante/onboarding" replace />
   }
 

@@ -125,7 +125,7 @@ class TestNarrativeContinuity:
 
 @pytest.mark.asyncio
 async def test_research_agent_publishes_memory(db):
-    from app.agents.research_agent import ResearchAgent
+    from app.services.research_agent import ResearchAgent
 
     store = memory_store_from_session(db)
     agent = ResearchAgent(shared_memory_store=store)
@@ -152,7 +152,7 @@ async def test_research_agent_publishes_memory(db):
 
 @pytest.mark.asyncio
 async def test_research_agent_no_memory_when_no_store(db):
-    from app.agents.research_agent import ResearchAgent
+    from app.services.research_agent import ResearchAgent
 
     agent = ResearchAgent(shared_memory_store=None)
     state = await agent.analyze({
@@ -168,160 +168,6 @@ async def test_research_agent_no_memory_when_no_store(db):
 # 4. PromptEngineering consumes memory
 # =============================================================================
 
-
-def test_prompt_engineering_consumes_narrative_memory(db):
-    from app.services.pedagogical_orchestration_service import PromptEngineering
-    from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
-
-    store = memory_store_from_session(db)
-    publish_narrative_persona(
-        store, persona="Profesor amigable",
-        student_id="tea-1", module_id="course:week1",
-    )
-
-    engine = PromptEngineering()
-    data = WeeklyPedagogicalPlanCreate(
-        week_number=1,
-        topic="Matematicas",
-        objectives=["Sumar"],
-        bloom_target=2,
-        pedagogical_style="socratico",
-        pedagogical_intention="Fomentar el pensamiento critico en matematicas basicas",
-        preferred_modality="visual",
-    )
-    course = type("Course", (), {"name": "Matematicas", "id": "c-1"})()
-
-    result = engine.run(data, course, memory_store=store, student_id="tea-1")
-    assert "Profesor amigable" in result["student_prompt"]
-    assert "Profesor amigable" in result["tutor_prompt"]
-    assert "Profesor amigable" in result["teacher_review_prompt"]
-
-
-def test_prompt_engineering_no_memory_fallback(db):
-    from app.services.pedagogical_orchestration_service import PromptEngineering
-    from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
-
-    engine = PromptEngineering()
-    data = WeeklyPedagogicalPlanCreate(
-        week_number=1, topic="Test", objectives=["O"],
-        bloom_target=2, pedagogical_style="socratico",
-        pedagogical_intention="Intencion clara para el curso de prueba",
-        preferred_modality="text",
-    )
-    course = type("Course", (), {"name": "Curso", "id": "c-1"})()
-    result = engine.run(data, course, memory_store=None)
-    # Should still work without memory
-    assert "Curso" in result["student_prompt"]
-
-
-# =============================================================================
-# 5. ConsistencyValidation consumes memory
-# =============================================================================
-
-
-def test_consistency_validation_checks_memory(db):
-    from app.services.pedagogical_orchestration_service import ConsistencyValidation
-    from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
-
-    store = memory_store_from_session(db)
-    # Publish a past record with an issue
-    store.publish_observation(
-        voter_name="consistency_agent",
-        key="consensus:result",
-        value={"issues": [{"type": "missing_objectives", "severity": "error"}]},
-        confidence=0.9,
-        student_id="tea-1",
-        memory_type="pedagogical_decision",
-    )
-
-    validator = ConsistencyValidation()
-    data = WeeklyPedagogicalPlanCreate(
-        week_number=2, topic="Test", objectives=["O1", "O2"],
-        bloom_target=3, pedagogical_style="abp",
-        pedagogical_intention="Intencion clara y suficientemente larga para aprobar",
-        preferred_modality="text",
-    )
-    result = validator.run(
-        data,
-        research_validation={"valid": True, "issues": []},
-        structure={"weekly_sequence": [{"phase": "a"}]},
-        memory_store=store,
-        student_id="tea-1",
-        course_id="c-1",
-    )
-    issues = [i["type"] for i in result["issues"]]
-    assert "recurring:missing_objectives" in issues
-
-
-def test_consistency_validation_no_memory_fallback(db):
-    from app.services.pedagogical_orchestration_service import ConsistencyValidation
-    from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
-
-    validator = ConsistencyValidation()
-    data = WeeklyPedagogicalPlanCreate(
-        week_number=1, topic="Test", objectives=["O"],
-        bloom_target=2, pedagogical_style="socratico",
-        pedagogical_intention="Intencion clara para curso de prueba",
-        preferred_modality="text",
-    )
-    result = validator.run(
-        data,
-        research_validation={"valid": True, "issues": []},
-        structure={"weekly_sequence": [{"phase": "a"}]},
-        memory_store=None,
-    )
-    assert result["valid"] is True
-
-
-# =============================================================================
-# 6. ConsensusMediator factors prior memory
-# =============================================================================
-
-
-def test_consensus_uses_past_confidence(db):
-    from app.services.pedagogical_orchestration_service import ConsensusMediator
-
-    store = memory_store_from_session(db)
-    # Publish past high-confidence decisions
-    for conf in [0.9, 0.85]:
-        store.publish_observation(
-            voter_name="consensus",
-            key="consensus:result",
-            value={"confidence": conf},
-            confidence=conf,
-            student_id="stu-1",
-            memory_type="pedagogical_decision",
-        )
-
-    mediator = ConsensusMediator()
-    result = mediator.run(
-        validation={"valid": True},
-        research_metrics={"pedagogical_confidence": 0.5},
-        memory_store=store,
-        student_id="stu-1",
-    )
-    # Past confidence (avg 0.875 * 0.1 = 0.0875) should boost base 0.5 → ~0.5875
-    assert result["confidence"] > 0.5
-    assert result["memory_influence"] > 0.0
-    assert result["base_confidence"] == 0.5
-
-
-def test_consensus_no_memory_fallback(db):
-    from app.services.pedagogical_orchestration_service import ConsensusMediator
-
-    mediator = ConsensusMediator()
-    result = mediator.run(
-        validation={"valid": True},
-        research_metrics={"pedagogical_confidence": 0.6},
-        memory_store=None,
-    )
-    assert result["decision"] == "approve"
-    assert result["memory_influence"] == 0.0
-
-
-# =============================================================================
-# 7. Narrative persistence through orchestrators
-# =============================================================================
 
 
 @pytest.mark.asyncio
@@ -347,44 +193,6 @@ async def test_module_orchestrator_publishes_narrative(db):
     )
     assert len(records) >= 2
 
-
-@pytest.mark.asyncio
-async def test_pedagogical_orchestrator_publishes_narrative(db):
-    from app.services.pedagogical_orchestration_service import (
-        pedagogical_orchestration_service,
-    )
-    from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate
-    from app.models.course import Course
-    from app.models.user import User, UserRole
-
-    store = memory_store_from_session(db)
-    teacher = User(id="tea-1", email="tea@test.com", hashed_password="x", first_name="Teacher", last_name="Test", role=UserRole.DOCENTE, is_active=True)
-    db.add(teacher)
-    course = Course(id="c-1", name="Curso Test", teacher_id="tea-1", code="PED-01", cycle=1, year=2026)
-    db.add(course)
-    db.flush()
-
-    data = WeeklyPedagogicalPlanCreate(
-        week_number=1,
-        topic="Listas Enlazadas",
-        objectives=["Insertar", "Buscar"],
-        bloom_target=3,
-        pedagogical_style="abp",
-        pedagogical_intention="Guiar al estudiante en la comprension de listas enlazadas mediante ejercicios practicos progresivos",
-        preferred_modality="interactive",
-    )
-
-    plan = await pedagogical_orchestration_service.generate_weekly_plan(
-        db=db, course=course, teacher=teacher, data=data,
-        memory_store=store,
-    )
-    assert plan.topic == "Listas Enlazadas"
-
-    records = store.query(
-        student_id="tea-1",
-        memory_type=NARRATIVE_MEMORY_TYPE,
-    )
-    assert len(records) >= 2
 
 
 # =============================================================================

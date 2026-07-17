@@ -467,3 +467,39 @@ def test_legacy_student_with_path_not_blocked(
         headers=auth_header(estudiante_token),
     )
     assert resp.status_code == 200
+
+
+# ── Evidencia por competencia hacia el Runtime ───────────────────────
+
+
+class _Q:
+    def __init__(self, qid, topic, correct):
+        self.id = qid
+        self.topic = topic
+        self.correct_index = correct
+
+
+def test_evidencia_por_competencia_agrega_por_topic():
+    """El pre-test entra al Runtime una competencia por hecho: índices
+    incorrectos DENTRO de cada topic + total — mismo criterio de
+    corrección que submit_attempt (sin respuesta = incorrecta)."""
+    ordered = [
+        _Q("q1", "bucles", 0),
+        _Q("q2", "bucles", 1),
+        _Q("q3", "variables", 2),
+        _Q("q4", "bucles", 3),
+    ]
+    answers = {"q1": 0, "q2": 9, "q4": 3}  # q2 mal, q3 sin responder
+    evidencia = knowledge_test_service._evidencia_por_competencia(ordered, answers)
+    assert evidencia == {
+        "bucles": {"incorrectos": [1], "total": 3},
+        "variables": {"incorrectos": [0], "total": 1},
+    }
+
+
+def test_evidencia_por_competencia_tipo_invalido_cuenta_incorrecta():
+    ordered = [_Q("q1", "bucles", 0)]
+    evidencia = knowledge_test_service._evidencia_por_competencia(
+        ordered, {"q1": "0"}  # string, no int — mismo guard que submit
+    )
+    assert evidencia == {"bucles": {"incorrectos": [0], "total": 1}}

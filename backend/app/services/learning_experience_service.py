@@ -19,6 +19,7 @@ from enum import Enum
 from sqlalchemy.orm import Session
 
 from app.models.course import Course, CourseStatus
+from app.models.enrollment import Enrollment
 from app.models.student_progress import LearningPath, PathModule
 from app.models.user import User
 
@@ -27,8 +28,12 @@ ACTIVE_EXPERIENCE_SLUG = "fundamentos-programacion"
 
 
 class ExperienceState(str, Enum):
-    NOT_STARTED = "NOT_STARTED"   # aún no inició (no hay LearningPath)
-    READY = "READY"               # aprovisionada, sin progreso todavía
+    NOT_STARTED = "NOT_STARTED"   # aún no inició (sin matrícula)
+    # aprovisionada: matriculado, sin progreso todavía — con o sin
+    # LearningPath (Pilar 4, jul 2026: la ruta personalizada ya no se crea
+    # en el onboarding, se difiere hasta que el diagnóstico/pre-test
+    # terminan; "iniciado" depende de la matrícula, nunca de la ruta).
+    READY = "READY"
     IN_PROGRESS = "IN_PROGRESS"   # con módulos completados
     COMPLETED = "COMPLETED"       # ruta completada
 
@@ -79,6 +84,17 @@ def get_state(db: Session, student: User) -> ExperienceState:
     if not exp:
         return ExperienceState.NOT_STARTED
 
+    enrollment = (
+        db.query(Enrollment)
+        .filter(
+            Enrollment.student_id == student.id,
+            Enrollment.course_id == exp.anchor_course_id,
+        )
+        .first()
+    )
+    if not enrollment:
+        return ExperienceState.NOT_STARTED
+
     path = (
         db.query(LearningPath)
         .filter(
@@ -88,7 +104,9 @@ def get_state(db: Session, student: User) -> ExperienceState:
         .first()
     )
     if not path:
-        return ExperienceState.NOT_STARTED
+        # Matriculado (la experiencia SÍ inició), pero la ruta personalizada
+        # todavía no existe — el diagnóstico único (Pilar 4) sigue en curso.
+        return ExperienceState.READY
 
     total = db.query(PathModule).filter(PathModule.path_id == path.id).count()
     done = (

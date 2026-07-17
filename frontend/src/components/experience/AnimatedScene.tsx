@@ -17,6 +17,7 @@ export function AnimatedScene({ sceneId }: SceneProps) {
 
 const SCENES: Record<string, ComponentType> = {
   'dos-robots': DosRobotsScene,
+  'caja-variable': CajaVariableScene,
 }
 
 // ── Escena: dos robots, misma meta, instrucciones distintas ────────────────────
@@ -108,6 +109,51 @@ function DosRobotsScene() {
         <span className="ml1-b absolute top-2 text-2xl" style={{ left: '4%' }}>🤖</span>
         <span className="absolute top-2 text-2xl" style={{ left: '82%' }}>🚪</span>
         <span className="ml1-ok absolute top-1 text-sm font-bold text-emerald-400" style={{ left: '79%' }}>✓</span>
+      </div>
+    </div>
+  )
+}
+
+// ── Escena: la misma caja, dos valores distintos ────────────────────────────────
+// Una variable «edad» guarda 20; el chip «edad = edad + 1» se activa y el valor
+// visible pasa a 21 — el NOMBRE no cambia, el valor sí. Bucle de 6 s. Con
+// prefers-reduced-motion queda el cuadro estático en el primer valor.
+
+function CajaVariableScene() {
+  return (
+    <div
+      className="rounded-xl border border-white/[0.08] bg-neural-lowest/60 overflow-hidden"
+      role="img"
+      aria-label="Animación: una caja llamada edad guarda el número 20. Al ejecutar edad = edad + 1, el mismo nombre pasa a guardar 21 — el nombre no cambia, el valor sí."
+    >
+      <style>{`
+        @keyframes mlv-fade1 { 0%, 45% { opacity: 1; } 50%, 100% { opacity: 0; } }
+        @keyframes mlv-fade2 { 0%, 45% { opacity: 0; } 50%, 100% { opacity: 1; } }
+        @keyframes mlv-chip1 { 0%, 45% { opacity: 1; } 50%, 100% { opacity: 0.35; } }
+        @keyframes mlv-chip2 { 0%, 45% { opacity: 0.35; } 50%, 100% { opacity: 1; } }
+        .mlv-v1 { animation: mlv-fade1 6s ease-in-out infinite; }
+        .mlv-v2 { animation: mlv-fade2 6s ease-in-out infinite; }
+        .mlv-c1 { animation: mlv-chip1 6s linear infinite; }
+        .mlv-c2 { animation: mlv-chip2 6s linear infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .mlv-v1, .mlv-v2, .mlv-c1, .mlv-c2 { animation: none; }
+        }
+      `}</style>
+
+      <div className="px-4 pt-4 pb-2 flex flex-wrap gap-1.5">
+        <span className="mlv-c1 text-[11px] font-mono px-2 py-0.5 rounded-full border border-neural-glow/30 text-neural-glow bg-neural-glow/5">
+          edad = 20
+        </span>
+        <span className="mlv-c2 text-[11px] font-mono px-2 py-0.5 rounded-full border border-neural-glow/30 text-neural-glow bg-neural-glow/5">
+          edad = edad + 1
+        </span>
+      </div>
+      <div className="relative h-24 mx-4 mb-4 flex items-center justify-center">
+        <div className="w-24 h-16 rounded-lg border-2 border-neural-violet/40 bg-neural-violet/5 flex items-center justify-center relative">
+          <span className="absolute -top-5 text-[10px] font-mono text-neural-violet/80">edad</span>
+          <span className="mlv-v1 absolute text-2xl font-bold text-neural-text">20</span>
+          <span className="mlv-v2 absolute text-2xl font-bold text-neural-text">21</span>
+        </div>
       </div>
     </div>
   )

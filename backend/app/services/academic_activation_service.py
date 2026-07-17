@@ -516,13 +516,22 @@ class CurriculumActivationPipeline:
     def provision_experience(
         self, db: Session, student: User, course: Course
     ) -> AcademicActivationResult:
-        """Aprovisiona el contenido de UNA experiencia de aprendizaje (curso ancla)
-        para el estudiante: matrícula + ruta semanal + evento de orquestación.
-        Idempotente y sin ciclo (herencia LMS desacoplada).
+        """Aprovisiona lo MÍNIMO para que el estudiante exista en la experiencia
+        (matrícula + objetivos del curso + evento de orquestación) — idempotente,
+        sin ciclo (herencia LMS desacoplada). Deliberadamente NO crea la
+        LearningPath del estudiante (Pilar 4, jul 2026 — diagnóstico único):
+        antes se creaba aquí con `dominant='reading'` por defecto (el
+        diagnóstico todavía no había corrido), lo que además dejaba
+        `pretest_required` en False desde el minuto uno (`not has_learning_path`)
+        y volvía inalcanzable el pre-test real (`KnowledgeTest`/`PretestGuard`).
+        La ruta personalizada la sigue generando `generate_learning_path_adaptive`
+        (ya invocado por el frontend tras el diagnóstico y tras el pre-test) —
+        mismo mecanismo existente, ahora es la ÚNICA vez que se crea la ruta.
 
         El `course` lo resuelve `LearningExperienceService`, que es el ÚNICO punto
         del sistema que conoce el ancla concreta (IS301 hoy). Aquí no hay ninguna
-        referencia a ese código. `activate_student()` se conserva para compatibilidad."""
+        referencia a ese código. `activate_student()` se conserva para compatibilidad
+        (ruta legacy por ciclo, sí sigue creando la ruta de inmediato — sin cambios)."""
         result = AcademicActivationResult(
             student_id=student.id, cycle=student.current_cycle
         )
@@ -536,10 +545,7 @@ class CurriculumActivationPipeline:
             result.enrollments_reactivated += 1
         result.course_ids.append(course.id)
 
-        _, path_created, modules_created, objectives_created = self.weekly_paths.ensure_weekly_path(db, student, course)
-        result.learning_paths_created += path_created
-        result.modules_created += modules_created
-        result.objectives_created += objectives_created
+        result.objectives_created += self.weekly_paths._ensure_weekly_objectives(db, course)
         result.orchestration_events_created += self._ensure_orchestration_event(db, student, course)
 
         db.flush()

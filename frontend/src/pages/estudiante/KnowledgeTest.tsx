@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowLeft,
@@ -83,6 +83,12 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  // Diagnóstico único (Pilar 4): cuando se llega desde DiagnosticTest en el
+  // mismo recorrido inicial, ?continuous=true salta la pantalla "listo para
+  // empezar" — mismo componente, mismas preguntas, mismo backend, solo sin
+  // el clic redundante que partía la experiencia en dos cuestionarios.
+  const [searchParams] = useSearchParams()
+  const continuous = searchParams.get('continuous') === 'true'
 
   const isPre = kind === 'pre'
   const title = isPre ? 'Evaluación Diagnóstica' : 'Post-Test'
@@ -93,6 +99,22 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [current, setCurrent] = useState(0)
   const [result, setResult] = useState<KnowledgeTestResult | null>(null)
+
+  // Progreso local del intento en curso: el backend recuerda el intento
+  // (mismo attempt_id, mismo orden de preguntas al reanudar), pero las
+  // respuestas marcadas y la pregunta actual solo existían en memoria de
+  // React — un cierre de pestaña a mitad del test las perdía aunque el
+  // intento seguía intacto en el servidor. Se guardan por attempt_id
+  // porque ese id es estable entre reanudaciones.
+  const draftKey = (id: string) => `knowledge-test-draft:${id}`
+
+  const saveDraft = (id: string, draftAnswers: Record<string, number>, draftCurrent: number) => {
+    localStorage.setItem(draftKey(id), JSON.stringify({ answers: draftAnswers, current: draftCurrent }))
+  }
+
+  const clearDraft = (id: string) => {
+    localStorage.removeItem(draftKey(id))
+  }
 
   const status = useKnowledgeTestStatus(courseId)
   const startTest = useStartKnowledgeTest()
@@ -110,6 +132,16 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
         onSuccess: (data) => {
           setAttemptId(data.attempt_id)
           setQuestions(data.questions)
+          const draftRaw = localStorage.getItem(draftKey(data.attempt_id))
+          if (draftRaw) {
+            try {
+              const draft = JSON.parse(draftRaw) as { answers: Record<string, number>; current: number }
+              setAnswers(draft.answers)
+              setCurrent(draft.current)
+            } catch {
+              clearDraft(data.attempt_id)
+            }
+          }
           setPhase('questions')
         },
         onError: (error) => {
@@ -123,12 +155,25 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
     )
   }
 
+  // Auto-inicio del recorrido continuo: espera a que status.data cargue para
+  // no saltar por delante de `alreadyCompleted`/`bank_available` (mismos
+  // guardas que ya protegen el flujo manual, sin duplicarlos). Un solo
+  // intento — si el estudiante vuelve a 'intro' después (back button), el
+  // botón manual de IntroScreen sigue disponible, nunca reintenta solo.
+  useEffect(() => {
+    if (!continuous || phase !== 'intro' || !status.data) return
+    if (alreadyCompleted || !status.data.bank_available || startTest.isPending) return
+    handleStart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [continuous, phase, status.data, alreadyCompleted])
+
   const handleSubmit = () => {
     if (!attemptId) return
     submitTest.mutate(
       { attemptId, answers },
       {
         onSuccess: (data) => {
+          clearDraft(attemptId)
           setResult(data)
           setPhase('result')
         },
@@ -187,6 +232,19 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
   }
 
   if (phase === 'intro') {
+    // Recorrido continuo: la pantalla "lista para empezar" nunca aparece —
+    // el useEffect de arriba ya llamó a handleStart(). Este loader solo
+    // cubre el instante real de espera (status.data / startTest en curso),
+    // nunca reemplaza el guion manual (IntroScreen sigue siendo la puerta
+    // de entrada normal fuera del recorrido continuo).
+    if (continuous) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <Loader2 className="h-6 w-6 animate-spin text-neural-glow mb-3" />
+          <p className="text-sm text-neural-muted">Continuando con tu evaluación diagnóstica…</p>
+        </div>
+      )
+    }
     return (
       <IntroScreen
         kind={kind}
@@ -252,7 +310,11 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
                   className="hidden"
                   name={`q-${question.id}`}
                   checked={selected}
-                  onChange={() => setAnswers((prev) => ({ ...prev, [question.id]: idx }))}
+                  onChange={() => {
+                    const next = { ...answers, [question.id]: idx }
+                    setAnswers(next)
+                    if (attemptId) saveDraft(attemptId, next, current)
+                  }}
                 />
                 <span className="text-sm text-neural-text">{option}</span>
               </label>
@@ -264,7 +326,11 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
       <div className="flex justify-between">
         <Button
           variant="outline"
-          onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+          onClick={() => {
+            const next = Math.max(0, current - 1)
+            setCurrent(next)
+            if (attemptId) saveDraft(attemptId, answers, next)
+          }}
           disabled={current === 0}
         >
           Anterior
@@ -272,7 +338,11 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
         {current < questions.length - 1 ? (
           <Button
             className="gap-2"
-            onClick={() => setCurrent((c) => c + 1)}
+            onClick={() => {
+              const next = current + 1
+              setCurrent(next)
+              if (attemptId) saveDraft(attemptId, answers, next)
+            }}
             disabled={answers[question.id] === undefined}
           >
             Siguiente
@@ -456,7 +526,8 @@ function CompetencyClosingScreen({
           </div>
           <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3">
             <p className="text-[10px] font-mono tracking-wider uppercase text-amber-300 mb-1">
-              A reforzar primero
+              {/* Si el foco ya está dominado (>=70%), no contradecir "Base sólida" llamándolo "a reforzar" */}
+              {profile.focus_percentage >= 70 ? 'Siguiente reto' : 'A reforzar primero'}
             </p>
             <p className="text-sm font-medium text-neural-text">{profile.focus_label}</p>
             <p className="text-xs text-neural-muted mt-0.5">{profile.focus_percentage.toFixed(0)}%</p>

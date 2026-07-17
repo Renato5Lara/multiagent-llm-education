@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { CheckCircle2 } from 'lucide-react'
+import { useLiveDeliberation } from '@/hooks/useLiveDeliberation'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -40,11 +41,16 @@ export interface PathContext {
 }
 
 interface AgentActivityPanelProps {
-  mode: 'diagnostic' | 'module' | 'path'
+  mode: 'diagnostic' | 'module' | 'path' | 'evaluation'
   diagnosticProfile?: DiagnosticProfile
   moduleContext?: ModuleContext
   pathContext?: PathContext
   isBackendReady?: boolean
+  /** session_id determinista (curso:{courseId}:estudiante:{studentId}) —
+   *  habilita la deliberación en vivo real durante la cola de espera
+   *  (RFC-0007 §2.1), en vez de dejar una sola frase estática mientras dura
+   *  la petición real (30-45s: Diagnosticar → Remediar/Orientar → Consenso). */
+  sessionId?: string
   onComplete: () => void
 }
 
@@ -93,11 +99,13 @@ const MODALITY_DEFAULT_STRATEGIES: Record<string, string[]> = {
 
 /** Color de identidad por agente en la deliberación (RC-FINAL). */
 const AGENT_DOT: Record<string, string> = {
-  'Agente Diagnóstico': 'bg-neural-glow',
-  'Agente Perfil':      'bg-purple-400',
-  'Agente Adaptación':  'bg-violet-400',
-  'Agente Tutor':       'bg-orange-300',
-  'Motor de Consenso':  'bg-neural-pulse',
+  'Agente Diagnóstico':  'bg-neural-glow',
+  'Agente Perfil':       'bg-purple-400',
+  'Agente Adaptación':   'bg-violet-400',
+  'Agente Tutor':        'bg-orange-300',
+  'Agente Remediación':  'bg-amber-400',
+  'Agente Orientador':   'bg-cyan-300',
+  'Motor de Consenso':   'bg-neural-pulse',
 }
 
 const LEVEL_LABEL: Record<string, string> = {
@@ -128,11 +136,25 @@ function getDiagnosticMessages(p: DiagnosticProfile) {
   }
 
   return [
-    { agent: 'Agente Diagnóstico', text: `Diagnóstico completado. ${p.knownCount}/8 temas dominados. Nivel previo: ${level}.` },
-    { agent: 'Agente Perfil',      text: `Perfil ${style} detectado (conf. ${confPct}%)${p.secondary ? `. Modalidad secundaria: ${MODALITY_LABEL_ADJ[p.secondary] ?? p.secondary}` : ''}.` },
-    { agent: 'Agente Adaptación',  text: strategyMsg[p.dominant] || 'Seleccionando estrategia de contenido adaptativo.' },
-    { agent: 'Agente Tutor',       text: tutorMsg[p.dominant] || 'Ajustando parámetros del tutor IA.' },
-    { agent: 'Motor de Consenso',  text: 'Consenso alcanzado. Ruta multimodal aprobada. Iniciando generación de contenido adaptativo.' },
+    { agent: 'Agente Diagnóstico', text: `Terminé de leer tus respuestas: ${p.knownCount}/8 temas dominados, nivel previo ${level}.` },
+    { agent: 'Agente Perfil',      text: `Yo me fijé en CÓMO respondiste, no en cuánto sabías: perfil ${style} (conf. ${confPct}%)${p.secondary ? `, con ${MODALITY_LABEL_ADJ[p.secondary] ?? p.secondary} como apoyo` : ''}.` },
+    { agent: 'Agente Adaptación',  text: `Con esos dos datos, propongo la estrategia: ${(strategyMsg[p.dominant] || 'contenido adaptativo').toLowerCase()}` },
+    { agent: 'Agente Tutor',       text: `De acuerdo — yo me encargo de que se sienta así: ${(tutorMsg[p.dominant] || 'ajusto mis explicaciones a ese perfil').toLowerCase()}` },
+    { agent: 'Motor de Consenso',  text: 'Las cuatro propuestas son consistentes entre sí. Consenso alcanzado — generando tu ruta ahora.' },
+  ]
+}
+
+/** Modo 'evaluation' — mientras se corrige el intento real: Diagnosticar
+ *  interpreta las respuestas, Remediar u Orientar deciden la estrategia según
+ *  el resultado, y Consenso aprueba la decisión (mismo flujo real que ya
+ *  corre en el submit — no es un modo nuevo del dominio, solo su narración). */
+function getEvaluationMessages() {
+  return [
+    { agent: 'Agente Diagnóstico', text: 'Ya interpreté tus respuestas: reviso cuántas fueron correctas y en qué tema, para pasarles el resultado a los demás.' },
+    { agent: 'Agente Remediación', text: 'Yo reviso ese resultado por si hay vacíos — si los hay, ya tengo listo un refuerzo antes de que sigas.' },
+    { agent: 'Agente Orientador',  text: 'Y yo reviso lo contrario: si el resultado es sólido, propongo saltar directo al siguiente contenido, sin repetir lo que ya dominas.' },
+    { agent: 'Agente Tutor',       text: 'Con lo que decidan entre ustedes dos, yo actualizo qué y cómo explicarte de ahora en adelante.' },
+    { agent: 'Motor de Consenso',  text: 'Solo una de las dos propuestas puede ganar — comparando evidencia y aprobando la estrategia definitiva.' },
   ]
 }
 
@@ -143,11 +165,11 @@ function getModuleMessages(ctx?: ModuleContext) {
     ?? 'actividades adaptativas'
 
   return [
-    { agent: 'Agente Diagnóstico', text: 'Recuperando tu perfil de aprendizaje.' },
-    { agent: 'Agente Perfil',      text: `Detectando modalidad dominante: ${modLabel}.` },
-    { agent: 'Agente Adaptación',  text: `Priorizando ${strats}.` },
-    { agent: 'Agente Tutor',       text: 'Preparando ejemplos personalizados.' },
-    { agent: 'Motor de Consenso',  text: 'Estrategia de aprendizaje aprobada.' },
+    { agent: 'Agente Diagnóstico', text: 'Recuperando tu perfil de aprendizaje para preparar este módulo.' },
+    { agent: 'Agente Perfil',      text: `Con ese perfil, la modalidad dominante sigue siendo ${modLabel} — mantengo la misma lectura.` },
+    { agent: 'Agente Adaptación',  text: `Entonces priorizo ${strats} para este contenido específico.` },
+    { agent: 'Agente Tutor',       text: 'Recibido — preparo los ejemplos de este módulo con ese mismo criterio.' },
+    { agent: 'Motor de Consenso',  text: 'Todo consistente con tu ruta ya aprobada. Estrategia confirmada para este módulo.' },
   ]
 }
 
@@ -157,20 +179,30 @@ function getModuleMessages(ctx?: ModuleContext) {
 function getPathMessages(ctx?: PathContext) {
   const strongestPct = ctx?.strongestPct !== undefined ? ` (${Math.round(ctx.strongestPct)}%)` : ''
   const focusPct = ctx?.focusPct !== undefined ? ` (${Math.round(ctx.focusPct)}%)` : ''
+  // Si el foco ya está dominado (>=70%, mismo umbral que el backend), no hay
+  // vacío real que reforzar — contradiría "tu base más sólida es X" cuando X
+  // es la misma competencia (ver fix(learning-path) en KnowledgeTest.tsx).
+  const mastered = ctx?.focusPct !== undefined && ctx.focusPct >= 70
   const opening = ctx?.strongestLabel
     ? `Detecté estos patrones en tus respuestas: tu base más sólida es «${ctx.strongestLabel}»${strongestPct}.`
     : 'Terminé de leer tu diagnóstico. Ya identifiqué los patrones de tus respuestas.'
-  const counter = ctx?.focusLabel
-    ? `Yo vi otros: «${ctx.focusLabel}»${focusPct} es donde más apoyo vas a necesitar.`
-    : ctx?.weaknesses?.length
-      ? `Yo vi otros: conviene reforzar ${ctx.weaknesses.slice(0, 2).join(' y ')} antes de avanzar.`
-      : 'Yo no encontré temas críticos — puedes avanzar a buen ritmo.'
+  const counter = mastered
+    ? 'Yo también lo vi: dominas todas las competencias evaluadas — no hay vacíos que reforzar.'
+    : ctx?.focusLabel
+      ? `Yo vi otros: «${ctx.focusLabel}»${focusPct} es donde más apoyo vas a necesitar.`
+      : ctx?.weaknesses?.length
+        ? `Yo vi otros: conviene reforzar ${ctx.weaknesses.slice(0, 2).join(' y ')} antes de avanzar.`
+        : 'Yo no encontré temas críticos — puedes avanzar a buen ritmo.'
 
   return [
     { agent: 'Agente Diagnóstico', text: opening },
     { agent: 'Agente Perfil',      text: counter },
-    { agent: 'Agente Adaptación',  text: 'Entonces propongo ordenar los módulos para reforzar eso primero, sin frenar tu avance.' },
-    { agent: 'Agente Tutor',       text: 'De acuerdo. Prepararé explicaciones y práctica adicional donde el diagnóstico mostró vacíos.' },
+    { agent: 'Agente Adaptación',  text: mastered
+        ? 'Entonces propongo retos de mayor nivel en vez de repaso, para no frenar tu avance.'
+        : 'Entonces propongo ordenar los módulos para reforzar eso primero, sin frenar tu avance.' },
+    { agent: 'Agente Tutor',       text: mastered
+        ? 'De acuerdo. Prepararé desafíos avanzados en lugar de refuerzo básico.'
+        : 'De acuerdo. Prepararé explicaciones y práctica adicional donde el diagnóstico mostró vacíos.' },
     { agent: 'Motor de Consenso',  text: 'Consenso alcanzado. Tu ruta de aprendizaje quedó aprobada — abriéndola ahora.' },
   ]
 }
@@ -183,13 +215,16 @@ export function AgentActivityPanel({
   moduleContext,
   pathContext,
   isBackendReady = true,
+  sessionId,
   onComplete,
 }: AgentActivityPanelProps) {
   const messages = mode === 'diagnostic' && diagnosticProfile
     ? getDiagnosticMessages(diagnosticProfile)
     : mode === 'path'
       ? getPathMessages(pathContext)
-      : getModuleMessages(moduleContext)
+      : mode === 'evaluation'
+        ? getEvaluationMessages()
+        : getModuleMessages(moduleContext)
 
   const [agents, setAgents] = useState<AgentState[]>(
     AGENT_DEFS.map(d => ({ id: d.id, name: d.name, status: 'waiting' as AgentStatus, progress: 0, duration: d.duration }))
@@ -200,6 +235,11 @@ export function AgentActivityPanel({
   const timersRef    = useRef<ReturnType<typeof setTimeout>[]>([])
   const onCompleteRef = useRef(onComplete)
   useEffect(() => { onCompleteRef.current = onComplete }, [onComplete])
+
+  // Deliberación en vivo real (RFC-0007 §2.1): solo sondea mientras la
+  // narración local ya terminó y la petición real sigue en curso — es
+  // exactamente el tramo que antes quedaba con una sola frase estática.
+  const liveEvents = useLiveDeliberation(sessionId, animationDone && !isBackendReady)
 
   // Run agent animation timeline once on mount
   useEffect(() => {
@@ -349,14 +389,18 @@ export function AgentActivityPanel({
             ? 'Preparando tu experiencia de aprendizaje'
             : mode === 'path'
               ? 'Los agentes están construyendo tu ruta'
-              : 'Analizando tu perfil de aprendizaje'}
+              : mode === 'evaluation'
+                ? 'Corrigiendo tu evaluación'
+                : 'Analizando tu perfil de aprendizaje'}
         </h2>
         <p className="text-neural-muted/70 text-sm mt-1">
           {mode === 'module'
             ? 'Los agentes están adaptando este módulo para ti'
             : mode === 'path'
               ? 'Debaten tu diagnóstico hasta llegar a un consenso'
-              : 'Los agentes están procesando tu diagnóstico'}
+              : mode === 'evaluation'
+                ? 'Los agentes deciden si reforzar o avanzar según tu resultado'
+                : 'Los agentes están procesando tu diagnóstico'}
         </p>
       </div>
 
@@ -436,19 +480,40 @@ export function AgentActivityPanel({
         ))}
       </div>
 
-      {/* Waiting for backend indicator (module mode only, after animation) */}
+      {/* Tramo de espera real (la petición sigue en curso tras la narración
+          local): si hay traza real disponible, se muestra en vivo — nunca
+          una frase estática repitiéndose durante 30-40s. */}
       {animationDone && !isBackendReady && (
-        <div className="glass-panel rounded-xl px-5 py-3 flex items-center gap-3">
-          <span className="relative flex h-1.5 w-1.5 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-glow" />
-          </span>
-          <p className="text-xs text-neural-muted">
-            {mode === 'path'
-              ? 'Materializando la ruta que los agentes acordaron...'
-              : 'Optimizando el contenido final para tu perfil...'}
-          </p>
-        </div>
+        liveEvents.length > 0 ? (
+          <div className="glass-panel rounded-xl p-4 space-y-2 max-h-[180px] overflow-y-auto">
+            <p className="text-[9px] font-mono text-neural-muted/40 tracking-[0.2em] uppercase mb-1">
+              Sigue en curso — traza real del runtime
+            </p>
+            {liveEvents.map(ev => (
+              <div key={ev.key} className="flex items-start gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
+                <span className={`mt-1.5 inline-flex rounded-full h-1.5 w-1.5 shrink-0 ${
+                  ev.isConsensus ? 'bg-neural-pulse' : AGENT_DOT[ev.agent] ?? 'bg-neural-glow'
+                }`} />
+                <p className="text-xs text-neural-muted/80 leading-snug">
+                  <span className="text-neural-glow/70 font-mono text-[10px] uppercase mr-1">{ev.agent}</span>
+                  {ev.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="glass-panel rounded-xl px-5 py-3 flex items-center gap-3">
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-neural-glow" />
+            </span>
+            <p className="text-xs text-neural-muted">
+              {mode === 'path'
+                ? 'Materializando la ruta que los agentes acordaron...'
+                : 'Optimizando el contenido final para tu perfil...'}
+            </p>
+          </div>
+        )
       )}
     </div>
   )

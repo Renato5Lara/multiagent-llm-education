@@ -4,10 +4,16 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_docente, get_db
 from app.models.user import User
 from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
-from app.schemas.pedagogy import WeeklyPedagogicalPlanCreate, WeeklyPedagogicalPlanResponse
+from app.schemas.pedagogy import (
+    AsuntoPrioridadResponse,
+    WeeklyPedagogicalPlanCreate,
+    WeeklyPedagogicalPlanResponse,
+    WeeklyPlanSuggestionResponse,
+)
 from app.services import course_service
 from app.memory.shared_memory import memory_store_from_session
 from app.services.audit_service import log_action
+from app.services.pedagogy_runtime_bridge import sugerir_prioridad_semanal
 # The legacy weekly-plan orchestration service was restored as
 # weekly_pedagogy_service after merge 918306c replaced this module path
 # with the /orchestrate-pipeline service (incompatible API).
@@ -28,6 +34,43 @@ def list_weekly_plans(
     if course.teacher_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el docente del curso puede ver planes")
     return pedagogical_orchestration_service.list_weekly_plans(db, course_id)
+
+
+@router.get(
+    "/courses/{course_id}/weekly-plans/suggestions",
+    response_model=WeeklyPlanSuggestionResponse,
+)
+def get_weekly_plan_suggestion(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_docente),
+):
+    """Plataforma Operativa 2 — Inteligencia Docente: sugerencia de solo
+    lectura derivada de las decisiones que el Runtime ya tomó para el
+    roster del curso (S3, `runtime_bridge.consultar_decision_vigente`).
+    No decide el plan — el docente conserva la autoridad (RFC-0009)."""
+    course = course_service.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Curso no encontrado")
+    if course.teacher_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el docente del curso puede ver sugerencias")
+
+    sugerencia = sugerir_prioridad_semanal(db, course_id)
+    return WeeklyPlanSuggestionResponse(
+        course_id=course_id,
+        estudiantes_totales=sugerencia.estudiantes_totales,
+        estudiantes_con_evidencia=sugerencia.estudiantes_con_evidencia,
+        prioridades=[
+            AsuntoPrioridadResponse(
+                competencia=p.competencia,
+                estudiantes_reforzar=p.estudiantes_reforzar,
+                estudiantes_avanzar=p.estudiantes_avanzar,
+            )
+            for p in sugerencia.prioridades
+        ],
+        competencia_sugerida=sugerencia.competencia_sugerida,
+        bloom_target_sugerido=sugerencia.bloom_target_sugerido,
+    )
 
 
 @router.post("/courses/{course_id}/weekly-plans", response_model=WeeklyPedagogicalPlanResponse)

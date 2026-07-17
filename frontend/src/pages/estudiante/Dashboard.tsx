@@ -12,6 +12,12 @@ import { useNavigate } from 'react-router-dom'
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { CourseProgress, LearningPathItem } from '@/types/student'
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} Dashboard:${event}`, extra ?? '')
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 const MODALITY_DARK: Record<string, string> = {
@@ -134,7 +140,7 @@ function FdPHeroCard({ course, missions, currentMission, navigate }: {
 
         {/* CTA — conduce a la misión actual (la Misión Activa reanuda sola) */}
         {!course.has_diagnostic ? (
-          <Button className="gap-2" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
+          <Button className="gap-2" onClick={() => { debugDiagLog('click:comenzar-diagnostico', { courseId: course.course_id }); navigate(`/estudiante/diagnostic/${course.course_id}`) }}>
             <Brain className="h-4 w-4" />
             Comenzar diagnóstico
           </Button>
@@ -325,7 +331,15 @@ export default function EstudianteDashboard() {
   const fdp = findActiveExperience(courses)
   const { data: path, isLoading: pathLoading } = useLearningPath(fdp?.course_id)
 
-  if (coursesLoading || (fdp?.has_learning_path && pathLoading)) return <DashboardSkeleton />
+  debugDiagLog('render', {
+    coursesLoading, pathLoading,
+    hasFdp: !!fdp, hasLearningPath: fdp?.has_learning_path, hasDiagnostic: fdp?.has_diagnostic,
+  })
+
+  if (coursesLoading || (fdp?.has_learning_path && pathLoading)) {
+    debugDiagLog('render:skeleton-branch', { coursesLoading, pathLoading, hasLearningPath: fdp?.has_learning_path })
+    return <DashboardSkeleton />
+  }
 
   const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Estudiante'
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'

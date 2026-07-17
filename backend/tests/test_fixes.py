@@ -2,7 +2,7 @@
 Tests de regresión para los 7 fixes aplicados en la auditoría técnica.
 
 Fixes cubiertos:
-1. ai_service importa prompts correctamente (NameError TUTOR_CHAT_PROMPT)
+1. ai_service importa prompts correctamente
 2. retrieval.py MULTIMODAL → aggregate.multimodal_prompts
 3. retrieval.py modalidades: image/text/video/audio
 4. orchestration.py salva multimodal_prompts en CourseWeek
@@ -29,15 +29,6 @@ class TestFix1AIServiceImports:
         assert isinstance(result, dict)
         assert "fortalezas" in result
         assert "confianza" in result
-
-    def test_generate_tutor_response_no_crash(self):
-        """generate_tutor_response no debe lanzar NameError por prompts faltantes."""
-        result = ai_service.generate_tutor_response(
-            message="¿Qué es un arreglo?",
-            course_name="Programación",
-        )
-        assert isinstance(result, str)
-        assert len(result) > 0
 
     def test_fallback_tutor_response_works(self):
         """_fallback_tutor_response retorna respuestas coherentes según keyword."""

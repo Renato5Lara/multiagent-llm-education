@@ -76,3 +76,34 @@ def export_results(
             "Content-Disposition": f'attachment; filename="resultados_experimento_{stamp}.csv"'
         },
     )
+
+
+@router.get("/export-experiment")
+def export_experiment(
+    course_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Exportar experimento — un clic, un archivo: resumen por estudiante,
+    detalle por ciclo (modalidad diagnosticada vs. modalidad de refuerzo) y
+    estadísticas descriptivas, en tres hojas del mismo XLSX. No calcula
+    nada nuevo: compone get_student_result_rows + get_cycle_evidence_rows +
+    get_experiment_statistics, ya usados por el resto del dashboard."""
+    if not research_export_service.excel_available():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "XLSX_UNAVAILABLE", "message": "openpyxl no disponible en el servidor"},
+        )
+
+    summary_rows = research_dashboard_service.get_student_result_rows(db, course_id)
+    cycle_rows = research_dashboard_service.get_cycle_evidence_rows(db, course_id)
+    statistics = research_dashboard_service.get_experiment_statistics(db, course_id)
+
+    content = research_export_service.experiment_to_xlsx(summary_rows, cycle_rows, statistics)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="experimento_completo_{stamp}.xlsx"'
+        },
+    )

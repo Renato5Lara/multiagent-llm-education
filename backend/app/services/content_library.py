@@ -6,7 +6,18 @@ Tipos: theory, example, exercise, game*, simulation*
 (*) game y simulation son placeholders para Code Lab D4.3.
 """
 
-from app.services.adaptive_engine import MODALITY_CONTENT_ORDER
+# Orden de render por modalidad — tabla de PRESENTACIÓN, no de decisión
+# (heredada del motor D4.1 al retirarlo): la modalidad la decide el
+# Runtime; esto solo dice en qué orden se muestran los bloques.
+# "visual"/"mixta" son el vocabulario del Runtime (DISENO_POR_ACCION);
+# las claves VARK se conservan para contenido histórico.
+MODALITY_CONTENT_ORDER: dict[str, list[str]] = {
+    "visual": ["diagram", "example", "video", "theory", "exercise", "simulation", "game"],
+    "mixta": ["theory", "diagram", "example", "exercise", "video", "simulation", "game"],
+    "reading": ["theory", "example", "exercise", "diagram", "video", "simulation", "game"],
+    "audio": ["video", "theory", "example", "exercise", "diagram", "simulation", "game"],
+    "kinesthetic": ["game", "simulation", "exercise", "example", "theory", "video", "diagram"],
+}
 
 # ── Contenido educativo ────────────────────────────────────────────────────────
 
@@ -462,7 +473,7 @@ def get_adaptive_content(topic_slug: str, modality: str) -> list[dict]:
     if not topic_content:
         return []
 
-    order = MODALITY_CONTENT_ORDER.get(modality, MODALITY_CONTENT_ORDER["reading"])
+    order = MODALITY_CONTENT_ORDER.get(modality, MODALITY_CONTENT_ORDER["mixta"])
     ordered_blocks = []
     for content_type in order:
         block = topic_content.get(content_type)

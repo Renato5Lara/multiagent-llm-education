@@ -4,8 +4,9 @@
 
 import type { ModuleExperienceDefinition } from '@/types/moduleExperience'
 import { MODULE_1_EXPERIENCE } from './module1'
+import { MODULE_2_EXPERIENCE } from './module2'
 
-const EXPERIENCES: ModuleExperienceDefinition[] = [MODULE_1_EXPERIENCE]
+const EXPERIENCES: ModuleExperienceDefinition[] = [MODULE_1_EXPERIENCE, MODULE_2_EXPERIENCE]
 
 function normalize(value: string): string {
   return value

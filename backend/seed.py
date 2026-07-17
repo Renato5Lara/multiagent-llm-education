@@ -8,6 +8,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.models import (
     User, UserRole,
@@ -398,6 +399,118 @@ def seed():
             db.add(estudiante5)
             print("[OK] Estudiante ciclo 5: estudiante5@upao.edu.pe / Student2026!")
 
+        # Estudiante aislado sin historial — para validar el recorrido completo
+        # (diagnóstico → plan → módulos → evaluación) desde cero en navegador
+        # real, sin mutar estudiante3/5 (Sprint 3, Caso 1). Mismo curso real
+        # (IS301) que estudiante3, nunca el escenario legacy de seed_demo_swarm
+        # (SWA101, recursos con file_path="/fake/path/..." — no forma parte
+        # del Runtime, es el grupo de control D-001 de BaseAgent).
+        estudiante_e2e = db.query(User).filter(User.email == "estudiante.e2e@upao.edu.pe").first()
+        if not estudiante_e2e:
+            estudiante_e2e = User(
+                email="estudiante.e2e@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399999",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e)
+            print("[OK] Estudiante E2E (sin historial): estudiante.e2e@upao.edu.pe / Student2026!")
+
+        # Segunda cuenta aislada, igual de desechable — valida específicamente
+        # la transición visible Módulo 1 → Módulo 2 (PED-004 generalizado a
+        # dos módulos) sin reutilizar estudiante.e2e, que ya avanzó de más.
+        estudiante_e2e2 = db.query(User).filter(User.email == "estudiante.e2e2@upao.edu.pe").first()
+        if not estudiante_e2e2:
+            estudiante_e2e2 = User(
+                email="estudiante.e2e2@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Dos",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399998",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e2)
+            print("[OK] Estudiante E2E 2 (sin historial): estudiante.e2e2@upao.edu.pe / Student2026!")
+
+        # Tercera cuenta aislada y desechable — valida la deliberación en vivo
+        # real (useLiveDeliberation, RFC-0007 §2.1) durante el diagnóstico, el
+        # tramo de espera más largo (5 agentes LLM en cadena, 30-45s reales).
+        estudiante_e2e3 = db.query(User).filter(User.email == "estudiante.e2e3@upao.edu.pe").first()
+        if not estudiante_e2e3:
+            estudiante_e2e3 = User(
+                email="estudiante.e2e3@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Tres",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399997",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e3)
+            print("[OK] Estudiante E2E 3 (sin historial): estudiante.e2e3@upao.edu.pe / Student2026!")
+
+        # Cuarta cuenta aislada y desechable — valida el diagnóstico único
+        # (Pilar 4, jul 2026): Onboarding → DiagnosticTest → KnowledgeTest sin
+        # el clic redundante entre ambos. Necesita estar 100% sin historial
+        # (ni diagnóstico ni pretest), por eso nunca se reutiliza e2e/e2e2/e2e3.
+        estudiante_e2e4 = db.query(User).filter(User.email == "estudiante.e2e4@upao.edu.pe").first()
+        if not estudiante_e2e4:
+            estudiante_e2e4 = User(
+                email="estudiante.e2e4@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Cuatro",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399996",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e4)
+            print("[OK] Estudiante E2E 4 (sin historial): estudiante.e2e4@upao.edu.pe / Student2026!")
+
+        # Quinta cuenta aislada y desechable — e2e4 ya no está "sin historial"
+        # después de validar el diagnóstico único una vez; esta reemplaza ese
+        # rol para la siguiente pasada, sin mutar ninguna cuenta ya usada.
+        estudiante_e2e5 = db.query(User).filter(User.email == "estudiante.e2e5@upao.edu.pe").first()
+        if not estudiante_e2e5:
+            estudiante_e2e5 = User(
+                email="estudiante.e2e5@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Cinco",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399995",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e5)
+            print("[OK] Estudiante E2E 5 (sin historial): estudiante.e2e5@upao.edu.pe / Student2026!")
+
+        # Sexta cuenta — e2e5 se usó para una pasada con el backend todavía
+        # sin reiniciar (código viejo, sin --reload); esta es la primera
+        # prueba real contra el fix ya cargado.
+        estudiante_e2e6 = db.query(User).filter(User.email == "estudiante.e2e6@upao.edu.pe").first()
+        if not estudiante_e2e6:
+            estudiante_e2e6 = User(
+                email="estudiante.e2e6@upao.edu.pe",
+                hashed_password=get_password_hash("Student2026!"),
+                first_name="Estudiante",
+                last_name="E2E Seis",
+                role=UserRole.ESTUDIANTE,
+                institutional_code="202399994",
+                current_cycle=3,
+                is_active=True,
+            )
+            db.add(estudiante_e2e6)
+            print("[OK] Estudiante E2E 6 (sin historial): estudiante.e2e6@upao.edu.pe / Student2026!")
+
         db.commit()
 
         # ===== COMPETENCIAS INSTITUCIONALES UPAO =====
@@ -535,6 +648,28 @@ def seed():
                     )
                     db.add(enrollment)
 
+        # Estudiante E2E: solo IS301 (el curso de tesis), no toda la malla del
+        # ciclo 3 — este estudiante existe únicamente para validar el
+        # recorrido completo del Runtime, no para simular una carga real.
+        is301 = course_map.get("IS301")
+        for e2e_student in (estudiante_e2e, estudiante_e2e2, estudiante_e2e3, estudiante_e2e4, estudiante_e2e5, estudiante_e2e6):
+            if not is301 or not e2e_student:
+                continue
+            existing_enroll = (
+                db.query(Enrollment)
+                .filter(
+                    Enrollment.course_id == is301.id,
+                    Enrollment.student_id == e2e_student.id,
+                )
+                .first()
+            )
+            if not existing_enroll:
+                db.add(Enrollment(
+                    course_id=is301.id,
+                    student_id=e2e_student.id,
+                    status=EnrollmentStatus.ACTIVO,
+                ))
+
         db.commit()
 
         print(f"\n[OK] Seed institucional completado exitosamente")
@@ -548,6 +683,9 @@ def seed():
             count = sum(1 for c in course_map.values() if c.cycle == cycle)
             if count > 0:
                 print(f"  Ciclo {cycle}: {count} cursos")
+
+        # ===== ESCENARIO DE DEMOSTRACIÓN SWARM =====
+        seed_demo_swarm(db)
 
     except Exception as e:
         db.rollback()
@@ -707,6 +845,124 @@ def seed_institutional_courses(db):
 
     db.commit()
     print(f"[OK] {len(course_map)} cursos institucionales sembrados desde la malla ISIA 2025")
+
+
+def seed_demo_swarm(db: Session):
+    """Siembra el escenario de demostración end-to-end para el Swarm."""
+    from app.models.knowledge_test import KnowledgeTestQuestion
+    from app.core.security import get_password_hash
+    
+    # 1. Competencia base
+    comp = db.query(Competency).filter(Competency.name == "Desarrollo de Software").first()
+    if not comp:
+        comp = Competency(name="Desarrollo de Software", competency_type=CompetencyType.CAREER, active=True)
+        db.add(comp)
+        db.flush()
+
+    # 2. Curso SWA101
+    course = db.query(Course).filter(Course.code == "SWA101").first()
+    if not course:
+        course = Course(
+            code="SWA101",
+            name="Laboratorio de Inteligencia de Enjambre",
+            description="Curso especializado para validación del Runtime Multiagente UPAO MAS-EDU.",
+            cycle=10,
+            year=2026,
+            status=CourseStatus.PUBLICADO
+        )
+        db.add(course)
+        db.flush()
+        db.add(CourseCompetency(course_id=course.id, competency_id=comp.id))
+        db.flush()
+        print("[OK] Curso Demo Swarm: SWA101")
+    
+    # 3. Learning Objectives (Módulos)
+    objectives = [
+        {"title": "Agentes Autónomos", "desc": "Introducción a la arquitectura de agentes y LLMs.", "bloom": 2, "order": 1},
+        {"title": "Memoria y Consenso", "desc": "Mecanismos de memoria compartida y votación.", "bloom": 3, "order": 2},
+        {"title": "Adaptatividad Pedagógica", "desc": "Ajuste dinámico del flujo de aprendizaje.", "bloom": 4, "order": 3},
+        {"title": "Evaluación Multimodal", "desc": "Evaluación usando diferentes modalidades de contenido.", "bloom": 5, "order": 4}
+    ]
+    
+    existing_objs = db.query(LearningObjective).filter(LearningObjective.course_id == course.id).count()
+    if existing_objs == 0:
+        for obj in objectives:
+            db.add(LearningObjective(
+                course_id=course.id,
+                title=obj["title"],
+                description=obj["desc"],
+                bloom_level=obj["bloom"],
+                order=obj["order"]
+            ))
+        db.flush()
+
+    # 4. Student
+    demo_student = db.query(User).filter(User.email == "demo_swarm@upao.edu.pe").first()
+    if not demo_student:
+        demo_student = User(
+            email="demo_swarm@upao.edu.pe",
+            hashed_password=get_password_hash("Demo2026!"),
+            first_name="Estudiante",
+            last_name="Demostrador",
+            role=UserRole.ESTUDIANTE,
+            institutional_code="DEMO9999",
+            current_cycle=10,
+            is_active=True,
+        )
+        db.add(demo_student)
+        db.flush()
+        print("[OK] Estudiante Demo Swarm: demo_swarm@upao.edu.pe / Demo2026!")
+        
+    # 5. Enrollment
+    enroll = db.query(Enrollment).filter(Enrollment.course_id == course.id, Enrollment.student_id == demo_student.id).first()
+    if not enroll:
+        db.add(Enrollment(course_id=course.id, student_id=demo_student.id, status=EnrollmentStatus.ACTIVO))
+        db.flush()
+
+    # 6. Resources
+    existing_resources = db.query(Resource).filter(Resource.course_id == course.id).count()
+    if existing_resources == 0:
+        resources = [
+            (ResourceType.PDF, "arquitectura_agentes.pdf"),
+            (ResourceType.VIDEO, "video_consenso.mp4"),
+            (ResourceType.TEXT, "paper_adaptatividad.txt"),
+            (ResourceType.IMAGE, "diagrama_multimodal.png")
+        ]
+        for r_type, fname in resources:
+            db.add(Resource(
+                course_id=course.id,
+                filename=fname,
+                original_filename=fname,
+                file_path=f"/fake/path/{fname}",
+                mime_type="application/octet-stream",
+                size_bytes=1024,
+                resource_type=r_type
+            ))
+        db.flush()
+
+    # 7. Knowledge Test Questions para el Diagnóstico
+    existing_questions = db.query(KnowledgeTestQuestion).filter(KnowledgeTestQuestion.id.like(f"SWA101:%")).count()
+    if existing_questions == 0:
+        demo_questions = []
+        for m_idx in range(1, 5):
+            for q_idx in range(2):
+                q_id = f"SWA101:v1:comp_{m_idx}:o{q_idx}"
+                demo_questions.append(KnowledgeTestQuestion(
+                    id=q_id,
+                    course_code="SWA101",
+                    version=1,
+                    module_number=m_idx,
+                    topic=f"comp_{m_idx}_tema",
+                    difficulty="intermedio",
+                    bloom_level=m_idx + 1,
+                    order=q_idx,
+                    text=f"Pregunta de demostración para el módulo {m_idx} (Pregunta {q_idx + 1}). ¿Cuál es el concepto correcto?",
+                    options=["Opción incorrecta A", "Opción correcta B", "Opción incorrecta C", "Opción incorrecta D"],
+                    correct_index=1
+                ))
+        db.add_all(demo_questions)
+        db.flush()
+        print("[OK] Banco de preguntas de demostración inyectado.")
 
 
 if __name__ == "__main__":

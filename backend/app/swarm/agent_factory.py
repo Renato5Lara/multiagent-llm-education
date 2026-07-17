@@ -101,7 +101,7 @@ class AgentFactory:
     # ── New pedagogical orchestration agents ──────────────────────
 
     def create_research_agent(self):
-        from app.agents.research_agent import ResearchAgent
+        from app.services.research_agent import ResearchAgent
         return ResearchAgent(
             agent_name="research_agent",
             uow=self.uow,

@@ -137,3 +137,9 @@ outputs/pptx-audit/
 # ===== LOCAL TOOLING =====
 .claude/settings.local.json
 .codegraph/daemon.pid
+
+# ===== PAQUETE DE INVESTIGACIÓN (snapshot regenerable, no versionar) =====
+/research/
+
+# ===== REPORTES AUTOGENERADOS DE LA DEMO SWARM (regenerables, no versionar) =====
+backend/docs/bug_reports/

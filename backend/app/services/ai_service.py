@@ -2,15 +2,34 @@ import json
 import logging
 from typing import Optional
 
-from app.agents.prompts import (
+from app.services.llm_prompts import (
     DIAGNOSTIC_ANALYSIS_PROMPT,
     DIAGNOSTIC_SYSTEM_PROMPT,
-    TUTOR_CHAT_PROMPT,
     TUTOR_SYSTEM_PROMPT,
 )
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+# Contexto pedagógico decidido por el Runtime LangGraph (runtime_bridge.
+# contexto_pedagogico_tutor). El tutor REDACTA sobre estas decisiones;
+# jamás las toma: la modalidad, la profundidad, la ruta y la deuda las
+# decidió el runtime multiagente (RFC-0002: ninguna capacidad redacta
+# mensajes al estudiante; ninguna capa de plataforma decide adaptación).
+TUTOR_RUNTIME_PROMPT = """Contexto del estudiante, decidido por el sistema multiagente:
+- Curso: {course_name}
+- Módulo actual: {module_title}
+- Adaptación vigente: {adaptacion}
+- Señales de conducta detectadas en la sesión: {senales}
+- Ruta de aprendizaje actual: {ruta}
+- Deuda de aprendizaje abierta: {deuda}
+
+Usa este contexto para calibrar tu respuesta (modalidad, profundidad y
+tono), sin mencionarlo de forma literal ni técnica al estudiante.
+
+Pregunta del estudiante: {message}
+
+Responde en JSON: {{"respuesta": "tu respuesta aquí"}}"""
 
 
 class AIService:
@@ -94,28 +113,35 @@ class AIService:
             "confianza": 0.5,
         }
 
-    def generate_tutor_response(
+    def generate_tutor_response_desde_runtime(
         self,
         message: str,
         course_name: str,
-        module_title: str = "",
-        progress: int = 0,
-        learning_style: str = "visual",
-        bloom_level: int = 2,
-        course_code: str = "",
-        prerequisites: str = "",
+        module_title: str,
+        contexto: dict,
     ) -> str:
-        prompt = TUTOR_CHAT_PROMPT.format(
-            course_name=course_name,
-            course_code=course_code,
-            module_title=module_title or "Módulo actual",
-            progress=progress,
-            learning_style=learning_style,
-            bloom_level=bloom_level,
-            prerequisites=prerequisites,
+        """Redacta la respuesta del tutor sobre el contexto que el
+        Runtime ya decidió (`runtime_bridge.contexto_pedagogico_tutor`).
+        Con contexto vacío (estudiante sin evidencia todavía) el tutor
+        responde igual, declarando internamente que aún no hay
+        adaptación — un estado válido, no un error."""
+        diseno = contexto.get("diseno") or {}
+        adaptacion = (
+            f"{contexto.get('asunto')} → modalidad {diseno.get('modalidad', '?')}, "
+            f"profundidad {diseno.get('profundidad', '?')}"
+            if contexto.get("asunto")
+            else "sin evidencia todavía (aún no hay adaptación decidida)"
+        )
+        memoria = contexto.get("memoria") or {}
+        prompt = TUTOR_RUNTIME_PROMPT.format(
+            course_name=course_name or "Fundamentos de la Programación",
+            module_title=module_title or "no especificado",
+            adaptacion=adaptacion,
+            senales=", ".join(contexto.get("senales", ())) or "ninguna todavía",
+            ruta=memoria.get("ruta") or "inicio del curso",
+            deuda=", ".join(map(str, memoria.get("deuda_abierta", ()))) or "ninguna",
             message=message,
         )
-
         result = self._call_openai(TUTOR_SYSTEM_PROMPT, prompt, temperature=0.7)
         if result:
             try:

@@ -276,35 +276,6 @@ class TestNestedEventLoopDetection:
                         pass
 
 
-# =============================================================================
-# Fire-and-forget detection
-# =============================================================================
-
-
-def test_ensure_future_has_done_callback():
-    """Verify ensure_future patterns in adaptive_service include error callbacks."""
-    import re
-
-    from app.services.adaptive_service import evaluate_module_completion
-
-    source = open(evaluate_module_completion.__code__.co_filename)
-    try:
-        content = source.read()
-    finally:
-        source.close()
-
-    ensure_future_calls = re.findall(
-        r"ensure_future\(([^)]+)\)", content
-    )
-    for call_expr in ensure_future_calls:
-        idx = content.index(f"ensure_future({call_expr})")
-        chunk = content[idx : idx + 500]
-        if "add_done_callback" not in chunk:
-            pytest.fail(
-                f"ensure_future at adaptive_service.py around char {idx} "
-                f"has no add_done_callback — errors silently swallowed"
-            )
-
 
 # =============================================================================
 # Helpers

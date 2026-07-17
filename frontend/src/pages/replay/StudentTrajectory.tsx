@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { CheckCircle2, Circle, Lock, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Circle, Lock, Sparkles, ShieldCheck } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import PageHeader from '@/components/common/PageHeader'
+import { DeliberationEventList } from '@/components/observability/DeliberationEventList'
+import { ConceptCausalStory } from '@/components/observability/ConceptCausalStory'
 import { useUsers } from '@/hooks/useUsers'
 import { useStudentTrajectory } from '@/hooks/useEvidence'
+import { traducirTraza } from '@/hooks/useLiveDeliberation'
 import { MODALITY_LABELS } from '@/lib/constants'
 
 const MODULE_STATUS_ICON: Record<string, typeof CheckCircle2> = {
@@ -102,6 +105,76 @@ export default function StudentTrajectoryPage() {
                                     <Badge key={a} variant="outline">{a}</Badge>
                                 ))}
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                                Historia del aprendizaje por concepto
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {trajectory.concept_narratives.length === 0 ? (
+                                <p className="text-muted-foreground text-sm">Sin evidencia de conceptos registrada en el runtime todavía.</p>
+                            ) : (
+                                <div className="grid md:grid-cols-2 gap-3">
+                                    {[...trajectory.concept_narratives]
+                                        .sort((a, b) =>
+                                            (b.evidencia_observada.length + b.decision_runtime.length) -
+                                            (a.evidencia_observada.length + a.decision_runtime.length))
+                                        .map(n => <ConceptCausalStory key={n.concepto} narrative={n} />)}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Observabilidad Pedagógica se movió a su propia pestaña dentro del
+                        Panel Pedagógico (arquitectura de dashboards congelada, jul 2026) —
+                        AgentSeriesCharts se reutiliza ahí, nunca una segunda copia. */}
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                                <Sparkles className="h-4 w-4 text-primary" />
+                                Deliberación real del enjambre
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <DeliberationEventList eventos={traducirTraza(trajectory.runtime_trace)} />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader><CardTitle className="text-lg">Post-Test y ganancia de aprendizaje</CardTitle></CardHeader>
+                        <CardContent>
+                            {trajectory.outcome.pre_percentage === null ? (
+                                <p className="text-muted-foreground text-sm">Sin pre-test completado — no hay ganancia que calcular todavía.</p>
+                            ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Pre-Test</p>
+                                        <p className="font-medium">{trajectory.outcome.pre_percentage}% {trajectory.outcome.pre_level && `(${trajectory.outcome.pre_level})`}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Post-Test</p>
+                                        <p className="font-medium">
+                                            {trajectory.outcome.post_percentage !== null ? `${trajectory.outcome.post_percentage}% ${trajectory.outcome.post_level ? `(${trajectory.outcome.post_level})` : ''}` : 'Pendiente'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Incremento</p>
+                                        <p className="font-medium">
+                                            {trajectory.outcome.absolute_gain !== null ? `${trajectory.outcome.absolute_gain >= 0 ? '+' : ''}${trajectory.outcome.absolute_gain.toFixed(1)} pts` : '—'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Ganancia normalizada (g)</p>
+                                        <p className="font-medium">{trajectory.outcome.normalized_gain !== null ? trajectory.outcome.normalized_gain.toFixed(2) : '—'}</p>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

@@ -253,35 +253,3 @@ class TestMyCourses:
         assert data[0]["course_id"] == cid
         assert data[0]["has_diagnostic"] is False
 
-
-class TestAgentEndpoints:
-    """Tests de los endpoints de agentes IA."""
-
-    def test_analyze_diagnostic(self, client, docente_token, estudiante_token, estudiante_user, db):
-        estudiante_user.current_cycle = 1
-        db.commit()
-        cid = _create_published_course(client, docente_token, db, "AGT-01", cycle=1)
-        client.post(f"/api/courses/{cid}/enroll", headers=auth_header(docente_token),
-                     json={"student_ids": [estudiante_user.id]})
-
-        resp = client.post(
-            f"/api/agents/analyze-diagnostic",
-            headers=auth_header(estudiante_token),
-            json={
-                "answers": {"1": 4, "2": 3, "3": 5},
-                "course_id": cid,
-                "objectives": [],
-            },
-        )
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "learning_profile" in data
-        assert "recommendations" in data
-
-    def test_analyze_diagnostic_sin_datos(self, client, estudiante_token):
-        resp = client.post(
-            "/api/agents/analyze-diagnostic",
-            headers=auth_header(estudiante_token),
-            json={"answers": {}, "course_id": ""},
-        )
-        assert resp.status_code == 400

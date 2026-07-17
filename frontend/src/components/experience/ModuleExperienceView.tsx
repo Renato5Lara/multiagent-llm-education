@@ -1,21 +1,37 @@
 // Experiencia de Módulo — orquesta el patrón congelado (jul 2026):
 // apertura de curiosidad → ciclos [concepto multimodal → práctica universal →
 // feedback → momento de decisión] → cierre del incremento.
-// S1: mock-first — sin backend nuevo; la evidencia se registra localmente con
-// el mismo contrato que en S3/S4 consumirá el agente evaluador.
+// La evidencia se registra localmente (mapa de dominio, cursor) Y, desde el
+// refinamiento de evaluación continua, entra al Runtime real al cerrar cada
+// ciclo (ver advanceCycle) — el mismo contrato que ya usaba la Evaluación de
+// Módulo, solo que ahora también se dispara aquí.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ArrowLeft, BookOpen, CheckCircle2, Compass, FlaskConical, GraduationCap, LifeBuoy, Map, Route, TrendingUp,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
 import { ConceptStep } from './ConceptStep'
+import { ConceptPrimerCard } from './ConceptPrimerCard'
 import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
+import { PythonBridge } from './PythonBridge'
+import { CuriosityFactCard } from './CuriosityFactCard'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
+import { PredictOutputPractice } from './PredictOutputPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
+import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
+import { useLearningPath, useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
+import {
+  alternateModality, describeAdaptation, describeResourceFraming,
+  MODALITY_ORDER, orderingFallbackOf, resolveConceptForRender, resolvePractice,
+  resolveReinforcementPriority, selectReinforcement,
+} from '@/lib/experiences/experienceOrchestrator'
+import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
   Reinforcement, ReinforcementKind, RemediationLevel, RemediationStep,
@@ -26,46 +42,173 @@ import type { LearningModality } from '@/types/modality'
 // sobre AUTONOMY_HIGH el menú sugiere continuar.
 const AUTONOMY_LOW = 0.4
 
+/** Semilla de `mastery` para el PRIMER ciclo del módulo, a partir del mismo
+ *  `initialProfundidad` que ya siembra `profundidad` (Sprint "Coherencia del
+ *  estado interno", jul 2026 — corrige una contradicción, no es todavía
+ *  adaptación de contenido: ver Fase B). Antes, `mastery` arrancaba en el
+ *  mismo `priorMastery` fijo (0.2) para cualquier estudiante, sin importar
+ *  el pre-test — un estudiante "aplicacion" que necesitaba una pista en la
+ *  práctica principal caía por debajo de AUTONOMY_LOW exactamente igual que
+ *  uno "fundamentos", y el menú de decisión nunca sugería "ya dominas esto"
+ *  en el primer ciclo. Los valores no pretenden ser exactos — solo dejar de
+ *  ser el MISMO número para perfiles opuestos. */
+const MASTERY_SEED_APLICACION = 0.7
+const MASTERY_SEED_FUNDAMENTOS = 0.15
+
+// Último respaldo, tipo-seguro, para fallbackSolutionOf (Nivel 3 de la
+// escalera): en la práctica nunca se renderiza — todo ciclo con escalera
+// define practice en su peldaño de Nivel 2 — pero TypeScript exige un valor
+// total. Documentado aquí en vez de silenciado con un cast.
+const EMPTY_ORDERING_FALLBACK: OrderingPracticeDef = {
+  kind: 'ordering',
+  prompt: '',
+  items: [],
+  successFeedback: '',
+  orderFeedback: '',
+}
+
 type Phase =
   | 'opening'
   | 'reveal'
+  | 'curiosity'
   | 'concept'
   | 'practice'
   | 'decision'
+  | 'adapting'
   | 'reinforcement'
   | 'remediation'
   | 'slice_end'
 
+// Narración real (no agentes inventados, sin cifras de confianza fabricadas):
+// describe el mismo tramo Adaptar que ya corre en el backend mientras la
+// mutación de cycle-evidence está en vuelo. Si la respuesta llega rápido,
+// esta fase apenas se ve — si tarda, el tiempo de espera se siente como
+// parte del aprendizaje, no como una pantalla de carga vacía.
+const ADAPTING_STEPS = [
+  'Analizando cómo resolviste el reto',
+  'Detectando qué tanto dominas el concepto',
+  'Eligiendo la mejor forma de continuar',
+] as const
+
+/** Cuánto queda visible la frase de adaptación antes de transicionar — tiempo
+ *  de lectura, no una espera técnica (nunca bloquea: el "Continuar" ya quedó
+ *  atrás, el estudiante no necesita tocar nada para que esto avance). */
+const ADAPTATION_MESSAGE_MS = 1600
+
+/** Saludo al reanudar una sesión previa (auditoría de continuidad, jul 2026):
+ *  el sistema no solo restaura la pantalla, dice explícitamente que recuerda
+ *  al estudiante — mismo espíritu que describeAdaptation, nunca jerga técnica. */
+function describeWelcomeBack(cursor: Pick<ExperienceCursor, 'phase' | 'remediationLevel'>): string {
+  if (cursor.phase === 'remediation' || cursor.phase === 'reinforcement') {
+    return 'Bienvenido de nuevo. La última vez vimos que este concepto todavía necesitaba un poco más de práctica — continuemos justo desde ahí.'
+  }
+  return 'Bienvenido de nuevo. Continuemos justo donde lo dejaste.'
+}
+
+/** Cuánto queda visible el saludo de bienvenida antes de apagarse solo —
+ *  nunca bloquea ni exige un clic; es un tono, no un paso. */
+const WELCOME_BACK_MS = 5000
+
 // A1 — persistencia temporal del cursor en localStorage: reanuda tras recarga o
 // salida sin perder el avance. Provisional (S1); migrará a Misión Activa backend
-// en S3. Solo se persiste el estado reconstruible; las fases transitorias
-// (practice/decision/reinforcement) dependen de estado en memoria del paso, por
-// lo que al reanudar se vuelve al inicio del ciclo actual conservando el dominio.
-const RESUMABLE_PHASES: Phase[] = ['opening', 'reveal', 'concept', 'slice_end']
+// en S3. Persiste el ESTADO DE APRENDIZAJE completo, no solo la pantalla
+// (refinamiento de experiencia, jul 2026 — auditoría de continuidad: salir y
+// volver, o refrescar, obligaba a rehacer una práctica ya resuelta porque solo
+// se guardaba {phase, cycleIndex, mastery}). 'reinforcement' y 'remediation'
+// ahora SÍ reanudan directo: `activeReinforcementKind`/`remediationLevel` ya
+// alcanzan para reconstruir qué refuerzo o peldaño estaba activo (se busca de
+// nuevo en el propio contenido del ciclo, nunca se serializa el objeto).
+const RESUMABLE_PHASES: Phase[] = [
+  'opening', 'reveal', 'curiosity', 'concept', 'practice', 'decision', 'reinforcement', 'remediation', 'slice_end',
+]
 
 interface ExperienceCursor {
   phase: Phase
   cycleIndex: number
   mastery: Record<string, number>
+  practiceOutcome: PracticeOutcome | null
+  pythonOutcome: PracticeOutcome | null
+  pythonPracticeDone: boolean
+  remediationLevel: RemediationLevel
+  visitedReinforcements: ReinforcementKind[]
+  activeReinforcementKind: ReinforcementKind | null
+  autoReinforcement: boolean
+  /** Modalidad real recomendada por Adaptar (runtime_decision.diseno.modalidad)
+   *  cuando coincide con una de las 4 modalidades conocidas — antes se recibía
+   *  y se descartaba en silencio. `null` = sin recomendación aplicada todavía,
+   *  se usa la modalidad diagnosticada del estudiante. */
+  modalityOverride: LearningModality | null
+  /** Ciclos CONSECUTIVOS cerrados con andamiaje="reto" (fluidez real,
+   *  confirmada por Tutorizar con tiempo/ayudas — no solo un acierto
+   *  aislado). Nunca decidido por el Runtime: es progresión local pura
+   *  (RFC-0002 §3 no declara "racha" como señal del dominio) — se resetea
+   *  a 0 en cualquier ciclo que NO cierre con "reto". Gobierna cuántos
+   *  peldaños de la escalera de PythonBridge se saltan al entrar al
+   *  SIGUIENTE ciclo (ver `pythonSkipStages` más abajo) — nunca contenido
+   *  nuevo, solo un punto de entrada distinto en la misma progresión ya
+   *  autorada. */
+  fluencyStreak: number
+  /** Cuántas microexplicaciones de cycle.conceptPrimers ya se confirmaron en
+   *  ESTE ciclo (sprint "mejora pedagógica", jul 2026) — gobierna si toca
+   *  mostrar la siguiente tarjeta o ya se pasó a curiosityFact/concept. 0 en
+   *  un ciclo sin conceptPrimers nunca se consulta (comportamiento previo
+   *  exacto). Se reinicia junto con el resto del sub-estado del ciclo. */
+  primerIndex: number
 }
 
 const cursorKey = (moduleId: string) => `experience-cursor:${moduleId}`
+
+/** Fase de ENTRADA a un ciclo (sprint "UX ¿Sabías que...?", jul 2026): un
+ *  ciclo con curiosityFact abre con su propia pantalla ("¿Sabías que...?",
+ *  con fuente y Continuar); uno sin ella cae directo al contenido principal
+ *  — mismo comportamiento previo exacto para esos ciclos. */
+function firstPhaseFor(cycle: { curiosityFact?: unknown } | undefined): 'curiosity' | 'concept' {
+  return cycle?.curiosityFact ? 'curiosity' : 'concept'
+}
 
 function defaultMastery(definition: ModuleExperienceDefinition): Record<string, number> {
   return Object.fromEntries(definition.cycles.map(c => [c.conceptId, c.priorMastery]))
 }
 
-function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): ExperienceCursor {
+function emptyCursor(mastery: Record<string, number>): ExperienceCursor {
+  return {
+    phase: 'opening', cycleIndex: 0, mastery,
+    practiceOutcome: null, pythonOutcome: null, pythonPracticeDone: false,
+    remediationLevel: 0, visitedReinforcements: [], activeReinforcementKind: null,
+    autoReinforcement: false, modalityOverride: null, fluencyStreak: 0, primerIndex: 0,
+  }
+}
+
+/** `resumed` distingue "cursor real recuperado de una sesión anterior" de
+ *  "arranque en frío" — gobierna si se muestra el saludo de bienvenida de
+ *  regreso (nunca en la primera vez, solo cuando de verdad había algo que
+ *  recordar). */
+function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): ExperienceCursor & { resumed: boolean } {
   const base = defaultMastery(definition)
   try {
     const raw = localStorage.getItem(cursorKey(moduleId))
-    if (!raw) return { phase: 'opening', cycleIndex: 0, mastery: base }
+    if (!raw) return { ...emptyCursor(base), resumed: false }
     const saved = JSON.parse(raw) as Partial<ExperienceCursor>
     const cycleIndex = Math.min(Math.max(saved.cycleIndex ?? 0, 0), definition.cycles.length - 1)
     const phase = saved.phase && RESUMABLE_PHASES.includes(saved.phase) ? saved.phase : 'concept'
-    return { phase, cycleIndex, mastery: { ...base, ...(saved.mastery ?? {}) } }
+    return {
+      phase,
+      cycleIndex,
+      mastery: { ...base, ...(saved.mastery ?? {}) },
+      practiceOutcome: saved.practiceOutcome ?? null,
+      pythonOutcome: saved.pythonOutcome ?? null,
+      pythonPracticeDone: saved.pythonPracticeDone ?? false,
+      remediationLevel: (saved.remediationLevel as RemediationLevel | undefined) ?? 0,
+      visitedReinforcements: saved.visitedReinforcements ?? [],
+      activeReinforcementKind: saved.activeReinforcementKind ?? null,
+      autoReinforcement: saved.autoReinforcement ?? false,
+      modalityOverride: saved.modalityOverride ?? null,
+      fluencyStreak: saved.fluencyStreak ?? 0,
+      primerIndex: saved.primerIndex ?? 0,
+      resumed: phase !== 'opening',
+    }
   } catch {
-    return { phase: 'opening', cycleIndex: 0, mastery: base }
+    return { ...emptyCursor(base), resumed: false }
   }
 }
 
@@ -89,12 +232,26 @@ interface Props {
   definition: ModuleExperienceDefinition
   moduleId: string
   modality?: LearningModality
+  /** Requerido para la evaluación continua (registrar_evidencia_evaluacion
+   *  necesita course_id) — opcional solo para no romper llamadas previas al
+   *  refinamiento de experiencia; sin él, la evidencia sigue siendo local. */
+  courseId?: string
   /** Salida sin completar (botón "Salir" a media misión). */
   onExit: () => void
   /** Cierre de la misión — marca el módulo completado (reusa la lógica legacy).
    *  A2 — recibe el dominio agregado (0-1) derivado de la evidencia para que el
    *  mecanismo existente (ResearchMetric vía record_metric) lo registre. */
   onFinish?: (score?: number) => void
+  /** Profundidad que Adaptar ya decidió a partir del pre-test para el módulo
+   *  de este curso (misma cadena real Diagnosticar→Remediar/Orientar→Adaptar
+   *  de RFC-0002 §3 que decide entre ciclos — el pre-test registra evidencia
+   *  real desde el día uno, pero quedaba atada a la competencia del pre-test,
+   *  sin conectar nunca con el Ciclo 1 del módulo). Solo se siembra en el
+   *  PRIMER ciclo (cycleIndex === 0): del segundo en adelante ya existe
+   *  evidencia real de este módulo y el mecanismo de siempre (cycle-evidence
+   *  entre etapas) manda. `undefined` conserva el comportamiento previo
+   *  exacto (arranque siempre en "más apoyo", sin importar el pre-test). */
+  initialProfundidad?: string
 }
 
 /** A4 — Ganancia de dominio que refleja el aprendizaje REAL, no solo el acierto.
@@ -114,6 +271,12 @@ const MASTERY_TIME_PENALTY = 0.05
 const MASTERY_SLOW_MS = 90_000
 const MASTERY_FLOOR = 0.05
 
+/** Umbral de "dominado" — mismo valor que evaluatorVerdict ya usaba (avg >=
+ *  0.45) para decidir su tono, nombrado aquí para reutilizarlo también en el
+ *  checklist "Hoy dominaste" del cierre (sprint "continuidad del progreso",
+ *  jul 2026) sin repetir el número mágico en dos lugares. */
+const MASTERY_DOMINATED_THRESHOLD = 0.45
+
 /** Resolver con más andamiaje acredita menos dominio. El Nivel 3 (solución
  *  explicada) no acredita nada: el estudiante continúa, pero el perfil registra
  *  que el concepto sigue sin dominarse. */
@@ -132,18 +295,16 @@ function masteryGain(outcome: PracticeOutcome, level: RemediationLevel = 0): num
  *  resolver. Se aplica solo en el menú de decisión, nunca en la escalera. */
 const REINFORCEMENT_GAIN = 0.05
 
+/** Ganancia de la micropráctica de Python ("ahora hazlo tú") — mismo orden de
+ *  magnitud que un refuerzo voluntario: complementa la práctica principal,
+ *  nunca la sustituye. Cero si se reveló la solución. */
+const PYTHON_PRACTICE_GAIN = 0.05
+
 /** Intentos que la actividad concede antes de agotarse (espejo de
  *  MAX_ATTEMPTS_BEFORE_SOLUTION en OrderingPractice). Solo para la evidencia
  *  del Nivel 3, donde ya no hay actividad que los cuente. */
 const MAX_SUPPORT_ATTEMPTS = 3
 
-const MODALITY_ORDER: LearningModality[] = ['visual', 'reading', 'audio', 'kinesthetic']
-
-/** Otra representación del mismo concepto (Nivel 2): la primera modalidad
- *  disponible distinta a la del perfil del estudiante. */
-function alternateModality(current: LearningModality): LearningModality {
-  return MODALITY_ORDER.find(m => m !== current) ?? current
-}
 
 /** Clasificación del desenlace — vale más que una nota para el evaluador. */
 function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 'solucion_mostrada' {
@@ -151,27 +312,169 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
   return outcome.attempts <= 1 ? 'domino_solo' : 'con_pistas'
 }
 
-export function ModuleExperienceView({ definition, moduleId, modality, onExit, onFinish }: Props) {
-  const effectiveModality: LearningModality = modality ?? 'reading'
+export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish, initialProfundidad }: Props) {
+  const submitCycleEvidence = useSubmitCycleEvidence()
+  // Sprint "continuidad del progreso" (jul 2026): mismo hook y mismo endpoint
+  // que ya usan Dashboard.tsx y LearningPath.tsx para "X/Y misiones
+  // completadas" — reutilizado aquí, no reinventado, para que el cierre de un
+  // ciclo pueda mostrar el progreso acumulado del CURSO, no solo el de este
+  // módulo. React Query ya cachea esta consulta por courseId: si el
+  // estudiante vino de /estudiante/path, este fetch normalmente resuelve
+  // desde caché sin una llamada de red nueva. `courseId` ausente (demo local
+  // sin evaluación continua) deja el hook deshabilitado — el panel de
+  // progreso acumulado simplemente no se muestra, nunca bloquea el cierre.
+  const learningPath = useLearningPath(courseId)
 
-  // A1 — rehidratar el cursor persistido una sola vez al montar.
-  const [initialCursor] = useState<ExperienceCursor>(() => loadCursor(moduleId, definition))
+  // A1 — rehidratar el cursor persistido una sola vez al montar. Ya no es solo
+  // la pantalla: todo el sub-estado pedagógico se restaura junto con ella
+  // (auditoría de continuidad, jul 2026) para que reanudar nunca obligue a
+  // rehacer una práctica ya resuelta.
+  const [initialCursor] = useState(() => loadCursor(moduleId, definition))
   const [phase, setPhase] = useState<Phase>(initialCursor.phase)
   const [cycleIndex, setCycleIndex] = useState(initialCursor.cycleIndex)
   const [mastery, setMastery] = useState<Record<string, number>>(initialCursor.mastery)
-  const [activeReinforcement, setActiveReinforcement] = useState<Reinforcement | null>(null)
+  const [activeReinforcement, setActiveReinforcement] = useState<Reinforcement | null>(() => {
+    if (!initialCursor.activeReinforcementKind) return null
+    const savedCycle = definition.cycles[initialCursor.cycleIndex]
+    return savedCycle?.decision?.reinforcements.find(r => r.kind === initialCursor.activeReinforcementKind) ?? null
+  })
+  // Multimodalidad real: recurso REAL del repositorio del curso para la
+  // modalidad recomendada, consultado justo antes de entrar a 'reinforcement'
+  // — null casi siempre hoy (repositorio vacío para IS301), nunca persistido
+  // en el cursor porque es un intento de red, no estado de progreso.
+  const [externalResource, setExternalResource] = useState<CourseResource | null>(null)
   // PED-005 — refuerzos ya explorados en el ciclo actual: al terminar uno se
   // vuelve al menú (elegir nunca es un callejón) y el dominio del refuerzo se
   // acredita solo la primera vez por tipo.
-  const [visitedReinforcements, setVisitedReinforcements] = useState<Set<ReinforcementKind>>(new Set())
+  const [visitedReinforcements, setVisitedReinforcements] = useState<Set<ReinforcementKind>>(
+    () => new Set(initialCursor.visitedReinforcements),
+  )
   // Peldaño activo de la escalera. 0 = actividad principal (sin remediación).
-  const [remediationLevel, setRemediationLevel] = useState<RemediationLevel>(0)
+  const [remediationLevel, setRemediationLevel] = useState<RemediationLevel>(initialCursor.remediationLevel)
+  // Profundidad VIGENTE de la misión (jul 2026, Sprint "Adaptación desde el
+  // primer segundo"): antes solo se leía dentro del closure de advanceCycle
+  // para el mensaje de transición y se descartaba — el siguiente ciclo
+  // siempre arrancaba en el valor por defecto, sin importar la decisión real
+  // del ciclo anterior. Ahora se persiste: nace de `initialProfundidad`
+  // (pre-test, primer ciclo) y cada cycle-evidence real la actualiza — la
+  // MISMA fuente de verdad que ya gobierna el refuerzo automático y el
+  // mensaje de adaptación, ahora también gobierna la teoría del ciclo
+  // siguiente (resolveConceptForRender) y la micropráctica de Python
+  // (PythonBridge.initialProfundidad). Ningún concepto nuevo, ninguna
+  // llamada nueva al Runtime.
+  const [profundidad, setProfundidad] = useState<string | undefined>(initialProfundidad)
+  // `initialProfundidad` depende de useKnowledgeTestResult/useLearningPath
+  // (React Query, asíncronas): en el primer render del padre casi siempre
+  // llegan como `undefined` porque la consulta todavía no resuelve, y el
+  // inicializador de useState solo se evalúa una vez al montar — sin este
+  // efecto, la profundidad sembrada por el pre-test nunca llega a aplicarse
+  // cuando la carga es más lenta que el montaje. `cycleEvidenceAppliedRef`
+  // evita que esta siembra tardía pise una decisión real ya recibida de
+  // cycle-evidence (esa es siempre la fuente de verdad más reciente).
+  const cycleEvidenceAppliedRef = useRef(false)
+  useEffect(() => {
+    if (cycleEvidenceAppliedRef.current) return
+    if (initialProfundidad === undefined) return
+    setProfundidad(initialProfundidad)
+    // Misma siembra tardía, ahora también para `mastery` — antes esta
+    // variable nunca se enteraba del pre-test y arrancaba en el mismo
+    // priorMastery fijo para cualquier estudiante (ver MASTERY_SEED_* más
+    // arriba). Solo toca el conceptId del PRIMER ciclo, y solo si `mastery`
+    // sigue en su valor de arranque intacto — si el estudiante ya generó
+    // progreso real en este ciclo (Python, refuerzo) antes de que esta
+    // siembra tardía llegara, ese progreso real nunca se pisa.
+    const firstCycle = definition.cycles[0]
+    if (firstCycle) {
+      const seeded = initialProfundidad === 'aplicacion' ? MASTERY_SEED_APLICACION
+        : initialProfundidad === 'fundamentos' ? MASTERY_SEED_FUNDAMENTOS
+          : firstCycle.priorMastery
+      setMastery(prev => (
+        prev[firstCycle.conceptId] === firstCycle.priorMastery
+          ? { ...prev, [firstCycle.conceptId]: seeded }
+          : prev
+      ))
+    }
+  }, [initialProfundidad, definition.cycles])
   // Desenlace de la práctica del ciclo actual — habilita Continuar SIEMPRE
   // (nunca-bloquear), incluso cuando se mostró la solución.
-  const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(null)
+  const [practiceOutcome, setPracticeOutcome] = useState<PracticeOutcome | null>(initialCursor.practiceOutcome)
+  // La UI obedece al Runtime (no solo lo notifica): cuando `profundidad`
+  // devuelta por cycle-evidence es "fundamentos", se inserta automáticamente
+  // un refuerzo del propio ciclo (mismo mecanismo que el menú de decisión, sin
+  // agente ni fase nueva) antes de continuar. Esta bandera distingue ese
+  // origen del refuerzo elegido voluntariamente, para que al terminar continúe
+  // el ciclo en vez de volver al menú.
+  const [autoReinforcement, setAutoReinforcement] = useState(initialCursor.autoReinforcement)
+  // Pilar 2 — Adaptar ya recomienda una modalidad real (runtime_decision.
+  // diseno.modalidad) en cada cycle-evidence; antes se recibía y se
+  // descartaba. Cuando coincide con una de las 4 modalidades conocidas
+  // (MODALITY_ORDER), reemplaza a la diagnosticada para el resto de la
+  // misión — null mantiene el comportamiento previo exacto.
+  const [modalityOverride, setModalityOverride] = useState<LearningModality | null>(initialCursor.modalityOverride)
+  const effectiveModality: LearningModality = modalityOverride ?? modality ?? 'reading'
+  // Progresión natural para fluidez sostenida (ver doc de ExperienceCursor.
+  // fluencyStreak): cuántos ciclos SEGUIDOS acaban de cerrar con
+  // andamiaje="reto". Solo cuenta racha real y reciente — un solo ciclo
+  // fluido no basta ("durante varios ciclos"), y cualquier ciclo que NO
+  // cierre en "reto" la corta a 0.
+  const [fluencyStreak, setFluencyStreak] = useState(initialCursor.fluencyStreak)
+  // Microexplicaciones pendientes del ciclo actual (sprint "mejora
+  // pedagógica"): cuántas de cycle.conceptPrimers ya se confirmaron. Un
+  // ciclo sin conceptPrimers nunca la consulta (comportamiento previo
+  // intacto). Se resetea a 0 en commitAdvance, igual que el resto del
+  // sub-estado por ciclo.
+  const [primerIndex, setPrimerIndex] = useState(initialCursor.primerIndex)
+  // Progresión gradual, no un salto: 1 ciclo fluido no altera nada (0
+  // peldaños saltados); recién a partir de DOS ciclos seguidos se salta el
+  // peldaño "observar" (el más trivial: solo mirar el código correr);
+  // cuatro o más salta también "manipular". Tope en 2 — nunca aterriza
+  // directo en los peldaños de escritura libre, que ya tienen su propio
+  // criterio (`shouldStartBlank`, ligado a `profundidad`, no a la racha).
+  const pythonSkipStages = fluencyStreak >= 4 ? 2 : fluencyStreak >= 2 ? 1 : 0
+  // "Ahora hazlo tú" (PythonBridge.practice): si el puente del ciclo trae una
+  // micropráctica interactiva, Continuar espera a que quede resuelta o con
+  // solución mostrada — igual que el refuerzo del menú, nunca bloquea después
+  // de eso. Sin `practice` en el puente, este estado nunca se consulta.
+  const [pythonPracticeDone, setPythonPracticeDone] = useState(initialCursor.pythonPracticeDone)
+  // Evidencia de la micropráctica de Python — se combina con practiceOutcome
+  // en advanceCycle para que el Runtime vea el ciclo completo (ordenamiento +
+  // Python), no solo la mitad. null mientras no se haya resuelto ni agotado.
+  const [pythonOutcome, setPythonOutcome] = useState<PracticeOutcome | null>(initialCursor.pythonOutcome)
+  // Frase conversacional de la adaptación (describeAdaptation) — visible
+  // durante la fase 'adapting' una vez que la decisión real ya llegó, justo
+  // antes de transicionar. null mientras se espera la respuesta del Runtime.
+  const [adaptationMessage, setAdaptationMessage] = useState<string | null>(null)
+  // Timeout de la pausa de lectura tras mostrar adaptationMessage — se limpia
+  // al desmontar para no tocar estado de un componente ya fuera de pantalla
+  // (p. ej. el estudiante presiona "Salir" durante esa pausa).
+  const adaptationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {
+    if (adaptationTimeoutRef.current) clearTimeout(adaptationTimeoutRef.current)
+  }, [])
+  // Saludo de bienvenida al reanudar (describeWelcomeBack) — solo cuando el
+  // cursor cargado venía de verdad de una sesión anterior (`resumed`), nunca
+  // en el arranque en frío. Se apaga solo (WELCOME_BACK_MS) o al primer gesto
+  // del estudiante (cualquier cambio de fase), lo que ocurra primero.
+  const [welcomeBackMessage, setWelcomeBackMessage] = useState<string | null>(
+    () => (initialCursor.resumed ? describeWelcomeBack(initialCursor) : null),
+  )
+  const welcomeBackPhaseRef = useRef(initialCursor.phase)
+  useEffect(() => {
+    if (!welcomeBackMessage) return
+    if (phase !== welcomeBackPhaseRef.current) {
+      setWelcomeBackMessage(null)
+      return
+    }
+    const timeout = setTimeout(() => setWelcomeBackMessage(null), WELCOME_BACK_MS)
+    return () => clearTimeout(timeout)
+  }, [phase, welcomeBackMessage])
 
   const cycle = definition.cycles[cycleIndex]
   const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
+  // Multimodalidad profunda: la mecánica de la práctica principal, no solo
+  // el refuerzo, puede variar por modalidad — resuelta una vez por render,
+  // reutilizada en los handlers y en el propio render de la fase 'practice'.
+  const resolvedPractice = cycle ? resolvePractice(cycle, effectiveModality) : undefined
 
   // LEARN-002 — recuperar la hipótesis registrada en la apertura para
   // devolverle su veredicto en el cierre. Se lee solo al llegar al cierre.
@@ -189,24 +492,41 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
       ? definition.closing.hypothesis.verdicts[openingAnswer.option] ?? null
       : null
 
+  // Sprint "continuidad del progreso" (jul 2026): UNA sola derivación de
+  // mastery/priorMastery para todo el cierre — evaluatorVerdict ya calculaba
+  // `avg` (dominio actual promedio) en su propio useMemo; el checklist "Hoy
+  // dominaste" y la frase "tu dominio aumentó" necesitan esa MISMA cifra más
+  // el punto de partida (priorMastery, ya definido por cada LearningCycle
+  // desde S1 — nunca un dato nuevo). Calculada una vez, consumida en los dos
+  // lugares — nunca recomputada ni duplicada.
+  const moduleMasterySummary = useMemo(() => {
+    const avgBefore = definition.cycles.length
+      ? definition.cycles.reduce((sum, c) => sum + c.priorMastery, 0) / definition.cycles.length
+      : 0
+    const avgAfter = definition.cycles.length
+      ? definition.cycles.reduce((sum, c) => sum + (mastery[c.conceptId] ?? 0), 0) / definition.cycles.length
+      : 0
+    const masteredCycles = definition.cycles.filter(c => (mastery[c.conceptId] ?? 0) >= MASTERY_DOMINATED_THRESHOLD)
+    return { avgBefore, avgAfter, masteredCycles }
+  }, [definition.cycles, mastery])
+
   // BUG-002 (C-51) — el cierre lo pronuncia el Agente Evaluador con la
   // evidencia real observada (dominio + remediación), no una pantalla anónima.
   // Decide el TONO, nunca el paso: continuar siempre es posible (PED-06).
   const evaluatorVerdict = useMemo(() => {
     if (phase !== 'slice_end') return null
-    const values = definition.cycles.map(c => mastery[c.conceptId] ?? 0)
-    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
+    const avg = moduleMasterySummary.avgAfter
     const maxRemediation = readEvidence(moduleId)
       .filter(e => e.type === 'remediation_level')
       .reduce((max, e) => Math.max(max, Number(e.detail.level) || 0), 0)
-    if (avg >= 0.45 && maxRemediation === 0) {
+    if (avg >= MASTERY_DOMINATED_THRESHOLD && maxRemediation === 0) {
       return 'Observé tus prácticas: construiste este concepto por tu cuenta, sin necesitar apoyo. Este territorio es tuyo — podemos continuar.'
     }
     if (avg >= 0.3) {
       return 'Observé tus prácticas: lo resolviste con algo de apoyo. Es suficiente para avanzar — llevo anotado qué reforzar contigo más adelante.'
     }
     return 'Observé tus prácticas: este concepto todavía se está construyendo, y necesitaste mi ayuda máxima. Puedes continuar — lo dejé registrado para volver sobre él contigo.'
-  }, [definition.cycles, mastery, moduleId, phase])
+  }, [moduleMasterySummary, moduleId, phase])
 
   const bumpMastery = useCallback((conceptId: string, delta: number) => {
     setMastery(prev => ({
@@ -215,10 +535,26 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     }))
   }, [])
 
-  // A1 — persistir el cursor en cada cambio de fase/ciclo/dominio.
+  // A1 — persistir el cursor en cada cambio de sub-estado pedagógico, no solo
+  // de pantalla — es lo que permite reanudar (P1 de la auditoría de
+  // continuidad) sin rehacer una práctica ya resuelta.
   useEffect(() => {
-    saveCursor(moduleId, { phase, cycleIndex, mastery })
-  }, [moduleId, phase, cycleIndex, mastery])
+    saveCursor(moduleId, {
+      phase, cycleIndex, mastery,
+      practiceOutcome, pythonOutcome, pythonPracticeDone,
+      remediationLevel,
+      visitedReinforcements: Array.from(visitedReinforcements),
+      activeReinforcementKind: activeReinforcement?.kind ?? null,
+      autoReinforcement,
+      modalityOverride,
+      fluencyStreak,
+      primerIndex,
+    })
+  }, [
+    moduleId, phase, cycleIndex, mastery, practiceOutcome, pythonOutcome, pythonPracticeDone,
+    remediationLevel, visitedReinforcements, activeReinforcement, autoReinforcement, modalityOverride,
+    fluencyStreak, primerIndex,
+  ])
 
   // Cierre de la misión: se borra el cursor (el repaso posterior parte limpio)
   // y se marca el módulo completado vía la lógica legacy. "Salir" a media misión
@@ -238,6 +574,28 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     }
   }, [moduleId, definition, mastery, onFinish, onExit])
 
+  // Limpia TODO el estado del ciclo completado y avanza al siguiente (o al
+  // cierre). Separado de `advanceCycle` para que insertar un refuerzo
+  // automático (decisión del Runtime) pueda posponer este commit sin
+  // duplicar la lógica de transición.
+  const commitAdvance = useCallback(() => {
+    setActiveReinforcement(null)
+    setVisitedReinforcements(new Set())
+    setRemediationLevel(0)
+    setPracticeOutcome(null)   // ← crítico: reset entre ciclos
+    setAutoReinforcement(false)
+    setPythonPracticeDone(false)
+    setPythonOutcome(null)
+    setAdaptationMessage(null)
+    setPrimerIndex(0)
+    if (cycleIndex + 1 < definition.cycles.length) {
+      setCycleIndex(i => i + 1)
+      setPhase(firstPhaseFor(definition.cycles[cycleIndex + 1]))
+    } else {
+      setPhase('slice_end')
+    }
+  }, [cycleIndex, definition.cycles])
+
   /** @param pendingGain ganancia que el llamador acaba de aplicar con bumpMastery.
    *  El estado `mastery` de este closure es el ANTERIOR al bump (React agrupa las
    *  actualizaciones), así que sin sumarla aquí el evento `cycle_completed`
@@ -251,20 +609,172 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
       conceptId: cycle.conceptId,
       detail: { cycleId: cycle.id, mastery: Math.round(finalMastery * 100) / 100 },
     })
-    // Limpia TODO el estado del ciclo completado antes de avanzar.
-    // Sin esto, practiceOutcome del ciclo anterior puede hacer que el
-    // botón "Continuar" aparezca instantáneamente al montar el siguiente ciclo.
-    setActiveReinforcement(null)
-    setVisitedReinforcements(new Set())
-    setRemediationLevel(0)
-    setPracticeOutcome(null)   // ← crítico: reset entre ciclos
-    if (cycleIndex + 1 < definition.cycles.length) {
-      setCycleIndex(i => i + 1)
-      setPhase('concept')
-    } else {
-      setPhase('slice_end')
+    if (!courseId) {
+      commitAdvance()
+      return
     }
-  }, [cycle, cycleIndex, definition.cycles.length, mastery, moduleId])
+    // Evaluación continua (refinamiento de experiencia, jul 2026): el cierre
+    // de CADA ciclo entra al Runtime real, no solo al mapa de dominio local
+    // — mismo contrato que ya usa la Evaluación de Módulo
+    // (registrar_evidencia_evaluacion), traducción fiel de intentos a items
+    // (igual que _registrar_diagnostico_en_runtime con el Likert). Haber
+    // necesitado la escalera de remediación (remediationLevel > 0) cuenta
+    // como la práctica agotada sin ayuda — el crédito reducido que ya
+    // reconoce LEVEL_GAIN_FACTOR localmente es la misma señal que el
+    // Runtime necesita ver como "no dominada".
+    //
+    // La UI ahora OBEDECE la decisión, no solo la notifica: la fase
+    // 'adapting' espera la respuesta real (nunca bloquea de forma
+    // permanente — un error también resuelve el avance). Si `profundidad`
+    // es "fundamentos" (mismo vocabulario que ya usan bloom_target_desde_
+    // entrega/decision_adaptativa en el backend), se inserta un refuerzo
+    // del propio ciclo antes de continuar — reutiliza el mecanismo de
+    // refuerzos ya existente (PED-005), nunca uno nuevo.
+    //
+    // Cierre del bucle observar→adaptar: si el puente del ciclo trae una
+    // micropráctica de Python, su evidencia (pythonOutcome) se COMBINA con la
+    // de la práctica de ordenamiento antes de enviarla — el Runtime debe ver
+    // el ciclo completo, no solo la mitad. Necesitar la solución en cualquiera
+    // de las dos cuenta como "no dominada", igual que la escalera de
+    // remediación ya hace con la suya.
+    const pythonRequired = !!cycle.pythonBridge?.practice
+    const orderingSolved = !!practiceOutcome && !practiceOutcome.solutionShown
+    const pythonSolved = !pythonRequired || (!!pythonOutcome && !pythonOutcome.solutionShown)
+    const solved = remediationLevel === 0 && orderingSolved && pythonSolved
+    const orderingAttempts = remediationLevel > 0 ? MAX_SUPPORT_ATTEMPTS : (practiceOutcome?.attempts ?? 1)
+    const attempts = orderingAttempts + (pythonOutcome?.attempts ?? 0)
+    const timeMs = (practiceOutcome?.timeMs ?? 0) + (pythonOutcome?.timeMs ?? 0)
+    setPhase('adapting')
+    submitCycleEvidence.mutate(
+      { courseId, competencia: cycle.conceptId, attempts, solved, hintsUsed: remediationLevel, timeMs },
+      {
+        onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+          const diseno = data?.runtime_decision?.diseno
+          const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
+          // Persiste para el SIGUIENTE ciclo (teoría + micropráctica de
+          // Python) — antes solo vivía en este closure para el mensaje de
+          // transición y se perdía al desmontar.
+          setProfundidad(profundidad)
+          cycleEvidenceAppliedRef.current = true
+          // Adaptar también recomienda una modalidad real
+          // (runtime/domain/adaptar/productor.py: DISENO_POR_ACCION) — antes
+          // se recibía y se descartaba igual que profundidad. Solo se honra
+          // cuando coincide con una de las 4 modalidades conocidas (hoy,
+          // "visual" en el caso "reforzar"; "mixta" y el resto de
+          // alternativas_descartadas no tienen equivalente y se ignoran a
+          // propósito, nunca se inventa una traducción).
+          const modalidadRecomendada = diseno?.modalidad ? String(diseno.modalidad) : undefined
+          // `andamiaje` (RFC-0002 §3, R3 — cuarta dimensión declarada desde
+          // el inicio, sin implementar hasta este sprint): Adaptar ya
+          // gobierna QUÉ intervención concreta corresponde a la señal de
+          // sesión, no solo su explicabilidad — el frontend renderiza la
+          // decisión, no la vuelve a tomar. `alternar-modalidad` reutiliza
+          // EXACTAMENTE el mismo mecanismo que ya usa la escalera de
+          // remediación local (`alternateModality`/`conceptModality:
+          // 'alternate'`, más abajo en este archivo), ahora informado por
+          // la señal real del Runtime en vez de solo el conteo de intentos.
+          const andamiaje = diseno?.andamiaje ? String(diseno.andamiaje) : undefined
+          // Racha de fluidez (ver ExperienceCursor.fluencyStreak): SOLO
+          // cuenta cuando ESTE ciclo cerró con "reto" — cualquier otro
+          // desenlace (confusión, frustración, o ningún andamiaje) la
+          // corta a 0. Progresión local pura, nunca decidida por el
+          // Runtime — gobierna cuántos peldaños de PythonBridge se saltan
+          // en el PRÓXIMO ciclo (más abajo, junto al render).
+          setFluencyStreak(prev => andamiaje === 'reto' ? prev + 1 : 0)
+          const modalidadHonrada =
+            andamiaje === 'alternar-modalidad'
+              ? alternateModality(effectiveModality)
+              : modalidadRecomendada && MODALITY_ORDER.includes(modalidadRecomendada as LearningModality)
+                ? (modalidadRecomendada as LearningModality)
+                : undefined
+          if (modalidadHonrada) setModalityOverride(modalidadHonrada)
+          // Adaptación multimodal real (no solo cantidad de ayuda): el
+          // refuerzo automático se elige según DOS señales reales — qué
+          // necesita el estudiante (profundidad: reforzar/desafiar) y cómo
+          // aprende mejor (modalidad: la recién recomendada por Adaptar, o
+          // si no hubo ninguna esta vez, la ya diagnosticada). "aplicacion"
+          // es la propuesta REAL de Orientar cuando Diagnosticar marcó el
+          // concepto como dominado (runtime/domain/orientar/productor.py) —
+          // antes se descartaba en silencio; "fundamentos" es Remediar.
+          // Mismo mecanismo de auto-refuerzo ya existente, ningún concepto
+          // nuevo en el Runtime ni recurso inventado en el frontend.
+          const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
+          const basePriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
+          // "ejemplo" (señal de confusión): el objetivo es cambiar la
+          // REPRESENTACIÓN del concepto, no solo repetirlo con otras
+          // palabras — pero el propio kind "ejemplo" (ver los 4 ciclos
+          // autorados) nunca trae `sceneId` ni `narrationText`, solo
+          // `body` (texto plano); es el ÚNICO kind que garantiza la misma
+          // representación de siempre, sin importar la modalidad. Antes
+          // esta línea lo forzaba justo a él al frente de la prioridad —
+          // el peor caso posible para confusión. Ahora se le resta
+          // prioridad (va al final): "animacion" (AnimatedScene,
+          // sceneId ya autorado) y "audio" (AudioNarration, narrationText
+          // ya autorado) — ambos con representación real distinta al
+          // texto — pasan primero, reutilizando exactamente lo que cada
+          // ciclo ya trae.
+          const reinforcementPriority = andamiaje === 'ejemplo'
+            ? ([...basePriority.filter(k => k !== 'ejemplo'), 'ejemplo'] as typeof basePriority)
+            : basePriority
+          const preferChallenge = profundidad === 'aplicacion'
+          // "reto" (señal de fluidez, ya confirmada por Tutorizar con
+          // tiempo/ayudas reales): los 4 ciclos autorados YA traen un
+          // Reinforcement kind="reto" con su propia práctica real
+          // (ordering/predict_output) — una oportunidad de aprendizaje
+          // genuina, no una repetición. El sprint anterior lo descartaba
+          // siempre (reinforcement = undefined) para evitar el bug real
+          // de caer a un refuerzo fácil cuando el ciclo no traía "reto" —
+          // pero de paso también descartaba el "reto" cuando SÍ existía.
+          // Ahora: si el ciclo trae un "reto" real, se muestra (avanza
+          // rápido → desafío mayor, en vez de solo avanzar); si no lo
+          // trae, sigue sin ofrecer nada — nunca cae a un tipo distinto.
+          const retoDisponible = andamiaje === 'reto'
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, ['reto'])
+            : undefined
+          const reinforcement = andamiaje === 'reto'
+            ? retoDisponible?.kind === 'reto' ? retoDisponible : undefined
+            : profundidad === 'fundamentos' || profundidad === 'aplicacion'
+              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, preferChallenge, reinforcementPriority)
+              : undefined
+          // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
+          // modalidad) — se muestra dentro de la propia fase 'adapting', una
+          // pausa de lectura breve antes de transicionar, nunca un toast aparte.
+          // Sprint "coherencia adaptativa" (jul 2026): `andamiaje` ya se
+          // computó arriba para decidir `reinforcement` mismo — antes se
+          // descartaba al llegar aquí, así que describeAdaptation nunca
+          // sabía POR QUÉ había un reinforcement que mostrar y asumía
+          // "dificultad" por defecto. Pasarlo es lo que le permite decir
+          // "ya dominas esto" cuando `andamiaje === 'reto'`, en vez de
+          // contradecir el "sugerido — ya dominas esto" que el estudiante
+          // acaba de ver en el menú de decisión.
+          setAdaptationMessage(describeAdaptation(
+            profundidad, reinforcement, cycle.conceptLabel,
+            definition.cycles[cycleIndex + 1]?.conceptLabel,
+            andamiaje,
+          ))
+          // Multimodalidad real: antes de mostrar el refuerzo ya autorado,
+          // se consulta si el repositorio del curso tiene un recurso real
+          // para la modalidad recomendada — best-effort, nunca bloquea la
+          // transición (setExternalResource llega después si acaso).
+          setExternalResource(null)
+          const resourceType = resourceTypeForModality(modalidadParaRefuerzo)
+          if (reinforcement && resourceType) {
+            fetchCourseResource(courseId, resourceType).then(setExternalResource)
+          }
+          adaptationTimeoutRef.current = setTimeout(() => {
+            if (reinforcement) {
+              setAutoReinforcement(true)
+              setActiveReinforcement(reinforcement)
+              setPhase('reinforcement')
+            } else {
+              commitAdvance()
+            }
+          }, ADAPTATION_MESSAGE_MS)
+        },
+        onError: () => commitAdvance(),
+      },
+    )
+  }, [commitAdvance, courseId, cycle, cycleIndex, definition, mastery, moduleId, practiceOutcome, pythonOutcome, remediationLevel, submitCycleEvidence, visitedReinforcements])
 
 
   // ── Handlers por fase ────────────────────────────────────────────────────────
@@ -286,14 +796,24 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
   }, [cycle, effectiveModality, moduleId])
 
   const handlePracticeAttempt = useCallback(({ attempt, status }: { attempt: number; status: string }) => {
-    if (!cycle) return
+    if (!cycle || !resolvedPractice) return
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
       conceptId: cycle.conceptId,
-      detail: { practice: cycle.practice.kind, attempt, status, correct: status === 'correct' },
+      detail: { practice: resolvedPractice.kind, attempt, status, correct: status === 'correct' },
     })
-  }, [cycle, moduleId])
+  }, [cycle, moduleId, resolvedPractice])
+
+  const handlePredictOutputAttempt = useCallback(({ attempt, correct }: { attempt: number; correct: boolean }) => {
+    if (!cycle || !resolvedPractice) return
+    recordEvidence({
+      type: 'practice_attempt',
+      moduleId,
+      conceptId: cycle.conceptId,
+      detail: { practice: resolvedPractice.kind, attempt, correct },
+    })
+  }, [cycle, moduleId, resolvedPractice])
 
   /** Evidencia para el agente evaluador — contrato RemediationEvidence.
    *  Se emite en CADA peldaño, se resuelva o se agote. */
@@ -332,13 +852,13 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
   }, [advanceCycle, cycle])
 
   const handlePracticeFinished = useCallback((outcome: PracticeOutcome) => {
-    if (!cycle) return
+    if (!cycle || !resolvedPractice) return
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
       conceptId: cycle.conceptId,
       detail: {
-        practice: cycle.practice.kind,
+        practice: resolvedPractice.kind,
         attempts: outcome.attempts,
         timeMs: outcome.timeMs,
         solutionShown: outcome.solutionShown,
@@ -348,7 +868,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     })
     bumpMastery(cycle.conceptId, masteryGain(outcome, 0))
     setPracticeOutcome(outcome)
-  }, [bumpMastery, cycle, moduleId])
+  }, [bumpMastery, cycle, moduleId, resolvedPractice])
 
   /** Nivel 0 agotado: no se revela la solución — escala al Nivel 1. */
   const handlePracticeExhausted = useCallback((outcome: PracticeOutcome) => {
@@ -363,6 +883,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
       advanceCycle()
       return
     }
+    // Ya pasó por la escalera en este ciclo: no se remedia dos veces — va
+    // directo al menú de consolidación, igual que cualquier otro cierre.
+    if (remediationLevel > 0) {
+      setPhase('decision')
+      return
+    }
     const current = mastery[cycle.conceptId] ?? 0
     const needsSupport = current < AUTONOMY_LOW
     // Resolvió, pero el dominio no alcanza la baranda: se refuerza antes de
@@ -373,7 +899,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     } else {
       setPhase('decision')
     }
-  }, [advanceCycle, cycle, effectiveModality, enterRemediation, mastery, practiceOutcome, recordRemediation])
+  }, [advanceCycle, cycle, effectiveModality, enterRemediation, mastery, practiceOutcome, recordRemediation, remediationLevel])
 
   const handleDecision = useCallback((choice: DecisionChoice) => {
     if (!cycle) return
@@ -415,8 +941,15 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     if (firstView) bumpMastery(cycle.conceptId, REINFORCEMENT_GAIN)
     setVisitedReinforcements(prev => new Set(prev).add(kind))
     setActiveReinforcement(null)
-    setPhase('decision')
-  }, [activeReinforcement, bumpMastery, cycle, moduleId, visitedReinforcements])
+    // Refuerzo auto-insertado por la decisión del Runtime (profundidad =
+    // fundamentos): a diferencia del refuerzo voluntario del menú, aquí no
+    // hay a qué menú volver — el ciclo ya se cerró, así que continúa.
+    if (autoReinforcement) {
+      commitAdvance()
+    } else {
+      setPhase('decision')
+    }
+  }, [activeReinforcement, autoReinforcement, bumpMastery, commitAdvance, cycle, moduleId, visitedReinforcements])
 
   // ── Escalera de remediación ──────────────────────────────────────────────────
 
@@ -426,14 +959,31 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
   const stepModality: LearningModality =
     step?.conceptModality === 'alternate' ? alternateModality(effectiveModality) : effectiveModality
 
-  /** Resolvió en este peldaño: acredita dominio reducido y sigue. */
+  // Auditoría (2026-07-17): el panel "Concepto re-explicado" del Nivel 1
+  // (conceptModality: 'same') pasaba `cycle.concept.variants[stepModality]`
+  // — con stepModality === effectiveModality en ese nivel, mostraba
+  // EXACTAMENTE la misma variante (mismo `body`, palabra por palabra) que
+  // el estudiante ya leyó en la fase 'concept' antes de fallar la práctica.
+  // No era "otra forma de explicarlo": era la misma explicación repetida.
+  // `reviewModality` rota SIEMPRE a una modalidad distinta de la ya vista,
+  // reutilizando exactamente `alternateModality()` (mismo mecanismo de
+  // v1.4) — una vez por nivel, para que el Nivel 2 (si el estudiante vuelve
+  // a confundirse) tampoco repita lo que el Nivel 1 ya mostró.
+  let reviewModality: LearningModality = effectiveModality
+  for (let i = 0; i < remediationLevel; i++) reviewModality = alternateModality(reviewModality)
+
+  /** Resolvió en este peldaño: acredita dominio reducido y vuelve al cierre
+   *  normal del ciclo (puente a Python si lo trae, luego menú de consolidación)
+   *  — antes saltaba directo a advanceCycle() y ambos quedaban inalcanzables
+   *  para cualquier estudiante que hubiera necesitado la escalera. */
   const handleStepSolved = useCallback((outcome: PracticeOutcome) => {
     if (!cycle || remediationLevel === 0) return
     const gain = masteryGain(outcome, remediationLevel)
     recordRemediation(remediationLevel, outcome, true, stepModality, gain)
     bumpMastery(cycle.conceptId, gain)
-    advanceCycle(gain)
-  }, [advanceCycle, bumpMastery, cycle, recordRemediation, remediationLevel, stepModality])
+    setPracticeOutcome(outcome)
+    setPhase('practice')
+  }, [bumpMastery, cycle, recordRemediation, remediationLevel, stepModality])
 
   /** Agotó este peldaño: escala al siguiente. El Nivel 3 no tiene práctica, así
    *  que la escalera termina siempre — el bloqueo es imposible por construcción. */
@@ -443,12 +993,16 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     enterRemediation((remediationLevel + 1) as RemediationLevel)
   }, [cycle, enterRemediation, recordRemediation, remediationLevel, stepModality])
 
-  /** Nivel 3 — ayuda máxima registrada, se continúa siempre. */
+  /** Nivel 3 — ayuda máxima registrada. Vuelve al cierre normal del ciclo, igual
+   *  que handleStepSolved: el puente a Python y el menú de consolidación siguen
+   *  siendo parte del ciclo aunque la ayuda haya sido máxima. */
   const handleMaxSupportContinue = useCallback(() => {
     if (!cycle) return
-    recordRemediation(3, { attempts: MAX_SUPPORT_ATTEMPTS, timeMs: 0, solutionShown: true }, false, stepModality)
-    advanceCycle()
-  }, [advanceCycle, cycle, recordRemediation, stepModality])
+    const outcome: PracticeOutcome = { attempts: MAX_SUPPORT_ATTEMPTS, timeMs: 0, solutionShown: true }
+    recordRemediation(3, outcome, false, stepModality)
+    setPracticeOutcome(outcome)
+    setPhase('practice')
+  }, [cycle, recordRemediation, stepModality])
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -475,7 +1029,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
               Territorio: {definition.territory}
             </span>
           </div>
-          <Button className="w-full gap-2" onClick={() => setPhase('concept')}>
+          <Button className="w-full gap-2" onClick={() => setPhase(firstPhaseFor(cycle))}>
             Comenzar →
           </Button>
         </div>
@@ -483,10 +1037,118 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
     )
   }
 
+  if (phase === 'adapting') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 animate-in fade-in duration-300">
+        <div className="glass-panel rounded-2xl p-8 max-w-md w-full text-center space-y-5">
+          <span className="relative flex h-2.5 w-2.5 mx-auto">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-pulse opacity-60" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-neural-pulse" />
+          </span>
+          {adaptationMessage ? (
+            // La decisión ya llegó — la narración reemplaza el checklist
+            // (nunca coexisten: decirle "sigo eligiendo" mientras ya se sabe
+            // qué sigue sería contradictorio). Última parada antes de que la
+            // transición programada (ADAPTATION_MESSAGE_MS) cambie de fase.
+            <p className="text-base text-neural-text leading-relaxed animate-in fade-in duration-500">
+              {adaptationMessage}
+            </p>
+          ) : (
+            <>
+              <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-pulse">
+                Personalizando tu siguiente paso
+              </p>
+              <ul className="space-y-2.5 text-left">
+                {ADAPTING_STEPS.map((step, i) => (
+                  <li
+                    key={step}
+                    className="text-sm text-neural-text/80 flex items-center gap-2.5 animate-in fade-in slide-in-from-left-1"
+                    style={{ animationDelay: `${i * 450}ms`, animationDuration: '400ms', animationFillMode: 'both' }}
+                  >
+                    <span className="text-neural-glow shrink-0">✓</span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   if (phase === 'slice_end') {
+    // Sprint "continuidad del progreso" (jul 2026): el cierre dejaba de
+    // sentirse como una sesión aislada ("100% → Fin") recién con estos tres
+    // datos, y los tres ya existían en el sistema — ninguno se inventa aquí:
+    //
+    //   1. moduleMasterySummary (arriba, useMemo) — mismo dominio real que ya
+    //      alimentaba a evaluatorVerdict.
+    //   2. learningPath (mismo hook que Dashboard.tsx/LearningPath.tsx ya usan
+    //      para "X/Y misiones completadas") — progreso ACUMULADO del curso,
+    //      no solo de este módulo. `completedAfter` proyecta el cierre que
+    //      handleFinish está a punto de confirmar en el backend (doComplete,
+    //      en ModuleLearningView.tsx, marca esta misión 'completed' y navega
+    //      de inmediato) — nunca inventa una misión que no exista en items.
+    //   3. definition.closing.nextMission (ya existía, ModuleExperienceDefinition)
+    //      — de dónde sale la frase de continuidad.
+    const pathItems = learningPath.data?.items ?? []
+    const totalMissions = pathItems.length
+    const completedBefore = pathItems.filter(i => i.status === 'completed').length
+    const thisAlreadyCounted = pathItems.find(i => i.id === moduleId)?.status === 'completed'
+    const completedAfter = totalMissions > 0
+      ? Math.min(totalMissions, completedBefore + (thisAlreadyCounted ? 0 : 1))
+      : 0
+    const coursePct = totalMissions > 0 ? Math.round((completedAfter / totalMissions) * 100) : null
+    const courseComplete = totalMissions > 0 && completedAfter === totalMissions
+
+    const continuityMessage = definition.closing.nextMission
+      ? `La próxima vez continuarás directo en «${definition.closing.nextMission.title}».`
+      : courseComplete
+        ? `Completaste toda tu ruta de ${learningPath.data?.course_name ?? 'aprendizaje'} — tu progreso quedó guardado.`
+        : 'Tu progreso quedó guardado — la próxima vez continuarás justo desde aquí.'
+
     return (
       <div className="max-w-2xl mx-auto py-8 space-y-6 animate-in fade-in duration-500">
         <div className="glass-panel rounded-2xl p-8 space-y-6">
+          {/* "Hoy dominaste" — el mismo dominio de siempre, presentado como
+              un logro de ESTA sesión (checklist), no solo como una barra
+              estática que reemplaza a la anterior sin decir qué cambió. */}
+          {moduleMasterySummary.masteredCycles.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-emerald-400">
+                  Hoy dominaste
+                </p>
+              </div>
+              <ul className="space-y-1.5 pl-0.5">
+                {moduleMasterySummary.masteredCycles.map(c => (
+                  <li key={c.conceptId} className="flex items-center gap-2 text-sm text-neural-text/90">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    {c.conceptLabel}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* "Tu dominio aumentó" — mismo promedio que evaluatorVerdict ya
+              calculaba, ahora también expresado como el DELTA real desde
+              priorMastery (el punto de partida de cada ciclo), no solo el
+              número final. */}
+          {moduleMasterySummary.avgAfter > moduleMasterySummary.avgBefore && (
+            <div className="flex items-center gap-2.5 rounded-xl border border-neural-glow/20 bg-neural-glow/5 px-4 py-3">
+              <TrendingUp className="h-4 w-4 text-neural-glow shrink-0" />
+              <p className="text-sm text-neural-text/90 leading-relaxed">
+                Tu dominio en este territorio subió de{' '}
+                <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgBefore * 100)}%</span>
+                {' '}a{' '}
+                <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgAfter * 100)}%</span>.
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center gap-2.5">
             <Map className="h-4 w-4 text-neural-glow shrink-0" />
             <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-glow">
@@ -578,8 +1240,44 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             </div>
           )}
 
+          {/* "Mostrar progreso acumulado" — mismo dato que ya muestra el
+              Dashboard ("X/Y misiones completadas"), consumido aquí vía el
+              mismo hook (useLearningPath), no reinventado. Ausente sin
+              courseId (demo local) o mientras el fetch está en vuelo — nunca
+              bloquea el cierre. */}
+          {totalMissions > 0 && coursePct !== null && (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <Route className="h-4 w-4 text-neural-violet shrink-0" />
+                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
+                  Tu progreso en {learningPath.data?.course_name ?? 'tu ruta de aprendizaje'}
+                </p>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm text-neural-text/90">{completedAfter}/{totalMissions} misiones</p>
+                <span className="text-sm font-mono text-neural-violet">{coursePct}%</span>
+              </div>
+              <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-neural-violet h-1.5 rounded-full transition-all duration-700"
+                  style={{ width: `${coursePct}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* "La próxima vez continuarás desde aquí" — nombra un mecanismo que
+              YA existe (cursor persistido, Misión Activa) en vez de dejar que
+              el botón de abajo se sienta como el final de todo. */}
+          <p className="text-xs text-neural-muted text-center leading-relaxed">
+            {continuityMessage}
+          </p>
+
           <Button className="w-full" onClick={handleFinish}>
-            {definition.closing.nextMission ? 'Continuar al siguiente módulo →' : 'Finalizar misión →'}
+            {/* "misión", nunca "módulo" — el resto de la experiencia ya evita esa
+                palabra (missionTitle, routeTitle); este era el único lugar que
+                todavía la usaba, rompiendo la sensación de aprendizaje continuo. */}
+            {definition.closing.nextMission ? 'Seguir con la siguiente misión →' : 'Finalizar misión →'}
           </Button>
         </div>
       </div>
@@ -607,22 +1305,103 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
         </span>
       </div>
 
-      {phase === 'concept' && cycle && (
-        <ConceptStep concept={cycle.concept} modality={effectiveModality} onContinue={handleConceptDone} />
+      {welcomeBackMessage && (
+        <div className="rounded-xl border border-neural-glow/25 bg-neural-glow/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-500">
+          <span className="relative flex h-2 w-2 shrink-0 mt-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-glow" />
+          </span>
+          <p className="text-sm text-neural-text/90 leading-relaxed">{welcomeBackMessage}</p>
+        </div>
       )}
 
-      {phase === 'practice' && cycle && (
+      {/* "¿Sabías que...?" (sprint "UX ¿Sabías que...?", jul 2026): pantalla
+          propia al ENTRAR al ciclo — dato, fuente verificable, Continuar —
+          antes de las microexplicaciones o la teoría. Un ciclo sin
+          curiosityFact nunca pasa por esta fase (firstPhaseFor lo salta). */}
+      {phase === 'curiosity' && cycle && cycle.curiosityFact && (
+        <CuriosityFactCard
+          fact={cycle.curiosityFact}
+          onContinue={() => setPhase('concept')}
+        />
+      )}
+
+      {/* Microexplicaciones del ciclo (sprint "mejora pedagógica", jul 2026):
+          una tarjeta corta por término nuevo, ANTES del concepto — nunca
+          junto a él. Un ciclo sin conceptPrimers (o ya confirmadas todas)
+          cae directo al bloque de siempre, sin cambio de comportamiento. */}
+      {phase === 'concept' && cycle && cycle.conceptPrimers && primerIndex < cycle.conceptPrimers.length && (
+        <ConceptPrimerCard
+          key={`${cycle.id}-primer-${primerIndex}`}
+          primer={cycle.conceptPrimers[primerIndex]}
+          onContinue={() => setPrimerIndex(i => i + 1)}
+        />
+      )}
+
+      {phase === 'concept' && cycle && (!cycle.conceptPrimers || primerIndex >= cycle.conceptPrimers.length) && (
         <div className="space-y-5">
-          <OrderingPractice
-            key={`${cycle.id}-practice`}
-            practice={cycle.practice}
-            onAttempt={handlePracticeAttempt}
-            onFinished={handlePracticeFinished}
-            // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
-            revealOnExhaust={!cycle.remediation}
-            onExhausted={handlePracticeExhausted}
+          <ConceptStep
+            concept={resolveConceptForRender(cycle, effectiveModality, profundidad)}
+            modality={effectiveModality}
+            onContinue={handleConceptDone}
+            earlyReinforcement={profundidad === 'fundamentos' ? cycle.remediation?.steps[0]?.illustration : undefined}
           />
-          {practiceOutcome && (
+        </div>
+      )}
+
+      {phase === 'practice' && cycle && resolvedPractice && (
+        <div className="space-y-5">
+          {/* remediationLevel > 0 significa que se volvió aquí YA resuelto por
+           *  la escalera (handleStepSolved/handleMaxSupportContinue) — no se
+           *  repite la actividad, solo se completa el cierre normal del ciclo
+           *  (puente a Python, menú de consolidación) que antes se saltaba. */}
+          {remediationLevel === 0 && (
+            resolvedPractice.kind === 'ordering' ? (
+              <OrderingPractice
+                key={`${cycle.id}-practice`}
+                practice={resolvedPractice}
+                onAttempt={handlePracticeAttempt}
+                onFinished={handlePracticeFinished}
+                // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
+                revealOnExhaust={!cycle.remediation}
+                onExhausted={handlePracticeExhausted}
+                // Pretest gobierna también la práctica principal, no solo el
+                // editor (Sprint pedagógico Fase 2, prioridad 1): mismo
+                // criterio earlyHelp que ya usa PythonBridge.
+                profundidad={profundidad}
+                // Auditoría pedagógica (Hallazgo A): la misma práctica ahora
+                // se presenta distinto por modalidad (narración auditiva,
+                // secuencia como cadena visual) — nunca cambia QUÉ se evalúa.
+                modality={effectiveModality}
+              />
+            ) : (
+              <PredictOutputPractice
+                key={`${cycle.id}-practice`}
+                practice={resolvedPractice}
+                onAttempt={handlePredictOutputAttempt}
+                onFinished={handlePracticeFinished}
+                revealOnExhaust={!cycle.remediation}
+                onExhausted={handlePracticeExhausted}
+                profundidad={profundidad}
+              />
+            )
+          )}
+          {practiceOutcome && cycle.pythonBridge && (
+            <PythonBridge
+              bridge={cycle.pythonBridge}
+              moduleId={moduleId}
+              conceptId={cycle.conceptId}
+              courseId={courseId}
+              initialProfundidad={profundidad}
+              initialSkipStages={pythonSkipStages}
+              onPracticeDone={outcome => {
+                setPythonPracticeDone(true)
+                setPythonOutcome(outcome)
+                if (!outcome.solutionShown) bumpMastery(cycle.conceptId, PYTHON_PRACTICE_GAIN)
+              }}
+            />
+          )}
+          {practiceOutcome && (!cycle.pythonBridge?.practice || pythonPracticeDone) && (
             <div className="flex justify-end animate-in fade-in duration-300">
               <Button onClick={handlePracticeContinue} className="gap-2">
                 Continuar →
@@ -646,11 +1425,15 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
           key={`${cycle.id}-remediation-${step.level}`}
           step={step}
           conceptTitle={cycle.concept.title}
-          conceptVariant={cycle.concept.variants[stepModality] ?? cycle.concept.variants.reading}
+          conceptVariant={cycle.concept.variants[reviewModality] ?? cycle.concept.variants.reading}
           modality={stepModality}
           moduleId={moduleId}
           conceptId={cycle.conceptId}
-          fallbackSolutionOf={cycle.remediation?.steps.find(s => s.level === 2)?.practice ?? cycle.practice}
+          fallbackSolutionOf={
+            cycle.remediation?.steps.find(s => s.level === 2)?.practice ??
+            orderingFallbackOf(cycle.practice) ??
+            EMPTY_ORDERING_FALLBACK
+          }
           onSolved={handleStepSolved}
           onExhausted={handleStepExhausted}
           onContinue={handleMaxSupportContinue}
@@ -659,6 +1442,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
 
       {phase === 'reinforcement' && activeReinforcement && (
         <div className="space-y-5 animate-in fade-in duration-500">
+          {externalResource && cycle && (
+            <ExternalResourceCard
+              resource={externalResource}
+              framing={describeResourceFraming(effectiveModality, cycle.conceptLabel)}
+            />
+          )}
           <div className="glass-panel rounded-2xl p-6 space-y-4">
             <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>
             {activeReinforcement.sceneId && <AnimatedScene sceneId={activeReinforcement.sceneId} />}
@@ -670,11 +1459,21 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
             ))}
           </div>
 
+          {activeReinforcement.pythonBridge && (
+            <PythonBridge
+              bridge={activeReinforcement.pythonBridge}
+              moduleId={moduleId}
+              conceptId={cycle?.conceptId ?? ''}
+              courseId={courseId}
+            />
+          )}
+
           {activeReinforcement.practice ? (
             <ReinforcementPractice
               practice={activeReinforcement.practice}
               moduleId={moduleId}
               conceptId={cycle?.conceptId ?? ''}
+              modality={effectiveModality}
               onDone={handleReinforcementDone}
             />
           ) : (
@@ -693,48 +1492,67 @@ export function ModuleExperienceView({ definition, moduleId, modality, onExit, o
 // ── Reto rápido dentro del refuerzo ─────────────────────────────────────────────
 
 function ReinforcementPractice({
-  practice, moduleId, conceptId, onDone,
+  practice, moduleId, conceptId, modality, onDone,
 }: {
   practice: NonNullable<Reinforcement['practice']>
   moduleId: string
   conceptId: string
+  modality?: LearningModality
   onDone: () => void
 }) {
   const [outcome, setOutcome] = useState<PracticeOutcome | null>(null)
+
+  const finish = (result: PracticeOutcome) => {
+    recordEvidence({
+      type: 'practice_attempt',
+      moduleId,
+      conceptId,
+      detail: {
+        practice: practice.kind,
+        context: 'reinforcement',
+        attempts: result.attempts,
+        timeMs: result.timeMs,
+        solutionShown: result.solutionShown,
+        outcome: outcomeLabel(result),
+        final: true,
+      },
+    })
+    setOutcome(result)
+  }
 
   // Refuerzo VOLUNTARIO: el estudiante ya superó la baranda de autonomía y eligió
   // profundizar. Terminar la práctica —resolviéndola o viendo la solución— basta
   // para continuar. La exigencia de acertar vive en la escalera, no aquí.
   return (
     <div className="space-y-5">
-      <OrderingPractice
-        practice={practice}
-        onAttempt={({ attempt, status }) => {
-          recordEvidence({
-            type: 'practice_attempt',
-            moduleId,
-            conceptId,
-            detail: { practice: 'ordering', context: 'reinforcement', attempt, status, correct: status === 'correct' },
-          })
-        }}
-        onFinished={result => {
-          recordEvidence({
-            type: 'practice_attempt',
-            moduleId,
-            conceptId,
-            detail: {
-              practice: 'ordering',
-              context: 'reinforcement',
-              attempts: result.attempts,
-              timeMs: result.timeMs,
-              solutionShown: result.solutionShown,
-              outcome: outcomeLabel(result),
-              final: true,
-            },
-          })
-          setOutcome(result)
-        }}
-      />
+      {practice.kind === 'ordering' ? (
+        <OrderingPractice
+          practice={practice}
+          modality={modality}
+          onAttempt={({ attempt, status }) => {
+            recordEvidence({
+              type: 'practice_attempt',
+              moduleId,
+              conceptId,
+              detail: { practice: 'ordering', context: 'reinforcement', attempt, status, correct: status === 'correct' },
+            })
+          }}
+          onFinished={finish}
+        />
+      ) : (
+        <PredictOutputPractice
+          practice={practice}
+          onAttempt={({ attempt, correct }) => {
+            recordEvidence({
+              type: 'practice_attempt',
+              moduleId,
+              conceptId,
+              detail: { practice: 'predict_output', context: 'reinforcement', attempt, correct },
+            })
+          }}
+          onFinished={finish}
+        />
+      )}
       {outcome && (
         <div className="flex justify-end animate-in fade-in duration-300">
           <Button onClick={onDone} className="gap-2">
@@ -876,6 +1694,7 @@ function StepPractice({
     <div className="space-y-5">
       <OrderingPractice
         practice={practice}
+        modality={modality}
         revealOnExhaust={false}
         onAttempt={({ attempt, status }) => {
           recordEvidence({

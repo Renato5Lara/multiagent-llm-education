@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.agents.research_agent import ResearchAgent
+from app.services.research_agent import ResearchAgent
 from app.db.uow import UnitOfWork
 from app.integrations.tavily.cache import TavilyCache
 from app.integrations.tavily.client import TavilyClient
@@ -296,7 +296,7 @@ async def test_no_asyncio_run_or_nested_loop_in_research_path():
     from pathlib import Path
 
     files = [
-        Path("app/agents/research_agent.py"),
+        Path("app/services/research_agent.py"),
         Path("app/integrations/tavily/retrieval.py"),
         Path("app/integrations/tavily/client.py"),
     ]

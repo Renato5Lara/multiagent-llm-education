@@ -6,7 +6,6 @@ import type {
   DiagnosticResult,
   LearningPath,
   PathModule,
-  AgentPlan,
   StudentProfile,
   LearningPathDetail,
   CourseProgress,
@@ -16,13 +15,27 @@ import type {
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
 import { useToast } from '@/hooks/use-toast'
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+// instrumentación para el loop intermitente de carga infinita reportado en
+// /estudiante/diagnostic tras "Comenzar diagnóstico" en cuentas nuevas.
+// No cambia comportamiento ni agrega reintentos — solo registra en consola.
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} ${event}`, extra ?? '')
+}
+
 export function useSubmitDiagnostic() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
   return useMutation({
     mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<DiagnosticResult>(`/api/students/diagnostic/${courseId}`, { answers })
+      // La deliberación real encadena 5 agentes LLM (Diagnóstico → Perfil →
+      // Adaptación → Tutor → Consenso): 30-45s+ observados, igual que
+      // useModuleOrchestration — mismo motivo, mismo ajuste.
+      const resp = await api.post<DiagnosticResult>(`/api/students/diagnostic/${courseId}`, { answers }, {
+        timeout: 120_000,
+      })
       return resp.data
     },
     onSuccess: (_data, variables) => {
@@ -79,8 +92,15 @@ export function useStudentProfile() {
   return useQuery({
     queryKey: ['student-profile'],
     queryFn: async () => {
-      const resp = await api.get<StudentProfile>('/api/students/profile')
-      return resp.data
+      debugDiagLog('useStudentProfile:request')
+      try {
+        const resp = await api.get<StudentProfile>('/api/students/profile')
+        debugDiagLog('useStudentProfile:success', { status: resp.status })
+        return resp.data
+      } catch (err) {
+        debugDiagLog('useStudentProfile:error', { message: getErrorMessage(err) })
+        throw err
+      }
     },
   })
 }
@@ -108,8 +128,15 @@ export function useMyCourses() {
   return useQuery({
     queryKey: ['my-courses'],
     queryFn: async () => {
-      const resp = await api.get<CourseProgress[]>('/api/students/my-courses')
-      return resp.data
+      debugDiagLog('useMyCourses:request')
+      try {
+        const resp = await api.get<CourseProgress[]>('/api/students/my-courses')
+        debugDiagLog('useMyCourses:success', { count: resp.data?.length })
+        return resp.data
+      } catch (err) {
+        debugDiagLog('useMyCourses:error', { message: getErrorMessage(err) })
+        throw err
+      }
     },
   })
 }
@@ -131,8 +158,15 @@ export function useActiveExperience() {
   return useQuery({
     queryKey: ['active-experience'],
     queryFn: async () => {
-      const resp = await api.get<ActiveExperience>('/api/students/experience')
-      return resp.data
+      debugDiagLog('useActiveExperience:request')
+      try {
+        const resp = await api.get<ActiveExperience>('/api/students/experience')
+        debugDiagLog('useActiveExperience:success', { state: resp.data?.state })
+        return resp.data
+      } catch (err) {
+        debugDiagLog('useActiveExperience:error', { message: getErrorMessage(err) })
+        throw err
+      }
     },
     retry: false,
     staleTime: 30000,
@@ -163,11 +197,18 @@ export function useLearningPath(courseId: string | undefined) {
   return useQuery({
     queryKey: ['learning-path', courseId],
     queryFn: async () => {
-      const resp = await api.get<LearningPathDetail>(`/api/students/learning-path/${courseId}`)
-      // PED-004 — modo módulo de referencia: los módulos legacy no se muestran
-      // ni se alcanzan. Filtrar aquí cubre TODAS las superficies que consumen
-      // la ruta (página de ruta, dashboard y la navegación post-completado).
-      return { ...resp.data, items: filterToReferenceModules(resp.data.items) }
+      debugDiagLog('useLearningPath:request', { courseId })
+      try {
+        const resp = await api.get<LearningPathDetail>(`/api/students/learning-path/${courseId}`)
+        debugDiagLog('useLearningPath:success', { courseId, itemCount: resp.data?.items?.length })
+        // PED-004 — modo módulo de referencia: los módulos legacy no se muestran
+        // ni se alcanzan. Filtrar aquí cubre TODAS las superficies que consumen
+        // la ruta (página de ruta, dashboard y la navegación post-completado).
+        return { ...resp.data, items: filterToReferenceModules(resp.data.items) }
+      } catch (err) {
+        debugDiagLog('useLearningPath:error', { courseId, message: getErrorMessage(err) })
+        throw err
+      }
     },
     enabled: !!courseId,
   })
@@ -177,8 +218,13 @@ export function useUpdateModule() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ moduleId, status, score }: { moduleId: string; status: string; score?: number; courseId?: string }) => {
-      const resp = await api.patch<PathModule>(`/api/students/module/${moduleId}`, { status, score })
+    mutationFn: async (
+      { moduleId, status, score, durationMinutes }:
+      { moduleId: string; status: string; score?: number; courseId?: string; durationMinutes?: number },
+    ) => {
+      const resp = await api.patch<PathModule>(`/api/students/module/${moduleId}`, {
+        status, score, duration_minutes: durationMinutes,
+      })
       return resp.data
     },
     onSuccess: (_data, variables) => {
@@ -221,26 +267,6 @@ export function useCourseProgress(courseId: string | undefined) {
       return resp.data
     },
     enabled: !!courseId,
-  })
-}
-
-export function useAgentGeneratePlan() {
-  const queryClient = useQueryClient()
-  const { toast } = useToast()
-
-  return useMutation({
-    mutationFn: async ({ courseId, answers }: { courseId: string; answers: Record<string, number> }) => {
-      const resp = await api.post<AgentPlan>('/api/agents/generate-plan', { course_id: courseId, answers })
-      return resp.data
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['learning-path', variables.courseId] })
-      queryClient.invalidateQueries({ queryKey: ['my-courses'] })
-      toast({ title: 'Plan generado exitosamente' })
-    },
-    onError: (error) => {
-      toast({ variant: 'destructive', title: 'Error del agente', description: getErrorMessage(error) })
-    },
   })
 }
 
@@ -345,7 +371,44 @@ export function useStartEvaluation() {
 export function useSubmitEvaluation() {
   return useMutation({
     mutationFn: async ({ attemptId, answers }: { attemptId: string; answers: Record<number, number> }) => {
-      const resp = await api.post(`/api/students/evaluation/${attemptId}/submit`, { answers })
+      // Dispara Diagnosticar → Remediar/Orientar → Consenso sobre LLM real
+      // (mismo motivo que useSubmitDiagnostic/useModuleOrchestration).
+      const resp = await api.post(`/api/students/evaluation/${attemptId}/submit`, { answers }, {
+        timeout: 120_000,
+      })
+      return resp.data
+    },
+  })
+}
+
+export interface CycleEvidencePayload {
+  courseId: string
+  competencia: string
+  attempts: number
+  solved: boolean
+  /** Nivel de la escalera de remediación alcanzado (0 = ninguna ayuda) —
+   *  dataset de investigación (RESEARCH_ITERATIONS.md): "ayudas utilizadas". */
+  hintsUsed?: number
+  /** Suma de práctica + puente Python, en ms — dataset: "tiempo por ciclo". */
+  timeMs?: number
+}
+
+/** Evaluación continua (refinamiento de experiencia, jul 2026): la
+ *  evidencia de resolver la práctica de un ciclo entra al Runtime real
+ *  en el momento en que ocurre, sin esperar la Evaluación de Módulo
+ *  separada. Fire-and-forget desde la UI — nunca bloquea al estudiante
+ *  ni su avance (mismo criterio best-effort del propio endpoint). */
+export function useSubmitCycleEvidence() {
+  return useMutation({
+    mutationFn: async (payload: CycleEvidencePayload) => {
+      const resp = await api.post('/api/students/cycle-evidence', {
+        course_id: payload.courseId,
+        competencia: payload.competencia,
+        attempts: payload.attempts,
+        solved: payload.solved,
+        hints_used: payload.hintsUsed,
+        time_ms: payload.timeMs,
+      }, { timeout: 120_000 })
       return resp.data
     },
   })

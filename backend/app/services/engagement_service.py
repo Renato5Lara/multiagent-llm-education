@@ -20,14 +20,13 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.agents.engagement_generator_agent import engagement_generator_agent
+from app.services.engagement_generator import engagement_generator_agent
 from app.models.engagement import (
     EngagementEvent,
     EngagementInteraction,
     EngagementResource,
     EngagementSession,
 )
-from app.models.student_profile import StudentProfile
 from app.models.student_progress import LearningPath, PathModule
 from app.models.course import Course
 from app.models.user import User
@@ -149,26 +148,45 @@ class EngagementService:
             course = db.query(Course).filter(Course.id == path.course_id).first()
             course_name = course.name if course else ""
 
-        # ── Perfil del estudiante ────────────────────────────────────────────
-        profile = (
-            db.query(StudentProfile)
-            .filter(StudentProfile.student_id == student.id)
-            .first()
-        )
-        modality = (
-            (profile.dominant_style or "reading").lower()
-            if profile else "reading"
-        )
+        # ── Decisión del Runtime (única fuente de adaptación) ────────────────
+        # Antes: modalidad desde StudentProfile.dominant_style y bloom
+        # estático del módulo — lógica adaptativa heredada. Ahora ambos
+        # se derivan de la Entrega vigente del runtime (S1) vía el mismo
+        # puente que module_orchestration; "mixta" es el neutro cuando el
+        # runtime aún no decidió sobre esta competencia (estudiante sin
+        # evidencia), no una regla propia. Best-effort: engagement jamás
+        # se cae porque el runtime no tenga sesión todavía.
+        modality = "mixta"
+        bloom_target = module.bloom_level or 3
+        if path is not None:
+            try:
+                from app.services.runtime_bridge import (
+                    asunto_de_modalidad,
+                    bloom_target_desde_entrega,
+                    consultar_decision_vigente,
+                    modalidad_desde_entrega,
+                )
+
+                entrega = consultar_decision_vigente(
+                    student_id=student.id, course_id=path.course_id
+                )
+                asunto = asunto_de_modalidad(module.title)
+                bloom_target = bloom_target_desde_entrega(
+                    module.bloom_level, asunto, entrega
+                )
+                modality = modalidad_desde_entrega(asunto, entrega) or "mixta"
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("engagement.start: runtime_bridge failed: %s", exc)
 
         # ── Generar recursos via agente ──────────────────────────────────────
         logger.info(
-            "engagement.start: generating resources module=%s modality=%s",
-            module_id[:8], modality,
+            "engagement.start: generating resources module=%s modality=%s bloom=%d",
+            module_id[:8], modality, bloom_target,
         )
         raw_resources = engagement_generator_agent.generate(
             module_title=module.title,
             course_name=course_name,
-            bloom_level=module.bloom_level or 3,
+            bloom_level=bloom_target,
             modality=modality,
             count=6,
         )

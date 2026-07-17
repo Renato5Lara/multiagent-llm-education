@@ -1,0 +1,143 @@
+"""kernel/deliberation/politica.py — política versionada. Nace en
+RFC-0006/1 Parte 0 (los pesos de `ce`); RFC-0006/3 Parte C le agrega
+`theta` (el umbral de decisión) sobre el mismo módulo — este archivo
+cubre `Politica` completa, no una parte congelada en el tiempo.
+
+Sin Postgres, sin LangGraph: `Politica`/`POLITICAS`/`resolver_politica`
+no dependen de nada persistido — son constantes de código.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+
+from runtime.kernel.deliberation.politica import POLITICAS, Politica, resolver_politica
+
+
+class TestParte0_PoliticaVersionada:
+    def test_v1_esta_registrada_con_pesos_cero(self):
+        v1 = POLITICAS["v1"]
+        assert v1.peso_refuerzo == Decimal("0")
+        assert v1.peso_refutacion == Decimal("0")
+        assert v1.peso_decaimiento == Decimal("0")
+
+    def test_v1_theta_es_cero(self):
+        """theta_v1 = 0 no es un valor empírico ajustado a los productores
+        actuales — es una prueba matemática: A1 garantiza ce >= 0 siempre,
+        así que ce >= theta se cumple para CUALQUIER claim posible, sin
+        excepción. La insuficiencia D3 queda estructuralmente
+        inalcanzable bajo v1 por construcción."""
+        assert POLITICAS["v1"].theta == Decimal("0")
+
+    def test_theta_fuera_de_0_1_es_ValueError(self):
+        with pytest.raises(ValueError, match=r"theta debe estar en \[0, 1\]"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("1.01"),
+            )
+        with pytest.raises(ValueError, match=r"theta debe estar en \[0, 1\]"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("-0.01"),
+            )
+
+    def test_resolver_politica_v1(self):
+        assert resolver_politica("v1") is POLITICAS["v1"]
+
+    def test_resolver_politica_version_inexistente_es_ValueError(self):
+        with pytest.raises(ValueError, match="no está registrada"):
+            resolver_politica("v99")
+
+    def test_una_politica_nueva_no_toca_v1(self):
+        """El mecanismo permite que una política nueva exista sin tocar
+        una línea de v1 — construirla no muta POLITICAS ni v1 (frozen,
+        diccionario aparte). No se registra aquí (eso es RFC-0006/3,
+        Parte D) — solo se demuestra que el mecanismo lo soportaría."""
+        v1_antes = POLITICAS["v1"]
+        candidata = Politica(
+            peso_refuerzo=Decimal("0.10"),
+            peso_refutacion=Decimal("0.10"),
+            peso_decaimiento=Decimal("0.02"),
+            theta=Decimal("0.30"),
+        )
+        assert candidata != v1_antes
+        assert POLITICAS["v1"] is v1_antes
+        assert POLITICAS["v1"].peso_refuerzo == Decimal("0")
+
+    def test_permite_decaimiento_mayor_que_refuerzo(self):
+        """No hay invariante `peso_refuerzo >= peso_decaimiento`: se
+        consideró y se descartó durante la implementación de Parte A —
+        `confianza.py` ancla la edad lógica a la última validación local
+        (A4/A6, ver "Garantías" en el docstring de módulo de
+        `confianza.py`), así que una validación recién aplicada siempre
+        tiene edad lógica 0 en su propio tick, sin importar la magnitud
+        de los pesos. Restringir esta combinación sería una invariante
+        sin necesidad matemática real."""
+        politica = Politica(
+            peso_refuerzo=Decimal("0.01"),
+            peso_refutacion=Decimal("0"),
+            peso_decaimiento=Decimal("0.05"),
+            theta=Decimal("0"),
+        )
+        assert politica.peso_decaimiento > politica.peso_refuerzo
+
+    def test_v1_no_reserva_asuntos_y_su_limite_es_inerte(self):
+        """Parte F sobre v1: ambas vías de escalada quedan
+        estructuralmente inalcanzables — sin asuntos reservados la
+        primera vía nunca aplica, y con delta=0 ninguna `Aplazada`
+        puede producirse, así que ninguna cadena alcanza el límite de
+        reconvocatoria (misma prueba matemática que theta/delta).
+        politica-v1 sigue produciendo exactamente las mismas decisiones."""
+        v1 = POLITICAS["v1"]
+        assert v1.asuntos_reservados == frozenset()
+        assert v1.delta == Decimal("0")  # la premisa de la prueba de inercia
+        assert v1.limite_reconvocatoria == 2
+
+    def test_limite_de_reconvocatoria_menor_que_1_es_ValueError(self):
+        """Con límite 0 el aplazamiento productivo (CONCEPT-0002 §4)
+        sería inalcanzable: toda tensión sin margen iría directa al
+        docente en su primera convocatoria."""
+        with pytest.raises(ValueError, match="limite_reconvocatoria debe ser >= 1"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("0"),
+                limite_reconvocatoria=0,
+            )
+
+    def test_asunto_reservado_vacio_es_ValueError(self):
+        with pytest.raises(ValueError, match="no admite asuntos vacíos"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("0"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("0"),
+                asuntos_reservados=frozenset({""}),
+            )
+
+    def test_rechaza_pesos_negativos(self):
+        with pytest.raises(ValueError, match="no puede ser negativo"):
+            Politica(
+                peso_refuerzo=Decimal("0"),
+                peso_refutacion=Decimal("-0.01"),
+                peso_decaimiento=Decimal("0"),
+                theta=Decimal("0"),
+            )
+
+    def test_no_importa_langgraph(self):
+        """Toda la Parte A/0 se prueba sin ejecutar LangGraph — criterio
+        de cierre de RFC-0006/1: verificación estructural de que ni
+        siquiera el módulo de política lo importa."""
+        import re
+        from pathlib import Path
+
+        fuente = Path(__file__).resolve().parents[3] / "runtime" / "kernel" / "deliberation" / "politica.py"
+        texto = fuente.read_text(encoding="utf-8")
+        assert not re.search(r"^\s*(import|from)\s+langgraph", texto, re.M)

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
+import type { RuntimePasoTraza } from '@/hooks/useRuntimeTrace'
 
 export interface StudentTrajectoryDiagnostic {
     dominant_modality: string | null
@@ -83,6 +84,56 @@ export interface StudentTrajectory {
     modules: StudentTrajectoryModule[]
     evaluations: StudentTrajectoryEvaluation[]
     evidence: StudentTrajectoryEvidence[]
+    // RFC-0007 §5 (Modo Evidencia v2) — traza real del runtime (RFC-0010 S3),
+    // misma forma que /api/runtime/sessions/{id}/traza; se traduce con la
+    // MISMA función que ya usa AgentDecisionTimeline (traducirTraza), nunca
+    // una segunda narración.
+    runtime_trace: RuntimePasoTraza[]
+    outcome: {
+        pre_percentage: number | null
+        post_percentage: number | null
+        absolute_gain: number | null
+        normalized_gain: number | null
+        pre_level: string | null
+        post_level: string | null
+    }
+    // Orden 2026-07-15 "adaptación dinámica narrada" — narrativa causal por
+    // concepto (evidencia observada → decisión del Runtime → resultado →
+    // acción siguiente), construida en el backend a partir de claims REALES
+    // (asunto dominio(concepto)/modalidad(concepto)); nunca texto generado
+    // en el frontend.
+    concept_narratives: ConceptNarrative[]
+    // Observabilidad Pedagógica (orden 2026-07-15) — evolución real de cada
+    // agente (confianza de sus claims en el tiempo) y del consenso (confianza
+    // de cada decisión derivada). Cada punto es un valor real de ClaimEntry/
+    // DecisionEntry, nunca una métrica inventada.
+    agent_series: AgentSeries[]
+    consensus_series: SeriesPoint[]
+}
+
+export interface SeriesPoint {
+    transicion: number
+    confianza: number
+    asunto: string
+}
+
+export interface AgentSeries {
+    agente: string
+    puntos: SeriesPoint[]
+}
+
+export interface ConceptNarrativeClaim {
+    autor: string
+    afirmacion: Record<string, unknown>
+    confianza: number
+}
+
+export interface ConceptNarrative {
+    concepto: string
+    evidencia_observada: ConceptNarrativeClaim[]
+    decision_runtime: ConceptNarrativeClaim[]
+    resultado: boolean | null
+    accion_siguiente: string | null
 }
 
 // Única fuente de datos del Modo Evidencia — ver evidence_service.py.

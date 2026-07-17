@@ -31,7 +31,7 @@ from app.core.config import settings
 from app.llm.config import LLMConfig
 from app.llm.service import LLMService
 
-from app.agents.research_agent import ResearchAgent
+from app.services.research_agent import ResearchAgent
 from app.memory.narrative_continuity import (
     publish_narrative_persona,
     query_narrative_persona,
@@ -40,6 +40,12 @@ from app.memory.shared_memory import SharedMemoryStore
 from app.models.course import Course
 from app.models.student_progress import PathModule
 from app.models.user import User
+from app.services.runtime_bridge import (
+    asunto_de_modalidad,
+    bloom_target_desde_entrega,
+    consultar_decision_vigente,
+)
+from runtime.boundary import Entrega, normalizar_asunto
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +57,82 @@ BLOOM_LABELS = {
     5: "Evaluar",
     6: "Crear",
 }
+
+
+def _asunto_de_modalidad(module: "PathModule") -> str:
+    """Delegado en `runtime_bridge.asunto_de_modalidad` — la traducción
+    vive UNA sola vez en el puente (la comparten engagement y cualquier
+    consumidor futuro de la Entrega); aquí solo se adapta la firma al
+    modelo `PathModule` de este servicio."""
+    return asunto_de_modalidad(module.title)
+
+
+def _bloom_target_desde_entrega(module: "PathModule", entrega: Entrega) -> int:
+    """Delegado en `runtime_bridge.bloom_target_desde_entrega` (Épica 2:
+    el runtime decide, este servicio ejecuta) — misma razón que
+    `_asunto_de_modalidad`."""
+    return bloom_target_desde_entrega(
+        module.bloom_level, _asunto_de_modalidad(module), entrega
+    )
+
+
+def _aplicar_modalidad_desde_entrega(
+    prompts: list[dict[str, Any]], module: "PathModule", entrega: Entrega
+) -> list[dict[str, Any]]:
+    """Épica 2: qué bloques multimodales (`_build_multimodal_prompts`)
+    quedan habilitados según la decisión del runtime, si aplica a este
+    módulo (mismo chequeo de `asunto` que `_bloom_target_desde_entrega`,
+    ADR-0010) — sin ese chequeo se aplicaría por error la decisión de
+    otro módulo de la misma sesión de curso.
+
+    `modalidad` no tiene todavía un catálogo formal en
+    `runtime/domain/shared` (BLUEPRINT lo reserva; no implementado):
+    se interpreta literalmente la palabra que ya produce
+    `DISENO_POR_ACCION` (`runtime/domain/adaptar/productor.py`), sin
+    inventar una taxonomía pedagógica adicional — "visual" (accion
+    "reforzar") habilita solo el bloque `image`; "mixta" (accion
+    "avanzar-con-andamiaje") deja todos habilitados, igual que sin
+    decisión aplicable (comportamiento previo, sin cambios)."""
+    if entrega.diseno is None or entrega.asunto is None:
+        return prompts
+    if entrega.asunto != _asunto_de_modalidad(module):
+        return prompts
+    if entrega.diseno.get("modalidad") != "visual":
+        return prompts
+    return [{**p, "enabled": p.get("modality") == "image"} for p in prompts]
+
+
+def _entrega_a_dict(entrega: Entrega | None) -> dict[str, Any] | None:
+    """Expone la Entrega completa (S1) en la respuesta — incluye
+    `alternativas_descartadas` sin reinterpretarlas: Modo Evidencia
+    "enseña el vocabulario, no lo esconde" (RFC-0010 regla 2). `None` si
+    no hubo decisión aplicable (estudiante nuevo, runtime no
+    disponible) o el resultado es degradado."""
+    if entrega is None or entrega.diseno is None:
+        return None
+    return {"asunto": entrega.asunto, "diseno": entrega.diseno}
+
+
+def _leer_entrega_del_runtime(
+    orch_id: str, student: "User", course: "Course"
+) -> Entrega:
+    """Lee la decisión vigente del runtime (S3, best-effort) — una sola
+    vez por orquestación; `bloom_target` y `modalidad` se derivan de la
+    MISMA `Entrega` (evita una segunda lectura de Postgres). Nunca
+    bloquea la orquestación: si el runtime no responde (Postgres caído,
+    lo que sea), degrada a "sin decisión" — el comportamiento previo
+    exacto, igual que cualquier otra fase de este pipeline (ver
+    constraints del docstring del módulo)."""
+    try:
+        return consultar_decision_vigente(student_id=student.id, course_id=course.id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "orchestrate[%s]: runtime_bridge read failed (%r) — "
+            "sin decisión del runtime, comportamiento previo",
+            orch_id, exc,
+        )
+        return Entrega(asunto=None, diseno=None)
+
 
 # Maximum time (seconds) for the entire orchestration.  If exceeded the
 # pipeline returns a gracefully-degraded result rather than a 500.
@@ -389,7 +471,8 @@ class ModuleOrchestrationService:
         memory_store: SharedMemoryStore | None,
     ) -> dict[str, Any]:
         topic = module.title
-        bloom_target = module.bloom_level or 3
+        entrega_runtime = _leer_entrega_del_runtime(orch_id, student, course)
+        bloom_target = _bloom_target_desde_entrega(module, entrega_runtime)
         session_id = uuid.uuid4().hex[:12]
         t0 = time.monotonic()
 
@@ -433,7 +516,7 @@ class ModuleOrchestrationService:
         try:
             result = await self._build_orchestration_result(
                 research_state, student, course, module, bloom_target, orch_id,
-                session_id=session_id,
+                session_id=session_id, entrega_runtime=entrega_runtime,
             )
         except Exception as build_exc:
             logger.error(
@@ -599,6 +682,7 @@ class ModuleOrchestrationService:
         bloom_target: int,
         orch_id: str,
         session_id: str | None = None,
+        entrega_runtime: Entrega | None = None,
     ) -> dict[str, Any]:
         research = research_state.get("research", {})
         research_metrics = research_state.get("research_metrics", {})
@@ -630,6 +714,10 @@ class ModuleOrchestrationService:
         applications = self._build_real_applications(applications_raw, module.title)
         guided_practice = self._generate_guided_practice(module.title, bloom_target)
         multimodal_prompts = self._build_multimodal_prompts(multimodal_prompts_raw, module.title)
+        if entrega_runtime is not None:
+            multimodal_prompts = _aplicar_modalidad_desde_entrega(
+                multimodal_prompts, module, entrega_runtime
+            )
         concept_blocks = await self._build_concept_blocks(
             topic=module.title,
             concepts=concepts,
@@ -673,6 +761,7 @@ class ModuleOrchestrationService:
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "session_id": session_id,
             "concept_blocks": concept_blocks,
+            "runtime_decision": _entrega_a_dict(entrega_runtime),
         }
 
     def _degraded_result(

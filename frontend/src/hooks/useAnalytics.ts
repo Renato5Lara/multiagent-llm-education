@@ -1,21 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
 import { useAuthStore } from '@/stores/authStore'
-import type { IADashboardResponse, DocenteAnalyticsResponse } from '@/types/analytics'
+import type { DocenteAnalyticsResponse } from '@/types/analytics'
 
 const dashboardKey = ['analytics', 'dashboard']
-
-export function useIADashboard() {
-    const role = useAuthStore((s) => s.user?.role) || 'estudiante'
-    return useQuery({
-        queryKey: [...dashboardKey, role],
-        queryFn: async () => {
-            const resp = await api.get<IADashboardResponse>('/api/analytics/dashboard')
-            return resp.data
-        },
-        staleTime: 60 * 1000,
-    })
-}
 
 export function useCourseAccess(courseId: string | undefined) {
     return useQuery({
@@ -37,17 +25,6 @@ export function useCurriculumStatus() {
             return resp.data
         },
         staleTime: 30 * 1000,
-    })
-}
-
-export function useRiskPrediction() {
-    return useQuery({
-        queryKey: ['analytics', 'risk-prediction'],
-        queryFn: async () => {
-            const resp = await api.get('/api/analytics/risk-prediction')
-            return resp.data
-        },
-        staleTime: 2 * 60 * 1000,
     })
 }
 

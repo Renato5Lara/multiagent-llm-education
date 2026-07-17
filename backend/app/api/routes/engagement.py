@@ -54,8 +54,9 @@ async def start_engagement(
     Si ya existe una sesión completed o skipped la devuelve directamente
     para que el frontend pueda saltar la fase Engage.
 
-    Los recursos son generados por el EngagementGeneratorAgent usando
-    el perfil de aprendizaje del estudiante (dominant_style).
+    Los recursos son generados por el EngagementGeneratorAgent con la
+    modalidad y profundidad que el Runtime decidió (Entrega vigente, S1,
+    vía runtime_bridge) — "mixta" como neutro si aún no hay decisión.
     """
     logger.info("engagement.start: student=%s module=%s", current_user.id[:8], module_id[:8])
     return svc.start(current_user, module_id)

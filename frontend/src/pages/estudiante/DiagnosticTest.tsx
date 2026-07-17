@@ -7,6 +7,9 @@ import { useSubmitDiagnostic, useGeneratePath } from '@/hooks/useStudent'
 import { useToast } from '@/hooks/use-toast'
 import api from '@/lib/api'
 import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
+import { getErrorMessage } from '@/lib/errors'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -173,7 +176,12 @@ function TransitionScreen({ onContinue }: { onContinue: () => void }) {
 // DoneScreen — tras el diagnóstico:
 //   sin pretestNext → va a la ruta con ?autostart (el estudiante la VE y
 //   la lanzadera la lleva al Módulo 1 automáticamente desde el backend).
-//   con pretestNext → va al KnowledgeTest.
+//   con pretestNext → continúa AUTOMÁTICAMENTE al KnowledgeTest (Pilar 4 —
+//   diagnóstico único, jul 2026): antes exigía un clic de "Continuar con la
+//   evaluación diagnóstica →" que partía la experiencia en dos cuestionarios
+//   separados; ahora es la misma conversación continua, sin botón redundante.
+const CONTINUOUS_TRANSITION_MS = 1400
+
 function DoneScreen({
   courseId, navigate, pretestNext,
 }: {
@@ -194,6 +202,14 @@ function DoneScreen({
     })
   }
 
+  useEffect(() => {
+    if (!pretestNext) return
+    const t = setTimeout(() => {
+      navigate(`/estudiante/knowledge-test/${courseId}?continuous=true`, { replace: true })
+    }, CONTINUOUS_TRANSITION_MS)
+    return () => clearTimeout(t)
+  }, [pretestNext, courseId, navigate])
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="glass-panel rounded-2xl p-10 max-w-md w-full">
@@ -206,13 +222,13 @@ function DoneScreen({
         </h2>
         <p className="text-neural-muted text-sm mb-6 leading-relaxed">
           {pretestNext
-            ? 'Falta un paso: una evaluación diagnóstica de conocimientos para que tu ruta parta exactamente de lo que ya sabes.'
+            ? 'Ahora unas preguntas sobre lo que ya sabes, para que tu ruta parta exactamente de ahí.'
             : 'El swarm analizó tu perfil y construyó una ruta personalizada. Vas a verla antes de comenzar.'}
         </p>
         {pretestNext ? (
-          <Button className="w-full gap-2" onClick={() => navigate(`/estudiante/knowledge-test/${courseId}`)}>
-            Continuar con la evaluación diagnóstica →
-          </Button>
+          <div className="flex items-center justify-center gap-2 text-sm text-neural-muted">
+            <Loader2 className="h-4 w-4 animate-spin" /> Continuando…
+          </div>
         ) : (
           <Button
             className="w-full gap-2"
@@ -255,15 +271,24 @@ function ErrorScreen({
   )
 }
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} DiagnosticTest:${event}`, extra ?? '')
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function DiagnosticTest() {
   const { courseId } = useParams<{ courseId: string }>()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const studentId = useAuthStore(s => s.user?.id)
 
   const submitDiagnostic = useSubmitDiagnostic()
   const generatePath = useGeneratePath()
+
+  debugDiagLog('mount-or-render', { courseId, studentId })
 
   const [phase, setPhase] = useState<Phase>('section_a')
   const [sectionAIdx, setSectionAIdx] = useState(0)
@@ -282,10 +307,15 @@ export default function DiagnosticTest() {
     if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current)
   }, [])
 
+  useEffect(() => {
+    debugDiagLog('phase-change', { phase })
+  }, [phase])
+
   // Fire API calls when swarm_thinking phase starts
   useEffect(() => {
     if (phase !== 'swarm_thinking' || !courseId) return
 
+    debugDiagLog('swarm_thinking:effect-start', { courseId })
     apiResultRef.current = null
     setApiReady(false)
 
@@ -293,26 +323,35 @@ export default function DiagnosticTest() {
       try {
         const formatted: Record<string, number> = {}
         Object.entries(answersRef.current).forEach(([k, v]) => { formatted[k] = v })
+        debugDiagLog('swarm_thinking:submitDiagnostic:start')
         await submitDiagnostic.mutateAsync({ courseId, answers: formatted })
+        debugDiagLog('swarm_thinking:submitDiagnostic:done')
         // Flujo diagnóstico unificado: si el pre-test de conocimiento está
         // pendiente, la ruta se genera después de rendirlo (fail-open si el
         // status no responde: comportamiento histórico intacto).
         let pretestNext = false
         try {
+          debugDiagLog('swarm_thinking:knowledge-test-status:start')
           const st = await api.get<{ pretest_required: boolean }>(
             `/api/students/knowledge-test/${courseId}/status`,
           )
           pretestNext = !!st.data?.pretest_required
-        } catch {
+          debugDiagLog('swarm_thinking:knowledge-test-status:done', { pretestNext })
+        } catch (err) {
+          debugDiagLog('swarm_thinking:knowledge-test-status:error', { message: getErrorMessage(err) })
           pretestNext = false
         }
         if (!pretestNext) {
+          debugDiagLog('swarm_thinking:generatePath:start')
           await generatePath.mutateAsync(courseId)
+          debugDiagLog('swarm_thinking:generatePath:done')
         }
         apiResultRef.current = { success: true, pretestNext }
+        debugDiagLog('swarm_thinking:effect-success', { pretestNext })
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
         apiResultRef.current = { success: false, error: msg }
+        debugDiagLog('swarm_thinking:effect-error', { message: msg })
       }
       setApiReady(true)
     }
@@ -383,6 +422,7 @@ export default function DiagnosticTest() {
           mode="diagnostic"
           diagnosticProfile={swarmProfile}
           isBackendReady={apiReady}
+          sessionId={courseId && studentId ? sesionDelCurso(courseId, studentId) : undefined}
           onComplete={handleSwarmComplete}
         />
       </div>

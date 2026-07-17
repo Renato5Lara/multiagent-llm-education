@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useModuleOrchestration, useUpdateMissionProgress } from '@/hooks/useStudent'
 import { useUpdateModule, useLearningPath } from '@/hooks/useStudent'
+import { useKnowledgeTestResult } from '@/hooks/useKnowledgeTest'
 import { useQueryClient } from '@tanstack/react-query'
 import StudentWeeklyLearningView from '@/components/estudiante/StudentWeeklyLearningView'
 import { TraceExplorer } from '@/components/observability/TraceExplorer'
@@ -16,7 +17,7 @@ import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
 import type { ModuleContext } from '@/components/swarm/AgentActivityPanel'
 import { useToast } from '@/hooks/use-toast'
 import type { ModuleOrchestrationResponse } from '@/types/pedagogy'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useStartEngagement } from '@/hooks/useEngagement'
 import { LearningJourney } from '@/components/learningJourney/LearningJourney'
 import { buildJourneyFromLegacy } from '@/lib/learningJourneyBuilder'
@@ -24,6 +25,8 @@ import { TutorPresence } from '@/components/tutor/TutorPresence'
 import type { LearningModality } from '@/types/modality'
 import { getModuleExperience } from '@/lib/experiences'
 import { ModuleExperienceView } from '@/components/experience/ModuleExperienceView'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
 
 const USE_LEARNING_JOURNEY = true
 
@@ -150,6 +153,7 @@ export default function ModuleLearningView() {
   const courseId = searchParams.get('courseId') || undefined
   const moduleTitleParam = searchParams.get('title') || undefined
   const navigate = useNavigate()
+  const studentId = useAuthStore(s => s.user?.id)
   const { toast } = useToast()
 
   // Experiencia de Módulo (patrón jul 2026): si el módulo tiene experiencia
@@ -158,12 +162,40 @@ export default function ModuleLearningView() {
 
   const { mutate: orchestrateModule, isPending: isOrchestrating, isError: orchestrationFailed } = useModuleOrchestration()
   const updateModule = useUpdateModule()
+  // Fase de cierre del producto (jul 2026): tiempo real vivido en el módulo,
+  // desde que se entra hasta doComplete() — el flujo continuo de ciclos
+  // nunca abría un LearningSession en el backend, así que "¿se registra el
+  // tiempo?" respondía NO para el 100% del flujo real (bug real encontrado
+  // en la verificación de preparación experimental, no una funcionalidad
+  // nueva). ModuleLearningView NO se remonta al navegar entre módulos
+  // (misma ruta, distinto param) — se reinicia explícitamente por efecto,
+  // nunca asumiendo un remount que React Router no garantiza aquí.
+  const moduleStartRef = useRef(Date.now())
+  useEffect(() => {
+    moduleStartRef.current = Date.now()
+  }, [moduleId])
   const { data: engageSession, isLoading: isLoadingSession } = useStartEngagement(experience ? undefined : moduleId)
   // Modalidad del APRENDIZ (diagnóstico → learning path). No confundir con
   // multimodal_prompts[].modality, que son modalidades de MEDIOS (image/video/
   // audio) y nunca valen 'kinesthetic' — usarlas rompía la puerta del Code Lab.
   const { data: learningPath } = useLearningPath(courseId)
   const learnerModality = (learningPath?.dominant_modality ?? undefined) as LearningModality | undefined
+  // Pre-Test → Ciclo 1 (jul 2026): Adaptar ya decide profundidad real desde
+  // el pre-test (Diagnosticar→Remediar/Orientar→Adaptar, RFC-0002 §3), pero
+  // esa cadena queda anclada a la competencia del pre-test — nunca llegaba
+  // al primer ciclo del módulo, que arrancaba igual sin importar el
+  // resultado. `module_breakdown` (por módulo del curso) ya existe y ya se
+  // usa para desbloquear módulos (mastery_threshold); se reutiliza aquí para
+  // sembrar la profundidad inicial del PRIMER ciclo — mismo umbral (70%) y
+  // mismo vocabulario ("fundamentos"/"aplicacion") que Adaptar ya produce.
+  const { data: pretestResult } = useKnowledgeTestResult(courseId, 'pre')
+  const currentModuleOrder = learningPath?.items?.find(i => i.id === moduleId)?.order
+  const currentModulePct = currentModuleOrder != null
+    ? pretestResult?.module_breakdown?.[String(currentModuleOrder)]?.pct
+    : undefined
+  const initialProfundidad = currentModulePct === undefined
+    ? undefined
+    : currentModulePct >= 70 ? 'aplicacion' : 'fundamentos'
   const queryClient = useQueryClient()
 
   const [data, setData] = useState<ModuleOrchestrationResponse | null>(null)
@@ -188,7 +220,7 @@ export default function ModuleLearningView() {
           setAppPhase('content')
           toast({ title: 'Misión reanudada', description: 'Continúas exactamente donde quedaste' })
         } else {
-          toast({ title: 'Módulo preparado', description: 'Contenido pedagógico generado exitosamente' })
+          toast({ title: 'Misión preparada', description: 'Contenido pedagógico generado exitosamente' })
         }
       },
     })
@@ -217,12 +249,13 @@ export default function ModuleLearningView() {
 
   const doComplete = useCallback((score?: number) => {
     if (!moduleId) return
+    const durationMinutes = (Date.now() - moduleStartRef.current) / 60000
     // A2 — score (dominio agregado) llega al evaluador via ResearchMetric.
     updateModule.mutate(
-      { moduleId, courseId, status: 'completed', score },
+      { moduleId, courseId, status: 'completed', score, durationMinutes },
       {
         onSuccess: async () => {
-          toast({ title: 'Módulo completado', description: 'Tu progreso ha sido actualizado' })
+          toast({ title: 'Misión completada', description: 'Tu progreso quedó guardado.' })
           // Flujo continuo: el backend desbloqueó el siguiente módulo en DB.
           // Refetch de la ruta para obtener el estado real desde el backend
           // (no por índice local — el orden puede ser adaptativo).
@@ -278,9 +311,16 @@ export default function ModuleLearningView() {
   if (experience && moduleId) {
     return (
       <ModuleExperienceView
+        // key: fuerza un remount al cambiar de módulo — sin esto, navegar de
+        // un módulo a otro con experiencia propia (p. ej. al terminar y
+        // continuar automáticamente) reutiliza la instancia y arrastra la
+        // fase (slice_end) y el dominio del módulo anterior.
+        key={moduleId}
         definition={experience}
         moduleId={moduleId}
+        courseId={courseId}
         modality={learnerModality}
+        initialProfundidad={initialProfundidad}
         onExit={handleBack}
         onFinish={doComplete}
       />
@@ -328,6 +368,7 @@ export default function ModuleLearningView() {
           mode="module"
           moduleContext={data ? moduleContext : undefined}
           isBackendReady={!!data}
+          sessionId={courseId && studentId ? sesionDelCurso(courseId, studentId) : undefined}
           onComplete={() => setAppPhase('content')}
         />
       </div>

@@ -1,13 +1,16 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Lock, CheckCircle, ChevronRight, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck, ArrowRight } from 'lucide-react'
+import { Lock, CheckCircle, ChevronRight, ChevronDown, BookOpen, MessageCircle, Trophy, Zap, ClipboardCheck, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
+import { getModuleExperience } from '@/lib/experiences'
+import { useAuthStore } from '@/stores/authStore'
+import { sesionDelCurso } from '@/lib/runtimeSession'
+import { AgentDecisionTimeline } from '@/components/observability/AgentDecisionTimeline'
 import type { LearningPathItem } from '@/types/student'
-import TutorWidget from '@/components/ai/TutorWidget'
 import { useEffect, useRef, useState } from 'react'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -23,6 +26,56 @@ const XP_LEVELS = [
 
 function getLevelLabel(xp: number) {
   return [...XP_LEVELS].reverse().find(l => xp >= l.min)?.label ?? 'Principiante'
+}
+
+/** Misma clave que `experience-cursor:${moduleId}` en ModuleExperienceView —
+ *  auditoría de continuidad, jul 2026: esta tarjeta decía "Comenzar misión"
+ *  incluso con progreso real guardado, mientras el Dashboard (para la MISMA
+ *  misión) decía "Continuar misión" — un estudiante que ya avanzó veía
+ *  "Comenzar" y pensaba que perdió su trabajo. Lectura, nunca escritura. */
+function hasSavedProgress(moduleId: string): boolean {
+  try {
+    const raw = localStorage.getItem(`experience-cursor:${moduleId}`)
+    if (!raw) return false
+    const saved = JSON.parse(raw) as { phase?: string }
+    return !!saved.phase && saved.phase !== 'opening'
+  } catch {
+    return false
+  }
+}
+
+// Dashboard de Aprendizaje (arquitectura de dashboards congelada, jul 2026):
+// "¿cómo voy?" a nivel de CONCEPTO, no solo de misión — reutiliza el mismo
+// `mastery` que ModuleExperienceView ya persiste por ciclo (nunca un cálculo
+// nuevo ni una segunda fuente de dominio). 0.6 es el mismo espíritu que
+// AUTONOMY_LOW=0.4 (el piso donde la remediación decide): suficientemente
+// por encima de ese piso para llamarlo "dominado" frente al estudiante.
+const CONCEPT_MASTERY_THRESHOLD = 0.6
+
+interface ConceptMasteryRow {
+  conceptLabel: string
+  mastered: boolean
+}
+
+function collectConceptMastery(items: LearningPathItem[]): ConceptMasteryRow[] {
+  const rows: ConceptMasteryRow[] = []
+  for (const item of items) {
+    const definition = getModuleExperience(item.title)
+    if (!definition) continue
+    let mastery: Record<string, number> = {}
+    try {
+      const raw = localStorage.getItem(`experience-cursor:${item.id}`)
+      if (raw) mastery = (JSON.parse(raw) as { mastery?: Record<string, number> }).mastery ?? {}
+    } catch {
+      mastery = {}
+    }
+    for (const cycle of definition.cycles) {
+      const value = mastery[cycle.conceptId]
+      if (value === undefined) continue
+      rows.push({ conceptLabel: cycle.conceptLabel, mastered: value >= CONCEPT_MASTERY_THRESHOLD })
+    }
+  }
+  return rows
 }
 
 const MODALITY_DARK: Record<string, string> = {
@@ -89,6 +142,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
   const isCompleted = item.status === 'completed'
   const isAvailable = item.status === 'available'
   const isLocked = item.status === 'locked'
+  const inProgress = isAvailable && hasSavedProgress(item.id)
 
   // Una misión disponible o completada puede abrirse; una completada se
   // reingresa como repaso. Solo las bloqueadas no son navegables.
@@ -172,7 +226,7 @@ function MissionCard({ item, missionNumber, isFinal, courseId, navigate }: Missi
                 className="gap-1.5 h-8 text-xs"
                 onClick={handleClick}
               >
-                Comenzar misión
+                {inProgress ? 'Continuar misión' : 'Comenzar misión'}
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -211,6 +265,13 @@ export default function LearningPath() {
   const generatePath = useGeneratePath()
   const { data: adaptiveDecision } = useAdaptiveDecision(courseId)
   const { data: ktStatus } = useKnowledgeTestStatus(courseId)
+  // Pilar 5 — Dashboard de investigación: la traza real de ESTA sesión
+  // (mismo session_id determinista que ya usa la espera en vivo del
+  // diagnóstico), narrada en lenguaje natural — colapsada por defecto para
+  // no competir con la tarjeta de estrategia, siempre disponible para quien
+  // quiera ver la evidencia detrás de la decisión.
+  const studentId = useAuthStore(s => s.user?.id)
+  const [showTimeline, setShowTimeline] = useState(false)
 
   // Cuenta regresivasegundos para autostart
   // RC-FINAL: 8 s — la ruta que el swarm construyó es evidencia de la tesis;
@@ -257,10 +318,20 @@ export default function LearningPath() {
   const totalCount = items.length
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const activeItem = items.find((i: LearningPathItem) => i.status === 'available')
+  // Auditoría pedagógica (jul 2026): un curso no puede mostrar dos modelos de
+  // evaluación a la vez. Cuando TODAS las misiones ya usan el patrón de
+  // ciclos (evidencia continua real vía cycle-evidence, ver
+  // ModuleExperienceView), la evaluación separada de abajo deja de
+  // mostrarse — reutiliza el mismo registro (`getModuleExperience`) que ya
+  // decide qué misiones usan ese flujo, sin backend/ruta/estado nuevos. Los
+  // cursos que aún no migraron conservan la evaluación legacy intacta.
+  const usesContinuousEvaluation = items.length > 0 && items.every(i => getModuleExperience(i.title) !== null)
   const modalityStyle = MODALITY_DARK[path.dominant_modality || '']
   const xp = completedCount * XP_PER_MISSION
   const maxXp = totalCount * XP_PER_MISSION
   const levelLabel = getLevelLabel(xp)
+  const conceptMastery = collectConceptMastery(items)
+  const nextConcept = conceptMastery.find(c => !c.mastered)?.conceptLabel
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -332,6 +403,32 @@ export default function LearningPath() {
         </div>
       </div>
 
+      {/* ── Mis conceptos — Dashboard de Aprendizaje congelado, jul 2026 ── */}
+      {conceptMastery.length > 0 && (
+        <div className="glass-panel rounded-2xl p-5 mb-6">
+          <p className="text-[9px] font-mono text-neural-muted/50 tracking-[0.2em] uppercase mb-3">
+            Mis conceptos
+          </p>
+          <div className="space-y-1.5 mb-3">
+            {conceptMastery.map(c => (
+              <div key={c.conceptLabel} className="flex items-center gap-2 text-sm">
+                <span className={c.mastered ? 'text-neural-pulse' : 'text-amber-400'}>
+                  {c.mastered ? '✓' : '⚠'}
+                </span>
+                <span className={c.mastered ? 'text-neural-text/80' : 'text-neural-text'}>
+                  {c.conceptLabel}
+                </span>
+              </div>
+            ))}
+          </div>
+          {nextConcept && (
+            <p className="text-xs text-neural-muted/60 pt-2 border-t border-white/[0.06]">
+              Próximo objetivo: <span className="text-neural-text/80">reforzar {nextConcept.toLowerCase()}</span>.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* ── Adaptive strategy card ──────────────────────────── */}
       {adaptiveDecision && (
         <div className="glass-panel rounded-2xl p-5 mb-6 border border-neural-violet/10">
@@ -361,6 +458,20 @@ export default function LearningPath() {
               Temas prioritarios: {adaptiveDecision.emphasis_topic_labels.join(', ')}.
             </p>
           )}
+          <button
+            type="button"
+            onClick={() => setShowTimeline(v => !v)}
+            className="mt-3 flex items-center gap-1.5 text-[11px] font-mono text-neural-violet/70 hover:text-neural-violet transition-colors"
+          >
+            <Sparkles className="h-3 w-3" />
+            {showTimeline ? 'Ocultar' : 'Ver'} cómo decidió el sistema
+            <ChevronDown className={`h-3 w-3 transition-transform ${showTimeline ? 'rotate-180' : ''}`} />
+          </button>
+          {showTimeline && courseId && studentId && (
+            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+              <AgentDecisionTimeline sessionId={sesionDelCurso(courseId, studentId)} />
+            </div>
+          )}
         </div>
       )}
 
@@ -378,8 +489,10 @@ export default function LearningPath() {
         ))}
       </div>
 
-      {/* ── Evaluación (fase Demuestra) ─────────────────────── */}
-      {completedCount > 0 && courseId && (
+      {/* ── Evaluación (fase Demuestra) ───────────────────────
+          Oculta cuando el curso ya evalúa continuamente por ciclos — dos
+          modelos de evaluación a la vez contradicen esa continuidad. */}
+      {completedCount > 0 && courseId && !usesContinuousEvaluation && (
         <div className="mt-6 glass-panel rounded-2xl p-5 border border-neural-glow/15">
           <div className="flex items-start gap-4">
             <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-neural-glow/50 bg-neural-glow/8">
@@ -446,12 +559,6 @@ export default function LearningPath() {
           Preguntar al Tutor IA
         </Button>
       </div>
-
-      <TutorWidget
-        courseId={courseId || ''}
-        courseName={path.course_name}
-        moduleTitle={activeItem?.title}
-      />
     </div>
   )
 }

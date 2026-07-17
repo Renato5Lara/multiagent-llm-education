@@ -81,12 +81,18 @@ export function MediaPromptCard({
   const [showWhy,      setShowWhy]      = useState(false)
   const [openInTool,   setOpenInTool]   = useState<string | null>(null)
   const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  useEffect(() => {
+  // Auditoría pedagógica (Hallazgo C): antes onComplete se disparaba en un
+  // useEffect de montaje — el paso quedaba "completado" (XP incluido) antes
+  // de que el estudiante copiara el prompt o abriera una herramienta de IA.
+  // Ahora se dispara una sola vez, en el primer gesto real del estudiante.
+  const completedRef = useRef(false)
+  const markComplete = () => {
+    if (completedRef.current) return
+    completedRef.current = true
     onComplete?.()
-    return () => clearTimeout(copyTimer.current)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }
+
+  useEffect(() => () => clearTimeout(copyTimer.current), [])
 
   const cfg = TYPE_CONFIG[type]
 
@@ -94,6 +100,7 @@ export function MediaPromptCard({
     try {
       await navigator.clipboard.writeText(prompt)
       setCopied(true)
+      markComplete()
       clearTimeout(copyTimer.current)
       copyTimer.current = setTimeout(() => setCopied(false), 2000)
     } catch {

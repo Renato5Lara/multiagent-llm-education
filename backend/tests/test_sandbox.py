@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.agents.programmer_agent import ProgrammerAgent
-from app.agents.reviewer_agent import ReviewerAgent
+from app.services.programmer_agent import ProgrammerAgent
+from app.services.reviewer_agent import ReviewerAgent
 from app.sandbox import SandboxLimits, SandboxRequest, SandboxResult, SandboxRunner, SandboxStatus
 from app.sandbox.policy import SandboxPolicy
 

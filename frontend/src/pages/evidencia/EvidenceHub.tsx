@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Route, ArrowRight, ShieldCheck, FlaskConical } from 'lucide-react'
+import { Route, ArrowRight, ShieldCheck, FlaskConical, Activity } from 'lucide-react'
 
 const evidenceTools = [
   {
@@ -21,6 +21,16 @@ const evidenceTools = [
     btnClass:  'text-neural-violet border-neural-violet/20 hover:bg-neural-violet/[0.06]',
     label: 'Datos reales',
     labelClass: 'bg-neural-violet/10 text-neural-violet border-neural-violet/20',
+  },
+  {
+    title: 'Runtime Console',
+    description: 'Traza, Estado Final y Memoria del runtime LangGraph en un solo lugar: facts, claims, deliberaciones, decisiones y la memoria consolidada — derivados del log persistido, nunca de una segunda tubería.',
+    icon: Activity,
+    href: '/evidencia/runtime',
+    iconClass: 'text-neural-pulse bg-neural-pulse/[0.06] border-neural-pulse/20',
+    btnClass:  'text-neural-pulse border-neural-pulse/20 hover:bg-neural-pulse/[0.06]',
+    label: 'Runtime nativo',
+    labelClass: 'bg-neural-pulse/10 text-neural-pulse border-neural-pulse/20',
   },
 ]
 
