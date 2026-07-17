@@ -52,7 +52,12 @@ const READING_PRACTICE: PredictOutputPracticeDef = {
 // `default`, rompiendo así la repetición Ciclo 1→Ciclo 2 para cada perfil.
 const VISUAL_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
-  prompt: 'Observa el código y predice qué muestra en pantalla.',
+  // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): copy
+  // reforzado hacia "comparar visualmente el antes y el después de la caja",
+  // no solo "leer código" — misma mecánica (predict_output), pero enmarca la
+  // tarea como observar dos estados de la misma caja, coherente con la
+  // metáfora visual de "caja" ya usada en la teoría de este ciclo.
+  prompt: 'Observa la caja "monedas" en dos momentos: antes y después de la segunda línea. ¿Qué valor final muestra en pantalla?',
   code: 'monedas = 5\nmonedas = monedas + 3\nprint(monedas)',
   options: [
     { id: 'a', text: '5' },
@@ -61,8 +66,8 @@ const VISUAL_PRACTICE: PredictOutputPracticeDef = {
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'b',
-  successFeedback: 'Exacto — «monedas» empezó en 5, pero «monedas = monedas + 3» la actualizó antes del print(). La caja siempre muestra su último valor, nunca el de arranque.',
-  wrongFeedback: 'Revisa: print(monedas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  successFeedback: 'Exacto — visualizando la caja «monedas»: empezó mostrando 5, pero «monedas = monedas + 3» la actualizó a 8 antes del print(). La caja siempre muestra su último valor, nunca el de arranque.',
+  wrongFeedback: 'Compara las dos fotos de la caja: print(monedas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
   solutionExplanation: [
     'Línea 1: monedas = 5 — crea la caja con el valor 5.',
     'Línea 2: monedas = monedas + 3 — lee el 5 que había, le suma 3, y guarda 8 en la misma caja.',
@@ -74,6 +79,12 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
   prompt: 'Después de escuchar la explicación, decide: ¿qué imprime este código?',
   code: 'temperatura = 18\ntemperatura = temperatura + 5\nprint(temperatura)',
+  // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): antes
+  // el prompt PROMETÍA audio ("después de escuchar...") sin reproducir nada.
+  // Narra exactamente el código de arriba — el estudiante puede resolver
+  // escuchando, sin necesitar leer el bloque de código en absoluto.
+  narrationText:
+    'Escucha con atención. Primera línea: temperatura es igual a dieciocho. Segunda línea: temperatura es igual a temperatura, más cinco. Tercera línea: imprime temperatura. ¿Qué número muestra la pantalla?',
   options: [
     { id: 'a', text: '18' },
     { id: 'b', text: '23' },
@@ -96,7 +107,13 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
 // que la teoría ya reveló.
 const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
-  prompt: 'Antes de revisar, predice: ¿qué imprime este código?',
+  // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): copy
+  // reforzado hacia "actuar la resta antes de comprobarla" — misma mecánica
+  // (predict_output), pero enmarca la predicción como algo que el estudiante
+  // hace con los dedos (contar vidas restantes) antes de ver el resultado,
+  // coherente con la escalera manipulable de PythonBridge que ya corre en
+  // este ciclo para el perfil kinestésico.
+  prompt: 'Cuenta con los dedos: empiezas con 5 vidas y pierdes 2. Antes de revisar, predice: ¿qué imprime este código?',
   code: 'vidas = 5\nvidas = vidas - 2\nprint(vidas)',
   options: [
     { id: 'a', text: '5' },
@@ -105,8 +122,8 @@ const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'b',
-  successFeedback: 'Exacto — igual que con la caja de vidas de la teoría, «vidas» empezó en 5 pero perdió 2 antes del print(). Se guarda el resultado, no el valor inicial.',
-  wrongFeedback: 'Revisa: print(vidas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  successFeedback: 'Exacto — igual que contar con los dedos, «vidas» empezó en 5 pero perdió 2 antes del print(). Se guarda el resultado, no el valor inicial. Tu cuenta física coincidió con la ejecución real.',
+  wrongFeedback: 'Vuelve a contar con los dedos: print(vidas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
   solutionExplanation: [
     'Línea 1: vidas = 5 — crea la caja con el valor 5.',
     'Línea 2: vidas = vidas - 2 — lee el 5 que había, le resta 2, y guarda 3 en la misma caja.',

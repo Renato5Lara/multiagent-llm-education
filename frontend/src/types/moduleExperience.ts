@@ -120,6 +120,14 @@ export interface PredictOutputPracticeDef {
   wrongFeedback: string
   /** Explicación paso a paso de la ejecución — se muestra tras agotar los intentos. */
   solutionExplanation: string[]
+  /** Narra el enunciado con voz real (AudioNarration, el MISMO componente que
+   *  ya usa la teoría) — auditoría "diversidad pedagógica" (jul 2026, revisión
+   *  post-sprint): sin esto, un ejercicio para el perfil auditivo podía decir
+   *  "después de escuchar..." sin reproducir ningún audio — una etiqueta que
+   *  prometía una modalidad que la pantalla no entregaba. Opcional: sin este
+   *  campo, la práctica se ve exactamente igual que antes (comportamiento
+   *  previo intacto para lector/visual/kinestésico, que nunca lo necesitaron). */
+  narrationText?: string
 }
 
 export type PracticeDef = OrderingPracticeDef | PredictOutputPracticeDef

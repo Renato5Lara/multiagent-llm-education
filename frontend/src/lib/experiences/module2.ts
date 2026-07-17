@@ -17,7 +17,13 @@ import { ELSE_PRIMER, IF_PRIMER } from './conceptPrimers'
 // mismo ciclo, para no adelantar ninguna de esas dos revelaciones.
 const VISUAL_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
-  prompt: 'Observa el código y predice qué imprime.',
+  // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): copy
+  // reforzado hacia "comparar visualmente dos valores", no solo "leer código"
+  // — misma mecánica (predict_output), pero enmarca la tarea como una
+  // comparación de magnitudes que el estudiante puede visualizar en una
+  // recta numérica (30 vs 24), coherente con las variantes visuales ya
+  // existentes de este ciclo (que sí usan infografía).
+  prompt: 'Compara los dos valores a simple vista: temperatura (30) frente al umbral (24). ¿Qué rama del if se enciende?',
   code: 'temperatura = 30\nif temperatura > 24:\n    print("Enciende el aire acondicionado")\nelse:\n    print("Temperatura agradable")',
   options: [
     { id: 'a', text: 'Enciende el aire acondicionado' },
@@ -26,8 +32,8 @@ const VISUAL_PRACTICE: PredictOutputPracticeDef = {
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'a',
-  successFeedback: 'Exacto — temperatura vale 30, y 30 > 24 es verdadero, así que Python tomó la rama del if y mostró "Enciende el aire acondicionado".',
-  wrongFeedback: 'Revisa la condición: temperatura vale 30. ¿30 es mayor a 24?',
+  successFeedback: 'Exacto — visualizando 30 a la derecha de 24 en la recta numérica, la comparación temperatura > 24 es verdadera, así que Python tomó la rama del if y mostró "Enciende el aire acondicionado".',
+  wrongFeedback: 'Compara visualmente los dos números: temperatura vale 30. ¿Está a la derecha de 24 en la recta numérica?',
   solutionExplanation: [
     'Línea 1: temperatura = 30 — crea la variable con el valor 30.',
     'Línea 2: if temperatura > 24: — 30 > 24 es verdadero, así que Python entra a esta rama.',
@@ -59,6 +65,12 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
   prompt: 'Después de escuchar la explicación, decide: ¿qué imprime este código?',
   code: 'hora = 19\nif hora >= 18:\n    print("Enciende las luces")\nelse:\n    print("Deja las luces apagadas")',
+  // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): antes
+  // el prompt PROMETÍA audio ("después de escuchar...") sin reproducir nada.
+  // Narra exactamente el código de arriba — el estudiante puede resolver
+  // escuchando, sin necesitar leer el bloque de código en absoluto.
+  narrationText:
+    'Escucha con atención. Primera línea: hora es igual a diecinueve. Segunda línea: si hora es mayor o igual a dieciocho, imprime "enciende las luces". De lo contrario, imprime "deja las luces apagadas". ¿Qué mensaje se muestra?',
   options: [
     { id: 'a', text: 'Enciende las luces' },
     { id: 'b', text: 'Deja las luces apagadas' },
@@ -77,7 +89,13 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
 
 const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
-  prompt: 'Antes de revisar, predice: ¿qué imprime este código?',
+  // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): copy
+  // reforzado hacia "actuar la condición antes de ver el resultado" — misma
+  // mecánica (predict_output), pero enmarca la predicción como una apuesta
+  // física que el estudiante hace con su propia edad antes de comprobarla,
+  // coherente con la escalera manipulable de PythonBridge que ya corre en
+  // este ciclo para el perfil kinestésico.
+  prompt: 'Antes de revisar, decide con tu propia mano (arriba = sí puede votar, abajo = no): ¿qué imprime este código?',
   code: 'edad = 20\nif edad >= 18:\n    print("Puede votar")\nelse:\n    print("Todavía no puede votar")',
   options: [
     { id: 'a', text: 'Puede votar' },
@@ -86,7 +104,7 @@ const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'a',
-  successFeedback: 'Exacto — edad vale 20, y 20 >= 18 es verdadero, así que Python tomó la rama del if y mostró "Puede votar".',
+  successFeedback: 'Exacto — edad vale 20, y 20 >= 18 es verdadero, así que Python tomó la rama del if y mostró "Puede votar". Tu predicción física coincidió con la ejecución real.',
   wrongFeedback: 'Revisa la condición: edad vale 20. ¿20 es mayor o igual a 18?',
   solutionExplanation: [
     'Línea 1: edad = 20 — crea la variable con el valor 20.',
