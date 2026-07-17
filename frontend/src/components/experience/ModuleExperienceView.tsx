@@ -857,6 +857,19 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   const stepModality: LearningModality =
     step?.conceptModality === 'alternate' ? alternateModality(effectiveModality) : effectiveModality
 
+  // Auditoría (2026-07-17): el panel "Concepto re-explicado" del Nivel 1
+  // (conceptModality: 'same') pasaba `cycle.concept.variants[stepModality]`
+  // — con stepModality === effectiveModality en ese nivel, mostraba
+  // EXACTAMENTE la misma variante (mismo `body`, palabra por palabra) que
+  // el estudiante ya leyó en la fase 'concept' antes de fallar la práctica.
+  // No era "otra forma de explicarlo": era la misma explicación repetida.
+  // `reviewModality` rota SIEMPRE a una modalidad distinta de la ya vista,
+  // reutilizando exactamente `alternateModality()` (mismo mecanismo de
+  // v1.4) — una vez por nivel, para que el Nivel 2 (si el estudiante vuelve
+  // a confundirse) tampoco repita lo que el Nivel 1 ya mostró.
+  let reviewModality: LearningModality = effectiveModality
+  for (let i = 0; i < remediationLevel; i++) reviewModality = alternateModality(reviewModality)
+
   /** Resolvió en este peldaño: acredita dominio reducido y vuelve al cierre
    *  normal del ciclo (puente a Python si lo trae, luego menú de consolidación)
    *  — antes saltaba directo a advanceCycle() y ambos quedaban inalcanzables
@@ -1186,7 +1199,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           key={`${cycle.id}-remediation-${step.level}`}
           step={step}
           conceptTitle={cycle.concept.title}
-          conceptVariant={cycle.concept.variants[stepModality] ?? cycle.concept.variants.reading}
+          conceptVariant={cycle.concept.variants[reviewModality] ?? cycle.concept.variants.reading}
           modality={stepModality}
           moduleId={moduleId}
           conceptId={cycle.conceptId}
