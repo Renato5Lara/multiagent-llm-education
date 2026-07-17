@@ -82,10 +82,18 @@ export function resolvePractice(cycle: LearningCycle, modality: LearningModality
 
 export const MODALITY_ORDER: LearningModality[] = ['visual', 'reading', 'audio', 'kinesthetic']
 
-/** Otra representación del mismo concepto (Nivel 2 de remediación): la
- *  primera modalidad disponible distinta a la del perfil del estudiante. */
+/** Otra representación del mismo concepto (Nivel 2 de remediación, y
+ *  desde el sprint "andamiaje" también frustración real de Tutorizar):
+ *  rotación real sobre MODALITY_ORDER, no "la primera distinta a la
+ *  actual" — con esa regla anterior, como 'visual' es el primer
+ *  elemento, CUALQUIER modalidad no-visual (reading/audio/kinesthetic)
+ *  caía siempre en 'visual', nunca en las otras dos representaciones
+ *  igual de reales que ya existen (audio narrado, simulación). Ahora
+ *  cada modalidad tiene su propia alternativa distinta: visual→reading,
+ *  reading→audio, audio→kinesthetic, kinesthetic→visual. */
 export function alternateModality(current: LearningModality): LearningModality {
-  return MODALITY_ORDER.find(m => m !== current) ?? current
+  const index = MODALITY_ORDER.indexOf(current)
+  return MODALITY_ORDER[(index + 1) % MODALITY_ORDER.length]
 }
 
 /** Motor de selección de refuerzo, prioridad de Etapa 1 (Pilar 1 + Pilar 2
