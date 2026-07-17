@@ -3,8 +3,97 @@
 // curiosidad + Ciclo 1. Los ciclos 2-3 (bucles, comprensiones) y el reto
 // integrador entran en incrementos siguientes, igual que en Módulo 1.
 
-import type { ModuleExperienceDefinition } from '@/types/moduleExperience'
+import type { ModuleExperienceDefinition, PredictOutputPracticeDef } from '@/types/moduleExperience'
 import { ELSE_PRIMER, IF_PRIMER } from './conceptPrimers'
+
+// Sprint "diversidad pedagógica" (jul 2026): Ciclo 3 (Módulo 1) cerró con
+// 'ordering' para las cuatro modalidades — este ciclo (el que sigue
+// inmediatamente en el recorrido real, Misión 1 → Misión 2) rompe esa
+// repetición dándoles a las cuatro su propia versión de "predecir la
+// ejecución" de un if/else — mismo componente ya existente
+// (PredictOutputPractice), mismo concepto evaluado (condición evaluable +
+// rama if/else), temas nuevos que no repiten ni el `concept.pythonBridge`
+// (temperatura > 24) ni el `cycle.pythonBridge` (sensor_lluvia) de este
+// mismo ciclo, para no adelantar ninguna de esas dos revelaciones.
+const VISUAL_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Observa el código y predice qué imprime.',
+  code: 'temperatura = 30\nif temperatura > 24:\n    print("Enciende el aire acondicionado")\nelse:\n    print("Temperatura agradable")',
+  options: [
+    { id: 'a', text: 'Enciende el aire acondicionado' },
+    { id: 'b', text: 'Temperatura agradable' },
+    { id: 'c', text: 'temperatura' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'a',
+  successFeedback: 'Exacto — temperatura vale 30, y 30 > 24 es verdadero, así que Python tomó la rama del if y mostró "Enciende el aire acondicionado".',
+  wrongFeedback: 'Revisa la condición: temperatura vale 30. ¿30 es mayor a 24?',
+  solutionExplanation: [
+    'Línea 1: temperatura = 30 — crea la variable con el valor 30.',
+    'Línea 2: if temperatura > 24: — 30 > 24 es verdadero, así que Python entra a esta rama.',
+    'Como la condición fue verdadera, se ejecuta print("Enciende el aire acondicionado") — la rama de else nunca corre.',
+  ],
+}
+
+const READING_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Lee el código con calma y predice qué imprime.',
+  code: 'humo = 620\nif humo > 500:\n    print("Suena la alarma")\nelse:\n    print("Todo en orden")',
+  options: [
+    { id: 'a', text: 'Suena la alarma' },
+    { id: 'b', text: 'Todo en orden' },
+    { id: 'c', text: 'humo' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'a',
+  successFeedback: 'Exacto — humo vale 620, y 620 > 500 es verdadero, así que Python tomó la rama del if y mostró "Suena la alarma".',
+  wrongFeedback: 'Revisa la condición: humo vale 620. ¿620 es mayor a 500?',
+  solutionExplanation: [
+    'Línea 1: humo = 620 — crea la variable con el valor 620.',
+    'Línea 2: if humo > 500: — 620 > 500 es verdadero, así que Python entra a esta rama.',
+    'Como la condición fue verdadera, se ejecuta print("Suena la alarma") — igual que la alarma contra incendios que leíste arriba, la rama de else nunca corre.',
+  ],
+}
+
+const AUDIO_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Después de escuchar la explicación, decide: ¿qué imprime este código?',
+  code: 'hora = 19\nif hora >= 18:\n    print("Enciende las luces")\nelse:\n    print("Deja las luces apagadas")',
+  options: [
+    { id: 'a', text: 'Enciende las luces' },
+    { id: 'b', text: 'Deja las luces apagadas' },
+    { id: 'c', text: 'hora' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'a',
+  successFeedback: 'Exacto — hora vale 19, y 19 >= 18 es verdadero, así que Python tomó la rama del if y mostró "Enciende las luces".',
+  wrongFeedback: 'Revisa la condición: hora vale 19. ¿19 es mayor o igual a 18?',
+  solutionExplanation: [
+    'Línea 1: hora = 19 — crea la variable con el valor 19.',
+    'Línea 2: if hora >= 18: — 19 >= 18 es verdadero, así que Python entra a esta rama.',
+    'Como la condición fue verdadera, se ejecuta print("Enciende las luces") — la rama de else nunca corre.',
+  ],
+}
+
+const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Antes de revisar, predice: ¿qué imprime este código?',
+  code: 'edad = 20\nif edad >= 18:\n    print("Puede votar")\nelse:\n    print("Todavía no puede votar")',
+  options: [
+    { id: 'a', text: 'Puede votar' },
+    { id: 'b', text: 'Todavía no puede votar' },
+    { id: 'c', text: 'edad' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'a',
+  successFeedback: 'Exacto — edad vale 20, y 20 >= 18 es verdadero, así que Python tomó la rama del if y mostró "Puede votar".',
+  wrongFeedback: 'Revisa la condición: edad vale 20. ¿20 es mayor o igual a 18?',
+  solutionExplanation: [
+    'Línea 1: edad = 20 — crea la variable con el valor 20.',
+    'Línea 2: if edad >= 18: — 20 >= 18 es verdadero, así que Python entra a esta rama.',
+    'Como la condición fue verdadera, se ejecuta print("Puede votar") — la rama de else nunca corre.',
+  ],
+}
 
 export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
   moduleNumber: 2,
@@ -123,32 +212,43 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
         },
       },
       practice: {
-        kind: 'ordering',
-        prompt:
-          'El robot debe decidir si abrir o cerrar el paraguas según la lluvia. Construye la secuencia usando SOLO pasos evaluables — uno de la lista es ambiguo y debes descartarlo.',
-        items: [
-          { id: 'p1', text: 'Consulta el sensor de lluvia', position: 1 },
-          { id: 'p2', text: 'Si el sensor marca SÍ, extiende el paraguas', position: 2 },
-          { id: 'p3', text: 'Si el sensor marca NO, mantén el paraguas plegado', position: 3 },
-          {
-            id: 'd1',
-            text: 'Actúa según el clima',
-            position: null,
-            whyWrong:
-              '«Actúa según el clima» no dice qué condición evaluar ni qué hacer en cada caso — es la meta, no una instrucción evaluable.',
-          },
-        ],
-        successFeedback:
-          'Exacto. Una condición evaluable y una acción distinta para cada resultado posible — eso es una estructura de control real. Cuando escribas `if` en Python, esa misma claridad será exigida por el lenguaje.',
-        orderFeedback:
-          'El robot necesita el resultado del sensor ANTES de decidir qué hacer con el paraguas: no puede reaccionar a una condición que todavía no consultó.',
-        generalHint:
-          'El robot se detuvo: revisa si cada paso depende de una condición que sí se puede responder con SÍ o NO.',
-        solutionExplanation: [
-          'Primero se consulta la condición (el sensor). Después, una acción distinta para cada resultado posible: SÍ abre, NO mantiene cerrado.',
-          'Fíjate en el orden: no puedes decidir qué hacer con el paraguas antes de conocer el resultado del sensor — la condición siempre se evalúa primero.',
-          'Acabas de construir tu primera estructura de control: una condición evaluable con una acción para cada resultado. Eso es exactamente un `if`/`else` en Python.',
-        ],
+        // `default` conserva exactamente el ejercicio original (sin cambios)
+        // como red de seguridad de orderingFallbackOf — ya no se resuelve
+        // directamente para ninguna modalidad, porque las cuatro tienen
+        // override explícito abajo (ver el comentario "diversidad
+        // pedagógica" junto a los const al inicio del archivo).
+        default: {
+          kind: 'ordering',
+          prompt:
+            'El robot debe decidir si abrir o cerrar el paraguas según la lluvia. Construye la secuencia usando SOLO pasos evaluables — uno de la lista es ambiguo y debes descartarlo.',
+          items: [
+            { id: 'p1', text: 'Consulta el sensor de lluvia', position: 1 },
+            { id: 'p2', text: 'Si el sensor marca SÍ, extiende el paraguas', position: 2 },
+            { id: 'p3', text: 'Si el sensor marca NO, mantén el paraguas plegado', position: 3 },
+            {
+              id: 'd1',
+              text: 'Actúa según el clima',
+              position: null,
+              whyWrong:
+                '«Actúa según el clima» no dice qué condición evaluar ni qué hacer en cada caso — es la meta, no una instrucción evaluable.',
+            },
+          ],
+          successFeedback:
+            'Exacto. Una condición evaluable y una acción distinta para cada resultado posible — eso es una estructura de control real. Cuando escribas `if` en Python, esa misma claridad será exigida por el lenguaje.',
+          orderFeedback:
+            'El robot necesita el resultado del sensor ANTES de decidir qué hacer con el paraguas: no puede reaccionar a una condición que todavía no consultó.',
+          generalHint:
+            'El robot se detuvo: revisa si cada paso depende de una condición que sí se puede responder con SÍ o NO.',
+          solutionExplanation: [
+            'Primero se consulta la condición (el sensor). Después, una acción distinta para cada resultado posible: SÍ abre, NO mantiene cerrado.',
+            'Fíjate en el orden: no puedes decidir qué hacer con el paraguas antes de conocer el resultado del sensor — la condición siempre se evalúa primero.',
+            'Acabas de construir tu primera estructura de control: una condición evaluable con una acción para cada resultado. Eso es exactamente un `if`/`else` en Python.',
+          ],
+        },
+        visual: VISUAL_PRACTICE,
+        reading: READING_PRACTICE,
+        audio: AUDIO_PRACTICE,
+        kinesthetic: KINESTHETIC_PRACTICE,
       },
       pythonBridge: {
         label: 'Esto ya es Python',

@@ -40,6 +40,80 @@ const READING_PRACTICE: PredictOutputPracticeDef = {
   ],
 }
 
+// Sprint "diversidad pedagógica" (jul 2026): antes de este sprint, la
+// práctica PRINCIPAL de visual/audio/kinestésico repetía 'ordering' (arrastrar
+// y ordenar) en TODOS los ciclos del módulo — el mismo patrón de interacción,
+// ciclo tras ciclo, mientras solo 'reading' alternaba con 'predict_output'.
+// Estas tres variantes le dan a cada perfil su PROPIA versión de "predecir la
+// ejecución" — mismo componente ya existente (PredictOutputPractice, cero
+// arquitectura nueva), mismo concepto evaluado (reasignación de variable),
+// pero con su propio tema y voz — nunca el texto genérico de READING_PRACTICE
+// reetiquetado. Los tres reemplazan el 'ordering' que este ciclo heredaría de
+// `default`, rompiendo así la repetición Ciclo 1→Ciclo 2 para cada perfil.
+const VISUAL_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Observa el código y predice qué muestra en pantalla.',
+  code: 'monedas = 5\nmonedas = monedas + 3\nprint(monedas)',
+  options: [
+    { id: 'a', text: '5' },
+    { id: 'b', text: '8' },
+    { id: 'c', text: 'monedas' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'b',
+  successFeedback: 'Exacto — «monedas» empezó en 5, pero «monedas = monedas + 3» la actualizó antes del print(). La caja siempre muestra su último valor, nunca el de arranque.',
+  wrongFeedback: 'Revisa: print(monedas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  solutionExplanation: [
+    'Línea 1: monedas = 5 — crea la caja con el valor 5.',
+    'Línea 2: monedas = monedas + 3 — lee el 5 que había, le suma 3, y guarda 8 en la misma caja.',
+    'Línea 3: print(monedas) — muestra lo que hay AHORA en la caja: 8, no el 5 inicial.',
+  ],
+}
+
+const AUDIO_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Después de escuchar la explicación, decide: ¿qué imprime este código?',
+  code: 'temperatura = 18\ntemperatura = temperatura + 5\nprint(temperatura)',
+  options: [
+    { id: 'a', text: '18' },
+    { id: 'b', text: '23' },
+    { id: 'c', text: 'temperatura' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'b',
+  successFeedback: 'Exacto — «temperatura» empezó en 18, pero «temperatura = temperatura + 5» la actualizó antes del print(). Escuchaste bien: la caja siempre guarda su último valor.',
+  wrongFeedback: 'Revisa: print(temperatura) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  solutionExplanation: [
+    'Línea 1: temperatura = 18 — crea la caja con el valor 18.',
+    'Línea 2: temperatura = temperatura + 5 — lee el 18 que había, le suma 5, y guarda 23 en la misma caja.',
+    'Línea 3: print(temperatura) — muestra lo que hay AHORA en la caja: 23, no el 18 inicial.',
+  ],
+}
+
+// Mismo tema (vidas) que ya predijo mentalmente en la teoría kinestésica de
+// este ciclo ("vidas = 3" / "vidas = vidas - 1") — pero con otros números,
+// para que resolverlo exija aplicar la regla, no solo recordar la respuesta
+// que la teoría ya reveló.
+const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
+  kind: 'predict_output',
+  prompt: 'Antes de revisar, predice: ¿qué imprime este código?',
+  code: 'vidas = 5\nvidas = vidas - 2\nprint(vidas)',
+  options: [
+    { id: 'a', text: '5' },
+    { id: 'b', text: '3' },
+    { id: 'c', text: 'vidas' },
+    { id: 'd', text: 'Error' },
+  ],
+  correctOptionId: 'b',
+  successFeedback: 'Exacto — igual que con la caja de vidas de la teoría, «vidas» empezó en 5 pero perdió 2 antes del print(). Se guarda el resultado, no el valor inicial.',
+  wrongFeedback: 'Revisa: print(vidas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  solutionExplanation: [
+    'Línea 1: vidas = 5 — crea la caja con el valor 5.',
+    'Línea 2: vidas = vidas - 2 — lee el 5 que había, le resta 2, y guarda 3 en la misma caja.',
+    'Línea 3: print(vidas) — muestra lo que hay AHORA en la caja: 3, no el 5 inicial.',
+  ],
+}
+
 export const CICLO_2_VARIABLES: LearningCycle = {
   id: 'ciclo-2',
   conceptId: 'variables',
@@ -152,6 +226,14 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       ],
     },
     reading: READING_PRACTICE,
+    // Sprint "diversidad pedagógica": los tres perfiles restantes también
+    // predicen la ejecución en este ciclo (en vez de heredar 'ordering' de
+    // `default`) — cada uno con su propio tema y voz, nunca el texto de
+    // `reading` reetiquetado. `default` se conserva intacto como red de
+    // seguridad (orderingFallbackOf) y por si una modalidad nueva se agrega.
+    visual: VISUAL_PRACTICE,
+    audio: AUDIO_PRACTICE,
+    kinesthetic: KINESTHETIC_PRACTICE,
   },
   pythonBridge: {
     label: 'Esto ya es Python',

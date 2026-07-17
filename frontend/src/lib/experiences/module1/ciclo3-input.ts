@@ -4,32 +4,8 @@
 // ordenamiento → puente a Python con micropráctica real en Pyodide →
 // decisión → escalera de remediación.
 
-import type { LearningCycle, PredictOutputPracticeDef } from '@/types/moduleExperience'
+import type { LearningCycle } from '@/types/moduleExperience'
 import { INPUT_PRIMER } from '../conceptPrimers'
-
-// Multimodalidad profunda (jul 2026, Sprint 3 — "consolidar antes de
-// ampliar catálogo", mismo patrón ya probado en Ciclo 2/READING_PRACTICE):
-// el lector no arrastra para ordenar — predice la ejecución completa,
-// incluida la pausa real de input(), antes de ver el resultado.
-const READING_PRACTICE: PredictOutputPracticeDef = {
-  kind: 'predict_output',
-  prompt: '¿Qué muestra la pantalla completa? (el usuario escribe: Luna)',
-  code: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
-  options: [
-    { id: 'a', text: '¿Cómo te llamas? Hola, nombre' },
-    { id: 'b', text: 'Hola, Luna' },
-    { id: 'c', text: '¿Cómo te llamas? Hola, Luna' },
-    { id: 'd', text: 'nombre' },
-  ],
-  correctOptionId: 'c',
-  successFeedback: 'Exacto — input() primero muestra su pregunta en pantalla y espera; recién cuando la persona responde, print() usa esa respuesta guardada, nunca la palabra "nombre" en sí.',
-  wrongFeedback: 'Revisa dos cosas: la pregunta de input() SÍ aparece en pantalla (no se oculta), y lo que se guarda en nombre es la respuesta escrita, no la palabra "nombre".',
-  solutionExplanation: [
-    'Línea 1: input("¿Cómo te llamas? ") muestra la pregunta y se detiene. El usuario escribió Luna — ese texto queda guardado en nombre.',
-    'Línea 2: print("Hola,", nombre) usa el valor guardado — Luna — no la palabra "nombre".',
-    'La pantalla completa muestra ambas cosas en orden: primero la pregunta de input(), después el saludo de print().',
-  ],
-}
 
 export const CICLO_3_INPUT: LearningCycle = {
   id: 'ciclo-3',
@@ -144,7 +120,12 @@ export const CICLO_3_INPUT: LearningCycle = {
         'Eso es exactamente lo que hace input(): pregunta, espera, y guarda la respuesta en una variable — la misma variable que ya sabes crear y leer desde el ciclo anterior.',
       ],
     },
-    reading: READING_PRACTICE,
+    // Sprint "diversidad pedagógica" (jul 2026): antes, 'reading' predecía
+    // aquí (predict_output) justo después de haber predicho en Ciclo 2 —
+    // dos ciclos seguidos con la misma dinámica para ese perfil. Sin
+    // override, 'reading' cae a `default` (ordering) — retoma la secuencia
+    // igual que las demás modalidades, y el Ciclo 4 (Módulo 2) vuelve a
+    // alternar a predict_output para las cuatro.
   },
   pythonBridge: {
     label: 'Esto ya es Python',
