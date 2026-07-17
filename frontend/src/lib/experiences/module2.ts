@@ -47,6 +47,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
           'En 1883, Warren Johnson inventó el primer termostato eléctrico: una tira de dos metales que se dobla con el calor. Cuando se dobla lo suficiente (la condición), cierra un circuito y corta la calefacción — si no, la mantiene encendida.',
         connection:
           'Ese termostato de 1883 ya tenía exactamente la estructura que vas a construir hoy: una condición que se puede medir como SÍ o NO, y una acción distinta para cada resultado — sin escribir una sola línea de código.',
+        source: 'National Inventors Hall of Fame',
       },
       concept: {
         title: '¿Qué hace evaluable a una condición?',

@@ -15,6 +15,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
       'En 1801, el telar de Jacquard tejía patrones complejos usando tarjetas perforadas: cada agujero (o su ausencia) le decía a la máquina exactamente qué hilo levantar. Sin una tarjeta ambigua — el telar no sabía "interpretar", solo ejecutar.',
     connection:
       'Ese telar resolvía el mismo problema que vas a resolver hoy, más de un siglo antes de la primera computadora: cómo darle instrucciones a una máquina que no puede adivinar nada.',
+    source: 'Computer History Museum',
   },
   concept: {
     title: '¿Qué hace precisa a una instrucción?',

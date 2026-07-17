@@ -68,6 +68,7 @@ const EMPTY_ORDERING_FALLBACK: OrderingPracticeDef = {
 type Phase =
   | 'opening'
   | 'reveal'
+  | 'curiosity'
   | 'concept'
   | 'practice'
   | 'decision'
@@ -116,7 +117,7 @@ const WELCOME_BACK_MS = 5000
 // alcanzan para reconstruir qué refuerzo o peldaño estaba activo (se busca de
 // nuevo en el propio contenido del ciclo, nunca se serializa el objeto).
 const RESUMABLE_PHASES: Phase[] = [
-  'opening', 'reveal', 'concept', 'practice', 'decision', 'reinforcement', 'remediation', 'slice_end',
+  'opening', 'reveal', 'curiosity', 'concept', 'practice', 'decision', 'reinforcement', 'remediation', 'slice_end',
 ]
 
 interface ExperienceCursor {
@@ -154,6 +155,14 @@ interface ExperienceCursor {
 }
 
 const cursorKey = (moduleId: string) => `experience-cursor:${moduleId}`
+
+/** Fase de ENTRADA a un ciclo (sprint "UX ¿Sabías que...?", jul 2026): un
+ *  ciclo con curiosityFact abre con su propia pantalla ("¿Sabías que...?",
+ *  con fuente y Continuar); uno sin ella cae directo al contenido principal
+ *  — mismo comportamiento previo exacto para esos ciclos. */
+function firstPhaseFor(cycle: { curiosityFact?: unknown } | undefined): 'curiosity' | 'concept' {
+  return cycle?.curiosityFact ? 'curiosity' : 'concept'
+}
 
 function defaultMastery(definition: ModuleExperienceDefinition): Record<string, number> {
   return Object.fromEntries(definition.cycles.map(c => [c.conceptId, c.priorMastery]))
@@ -546,11 +555,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     setPrimerIndex(0)
     if (cycleIndex + 1 < definition.cycles.length) {
       setCycleIndex(i => i + 1)
-      setPhase('concept')
+      setPhase(firstPhaseFor(definition.cycles[cycleIndex + 1]))
     } else {
       setPhase('slice_end')
     }
-  }, [cycleIndex, definition.cycles.length])
+  }, [cycleIndex, definition.cycles])
 
   /** @param pendingGain ganancia que el llamador acaba de aplicar con bumpMastery.
    *  El estado `mastery` de este closure es el ANTERIOR al bump (React agrupa las
@@ -976,7 +985,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               Territorio: {definition.territory}
             </span>
           </div>
-          <Button className="w-full gap-2" onClick={() => setPhase('concept')}>
+          <Button className="w-full gap-2" onClick={() => setPhase(firstPhaseFor(cycle))}>
             Comenzar →
           </Button>
         </div>
@@ -1161,10 +1170,21 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         </div>
       )}
 
+      {/* "¿Sabías que...?" (sprint "UX ¿Sabías que...?", jul 2026): pantalla
+          propia al ENTRAR al ciclo — dato, fuente verificable, Continuar —
+          antes de las microexplicaciones o la teoría. Un ciclo sin
+          curiosityFact nunca pasa por esta fase (firstPhaseFor lo salta). */}
+      {phase === 'curiosity' && cycle && cycle.curiosityFact && (
+        <CuriosityFactCard
+          fact={cycle.curiosityFact}
+          onContinue={() => setPhase('concept')}
+        />
+      )}
+
       {/* Microexplicaciones del ciclo (sprint "mejora pedagógica", jul 2026):
-          una tarjeta corta por término nuevo, ANTES de curiosityFact/concept
-          — nunca junto a ellos. Un ciclo sin conceptPrimers (o ya confirmadas
-          todas) cae directo al bloque de siempre, sin cambio de comportamiento. */}
+          una tarjeta corta por término nuevo, ANTES del concepto — nunca
+          junto a él. Un ciclo sin conceptPrimers (o ya confirmadas todas)
+          cae directo al bloque de siempre, sin cambio de comportamiento. */}
       {phase === 'concept' && cycle && cycle.conceptPrimers && primerIndex < cycle.conceptPrimers.length && (
         <ConceptPrimerCard
           key={`${cycle.id}-primer-${primerIndex}`}
@@ -1175,7 +1195,6 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
       {phase === 'concept' && cycle && (!cycle.conceptPrimers || primerIndex >= cycle.conceptPrimers.length) && (
         <div className="space-y-5">
-          {cycle.curiosityFact && <CuriosityFactCard fact={cycle.curiosityFact} />}
           <ConceptStep
             concept={resolveConceptForRender(cycle, effectiveModality, profundidad)}
             modality={effectiveModality}

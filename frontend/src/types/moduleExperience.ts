@@ -203,6 +203,13 @@ export interface CuriosityFact {
   fact: string
   /** Por qué este dato conecta con lo que el estudiante está por aprender. */
   connection: string
+  /** Origen verificable del dato (sprint "UX ¿Sabías que...?", jul 2026) —
+   *  nunca una referencia inventada. No es cita APA: solo el nombre de la
+   *  fuente real donde el dato puede confirmarse (p. ej. "Computer History
+   *  Museum", "National Inventors Hall of Fame", "Python.org", "PEP 20",
+   *  "Real Python", "MDN"). Obligatorio: un dato sin fuente verificable no
+   *  debería mostrarse como curiosidad. */
+  source: string
 }
 
 // ── Puente a Python ─────────────────────────────────────────────────────────────
