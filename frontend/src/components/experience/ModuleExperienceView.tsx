@@ -7,7 +7,9 @@
 // Módulo, solo que ahora también se dispara aquí.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map } from 'lucide-react'
+import {
+  ArrowLeft, BookOpen, CheckCircle2, Compass, FlaskConical, GraduationCap, LifeBuoy, Map, Route, TrendingUp,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
@@ -22,7 +24,7 @@ import { PredictOutputPractice } from './PredictOutputPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
-import { useSubmitCycleEvidence } from '@/hooks/useStudent'
+import { useLearningPath, useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
 import {
   alternateModality, describeAdaptation, describeResourceFraming,
@@ -269,6 +271,12 @@ const MASTERY_TIME_PENALTY = 0.05
 const MASTERY_SLOW_MS = 90_000
 const MASTERY_FLOOR = 0.05
 
+/** Umbral de "dominado" — mismo valor que evaluatorVerdict ya usaba (avg >=
+ *  0.45) para decidir su tono, nombrado aquí para reutilizarlo también en el
+ *  checklist "Hoy dominaste" del cierre (sprint "continuidad del progreso",
+ *  jul 2026) sin repetir el número mágico en dos lugares. */
+const MASTERY_DOMINATED_THRESHOLD = 0.45
+
 /** Resolver con más andamiaje acredita menos dominio. El Nivel 3 (solución
  *  explicada) no acredita nada: el estudiante continúa, pero el perfil registra
  *  que el concepto sigue sin dominarse. */
@@ -306,6 +314,16 @@ function outcomeLabel(outcome: PracticeOutcome): 'domino_solo' | 'con_pistas' | 
 
 export function ModuleExperienceView({ definition, moduleId, modality, courseId, onExit, onFinish, initialProfundidad }: Props) {
   const submitCycleEvidence = useSubmitCycleEvidence()
+  // Sprint "continuidad del progreso" (jul 2026): mismo hook y mismo endpoint
+  // que ya usan Dashboard.tsx y LearningPath.tsx para "X/Y misiones
+  // completadas" — reutilizado aquí, no reinventado, para que el cierre de un
+  // ciclo pueda mostrar el progreso acumulado del CURSO, no solo el de este
+  // módulo. React Query ya cachea esta consulta por courseId: si el
+  // estudiante vino de /estudiante/path, este fetch normalmente resuelve
+  // desde caché sin una llamada de red nueva. `courseId` ausente (demo local
+  // sin evaluación continua) deja el hook deshabilitado — el panel de
+  // progreso acumulado simplemente no se muestra, nunca bloquea el cierre.
+  const learningPath = useLearningPath(courseId)
 
   // A1 — rehidratar el cursor persistido una sola vez al montar. Ya no es solo
   // la pantalla: todo el sub-estado pedagógico se restaura junto con ella
@@ -474,24 +492,41 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       ? definition.closing.hypothesis.verdicts[openingAnswer.option] ?? null
       : null
 
+  // Sprint "continuidad del progreso" (jul 2026): UNA sola derivación de
+  // mastery/priorMastery para todo el cierre — evaluatorVerdict ya calculaba
+  // `avg` (dominio actual promedio) en su propio useMemo; el checklist "Hoy
+  // dominaste" y la frase "tu dominio aumentó" necesitan esa MISMA cifra más
+  // el punto de partida (priorMastery, ya definido por cada LearningCycle
+  // desde S1 — nunca un dato nuevo). Calculada una vez, consumida en los dos
+  // lugares — nunca recomputada ni duplicada.
+  const moduleMasterySummary = useMemo(() => {
+    const avgBefore = definition.cycles.length
+      ? definition.cycles.reduce((sum, c) => sum + c.priorMastery, 0) / definition.cycles.length
+      : 0
+    const avgAfter = definition.cycles.length
+      ? definition.cycles.reduce((sum, c) => sum + (mastery[c.conceptId] ?? 0), 0) / definition.cycles.length
+      : 0
+    const masteredCycles = definition.cycles.filter(c => (mastery[c.conceptId] ?? 0) >= MASTERY_DOMINATED_THRESHOLD)
+    return { avgBefore, avgAfter, masteredCycles }
+  }, [definition.cycles, mastery])
+
   // BUG-002 (C-51) — el cierre lo pronuncia el Agente Evaluador con la
   // evidencia real observada (dominio + remediación), no una pantalla anónima.
   // Decide el TONO, nunca el paso: continuar siempre es posible (PED-06).
   const evaluatorVerdict = useMemo(() => {
     if (phase !== 'slice_end') return null
-    const values = definition.cycles.map(c => mastery[c.conceptId] ?? 0)
-    const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
+    const avg = moduleMasterySummary.avgAfter
     const maxRemediation = readEvidence(moduleId)
       .filter(e => e.type === 'remediation_level')
       .reduce((max, e) => Math.max(max, Number(e.detail.level) || 0), 0)
-    if (avg >= 0.45 && maxRemediation === 0) {
+    if (avg >= MASTERY_DOMINATED_THRESHOLD && maxRemediation === 0) {
       return 'Observé tus prácticas: construiste este concepto por tu cuenta, sin necesitar apoyo. Este territorio es tuyo — podemos continuar.'
     }
     if (avg >= 0.3) {
       return 'Observé tus prácticas: lo resolviste con algo de apoyo. Es suficiente para avanzar — llevo anotado qué reforzar contigo más adelante.'
     }
     return 'Observé tus prácticas: este concepto todavía se está construyendo, y necesitaste mi ayuda máxima. Puedes continuar — lo dejé registrado para volver sobre él contigo.'
-  }, [definition.cycles, mastery, moduleId, phase])
+  }, [moduleMasterySummary, moduleId, phase])
 
   const bumpMastery = useCallback((conceptId: string, delta: number) => {
     setMastery(prev => ({
@@ -1034,9 +1069,77 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   }
 
   if (phase === 'slice_end') {
+    // Sprint "continuidad del progreso" (jul 2026): el cierre dejaba de
+    // sentirse como una sesión aislada ("100% → Fin") recién con estos tres
+    // datos, y los tres ya existían en el sistema — ninguno se inventa aquí:
+    //
+    //   1. moduleMasterySummary (arriba, useMemo) — mismo dominio real que ya
+    //      alimentaba a evaluatorVerdict.
+    //   2. learningPath (mismo hook que Dashboard.tsx/LearningPath.tsx ya usan
+    //      para "X/Y misiones completadas") — progreso ACUMULADO del curso,
+    //      no solo de este módulo. `completedAfter` proyecta el cierre que
+    //      handleFinish está a punto de confirmar en el backend (doComplete,
+    //      en ModuleLearningView.tsx, marca esta misión 'completed' y navega
+    //      de inmediato) — nunca inventa una misión que no exista en items.
+    //   3. definition.closing.nextMission (ya existía, ModuleExperienceDefinition)
+    //      — de dónde sale la frase de continuidad.
+    const pathItems = learningPath.data?.items ?? []
+    const totalMissions = pathItems.length
+    const completedBefore = pathItems.filter(i => i.status === 'completed').length
+    const thisAlreadyCounted = pathItems.find(i => i.id === moduleId)?.status === 'completed'
+    const completedAfter = totalMissions > 0
+      ? Math.min(totalMissions, completedBefore + (thisAlreadyCounted ? 0 : 1))
+      : 0
+    const coursePct = totalMissions > 0 ? Math.round((completedAfter / totalMissions) * 100) : null
+    const courseComplete = totalMissions > 0 && completedAfter === totalMissions
+
+    const continuityMessage = definition.closing.nextMission
+      ? `La próxima vez continuarás directo en «${definition.closing.nextMission.title}».`
+      : courseComplete
+        ? `Completaste toda tu ruta de ${learningPath.data?.course_name ?? 'aprendizaje'} — tu progreso quedó guardado.`
+        : 'Tu progreso quedó guardado — la próxima vez continuarás justo desde aquí.'
+
     return (
       <div className="max-w-2xl mx-auto py-8 space-y-6 animate-in fade-in duration-500">
         <div className="glass-panel rounded-2xl p-8 space-y-6">
+          {/* "Hoy dominaste" — el mismo dominio de siempre, presentado como
+              un logro de ESTA sesión (checklist), no solo como una barra
+              estática que reemplaza a la anterior sin decir qué cambió. */}
+          {moduleMasterySummary.masteredCycles.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-emerald-400">
+                  Hoy dominaste
+                </p>
+              </div>
+              <ul className="space-y-1.5 pl-0.5">
+                {moduleMasterySummary.masteredCycles.map(c => (
+                  <li key={c.conceptId} className="flex items-center gap-2 text-sm text-neural-text/90">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    {c.conceptLabel}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* "Tu dominio aumentó" — mismo promedio que evaluatorVerdict ya
+              calculaba, ahora también expresado como el DELTA real desde
+              priorMastery (el punto de partida de cada ciclo), no solo el
+              número final. */}
+          {moduleMasterySummary.avgAfter > moduleMasterySummary.avgBefore && (
+            <div className="flex items-center gap-2.5 rounded-xl border border-neural-glow/20 bg-neural-glow/5 px-4 py-3">
+              <TrendingUp className="h-4 w-4 text-neural-glow shrink-0" />
+              <p className="text-sm text-neural-text/90 leading-relaxed">
+                Tu dominio en este territorio subió de{' '}
+                <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgBefore * 100)}%</span>
+                {' '}a{' '}
+                <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgAfter * 100)}%</span>.
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center gap-2.5">
             <Map className="h-4 w-4 text-neural-glow shrink-0" />
             <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-glow">
@@ -1127,6 +1230,39 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               </p>
             </div>
           )}
+
+          {/* "Mostrar progreso acumulado" — mismo dato que ya muestra el
+              Dashboard ("X/Y misiones completadas"), consumido aquí vía el
+              mismo hook (useLearningPath), no reinventado. Ausente sin
+              courseId (demo local) o mientras el fetch está en vuelo — nunca
+              bloquea el cierre. */}
+          {totalMissions > 0 && coursePct !== null && (
+            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-2.5">
+              <div className="flex items-center gap-2.5">
+                <Route className="h-4 w-4 text-neural-violet shrink-0" />
+                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
+                  Tu progreso en {learningPath.data?.course_name ?? 'tu ruta de aprendizaje'}
+                </p>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm text-neural-text/90">{completedAfter}/{totalMissions} misiones</p>
+                <span className="text-sm font-mono text-neural-violet">{coursePct}%</span>
+              </div>
+              <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-neural-violet h-1.5 rounded-full transition-all duration-700"
+                  style={{ width: `${coursePct}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* "La próxima vez continuarás desde aquí" — nombra un mecanismo que
+              YA existe (cursor persistido, Misión Activa) en vez de dejar que
+              el botón de abajo se sienta como el final de todo. */}
+          <p className="text-xs text-neural-muted text-center leading-relaxed">
+            {continuityMessage}
+          </p>
 
           <Button className="w-full" onClick={handleFinish}>
             {/* "misión", nunca "módulo" — el resto de la experiencia ya evita esa
