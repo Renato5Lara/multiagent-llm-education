@@ -625,17 +625,21 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             : basePriority
           const preferChallenge = profundidad === 'aplicacion'
           // "reto" (señal de fluidez, ya confirmada por Tutorizar con
-          // tiempo/ayudas reales — no solo profundidad="aplicacion"
-          // genérico, que YA fuerza preferChallenge por sí sola: sin este
-          // caso especial, "reto" nunca cambiaba nada que "aplicacion" no
-          // causara ya, con o sin la señal real — el estudiante veía
-          // exactamente el mismo reto de siempre, incluso otra práctica
-          // repetida si el ciclo no traía un refuerzo tipo "reto"). Ahora,
-          // fluidez confirmada NO ofrece ningún refuerzo — nada que
-          // reforzar, avanza directo — en vez de otra práctica que ya no
-          // hace falta.
+          // tiempo/ayudas reales): los 4 ciclos autorados YA traen un
+          // Reinforcement kind="reto" con su propia práctica real
+          // (ordering/predict_output) — una oportunidad de aprendizaje
+          // genuina, no una repetición. El sprint anterior lo descartaba
+          // siempre (reinforcement = undefined) para evitar el bug real
+          // de caer a un refuerzo fácil cuando el ciclo no traía "reto" —
+          // pero de paso también descartaba el "reto" cuando SÍ existía.
+          // Ahora: si el ciclo trae un "reto" real, se muestra (avanza
+          // rápido → desafío mayor, en vez de solo avanzar); si no lo
+          // trae, sigue sin ofrecer nada — nunca cae a un tipo distinto.
+          const retoDisponible = andamiaje === 'reto'
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, ['reto'])
+            : undefined
           const reinforcement = andamiaje === 'reto'
-            ? undefined
+            ? retoDisponible?.kind === 'reto' ? retoDisponible : undefined
             : profundidad === 'fundamentos' || profundidad === 'aplicacion'
               ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, preferChallenge, reinforcementPriority)
               : undefined
