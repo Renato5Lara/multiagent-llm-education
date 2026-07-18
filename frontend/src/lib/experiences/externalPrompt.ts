@@ -38,7 +38,9 @@ const TASK_BY_MODALITY: Record<LearningModality, string> = {
   reading:
     'Escribe el guion de un VIDEO explicativo de 2 a 3 minutos sobre este concepto: ' +
     'escena por escena, qué se ve en pantalla y qué dice la voz, con un ejemplo ' +
-    'desarrollado de principio a fin.',
+    'desarrollado de principio a fin. Además, sugiéreme 2 o 3 videos REALES que ya ' +
+    'existan (título y canal, o el término exacto de búsqueda) donde este concepto ' +
+    'esté bien explicado en español para principiantes.',
   kinesthetic:
     'Diseña una SIMULACIÓN interactiva de este concepto para hacerla aquí mismo en el chat, ' +
     'paso a paso: tú me das una situación, yo predigo o decido, y tú me confirmas o corriges ' +
