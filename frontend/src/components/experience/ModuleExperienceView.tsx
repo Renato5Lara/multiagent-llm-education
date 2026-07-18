@@ -1412,6 +1412,25 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           >
             Ciclo {cycleIndex + 1} de {definition.cycles.length}
           </span>
+          {/* UX-10 "Gamificación educativa": la racha de dominio YA existía
+              como señal interna (fluencyStreak — ciclos cerrados donde el
+              Runtime confirmó dominio con andamiaje 'reto'); ahora el
+              estudiante la VE. No es un punto vacío: su consecuencia real
+              es que el sistema retira andamiaje (pythonSkipStages salta
+              los peldaños triviales del próximo ciclo). La recompensa ES
+              el aprendizaje demostrado — se corta a 0 con cualquier
+              tropiezo real, nunca se acumula por completar pantallas. */}
+          {fluencyStreak > 0 && (
+            <span
+              className={cn(
+                'text-[10px] font-mono px-2 py-1 rounded-full border',
+                'border-amber-400/40 text-amber-300 bg-amber-400/10',
+              )}
+              title={`Cerraste ${fluencyStreak} ${fluencyStreak === 1 ? 'concepto' : 'conceptos'} seguidos demostrando dominio sin ayuda — el sistema responde retirándote andamiaje: tu próximo reto de código empieza más adelante.`}
+            >
+              🔥 Dominio ×{fluencyStreak}
+            </span>
+          )}
         </div>
       </div>
 
