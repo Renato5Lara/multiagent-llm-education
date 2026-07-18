@@ -60,6 +60,13 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
   const framed = FRAMED_MEDIA.includes(variant.medium)
+  // Sprint UX-01: con imagen real en pantalla, la infografía ES la teoría y
+  // el texto queda en rol de apoyo (menor y atenuado) — nunca compitiendo a
+  // igual jerarquía con la imagen. Sin imagen, jerarquía previa intacta.
+  const imageShown = hasIllustrationImage(variant)
+  const bodyClass = imageShown
+    ? 'text-sm text-neural-muted leading-relaxed'
+    : 'text-sm md:text-base text-neural-text/90 leading-relaxed'
   // La narración es el medio principal cuando existe: sin engancharse con
   // ella (o abrir la transcripción como alternativa consciente), el
   // estudiante no vio ningún contenido real, solo un reproductor sin usar.
@@ -175,7 +182,7 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
               )
             ) : (
               variant.body.map((paragraph, i) => (
-                <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
+                <p key={i} className={bodyClass}>
                   {paragraph}
                 </p>
               ))
