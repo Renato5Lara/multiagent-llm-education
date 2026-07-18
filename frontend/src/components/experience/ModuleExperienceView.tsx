@@ -1436,6 +1436,8 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             modality={effectiveModality}
             onContinue={handleConceptDone}
             earlyReinforcement={profundidad === 'fundamentos' ? cycle.remediation?.steps[0]?.illustration : undefined}
+            profundidad={profundidad}
+            conceptLabel={cycle.conceptLabel}
           />
         </div>
       )}

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AudioNarration } from './AudioNarration'
 import { ConceptInteractionCard } from './ConceptInteractionCard'
+import { ExternalResourceLauncher } from './ExternalResourceLauncher'
 import { LearningAnchor } from './LearningAnchor'
 import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { PythonBridge } from './PythonBridge'
@@ -53,9 +54,16 @@ interface Props {
    *  ahora también se ofrece proactivamente, antes de intentarla. Ningún
    *  campo ni componente nuevo — mismo contenido, mostrado antes. */
   earlyReinforcement?: { mediumLabel: string; body: string[] }
+  /** Sprint UX-08: profundidad real ya decidida por el Runtime (si existe)
+   *  — alimenta el "nivel" del prompt para herramientas externas; nunca
+   *  cambia qué teoría se muestra (eso ya lo resolvió el llamador). */
+  profundidad?: string
+  /** Nombre corto del concepto (cycle.conceptLabel) para el prompt externo.
+   *  Sin él, el botón de recursos externos no se muestra. */
+  conceptLabel?: string
 }
 
-export function ConceptStep({ concept, modality, onContinue, earlyReinforcement }: Props) {
+export function ConceptStep({ concept, modality, onContinue, earlyReinforcement, profundidad, conceptLabel }: Props) {
   const startRef = useRef(Date.now())
   const [showTranscript, setShowTranscript] = useState(false)
   const [narrationEngaged, setNarrationEngaged] = useState(false)
@@ -252,6 +260,19 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
 
       {variant.sourceNote && (
         <p className="text-xs text-neural-muted/60 italic px-1">{variant.sourceNote}</p>
+      )}
+
+      {/* Sprint UX-08: recurso externo inteligente — un botón discreto que
+          prepara un prompt con el contenido real de ESTE ciclo para que el
+          estudiante lo pegue en ChatGPT/Claude/Gemini. La plataforma nunca
+          genera ni envía nada. Solo aparece con conceptLabel disponible. */}
+      {conceptLabel && (
+        <ExternalResourceLauncher
+          modality={modality}
+          concept={concept}
+          conceptLabel={conceptLabel}
+          profundidad={profundidad}
+        />
       )}
       </div>
 
