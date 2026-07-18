@@ -11,7 +11,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Code2, Eye, GraduationCap, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
+import { classifyPythonError, parsePythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef, PythonPracticeMode } from '@/types/moduleExperience'
@@ -65,6 +65,42 @@ const ERROR_CATEGORY_LABEL: Record<PythonErrorCategory, string> = {
   variables: 'Python buscó algo que todavía no existe — un nombre usado antes de crearlo.',
   logica: 'Tu código se ejecutó, pero algo en el camino no hizo lo que esperabas.',
   salida: 'Tu código corrió sin errores — pero lo que muestra no es exactamente lo pedido.',
+}
+
+/** Sprint UX-04 — el error como material de aprendizaje, nunca solo un
+ *  traceback: señala la LÍNEA del código del estudiante, la muestra
+ *  resaltada, traduce la excepción a lenguaje de principiante, y deja el
+ *  detalle técnico original disponible sin imponerlo. El botón Ejecutar
+ *  sigue activo — reintentar es siempre el siguiente paso natural. */
+function PythonErrorCard({ error, code }: { error: string; code: string }) {
+  const parsed = parsePythonError(error)
+  const codeLines = code.split('\n')
+  const offendingLine =
+    parsed.line !== null && parsed.line >= 1 && parsed.line <= codeLines.length
+      ? codeLines[parsed.line - 1]
+      : null
+  return (
+    <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3.5 py-3 space-y-2">
+      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-amber-400">
+        {parsed.line !== null ? `Error en la línea ${parsed.line} — ${parsed.name}` : `Error — ${parsed.name}`}
+      </p>
+      {offendingLine !== null && offendingLine.trim() !== '' && (
+        <pre className="rounded-md border border-amber-500/25 bg-black/40 px-3 py-1.5 font-mono text-[13px] text-amber-200 whitespace-pre overflow-x-auto">
+          {offendingLine}
+        </pre>
+      )}
+      <p className="text-sm text-neural-text/90 leading-relaxed">
+        {parsed.translation ?? (parsed.message || 'Python no pudo ejecutar el código.')}
+      </p>
+      <p className="text-xs text-neural-muted/80">
+        Corrige la línea y vuelve a presionar <span className="font-semibold text-neural-text/80">Ejecutar</span> — equivocarse y reintentar es exactamente cómo se aprende a programar.
+      </p>
+      <details className="text-xs text-neural-muted/60">
+        <summary className="cursor-pointer select-none">Ver el mensaje original de Python</summary>
+        <pre className="mt-1.5 font-mono text-[11px] whitespace-pre-wrap break-words opacity-80">{error}</pre>
+      </details>
+    </div>
+  )
 }
 
 interface Props {
@@ -430,9 +466,13 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     </div>
   )
 
-  // Laboratorio: el editor deja de ser una franja de 3 líneas — crece con el
-  // código (acotado) para que escribir sea cómodo sin scroll interno.
-  const editorRows = labMode ? Math.min(16, Math.max(8, code.split('\n').length + 2)) : 3
+  // El editor crece con el código (acotado) para que escribir sea cómodo sin
+  // scroll interno — UX-04 extiende al modo inline lo que el laboratorio ya
+  // hacía: la franja fija de 3 líneas quedaba demasiado pequeña apenas el
+  // ejercicio pasaba de una línea.
+  const editorRows = labMode
+    ? Math.min(16, Math.max(8, code.split('\n').length + 2))
+    : Math.min(12, Math.max(5, code.split('\n').length + 2))
   const editorBlock = (
     <textarea
       value={code}
@@ -492,7 +532,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     </div>
   )
 
-  const rawErrorBlock = error && !showSolution && <p className="text-sm text-amber-400">{error}</p>
+  // UX-04: nunca solo el traceback — línea señalada y resaltada, explicación
+  // en lenguaje de estudiante, y el mensaje original disponible sin imponerlo.
+  const rawErrorBlock = error && !showSolution && <PythonErrorCard error={error} code={code} />
 
   // Tras un acierto (etapa intermedia en espera de "Continuar", o la
   // última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
