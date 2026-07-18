@@ -73,6 +73,12 @@ interface Props {
 export function ConceptStep({ concept, modality, onContinue, earlyReinforcement, profundidad, conceptLabel, primers }: Props) {
   const startRef = useRef(Date.now())
   const [showTranscript, setShowTranscript] = useState(false)
+  // UX-07 "Recursos cognitivos": en el perfil visual con imagen real, el
+  // texto de apoyo vive colapsado ("Ver explicación escrita") — el
+  // estudiante visual recuerda imágenes, no párrafos. Paralelo exacto de
+  // la transcripción del perfil auditivo: la palabra escrita disponible a
+  // un clic, nunca borrada, nunca impuesta.
+  const [showBodyText, setShowBodyText] = useState(false)
   const [narrationEngaged, setNarrationEngaged] = useState(false)
   // Sprint UX-07 "Learning Anchors": no solo CUÁNTAS predicciones se
   // respondieron — también en qué ORDEN y qué se eligió. Una predicción
@@ -254,6 +260,35 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
                   className="text-xs text-neural-muted underline underline-offset-2"
                 >
                   Ver transcripción
+                </button>
+              )
+            ) : imageShown && modality === 'visual' ? (
+              /* UX-07: perfil visual con imagen real — "mira, no leas". El
+                 texto de apoyo queda colapsado, igual que la transcripción
+                 del perfil auditivo: disponible a un clic, nunca impuesto.
+                 La imagen (con su propia leyenda embebida) ES la teoría. */
+              showBodyText ? (
+                <div className="space-y-4">
+                  {variant.body.map((paragraph, i) => (
+                    <p key={i} className={bodyClass}>
+                      {paragraph}
+                    </p>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowBodyText(false)}
+                    className="text-xs text-neural-muted underline underline-offset-2"
+                  >
+                    Ocultar explicación escrita
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowBodyText(true)}
+                  className="text-xs text-neural-muted underline underline-offset-2"
+                >
+                  Ver explicación escrita
                 </button>
               )
             ) : (
