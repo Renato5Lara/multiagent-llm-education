@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Sprint UX-06 — segundo recurso visual del Ciclo 1 (instrucciones
+       precisas). Visualiza la MISMA analogía que ya cuenta el texto
+       (secondExample.body: "el manual de calibración del robot"), nunca
+       una idea nueva. Plantilla B (Comparación) — design-system-
+       ilustraciones.md §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Panel vago -->
+  <rect x="56" y="56" width="688" height="304" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <!-- Ícono llave inglesa (ancla temática) -->
+  <g stroke="#f59e0b" stroke-width="2.5" fill="none" opacity="0.85" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 672 96 a 14 14 0 1 0 -9 13 l 26 26 l 9 -9 l -8 -8 l 6 -6 l -9 -9 z"/>
+  </g>
+  <text x="96" y="110" fill="#f59e0b" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">AMBIGUA</text>
+  <text x="96" y="162" fill="#f8fafc" font-size="31" font-weight="600">«AJUSTA EL BRAZO»</text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#f59e0b" stroke-width="2" fill="none">
+      <circle cx="110" cy="212" r="13"/><circle cx="110" cy="264" r="13"/><circle cx="110" cy="316" r="13"/>
+    </g>
+    <g fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">
+      <text x="110" y="218">?</text><text x="110" y="270">?</text><text x="110" y="322">?</text>
+    </g>
+    <text x="140" y="220">¿qué pieza?</text>
+    <text x="140" y="272">¿cuánto?</text>
+    <text x="140" y="324">¿en qué dirección?</text>
+  </g>
+
+  <!-- Flecha de transformación -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="384" x2="400" y2="430"/>
+    <polyline points="388,418 400,432 412,418"/>
+  </g>
+  <text x="424" y="415" fill="#94a3b8" font-size="19">hazla precisa</text>
+
+  <!-- Panel preciso -->
+  <rect x="56" y="464" width="688" height="398" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="518" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">PRECISA</text>
+  <text x="96" y="566" fill="#f8fafc" font-size="25" font-weight="600">«GIRA EL TORNILLO DE LA</text>
+  <text x="96" y="600" fill="#f8fafc" font-size="25" font-weight="600">ARTICULACIÓN DEL CODO</text>
+  <text x="96" y="634" fill="#f8fafc" font-size="25" font-weight="600">DOS VUELTAS EN SENTIDO</text>
+  <text x="96" y="668" fill="#f8fafc" font-size="25" font-weight="600">HORARIO, HASTA SENTIR</text>
+  <text x="96" y="702" fill="#f8fafc" font-size="25" font-weight="600">RESISTENCIA.»</text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#10b981" stroke-width="2.5" fill="none">
+      <polyline points="100,744 108,752 122,736"/>
+      <polyline points="100,788 108,796 122,780"/>
+      <polyline points="100,832 108,840 122,824"/>
+    </g>
+    <text x="140" y="752">qué pieza</text>
+    <text x="140" y="796">cuánto</text>
+    <text x="140" y="840">hasta cuándo</text>
+  </g>
+
+  <!-- Leyenda -->
+  <text x="400" y="920" fill="#94a3b8" font-size="21" text-anchor="middle">Es la misma regla de la puerta, en un contexto distinto: una</text>
+  <text x="400" y="950" fill="#94a3b8" font-size="21" text-anchor="middle">instrucción precisa no cambia según la tarea, cambia según cuánto deja adivinar.</text>
+</svg>

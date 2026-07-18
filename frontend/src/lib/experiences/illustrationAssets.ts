@@ -27,6 +27,14 @@ import m1c3Teoria from '@/assets/illustrations/m1-c3-teoria-pregunta-input.svg'
 import m1c3L2 from '@/assets/illustrations/m1-c3-l2-cartel-robot.svg'
 import m2c1Teoria from '@/assets/illustrations/m2-c1-teoria-condicion-paraguas.svg'
 import m2c1L2 from '@/assets/illustrations/m2-c1-l2-aire-mal.svg'
+// Sprint UX-06 "Perfil visual real" (jul 2026): segundo recurso visual por
+// concepto — visualiza la MISMA analogía que `secondExample.body` ya cuenta
+// en prosa (manual de calibración, compartimento, cartel, pausa real),
+// nunca una idea pedagógica nueva. Solo se muestran en el perfil visual.
+import m1c1Analogia from '@/assets/illustrations/m1-c1-analogia-manual-calibracion.svg'
+import m1c2Analogia from '@/assets/illustrations/m1-c2-analogia-compartimento.svg'
+import m1c3Analogia from '@/assets/illustrations/m1-c3-analogia-pausa-real.svg'
+import m2c1Analogia from '@/assets/illustrations/m2-c1-analogia-alarma-incendios.svg'
 
 export const ILLUSTRATION_ASSETS: Record<string, string> = {
   'm1-c1-teoria-cruza-habitacion': m1c1Teoria,
@@ -37,6 +45,10 @@ export const ILLUSTRATION_ASSETS: Record<string, string> = {
   'm1-c3-l2-cartel-robot': m1c3L2,
   'm2-c1-teoria-condicion-paraguas': m2c1Teoria,
   'm2-c1-l2-aire-mal': m2c1L2,
+  'm1-c1-analogia-manual-calibracion': m1c1Analogia,
+  'm1-c2-analogia-compartimento': m1c2Analogia,
+  'm1-c3-analogia-pausa-real': m1c3Analogia,
+  'm2-c1-analogia-alarma-incendios': m2c1Analogia,
 }
 
 /** Resuelve un `imageAsset` (clave) a su URL real ya empaquetada por Vite.

@@ -231,17 +231,32 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
       {hasAside && (
         <div className="space-y-4 lg:sticky lg:top-4">
           {/* Un segundo caso — no un refuerzo opcional, parte del recorrido:
-              la teoría no depende de un solo ejemplo para fijar la idea. */}
+              la teoría no depende de un solo ejemplo para fijar la idea.
+              Sprint UX-06 "Perfil visual real": con imagen real declarada
+              Y perfil visual, se muestra ESA imagen — la MISMA analogía que
+              `body` ya cuenta en prosa, solo con una segunda forma de
+              leerse. Otros perfiles, o sin imagen todavía, ven el texto
+              exactamente como antes — comportamiento previo intacto. */}
           {concept.secondExample && (
             <div className="glass-panel rounded-2xl p-5 space-y-3">
               <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-                {concept.secondExample.label}
+                {modality === 'visual' && hasIllustrationImage(concept.secondExample)
+                  ? (concept.secondExample.visualMediumLabel ?? concept.secondExample.label)
+                  : concept.secondExample.label}
               </p>
-              {concept.secondExample.body.map((paragraph, i) => (
-                <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
+              {modality === 'visual' && hasIllustrationImage(concept.secondExample) ? (
+                <IllustrationVisual
+                  imageUrl={concept.secondExample.imageUrl}
+                  imageAsset={concept.secondExample.imageAsset}
+                  alt={concept.secondExample.label}
+                />
+              ) : (
+                concept.secondExample.body.map((paragraph, i) => (
+                  <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+                    {paragraph}
+                  </p>
+                ))
+              )}
             </div>
           )}
 

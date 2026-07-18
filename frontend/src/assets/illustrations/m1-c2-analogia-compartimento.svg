@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Sprint UX-06 — segundo recurso visual del Ciclo 2 (variables).
+       Visualiza la MISMA analogía del texto (secondExample.body: "el
+       compartimento de almacenamiento del robot") — el NOMBRE siempre
+       lleva al mismo lugar, aunque el CONTENIDO cambie. No es un caso
+       vago→preciso (por eso no usa la Plantilla B con ámbar): es un
+       estado 1 → estado 2 del mismo compartimento, ambos válidos —
+       variante propia dentro de la paleta oficial, reutilizando el
+       violeta de "resaltado puntual" (§5) para anclar visualmente que
+       el nombre no cambia entre ambos paneles. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Panel 1: antes -->
+  <rect x="56" y="72" width="688" height="330" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="126" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">ANTES</text>
+  <!-- Ícono compartimento -->
+  <g stroke="#10b981" stroke-width="2.5" fill="none" opacity="0.9">
+    <rect x="646" y="98" width="52" height="42" rx="6"/>
+    <line x1="646" y1="112" x2="698" y2="112"/>
+  </g>
+  <!-- Etiqueta (violeta, resaltado — persiste igual en el panel 2) -->
+  <g>
+    <rect x="96" y="152" width="150" height="46" rx="10" fill="#7c3aed" fill-opacity="0.12" stroke="#7c3aed" stroke-width="2"/>
+    <text x="171" y="182" fill="#7c3aed" font-size="24" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', Consolas, monospace">llave</text>
+  </g>
+  <text x="96" y="246" fill="#94a3b8" font-size="19">guarda</text>
+  <text x="96" y="284" fill="#f8fafc" font-size="30" font-weight="600">«llave maestra»</text>
+  <text x="96" y="342" fill="#94a3b8" font-size="19" font-style="italic">Igual que la caja con nombre que ya conoces:</text>
+  <text x="96" y="372" fill="#94a3b8" font-size="19" font-style="italic">el nombre «llave» apunta a este compartimento.</text>
+
+  <!-- Flecha de transformación -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="402" x2="400" y2="448"/>
+    <polyline points="388,436 400,450 412,436"/>
+  </g>
+  <text x="424" y="433" fill="#94a3b8" font-size="19">guardas algo nuevo</text>
+
+  <!-- Panel 2: después -->
+  <rect x="56" y="482" width="688" height="330" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="536" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">DESPUÉS</text>
+  <g stroke="#10b981" stroke-width="2.5" fill="none" opacity="0.9">
+    <rect x="646" y="508" width="52" height="42" rx="6"/>
+    <line x1="646" y1="522" x2="698" y2="522"/>
+  </g>
+  <!-- MISMA etiqueta violeta — el nombre no cambió -->
+  <g>
+    <rect x="96" y="562" width="150" height="46" rx="10" fill="#7c3aed" fill-opacity="0.12" stroke="#7c3aed" stroke-width="2"/>
+    <text x="171" y="592" fill="#7c3aed" font-size="24" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono', Consolas, monospace">llave</text>
+  </g>
+  <text x="96" y="656" fill="#94a3b8" font-size="19">guarda</text>
+  <text x="96" y="694" fill="#f8fafc" font-size="30" font-weight="600">«destornillador»</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="892" fill="#94a3b8" font-size="21" text-anchor="middle">El nombre — la etiqueta «llave» — siempre te lleva al mismo</text>
+  <text x="400" y="922" fill="#94a3b8" font-size="21" text-anchor="middle">compartimento, aunque lo que guardes adentro cambie.</text>
+</svg>

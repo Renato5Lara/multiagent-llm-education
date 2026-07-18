@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Sprint UX-06 — segundo recurso visual del Ciclo 3 de Módulo 1
+       (input). Visualiza la MISMA analogía del texto
+       (secondExample.body: "el robot que hace una pausa real").
+       Plantilla A (Jerarquía/Árbol) — design-system-ilustraciones.md §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Nodo meta: actúa sin esperar -->
+  <rect x="130" y="80" width="540" height="196" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <!-- Ícono robot en movimiento (ancla temática) -->
+  <g stroke="#f59e0b" stroke-width="2.5" fill="none" opacity="0.9">
+    <rect x="368" y="110" width="64" height="46" rx="8"/>
+    <line x1="400" y1="110" x2="400" y2="98"/>
+    <circle cx="400" cy="95" r="3"/>
+    <path d="M 340 133 h 18" stroke-dasharray="3 4"/>
+    <path d="M 442 133 h 18" stroke-dasharray="3 4"/>
+  </g>
+  <text x="400" y="210" fill="#f8fafc" font-size="27" font-weight="700" text-anchor="middle">EL ROBOT ACTÚA DE INMEDIATO</text>
+  <text x="400" y="250" fill="#94a3b8" font-size="20" text-anchor="middle">nunca espera tu respuesta</text>
+
+  <!-- Conectores en Y invertida -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="276" x2="400" y2="360"/>
+    <polyline points="400,360 220,360 220,440"/>
+    <polyline points="400,360 580,360 580,440"/>
+  </g>
+
+  <!-- Paso 1: pregunta -->
+  <rect x="70" y="444" width="300" height="240" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <g stroke="#10b981" stroke-width="2.5" fill="none">
+    <rect x="100" y="474" width="34" height="24" rx="7"/>
+    <polyline points="110,498 110,508 122,498"/>
+  </g>
+  <text x="220" y="546" fill="#f8fafc" font-size="21" font-weight="600" text-anchor="middle">Pregunta ¿Cuántos</text>
+  <text x="220" y="580" fill="#f8fafc" font-size="21" font-weight="600" text-anchor="middle">pasos quieres</text>
+  <text x="220" y="614" fill="#f8fafc" font-size="21" font-weight="600" text-anchor="middle">que avance?</text>
+  <text x="220" y="648" fill="#94a3b8" font-size="19" text-anchor="middle">el robot pregunta</text>
+
+  <!-- Paso 2: espera y confirma -->
+  <rect x="430" y="444" width="300" height="240" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <g stroke="#10b981" stroke-width="2" fill="none">
+    <circle cx="477" cy="488" r="13"/>
+    <polyline points="477,480 477,488 485,492"/>
+  </g>
+  <text x="580" y="546" fill="#f8fafc" font-size="21" font-weight="600" text-anchor="middle">Espera y recién</text>
+  <text x="580" y="580" fill="#f8fafc" font-size="21" font-weight="600" text-anchor="middle">continúa cuando</text>
+  <text x="580" y="614" fill="#f8fafc" font-size="21" font-weight="600" text-anchor="middle">confirmas</text>
+  <text x="580" y="648" fill="#94a3b8" font-size="19" text-anchor="middle">recién aquí actúa</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="812" fill="#94a3b8" font-size="21" text-anchor="middle">Esa pausa — preguntar y esperar — es exactamente lo que hace</text>
+  <text x="400" y="842" fill="#94a3b8" font-size="21" text-anchor="middle">un programa cuando necesita un dato que solo tú tienes.</text>
+</svg>

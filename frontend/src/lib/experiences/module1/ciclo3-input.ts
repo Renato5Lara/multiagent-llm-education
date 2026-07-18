@@ -28,6 +28,10 @@ export const CICLO_3_INPUT: LearningCycle = {
         'Este mismo robot no siempre actúa de inmediato: cuando necesita un dato que no tiene, se detiene, muestra «¿Cuántos pasos quieres que avance?», y espera. No continúa hasta que tú escribes algo y confirmas.',
         'Esa pausa — preguntar y esperar — es exactamente lo que hace un programa cuando necesita un dato que solo tú tienes. La misma regla de siempre aplica: si el robot no puede adivinarlo, tiene que preguntarlo.',
       ],
+      // Sprint UX-06 "Perfil visual real" (jul 2026): misma analogía, visualizada.
+      visualMediumLabel: 'Analogía visual',
+      imageAsset: 'm1-c3-analogia-pausa-real',
+      provenance: 'propia',
     },
     pythonBridge: {
       label: 'Esto ya es Python',

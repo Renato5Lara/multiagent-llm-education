@@ -155,6 +155,11 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         'Un compartimento del robot no es útil por ser una caja: es útil porque tiene un nombre, y ese nombre siempre te lleva al mismo contenido, aunque lo que guardes adentro cambie con cada tarea.',
         'Una variable funciona igual: el NOMBRE (edad, mensaje, bateria) siempre te lleva al mismo valor guardado — hasta que tú decidas guardar uno distinto.',
       ],
+      // Sprint UX-06 "Perfil visual real" (jul 2026): misma analogía,
+      // visualizada — el nombre persiste entre dos estados del compartimento.
+      visualMediumLabel: 'Analogía visual',
+      imageAsset: 'm1-c2-analogia-compartimento',
+      provenance: 'propia',
     },
     pythonBridge: {
       label: 'Esto ya es Python',

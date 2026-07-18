@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Sprint UX-06 — segundo recurso visual del Ciclo 1 de Módulo 2
+       (condicionales). Visualiza la MISMA analogía del texto
+       (secondExample.body: "la alarma contra incendios") — distinta de
+       m2-c1-l2-aire-mal.svg (esa es de remediación L2, con otro ejemplo:
+       ventilador/CO2). Plantilla A.1 (Jerarquía con decisión) —
+       design-system-ilustraciones.md §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Nodo idea -->
+  <rect x="190" y="72" width="420" height="160" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <g>
+    <circle cx="232" cy="112" r="13" stroke="#f59e0b" stroke-width="2" fill="none"/>
+    <text x="232" y="118" fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">?</text>
+  </g>
+  <text x="400" y="150" fill="#f8fafc" font-size="30" font-weight="700" text-anchor="middle">HAY MUCHO HUMO</text>
+  <text x="400" y="192" fill="#94a3b8" font-size="20" text-anchor="middle">la idea — ningún sensor sabe medir «mucho»</text>
+
+  <!-- Conector idea → rombo -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="232" x2="400" y2="312"/>
+    <polyline points="388,300 400,314 412,300"/>
+  </g>
+
+  <!-- Rombo de decisión (cian) -->
+  <polygon points="400,330 660,462 400,594 140,462" fill="#06b6d4" fill-opacity="0.08" stroke="#06b6d4" stroke-width="2"/>
+  <!-- Ícono sensor de humo -->
+  <g stroke="#06b6d4" stroke-width="2" fill="none">
+    <circle cx="400" cy="404" r="20"/>
+    <circle cx="400" cy="404" r="6"/>
+    <path d="M 380 388 q 6 -10 0 -20" stroke-dasharray="3 3"/>
+    <path d="M 420 388 q -6 -10 0 -20" stroke-dasharray="3 3"/>
+  </g>
+  <text x="400" y="458" fill="#f8fafc" font-size="22" font-weight="600" text-anchor="middle">¿El sensor supera 500</text>
+  <text x="400" y="492" fill="#f8fafc" font-size="22" font-weight="600" text-anchor="middle">partículas de humo</text>
+  <text x="400" y="526" fill="#f8fafc" font-size="22" font-weight="600" text-anchor="middle">por metro cúbico?</text>
+
+  <!-- Ramas SÍ / NO -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <polyline points="280,528 210,580 210,626"/>
+    <polyline points="520,528 590,580 590,626"/>
+  </g>
+  <text x="188" y="588" fill="#7c3aed" font-size="21" font-weight="700" text-anchor="end">SÍ</text>
+  <text x="612" y="588" fill="#7c3aed" font-size="21" font-weight="700">NO</text>
+
+  <!-- Resultado SÍ -->
+  <rect x="80" y="630" width="280" height="160" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- Ícono campana de alarma -->
+  <g stroke="#10b981" stroke-width="2" fill="none">
+    <path d="M 220 662 a 18 18 0 0 1 18 18 v 10 a 22 22 0 0 0 6 15 h -48 a 22 22 0 0 0 6 -15 v -10 a 18 18 0 0 1 18 -18 z"/>
+    <line x1="212" y1="708" x2="228" y2="708"/>
+  </g>
+  <text x="220" y="740" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">Suena la</text>
+  <text x="220" y="772" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">alarma</text>
+
+  <!-- Resultado NO -->
+  <rect x="440" y="630" width="280" height="160" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <g stroke="#10b981" stroke-width="2" fill="none" opacity="0.55">
+    <path d="M 580 662 a 18 18 0 0 1 18 18 v 10 a 22 22 0 0 0 6 15 h -48 a 22 22 0 0 0 6 -15 v -10 a 18 18 0 0 1 18 -18 z"/>
+    <line x1="572" y1="708" x2="588" y2="708"/>
+  </g>
+  <text x="580" y="740" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">Permanece</text>
+  <text x="580" y="772" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">en silencio</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="892" fill="#94a3b8" font-size="21" text-anchor="middle">Es la misma estructura del paraguas y el termostato, en un</text>
+  <text x="400" y="922" fill="#94a3b8" font-size="21" text-anchor="middle">contexto donde el error cuesta caro: nunca una idea vaga.</text>
+</svg>

@@ -165,6 +165,10 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             'Una alarma contra incendios no decide «si hay mucho humo»: decide con un sensor que mide partículas de humo por metro cúbico — ¿supera las 500? Si SÍ, suena la alarma. Si NO, permanece en silencio.',
             'Es la misma estructura del paraguas y el termostato, en un contexto donde el error cuesta caro: por eso el sensor nunca usa una idea vaga como «mucho humo».',
           ],
+          // Sprint UX-06 "Perfil visual real" (jul 2026): misma analogía, visualizada.
+          visualMediumLabel: 'Comparación',
+          imageAsset: 'm2-c1-analogia-alarma-incendios',
+          provenance: 'propia',
         },
         pythonBridge: {
           label: 'Esto ya es Python',

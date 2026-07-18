@@ -59,6 +59,21 @@ export interface VisualAsset {
   imageUrl?: string
   imageAsset?: string
   imagePrompt?: string
+  /** Sprint UX-06 "Perfil visual real" (jul 2026) — de dónde viene el
+   *  recurso. Trazabilidad únicamente: este campo NUNCA dispara generación
+   *  automática (restricción explícita del proyecto — ninguna llamada a
+   *  API de imágenes en código). Sirve para que el material del curso
+   *  pueda declarar honestamente su origen cuando conviene mostrarlo.
+   *  - 'propia'             — autorado a mano para este proyecto (las 8
+   *    infografías de UX-01, y los diagramas de este sprint).
+   *  - 'pregenerada'        — producida antes con una herramienta externa
+   *    (p. ej. GPT Image) y luego registrada como archivo del build.
+   *  - 'ia_generativa'      — producto de IA generativa pegado manualmente,
+   *    sin llamada automática desde la plataforma.
+   *  - 'externa_autorizada' — recurso de terceros con permiso de uso ya
+   *    verificado (nunca copiado sin revisar licencia).
+   *  Ausente = comportamiento previo, se asume 'propia'. */
+  provenance?: 'propia' | 'pregenerada' | 'ia_generativa' | 'externa_autorizada'
 }
 
 /** Narración GRABADA de un contenido que ya declara `narrationText` (Sprint
@@ -118,10 +133,22 @@ export interface ConceptVariant extends VisualAsset, NarrationAudioRef {
 /** Un segundo ejemplo concreto DEL MISMO concepto — no un refuerzo opcional:
  *  parte del recorrido obligatorio, para que la teoría no dependa de un solo
  *  caso (refinamiento de experiencia, jul 2026 — "más ejemplos... durante
- *  toda la explicación", no solo al final). */
-export interface SecondExample {
+ *  toda la explicación", no solo al final).
+ *
+ *  Sprint UX-06 "Perfil visual real" (jul 2026): extiende VisualAsset con
+ *  el MISMO criterio que ya usa ConceptVariant — con imagen real
+ *  (imageUrl/imageAsset) declarada, el perfil visual ve ESA imagen en vez
+ *  de `body`; el resto de perfiles sigue viendo el texto de siempre, sin
+ *  cambio. La imagen nunca es una idea nueva: visualiza la MISMA analogía
+ *  que `body` ya cuenta en prosa — ningún segundo ejemplo se inventa dos
+ *  veces, solo se le da una segunda forma de leerse. */
+export interface SecondExample extends VisualAsset {
   label: string
   body: string[]
+  /** Cómo nombrar el medio cuando hay imagen — "Analogía visual",
+   *  "Diagrama", "Comparación" (paralelo a ConceptVariant.mediumLabel).
+   *  Sin imagen, no se usa. */
+  visualMediumLabel?: string
 }
 
 export interface CycleConcept {

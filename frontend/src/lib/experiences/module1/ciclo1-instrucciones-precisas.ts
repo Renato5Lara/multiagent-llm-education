@@ -30,6 +30,12 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         'El manual de calibración del robot nunca dice «ajusta el brazo»: dice «gira el tornillo de la articulación del codo dos vueltas en sentido horario, hasta sentir resistencia». Qué pieza, cuánto, en qué dirección y hasta cuándo — nada queda a tu imaginación.',
         'Es la misma regla de la puerta, en un contexto completamente distinto: una instrucción precisa no cambia según la tarea, cambia según cuánto deja adivinar.',
       ],
+      // Sprint UX-06 "Perfil visual real" (jul 2026): la MISMA analogía de
+      // arriba, visualizada — el perfil visual ve este diagrama en vez del
+      // texto; el resto sigue viendo `body` sin cambio.
+      visualMediumLabel: 'Analogía visual',
+      imageAsset: 'm1-c1-analogia-manual-calibracion',
+      provenance: 'propia',
     },
     pythonBridge: {
       label: 'Esto ya es Python',
