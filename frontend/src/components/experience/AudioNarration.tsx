@@ -11,14 +11,29 @@ import { Button } from '@/components/ui/button'
 interface Props {
   /** Texto plano a narrar — sin comillas tipográficas ni emojis (suenan mal). */
   text: string
+  /** Se dispara UNA vez cuando el estudiante realmente se comprometió con la
+   *  narración: la dejó terminar sola, la detuvo a propósito habiéndola
+   *  iniciado (una decisión consciente, no ignorarla), o el navegador no
+   *  puede reproducirla — nunca bloquea a quien no tiene síntesis de voz
+   *  disponible. Auditoría "criterios de finalización reales" (jul 2026):
+   *  antes no existía forma de saber si el botón "Reproducir" se usó. */
+  onEngaged?: () => void
 }
 
 type Status = 'idle' | 'playing' | 'failed'
 
-export function AudioNarration({ text }: Props) {
+export function AudioNarration({ text, onEngaged }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const watchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window
+
+  // Sin síntesis de voz en este navegador, no hay forma de "reproducir": la
+  // transcripción visible ya es el único camino, así que no hay nada que
+  // esperar de este componente.
+  useEffect(() => {
+    if (!supported) onEngaged?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supported])
 
   // Al desmontar (salir del refuerzo), la narración se detiene siempre.
   useEffect(() => {
@@ -33,8 +48,11 @@ export function AudioNarration({ text }: Props) {
     const synth = window.speechSynthesis
     if (watchdogRef.current) clearTimeout(watchdogRef.current)
     if (status === 'playing') {
+      // Detenerla habiéndola iniciado es una decisión consciente — "saltada
+      // conscientemente", no ignorada.
       synth.cancel()
       setStatus('idle')
+      onEngaged?.()
       return
     }
     const utterance = new SpeechSynthesisUtterance(text)
@@ -42,15 +60,18 @@ export function AudioNarration({ text }: Props) {
     utterance.rate = 0.95
     const voice = synth.getVoices().find(v => v.lang.toLowerCase().startsWith('es'))
     if (voice) utterance.voice = voice
-    utterance.onend = () => setStatus('idle')
-    utterance.onerror = () => setStatus('failed')
+    utterance.onend = () => { setStatus('idle'); onEngaged?.() }
+    utterance.onerror = () => { setStatus('failed'); onEngaged?.() }
     synth.cancel()
     synth.speak(utterance)
     setStatus('playing')
     // Sin voces instaladas, speak() no emite NINGÚN evento: el botón quedaría
     // "muerto". Si al segundo la síntesis no arrancó, se informa el fallo.
     watchdogRef.current = setTimeout(() => {
-      if (!synth.speaking) setStatus(s => (s === 'playing' ? 'failed' : s))
+      if (!synth.speaking) {
+        setStatus(s => (s === 'playing' ? 'failed' : s))
+        onEngaged?.()
+      }
     }, 1000)
   }
 

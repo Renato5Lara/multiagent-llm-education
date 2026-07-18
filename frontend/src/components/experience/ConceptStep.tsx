@@ -7,8 +7,18 @@ import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, Hel
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
+import { useMinDwell } from '@/hooks/useMinDwell'
 import type { CycleConcept, ConceptVariant, TheoryMedium } from '@/types/moduleExperience'
 import type { LearningModality } from '@/types/modality'
+
+// Auditoría "criterios de finalización reales" (jul 2026): antes "Ponerlo a
+// prueba →" estaba siempre habilitado — un clic instantáneo saltaba toda la
+// teoría (infografía, narración, segundo ejemplo, PythonBridge) sin haberla
+// visto. No es una exigencia de lectura completa (eso sí bloquearía
+// innecesariamente): solo un piso mínimo de permanencia, más — cuando el
+// medio ES la narración — haberla escuchado o detenido a propósito (o
+// abierto la transcripción en su lugar), nunca solo ignorarla.
+const CONCEPT_MIN_DWELL_MS = 4000
 
 const MEDIUM_ICON: Partial<Record<TheoryMedium, typeof Film>> = {
   infografia: ImageIcon,
@@ -42,9 +52,15 @@ interface Props {
 export function ConceptStep({ concept, modality, onContinue, earlyReinforcement }: Props) {
   const startRef = useRef(Date.now())
   const [showTranscript, setShowTranscript] = useState(false)
+  const [narrationEngaged, setNarrationEngaged] = useState(false)
+  const dwellReady = useMinDwell(CONCEPT_MIN_DWELL_MS)
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
   const framed = FRAMED_MEDIA.includes(variant.medium)
+  // La narración es el medio principal cuando existe: sin engancharse con
+  // ella (o abrir la transcripción como alternativa consciente), el
+  // estudiante no vio ningún contenido real, solo un reproductor sin usar.
+  const canContinue = dwellReady && (!variant.narrationText || narrationEngaged || showTranscript)
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 animate-in fade-in duration-500">
@@ -112,7 +128,9 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
             )}
 
             {/* RC-FINAL: la variante de audio SUENA — narración con voz real */}
-            {variant.narrationText && <AudioNarration text={variant.narrationText} />}
+            {variant.narrationText && (
+              <AudioNarration text={variant.narrationText} onEngaged={() => setNarrationEngaged(true)} />
+            )}
 
             {/* Perfil auditivo: "escucha, no leas" — el texto completo ya no
                 queda visible de entrada debajo del reproductor (eso invitaba
@@ -190,8 +208,15 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
           código real mientras aprende el concepto, no solo al final. */}
       {concept.pythonBridge && <PythonBridge bridge={concept.pythonBridge} />}
 
-      <div className="flex justify-end">
-        <Button onClick={() => onContinue(Date.now() - startRef.current)} className="gap-2">
+      <div className="flex flex-col items-end gap-1.5">
+        {!canContinue && (
+          <p className="text-xs text-neural-muted/70 italic">
+            {!dwellReady
+              ? 'Tómate un momento antes de continuar…'
+              : 'Escucha la narración (o abre la transcripción) antes de continuar.'}
+          </p>
+        )}
+        <Button onClick={() => onContinue(Date.now() - startRef.current)} disabled={!canContinue} className="gap-2">
           Ponerlo a prueba →
         </Button>
       </div>

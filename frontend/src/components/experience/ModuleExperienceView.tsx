@@ -32,6 +32,7 @@ import {
   resolveReinforcementPriority, selectReinforcement,
 } from '@/lib/experiences/experienceOrchestrator'
 import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
+import { useMinDwell } from '@/hooks/useMinDwell'
 import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
   Reinforcement, ReinforcementKind, RemediationLevel, RemediationStep,
@@ -1477,14 +1478,31 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               onDone={handleReinforcementDone}
             />
           ) : (
-            <div className="flex justify-end">
-              <Button onClick={handleReinforcementDone} className="gap-2">
-                Continuar →
-              </Button>
-            </div>
+            // `key` remonta el gate en cada refuerzo distinto (el estudiante
+            // puede volver al menú y elegir otro) — el piso de permanencia
+            // siempre arranca de cero, nunca hereda el de un refuerzo previo.
+            <ReinforcementContinueGate key={activeReinforcement.title} onContinue={handleReinforcementDone} />
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Refuerzo sin práctica propia (animación/audio/ejemplo leído) ───────────────
+// Auditoría "criterios de finalización reales" (jul 2026): "Continuar"
+// estaba siempre habilitado aquí — un clic instantáneo saltaba la animación,
+// la narración o el ejemplo sin haberlos visto. Mismo piso que ConceptStep,
+// sin exigir nada más: es contenido de refuerzo voluntario, no una prueba.
+const REINFORCEMENT_MIN_DWELL_MS = 3000
+
+function ReinforcementContinueGate({ onContinue }: { onContinue: () => void }) {
+  const dwellReady = useMinDwell(REINFORCEMENT_MIN_DWELL_MS)
+  return (
+    <div className="flex justify-end">
+      <Button onClick={onContinue} disabled={!dwellReady} className="gap-2">
+        Continuar →
+      </Button>
     </div>
   )
 }

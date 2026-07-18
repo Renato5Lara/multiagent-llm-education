@@ -7,6 +7,7 @@
 
 import { Lightbulb } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useMinDwell } from '@/hooks/useMinDwell'
 import type { CuriosityFact } from '@/types/moduleExperience'
 
 interface Props {
@@ -17,7 +18,13 @@ interface Props {
   onContinue?: () => void
 }
 
+// Auditoría "criterios de finalización reales" (jul 2026): "Continuar"
+// estaba siempre habilitado — un clic instantáneo saltaba el dato y su
+// fuente sin haberlos leído. Piso bajo, acorde al tamaño real del contenido.
+const CURIOSITY_MIN_DWELL_MS = 2500
+
 export function CuriosityFactCard({ fact, onContinue }: Props) {
+  const dwellReady = useMinDwell(CURIOSITY_MIN_DWELL_MS)
   return (
     <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-5 space-y-3 animate-in fade-in duration-500">
       <div className="flex items-center gap-2.5">
@@ -37,7 +44,7 @@ export function CuriosityFactCard({ fact, onContinue }: Props) {
       </p>
       {onContinue && (
         <div className="flex justify-end pt-1">
-          <Button onClick={onContinue} className="gap-2">
+          <Button onClick={onContinue} disabled={!dwellReady} className="gap-2">
             Continuar →
           </Button>
         </div>

@@ -7,6 +7,7 @@
 
 import { Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useMinDwell } from '@/hooks/useMinDwell'
 import type { ConceptPrimer } from '@/types/moduleExperience'
 
 interface Props {
@@ -14,7 +15,13 @@ interface Props {
   onContinue: () => void
 }
 
+// Auditoría "criterios de finalización reales" (jul 2026): tarjeta corta a
+// propósito (<1 min), pero "Ahora úsalo →" estaba siempre habilitado — un
+// clic instantáneo la saltaba entera. Piso bajo, no una espera real.
+const PRIMER_MIN_DWELL_MS = 1800
+
 export function ConceptPrimerCard({ primer, onContinue }: Props) {
+  const dwellReady = useMinDwell(PRIMER_MIN_DWELL_MS)
   return (
     <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] p-5 space-y-4 animate-in fade-in duration-500">
       <div className="flex items-center gap-2.5">
@@ -41,7 +48,7 @@ export function ConceptPrimerCard({ primer, onContinue }: Props) {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={onContinue} className="gap-2">
+        <Button onClick={onContinue} disabled={!dwellReady} className="gap-2">
           Ahora úsalo →
         </Button>
       </div>
