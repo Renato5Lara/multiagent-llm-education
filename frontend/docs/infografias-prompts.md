@@ -6,6 +6,8 @@ Cobertura (jul 2026, tercera vuelta — cobertura completa): **8 piezas en total
 
 **No modifica código.** La integración de la imagen resultante al `imageAsset` correspondiente (registro en `lib/experiences/illustrationAssets.ts`) es un paso posterior, fuera de este documento.
 
+**Regla normativa:** todo prompt de este documento sigue `frontend/docs/design-system-ilustraciones.md` — paleta, tipografía, iconografía, plantillas y el bloque prefijo de §11 son ese documento, no una copia local. Si algo aquí llegara a contradecirlo, el Design System gana.
+
 ---
 
 ## Cómo usar este documento

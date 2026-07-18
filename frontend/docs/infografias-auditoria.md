@@ -2,7 +2,7 @@
 
 Auditoría de **todas** las infografías/ilustraciones de la plataforma (teoría, remediación, ejemplos, VARK Visual), hecha leyendo el código de contenido (`frontend/src/lib/experiences/*.ts`) y el de renderizado (`ConceptStep.tsx`, `ModuleExperienceView.tsx`, `IllustrationVisual.tsx`, `illustrationAssets.ts`). No genera ninguna imagen — es un inventario y una clasificación de estado.
 
-Para los prompts completos de cada pieza, ver `frontend/docs/infografias-prompts.md`. Este documento responde una pregunta distinta: **qué existe, qué falta, y qué falta para cada una específicamente** — no cómo generarla.
+Para los prompts completos de cada pieza, ver `frontend/docs/infografias-prompts.md`. Para las reglas visuales que esos prompts deben cumplir (paleta, plantillas, tipografía, elementos prohibidos), ver `frontend/docs/design-system-ilustraciones.md`. Este documento responde una pregunta distinta de ambos: **qué existe, qué falta, y qué falta para cada una específicamente** — no cómo generarla ni qué reglas seguir.
 
 ---
 
