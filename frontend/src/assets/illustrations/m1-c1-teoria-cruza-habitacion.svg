@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla B (Comparación) — design-system-ilustraciones.md §9.
+       Vago (ámbar punteado) → Preciso (esmeralda sólido). -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Panel vago -->
+  <rect x="56" y="56" width="688" height="340" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <!-- Ícono robot (ancla temática, outline, esquina superior) -->
+  <g stroke="#f59e0b" stroke-width="2.5" fill="none" opacity="0.85">
+    <rect x="668" y="92" width="40" height="32" rx="8"/>
+    <line x1="688" y1="92" x2="688" y2="80"/>
+    <circle cx="688" cy="77" r="3"/>
+    <circle cx="680" cy="108" r="2.5" fill="#f59e0b" stroke="none"/>
+    <circle cx="696" cy="108" r="2.5" fill="#f59e0b" stroke="none"/>
+  </g>
+  <text x="96" y="110" fill="#f59e0b" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">AMBIGUA</text>
+  <text x="96" y="162" fill="#f8fafc" font-size="31" font-weight="600">«CRUZA LA HABITACIÓN»</text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#f59e0b" stroke-width="2" fill="none">
+      <circle cx="110" cy="212" r="13"/><circle cx="110" cy="264" r="13"/><circle cx="110" cy="316" r="13"/>
+    </g>
+    <g fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">
+      <text x="110" y="218">?</text><text x="110" y="270">?</text><text x="110" y="322">?</text>
+    </g>
+    <text x="140" y="220">¿cuántos pasos?</text>
+    <text x="140" y="272">¿hacia qué lado gira?</text>
+    <text x="140" y="324">¿qué hace al llegar?</text>
+  </g>
+
+  <!-- Flecha de transformación -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="416" x2="400" y2="462"/>
+    <polyline points="388,450 400,464 412,450"/>
+  </g>
+  <text x="424" y="447" fill="#94a3b8" font-size="19">hazla precisa</text>
+
+  <!-- Panel preciso -->
+  <rect x="56" y="496" width="688" height="366" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="550" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">PRECISA</text>
+  <text x="96" y="600" fill="#f8fafc" font-size="27" font-weight="600">«GIRA 90° A LA IZQUIERDA.</text>
+  <text x="96" y="638" fill="#f8fafc" font-size="27" font-weight="600">AVANZA 4 PASOS.</text>
+  <text x="96" y="676" fill="#f8fafc" font-size="27" font-weight="600">DETENTE FRENTE A LA PUERTA.»</text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#10b981" stroke-width="2.5" fill="none">
+      <polyline points="100,718 108,726 122,710"/>
+      <polyline points="100,762 108,770 122,754"/>
+      <polyline points="100,806 108,814 122,798"/>
+    </g>
+    <text x="140" y="726">qué hacer</text>
+    <text x="140" y="770">cuánto</text>
+    <text x="140" y="814">hacia dónde</text>
+  </g>
+
+  <!-- Leyenda -->
+  <text x="400" y="920" fill="#94a3b8" font-size="21" text-anchor="middle">La diferencia no es el detalle decorativo: la instrucción precisa</text>
+  <text x="400" y="950" fill="#94a3b8" font-size="21" text-anchor="middle">no deja ninguna decisión en manos del robot.</text>
+</svg>

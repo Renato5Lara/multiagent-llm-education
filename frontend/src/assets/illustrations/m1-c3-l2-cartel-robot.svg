@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla A (Jerarquía/Árbol) — cartel sin responder (ámbar punteado)
+       arriba; mostrar pregunta / guardar respuesta (esmeralda) abajo. §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Nodo meta: el cartel del robot -->
+  <rect x="150" y="80" width="500" height="212" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <!-- Ícono robot con pantalla y respuesta pendiente -->
+  <g stroke="#f59e0b" stroke-width="2.5" fill="none" opacity="0.9">
+    <rect x="368" y="112" width="64" height="46" rx="8"/>
+    <line x1="400" y1="112" x2="400" y2="100"/>
+    <circle cx="400" cy="97" r="3"/>
+    <line x1="380" y1="128" x2="420" y2="128"/>
+    <line x1="380" y1="144" x2="404" y2="144" stroke-dasharray="4 4"/>
+  </g>
+  <text x="400" y="212" fill="#f8fafc" font-size="30" font-weight="700" text-anchor="middle">CARTEL DEL ROBOT</text>
+  <text x="400" y="254" fill="#94a3b8" font-size="20" text-anchor="middle">la pregunta impresa, todavía sin respuesta</text>
+
+  <!-- Conectores en Y invertida -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="292" x2="400" y2="376"/>
+    <polyline points="400,376 220,376 220,456"/>
+    <polyline points="400,376 580,376 580,456"/>
+  </g>
+
+  <!-- Paso 1: mostrar la pregunta -->
+  <rect x="70" y="460" width="300" height="230" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- Ícono globo de diálogo -->
+  <g stroke="#10b981" stroke-width="2.5" fill="none">
+    <rect x="100" y="490" width="34" height="24" rx="7"/>
+    <polyline points="110,514 110,524 122,514"/>
+  </g>
+  <text x="220" y="558" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">Muestra la pregunta</text>
+  <text x="220" y="592" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">«¿Cuántos años tienes?»</text>
+  <text x="220" y="648" fill="#94a3b8" font-size="19" text-anchor="middle">el robot pregunta</text>
+
+  <!-- Paso 2: guardar la respuesta -->
+  <rect x="430" y="460" width="300" height="230" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- Ícono caja con check -->
+  <g stroke="#10b981" stroke-width="2.5" fill="none">
+    <rect x="462" y="490" width="30" height="26" rx="4"/>
+    <polyline points="469,503 475,509 486,496"/>
+  </g>
+  <text x="580" y="558" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">Guarda la respuesta</text>
+  <text x="580" y="592" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">en la caja <tspan fill="#06b6d4" font-family="'JetBrains Mono', Consolas, monospace">edad</tspan></text>
+  <text x="580" y="648" fill="#94a3b8" font-size="19" text-anchor="middle">recién aquí hay un dato</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="822" fill="#94a3b8" font-size="21" text-anchor="middle">Sin la pregunta, nadie sabe qué escribir. Sin guardar la respuesta,</text>
+  <text x="400" y="852" fill="#94a3b8" font-size="21" text-anchor="middle">se pierde apenas el programa sigue.</text>
+</svg>

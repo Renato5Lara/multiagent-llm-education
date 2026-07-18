@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla B (Comparación) — valor suelto (ámbar punteado) → valor con
+       nombre (esmeralda sólido). design-system-ilustraciones.md §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Panel vago: el valor suelto -->
+  <rect x="56" y="56" width="688" height="340" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <!-- Ícono caja/contenedor (ancla temática, outline, esquina superior) -->
+  <g stroke="#f59e0b" stroke-width="2.5" fill="none" opacity="0.85">
+    <rect x="668" y="88" width="42" height="34" rx="4"/>
+    <line x1="668" y1="100" x2="710" y2="100"/>
+  </g>
+  <text x="96" y="110" fill="#f59e0b" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">VALOR SUELTO</text>
+  <text x="96" y="170" fill="#f8fafc" font-size="44" font-weight="700" font-family="'JetBrains Mono', Consolas, monospace">20</text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#f59e0b" stroke-width="2" fill="none">
+      <circle cx="110" cy="222" r="13"/><circle cx="110" cy="274" r="13"/><circle cx="110" cy="326" r="13"/>
+    </g>
+    <g fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">
+      <text x="110" y="228">?</text><text x="110" y="280">?</text><text x="110" y="332">?</text>
+    </g>
+    <text x="140" y="230">¿20 qué cosa?</text>
+    <text x="140" y="282">¿por qué aparece varias veces en el programa?</text>
+    <text x="140" y="334">¿qué pasa si cambia?</text>
+  </g>
+
+  <!-- Flecha de transformación -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="416" x2="400" y2="462"/>
+    <polyline points="388,450 400,464 412,450"/>
+  </g>
+  <text x="424" y="447" fill="#94a3b8" font-size="19">dale un nombre</text>
+
+  <!-- Panel preciso: el valor con nombre -->
+  <rect x="56" y="496" width="688" height="366" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="550" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">VALOR CON NOMBRE</text>
+  <!-- Ícono etiqueta/tag junto al nombre -->
+  <g stroke="#06b6d4" stroke-width="2.5" fill="none" opacity="0.9">
+    <path d="M 96 596 l 22 0 l 14 14 l -14 14 l -22 0 z"/>
+    <circle cx="106" cy="610" r="3"/>
+  </g>
+  <text x="148" y="622" font-size="40" font-weight="700" font-family="'JetBrains Mono', Consolas, monospace">
+    <tspan fill="#06b6d4">edad</tspan><tspan fill="#f8fafc"> = 20</tspan>
+  </text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#10b981" stroke-width="2.5" fill="none">
+      <polyline points="100,682 108,690 122,674"/>
+      <polyline points="100,730 108,738 122,722"/>
+      <polyline points="100,778 108,786 122,770"/>
+    </g>
+    <text x="140" y="690">nombre: <tspan fill="#06b6d4" font-family="'JetBrains Mono', Consolas, monospace">edad</tspan></text>
+    <text x="140" y="738">valor: <tspan font-family="'JetBrains Mono', Consolas, monospace">20</tspan></text>
+    <text x="140" y="786">se puede leer y actualizar donde haga falta</text>
+  </g>
+
+  <!-- Leyenda -->
+  <text x="400" y="912" fill="#94a3b8" font-size="21" text-anchor="middle">Un número suelto no dice nada de sí mismo. El mismo número con</text>
+  <text x="400" y="942" fill="#94a3b8" font-size="21" text-anchor="middle">nombre se puede leer, reutilizar y cambiar sin reescribir el programa.</text>
+</svg>

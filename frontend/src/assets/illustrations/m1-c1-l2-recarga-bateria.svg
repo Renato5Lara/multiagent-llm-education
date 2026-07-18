@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla A (Jerarquía/Árbol) — meta ambigua (ámbar punteado) arriba,
+       pasos ejecutables (esmeralda sólido) abajo. §9 del design system. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Nodo meta -->
+  <rect x="170" y="96" width="460" height="170" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <!-- Ícono batería (ancla temática, outline) -->
+  <g stroke="#f59e0b" stroke-width="2.5" fill="none" opacity="0.85">
+    <rect x="556" y="126" width="40" height="22" rx="5"/>
+    <rect x="596" y="132" width="6" height="10" rx="2"/>
+  </g>
+  <!-- Ícono ? (ambigüedad) -->
+  <g>
+    <circle cx="212" cy="137" r="13" stroke="#f59e0b" stroke-width="2" fill="none"/>
+    <text x="212" y="143" fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">?</text>
+  </g>
+  <text x="400" y="180" fill="#f8fafc" font-size="30" font-weight="700" text-anchor="middle">RECARGA LA BATERÍA</text>
+  <text x="400" y="222" fill="#94a3b8" font-size="20" text-anchor="middle">la meta — el robot no sabe ejecutarlo</text>
+
+  <!-- Conectores en Y invertida -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="266" x2="400" y2="360"/>
+    <polyline points="400,360 220,360 220,440"/>
+    <polyline points="400,360 580,360 580,440"/>
+  </g>
+
+  <!-- Paso 1 -->
+  <rect x="70" y="444" width="300" height="220" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <g stroke="#10b981" stroke-width="2.5" fill="none">
+    <polyline points="102,486 112,496 130,476"/>
+  </g>
+  <text x="220" y="546" fill="#f8fafc" font-size="24" font-weight="600" text-anchor="middle">Conecta el cable</text>
+  <text x="220" y="580" fill="#f8fafc" font-size="24" font-weight="600" text-anchor="middle">al puerto de carga</text>
+  <text x="220" y="628" fill="#94a3b8" font-size="19" text-anchor="middle">ejecutable</text>
+
+  <!-- Paso 2 -->
+  <rect x="430" y="444" width="300" height="220" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <g stroke="#10b981" stroke-width="2.5" fill="none">
+    <polyline points="462,486 472,496 490,476"/>
+  </g>
+  <text x="580" y="530" fill="#f8fafc" font-size="24" font-weight="600" text-anchor="middle">Espera hasta que</text>
+  <text x="580" y="564" fill="#f8fafc" font-size="24" font-weight="600" text-anchor="middle">la luz indicadora</text>
+  <text x="580" y="598" fill="#f8fafc" font-size="24" font-weight="600" text-anchor="middle">se ponga verde</text>
+  <text x="580" y="640" fill="#94a3b8" font-size="19" text-anchor="middle">ejecutable</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="812" fill="#94a3b8" font-size="21" text-anchor="middle">Todo lo de arriba es una meta.</text>
+  <text x="400" y="842" fill="#94a3b8" font-size="21" text-anchor="middle">Todo lo que cuelga de ella es una instrucción ejecutable.</text>
+</svg>

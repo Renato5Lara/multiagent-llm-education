@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla B (Comparación) — llamada sin preguntar (ámbar punteado) →
+       pregunta, espera y guarda (esmeralda sólido). §9 del design system. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Panel vago: la llamada sin preguntar -->
+  <rect x="56" y="56" width="688" height="330" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="96" y="110" fill="#f59e0b" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">SIN PREGUNTAR</text>
+  <text x="96" y="168" fill="#f8fafc" font-size="38" font-weight="700" font-family="'JetBrains Mono', Consolas, monospace">saludar()</text>
+  <g font-size="23" fill="#f8fafc">
+    <g stroke="#f59e0b" stroke-width="2" fill="none">
+      <circle cx="110" cy="218" r="13"/><circle cx="110" cy="268" r="13"/><circle cx="110" cy="318" r="13"/>
+    </g>
+    <g fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">
+      <text x="110" y="224">?</text><text x="110" y="274">?</text><text x="110" y="324">?</text>
+    </g>
+    <text x="140" y="226">¿a quién saluda?</text>
+    <text x="140" y="276">¿de dónde saca el nombre?</text>
+    <text x="140" y="326">¿qué hace si no lo sabe?</text>
+  </g>
+
+  <!-- Flecha de transformación -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="406" x2="400" y2="452"/>
+    <polyline points="388,440 400,454 412,440"/>
+  </g>
+  <text x="424" y="437" fill="#94a3b8" font-size="19">pregúntale al usuario</text>
+
+  <!-- Panel preciso: pregunta, espera y guarda -->
+  <rect x="56" y="486" width="688" height="384" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="540" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">PREGUNTA, ESPERA Y GUARDA</text>
+  <text x="96" y="596" fill="#f8fafc" font-size="26" font-weight="600" font-family="'JetBrains Mono', Consolas, monospace">nombre = input("¿Cómo te llamas? ")</text>
+  <text x="96" y="634" fill="#f8fafc" font-size="26" font-weight="600" font-family="'JetBrains Mono', Consolas, monospace">saludar(nombre)</text>
+  <g font-size="22" fill="#f8fafc">
+    <!-- globo de diálogo: pregunta -->
+    <g stroke="#10b981" stroke-width="2" fill="none">
+      <rect x="96" y="672" width="28" height="20" rx="6"/>
+      <polyline points="104,692 104,700 114,692"/>
+    </g>
+    <text x="140" y="690">pregunta: qué muestra en pantalla</text>
+    <!-- reloj/pausa: espera -->
+    <g stroke="#10b981" stroke-width="2" fill="none">
+      <circle cx="110" cy="738" r="13"/>
+      <polyline points="110,730 110,738 118,742"/>
+    </g>
+    <text x="140" y="746">espera: se detiene hasta que respondes</text>
+    <!-- caja con check: guarda -->
+    <g stroke="#10b981" stroke-width="2" fill="none">
+      <rect x="97" y="782" width="26" height="22" rx="4"/>
+      <polyline points="103,793 108,798 117,787"/>
+    </g>
+    <text x="140" y="801">guarda: la respuesta queda en la variable</text>
+  </g>
+
+  <!-- Leyenda -->
+  <text x="400" y="916" fill="#94a3b8" font-size="21" text-anchor="middle">Sin preguntar, el programa tendría que adivinar quién eres.</text>
+  <text x="400" y="946" fill="#94a3b8" font-size="21" text-anchor="middle">input() reemplaza esa adivinanza por una pregunta real, y una espera real.</text>
+</svg>

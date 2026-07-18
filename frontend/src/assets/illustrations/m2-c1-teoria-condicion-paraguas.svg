@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla B.1 (Comparación con decisión) — idea vaga (ámbar punteado) →
+       condición evaluable (rombo cian + dos resultados esmeralda). §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Panel vago -->
+  <rect x="56" y="48" width="688" height="270" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="96" y="100" fill="#f59e0b" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">IDEA VAGA</text>
+  <text x="96" y="148" fill="#f8fafc" font-size="27" font-weight="600">«SI HACE MAL TIEMPO, ABRE EL PARAGUAS»</text>
+  <g font-size="22" fill="#f8fafc">
+    <g stroke="#f59e0b" stroke-width="2" fill="none">
+      <circle cx="108" cy="190" r="12"/><circle cx="108" cy="234" r="12"/><circle cx="108" cy="278" r="12"/>
+    </g>
+    <g fill="#f59e0b" font-size="16" font-weight="700" text-anchor="middle">
+      <text x="108" y="196">?</text><text x="108" y="240">?</text><text x="108" y="284">?</text>
+    </g>
+    <text x="136" y="197">¿qué cuenta como mal tiempo?</text>
+    <text x="136" y="241">¿lluvia? ¿viento? ¿nublado?</text>
+    <text x="136" y="285">¿quién decide?</text>
+  </g>
+
+  <!-- Flecha de transformación -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="336" x2="400" y2="378"/>
+    <polyline points="388,366 400,380 412,366"/>
+  </g>
+  <text x="424" y="365" fill="#94a3b8" font-size="19">hazla evaluable</text>
+
+  <!-- Panel preciso: condición evaluable -->
+  <rect x="56" y="404" width="688" height="470" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <text x="96" y="454" fill="#10b981" font-size="17" font-family="'JetBrains Mono', Consolas, monospace" letter-spacing="4">CONDICIÓN EVALUABLE</text>
+
+  <!-- Rombo de decisión (cian) -->
+  <polygon points="400,478 620,570 400,662 180,570" fill="#06b6d4" fill-opacity="0.08" stroke="#06b6d4" stroke-width="2"/>
+  <!-- Ícono gota de lluvia dentro del rombo -->
+  <path d="M 400 505 C 393 517 388 524 388 531 a 12 12 0 0 0 24 0 c 0 -7 -5 -14 -12 -26 z" fill="none" stroke="#06b6d4" stroke-width="2"/>
+  <text x="400" y="580" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">¿EL SENSOR DE LLUVIA</text>
+  <text x="400" y="610" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">DETECTA GOTAS?</text>
+
+  <!-- Ramas SÍ / NO -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <polyline points="290,617 218,660 218,700"/>
+    <polyline points="510,617 582,660 582,700"/>
+  </g>
+  <text x="196" y="668" fill="#7c3aed" font-size="21" font-weight="700" text-anchor="end">SÍ</text>
+  <text x="604" y="668" fill="#7c3aed" font-size="21" font-weight="700">NO</text>
+
+  <!-- Resultado SÍ -->
+  <rect x="96" y="704" width="264" height="132" rx="16" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- paraguas abierto -->
+  <g stroke="#10b981" stroke-width="2" fill="none">
+    <path d="M 210 742 a 24 24 0 0 1 48 0 z"/>
+    <line x1="234" y1="742" x2="234" y2="768"/>
+    <path d="M 234 768 a 6 6 0 0 1 -12 0"/>
+  </g>
+  <text x="228" y="812" fill="#f8fafc" font-size="22" font-weight="600" text-anchor="middle">Abre el paraguas</text>
+
+  <!-- Resultado NO -->
+  <rect x="440" y="704" width="264" height="132" rx="16" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- paraguas cerrado -->
+  <g stroke="#10b981" stroke-width="2" fill="none">
+    <path d="M 566 718 l 8 34 l 8 -34"/>
+    <line x1="574" y1="752" x2="574" y2="770"/>
+    <path d="M 574 770 a 6 6 0 0 1 -12 0"/>
+  </g>
+  <text x="572" y="812" fill="#f8fafc" font-size="22" font-weight="600" text-anchor="middle">Mantenlo cerrado</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="922" fill="#94a3b8" font-size="21" text-anchor="middle">La diferencia no es el detalle: una condición evaluable siempre</text>
+  <text x="400" y="952" fill="#94a3b8" font-size="21" text-anchor="middle">puede responderse con SÍ o NO — nunca «depende».</text>
+</svg>

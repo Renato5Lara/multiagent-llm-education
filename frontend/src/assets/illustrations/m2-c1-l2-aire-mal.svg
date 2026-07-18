@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" font-family="Outfit, 'Segoe UI', system-ui, sans-serif">
+  <!-- Plantilla A.1 (Jerarquía con decisión) — idea vaga (ámbar punteado) →
+       rombo de condición (cian) → dos resultados (esmeralda). §9. -->
+  <rect width="800" height="1000" fill="#0a0a0f"/>
+
+  <!-- Nodo idea -->
+  <rect x="170" y="72" width="460" height="160" rx="20" fill="#f59e0b" fill-opacity="0.08" stroke="#f59e0b" stroke-width="2" stroke-dasharray="9 7"/>
+  <g>
+    <circle cx="212" cy="112" r="13" stroke="#f59e0b" stroke-width="2" fill="none"/>
+    <text x="212" y="118" fill="#f59e0b" font-size="17" font-weight="700" text-anchor="middle">?</text>
+  </g>
+  <text x="400" y="150" fill="#f8fafc" font-size="30" font-weight="700" text-anchor="middle">EL AIRE ESTÁ MAL</text>
+  <text x="400" y="192" fill="#94a3b8" font-size="20" text-anchor="middle">la idea — la máquina no sabe evaluarla</text>
+
+  <!-- Conector idea → rombo -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <line x1="400" y1="232" x2="400" y2="312"/>
+    <polyline points="388,300 400,314 412,300"/>
+  </g>
+
+  <!-- Rombo de decisión (cian) -->
+  <polygon points="400,330 640,455 400,580 160,455" fill="#06b6d4" fill-opacity="0.08" stroke="#06b6d4" stroke-width="2"/>
+  <!-- Ícono sensor/medidor -->
+  <g stroke="#06b6d4" stroke-width="2" fill="none">
+    <path d="M 380 392 a 20 20 0 0 1 40 0"/>
+    <line x1="400" y1="392" x2="411" y2="381"/>
+    <line x1="374" y1="392" x2="426" y2="392"/>
+  </g>
+  <text x="400" y="450" fill="#f8fafc" font-size="25" font-weight="600" text-anchor="middle">¿El CO2 supera</text>
+  <text x="400" y="484" fill="#f8fafc" font-size="25" font-weight="600" text-anchor="middle">800 ppm?</text>
+
+  <!-- Ramas SÍ / NO -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="3" fill="none">
+    <polyline points="280,518 210,570 210,616"/>
+    <polyline points="520,518 590,570 590,616"/>
+  </g>
+  <text x="188" y="580" fill="#7c3aed" font-size="21" font-weight="700" text-anchor="end">SÍ</text>
+  <text x="612" y="580" fill="#7c3aed" font-size="21" font-weight="700">NO</text>
+
+  <!-- Resultado SÍ -->
+  <rect x="80" y="620" width="280" height="160" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- Ícono ventilador (aspas) -->
+  <g stroke="#10b981" stroke-width="2" fill="none">
+    <circle cx="220" cy="662" r="4.5"/>
+    <ellipse cx="220" cy="648" rx="5.5" ry="9"/>
+    <ellipse cx="220" cy="648" rx="5.5" ry="9" transform="rotate(120 220 662)"/>
+    <ellipse cx="220" cy="648" rx="5.5" ry="9" transform="rotate(240 220 662)"/>
+  </g>
+  <text x="220" y="722" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">Enciende</text>
+  <text x="220" y="754" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">el ventilador</text>
+
+  <!-- Resultado NO -->
+  <rect x="440" y="620" width="280" height="160" rx="20" fill="#10b981" fill-opacity="0.08" stroke="#10b981" stroke-width="2"/>
+  <!-- Ícono ventilador detenido (mismo tamaño, trazo tenue) -->
+  <g stroke="#10b981" stroke-width="2" fill="none" opacity="0.55">
+    <circle cx="580" cy="662" r="4.5"/>
+    <ellipse cx="580" cy="648" rx="5.5" ry="9"/>
+    <ellipse cx="580" cy="648" rx="5.5" ry="9" transform="rotate(120 580 662)"/>
+    <ellipse cx="580" cy="648" rx="5.5" ry="9" transform="rotate(240 580 662)"/>
+  </g>
+  <text x="580" y="722" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">Lo mantiene</text>
+  <text x="580" y="754" fill="#f8fafc" font-size="23" font-weight="600" text-anchor="middle">apagado</text>
+
+  <!-- Leyenda -->
+  <text x="400" y="882" fill="#94a3b8" font-size="21" text-anchor="middle">Todo lo de arriba es una idea.</text>
+  <text x="400" y="912" fill="#94a3b8" font-size="21" text-anchor="middle">Todo lo que cuelga de ella es una condición evaluable.</text>
+</svg>
