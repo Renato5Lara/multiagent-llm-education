@@ -178,6 +178,21 @@ export const CICLO_2_VARIABLES: LearningCycle = {
           caption:
             'Un número suelto no dice nada de sí mismo. El mismo número con nombre se puede leer, reutilizar y cambiar sin reescribir el programa entero.',
         },
+        // Auditoría "infografías" (jul 2026, tercera vuelta): ver misma nota
+        // en ciclo1-instrucciones-precisas.ts — `imageAsset` ya está listo
+        // para resolver contra illustrationAssets.ts.
+        imageAsset: 'm1-c2-teoria-variable-nombre',
+        imagePrompt:
+          'Infografía comparativa de dos paneles para una app educativa de programación, modo oscuro.\n\n' +
+          'COMPOSICIÓN: dos paneles rectangulares del mismo ancho, apilados verticalmente. Panel superior = VALOR SUELTO (vago). Panel inferior = VALOR CON NOMBRE (preciso). Entre ambos, una flecha corta apuntando hacia abajo con una etiqueta pequeña "dale un nombre".\n\n' +
+          'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo — formas geométricas simples, coherente con un diagrama de producto SaaS.\n\n' +
+          'COLORES: fondo casi negro #0a0a0f. Panel vago (superior): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Panel preciso (inferior): borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Acento cian #06b6d4 en la palabra "edad" dentro del panel preciso. Flecha central y su etiqueta en gris azulado #94a3b8. Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+          'ICONOS: tres signos de interrogación (?) pequeños junto a las preguntas del panel vago. Un pequeño icono de etiqueta/tag junto al nombre "edad" en el panel preciso. Un icono outline minimalista de contenedor/caja, pequeño, como ancla temática, en la esquina superior del panel vago.\n\n' +
+          'DISTRIBUCIÓN: formato vertical 4:5. Panel vago ocupa el 40% superior, panel preciso el 40% inferior, con la flecha y su etiqueta en el 10% central, y una leyenda final en el 10% inferior, fuera de ambos paneles.\n\n' +
+          'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+          '— Panel vago, título: "20" — debajo, en lista: "¿20 qué cosa?", "¿por qué aparece varias veces en el programa?", "¿qué pasa si cambia?"\n' +
+          '— Panel preciso, título: "EDAD = 20" — debajo, en lista: "nombre: edad", "valor: 20", "se puede leer y actualizar donde haga falta"\n' +
+          '— Leyenda inferior centrada, fuera de los paneles: "Un número suelto no dice nada de sí mismo. El mismo número con nombre se puede leer, reutilizar y cambiar sin reescribir el programa entero."',
         body: [
           'Una variable es una caja con nombre que guarda un valor — un número, un texto, lo que sea — para que puedas leerlo o cambiarlo más adelante sin repetirlo.',
           'Python crea esa caja con una sola línea: nombre = valor. Después de esa línea, escribir el nombre es exactamente lo mismo que escribir el valor que guarda.',

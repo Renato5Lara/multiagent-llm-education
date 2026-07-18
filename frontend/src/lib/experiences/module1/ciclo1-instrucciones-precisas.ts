@@ -54,6 +54,24 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
           caption:
             'La diferencia no es el detalle decorativo: la instrucción precisa no deja NINGUNA decisión en manos del robot.',
         },
+        // Auditoría "infografías" (jul 2026, tercera vuelta — cobertura
+        // completa): esta era la infografía PRINCIPAL de teoría, la única
+        // categoría que había quedado sin imagePrompt en la vuelta anterior
+        // (solo remediación L2 lo tenía). `imageAsset` ya está listo para
+        // resolver contra illustrationAssets.ts; hasta entonces se muestra
+        // `infographic` (comparación de nodos) como hoy — compatibilidad total.
+        imageAsset: 'm1-c1-teoria-cruza-habitacion',
+        imagePrompt:
+          'Infografía comparativa de dos paneles para una app educativa de programación, modo oscuro.\n\n' +
+          'COMPOSICIÓN: dos paneles rectangulares del mismo ancho, apilados verticalmente. Panel superior = INSTRUCCIÓN VAGA. Panel inferior = INSTRUCCIÓN PRECISA. Entre ambos, una flecha corta apuntando hacia abajo con una etiqueta pequeña "hazla precisa".\n\n' +
+          'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo ni ilustración de personas — solo formas geométricas, texto e iconos vectoriales simples, como un diagrama de producto SaaS.\n\n' +
+          'COLORES: fondo casi negro #0a0a0f. Panel vago (superior): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8% de opacidad. Panel preciso (inferior): borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Flecha central y su etiqueta en gris azulado #94a3b8. Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+          'ICONOS: tres signos de interrogación (?) pequeños distribuidos junto a las preguntas del panel vago. Tres checks (✓) pequeños junto a las tres partes del panel preciso. Un ícono outline minimalista de robot, pequeño, como ancla temática, en la esquina superior del panel vago (sin volverse realista).\n\n' +
+          'DISTRIBUCIÓN: formato vertical 4:5. Panel vago ocupa el 40% superior, panel preciso el 40% inferior, con la flecha y su etiqueta en el 10% central, y una leyenda final en el 10% inferior, fuera de ambos paneles.\n\n' +
+          'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+          '— Panel vago, título: "CRUZA LA HABITACIÓN" — debajo, en lista: "¿cuántos pasos?", "¿hacia qué lado gira?", "¿qué hace al llegar?"\n' +
+          '— Panel preciso, título: "GIRA 90° A LA IZQUIERDA. AVANZA 4 PASOS. DETENTE FRENTE A LA PUERTA." — debajo, en lista: "qué hacer", "cuánto", "hacia dónde"\n' +
+          '— Leyenda inferior centrada, fuera de los paneles: "La diferencia no es el detalle decorativo: la instrucción precisa no deja ninguna decisión en manos del robot."',
         body: [
           'Una instrucción es precisa cuando cualquier ejecutor — humano o máquina — produce exactamente el mismo resultado.',
           'Una computadora no imagina nada más. Python es el lenguaje con el que le escribes instrucciones precisas — igual que las que vas a construir para el robot.',

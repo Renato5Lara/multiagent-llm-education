@@ -189,6 +189,24 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
               caption:
                 'La diferencia no es el detalle: una condición evaluable siempre puede responderse con SÍ o NO — nunca "depende".',
             },
+            // Auditoría "infografías" (jul 2026, tercera vuelta): ver misma
+            // nota en module1/ciclo1-instrucciones-precisas.ts. A diferencia
+            // de las otras tres teorías (siempre 2 partes), esta SÍ es una
+            // condición booleana real — el prompt usa el rombo de decisión
+            // estándar de diagramas de flujo en el panel preciso, coherente
+            // con el diagrama de remediación L2 del mismo ciclo.
+            imageAsset: 'm2-c1-teoria-condicion-paraguas',
+            imagePrompt:
+              'Infografía comparativa de dos paneles para una app educativa de programación, modo oscuro.\n\n' +
+              'COMPOSICIÓN: dos paneles rectangulares del mismo ancho, apilados verticalmente. Panel superior = IDEA VAGA (rectángulo simple). Panel inferior = CONDICIÓN EVALUABLE (contiene un ROMBO de decisión con dos ramas etiquetadas SÍ / NO hacia dos resultados). Entre ambos, una flecha corta apuntando hacia abajo con una etiqueta pequeña "hazla evaluable".\n\n' +
+              'ESTILO: interfaz "glassmorphism" oscura, iconografía plana de diagrama de flujo real (rombo = decisión, rectángulo = proceso/resultado), sin fotorrealismo, coherente con un producto SaaS educativo.\n\n' +
+              'COLORES: fondo casi negro #0a0a0f. Panel vago (superior): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Rombo de decisión (panel inferior): borde SÓLIDO cian #06b6d4, relleno cian al 8%. Los dos nodos de resultado dentro del panel inferior: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Etiquetas "SÍ"/"NO" en violeta #7c3aed. Flecha central y su etiqueta en gris azulado #94a3b8. Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+              'ICONOS: tres signos de interrogación (?) pequeños junto a las preguntas del panel vago. Un pequeño ícono de sensor/gota de lluvia dentro del rombo. Un ícono de paraguas abierto junto al resultado SÍ y uno de paraguas cerrado junto al resultado NO, ambos del mismo tamaño (ningún resultado más importante que el otro).\n\n' +
+              'DISTRIBUCIÓN: formato vertical 4:5. Panel vago ocupa el 35% superior, panel preciso (con su rombo y dos resultados) el 45% inferior, con la flecha y su etiqueta en el 10% central, y una leyenda final en el 10% restante, fuera de ambos paneles.\n\n' +
+              'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+              '— Panel vago, título: "SI HACE MAL TIEMPO, ABRE EL PARAGUAS" — debajo, en lista: "¿qué cuenta como mal tiempo?", "¿lluvia? ¿viento? ¿nublado?", "¿quién decide?"\n' +
+              '— Panel preciso, rombo: "¿EL SENSOR DE LLUVIA DETECTA GOTAS?" — resultado SÍ: "Abre el paraguas" — resultado NO: "Mantenlo cerrado"\n' +
+              '— Leyenda inferior centrada, fuera de los paneles: "La diferencia no es el detalle: una condición evaluable siempre puede responderse con SÍ o NO — nunca depende."',
             body: [
               'Una estructura SI/ENTONCES necesita una condición que la máquina pueda evaluar como verdadera o falsa — nunca una idea vaga como "mal tiempo".',
               'Python usa exactamente esta lógica: `if condición:` seguido de qué hacer si es verdadera, y `else:` para cuando no lo es. La condición siempre se reduce a SÍ o NO.',

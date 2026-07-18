@@ -5,10 +5,16 @@
 // depende de dónde vive físicamente el archivo, y agregar la imagen real más
 // adelante no exige tocar el archivo del ciclo que ya la declara.
 //
+// Registro único para las dos categorías de infografía que existen hoy:
+// teoría (ConceptVariant.visual, medium 'infografia') y remediación L2
+// (RemediationIllustration, medium 'diagrama') — ambas usan la MISMA clave
+// `imageAsset` y se resuelven aquí, nunca por rutas dispersas en cada ciclo.
+//
 // Vacío a propósito: no se genera ni se descarga ninguna imagen
 // automáticamente. Cuando exista un PNG/SVG/WebP real para una ilustración
-// (ver el reporte de "infografías pendientes de ilustración"), se agrega
-// aquí con dos pasos:
+// (ver frontend/docs/infografias-auditoria.md para el estado de cada una y
+// frontend/docs/infografias-prompts.md para el prompt listo para generarla),
+// se agrega aquí con dos pasos:
 //   1. Colocar el archivo en frontend/src/assets/illustrations/.
 //   2. Importarlo y agregar una línea al mapa de abajo, con la MISMA clave
 //      que ya usa `imageAsset` en el ciclo — ejemplo (no ejecutar, solo

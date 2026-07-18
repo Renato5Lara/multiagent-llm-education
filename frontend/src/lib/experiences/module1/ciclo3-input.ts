@@ -52,6 +52,21 @@ export const CICLO_3_INPUT: LearningCycle = {
           caption:
             'Sin preguntar, el programa tendría que adivinar quién eres — y ya sabes que una máquina no adivina nada. input() reemplaza esa adivinanza por una pregunta real, y una espera real.',
         },
+        // Auditoría "infografías" (jul 2026, tercera vuelta): ver misma nota
+        // en ciclo1-instrucciones-precisas.ts — `imageAsset` ya está listo
+        // para resolver contra illustrationAssets.ts.
+        imageAsset: 'm1-c3-teoria-pregunta-input',
+        imagePrompt:
+          'Infografía comparativa de dos paneles para una app educativa de programación, modo oscuro.\n\n' +
+          'COMPOSICIÓN: dos paneles rectangulares del mismo ancho, apilados verticalmente. Panel superior = LLAMADA SIN PREGUNTAR (vago). Panel inferior = PREGUNTA, ESPERA Y GUARDA (preciso, dos líneas de código). Entre ambos, una flecha corta apuntando hacia abajo con una etiqueta pequeña "pregúntale al usuario".\n\n' +
+          'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo — iconografía plana tipo robot/pantalla, coherente con un diagrama de producto SaaS.\n\n' +
+          'COLORES: fondo casi negro #0a0a0f. Panel vago (superior): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Panel preciso (inferior): borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Flecha central y su etiqueta en gris azulado #94a3b8. Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+          'ICONOS: tres signos de interrogación (?) pequeños junto a las preguntas del panel vago. En el panel preciso, tres iconos pequeños en línea junto a cada parte: un globo de diálogo (pregunta), un reloj/pausa (espera), una caja con check (guarda).\n\n' +
+          'DISTRIBUCIÓN: formato vertical 4:5. Panel vago ocupa el 40% superior, panel preciso el 40% inferior (con las dos líneas de código en fuente monoespaciada), con la flecha y su etiqueta en el 10% central, y una leyenda final en el 10% inferior, fuera de ambos paneles.\n\n' +
+          'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+          '— Panel vago, título: "SALUDAR()" — debajo, en lista: "¿a quién saluda?", "¿de dónde saca el nombre?", "¿qué hace si no lo sabe?"\n' +
+          '— Panel preciso, título (dos líneas, monoespaciado): "NOMBRE = INPUT(\\"¿CÓMO TE LLAMAS?\\")" y "SALUDAR(NOMBRE)" — debajo, en lista: "pregunta: qué muestra en pantalla", "espera: se detiene hasta que respondes", "guarda: la respuesta queda en la variable"\n' +
+          '— Leyenda inferior centrada, fuera de los paneles: "Sin preguntar, el programa tendría que adivinar quién eres. input() reemplaza esa adivinanza por una pregunta real, y una espera real."',
         body: [
           'input() no es un tipo de dato nuevo ni una caja nueva: es la forma en que un programa pausa, pregunta, y deja que el USUARIO decida qué valor llega a la variable.',
           'Antes, tú escribías el valor directamente en el código (edad = 20). Con input(), el valor lo escribe la persona que usa el programa, en el momento en que lo usa.',
