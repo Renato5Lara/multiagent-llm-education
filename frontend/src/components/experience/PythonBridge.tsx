@@ -7,9 +7,10 @@
 // el estudiante escribe Python real, ejecutado con Pyodide en el propio
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
-import { useMemo, useState } from 'react'
-import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { Code2, Eye, GraduationCap, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
@@ -97,9 +98,59 @@ interface Props {
    *  `skipAhead()` arriba. `0`/`undefined` conserva el comportamiento previo
    *  exacto (arranca siempre en `bridge.practice`, el peldaño "observar"). */
   initialSkipStages?: number
+  /** Sprint UX-02 "Laboratorio adaptativo": 'lab' reorganiza las MISMAS
+   *  piezas en tres zonas a pantalla ancha — contexto (explicación del
+   *  puente + `aside`) a la izquierda, editor grande con consola siempre
+   *  visible al centro, y el tutor contextual (pistas, caso análogo,
+   *  errores, retroalimentación) a la derecha, solo cuando tiene algo que
+   *  decir. Ausente/'inline' = presentación previa exacta (tarjeta única
+   *  apilada) — ningún otro llamador cambia. Solo presentación: estado,
+   *  intentos, evidencia y decisiones del Runtime son idénticos. */
+  layout?: 'inline' | 'lab'
+  /** Solo layout 'lab': contenido adicional del panel izquierdo (objetivo
+   *  del ciclo, infografía, ayudas) — lo compone el llamador, que es quien
+   *  conoce el concepto; el puente no aprende ningún concepto nuevo. */
+  aside?: ReactNode
 }
 
-export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone, initialProfundidad, initialSkipStages = 0 }: Props) {
+export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone, initialProfundidad, initialSkipStages = 0, layout = 'inline', aside }: Props) {
+  const explanationCard = (
+    <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
+        <Code2 className="h-4 w-4 text-neural-glow shrink-0" />
+        <span className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-glow">
+          {bridge.label}
+        </span>
+      </div>
+      <pre className="px-5 py-4 overflow-x-auto text-[13px] leading-relaxed font-mono text-neural-text/90 whitespace-pre">
+        <code>{bridge.code}</code>
+      </pre>
+      <p className="px-5 pb-4 text-sm text-neural-muted leading-relaxed">
+        {bridge.explanation}
+      </p>
+    </div>
+  )
+
+  if (layout === 'lab' && bridge.practice) {
+    return (
+      <div className="grid gap-5 items-start lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="space-y-5 lg:sticky lg:top-4">
+          {explanationCard}
+          {aside}
+        </div>
+        <PythonMicroPractice
+          practice={skipAhead(bridge.practice, initialSkipStages)}
+          moduleId={moduleId}
+          conceptId={conceptId}
+          courseId={courseId}
+          onDone={onPracticeDone}
+          initialProfundidad={initialProfundidad}
+          layout="lab"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
@@ -138,13 +189,14 @@ function describeStageAdaptation(profundidad: string | undefined): string | null
   return null
 }
 
-function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, initialProfundidad }: {
+function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, initialProfundidad, layout = 'inline' }: {
   practice: PythonMicroPracticeDef
   moduleId: string
   conceptId: string
   courseId?: string
   onDone?: (outcome: PracticeOutcome) => void
   initialProfundidad?: string
+  layout?: 'inline' | 'lab'
 }) {
   const { ready, loadError, run } = usePyodide()
   const submitCycleEvidence = useSubmitCycleEvidence()
@@ -346,138 +398,239 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     goToStage(stage.nextStage, true, attempts)
   }
 
-  return (
-    <div className="border-t border-neural-glow/15 px-5 py-4 space-y-3">
+  // ── Bloques de UI (Sprint UX-02) ──────────────────────────────────────────
+  // Cada pieza se define UNA vez y se compone según el layout: 'inline'
+  // conserva exactamente el orden apilado previo; 'lab' reparte las mismas
+  // piezas entre el centro (editor + consola) y el tutor contextual de la
+  // derecha. Solo presentación — ningún estado ni handler cambia.
+  const labMode = layout === 'lab'
+
+  const stageNoteBlock = stageNote && (
+    <div className="flex items-start gap-2 rounded-lg border border-neural-glow/20 bg-neural-glow/5 px-3 py-2">
+      <Sparkles className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
+      <p className="text-sm text-neural-glow/90 leading-relaxed">{stageNote}</p>
+    </div>
+  )
+
+  const promptBlock = <p className="text-sm text-neural-text/90">{stage.prompt}</p>
+
+  // input() no tiene terminal real en el navegador: en vez de ocultar el
+  // valor simulado, se muestra explícitamente — el estudiante ve QUÉ
+  // escribe el usuario simulado, nunca un dato que aparece de la nada.
+  const simulatedInputsBlock = stage.simulatedInputs && stage.simulatedInputs.length > 0 && (
+    <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1.5">
       <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-        {MODE_LABEL[stage.mode ?? 'escribir_parcial']}
+        Simularemos que el usuario escribe
       </p>
-      {/* Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
-          de mostrar la siguiente — breve (best-effort, nunca más de una
-          llamada), pero real: la etapa que aparece después ya cambia según
-          esa decisión (más apoyo / menos andamiaje), no solo el texto. */}
-      {deciding ? (
-        <div className="flex items-center gap-2 py-3 text-sm text-neural-muted">
-          <Loader2 className="h-4 w-4 animate-spin text-neural-glow shrink-0" />
-          Personalizando tu siguiente paso…
-        </div>
-      ) : (
-        <>
-          {stageNote && (
-            <div className="flex items-start gap-2 rounded-lg border border-neural-glow/20 bg-neural-glow/5 px-3 py-2">
-              <Sparkles className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
-              <p className="text-sm text-neural-glow/90 leading-relaxed">{stageNote}</p>
-            </div>
-          )}
-          <p className="text-sm text-neural-text/90">{stage.prompt}</p>
-      {/* input() no tiene terminal real en el navegador: en vez de ocultar el
-          valor simulado, se muestra explícitamente — el estudiante ve QUÉ
-          escribe el usuario simulado, nunca un dato que aparece de la nada. */}
-      {stage.simulatedInputs && stage.simulatedInputs.length > 0 && (
-        <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1.5">
-          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-            Simularemos que el usuario escribe
-          </p>
-          {stage.simulatedInputs.map((value, i) => (
-            <p key={i} className="font-mono text-[13px] text-neural-text/90">
-              {value}
-            </p>
-          ))}
-        </div>
-      )}
-      <textarea
-        value={code}
-        onChange={e => setCode(e.target.value)}
-        disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
-        rows={3}
-        spellCheck={false}
-        className="w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70"
-      />
-      <div className="flex items-center gap-2 flex-wrap">
-        <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running || !!pendingNextStage} className="gap-2">
-          {running && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-          {ready ? 'Ejecutar →' : 'Cargando Python…'}
-        </Button>
-        {!done && !showSolution && !pendingNextStage && exhausted && (
-          <Button size="sm" variant="ghost" onClick={handleShowSolution}>
-            Ver solución
-          </Button>
-        )}
-        {pendingContinue && (
-          <Button size="sm" onClick={handleContinueAfterSolution} className="gap-2">
-            Continuar →
-          </Button>
-        )}
-        {pendingNextStage && (
-          <Button size="sm" onClick={handleContinueAfterCorrect} className="gap-2">
-            Continuar →
-          </Button>
-        )}
-      </div>
-      {loadError && <p className="text-sm text-red-400">{loadError}</p>}
-      {output !== null && !showSolution && (
-        <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
-          {output || '(sin salida)'}
-        </div>
-      )}
-      {error && !showSolution && <p className="text-sm text-amber-400">{error}</p>}
-      {/* Tras un acierto (etapa intermedia en espera de "Continuar", o la
-          última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
-          frase que conecta concepto+instrucción+resultado, cuando el
-          contenido la trae (sprint "PythonBridge como entorno de aprendizaje
-          real"). Sin `resultExplanation` autorada, el peldaño se ve igual
-          que antes de este sprint. */}
-      {(pendingNextStage || solved) && stage.resultExplanation && (
-        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 space-y-1">
-          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-emerald-400">Por qué pasó esto</p>
-          <p className="text-sm text-neural-text/80 leading-relaxed">{stage.resultExplanation}</p>
-        </div>
-      )}
-      {/* La ayuda responde a POR QUÉ falló (lastCategory), no solo a cuántas
-          veces — antes, un error real (SyntaxError/NameError) nunca mostraba
-          pista alguna; ahora toda categoría tiene su propio diagnóstico. */}
-      {!done && !showSolution && lastCategory && (
-        <div className="space-y-1.5">
-          <div className="flex items-start gap-2">
-            <Eye className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
-            <p className="text-sm text-neural-glow/90 leading-relaxed">{ERROR_CATEGORY_LABEL[lastCategory]}</p>
-          </div>
-          <p className="text-sm text-neural-muted">
-            {stage.hintsByCategory?.[lastCategory] ?? stage.hint}
-          </p>
-        </div>
-      )}
-      {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
-          del propio ejercicio (mismo criterio que la escalera de remediación:
-          más acompañamiento antes de ofrecer la respuesta, nunca en su lugar). */}
-      {!done && !showSolution && !pendingNextStage && attempts >= workedExampleThreshold && stage.workedExample && (
-        <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
-          <div className="flex items-center gap-2">
-            <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
-            <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-              Apoyo — veamos un caso parecido
-            </p>
-          </div>
-          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.workedExample.code}</pre>
-          <p className="text-sm text-neural-muted">→ {stage.workedExample.output}</p>
-          <p className="text-sm text-neural-text/80 leading-relaxed">{stage.workedExample.explanation}</p>
-        </div>
-      )}
-      {solved && (
-        <p className="text-sm text-emerald-400">
-          ✓ Exacto — eso es Python real haciendo lo que pediste.
+      {stage.simulatedInputs.map((value, i) => (
+        <p key={i} className="font-mono text-[13px] text-neural-text/90">
+          {value}
         </p>
+      ))}
+    </div>
+  )
+
+  // Laboratorio: el editor deja de ser una franja de 3 líneas — crece con el
+  // código (acotado) para que escribir sea cómodo sin scroll interno.
+  const editorRows = labMode ? Math.min(16, Math.max(8, code.split('\n').length + 2)) : 3
+  const editorBlock = (
+    <textarea
+      value={code}
+      onChange={e => setCode(e.target.value)}
+      disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
+      rows={editorRows}
+      spellCheck={false}
+      className={cn(
+        'w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70',
+        labMode ? 'text-[14px] leading-relaxed' : 'text-[13px]',
+      )}
+    />
+  )
+
+  const actionsBlock = (
+    <div className="flex items-center gap-2 flex-wrap">
+      <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running || !!pendingNextStage} className="gap-2">
+        {running && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+        {ready ? 'Ejecutar →' : 'Cargando Python…'}
+      </Button>
+      {!done && !showSolution && !pendingNextStage && exhausted && (
+        <Button size="sm" variant="ghost" onClick={handleShowSolution}>
+          Ver solución
+        </Button>
+      )}
+      {pendingContinue && (
+        <Button size="sm" onClick={handleContinueAfterSolution} className="gap-2">
+          Continuar →
+        </Button>
       )}
       {pendingNextStage && (
-        <p className="text-sm text-emerald-400">
-          ✓ Exacto — así se ve en pantalla.
+        <Button size="sm" onClick={handleContinueAfterCorrect} className="gap-2">
+          Continuar →
+        </Button>
+      )}
+    </div>
+  )
+
+  const loadErrorBlock = loadError && <p className="text-sm text-red-400">{loadError}</p>
+
+  const outputVisible = output !== null && !showSolution
+  const outputBlock = outputVisible && (
+    <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
+      {output || '(sin salida)'}
+    </div>
+  )
+  // Laboratorio: la consola SIEMPRE está visible — antes de ejecutar muestra
+  // una invitación, nunca un hueco que aparece y desaparece.
+  const consoleBlock = (
+    <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 space-y-1">
+      <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-neural-muted/70">Consola de salida</p>
+      {outputVisible ? (
+        <p className="font-mono text-[13px] text-neural-text/80 whitespace-pre-wrap">{output || '(sin salida)'}</p>
+      ) : (
+        <p className="font-mono text-[12px] text-neural-muted/50 italic">Ejecuta tu código para ver aquí la salida…</p>
+      )}
+    </div>
+  )
+
+  const rawErrorBlock = error && !showSolution && <p className="text-sm text-amber-400">{error}</p>
+
+  // Tras un acierto (etapa intermedia en espera de "Continuar", o la
+  // última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
+  // frase que conecta concepto+instrucción+resultado, cuando el
+  // contenido la trae (sprint "PythonBridge como entorno de aprendizaje
+  // real"). Sin `resultExplanation` autorada, el peldaño se ve igual
+  // que antes de este sprint.
+  const resultExplanationBlock = (pendingNextStage || solved) && stage.resultExplanation && (
+    <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 space-y-1">
+      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-emerald-400">Por qué pasó esto</p>
+      <p className="text-sm text-neural-text/80 leading-relaxed">{stage.resultExplanation}</p>
+    </div>
+  )
+
+  // La ayuda responde a POR QUÉ falló (lastCategory), no solo a cuántas
+  // veces — antes, un error real (SyntaxError/NameError) nunca mostraba
+  // pista alguna; ahora toda categoría tiene su propio diagnóstico.
+  const errorHelpBlock = !done && !showSolution && lastCategory && (
+    <div className="space-y-1.5">
+      <div className="flex items-start gap-2">
+        <Eye className="h-3.5 w-3.5 text-neural-glow shrink-0 mt-0.5" />
+        <p className="text-sm text-neural-glow/90 leading-relaxed">{ERROR_CATEGORY_LABEL[lastCategory]}</p>
+      </div>
+      <p className="text-sm text-neural-muted">
+        {stage.hintsByCategory?.[lastCategory] ?? stage.hint}
+      </p>
+    </div>
+  )
+
+  // Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
+  // del propio ejercicio (mismo criterio que la escalera de remediación:
+  // más acompañamiento antes de ofrecer la respuesta, nunca en su lugar).
+  const workedExampleBlock = !done && !showSolution && !pendingNextStage && attempts >= workedExampleThreshold && stage.workedExample && (
+    <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
+      <div className="flex items-center gap-2">
+        <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
+        <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+          Apoyo — veamos un caso parecido
         </p>
-      )}
-      {showSolution && (
-        <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1">
-          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">Solución</p>
-          <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.solutionCode}</pre>
+      </div>
+      <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.workedExample.code}</pre>
+      <p className="text-sm text-neural-muted">→ {stage.workedExample.output}</p>
+      <p className="text-sm text-neural-text/80 leading-relaxed">{stage.workedExample.explanation}</p>
+    </div>
+  )
+
+  const solvedBlock = solved && (
+    <p className="text-sm text-emerald-400">
+      ✓ Exacto — eso es Python real haciendo lo que pediste.
+    </p>
+  )
+  const pendingCorrectBlock = pendingNextStage && (
+    <p className="text-sm text-emerald-400">
+      ✓ Exacto — así se ve en pantalla.
+    </p>
+  )
+
+  const solutionBlock = showSolution && (
+    <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1">
+      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">Solución</p>
+      <pre className="font-mono text-[13px] text-neural-text/90 whitespace-pre">{stage.solutionCode}</pre>
+    </div>
+  )
+
+  const modeLabelBlock = (
+    <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+      {MODE_LABEL[stage.mode ?? 'escribir_parcial']}
+    </p>
+  )
+
+  // Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
+  // de mostrar la siguiente — breve (best-effort, nunca más de una
+  // llamada), pero real: la etapa que aparece después ya cambia según
+  // esa decisión (más apoyo / menos andamiaje), no solo el texto.
+  const decidingBlock = (
+    <div className="flex items-center gap-2 py-3 text-sm text-neural-muted">
+      <Loader2 className="h-4 w-4 animate-spin text-neural-glow shrink-0" />
+      Personalizando tu siguiente paso…
+    </div>
+  )
+
+  if (labMode) {
+    // Tutor contextual (derecha): SOLO aparece cuando tiene algo que aportar
+    // — nota de adaptación, diagnóstico del error, caso análogo,
+    // retroalimentación del acierto o solución. Sin contenido, el editor
+    // ocupa todo el ancho: nunca un chat vacío permanente.
+    const tutorBlocks = [stageNoteBlock, errorHelpBlock, workedExampleBlock, resultExplanationBlock, solutionBlock].filter(Boolean)
+    const tutorVisible = !deciding && tutorBlocks.length > 0
+    return (
+      <div className={cn('grid gap-5 items-start', tutorVisible && 'xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]')}>
+        <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] px-5 py-4 space-y-3">
+          {modeLabelBlock}
+          {deciding ? decidingBlock : (
+            <>
+              {promptBlock}
+              {simulatedInputsBlock}
+              {editorBlock}
+              {actionsBlock}
+              {loadErrorBlock}
+              {consoleBlock}
+              {rawErrorBlock}
+              {solvedBlock}
+              {pendingCorrectBlock}
+            </>
+          )}
         </div>
-      )}
+        {tutorVisible && (
+          <aside className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3 xl:sticky xl:top-4 animate-in fade-in slide-in-from-right-2 duration-300">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-neural-glow shrink-0" />
+              <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-glow">Tutor</p>
+            </div>
+            {tutorBlocks}
+          </aside>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="border-t border-neural-glow/15 px-5 py-4 space-y-3">
+      {modeLabelBlock}
+      {deciding ? decidingBlock : (
+        <>
+          {stageNoteBlock}
+          {promptBlock}
+          {simulatedInputsBlock}
+          {editorBlock}
+          {actionsBlock}
+          {loadErrorBlock}
+          {outputBlock}
+          {rawErrorBlock}
+          {resultExplanationBlock}
+          {errorHelpBlock}
+          {workedExampleBlock}
+          {solvedBlock}
+          {pendingCorrectBlock}
+          {solutionBlock}
         </>
       )}
     </div>

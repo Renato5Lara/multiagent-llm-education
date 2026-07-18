@@ -1288,9 +1288,39 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     )
   }
 
+  // Sprint UX-02 "Laboratorio adaptativo": cuando el ciclo llega al editor
+  // de Python (práctica resuelta → puente activo), la pantalla deja de ser
+  // una columna estrecha y se convierte en un laboratorio de tres zonas:
+  // contexto a la izquierda, editor grande con consola al centro, tutor
+  // contextual a la derecha. Solo presentación — la lógica del ciclo, la
+  // evidencia y las decisiones del Runtime no cambian.
+  const labActive = phase === 'practice' && !!practiceOutcome && !!cycle?.pythonBridge
+  const labConcept = labActive && cycle ? resolveConceptForRender(cycle, effectiveModality, profundidad) : null
+  const labVariant = labConcept ? (labConcept.variants[effectiveModality] ?? labConcept.variants.reading) : null
+  const labAside = labConcept && labVariant ? (
+    <>
+      <div className="glass-panel rounded-2xl p-5 space-y-2">
+        <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">Objetivo</p>
+        <p className="text-sm font-semibold text-neural-text">{labConcept.title}</p>
+        <p className="text-sm text-neural-muted leading-relaxed">
+          {labConcept.quickRecap?.body?.[0] ?? labVariant.body[0]}
+        </p>
+      </div>
+      {hasIllustrationImage(labVariant) && (
+        <div className="glass-panel rounded-2xl p-4">
+          <IllustrationVisual imageUrl={labVariant.imageUrl} imageAsset={labVariant.imageAsset} alt={labConcept.title} />
+        </div>
+      )}
+      <p className="text-xs text-neural-muted/60 italic px-1">
+        El tutor contextual aparece junto al editor solo cuando tiene una
+        pista, un ejemplo o una explicación que darte — nunca antes.
+      </p>
+    </>
+  ) : undefined
+
   // Fases dentro de un ciclo — cabecera compartida de la misión
   return (
-    <div className="max-w-2xl mx-auto py-4 space-y-6">
+    <div className={cn('mx-auto py-4 space-y-6', labActive ? 'max-w-[1400px] px-4 lg:px-6' : 'max-w-2xl')}>
       <div className="flex items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={onExit}>
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -1374,9 +1404,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           {/* remediationLevel > 0 significa que se volvió aquí YA resuelto por
            *  la escalera (handleStepSolved/handleMaxSupportContinue) — no se
            *  repite la actividad, solo se completa el cierre normal del ciclo
-           *  (puente a Python, menú de consolidación) que antes se saltaba. */}
+           *  (puente a Python, menú de consolidación) que antes se saltaba.
+           *  Con el laboratorio activo, la práctica ya resuelta conserva su
+           *  ancho de lectura, centrada sobre el laboratorio (UX-02). */}
           {remediationLevel === 0 && (
-            resolvedPractice.kind === 'ordering' ? (
+            <div className={cn(labActive && 'max-w-2xl mx-auto w-full')}>
+            {resolvedPractice.kind === 'ordering' ? (
               <OrderingPractice
                 key={`${cycle.id}-practice`}
                 practice={resolvedPractice}
@@ -1404,7 +1437,8 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
                 onExhausted={handlePracticeExhausted}
                 profundidad={profundidad}
               />
-            )
+            )}
+            </div>
           )}
           {practiceOutcome && cycle.pythonBridge && (
             <PythonBridge
@@ -1414,6 +1448,8 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               courseId={courseId}
               initialProfundidad={profundidad}
               initialSkipStages={pythonSkipStages}
+              layout={labActive ? 'lab' : 'inline'}
+              aside={labAside}
               onPracticeDone={outcome => {
                 setPythonPracticeDone(true)
                 setPythonOutcome(outcome)
