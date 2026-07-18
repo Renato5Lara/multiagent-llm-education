@@ -1375,7 +1375,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   return (
     <div className={cn(
       'mx-auto py-4 space-y-6',
-      labActive ? 'max-w-[1400px] px-4 lg:px-6' : practiceContextActive ? 'max-w-[1060px] px-4' : 'max-w-2xl',
+      labActive
+        ? 'max-w-[1400px] px-4 lg:px-6'
+        : practiceContextActive || phase === 'remediation' || (phase === 'reinforcement' && activeReinforcement?.practice)
+          ? 'max-w-[1060px] px-4'
+          : 'max-w-2xl',
     )}>
       <div className="flex items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={onExit}>
@@ -1542,53 +1546,67 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         />
       )}
 
+      {/* UX-08 "Workspace definitivo": con práctica propia, el refuerzo es
+          dos zonas — explicación (sticky) | actividad — no una pila. Sin
+          práctica (animación/audio solos), una columna como siempre. */}
       {phase === 'reinforcement' && activeReinforcement && (
-        <div className="space-y-5 animate-in fade-in duration-500">
-          {externalResource && cycle && (
-            <ExternalResourceCard
-              resource={externalResource}
-              framing={describeResourceFraming(effectiveModality, cycle.conceptLabel)}
-            />
+        <div
+          className={cn(
+            'animate-in fade-in duration-500',
+            activeReinforcement.practice
+              ? 'grid gap-5 items-start lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]'
+              : 'space-y-5',
           )}
-          <div className="glass-panel rounded-2xl p-6 space-y-4">
-            <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>
-            {activeReinforcement.sceneId && <AnimatedScene sceneId={activeReinforcement.sceneId} />}
-            {activeReinforcement.narrationText && (
-              <AudioNarration
-                text={activeReinforcement.narrationText}
-                audioSrc={resolveNarrationAudio(activeReinforcement)}
+        >
+          <div className={cn('space-y-5', activeReinforcement.practice && 'lg:sticky lg:top-4')}>
+            {externalResource && cycle && (
+              <ExternalResourceCard
+                resource={externalResource}
+                framing={describeResourceFraming(effectiveModality, cycle.conceptLabel)}
               />
             )}
-            {activeReinforcement.body.map((paragraph, i) => (
-              <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
-                {paragraph}
-              </p>
-            ))}
+            <div className="glass-panel rounded-2xl p-5 space-y-4">
+              <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>
+              {activeReinforcement.sceneId && <AnimatedScene sceneId={activeReinforcement.sceneId} />}
+              {activeReinforcement.narrationText && (
+                <AudioNarration
+                  text={activeReinforcement.narrationText}
+                  audioSrc={resolveNarrationAudio(activeReinforcement)}
+                />
+              )}
+              {activeReinforcement.body.map((paragraph, i) => (
+                <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
 
-          {activeReinforcement.pythonBridge && (
-            <PythonBridge
-              bridge={activeReinforcement.pythonBridge}
-              moduleId={moduleId}
-              conceptId={cycle?.conceptId ?? ''}
-              courseId={courseId}
-            />
-          )}
+          <div className="space-y-5">
+            {activeReinforcement.pythonBridge && (
+              <PythonBridge
+                bridge={activeReinforcement.pythonBridge}
+                moduleId={moduleId}
+                conceptId={cycle?.conceptId ?? ''}
+                courseId={courseId}
+              />
+            )}
 
-          {activeReinforcement.practice ? (
-            <ReinforcementPractice
-              practice={activeReinforcement.practice}
-              moduleId={moduleId}
-              conceptId={cycle?.conceptId ?? ''}
-              modality={effectiveModality}
-              onDone={handleReinforcementDone}
-            />
-          ) : (
-            // `key` remonta el gate en cada refuerzo distinto (el estudiante
-            // puede volver al menú y elegir otro) — el piso de permanencia
-            // siempre arranca de cero, nunca hereda el de un refuerzo previo.
-            <ReinforcementContinueGate key={activeReinforcement.title} onContinue={handleReinforcementDone} />
-          )}
+            {activeReinforcement.practice ? (
+              <ReinforcementPractice
+                practice={activeReinforcement.practice}
+                moduleId={moduleId}
+                conceptId={cycle?.conceptId ?? ''}
+                modality={effectiveModality}
+                onDone={handleReinforcementDone}
+              />
+            ) : (
+              // `key` remonta el gate en cada refuerzo distinto (el estudiante
+              // puede volver al menú y elegir otro) — el piso de permanencia
+              // siempre arranca de cero, nunca hereda el de un refuerzo previo.
+              <ReinforcementContinueGate key={activeReinforcement.title} onContinue={handleReinforcementDone} />
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -1712,6 +1730,10 @@ function RemediationStepView({
 }) {
   const solution = correctSequence(fallbackSolutionOf)
 
+  // UX-08 "Workspace definitivo": la remediación era la última pantalla-
+  // documento del flujo (4-5 bloques apilados). Ahora: apoyo a la
+  // izquierda (por qué estás aquí + concepto re-explicado + ilustración,
+  // sticky), actividad a la derecha — dos zonas, la actividad es el foco.
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       <div className="flex items-center gap-2.5">
@@ -1721,7 +1743,9 @@ function RemediationStepView({
         </p>
       </div>
 
-      <div className="glass-panel rounded-2xl p-6 space-y-4">
+      <div className="grid gap-5 items-start lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]">
+      <div className="space-y-4 lg:sticky lg:top-4">
+      <div className="glass-panel rounded-2xl p-5 space-y-3">
         <h3 className="text-base font-semibold text-neural-text">{step.title}</h3>
         {step.body.map((paragraph, i) => (
           <p key={i} className="text-sm text-neural-text/90 leading-relaxed">{paragraph}</p>
@@ -1737,7 +1761,7 @@ function RemediationStepView({
               {conceptTitle} · {conceptVariant.mediumLabel}
             </span>
           </div>
-          <div className="px-6 py-6 space-y-4">
+          <div className="px-5 py-5 space-y-4">
             {conceptVariant.body.map((paragraph, i) => (
               <p key={i} className="text-sm text-neural-text/90 leading-relaxed">{paragraph}</p>
             ))}
@@ -1745,12 +1769,10 @@ function RemediationStepView({
         </div>
       )}
 
-      {/* Ejemplo resuelto (N1) u otra representación (N2) */}
-      {/* Auditoría "infografías" (jul 2026, segunda vuelta): con imagen real
-          declarada (imageUrl/imageAsset), se muestra ESA imagen — nunca el
-          texto plano de abajo. Sin imagen, comportamiento previo intacto. */}
+      {/* Ejemplo resuelto (N1) u otra representación (N2) — con imagen real
+          declarada (imageUrl/imageAsset), se muestra ESA imagen. */}
       {step.illustration && (
-        <div className="rounded-2xl border border-neural-violet/25 bg-neural-violet/5 p-5 space-y-3">
+        <div className="rounded-2xl border border-neural-violet/25 bg-neural-violet/5 p-4 space-y-3">
           <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
             {step.illustration.mediumLabel}
           </p>
@@ -1767,7 +1789,9 @@ function RemediationStepView({
           )}
         </div>
       )}
+      </div>
 
+      <div className="space-y-5">
       {/* Actividad equivalente — distinta en cada peldaño */}
       {step.practice ? (
         <StepPractice
@@ -1806,6 +1830,8 @@ function RemediationStepView({
           </div>
         </>
       )}
+      </div>
+      </div>
     </div>
   )
 }
