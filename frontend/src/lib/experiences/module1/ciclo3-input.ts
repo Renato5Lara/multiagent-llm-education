@@ -100,9 +100,33 @@ export const CICLO_3_INPUT: LearningCycle = {
         mediumLabel: 'Simulación',
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
-          '🎤 Antes de leer nada, predice: el robot pregunta «¿Cuántas cajas quieres que cargue?» y espera. Respondes «3». ¿Qué hace el robot con esa respuesta?',
-          'Antes de revisar tu respuesta, predice también esta otra: el robot pregunta «¿Cómo te llamas?» pero el programa NO tiene ninguna caja donde guardar tu respuesta. ¿Qué pasa con lo que escribiste?',
-          'En el primer caso, el robot guarda tu «3» en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular cuántos viajes le faltan. En el segundo, la respuesta se pierde: sin una caja donde guardarse, desaparece apenas el programa sigue. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
+          '🎤 Nada de leer todavía: predice qué hace el robot, y comprueba al instante.',
+        ],
+        // Sprint UX-01: las dos predicciones que antes vivían en párrafos
+        // auto-respondidos ahora exigen elegir antes de ver la respuesta.
+        interactions: [
+          {
+            question: 'El robot pregunta «¿Cuántas cajas quieres que cargue?» y espera. Respondes «3». ¿Qué hace el robot con tu respuesta?',
+            options: [
+              'La repite en voz alta y la olvida',
+              'La guarda en una caja para usarla después',
+              'Empieza a cargar cajas sin guardar nada',
+            ],
+            correctIndex: 1,
+            reveal:
+              'Guarda tu «3» en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular cuántos viajes le faltan.',
+          },
+          {
+            question: 'Otro programa pregunta «¿Cómo te llamas?», pero NO tiene ninguna caja donde guardar la respuesta. ¿Qué pasa con lo que escribiste?',
+            options: [
+              'Se guarda solo, en una caja automática',
+              'Se pierde apenas el programa sigue',
+              'El programa se detiene para siempre',
+            ],
+            correctIndex: 1,
+            reveal:
+              'Sin una caja donde guardarse, la respuesta desaparece apenas el programa continúa. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
+          },
         ],
       },
     },

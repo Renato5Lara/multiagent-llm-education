@@ -109,7 +109,22 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         mediumLabel: 'Manos a la obra',
         sourceNote: 'Elegido para ti — tu perfil aprende haciendo, no leyendo.',
         body: [
-          'Nada de teoría por ahora: abajo tú mismo le vas a dar al robot la secuencia de instrucciones para cruzar la habitación. Si alguna es ambigua, el robot se detiene con error — pruébalo.',
+          'Nada de teoría por ahora: primero predice qué hace el robot, y después tú mismo le darás la secuencia para cruzar la habitación.',
+        ],
+        // Sprint UX-01: la predicción es una acción tocable, no un párrafo
+        // que se auto-responde — el estudiante se compromete antes de ver.
+        interactions: [
+          {
+            question: 'El robot doméstico recibe una sola orden: «Cruza la habitación». ¿Qué hace?',
+            options: [
+              'Cruza la habitación sin problema',
+              'Se detiene con un error, sin moverse',
+              'Pregunta cuántos pasos debe dar',
+            ],
+            correctIndex: 1,
+            reveal:
+              'El robot no cruza ni pregunta: se detiene con error. «Cruza» no dice cuántos pasos, hacia dónde girar ni qué hacer al llegar — y un robot no adivina ni imagina nada. Eso es exactamente lo que vas a arreglar abajo, dándole tú la secuencia precisa.',
+          },
         ],
       },
     },

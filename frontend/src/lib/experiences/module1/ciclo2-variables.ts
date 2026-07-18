@@ -218,9 +218,25 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         mediumLabel: 'Simulación',
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
-          '📦 Antes de leer nada, predice: el robot ejecuta «pasos = 0» y luego «pasos = pasos + 10». ¿Qué guarda la caja al final?',
-          'Antes de revisar tu respuesta, predice también esta otra: el robot ejecuta «baterias = 3» y después «baterias = baterias - 1». ¿Qué guarda baterias al final?',
-          'La primera caja guarda 10: crea la caja con 0 adentro, LEE lo que tenía, le suma 10, y guarda el resultado en la MISMA caja. La segunda guarda 2 — el robot gastó una batería de repuesto, y el nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta.',
+          '📦 Nada de leer todavía: predice tú primero, y comprueba al instante.',
+        ],
+        // Sprint UX-01: las dos predicciones que antes vivían en párrafos
+        // auto-respondidos ahora exigen elegir antes de ver la respuesta.
+        interactions: [
+          {
+            question: 'El robot ejecuta «pasos = 0» y luego «pasos = pasos + 10». ¿Qué guarda la caja pasos al final?',
+            options: ['0', '10', 'Las dos cosas: 0 y 10'],
+            correctIndex: 1,
+            reveal:
+              'La caja guarda 10: se crea con 0 adentro, el robot LEE lo que tenía, le suma 10, y guarda el resultado en la MISMA caja. Una caja nunca guarda dos valores — el nuevo reemplaza al anterior.',
+          },
+          {
+            question: 'Ahora ejecuta «baterias = 3» y después «baterias = baterias - 1». ¿Qué guarda baterias al final?',
+            options: ['3', '2', 'Nada: la caja se vació'],
+            correctIndex: 1,
+            reveal:
+              'Guarda 2 — el robot gastó una batería de repuesto. El nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta: eso es una variable, una caja con nombre cuyo contenido cambia.',
+          },
         ],
       },
     },

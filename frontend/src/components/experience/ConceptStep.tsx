@@ -6,6 +6,7 @@ import { useRef, useState } from 'react'
 import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, HelpCircle, CheckCircle2, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
+import { ConceptInteractionCard } from './ConceptInteractionCard'
 import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { PythonBridge } from './PythonBridge'
 import { IllustrationVisual } from './IllustrationVisual'
@@ -56,6 +57,7 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
   const startRef = useRef(Date.now())
   const [showTranscript, setShowTranscript] = useState(false)
   const [narrationEngaged, setNarrationEngaged] = useState(false)
+  const [answeredCount, setAnsweredCount] = useState(0)
   const dwellReady = useMinDwell(CONCEPT_MIN_DWELL_MS)
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
@@ -70,7 +72,14 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
   // La narración es el medio principal cuando existe: sin engancharse con
   // ella (o abrir la transcripción como alternativa consciente), el
   // estudiante no vio ningún contenido real, solo un reproductor sin usar.
-  const canContinue = dwellReady && (!variant.narrationText || narrationEngaged || showTranscript)
+  // Con predicciones tocables (Sprint UX-01, perfil kinestésico), el mismo
+  // criterio: continuar exige haberlas respondido TODAS — la acción es el
+  // contenido, no un adorno saltable.
+  const interactions = variant.interactions ?? []
+  const canContinue =
+    dwellReady &&
+    (!variant.narrationText || narrationEngaged || showTranscript) &&
+    answeredCount >= interactions.length
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 animate-in fade-in duration-500">
@@ -187,6 +196,18 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
                 </p>
               ))
             )}
+
+            {/* Predicciones tocables (Sprint UX-01): actuar antes de leer.
+                El estudiante kinestésico se compromete con cada hipótesis
+                tocando una opción; la explicación se revela al responder. */}
+            {interactions.map((interaction, i) => (
+              <ConceptInteractionCard
+                key={i}
+                interaction={interaction}
+                ordinal={i + 1}
+                onAnswered={() => setAnsweredCount(c => c + 1)}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -232,7 +253,9 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
           <p className="text-xs text-neural-muted/70 italic">
             {!dwellReady
               ? 'Tómate un momento antes de continuar…'
-              : 'Escucha la narración (o abre la transcripción) antes de continuar.'}
+              : answeredCount < interactions.length
+                ? 'Responde las predicciones antes de continuar — son tu forma de construir la idea.'
+                : 'Escucha la narración (o abre la transcripción) antes de continuar.'}
           </p>
         )}
         <Button onClick={() => onContinue(Date.now() - startRef.current)} disabled={!canContinue} className="gap-2">

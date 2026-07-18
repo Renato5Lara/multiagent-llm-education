@@ -242,9 +242,33 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             mediumLabel: 'Simulación',
             sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
             body: [
-              '🤖 Antes de leer nada, predice: le dices al robot «si hace mal tiempo, abre el paraguas». Empieza a llover. ¿Qué hace?',
-              'Antes de revisar tu respuesta, predice también esta otra: le dices «si el sensor detecta gotas, abre el paraguas; si no, mantenlo cerrado». Empieza a llover. ¿Qué hace?',
-              'Con «mal tiempo» el robot no hace nada — se queda inmóvil con error, porque no es una condición que pueda evaluar: no sabe qué medir. Con el sensor, en cambio, abre el paraguas: el sensor respondió SÍ, y esa respuesta activa una acción exacta.',
+              '🤖 Nada de leer todavía: dale tú las órdenes al robot y predice qué hace.',
+            ],
+            // Sprint UX-01: las dos predicciones que antes vivían en párrafos
+            // auto-respondidos ahora exigen elegir antes de ver la respuesta.
+            interactions: [
+              {
+                question: 'Le dices al robot: «si hace mal tiempo, abre el paraguas». Empieza a llover. ¿Qué hace?',
+                options: [
+                  'Abre el paraguas: está lloviendo',
+                  'Se queda inmóvil, con un error',
+                  'Espera a que el clima empeore más',
+                ],
+                correctIndex: 1,
+                reveal:
+                  'No hace nada — se queda inmóvil con error. «Mal tiempo» no es una condición que pueda evaluar: no sabe qué medir ni contra qué compararlo.',
+              },
+              {
+                question: 'Ahora le dices: «si el sensor detecta gotas, abre el paraguas; si no, mantenlo cerrado». Empieza a llover. ¿Qué hace?',
+                options: [
+                  'Abre el paraguas',
+                  'Sigue inmóvil, igual que antes',
+                  'Pregunta si eso cuenta como mal tiempo',
+                ],
+                correctIndex: 0,
+                reveal:
+                  'Abre el paraguas: el sensor respondió SÍ, y esa respuesta activa una acción exacta. Una condición evaluable siempre puede responderse con SÍ o NO — eso es exactamente un if.',
+              },
             ],
           },
         },

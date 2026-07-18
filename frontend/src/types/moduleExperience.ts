@@ -75,6 +75,25 @@ export interface NarrationAudioRef {
   narrationAudioAsset?: string
 }
 
+/** Micro-interacción de teoría (Sprint UX-01, jul 2026 — perfil kinestésico):
+ *  el estudiante ACTÚA antes de recibir la explicación. Antes, la variante
+ *  kinestésica pedía "predice..." en un párrafo y se auto-respondía dos
+ *  líneas después — texto disfrazado de simulación. Ahora la predicción es
+ *  una elección tocable y la explicación (`reveal`) solo aparece DESPUÉS de
+ *  responder — comprometerse con una hipótesis antes de ver la respuesta,
+ *  la misma mecánica que la apertura del módulo pero a escala de concepto.
+ *  Cualquier modalidad puede declararlas; hoy las usa kinestésico. */
+export interface ConceptInteraction {
+  /** La situación + pregunta que se responde ANTES de ver la explicación. */
+  question: string
+  /** Opciones tocables (2-4), una por hipótesis plausible. */
+  options: string[]
+  /** Índice (0-based) de la opción correcta en `options`. */
+  correctIndex: number
+  /** La explicación que se revela recién después de elegir — nunca antes. */
+  reveal: string
+}
+
 export interface ConceptVariant extends VisualAsset, NarrationAudioRef {
   medium: TheoryMedium
   mediumLabel: string
@@ -89,6 +108,11 @@ export interface ConceptVariant extends VisualAsset, NarrationAudioRef {
   /** Solo variantes de audio: texto narrado con voz real (AudioNarration),
    *  nunca un guion de desarrollador visible al estudiante. */
   narrationText?: string
+  /** Predicciones tocables que se responden ANTES de continuar (Sprint
+   *  UX-01) — el corazón de la variante kinestésica: cada concepto implica
+   *  una acción, no un párrafo que se auto-responde. Con este campo, el
+   *  botón de continuar espera a que TODAS estén respondidas. */
+  interactions?: ConceptInteraction[]
 }
 
 /** Un segundo ejemplo concreto DEL MISMO concepto — no un refuerzo opcional:
