@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AudioNarration } from './AudioNarration'
 import { ConceptInteractionCard } from './ConceptInteractionCard'
+import { ConceptPrimerCard } from './ConceptPrimerCard'
 import { ExternalResourceLauncher } from './ExternalResourceLauncher'
 import { LearningAnchor } from './LearningAnchor'
 import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
@@ -15,7 +16,7 @@ import { PythonBridge } from './PythonBridge'
 import { IllustrationVisual } from './IllustrationVisual'
 import { hasIllustrationImage } from '@/lib/experiences/illustrationAssets'
 import { useMinDwell } from '@/hooks/useMinDwell'
-import type { CycleConcept, ConceptVariant, TheoryMedium } from '@/types/moduleExperience'
+import type { ConceptPrimer, CycleConcept, ConceptVariant, TheoryMedium } from '@/types/moduleExperience'
 import type { LearningModality } from '@/types/modality'
 
 // Auditoría "criterios de finalización reales" (jul 2026): antes "Ponerlo a
@@ -61,9 +62,15 @@ interface Props {
   /** Nombre corto del concepto (cycle.conceptLabel) para el prompt externo.
    *  Sin él, el botón de recursos externos no se muestra. */
   conceptLabel?: string
+  /** QA Final (jul 2026): las microexplicaciones del ciclo se muestran
+   *  AQUÍ, compactas, arriba de la teoría — antes cada una era una pantalla
+   *  completa con su propio clic (2-3 interstitials consecutivos por ciclo,
+   *  cada uno con la pantalla casi vacía). Mismo contenido, mismo orden de
+   *  lectura ("antes del concepto"), sin peaje de navegación. */
+  primers?: ConceptPrimer[]
 }
 
-export function ConceptStep({ concept, modality, onContinue, earlyReinforcement, profundidad, conceptLabel }: Props) {
+export function ConceptStep({ concept, modality, onContinue, earlyReinforcement, profundidad, conceptLabel, primers }: Props) {
   const startRef = useRef(Date.now())
   const [showTranscript, setShowTranscript] = useState(false)
   const [narrationEngaged, setNarrationEngaged] = useState(false)
@@ -116,6 +123,15 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
 
       <div className={cn('grid gap-5 items-start', hasAside && 'lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)]')}>
       <div className="space-y-2">
+      {/* QA Final: microexplicaciones compactas, antes de la teoría — ya no
+          son pantallas propias con clic. */}
+      {primers && primers.length > 0 && (
+        <div className="space-y-3 pb-3">
+          {primers.map((primer, i) => (
+            <ConceptPrimerCard key={i} primer={primer} inline />
+          ))}
+        </div>
+      )}
       <div className="glass-panel rounded-2xl overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-white/[0.06]">
           <Icon className="h-4 w-4 text-neural-glow shrink-0" />

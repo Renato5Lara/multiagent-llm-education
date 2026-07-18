@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
 import { ConceptStep } from './ConceptStep'
-import { ConceptPrimerCard } from './ConceptPrimerCard'
 import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
@@ -436,7 +435,9 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // ciclo sin conceptPrimers nunca la consulta (comportamiento previo
   // intacto). Se resetea a 0 en commitAdvance, igual que el resto del
   // sub-estado por ciclo.
-  const [primerIndex, setPrimerIndex] = useState(initialCursor.primerIndex)
+  // QA Final: los primers ya no son fase con avance propio — el índice se
+  // conserva solo por compatibilidad del cursor persistido (siempre 0).
+  const [primerIndex] = useState(initialCursor.primerIndex)
   // Progresión gradual, no un salto: 1 ciclo fluido no altera nada (0
   // peldaños saltados); recién a partir de DOS ciclos seguidos se salta el
   // peldaño "observar" (el más trivial: solo mirar el código correr);
@@ -1294,9 +1295,15 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // contextual a la derecha. Solo presentación — la lógica del ciclo, la
   // evidencia y las decisiones del Runtime no cambian.
   const labActive = phase === 'practice' && !!practiceOutcome && !!cycle?.pythonBridge
-  const labConcept = labActive && cycle ? resolveConceptForRender(cycle, effectiveModality, profundidad) : null
+  // QA Final: el contexto (objetivo + infografía) acompaña TODA la fase de
+  // práctica, no solo el laboratorio post-resolución — antes, la actividad
+  // sin resolver era una columna estrecha en una página vacía, y el
+  // estudiante practicaba sin la teoría a la vista (teoría y práctica deben
+  // convivir, no turnarse).
+  const practiceContextActive = phase === 'practice' && remediationLevel === 0 && !practiceOutcome && !!cycle
+  const labConcept = (labActive || practiceContextActive) && cycle ? resolveConceptForRender(cycle, effectiveModality, profundidad) : null
   const labVariant = labConcept ? (labConcept.variants[effectiveModality] ?? labConcept.variants.reading) : null
-  const labAside = labConcept && labVariant ? (
+  const conceptAside = labConcept && labVariant ? (
     <>
       <div className="glass-panel rounded-2xl p-5 space-y-2">
         <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">Objetivo</p>
@@ -1310,6 +1317,11 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           <IllustrationVisual imageUrl={labVariant.imageUrl} imageAsset={labVariant.imageAsset} alt={labConcept.title} />
         </div>
       )}
+    </>
+  ) : undefined
+  const labAside = conceptAside ? (
+    <>
+      {conceptAside}
       <p className="text-xs text-neural-muted/60 italic px-1">
         El tutor contextual aparece junto al editor solo cuando tiene una
         pista, un ejemplo o una explicación que darte — nunca antes.
@@ -1361,7 +1373,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
   // Fases dentro de un ciclo — cabecera compartida de la misión
   return (
-    <div className={cn('mx-auto py-4 space-y-6', labActive ? 'max-w-[1400px] px-4 lg:px-6' : 'max-w-2xl')}>
+    <div className={cn(
+      'mx-auto py-4 space-y-6',
+      labActive ? 'max-w-[1400px] px-4 lg:px-6' : practiceContextActive ? 'max-w-[1060px] px-4' : 'max-w-2xl',
+    )}>
       <div className="flex items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={onExit}>
           <ArrowLeft className="h-4 w-4 mr-1" />
@@ -1407,29 +1422,23 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       )}
 
       {/* "¿Sabías que...?" (sprint "UX ¿Sabías que...?", jul 2026): pantalla
-          propia al ENTRAR al ciclo — dato, fuente verificable, Continuar —
-          antes de las microexplicaciones o la teoría. Un ciclo sin
-          curiosityFact nunca pasa por esta fase (firstPhaseFor lo salta). */}
+          propia al ENTRAR al ciclo. QA Final: centrada verticalmente — es
+          una pausa de curiosidad, no un documento truncado con el 80% de la
+          pantalla vacía debajo. */}
       {phase === 'curiosity' && cycle && cycle.curiosityFact && (
-        <CuriosityFactCard
-          fact={cycle.curiosityFact}
-          onContinue={() => setPhase('concept')}
-        />
+        <div className="min-h-[55vh] flex flex-col justify-center">
+          <CuriosityFactCard
+            fact={cycle.curiosityFact}
+            onContinue={() => setPhase('concept')}
+          />
+        </div>
       )}
 
-      {/* Microexplicaciones del ciclo (sprint "mejora pedagógica", jul 2026):
-          una tarjeta corta por término nuevo, ANTES del concepto — nunca
-          junto a él. Un ciclo sin conceptPrimers (o ya confirmadas todas)
-          cae directo al bloque de siempre, sin cambio de comportamiento. */}
-      {phase === 'concept' && cycle && cycle.conceptPrimers && primerIndex < cycle.conceptPrimers.length && (
-        <ConceptPrimerCard
-          key={`${cycle.id}-primer-${primerIndex}`}
-          primer={cycle.conceptPrimers[primerIndex]}
-          onContinue={() => setPrimerIndex(i => i + 1)}
-        />
-      )}
-
-      {phase === 'concept' && cycle && (!cycle.conceptPrimers || primerIndex >= cycle.conceptPrimers.length) && (
+      {/* QA Final: las microexplicaciones ya NO son pantallas propias con su
+          propio clic — viven compactas arriba de la teoría, dentro de
+          ConceptStep (mismo contenido, mismo orden de lectura, sin peaje de
+          navegación). El arranque del ciclo pasa de 2-3 interstitials a uno. */}
+      {phase === 'concept' && cycle && (
         <div className="space-y-5">
           <ConceptStep
             concept={resolveConceptForRender(cycle, effectiveModality, profundidad)}
@@ -1438,6 +1447,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             earlyReinforcement={profundidad === 'fundamentos' ? cycle.remediation?.steps[0]?.illustration : undefined}
             profundidad={profundidad}
             conceptLabel={cycle.conceptLabel}
+            primers={cycle.conceptPrimers}
           />
         </div>
       )}
@@ -1460,7 +1470,18 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
            *  ciclos sin laboratorio, comportamiento previo exacto: expandida
            *  a ancho de lectura, sin ancla. */}
           {remediationLevel === 0 && (
-            <div className={cn(labActive && 'max-w-2xl mx-auto w-full')}>
+            <div className={cn(
+              labActive && 'max-w-2xl mx-auto w-full',
+              // QA Final: la actividad sin resolver convive con su contexto
+              // (objetivo + infografía a la izquierda, sticky) — la teoría
+              // queda a la vista mientras se practica, y el ancho de la
+              // pantalla deja de desperdiciarse. Al resolver, practiceOutcome
+              // colapsa el aside y el laboratorio toma su lugar.
+              practiceContextActive && conceptAside && 'grid gap-5 items-start lg:grid-cols-[minmax(260px,300px)_minmax(0,1fr)]',
+            )}>
+              {practiceContextActive && conceptAside && (
+                <div className="space-y-4 lg:sticky lg:top-4">{conceptAside}</div>
+              )}
               {cycle.pythonBridge ? (
                 <LearningAnchor
                   label={resolvedPractice.kind === 'ordering' ? 'Secuencia resuelta' : 'Predicción resuelta'}
