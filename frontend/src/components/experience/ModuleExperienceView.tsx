@@ -1344,12 +1344,20 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       />
     )
   )
-  // Resumen de una línea para la barra colapsada — solo predict_output tiene
-  // una respuesta puntual que citar; ordering se identifica por su label solo.
-  const practiceAnchorSummary =
-    resolvedPractice?.kind === 'predict_output'
-      ? resolvedPractice.options.find(o => o.id === resolvedPractice.correctOptionId)?.text
-      : undefined
+  // Resumen de una línea para la barra colapsada (UX-07: ambas mecánicas
+  // citan su respuesta) — predict_output muestra la opción correcta;
+  // ordering, el primer y último paso de la secuencia armada.
+  const practiceAnchorSummary = (() => {
+    if (!resolvedPractice) return undefined
+    if (resolvedPractice.kind === 'predict_output') {
+      return resolvedPractice.options.find(o => o.id === resolvedPractice.correctOptionId)?.text
+    }
+    const steps = resolvedPractice.items
+      .filter(item => item.position !== null)
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    if (steps.length === 0) return undefined
+    return `${steps.length} pasos: «${steps[0].text}» → … → «${steps[steps.length - 1].text}»`
+  })()
 
   // Fases dentro de un ciclo — cabecera compartida de la misión
   return (

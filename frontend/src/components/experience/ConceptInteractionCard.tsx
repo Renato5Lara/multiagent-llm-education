@@ -15,8 +15,10 @@ interface Props {
   /** Posición 1-based mostrada en la etiqueta («Predicción 1»). */
   ordinal: number
   /** Se dispara UNA vez, al responder — el paso de teoría lo usa para
-   *  habilitar el botón de continuar cuando todas están respondidas. */
-  onAnswered: () => void
+   *  habilitar el botón de continuar cuando todas están respondidas.
+   *  Sprint UX-07: ahora reporta QUÉ se eligió (texto y acierto), para que
+   *  el ancla colapsada pueda citar la respuesta en su barra. */
+  onAnswered: (info: { option: string; correct: boolean }) => void
 }
 
 export function ConceptInteractionCard({ interaction, ordinal, onAnswered }: Props) {
@@ -27,7 +29,7 @@ export function ConceptInteractionCard({ interaction, ordinal, onAnswered }: Pro
   const choose = (index: number) => {
     if (answered) return
     setSelected(index)
-    onAnswered()
+    onAnswered({ option: interaction.options[index], correct: index === interaction.correctIndex })
   }
 
   return (

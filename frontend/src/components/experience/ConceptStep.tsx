@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AudioNarration } from './AudioNarration'
 import { ConceptInteractionCard } from './ConceptInteractionCard'
+import { LearningAnchor } from './LearningAnchor'
 import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { PythonBridge } from './PythonBridge'
 import { IllustrationVisual } from './IllustrationVisual'
@@ -58,7 +59,15 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
   const startRef = useRef(Date.now())
   const [showTranscript, setShowTranscript] = useState(false)
   const [narrationEngaged, setNarrationEngaged] = useState(false)
-  const [answeredCount, setAnsweredCount] = useState(0)
+  // Sprint UX-07 "Learning Anchors": no solo CUÁNTAS predicciones se
+  // respondieron — también en qué ORDEN y qué se eligió. Una predicción
+  // respondida se ancla (colapsa a una barra) recién cuando deja de ser la
+  // más reciente: la revelación que acaba de ganarse queda legible hasta
+  // que el estudiante avanza a la siguiente actividad, nunca se esconde en
+  // el mismo instante en que apareció.
+  const [answers, setAnswers] = useState<Map<number, { option: string; correct: boolean }>>(new Map())
+  const [answerOrder, setAnswerOrder] = useState<number[]>([])
+  const answeredCount = answers.size
   const dwellReady = useMinDwell(CONCEPT_MIN_DWELL_MS)
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
@@ -210,15 +219,33 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
 
             {/* Predicciones tocables (Sprint UX-01): actuar antes de leer.
                 El estudiante kinestésico se compromete con cada hipótesis
-                tocando una opción; la explicación se revela al responder. */}
-            {interactions.map((interaction, i) => (
-              <ConceptInteractionCard
-                key={i}
-                interaction={interaction}
-                ordinal={i + 1}
-                onAnswered={() => setAnsweredCount(c => c + 1)}
-              />
-            ))}
+                tocando una opción; la explicación se revela al responder.
+                Sprint UX-07: cada predicción vive SIEMPRE dentro de su
+                LearningAnchor (wrapper estable — ver LearningAnchor.tsx) y
+                se colapsa a una barra de referencia cuando deja de ser la
+                respondida más reciente — la última queda abierta para que
+                su revelación se lea; el resto asciende como referencia. */}
+            {interactions.map((interaction, i) => {
+              const answer = answers.get(i)
+              const isLatest = answerOrder[answerOrder.length - 1] === i
+              return (
+                <LearningAnchor
+                  key={i}
+                  label={`Predicción ${i + 1} respondida`}
+                  summary={answer ? `${answer.correct ? 'acertaste' : 'fallaste'}: «${answer.option}»` : undefined}
+                  resolved={!!answer && !isLatest}
+                >
+                  <ConceptInteractionCard
+                    interaction={interaction}
+                    ordinal={i + 1}
+                    onAnswered={info => {
+                      setAnswers(prev => new Map(prev).set(i, info))
+                      setAnswerOrder(prev => [...prev, i])
+                    }}
+                  />
+                </LearningAnchor>
+              )
+            })}
           </div>
         </div>
       </div>
