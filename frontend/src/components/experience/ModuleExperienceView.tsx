@@ -24,7 +24,6 @@ import { hasIllustrationImage } from '@/lib/experiences/illustrationAssets'
 import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { PredictOutputPractice } from './PredictOutputPractice'
-import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { ExternalResourceCard } from './ExternalResourceCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useLearningPath, useSubmitCycleEvidence } from '@/hooks/useStudent'
@@ -71,13 +70,18 @@ const EMPTY_ORDERING_FALLBACK: OrderingPracticeDef = {
   orderFeedback: '',
 }
 
+// Sprint UX-03 (jul 2026): la fase 'decision' (menú "¿Cómo quieres
+// consolidarlo?") se eliminó — la ayuda ya no se ofrece al final del ciclo,
+// se inserta automáticamente en 'adapting' cuando la evidencia real del
+// Runtime la pide (mismo mecanismo de auto-refuerzo que ya existía). Los
+// refuerzos autorados de cycle.decision siguen siendo el banco de contenido
+// del que el sistema elige — solo desapareció la pregunta.
 type Phase =
   | 'opening'
   | 'reveal'
   | 'curiosity'
   | 'concept'
   | 'practice'
-  | 'decision'
   | 'adapting'
   | 'reinforcement'
   | 'remediation'
@@ -123,7 +127,7 @@ const WELCOME_BACK_MS = 5000
 // alcanzan para reconstruir qué refuerzo o peldaño estaba activo (se busca de
 // nuevo en el propio contenido del ciclo, nunca se serializa el objeto).
 const RESUMABLE_PHASES: Phase[] = [
-  'opening', 'reveal', 'curiosity', 'concept', 'practice', 'decision', 'reinforcement', 'remediation', 'slice_end',
+  'opening', 'reveal', 'curiosity', 'concept', 'practice', 'reinforcement', 'remediation', 'slice_end',
 ]
 
 interface ExperienceCursor {
@@ -192,9 +196,13 @@ function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): E
   try {
     const raw = localStorage.getItem(cursorKey(moduleId))
     if (!raw) return { ...emptyCursor(base), resumed: false }
-    const saved = JSON.parse(raw) as Partial<ExperienceCursor>
+    const saved = JSON.parse(raw) as Partial<ExperienceCursor> & { phase?: string }
     const cycleIndex = Math.min(Math.max(saved.cycleIndex ?? 0, 0), definition.cycles.length - 1)
-    const phase = saved.phase && RESUMABLE_PHASES.includes(saved.phase) ? saved.phase : 'concept'
+    // UX-03: cursores guardados antes del sprint pueden traer 'decision' (el
+    // menú eliminado) — se reanudan en 'practice', donde el Continuar ya
+    // resuelto dispara la misma adaptación automática. Nada se pierde.
+    const savedPhase = saved.phase === 'decision' ? 'practice' : saved.phase
+    const phase = savedPhase && RESUMABLE_PHASES.includes(savedPhase as Phase) ? (savedPhase as Phase) : 'concept'
     return {
       phase,
       cycleIndex,
@@ -474,7 +482,6 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   }, [phase, welcomeBackMessage])
 
   const cycle = definition.cycles[cycleIndex]
-  const conceptMastery = cycle ? (mastery[cycle.conceptId] ?? 0) : 0
   // Multimodalidad profunda: la mecánica de la práctica principal, no solo
   // el refuerzo, puede variar por modalidad — resuelta una vez por render,
   // reutilizada en los handlers y en el propio render de la fase 'practice'.
@@ -883,53 +890,32 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
   const handlePracticeContinue = useCallback(() => {
     if (!cycle) return
-    if (!cycle.decision) {
-      advanceCycle()
-      return
-    }
-    // Ya pasó por la escalera en este ciclo: no se remedia dos veces — va
-    // directo al menú de consolidación, igual que cualquier otro cierre.
+    // UX-03: sin menú de consolidación al final. Ya pasó por la escalera en
+    // este ciclo (no se remedia dos veces) o cerró con dominio suficiente —
+    // en ambos casos el cierre va directo a la adaptación automática
+    // (advanceCycle → 'adapting'): el Runtime inserta el refuerzo solo
+    // cuando la evidencia lo pide, nunca pregunta.
     if (remediationLevel > 0) {
-      setPhase('decision')
+      advanceCycle()
       return
     }
     const current = mastery[cycle.conceptId] ?? 0
     const needsSupport = current < AUTONOMY_LOW
     // Resolvió, pero el dominio no alcanza la baranda: se refuerza antes de
-    // ofrecerle autonomía. La escalera siempre termina, así que esto no bloquea.
+    // continuar. La escalera siempre termina, así que esto no bloquea.
     if (needsSupport) {
       recordRemediation(0, practiceOutcome ?? { attempts: 1, timeMs: 0, solutionShown: false }, true, effectiveModality)
       enterRemediation(1)
     } else {
-      setPhase('decision')
+      advanceCycle()
     }
   }, [advanceCycle, cycle, effectiveModality, enterRemediation, mastery, practiceOutcome, recordRemediation, remediationLevel])
 
-  const handleDecision = useCallback((choice: DecisionChoice) => {
-    if (!cycle) return
-    recordEvidence({
-      type: 'choice',
-      moduleId,
-      conceptId: cycle.conceptId,
-      detail: { choice, declaredModality: effectiveModality, masteryAtChoice: mastery[cycle.conceptId] ?? 0 },
-    })
-    if (choice === 'continuar') {
-      advanceCycle()
-      return
-    }
-    const reinforcement = cycle.decision?.reinforcements.find(r => r.kind === choice)
-    if (reinforcement) {
-      setActiveReinforcement(reinforcement)
-      setPhase('reinforcement')
-    } else {
-      advanceCycle()
-    }
-  }, [advanceCycle, cycle, effectiveModality, mastery, moduleId])
-
-  /** Refuerzo VOLUNTARIO elegido en el menú de decisión (nunca remediación).
-   *  PED-005: al terminar se VUELVE AL MENÚ con lo visto marcado — el
-   *  estudiante puede explorar otro refuerzo o continuar, nunca queda en un
-   *  callejón por haber "elegido mal". */
+  /** Refuerzo insertado por el sistema (UX-03: ya no existe el voluntario del
+   *  menú). Al terminar, el ciclo continúa — la ayuda apareció, cumplió y el
+   *  flujo sigue sin preguntar nada. Cursores previos al sprint podían dejar
+   *  un refuerzo voluntario activo (autoReinforcement=false): también
+   *  continúan, nunca vuelven a un menú que ya no existe. */
   const handleReinforcementDone = useCallback(() => {
     if (!cycle || !activeReinforcement) return
     const kind = activeReinforcement.kind
@@ -945,15 +931,8 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     if (firstView) bumpMastery(cycle.conceptId, REINFORCEMENT_GAIN)
     setVisitedReinforcements(prev => new Set(prev).add(kind))
     setActiveReinforcement(null)
-    // Refuerzo auto-insertado por la decisión del Runtime (profundidad =
-    // fundamentos): a diferencia del refuerzo voluntario del menú, aquí no
-    // hay a qué menú volver — el ciclo ya se cerró, así que continúa.
-    if (autoReinforcement) {
-      commitAdvance()
-    } else {
-      setPhase('decision')
-    }
-  }, [activeReinforcement, autoReinforcement, bumpMastery, commitAdvance, cycle, moduleId, visitedReinforcements])
+    commitAdvance()
+  }, [activeReinforcement, bumpMastery, commitAdvance, cycle, moduleId, visitedReinforcements])
 
   // ── Escalera de remediación ──────────────────────────────────────────────────
 
@@ -1465,15 +1444,6 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             </div>
           )}
         </div>
-      )}
-
-      {phase === 'decision' && cycle?.decision && (
-        <DecisionMenu
-          menu={cycle.decision}
-          mastery={conceptMastery}
-          visited={visitedReinforcements}
-          onChoose={handleDecision}
-        />
       )}
 
       {phase === 'remediation' && cycle && step && (
