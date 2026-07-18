@@ -7,6 +7,8 @@ import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, Hel
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
+import { IllustrationVisual } from './IllustrationVisual'
+import { hasIllustrationImage } from '@/lib/experiences/illustrationAssets'
 import { useMinDwell } from '@/hooks/useMinDwell'
 import type { CycleConcept, ConceptVariant, TheoryMedium } from '@/types/moduleExperience'
 import type { LearningModality } from '@/types/modality'
@@ -79,11 +81,16 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
 
         <div className={framed ? 'bg-neural-lowest/60 px-6 py-6' : 'px-6 py-6'}>
           <div className="space-y-4">
-            {/* RC-FINAL: la variante visual ES visual — diagrama real, no solo texto
+            {/* Auditoría "infografías" (jul 2026, segunda vuelta): con imagen real
+                declarada (imageUrl/imageAsset), se muestra ESA imagen — nunca junto
+                a la comparación de nodos de abajo. Sin imagen, comportamiento previo
+                intacto: la variante visual ES visual — diagrama real, no solo texto
                 coloreado. El nodo "ambigua" usa borde punteado (forma = idea difusa);
                 el nodo "precisa" usa borde sólido con ícono de verificación (forma =
                 idea resuelta), conectados por una flecha de transformación. */}
-            {variant.infographic && (
+            {hasIllustrationImage(variant) ? (
+              <IllustrationVisual imageUrl={variant.imageUrl} imageAsset={variant.imageAsset} alt={concept.title} />
+            ) : variant.infographic && (
               <div className="space-y-0">
                 <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
                   <div className="flex items-center gap-1.5">

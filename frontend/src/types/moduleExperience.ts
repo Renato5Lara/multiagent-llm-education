@@ -32,14 +32,45 @@ export interface ConceptInfographic {
   caption: string
 }
 
-export interface ConceptVariant {
+/** Recurso visual real de una infografía/ilustración (auditoría "infografías",
+ *  jul 2026 — segunda vuelta): antes solo existía `imagePrompt` (un texto para
+ *  pegar en un generador externo, nunca mostrado al estudiante). Ahora, cuando
+ *  el contenido declara `imageUrl` o `imageAsset`, el componente muestra la
+ *  IMAGEN REAL en vez de su representación textual/estructurada — nunca ambas
+ *  a la vez. Sin ninguno de los dos, el comportamiento es exactamente el de
+ *  antes (texto o diagrama estructurado) — compatibilidad total, ningún
+ *  contenido existente se rompe. Acepta PNG, SVG y WebP: el navegador
+ *  resuelve el formato por el propio archivo, ningún código distingue entre
+ *  ellos.
+ *  - `imageUrl`   — URL o ruta servida tal cual (recurso externo, o ya
+ *    publicado — p. ej. subido al repositorio de recursos del curso).
+ *  - `imageAsset` — clave que se resuelve contra
+ *    `lib/experiences/illustrationAssets.ts` (ILLUSTRATION_ASSETS), para
+ *    imágenes empaquetadas con el build en vez de servidas por URL externa.
+ *    Si la clave todavía no tiene imagen real, se resuelve a `undefined` y
+ *    el componente cae al contenido textual — nunca rompe.
+ *  - `imagePrompt` — prompt ya redactado para generar la imagen en una
+ *    herramienta externa (ChatGPT/GPT Image). Nunca se usa para generar
+ *    nada automáticamente: es solo el texto a reutilizar cuando alguien
+ *    decida crear el recurso real.
+ *  Si ambos `imageUrl`/`imageAsset` están presentes, `imageUrl` gana (es
+ *  más directo, no depende de una resolución adicional). */
+export interface VisualAsset {
+  imageUrl?: string
+  imageAsset?: string
+  imagePrompt?: string
+}
+
+export interface ConceptVariant extends VisualAsset {
   medium: TheoryMedium
   mediumLabel: string
   /** Párrafos de apoyo. En S1 es mock; en S2 lo alimenta el Content Discovery Agent. */
   body: string[]
   /** "Elegido para ti — fuente: ..." (explicabilidad sin interrumpir) */
   sourceNote?: string
-  /** Solo variantes visuales: comparación gráfica renderizada de verdad. */
+  /** Solo variantes visuales: comparación gráfica renderizada de verdad —
+   *  se muestra solo cuando NO hay imagen real (`imageUrl`/`imageAsset`);
+   *  con imagen, esta comparación de nodos se omite a favor de la imagen. */
   infographic?: ConceptInfographic
   /** Solo variantes de audio: texto narrado con voz real (AudioNarration),
    *  nunca un guion de desarrollador visible al estudiante. */
@@ -178,20 +209,13 @@ export type RemediationLevel = 0 | 1 | 2 | 3
 export type RemediationModality = 'same' | 'alternate'
 
 /** Representación de apoyo del peldaño: ejemplo resuelto (L1), otra
- *  representación (L2). Es lo que hace que la experiencia sea distinta. */
-export interface RemediationIllustration {
+ *  representación (L2). Es lo que hace que la experiencia sea distinta.
+ *  Ver `VisualAsset` — con `imageUrl`/`imageAsset`, RemediationStepView
+ *  muestra la imagen real en vez de `body` como párrafos de texto plano. */
+export interface RemediationIllustration extends VisualAsset {
   medium: TheoryMedium
   mediumLabel: string
   body: string[]
-  /** Auditoría "infografías" (jul 2026): `medium: 'diagrama'` se renderiza
-   *  hoy como párrafos de texto plano (RemediationStepView reusa el mismo
-   *  bloque para todo `illustration`, sin distinguir medium) — el arte ASCII
-   *  del body (📊/├──/└──) no es un elemento visual real. Este campo NO
-   *  genera ninguna imagen: guarda el prompt ya redactado para pegar en un
-   *  generador de imágenes (ChatGPT/GPT Image) cuando alguien decida crear
-   *  el recurso real. Opcional a propósito — sin él, el peldaño se ve
-   *  exactamente igual que hoy (texto plano, comportamiento intacto). */
-  imagePrompt?: string
 }
 
 export interface RemediationStep {

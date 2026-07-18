@@ -19,6 +19,8 @@ import { AnimatedScene } from './AnimatedScene'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
 import { CuriosityFactCard } from './CuriosityFactCard'
+import { IllustrationVisual } from './IllustrationVisual'
+import { hasIllustrationImage } from '@/lib/experiences/illustrationAssets'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { PredictOutputPractice } from './PredictOutputPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
@@ -1640,14 +1642,25 @@ function RemediationStepView({
       )}
 
       {/* Ejemplo resuelto (N1) u otra representación (N2) */}
+      {/* Auditoría "infografías" (jul 2026, segunda vuelta): con imagen real
+          declarada (imageUrl/imageAsset), se muestra ESA imagen — nunca el
+          texto plano de abajo. Sin imagen, comportamiento previo intacto. */}
       {step.illustration && (
         <div className="rounded-2xl border border-neural-violet/25 bg-neural-violet/5 p-5 space-y-3">
           <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
             {step.illustration.mediumLabel}
           </p>
-          {step.illustration.body.map((paragraph, i) => (
-            <p key={i} className="text-sm text-neural-text/85 leading-relaxed">{paragraph}</p>
-          ))}
+          {hasIllustrationImage(step.illustration) ? (
+            <IllustrationVisual
+              imageUrl={step.illustration.imageUrl}
+              imageAsset={step.illustration.imageAsset}
+              alt={step.illustration.mediumLabel}
+            />
+          ) : (
+            step.illustration.body.map((paragraph, i) => (
+              <p key={i} className="text-sm text-neural-text/85 leading-relaxed">{paragraph}</p>
+            ))
+          )}
         </div>
       )}
 

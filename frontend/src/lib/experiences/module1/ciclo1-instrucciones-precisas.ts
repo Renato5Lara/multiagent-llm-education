@@ -404,10 +404,11 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
             '     └── «Espera hasta que la luz indicadora se ponga verde»   ← ejecutable',
             'Todo lo que esté en la caja de arriba es una meta. Todo lo que cuelga de ella son instrucciones.',
           ],
-          // Auditoría "infografías" (jul 2026): hoy este `body` es texto plano
-          // (ver tipo RemediationIllustration). Prompt listo para pegar en un
-          // generador de imágenes cuando se decida crear el recurso real —
-          // ningún código lo usa todavía.
+          // Auditoría "infografías" (jul 2026, segunda vuelta): `imageAsset`
+          // ya está listo para resolver — solo falta agregar la entrada real
+          // en lib/experiences/illustrationAssets.ts con esta misma clave.
+          // Hasta entonces, se muestra `body` como hoy (compatibilidad total).
+          imageAsset: 'm1-c1-l2-recarga-bateria',
           imagePrompt:
             'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
             'COMPOSICIÓN: un único nodo superior centrado (la META, ambigua) del que bajan dos líneas conectoras en forma de "Y" invertida hacia dos nodos inferiores (los PASOS, ejecutables), distribuidos simétricamente izquierda/derecha.\n\n' +

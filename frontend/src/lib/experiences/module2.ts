@@ -529,12 +529,13 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
                 'Todo lo que esté en la caja de arriba es una idea. Todo lo que cuelga de ella es una condición evaluable.',
               ],
               // Auditoría "infografías" (jul 2026): ver misma nota en
-              // module1/ciclo1-instrucciones-precisas.ts — `body` es texto
-              // plano hoy; este prompt queda listo para pegar en un
-              // generador de imágenes. A diferencia de los otros tres
+              // module1/ciclo1-instrucciones-precisas.ts (segunda vuelta) —
+              // `imageAsset` ya está listo para resolver contra
+              // illustrationAssets.ts. A diferencia de los otros tres
               // (siempre 2 ramas rectangulares), este SÍ es una condición
               // booleana real — el prompt usa el rombo de decisión estándar
               // de diagramas de flujo, coherente con el concepto if/else.
+              imageAsset: 'm2-c1-l2-aire-mal',
               imagePrompt:
                 'Mini diagrama de flujo para una app educativa de programación, modo oscuro.\n\n' +
                 'COMPOSICIÓN: un nodo superior centrado (rectángulo, la IDEA vaga "el aire está mal"), que baja a un ROMBO de decisión (la condición evaluable "¿el CO2 supera 800 ppm?"), del que salen dos ramas etiquetadas SÍ / NO hacia dos nodos rectangulares finales (los resultados "enciende el ventilador" / "lo mantiene apagado"). Es un flujo vertical de arriba hacia abajo: idea → condición → dos resultados posibles.\n\n' +

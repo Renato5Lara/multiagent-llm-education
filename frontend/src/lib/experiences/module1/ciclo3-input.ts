@@ -448,9 +448,10 @@ export const CICLO_3_INPUT: LearningCycle = {
             '     └── «Guarda la respuesta en la caja edad»           ← recién aquí hay un dato',
             'Sin la pregunta, nadie sabe qué escribir. Sin guardar la respuesta, se pierde apenas el programa sigue.',
           ],
-          // Auditoría "infografías" (jul 2026): ver misma nota en
-          // ciclo1-instrucciones-precisas.ts — `body` es texto plano hoy;
-          // este prompt queda listo para pegar en un generador de imágenes.
+          // Auditoría "infografías" (jul 2026, segunda vuelta): ver misma
+          // nota en ciclo1-instrucciones-precisas.ts — `imageAsset` ya está
+          // listo para resolver contra illustrationAssets.ts.
+          imageAsset: 'm1-c3-l2-cartel-robot',
           imagePrompt:
             'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
             'COMPOSICIÓN: un nodo superior centrado con forma de PANTALLA/CARTEL de un robot (un rectángulo con una línea de pregunta mostrada y un espacio en blanco debajo, todavía sin respuesta), del que bajan dos líneas conectoras en "Y" invertida hacia dos nodos inferiores: uno muestra al robot MOSTRANDO la pregunta en su pantalla, el otro muestra una CAJA/contenedor guardando la respuesta.\n\n' +

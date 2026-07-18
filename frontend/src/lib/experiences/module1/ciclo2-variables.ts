@@ -543,9 +543,10 @@ export const CICLO_2_VARIABLES: LearningCycle = {
             '     └── «Guarda el número 18 dentro»           ← ahora tiene valor',
             'Sin el nombre, no hay dónde guardar nada. Sin el valor, no hay nada que leer.',
           ],
-          // Auditoría "infografías" (jul 2026): ver misma nota en
-          // ciclo1-instrucciones-precisas.ts — `body` es texto plano hoy;
-          // este prompt queda listo para pegar en un generador de imágenes.
+          // Auditoría "infografías" (jul 2026, segunda vuelta): ver misma
+          // nota en ciclo1-instrucciones-precisas.ts — `imageAsset` ya está
+          // listo para resolver contra illustrationAssets.ts.
+          imageAsset: 'm1-c2-l2-caja-vacia',
           imagePrompt:
             'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
             'COMPOSICIÓN: un nodo superior centrado con forma de CAJA/CONTENEDOR abierto y vacío (la variable sin inicializar), del que bajan dos líneas conectoras en "Y" invertida hacia dos nodos inferiores: uno muestra la misma caja con una ETIQUETA/nombre pegada, el otro muestra la caja con un VALOR numérico dentro.\n\n' +
