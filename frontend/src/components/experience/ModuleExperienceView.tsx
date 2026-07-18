@@ -40,7 +40,7 @@ import type {
   ConceptVariant, ModuleExperienceDefinition, OrderingPracticeDef,
   Reinforcement, ReinforcementKind, RemediationLevel, RemediationStep,
 } from '@/types/moduleExperience'
-import type { LearningModality } from '@/types/modality'
+import { MODALITY_THEME, type LearningModality } from '@/types/modality'
 
 // Barandas de la autonomía: bajo este dominio, la remediación decide (no hay menú);
 // sobre AUTONOMY_HIGH el menú sugiere continuar.
@@ -1299,14 +1299,30 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-muted/60 truncate">
           {definition.missionTitle}
         </p>
-        <span
-          className={cn(
-            'text-[10px] font-mono px-2 py-1 rounded-full border shrink-0',
-            'border-neural-violet/30 text-neural-violet bg-neural-violet/5',
-          )}
-        >
-          Ciclo {cycleIndex + 1} de {definition.cycles.length}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Sprint UX-01 — adaptación visible: la versión de la experiencia
+              que este estudiante está viendo, siempre a la vista, nunca solo
+              en notas sueltas. Mismo vocabulario de color que ya usa
+              MODALITY_THEME en el resto de la plataforma. */}
+          <span
+            className={cn(
+              'text-[10px] font-mono px-2 py-1 rounded-full border',
+              MODALITY_THEME[effectiveModality].bg,
+              MODALITY_THEME[effectiveModality].color,
+            )}
+            title={`Estás viendo la versión ${MODALITY_THEME[effectiveModality].label.toLowerCase()} de esta misión, elegida según tu forma de aprender.`}
+          >
+            ✦ Versión {MODALITY_THEME[effectiveModality].label}
+          </span>
+          <span
+            className={cn(
+              'text-[10px] font-mono px-2 py-1 rounded-full border',
+              'border-neural-violet/30 text-neural-violet bg-neural-violet/5',
+            )}
+          >
+            Ciclo {cycleIndex + 1} de {definition.cycles.length}
+          </span>
+        </div>
       </div>
 
       {welcomeBackMessage && (
