@@ -1,5 +1,5 @@
 """
-Banco del instrumento de diagnóstico competencial (pre/post-test) — BANK_VERSION 2.
+Banco del instrumento de diagnóstico competencial (pre/post-test) — BANK_VERSION 3.
 
 12 ítems MCQ basados en RESOLUCIÓN DE PROBLEMAS (no percepción), organizados por
 las 6 competencias del modelo cognitivo COMP-0…COMP-5 (2 ítems por competencia).
@@ -22,6 +22,34 @@ para explicar el diagnóstico y elegir la remediación. Invisible al estudiante.
 
 El seed es idempotente: IDs deterministas (uuid5 por curso+versión+módulo+orden).
 El LLM no participa en la construcción del instrumento.
+
+Nota sobre difficulty vs. bloom_level (auditoría jul 2026): las dos dimensiones
+son independientes por diseño en las competencias de secuenciación/ejecución
+(COMP_3, COMP_4) — dentro de una misma competencia, el par order 0→1 mantiene el
+MISMO bloom_level pese a subir de difficulty, porque el tipo de operación
+cognitiva (simular una ejecución; ordenar un procedimiento) no cambia entre el
+ítem más simple y el más complejo de esa competencia — solo cambia cuánto
+contenido hay que procesar. En el resto de las competencias sí se corrigió para
+que difficulty y bloom_level progresen juntos (ver BANK_VERSION 3 changelog más
+abajo).
+
+Changelog BANK_VERSION 2 → 3 (auditoría pedagógica jul 2026, sin cambios de
+Runtime/adaptación — solo contenido de este archivo):
+1. COMP-2.1: opción distractora reescrita — "Guarda tres precios distintos del
+   mismo producto" podía leerse como literalmente cierta (sí quedan 3 variables
+   con 3 valores). Ahora dice que son independientes entre sí, lo cual sí es
+   inequívocamente falso (están encadenadas).
+2. 8 ítems con fragmentos de código (COMP-1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 5.1, 5.2)
+   ahora declaran explícitamente "Python" en el enunciado — antes ninguno lo
+   hacía, y en COMP-5.1 esa omisión hacía que un distractor (falta de punto y
+   coma) dependiera de una suposición no declarada sobre el lenguaje.
+3. COMP-1.2: el distractor "mayúscula/minúscula" no era un modelo mental
+   plausible (un dígito no tiene mayúscula/minúscula) — se reemplazó por una
+   confusión real y distinta de las otras tres opciones.
+4. COMP-1.2 pasa de "intermedio" a "básico" (coincide con su bloom_level real,
+   igual al de COMP-1.1). COMP-5.1 y COMP-5.2 pasan de "intermedio" a
+   "avanzado" (tienen bloom_level 4, el más alto del banco — más que los ítems
+   ya etiquetados "avanzado" en otras competencias).
 """
 
 import logging
@@ -33,7 +61,7 @@ from app.models.knowledge_test import KnowledgeTestQuestion
 
 logger = logging.getLogger(__name__)
 
-BANK_VERSION = 2
+BANK_VERSION = 3
 BANK_COURSE_CODE = "IS301"
 
 _NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "upao-mas-edu.knowledge-test-bank")
@@ -116,7 +144,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
     {
         "module_number": 2, "topic": COMP_1, "difficulty": "basico", "bloom_level": 2, "order": 0,
         "text": (
-            "En un programa escribes  nombre = \"Ana\"  y más adelante  "
+            "En un programa de Python escribes  nombre = \"Ana\"  y más adelante  "
             "nombre = \"Luis\" . ¿Qué ocurrió con el valor de la variable nombre?"
         ),
         "options": [
@@ -129,9 +157,9 @@ DIAGNOSTIC_ITEMS: list[dict] = [
         "mental_models": {0: "variable_acumula", 2: "variable_inmutable", 3: "reasignacion_crea_variable"},
     },
     {
-        "module_number": 2, "topic": COMP_1, "difficulty": "intermedio", "bloom_level": 2, "order": 1,
+        "module_number": 2, "topic": COMP_1, "difficulty": "basico", "bloom_level": 2, "order": 1,
         "text": (
-            "Un estudiante escribe un programa donde aparecen  \"5\"  (con comillas) "
+            "Un estudiante escribe un programa en Python donde aparecen  \"5\"  (con comillas) "
             "y también  5  (sin comillas). El profesor le dice que el programa los "
             "interpreta de forma distinta. ¿Cuál es la razón?"
         ),
@@ -139,7 +167,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
             "Son idénticos, las comillas no importan",
             "\"5\" es texto y 5 es un número; el programa los trata distinto",
             "\"5\" es un número y 5 es texto",
-            "Uno está en mayúscula y otro en minúscula",
+            "La diferencia depende del orden en que aparecen escritos, no de las comillas",
         ],
         "correct_index": 1,
         "mental_models": {0: "sin_distincion_tipos", 2: "tipo_invertido", 3: "diferencia_superficial"},
@@ -149,7 +177,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
     {
         "module_number": 2, "topic": COMP_2, "difficulty": "intermedio", "bloom_level": 2, "order": 0,
         "text": (
-            "¿Qué hace este código?\n\n"
+            "¿Qué hace este código de Python?\n\n"
             "    precio = 100\n"
             "    descuento = precio * 0.2\n"
             "    final = precio - descuento"
@@ -157,7 +185,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
         "options": [
             "Calcula el precio final aplicando un 20% de descuento",
             "Muestra el precio en pantalla",
-            "Guarda tres precios distintos del mismo producto",
+            "Guarda tres precios independientes, sin relación entre sí",
             "Da error porque usa la variable precio dos veces",
         ],
         "correct_index": 0,
@@ -166,7 +194,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
     {
         "module_number": 4, "topic": COMP_2, "difficulty": "avanzado", "bloom_level": 3, "order": 1,
         "text": (
-            "¿Qué hace este código?\n\n"
+            "¿Qué hace este código de Python?\n\n"
             "    edad = 20\n"
             "    if edad >= 18:\n"
             "        mensaje = \"Puede votar\"\n"
@@ -187,7 +215,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
     {
         "module_number": 2, "topic": COMP_3, "difficulty": "intermedio", "bloom_level": 3, "order": 0,
         "text": (
-            "¿Qué imprime este código?\n\n"
+            "¿Qué imprime este código de Python?\n\n"
             "    x = 5\n"
             "    y = 3\n"
             "    x = x + y\n"
@@ -200,7 +228,7 @@ DIAGNOSTIC_ITEMS: list[dict] = [
     {
         "module_number": 2, "topic": COMP_3, "difficulty": "avanzado", "bloom_level": 3, "order": 1,
         "text": (
-            "¿Qué imprime este código?\n\n"
+            "¿Qué imprime este código de Python?\n\n"
             "    a = \"5\"\n"
             "    b = \"5\"\n"
             "    print(a + b)"
@@ -252,9 +280,9 @@ DIAGNOSTIC_ITEMS: list[dict] = [
 
     # ══ COMP-5 · Razonamiento computacional (solo errores simples) ═══════════
     {
-        "module_number": 2, "topic": COMP_5, "difficulty": "intermedio", "bloom_level": 4, "order": 0,
+        "module_number": 2, "topic": COMP_5, "difficulty": "avanzado", "bloom_level": 4, "order": 0,
         "text": (
-            "Este programa da error. ¿Por qué?\n\n"
+            "Este programa de Python da error. ¿Por qué?\n\n"
             "    precio = 100\n"
             "    print(precioo)"
         ),
@@ -268,10 +296,10 @@ DIAGNOSTIC_ITEMS: list[dict] = [
         "mental_models": {1: "sintaxis_de_otro_lenguaje", 2: "print_solo_texto", 3: "numeros_necesitan_comillas"},
     },
     {
-        "module_number": 4, "topic": COMP_5, "difficulty": "intermedio", "bloom_level": 4, "order": 1,
+        "module_number": 4, "topic": COMP_5, "difficulty": "avanzado", "bloom_level": 4, "order": 1,
         "text": (
             "Se esperaba que una persona de 18 años se considerara \"Adulto\", "
-            "pero el programa no lo muestra. ¿Cuál es el error?\n\n"
+            "pero el programa de Python no lo muestra. ¿Cuál es el error?\n\n"
             "    edad = 18\n"
             "    if edad > 18:\n"
             "        print(\"Adulto\")"
@@ -377,8 +405,8 @@ MENTAL_MODEL_CATALOG: dict[str, dict[str, str]] = {
     },
     "diferencia_superficial": {
         "nombre": "Atribuye la diferencia a un detalle superficial",
-        "descripcion": "Cree que la diferencia es de mayúscula/minúscula, no de tipo.",
-        "explicacion": "La diferencia es de TIPO de dato, no de formato de escritura.",
+        "descripcion": "Cree que la diferencia depende de dónde aparece cada valor en la línea, no de las comillas.",
+        "explicacion": "La diferencia es de TIPO de dato, no de la posición en que se escribe.",
         "remediacion": "Comparar pares valor-texto / valor-número y nombrar la diferencia real.",
     },
     # COMP-2.1
