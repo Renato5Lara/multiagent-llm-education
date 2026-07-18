@@ -147,6 +147,24 @@ export function PredictOutputPractice({ practice, onAttempt, onFinished, revealO
           ))}
         </div>
       )}
+
+      {/* UX-06 recetas: la reflexión del perfil auditivo se escucha, no solo
+       *  se lee — `practice.narrationText` presente = variante auditiva de
+       *  esta práctica (misma señal que ya narra el enunciado arriba). El
+       *  feedback del intento y la explicación final cierran la secuencia
+       *  narración→pregunta oral→respuesta→reflexión sin abandonar el oído. */}
+      {practice.narrationText && (status === 'correct' || status === 'wrong' || status === 'exhausted') && (
+        <AudioNarration
+          key={status}
+          text={
+            status === 'correct'
+              ? practice.successFeedback
+              : status === 'wrong'
+                ? practice.wrongFeedback
+                : practice.solutionExplanation.join(' ')
+          }
+        />
+      )}
     </div>
   )
 }

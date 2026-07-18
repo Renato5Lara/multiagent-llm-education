@@ -114,6 +114,13 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
   // llenar el ancho.
   const hasAside = !!(concept.secondExample || earlyReinforcement || concept.pythonBridge)
 
+  // UX-06 "Experience Recipes": la secuencia auditiva COMIENZA escuchando
+  // — la narración deja de ser un bloque más dentro de la tarjeta y se
+  // convierte en el arranque protagonista, antes de cualquier texto. La
+  // transcripción y el resto quedan debajo, como apoyo. Solo audio con
+  // narración real; los demás perfiles no cambian.
+  const audioFirst = modality === 'audio' && !!variant.narrationText
+
   return (
     <div className={cn('mx-auto space-y-5 animate-in fade-in duration-500', hasAside ? 'max-w-[1060px]' : 'max-w-2xl')}>
 
@@ -130,6 +137,20 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
           {primers.map((primer, i) => (
             <ConceptPrimerCard key={i} primer={primer} inline />
           ))}
+        </div>
+      )}
+      {/* UX-06: perfil auditivo — la narración es lo PRIMERO, antes de
+          cualquier tarjeta de texto. */}
+      {audioFirst && (
+        <div className="rounded-2xl border border-neural-glow/30 bg-neural-glow/[0.06] p-4 mb-5 space-y-2.5">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-glow">
+            Escucha primero — esta lección empieza por el oído
+          </p>
+          <AudioNarration
+            text={variant.narrationText!}
+            audioSrc={resolveNarrationAudio(variant)}
+            onEngaged={() => setNarrationEngaged(true)}
+          />
         </div>
       )}
       <div className="glass-panel rounded-2xl overflow-hidden">
@@ -195,8 +216,10 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
               </div>
             )}
 
-            {/* RC-FINAL: la variante de audio SUENA — narración con voz real */}
-            {variant.narrationText && (
+            {/* RC-FINAL: la variante de audio SUENA — narración con voz real.
+                Con audioFirst (UX-06) el reproductor ya vive arriba como
+                arranque de la secuencia; aquí no se duplica. */}
+            {variant.narrationText && !audioFirst && (
               <AudioNarration
                 text={variant.narrationText}
                 audioSrc={resolveNarrationAudio(variant)}

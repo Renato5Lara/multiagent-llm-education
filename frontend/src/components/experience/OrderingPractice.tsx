@@ -357,6 +357,15 @@ export function OrderingPractice({
         </div>
       )}
 
+      {/* UX-06 recetas: la REFLEXIÓN del perfil auditivo también se escucha
+       *  — el ciclo auditivo cerraba leyendo el feedback en silencio, la
+       *  única pieza de su secuencia que abandonaba el oído. Mismo
+       *  componente, botón manual, sin autoplay. `key` por texto: cada
+       *  feedback nuevo reinicia el reproductor. */}
+      {isAudio && feedback && (
+        <AudioNarration key={feedback.text} text={feedback.text} />
+      )}
+
       {/* Solución completa explicada (3er intento) — enseñar, no castigar */}
       {solutionShown && (
         <div className="rounded-xl border border-neural-violet/30 bg-neural-violet/5 p-5 space-y-4 animate-in fade-in duration-500">
