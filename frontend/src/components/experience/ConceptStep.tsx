@@ -5,6 +5,7 @@
 import { useRef, useState } from 'react'
 import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, HelpCircle, CheckCircle2, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { AudioNarration } from './AudioNarration'
 import { ConceptInteractionCard } from './ConceptInteractionCard'
 import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
@@ -81,13 +82,23 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
     (!variant.narrationText || narrationEngaged || showTranscript) &&
     answeredCount >= interactions.length
 
+  // Sprint UX-05 "Workspace pedagógico adaptativo": el segundo ejemplo, el
+  // refuerzo adelantado y el puente a Python de la teoría dejan de apilarse
+  // debajo de la tarjeta principal — pasan a un panel de apoyo a la derecha,
+  // a la misma altura, en vez de alargar el scroll vertical. Sin ninguno de
+  // los tres, no hay panel: nunca se inventa una columna vacía solo para
+  // llenar el ancho.
+  const hasAside = !!(concept.secondExample || earlyReinforcement || concept.pythonBridge)
+
   return (
-    <div className="max-w-2xl mx-auto space-y-5 animate-in fade-in duration-500">
+    <div className={cn('mx-auto space-y-5 animate-in fade-in duration-500', hasAside ? 'max-w-[1060px]' : 'max-w-2xl')}>
 
       <h2 className="text-xl md:text-2xl font-bold text-neural-text leading-snug">
         {concept.title}
       </h2>
 
+      <div className={cn('grid gap-5 items-start', hasAside && 'lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)]')}>
+      <div className="space-y-2">
       <div className="glass-panel rounded-2xl overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-3 border-b border-white/[0.06]">
           <Icon className="h-4 w-4 text-neural-glow shrink-0" />
@@ -215,38 +226,44 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
       {variant.sourceNote && (
         <p className="text-xs text-neural-muted/60 italic px-1">{variant.sourceNote}</p>
       )}
+      </div>
 
-      {/* Un segundo caso — no un refuerzo opcional, parte del recorrido:
-          la teoría no depende de un solo ejemplo para fijar la idea. */}
-      {concept.secondExample && (
-        <div className="glass-panel rounded-2xl p-5 space-y-3">
-          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-            {concept.secondExample.label}
-          </p>
-          {concept.secondExample.body.map((paragraph, i) => (
-            <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
-              {paragraph}
-            </p>
-          ))}
+      {hasAside && (
+        <div className="space-y-4 lg:sticky lg:top-4">
+          {/* Un segundo caso — no un refuerzo opcional, parte del recorrido:
+              la teoría no depende de un solo ejemplo para fijar la idea. */}
+          {concept.secondExample && (
+            <div className="glass-panel rounded-2xl p-5 space-y-3">
+              <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+                {concept.secondExample.label}
+              </p>
+              {concept.secondExample.body.map((paragraph, i) => (
+                <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {earlyReinforcement && (
+            <div className="glass-panel rounded-2xl p-5 space-y-3">
+              <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+                {earlyReinforcement.mediumLabel} — repaso antes de practicar
+              </p>
+              {earlyReinforcement.body.map((paragraph, i) => (
+                <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
+
+          {/* Puente a Python del propio ejemplo de la teoría — el estudiante
+              ve código real mientras aprende el concepto, no solo al final. */}
+          {concept.pythonBridge && <PythonBridge bridge={concept.pythonBridge} />}
         </div>
       )}
-
-      {earlyReinforcement && (
-        <div className="glass-panel rounded-2xl p-5 space-y-3">
-          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-            {earlyReinforcement.mediumLabel} — repaso antes de practicar
-          </p>
-          {earlyReinforcement.body.map((paragraph, i) => (
-            <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
-              {paragraph}
-            </p>
-          ))}
-        </div>
-      )}
-
-      {/* Puente a Python del propio ejemplo de la teoría — el estudiante ve
-          código real mientras aprende el concepto, no solo al final. */}
-      {concept.pythonBridge && <PythonBridge bridge={concept.pythonBridge} />}
+      </div>
 
       <div className="flex flex-col items-end gap-1.5">
         {!canContinue && (

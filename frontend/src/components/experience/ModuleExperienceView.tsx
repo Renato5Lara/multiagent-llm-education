@@ -25,6 +25,7 @@ import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { PredictOutputPractice } from './PredictOutputPractice'
 import { ExternalResourceCard } from './ExternalResourceCard'
+import { LearningAnchor } from './LearningAnchor'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
 import { useLearningPath, useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
@@ -1091,177 +1092,196 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         ? `Completaste toda tu ruta de ${learningPath.data?.course_name ?? 'aprendizaje'} — tu progreso quedó guardado.`
         : 'Tu progreso quedó guardado — la próxima vez continuarás justo desde aquí.'
 
+    // UX-05 "Workspace pedagógico adaptativo": el cierre dejó de ser una
+    // columna de ocho bloques apilados — se reparte en dos columnas por lo
+    // que CADA una cuenta: izquierda = la narrativa de esta sesión (qué
+    // dominaste, tu hipótesis, el logro); derecha = dónde estás ahora
+    // (mapa de dominio, veredicto del evaluador, progreso del curso). La
+    // continuidad y el botón siguen a todo el ancho, al final — son el
+    // cierre de AMBAS columnas, no de una sola. Ningún dato ni condición
+    // cambia, solo su posición.
+    const hasRightColumn = evaluatorVerdict || (totalMissions > 0 && coursePct !== null)
     return (
-      <div className="max-w-2xl mx-auto py-8 space-y-6 animate-in fade-in duration-500">
-        <div className="glass-panel rounded-2xl p-8 space-y-6">
-          {/* "Hoy dominaste" — el mismo dominio de siempre, presentado como
-              un logro de ESTA sesión (checklist), no solo como una barra
-              estática que reemplaza a la anterior sin decir qué cambió. */}
-          {moduleMasterySummary.masteredCycles.length > 0 && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-emerald-400">
-                  Hoy dominaste
-                </p>
-              </div>
-              <ul className="space-y-1.5 pl-0.5">
-                {moduleMasterySummary.masteredCycles.map(c => (
-                  <li key={c.conceptId} className="flex items-center gap-2 text-sm text-neural-text/90">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                    {c.conceptLabel}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+      <div className="max-w-4xl mx-auto py-8 space-y-6 animate-in fade-in duration-500">
+        <div className="glass-panel rounded-2xl p-8 space-y-8">
+          <div className={cn('grid gap-8 items-start', hasRightColumn && 'lg:grid-cols-2')}>
 
-          {/* "Tu dominio aumentó" — mismo promedio que evaluatorVerdict ya
-              calculaba, ahora también expresado como el DELTA real desde
-              priorMastery (el punto de partida de cada ciclo), no solo el
-              número final. */}
-          {moduleMasterySummary.avgAfter > moduleMasterySummary.avgBefore && (
-            <div className="flex items-center gap-2.5 rounded-xl border border-neural-glow/20 bg-neural-glow/5 px-4 py-3">
-              <TrendingUp className="h-4 w-4 text-neural-glow shrink-0" />
-              <p className="text-sm text-neural-text/90 leading-relaxed">
-                Tu dominio en este territorio subió de{' '}
-                <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgBefore * 100)}%</span>
-                {' '}a{' '}
-                <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgAfter * 100)}%</span>.
+            {/* ── Columna izquierda: qué pasó en esta sesión ────────────── */}
+            <div className="space-y-6">
+              {/* "Hoy dominaste" — el mismo dominio de siempre, presentado como
+                  un logro de ESTA sesión (checklist), no solo como una barra
+                  estática que reemplaza a la anterior sin decir qué cambió. */}
+              {moduleMasterySummary.masteredCycles.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-emerald-400">
+                      Hoy dominaste
+                    </p>
+                  </div>
+                  <ul className="space-y-1.5 pl-0.5">
+                    {moduleMasterySummary.masteredCycles.map(c => (
+                      <li key={c.conceptId} className="flex items-center gap-2 text-sm text-neural-text/90">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        {c.conceptLabel}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* LEARN-002 — cierre del experimento: la hipótesis de la apertura
+                  recibe su veredicto ANTES del botón de salida. */}
+              {openingAnswer && hypothesisVerdict && (
+                <div className="rounded-xl border border-neural-violet/25 bg-neural-violet/5 p-5 space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <FlaskConical className="h-4 w-4 text-neural-violet shrink-0" />
+                    <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
+                      Tu hipótesis inicial
+                    </p>
+                  </div>
+                  <p className="text-sm text-neural-muted leading-relaxed">
+                    Al empezar respondiste:{' '}
+                    <span className="text-neural-text/90">«{openingAnswer.option}»</span>
+                    {openingAnswer.freeText && (
+                      <>
+                        {' '}— y predijiste:{' '}
+                        <span className="text-neural-text/90 italic">«{openingAnswer.freeText}»</span>
+                      </>
+                    )}
+                  </p>
+                  <p className="text-sm leading-relaxed">
+                    <span className="font-semibold text-neural-glow">{hypothesisVerdict.label}.</span>{' '}
+                    <span className="text-neural-text/90">{hypothesisVerdict.text}</span>
+                  </p>
+                  {definition.closing.hypothesis?.coda && (
+                    <p className="text-xs text-neural-muted leading-relaxed border-t border-white/[0.06] pt-3">
+                      {definition.closing.hypothesis.coda}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-sm text-neural-muted leading-relaxed">
+                {definition.closing.achievement}
               </p>
+
+              {definition.closing.nextMission && (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 space-y-1.5">
+                  <p className="text-xs text-neural-muted">
+                    <span className="font-mono text-neural-violet">PRÓXIMA MISIÓN ·</span>{' '}
+                    <span className="text-neural-text/90">{definition.closing.nextMission.title}</span>
+                  </p>
+                  <p className="text-xs text-neural-muted leading-relaxed">
+                    {definition.closing.nextMission.hook}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="flex items-center gap-2.5">
-            <Map className="h-4 w-4 text-neural-glow shrink-0" />
-            <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-glow">
-              Tu mapa de dominio
-            </p>
-          </div>
+            {/* ── Columna derecha: dónde estás ahora ────────────────────── */}
+            <div className="space-y-6 lg:border-l lg:border-white/[0.06] lg:pl-8">
+              {/* "Tu dominio aumentó" — mismo promedio que evaluatorVerdict ya
+                  calculaba, ahora también expresado como el DELTA real desde
+                  priorMastery (el punto de partida de cada ciclo), no solo el
+                  número final. */}
+              {moduleMasterySummary.avgAfter > moduleMasterySummary.avgBefore && (
+                <div className="flex items-center gap-2.5 rounded-xl border border-neural-glow/20 bg-neural-glow/5 px-4 py-3">
+                  <TrendingUp className="h-4 w-4 text-neural-glow shrink-0" />
+                  <p className="text-sm text-neural-text/90 leading-relaxed">
+                    Tu dominio en este territorio subió de{' '}
+                    <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgBefore * 100)}%</span>
+                    {' '}a{' '}
+                    <span className="font-mono text-neural-glow">{Math.round(moduleMasterySummary.avgAfter * 100)}%</span>.
+                  </p>
+                </div>
+              )}
 
-          <div className="space-y-4">
-            {definition.cycles.map(c => {
-              const value = Math.round((mastery[c.conceptId] ?? 0) * 100)
-              return (
-                <div key={c.conceptId} className="space-y-1.5">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <Map className="h-4 w-4 text-neural-glow shrink-0" />
+                  <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-glow">
+                    Tu mapa de dominio
+                  </p>
+                </div>
+                {definition.cycles.map(c => {
+                  const value = Math.round((mastery[c.conceptId] ?? 0) * 100)
+                  return (
+                    <div key={c.conceptId} className="space-y-1.5">
+                      <div className="flex items-baseline justify-between">
+                        <p className="text-sm font-medium text-neural-text">{c.conceptLabel}</p>
+                        <span className="text-xs font-mono text-neural-glow">{value}%</span>
+                      </div>
+                      <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="bg-neural-glow h-1.5 rounded-full neural-glow-sm transition-all duration-700"
+                          style={{ width: `${value}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* BUG-002 — el Agente Evaluador se pronuncia sobre lo observado. */}
+              {evaluatorVerdict && (
+                <div className="rounded-xl border border-neural-pulse/25 bg-neural-pulse/5 px-4 py-3.5 flex gap-3">
+                  <span className="relative flex h-2 w-2 shrink-0 mt-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-pulse opacity-60" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-pulse" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-neural-pulse mb-1">
+                      Agente Evaluador
+                    </p>
+                    <p className="text-sm text-neural-text/90 leading-relaxed">{evaluatorVerdict}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* "Mostrar progreso acumulado" — mismo dato que ya muestra el
+                  Dashboard ("X/Y misiones completadas"), consumido aquí vía el
+                  mismo hook (useLearningPath), no reinventado. Ausente sin
+                  courseId (demo local) o mientras el fetch está en vuelo — nunca
+                  bloquea el cierre. */}
+              {totalMissions > 0 && coursePct !== null && (
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <Route className="h-4 w-4 text-neural-violet shrink-0" />
+                    <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
+                      Tu progreso en {learningPath.data?.course_name ?? 'tu ruta de aprendizaje'}
+                    </p>
+                  </div>
                   <div className="flex items-baseline justify-between">
-                    <p className="text-sm font-medium text-neural-text">{c.conceptLabel}</p>
-                    <span className="text-xs font-mono text-neural-glow">{value}%</span>
+                    <p className="text-sm text-neural-text/90">{completedAfter}/{totalMissions} misiones</p>
+                    <span className="text-sm font-mono text-neural-violet">{coursePct}%</span>
                   </div>
                   <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-neural-glow h-1.5 rounded-full neural-glow-sm transition-all duration-700"
-                      style={{ width: `${value}%` }}
+                      className="bg-neural-violet h-1.5 rounded-full transition-all duration-700"
+                      style={{ width: `${coursePct}%` }}
                     />
                   </div>
                 </div>
-              )
-            })}
-          </div>
-
-          {/* BUG-002 — el Agente Evaluador se pronuncia sobre lo observado. */}
-          {evaluatorVerdict && (
-            <div className="rounded-xl border border-neural-pulse/25 bg-neural-pulse/5 px-4 py-3.5 flex gap-3">
-              <span className="relative flex h-2 w-2 shrink-0 mt-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-pulse opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-pulse" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-neural-pulse mb-1">
-                  Agente Evaluador
-                </p>
-                <p className="text-sm text-neural-text/90 leading-relaxed">{evaluatorVerdict}</p>
-              </div>
-            </div>
-          )}
-
-          {/* LEARN-002 — cierre del experimento: la hipótesis de la apertura
-              recibe su veredicto ANTES del botón de salida. */}
-          {openingAnswer && hypothesisVerdict && (
-            <div className="rounded-xl border border-neural-violet/25 bg-neural-violet/5 p-5 space-y-3">
-              <div className="flex items-center gap-2.5">
-                <FlaskConical className="h-4 w-4 text-neural-violet shrink-0" />
-                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
-                  Tu hipótesis inicial
-                </p>
-              </div>
-              <p className="text-sm text-neural-muted leading-relaxed">
-                Al empezar respondiste:{' '}
-                <span className="text-neural-text/90">«{openingAnswer.option}»</span>
-                {openingAnswer.freeText && (
-                  <>
-                    {' '}— y predijiste:{' '}
-                    <span className="text-neural-text/90 italic">«{openingAnswer.freeText}»</span>
-                  </>
-                )}
-              </p>
-              <p className="text-sm leading-relaxed">
-                <span className="font-semibold text-neural-glow">{hypothesisVerdict.label}.</span>{' '}
-                <span className="text-neural-text/90">{hypothesisVerdict.text}</span>
-              </p>
-              {definition.closing.hypothesis?.coda && (
-                <p className="text-xs text-neural-muted leading-relaxed border-t border-white/[0.06] pt-3">
-                  {definition.closing.hypothesis.coda}
-                </p>
               )}
             </div>
-          )}
-
-          <p className="text-sm text-neural-muted leading-relaxed">
-            {definition.closing.achievement}
-          </p>
-
-          {definition.closing.nextMission && (
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 space-y-1.5">
-              <p className="text-xs text-neural-muted">
-                <span className="font-mono text-neural-violet">PRÓXIMA MISIÓN ·</span>{' '}
-                <span className="text-neural-text/90">{definition.closing.nextMission.title}</span>
-              </p>
-              <p className="text-xs text-neural-muted leading-relaxed">
-                {definition.closing.nextMission.hook}
-              </p>
-            </div>
-          )}
-
-          {/* "Mostrar progreso acumulado" — mismo dato que ya muestra el
-              Dashboard ("X/Y misiones completadas"), consumido aquí vía el
-              mismo hook (useLearningPath), no reinventado. Ausente sin
-              courseId (demo local) o mientras el fetch está en vuelo — nunca
-              bloquea el cierre. */}
-          {totalMissions > 0 && coursePct !== null && (
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-2.5">
-              <div className="flex items-center gap-2.5">
-                <Route className="h-4 w-4 text-neural-violet shrink-0" />
-                <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
-                  Tu progreso en {learningPath.data?.course_name ?? 'tu ruta de aprendizaje'}
-                </p>
-              </div>
-              <div className="flex items-baseline justify-between">
-                <p className="text-sm text-neural-text/90">{completedAfter}/{totalMissions} misiones</p>
-                <span className="text-sm font-mono text-neural-violet">{coursePct}%</span>
-              </div>
-              <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-neural-violet h-1.5 rounded-full transition-all duration-700"
-                  style={{ width: `${coursePct}%` }}
-                />
-              </div>
-            </div>
-          )}
+          </div>
 
           {/* "La próxima vez continuarás desde aquí" — nombra un mecanismo que
               YA existe (cursor persistido, Misión Activa) en vez de dejar que
-              el botón de abajo se sienta como el final de todo. */}
-          <p className="text-xs text-neural-muted text-center leading-relaxed">
-            {continuityMessage}
-          </p>
-
-          <Button className="w-full" onClick={handleFinish}>
-            {/* "misión", nunca "módulo" — el resto de la experiencia ya evita esa
-                palabra (missionTitle, routeTitle); este era el único lugar que
-                todavía la usaba, rompiendo la sensación de aprendizaje continuo. */}
-            {definition.closing.nextMission ? 'Seguir con la siguiente misión →' : 'Finalizar misión →'}
-          </Button>
+              el botón de abajo se sienta como el final de todo. Cierre de
+              AMBAS columnas: a todo el ancho, con su propio separador. */}
+          <div className="space-y-4 border-t border-white/[0.06] pt-6">
+            <p className="text-xs text-neural-muted text-center leading-relaxed">
+              {continuityMessage}
+            </p>
+            <Button className="w-full" onClick={handleFinish}>
+              {/* "misión", nunca "módulo" — el resto de la experiencia ya evita esa
+                  palabra (missionTitle, routeTitle); este era el único lugar que
+                  todavía la usaba, rompiendo la sensación de aprendizaje continuo. */}
+              {definition.closing.nextMission ? 'Seguir con la siguiente misión →' : 'Finalizar misión →'}
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -1296,6 +1316,40 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       </p>
     </>
   ) : undefined
+
+  // UX-05 "Workspace pedagógico adaptativo" — la práctica principal, una vez
+  // resuelta, se define UNA sola vez aquí para envolverla (o no) en
+  // LearningAnchor sin duplicar sus props en dos ramas del render.
+  const practiceBody = resolvedPractice && cycle && (
+    resolvedPractice.kind === 'ordering' ? (
+      <OrderingPractice
+        key={`${cycle.id}-practice`}
+        practice={resolvedPractice}
+        onAttempt={handlePracticeAttempt}
+        onFinished={handlePracticeFinished}
+        revealOnExhaust={!cycle.remediation}
+        onExhausted={handlePracticeExhausted}
+        profundidad={profundidad}
+        modality={effectiveModality}
+      />
+    ) : (
+      <PredictOutputPractice
+        key={`${cycle.id}-practice`}
+        practice={resolvedPractice}
+        onAttempt={handlePredictOutputAttempt}
+        onFinished={handlePracticeFinished}
+        revealOnExhaust={!cycle.remediation}
+        onExhausted={handlePracticeExhausted}
+        profundidad={profundidad}
+      />
+    )
+  )
+  // Resumen de una línea para la barra colapsada — solo predict_output tiene
+  // una respuesta puntual que citar; ordering se identifica por su label solo.
+  const practiceAnchorSummary =
+    resolvedPractice?.kind === 'predict_output'
+      ? resolvedPractice.options.find(o => o.id === resolvedPractice.correctOptionId)?.text
+      : undefined
 
   // Fases dentro de un ciclo — cabecera compartida de la misión
   return (
@@ -1386,37 +1440,28 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
            *  (puente a Python, menú de consolidación) que antes se saltaba.
            *  Con el laboratorio activo, la práctica ya resuelta conserva su
            *  ancho de lectura, centrada sobre el laboratorio (UX-02). */}
+          {/* UX-05: en ciclos con laboratorio, la práctica vive SIEMPRE
+           *  dentro de LearningAnchor — desde antes de resolverse, no solo
+           *  después — para que el wrapper nunca entre/salga del árbol en
+           *  el momento de resolver (eso remontaría la práctica y perdería
+           *  su estado ya resuelto; ver el comentario en LearningAnchor.tsx).
+           *  `resolved` gobierna su apariencia: invisible mientras está
+           *  activa, se colapsa sola en cuanto `practiceOutcome` llega. En
+           *  ciclos sin laboratorio, comportamiento previo exacto: expandida
+           *  a ancho de lectura, sin ancla. */}
           {remediationLevel === 0 && (
             <div className={cn(labActive && 'max-w-2xl mx-auto w-full')}>
-            {resolvedPractice.kind === 'ordering' ? (
-              <OrderingPractice
-                key={`${cycle.id}-practice`}
-                practice={resolvedPractice}
-                onAttempt={handlePracticeAttempt}
-                onFinished={handlePracticeFinished}
-                // Con escalera, agotar intentos NO revela la solución: escala al Nivel 1.
-                revealOnExhaust={!cycle.remediation}
-                onExhausted={handlePracticeExhausted}
-                // Pretest gobierna también la práctica principal, no solo el
-                // editor (Sprint pedagógico Fase 2, prioridad 1): mismo
-                // criterio earlyHelp que ya usa PythonBridge.
-                profundidad={profundidad}
-                // Auditoría pedagógica (Hallazgo A): la misma práctica ahora
-                // se presenta distinto por modalidad (narración auditiva,
-                // secuencia como cadena visual) — nunca cambia QUÉ se evalúa.
-                modality={effectiveModality}
-              />
-            ) : (
-              <PredictOutputPractice
-                key={`${cycle.id}-practice`}
-                practice={resolvedPractice}
-                onAttempt={handlePredictOutputAttempt}
-                onFinished={handlePracticeFinished}
-                revealOnExhaust={!cycle.remediation}
-                onExhausted={handlePracticeExhausted}
-                profundidad={profundidad}
-              />
-            )}
+              {cycle.pythonBridge ? (
+                <LearningAnchor
+                  label={resolvedPractice.kind === 'ordering' ? 'Secuencia resuelta' : 'Predicción resuelta'}
+                  summary={practiceAnchorSummary}
+                  resolved={!!practiceOutcome}
+                >
+                  {practiceBody}
+                </LearningAnchor>
+              ) : (
+                practiceBody
+              )}
             </div>
           )}
           {practiceOutcome && cycle.pythonBridge && (

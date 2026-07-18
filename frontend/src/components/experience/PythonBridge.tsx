@@ -168,8 +168,11 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
   )
 
   if (layout === 'lab' && bridge.practice) {
+    // UX-05: la columna de contexto cede ancho al editor — sigue siendo
+    // cómoda de leer (260-320px), pero deja de competir con el editor por
+    // el espacio disponible.
     return (
-      <div className="grid gap-5 items-start lg:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="grid gap-5 items-start lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="space-y-5 lg:sticky lg:top-4">
           {explanationCard}
           {aside}
@@ -469,9 +472,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   // El editor crece con el código (acotado) para que escribir sea cómodo sin
   // scroll interno — UX-04 extiende al modo inline lo que el laboratorio ya
   // hacía: la franja fija de 3 líneas quedaba demasiado pequeña apenas el
-  // ejercicio pasaba de una línea.
+  // ejercicio pasaba de una línea. UX-05: en el laboratorio, el editor
+  // también gana un alto mínimo generoso (no solo "cabe el código") — el
+  // estudiante programa ahí, necesita verlo cómodo incluso con una línea.
   const editorRows = labMode
-    ? Math.min(16, Math.max(8, code.split('\n').length + 2))
+    ? Math.min(20, Math.max(10, code.split('\n').length + 3))
     : Math.min(12, Math.max(5, code.split('\n').length + 2))
   const editorBlock = (
     <textarea
@@ -482,7 +487,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       spellCheck={false}
       className={cn(
         'w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70',
-        labMode ? 'text-[14px] leading-relaxed' : 'text-[13px]',
+        labMode ? 'text-[14px] leading-relaxed min-h-[300px]' : 'text-[13px]',
       )}
     />
   )
@@ -520,9 +525,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     </div>
   )
   // Laboratorio: la consola SIEMPRE está visible — antes de ejecutar muestra
-  // una invitación, nunca un hueco que aparece y desaparece.
+  // una invitación, nunca un hueco que aparece y desaparece. UX-05: gana un
+  // alto mínimo (antes era una franja de una sola línea) para que se sienta
+  // una zona propia de la pantalla, no una nota al pie del editor.
   const consoleBlock = (
-    <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 space-y-1">
+    <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3.5 py-3 space-y-1.5 min-h-[92px]">
       <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-neural-muted/70">Consola de salida</p>
       {outputVisible ? (
         <p className="font-mono text-[13px] text-neural-text/80 whitespace-pre-wrap">{output || '(sin salida)'}</p>
@@ -623,8 +630,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     // ocupa todo el ancho: nunca un chat vacío permanente.
     const tutorBlocks = [stageNoteBlock, errorHelpBlock, workedExampleBlock, resultExplanationBlock, solutionBlock].filter(Boolean)
     const tutorVisible = !deciding && tutorBlocks.length > 0
+    // UX-05: el tutor cede ancho al editor — sigue siendo legible
+    // (220-280px), pero deja de repartirse el ancho a partes casi iguales
+    // con la zona donde el estudiante realmente programa.
     return (
-      <div className={cn('grid gap-5 items-start', tutorVisible && 'xl:grid-cols-[minmax(0,1fr)_minmax(260px,320px)]')}>
+      <div className={cn('grid gap-5 items-start', tutorVisible && 'xl:grid-cols-[minmax(0,1fr)_minmax(220px,280px)]')}>
         <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] px-5 py-4 space-y-3">
           {modeLabelBlock}
           {deciding ? decidingBlock : (
