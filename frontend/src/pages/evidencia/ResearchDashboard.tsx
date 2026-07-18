@@ -1,6 +1,13 @@
-import { Download, FileSpreadsheet, FlaskConical, Loader2, TrendingUp, Users } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { Clock, Download, FileSpreadsheet, FlaskConical, GitBranch, Loader2, Route, TrendingUp, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useResearchStudents, useResearchSummary } from '@/hooks/useResearch'
+import {
+  useCycleAggregates,
+  useResearchStudents,
+  useResearchSummary,
+  useStudentCycles,
+  type StudentCycleRow,
+} from '@/hooks/useResearch'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
 
@@ -65,9 +72,116 @@ function LevelDistribution({ title, distribution }: { title: string; distributio
   )
 }
 
+function fmtSeconds(value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—'
+  return value >= 60 ? `${(value / 60).toFixed(1)} min` : `${value.toFixed(0)} s`
+}
+
+const MODALITY_LABELS: Record<string, string> = {
+  visual: 'Visual',
+  reading: 'Lector',
+  audio: 'Auditivo',
+  kinesthetic: 'Kinestésico',
+  mixta: 'Mixta',
+}
+
+const PROFUNDIDAD_LABELS: Record<string, string> = {
+  fundamentos: 'Fundamentos',
+  aplicacion: 'Aplicación',
+}
+
+/** Barra horizontal genérica para un mapa clave→número — reutilizada para
+ *  tiempo por concepto, tasa de remediación, frecuencia de modalidad y
+ *  distribución de profundidad, para no repetir el mismo layout 4 veces. */
+function BarMap({
+  title,
+  icon,
+  entries,
+  formatValue,
+  labelFor,
+  maxHint,
+}: {
+  title: string
+  icon: ReactNode
+  entries: [string, number | null][]
+  formatValue: (v: number | null) => string
+  labelFor?: (key: string) => string
+  maxHint?: number
+}) {
+  const max = maxHint ?? Math.max(1, ...entries.map(([, v]) => v ?? 0))
+  return (
+    <div className="glass-panel rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-4">
+        {icon}
+        <p className="text-[10px] font-mono text-neural-muted/60 tracking-widest uppercase">{title}</p>
+      </div>
+      {entries.length ? (
+        <div className="space-y-3">
+          {entries.map(([key, value]) => {
+            const pct = value !== null ? Math.min(100, (value / max) * 100) : 0
+            return (
+              <div key={key}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-neural-text capitalize">{labelFor ? labelFor(key) : key}</span>
+                  <span className="text-neural-muted font-mono">{formatValue(value)}</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-neural-glow transition-all duration-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <p className="text-sm text-neural-muted/70">Sin ciclos registrados aún.</p>
+      )}
+    </div>
+  )
+}
+
+function CycleTraceCard({ row }: { row: StudentCycleRow }) {
+  const resultadoLabel =
+    row.resultado === true ? 'Resuelto sin ayuda' : row.resultado === false ? 'No resuelto sin ayuda' : 'Sin registrar'
+  const resultadoColor =
+    row.resultado === true ? 'text-neural-pulse' : row.resultado === false ? 'text-amber-400' : 'text-neural-muted'
+  return (
+    <div className="glass-panel rounded-xl p-4 space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <p className="text-sm font-semibold text-neural-text capitalize">{row.concepto ?? 'Concepto sin registrar'}</p>
+        <span className="text-[10px] font-mono text-neural-muted/60">{row.fecha ? new Date(row.fecha).toLocaleString() : '—'}</span>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+        <p className="text-neural-muted">
+          Evidencia: <span className="text-neural-text">{row.intentos ?? '—'} intento(s)</span>,{' '}
+          <span className={resultadoColor}>{resultadoLabel}</span>, {row.ayudas ?? 0} pista(s)
+          {row.tiempo_ms !== null && <>, {fmtMs(row.tiempo_ms)}</>}
+        </p>
+        <p className="text-neural-muted">
+          Decisión:{' '}
+          <span className="text-neural-text">
+            {row.modalidad_refuerzo ? MODALITY_LABELS[row.modalidad_refuerzo] ?? row.modalidad_refuerzo : '—'}
+          </span>
+          {row.profundidad && (
+            <> · Bloom: <span className="text-neural-text">{PROFUNDIDAD_LABELS[row.profundidad] ?? row.profundidad}</span></>
+          )}
+        </p>
+      </div>
+
+      <p className="text-xs text-neural-muted/80 italic border-t border-white/[0.06] pt-2.5">{row.justificacion}</p>
+    </div>
+  )
+}
+
 export default function ResearchDashboard() {
   const summary = useResearchSummary()
   const students = useResearchStudents()
+  const aggregates = useCycleAggregates()
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null)
+  const cycles = useStudentCycles(selectedStudent)
 
   if (summary.isLoading) {
     return (
@@ -156,6 +270,55 @@ export default function ResearchDashboard() {
           label="Resolución del test (prom.)"
           value={data.avg_pre_duration_seconds !== null ? `${(data.avg_pre_duration_seconds / 60).toFixed(1)} min` : '—'}
           hint={data.avg_post_duration_seconds !== null ? `post: ${(data.avg_post_duration_seconds / 60).toFixed(1)} min` : undefined}
+        />
+      </div>
+
+      {/* Ciclos de aprendizaje — agregados en vivo de research_metrics/CYCLE_EVIDENCE */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <GitBranch className="h-4 w-4 text-neural-violet" />
+          <h2 className="text-sm font-semibold text-neural-text">Ciclos de aprendizaje ({aggregates.data?.n_ciclos ?? (aggregates.isLoading ? '…' : 0)})</h2>
+          {aggregates.data?.tasa_remediacion_global_pct !== null && aggregates.data?.tasa_remediacion_global_pct !== undefined && (
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-amber-500/30 text-amber-300/90 bg-amber-500/10">
+              remediación global {aggregates.data.tasa_remediacion_global_pct}%
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-neural-muted/70 max-w-2xl">
+          Cada ciclo es un envío real de práctica (<span className="font-mono">/cycle-evidence</span>). La tasa de
+          remediación se define como el % de ciclos en los que el estudiante no resolvió sin que se revelara la
+          solución.
+        </p>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <BarMap
+          title="Tiempo promedio por concepto"
+          icon={<Clock className="h-4 w-4 text-neural-glow" />}
+          entries={Object.entries(aggregates.data?.tiempo_promedio_por_concepto_seg ?? {})}
+          formatValue={fmtSeconds}
+        />
+        <BarMap
+          title="Tasa de remediación por concepto"
+          icon={<TrendingUp className="h-4 w-4 text-amber-400" />}
+          entries={Object.entries(aggregates.data?.tasa_remediacion_por_concepto_pct ?? {})}
+          formatValue={(v) => (v !== null ? `${v}%` : '—')}
+          maxHint={100}
+        />
+      </div>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <BarMap
+          title="Rutas adaptativas (modalidad de refuerzo decidida)"
+          icon={<Route className="h-4 w-4 text-neural-violet" />}
+          entries={Object.entries(aggregates.data?.frecuencia_modalidad_refuerzo ?? {})}
+          formatValue={(v) => String(v ?? 0)}
+          labelFor={(k) => MODALITY_LABELS[k] ?? k}
+        />
+        <BarMap
+          title="Distribución de profundidad (Bloom)"
+          icon={<TrendingUp className="h-4 w-4 text-neural-pulse" />}
+          entries={Object.entries(aggregates.data?.distribucion_profundidad ?? {})}
+          formatValue={(v) => String(v ?? 0)}
+          labelFor={(k) => PROFUNDIDAD_LABELS[k] ?? k}
         />
       </div>
 
@@ -252,6 +415,49 @@ export default function ResearchDashboard() {
             Aún no hay estudiantes con pre-test completado. Los resultados aparecerán aquí conforme
             los estudiantes recorran la plataforma.
           </p>
+        )}
+      </div>
+
+      {/* Trazabilidad de la adaptación — evidencia → decisión → justificación por estudiante */}
+      <div className="glass-panel rounded-xl p-5 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <GitBranch className="h-4 w-4 text-neural-violet" />
+            <p className="text-[10px] font-mono text-neural-muted/60 tracking-widest uppercase">
+              Trazabilidad de la adaptación
+            </p>
+          </div>
+          <select
+            value={selectedStudent ?? ''}
+            onChange={(e) => setSelectedStudent(e.target.value || null)}
+            className="text-xs bg-neural-lowest/60 border border-white/10 rounded-lg px-3 py-1.5 text-neural-text"
+          >
+            <option value="">Selecciona un estudiante…</option>
+            {students.data?.rows.map((row) => (
+              <option key={row.student_id} value={row.student_id}>
+                {row.student_id.slice(0, 8)} · {row.profile ?? 'sin perfil'}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {!selectedStudent ? (
+          <p className="text-sm text-neural-muted/70">
+            Elige un estudiante para ver, ciclo por ciclo, la evidencia real que recibió el motor de adaptación, la
+            decisión que tomó Adaptar y la justificación derivada de esa misma evidencia.
+          </p>
+        ) : cycles.isLoading ? (
+          <div className="py-8 text-center">
+            <Loader2 className="h-6 w-6 animate-spin text-neural-glow mx-auto" />
+          </div>
+        ) : cycles.data && cycles.data.rows.length > 0 ? (
+          <div className="space-y-3 max-h-[32rem] overflow-y-auto pr-1">
+            {cycles.data.rows.map((row, i) => (
+              <CycleTraceCard key={`${row.concepto}-${row.fecha}-${i}`} row={row} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-neural-muted/70">Este estudiante todavía no tiene ciclos de práctica registrados.</p>
         )}
       </div>
     </div>

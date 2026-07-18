@@ -60,3 +60,50 @@ export function useResearchStudents() {
     },
   })
 }
+
+export interface CycleAggregates {
+  n_ciclos: number
+  tiempo_promedio_por_concepto_seg: Record<string, number | null>
+  tasa_remediacion_global_pct: number | null
+  tasa_remediacion_por_concepto_pct: Record<string, number | null>
+  frecuencia_modalidad_refuerzo: Record<string, number>
+  distribucion_profundidad: Record<string, number>
+}
+
+export function useCycleAggregates() {
+  return useQuery({
+    queryKey: ['research-cycle-aggregates'],
+    queryFn: async () => {
+      const resp = await api.get<CycleAggregates>('/api/research/cycle-aggregates')
+      return resp.data
+    },
+  })
+}
+
+export interface StudentCycleRow {
+  student_id: string
+  email: string
+  concepto: string | null
+  intentos: number | null
+  resultado: boolean | null
+  ayudas: number | null
+  tiempo_ms: number | null
+  modalidad_diagnosticada: string | null
+  modalidad_refuerzo: string | null
+  profundidad: string | null
+  fecha: string | null
+  justificacion: string
+}
+
+export function useStudentCycles(studentId: string | null) {
+  return useQuery({
+    queryKey: ['research-student-cycles', studentId],
+    queryFn: async () => {
+      const resp = await api.get<{ total: number; rows: StudentCycleRow[] }>(
+        `/api/research/students/${studentId}/cycles`
+      )
+      return resp.data
+    },
+    enabled: !!studentId,
+  })
+}

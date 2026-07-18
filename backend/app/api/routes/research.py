@@ -38,6 +38,30 @@ def get_students(
     return {"total": len(rows), "rows": rows}
 
 
+@router.get("/cycle-aggregates")
+def get_cycle_aggregates(
+    course_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Tiempo por concepto, tasa de remediación, frecuencia de rutas
+    adaptativas y distribución de profundidad — agregados en vivo sobre
+    research_metrics/CYCLE_EVIDENCE, antes solo visibles en el XLSX."""
+    return research_dashboard_service.get_cycle_aggregates(db, course_id)
+
+
+@router.get("/students/{student_id}/cycles")
+def get_student_cycles(
+    student_id: str,
+    course_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Traza de explicabilidad de un estudiante: evidencia real de cada
+    ciclo, la decisión de Adaptar y una justificación generada — nunca
+    texto libre, siempre derivada de los mismos campos que se muestran."""
+    rows = research_dashboard_service.get_student_cycle_rows(db, student_id, course_id)
+    return {"total": len(rows), "rows": rows}
+
+
 @router.get("/export")
 def export_results(
     fmt: str = "csv",

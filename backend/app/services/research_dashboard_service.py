@@ -296,6 +296,112 @@ def get_cycle_evidence_rows(db: Session, course_id: Optional[str] = None) -> lis
     return rows
 
 
+def get_cycle_aggregates(db: Session, course_id: Optional[str] = None) -> dict:
+    """Agregados en vivo del Dashboard del Investigador, derivados de la
+    misma tabla que get_cycle_evidence_rows — antes solo se veían en el
+    XLSX de exportación, nunca en pantalla. Ningún dato nuevo, ninguna
+    migración: agrupa lo que /cycle-evidence ya escribe en cada intento
+    real de práctica.
+
+    Definiciones operativas (no existe un campo "remediation_level" en el
+    payload, así que se documentan aquí):
+    - tasa de remediación de un concepto = % de ciclos con resultado=False
+      (el estudiante no lo logró sin que se revelara la solución).
+    - "ruta adaptativa" = la modalidad_refuerzo que Adaptar decidió para
+      ese ciclo; la frecuencia es cuántas veces se decidió cada una.
+    - "evolución Bloom" = distribución de profundidad (fundamentos/
+      aplicacion) que Adaptar asignó a través de los ciclos registrados.
+    """
+    rows = get_cycle_evidence_rows(db, course_id)
+    if not rows:
+        return {
+            "n_ciclos": 0,
+            "tiempo_promedio_por_concepto_seg": {},
+            "tasa_remediacion_global_pct": None,
+            "tasa_remediacion_por_concepto_pct": {},
+            "frecuencia_modalidad_refuerzo": {},
+            "distribucion_profundidad": {},
+        }
+
+    by_concepto: dict[str, list[dict]] = {}
+    for r in rows:
+        by_concepto.setdefault(r["concepto"] or "sin_concepto", []).append(r)
+
+    def _avg_seconds(items: list[dict]) -> Optional[float]:
+        values = [i["tiempo_ms"] for i in items if i["tiempo_ms"] is not None]
+        return round(sum(values) / len(values) / 1000, 1) if values else None
+
+    def _remediation_pct(items: list[dict]) -> Optional[float]:
+        total = len(items)
+        if not total:
+            return None
+        needed = sum(1 for i in items if i["resultado"] is False)
+        return round(100 * needed / total, 1)
+
+    modalidad_counts: dict[str, int] = {}
+    profundidad_counts: dict[str, int] = {}
+    for r in rows:
+        if r["modalidad_refuerzo"]:
+            modalidad_counts[r["modalidad_refuerzo"]] = modalidad_counts.get(r["modalidad_refuerzo"], 0) + 1
+        if r["profundidad"]:
+            profundidad_counts[r["profundidad"]] = profundidad_counts.get(r["profundidad"], 0) + 1
+
+    return {
+        "n_ciclos": len(rows),
+        "tiempo_promedio_por_concepto_seg": {c: _avg_seconds(items) for c, items in by_concepto.items()},
+        "tasa_remediacion_global_pct": _remediation_pct(rows),
+        "tasa_remediacion_por_concepto_pct": {c: _remediation_pct(items) for c, items in by_concepto.items()},
+        "frecuencia_modalidad_refuerzo": modalidad_counts,
+        "distribucion_profundidad": profundidad_counts,
+    }
+
+
+def _cycle_justification(row: dict) -> str:
+    """Frase de explicabilidad generada a partir de la evidencia real de un
+    ciclo — nunca texto libre de un LLM: es una plantilla determinística
+    sobre los mismos campos que ya se muestran en la fila, para que la
+    justificación sea trazable y reproducible (RC-FINAL del Dashboard del
+    Investigador: nada de texto que no se pueda auditar contra el dato)."""
+    intentos = row.get("intentos")
+    resultado = row.get("resultado")
+    ayudas = row.get("ayudas") or 0
+    modalidad_diag = row.get("modalidad_diagnosticada")
+    modalidad_ref = row.get("modalidad_refuerzo")
+    profundidad = row.get("profundidad")
+
+    resultado_txt = (
+        "resolvió sin revelar la solución" if resultado is True
+        else "no lo logró sin revelar la solución" if resultado is False
+        else "sin resultado registrado"
+    )
+    evidencia = f"{intentos if intentos is not None else '—'} intento(s), {resultado_txt}, {ayudas} pista(s) usada(s)."
+
+    if modalidad_diag and modalidad_ref:
+        if modalidad_diag == modalidad_ref:
+            decision = f"Adaptar mantuvo la modalidad diagnosticada ({modalidad_diag})"
+        else:
+            decision = f"Adaptar cambió la modalidad de {modalidad_diag} a {modalidad_ref}"
+    elif modalidad_ref:
+        decision = f"Adaptar asignó la modalidad {modalidad_ref} (sin diagnóstico previo registrado)"
+    else:
+        decision = "no hay una decisión de modalidad registrada para este ciclo"
+
+    profundidad_txt = f" y fijó la profundidad en «{profundidad}»" if profundidad else ""
+
+    return f"La evidencia indica {evidencia} {decision}{profundidad_txt}."
+
+
+def get_student_cycle_rows(db: Session, student_id: str, course_id: Optional[str] = None) -> list[dict]:
+    """Traza completa de un estudiante: una fila por ciclo real, en el mismo
+    formato que get_cycle_evidence_rows pero filtrada a un solo estudiante y
+    con una justificación generada — la base de datos de la vista de
+    trazabilidad/explicabilidad del Dashboard del Investigador."""
+    rows = [r for r in get_cycle_evidence_rows(db, course_id) if r["student_id"] == student_id]
+    for r in rows:
+        r["justificacion"] = _cycle_justification(r)
+    return rows
+
+
 def get_experiment_statistics(db: Session, course_id: Optional[str] = None) -> dict:
     """Estadísticas descriptivas del experimento completo — resumen para
     quien no va a abrir SPSS: n, medias, y la comprobación central de la
