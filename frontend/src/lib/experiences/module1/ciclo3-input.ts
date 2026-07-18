@@ -23,10 +23,10 @@ export const CICLO_3_INPUT: LearningCycle = {
       ],
     },
     secondExample: {
-      label: 'Otro caso — el cajero automático',
+      label: 'Otro caso — el robot que hace una pausa real',
       body: [
-        'Un cajero automático no imprime siempre el mismo monto: se detiene, muestra «¿Cuánto deseas retirar?», y espera. No continúa hasta que tú escribes algo y confirmas.',
-        'Esa pausa — preguntar y esperar — es exactamente lo que hace un programa cuando necesita un dato que solo tú tienes. La misma regla del robot aplica: si no puede adivinarlo, tiene que preguntarlo.',
+        'Este mismo robot no siempre actúa de inmediato: cuando necesita un dato que no tiene, se detiene, muestra «¿Cuántos pasos quieres que avance?», y espera. No continúa hasta que tú escribes algo y confirmas.',
+        'Esa pausa — preguntar y esperar — es exactamente lo que hace un programa cuando necesita un dato que solo tú tienes. La misma regla de siempre aplica: si el robot no puede adivinarlo, tiene que preguntarlo.',
       ],
     },
     pythonBridge: {
@@ -72,10 +72,10 @@ export const CICLO_3_INPUT: LearningCycle = {
         mediumLabel: 'Clip narrado',
         sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
         narrationText:
-          'Piensa en un mesero que nunca pregunta qué quieres comer: simplemente trae siempre el mismo plato. Funciona una vez, por casualidad, y falla con el siguiente cliente. Un buen mesero pregunta, y ESPERA tu respuesta antes de anotar el pedido. input() es exactamente ese mesero: muestra la pregunta, se detiene, y solo continúa cuando tú respondiste. Lo que respondiste queda guardado, listo para usarse, igual que una variable normal — porque, de hecho, es exactamente eso.',
+          'Piensa en un robot guía que nunca pregunta a dónde quieres ir: simplemente te lleva siempre al mismo lugar. Funciona una vez, por casualidad, y falla con la siguiente persona. Un buen robot guía pregunta, y ESPERA tu respuesta antes de moverse. input() es exactamente ese robot: muestra la pregunta, se detiene, y solo continúa cuando tú respondiste. Lo que respondiste queda guardado, listo para usarse, igual que una variable normal — porque, de hecho, es exactamente eso.',
         body: [
-          'Piensa en un mesero que nunca pregunta qué quieres comer: simplemente trae siempre el mismo plato. Funciona una vez, por casualidad, y falla con el siguiente cliente.',
-          'Un buen mesero pregunta, y ESPERA tu respuesta antes de anotar el pedido. input() es exactamente ese mesero: muestra la pregunta, se detiene, y solo continúa cuando tú respondiste.',
+          'Piensa en un robot guía que nunca pregunta a dónde quieres ir: simplemente te lleva siempre al mismo lugar. Funciona una vez, por casualidad, y falla con la siguiente persona.',
+          'Un buen robot guía pregunta, y ESPERA tu respuesta antes de moverse. input() es exactamente ese robot: muestra la pregunta, se detiene, y solo continúa cuando tú respondiste.',
           'Lo que respondiste queda guardado, listo para usarse, igual que una variable normal — porque, de hecho, es exactamente eso.',
         ],
       },
@@ -84,9 +84,9 @@ export const CICLO_3_INPUT: LearningCycle = {
         mediumLabel: 'Simulación',
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
-          '🎤 Antes de leer nada, predice: el robot pregunta «¿Cuántas manzanas quieres?» y espera. Respondes «3». ¿Qué hace el robot con esa respuesta?',
+          '🎤 Antes de leer nada, predice: el robot pregunta «¿Cuántas cajas quieres que cargue?» y espera. Respondes «3». ¿Qué hace el robot con esa respuesta?',
           'Antes de revisar tu respuesta, predice también esta otra: el robot pregunta «¿Cómo te llamas?» pero el programa NO tiene ninguna caja donde guardar tu respuesta. ¿Qué pasa con lo que escribiste?',
-          'En el primer caso, el robot guarda tu «3» en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular el precio. En el segundo, la respuesta se pierde: sin una caja donde guardarse, desaparece apenas el programa sigue. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
+          'En el primer caso, el robot guarda tu «3» en una caja — igual que en el ciclo anterior — y recién ahí puede usarlo, por ejemplo para calcular cuántos viajes le faltan. En el segundo, la respuesta se pierde: sin una caja donde guardarse, desaparece apenas el programa sigue. Por eso input() casi siempre aparece junto a una variable: nombre = input(...) — la pregunta y la caja, en la misma línea.',
         ],
       },
     },
@@ -258,32 +258,32 @@ export const CICLO_3_INPUT: LearningCycle = {
       {
         kind: 'reto',
         label: 'Resolver un reto rápido',
-        title: 'Reto: la calculadora de propinas',
+        title: 'Reto: cuánta batería reservar para la vuelta',
         body: ['Misma regla: pregunta, guarda y recién entonces usa la respuesta. Hay un impostor.'],
         practice: {
           kind: 'ordering',
-          prompt: 'Ordena las instrucciones para que el robot calcule cuánta propina dejar. Descarta la que sea la meta, no un paso.',
+          prompt: 'Ordena las instrucciones para que el robot calcule cuánta batería reservar para el regreso. Descarta la que sea la meta, no un paso.',
           items: [
-            { id: 't1', text: 'Muestra la pregunta ¿Cuánto fue la cuenta?', position: 1 },
-            { id: 't2', text: 'Guarda la respuesta en la caja llamada cuenta', position: 2 },
-            { id: 't3', text: 'Calcula el 10% del valor guardado en cuenta', position: 3 },
+            { id: 't1', text: 'Muestra la pregunta ¿Cuánta batería tienes ahora?', position: 1 },
+            { id: 't2', text: 'Guarda la respuesta en la caja llamada bateria', position: 2 },
+            { id: 't3', text: 'Calcula el 10% del valor guardado en bateria', position: 3 },
             {
               id: 'td1',
-              text: 'Decide cuánta propina dejar',
+              text: 'Decide cuánta batería reservar',
               position: null,
-              whyWrong: '«Decide cuánta propina dejar» es el resultado que quieres, no una instrucción sobre la caja cuenta.',
+              whyWrong: '«Decide cuánta batería reservar» es el resultado que quieres, no una instrucción sobre la caja bateria.',
             },
           ],
           successFeedback: 'Exacto — preguntaste, guardaste y recién ahí calculaste. Así funciona cualquier programa que depende de lo que el usuario responde.',
-          orderFeedback: 'El 10% de una cuenta vacía no existe — primero hay que guardar el monto.',
-          generalHint: 'Una de las frases describe el resultado que quieres, no un paso con la caja cuenta.',
+          orderFeedback: 'El 10% de una batería vacía no existe — primero hay que guardar el valor.',
+          generalHint: 'Una de las frases describe el resultado que quieres, no un paso con la caja bateria.',
           solutionExplanation: [
-            'Preguntar, guardar y solo después calcular — el mismo orden que necesita cualquier input() real. «Decide cuánta propina dejar» era la meta, no una instrucción sobre la caja.',
+            'Preguntar, guardar y solo después calcular — el mismo orden que necesita cualquier input() real. «Decide cuánta batería reservar» era la meta, no una instrucción sobre la caja.',
           ],
         },
         pythonBridge: {
           label: 'Esto ya es Python',
-          code: 'cuenta = float(input("¿Cuánto fue la cuenta? "))\npropina = cuenta * 0.10\nprint(propina)',
+          code: 'bateria = float(input("¿Cuánta batería tienes ahora? "))\nreserva = bateria * 0.10\nprint(reserva)',
           explanation:
             'input() SIEMPRE entrega texto, incluso si escribes un número — por eso hace falta float(...) para convertirlo antes de multiplicarlo. Sin ese casting, Python no puede calcular el 10% de un texto.',
           practice: {
@@ -299,8 +299,8 @@ export const CICLO_3_INPUT: LearningCycle = {
               salida: 'print(faltan) debe mostrar el número 80 — revisa que estés restando edad de 100, no al revés.',
             },
             workedExample: {
-              code: 'cuenta = float(input("¿Cuánto fue la cuenta? "))\npropina = cuenta * 0.10\nprint(propina)',
-              output: '¿Cuánto fue la cuenta? 5.0',
+              code: 'bateria = float(input("¿Cuánta batería tienes ahora? "))\nreserva = bateria * 0.10\nprint(reserva)',
+              output: '¿Cuánta batería tienes ahora? 5.0',
               explanation: 'float(input(...)) convierte el texto "50" en el número 50.0 antes de multiplicarlo por 0.10. Sin float(...), Python no puede multiplicar un texto por un decimal. Tu ejercicio usa int() y resta, no float() y multiplica.',
             },
             solutionCode: 'edad = int(input("¿Cuántos años tienes? "))\nfaltan = 100 - edad\nprint(faltan)',
@@ -310,57 +310,57 @@ export const CICLO_3_INPUT: LearningCycle = {
       {
         kind: 'ejemplo',
         label: 'Ver un ejemplo más',
-        title: 'Ejemplo: el buscador que pregunta qué buscas',
+        title: 'Ejemplo: el robot que pregunta antes de actuar',
         medium: 'ejemplo_comentado',
         body: [
-          'Un buscador no muestra siempre los mismos resultados: pregunta «¿Qué buscas?», espera lo que escribes, y solo entonces busca.',
-          'termino = input("¿Qué buscas? ") guarda tu búsqueda. buscar(termino) la usa. Sin esa pregunta, el buscador no tendría nada que buscar.',
-          'Tu turno: ordena los pasos que sigue el buscador antes de mostrar resultados.',
+          'Este robot no repite siempre la misma acción: pregunta «¿Qué tarea hago ahora?», espera lo que escribes, y solo entonces actúa.',
+          'tarea = input("¿Qué tarea hago ahora? ") guarda tu respuesta. ejecutar(tarea) la usa. Sin esa pregunta, el robot no tendría ninguna tarea que hacer.',
+          'Tu turno: ordena los pasos que sigue el robot antes de ejecutar la tarea.',
         ],
         practice: {
           kind: 'ordering',
-          prompt: 'Arma la secuencia que sigue el buscador antes de mostrar resultados. Descarta la que sea la meta.',
+          prompt: 'Arma la secuencia que sigue el robot antes de ejecutar la tarea. Descarta la que sea la meta.',
           items: [
-            { id: 'b1', text: 'Muestra la pregunta ¿Qué buscas?', position: 1 },
-            { id: 'b2', text: 'Guarda lo que escribiste en la caja termino', position: 2 },
-            { id: 'b3', text: 'Busca usando el valor guardado en termino', position: 3 },
+            { id: 'b1', text: 'Muestra la pregunta ¿Qué tarea hago ahora?', position: 1 },
+            { id: 'b2', text: 'Guarda lo que escribiste en la caja tarea', position: 2 },
+            { id: 'b3', text: 'Ejecuta usando el valor guardado en tarea', position: 3 },
             {
               id: 'bd1',
-              text: 'Encuentra lo que buscas',
+              text: 'Haz lo que necesito',
               position: null,
-              whyWrong: '«Encuentra lo que buscas» describe el resultado, no dice qué hacer con la caja termino.',
+              whyWrong: '«Haz lo que necesito» describe el resultado, no dice qué hacer con la caja tarea.',
             },
           ],
-          successFeedback: 'Exacto — sin la pregunta inicial, el buscador no tendría ningún término que usar.',
-          orderFeedback: 'Buscar sin haber guardado el término no tiene con qué trabajar.',
-          generalHint: 'Una de las frases describe el resultado, no un paso con la caja termino.',
+          successFeedback: 'Exacto — sin la pregunta inicial, el robot no tendría ninguna tarea que ejecutar.',
+          orderFeedback: 'Ejecutar sin haber guardado la tarea no tiene con qué trabajar.',
+          generalHint: 'Una de las frases describe el resultado, no un paso con la caja tarea.',
           solutionExplanation: [
-            'Preguntar, guardar y solo después buscar — el mismo orden que necesita cualquier programa que depende del usuario.',
+            'Preguntar, guardar y solo después ejecutar — el mismo orden que necesita cualquier programa que depende del usuario.',
           ],
         },
         pythonBridge: {
           label: 'Esto ya es Python',
-          code: 'termino = input("¿Qué buscas? ")\nbuscar(termino)',
+          code: 'tarea = input("¿Qué tarea hago ahora? ")\nejecutar(tarea)',
           explanation:
-            'La secuencia que armaste es, en Python, dos líneas: input() pregunta y guarda; buscar(termino) usa esa respuesta. Nada de "encuentra lo que buscas" — eso no es una instrucción.',
+            'La secuencia que armaste es, en Python, dos líneas: input() pregunta y guarda; ejecutar(tarea) usa esa respuesta. Nada de "haz lo que necesito" — eso no es una instrucción.',
           practice: {
-            prompt: 'Ahora hazlo tú: pide la comida favorita con input("¿Cuál es tu comida favorita? ") y únela al texto "Tu comida favorita es " usando el operador + antes de mostrarla con print()',
+            prompt: 'Ahora hazlo tú: pide el color favorito con input("¿Cuál es tu color favorito? ") y únelo al texto "Tu color favorito es " usando el operador + antes de mostrarlo con print()',
             starterCode: '# escribe tu código aquí\n',
-            expectedOutput: '¿Cuál es tu comida favorita? Tu comida favorita es pizza',
-            simulatedInputs: ['pizza'],
-            hint: 'El operador + une dos textos en uno solo: "Tu comida favorita es " + comida — recuerda dejar el espacio antes de la comilla final.',
+            expectedOutput: '¿Cuál es tu color favorito? Tu color favorito es azul',
+            simulatedInputs: ['azul'],
+            hint: 'El operador + une dos textos en uno solo: "Tu color favorito es " + color — recuerda dejar el espacio antes de la comilla final.',
             hintsByCategory: {
-              sintaxis: 'Revisa las comillas y el signo + entre los dos textos: "Tu comida favorita es " + comida',
-              variables: 'Python no encuentra comida porque nunca se creó con input() antes de usarla con +.',
+              sintaxis: 'Revisa las comillas y el signo + entre los dos textos: "Tu color favorito es " + color',
+              variables: 'Python no encuentra color porque nunca se creó con input() antes de usarla con +.',
               logica: 'Revisa el orden: primero input() guarda la respuesta, y solo después + puede unirla al texto fijo.',
               salida: '+ une los textos exactamente como están escritos — revisa que el espacio quede antes de la comilla final, no después.',
             },
             workedExample: {
-              code: 'color = input("¿Cuál es tu color favorito? ")\nprint("Tu color favorito es " + color)',
-              output: '¿Cuál es tu color favorito? Tu color favorito es azul',
-              explanation: '+ pegó "Tu color favorito es " con el valor de color, sin espacio de más ni de menos porque el espacio ya estaba dentro de las comillas del texto fijo. Tu ejercicio une comida, no color.',
+              code: 'apodo = input("¿Cuál es tu apodo? ")\nprint("Tu apodo es " + apodo)',
+              output: '¿Cuál es tu apodo? Tu apodo es Nico',
+              explanation: '+ pegó "Tu apodo es " con el valor de apodo, sin espacio de más ni de menos porque el espacio ya estaba dentro de las comillas del texto fijo. Tu ejercicio une color, no apodo.',
             },
-            solutionCode: 'comida = input("¿Cuál es tu comida favorita? ")\nprint("Tu comida favorita es " + comida)',
+            solutionCode: 'color = input("¿Cuál es tu color favorito? ")\nprint("Tu color favorito es " + color)',
           },
         },
       },
@@ -381,9 +381,9 @@ export const CICLO_3_INPUT: LearningCycle = {
         title: 'Una última explicación',
         medium: 'clip_narrado',
         narrationText:
-          '¿Sabes lo incómodo que es cuando alguien te hace una pregunta y, sin esperar tu respuesta, sigue hablando de otra cosa? Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas. Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
+          '¿Sabes lo incómodo que es cuando le preguntas algo a un robot y, sin esperar tu respuesta, sigue haciendo otra cosa? Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas. Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
         body: [
-          '¿Sabes lo incómodo que es cuando alguien te hace una pregunta y, sin esperar tu respuesta, sigue hablando de otra cosa? Se siente raro, ¿verdad?',
+          '¿Sabes lo incómodo que es cuando le preguntas algo a un robot y, sin esperar tu respuesta, sigue haciendo otra cosa? Se siente raro, ¿verdad?',
           'Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas.',
           'Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
         ],
@@ -436,15 +436,15 @@ export const CICLO_3_INPUT: LearningCycle = {
         title: 'Vamos más despacio, con otra imagen',
         conceptModality: 'alternate',
         body: [
-          'Piensa en un formulario en papel. Primero hay una pregunta impresa («Nombre: _____»); recién cuando TÚ escribes algo en la línea, el formulario tiene un dato. Sin tu letra, la línea sigue vacía.',
-          'input() es esa línea en blanco: existe la pregunta, pero el valor solo aparece cuando alguien responde. Ahora practica con solo dos pasos y un impostor.',
+          'Piensa en el robot con un cartel donde muestra una pregunta. Primero aparece la pregunta en el cartel («Nombre: _____»); recién cuando TÚ le respondes, el robot tiene un dato. Sin tu respuesta, el cartel sigue en blanco.',
+          'input() es ese cartel en blanco: existe la pregunta, pero el valor solo aparece cuando alguien responde. Ahora practica con solo dos pasos y un impostor.',
         ],
         illustration: {
           medium: 'diagrama',
           mediumLabel: 'Analogía visual: pregunta impresa → respuesta → dato',
           body: [
-            '📋 [ FORMULARIO ]  ← la pregunta impresa, todavía sin respuesta.',
-            '     ├── «Muestra la pregunta ¿Cuántos años tienes?»   ← el formulario pregunta',
+            '🤖 [ CARTEL DEL ROBOT ]  ← la pregunta impresa, todavía sin respuesta.',
+            '     ├── «Muestra la pregunta ¿Cuántos años tienes?»   ← el robot pregunta',
             '     └── «Guarda la respuesta en la caja edad»           ← recién aquí hay un dato',
             'Sin la pregunta, nadie sabe qué escribir. Sin guardar la respuesta, se pierde apenas el programa sigue.',
           ],
@@ -453,14 +453,14 @@ export const CICLO_3_INPUT: LearningCycle = {
           // este prompt queda listo para pegar en un generador de imágenes.
           imagePrompt:
             'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
-            'COMPOSICIÓN: un nodo superior centrado con forma de FORMULARIO/HOJA (un rectángulo con una línea de pregunta impresa y un espacio en blanco debajo, todavía sin respuesta), del que bajan dos líneas conectoras en "Y" invertida hacia dos nodos inferiores: uno muestra el formulario MOSTRANDO la pregunta en pantalla, el otro muestra una CAJA/contenedor guardando la respuesta.\n\n' +
-            'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo — iconografía plana tipo hoja/formulario y contenedor, coherente con un diagrama de flujo de producto SaaS.\n\n' +
-            'COLORES: fondo casi negro #0a0a0f. Nodo superior (formulario sin responder): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Nodos inferiores: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Líneas conectoras gris translúcido rgba(255,255,255,0.15). Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
-            'ICONOS: icono outline de formulario/hoja con una línea punteada donde iría la respuesta, en el nodo superior. En el nodo inferior izquierdo, un icono de globo de diálogo o altavoz (la pregunta se muestra). En el nodo inferior derecho, un icono de caja/contenedor con un check dentro (el dato quedó guardado).\n\n' +
-            'DISTRIBUCIÓN: formato vertical 4:5. Formulario ocupa ~20% de la altura, centrado arriba. Los dos nodos inferiores ocupan la mitad inferior, con amplio espacio en blanco entre ellos y respecto a los bordes.\n\n' +
+            'COMPOSICIÓN: un nodo superior centrado con forma de PANTALLA/CARTEL de un robot (un rectángulo con una línea de pregunta mostrada y un espacio en blanco debajo, todavía sin respuesta), del que bajan dos líneas conectoras en "Y" invertida hacia dos nodos inferiores: uno muestra al robot MOSTRANDO la pregunta en su pantalla, el otro muestra una CAJA/contenedor guardando la respuesta.\n\n' +
+            'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo — iconografía plana tipo robot/pantalla y contenedor, coherente con un diagrama de flujo de producto SaaS.\n\n' +
+            'COLORES: fondo casi negro #0a0a0f. Nodo superior (cartel sin responder): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Nodos inferiores: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Líneas conectoras gris translúcido rgba(255,255,255,0.15). Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+            'ICONOS: icono outline de un robot con una pantalla mostrando una línea punteada donde iría la respuesta, en el nodo superior. En el nodo inferior izquierdo, un icono de globo de diálogo (la pregunta se muestra). En el nodo inferior derecho, un icono de caja/contenedor con un check dentro (el dato quedó guardado).\n\n' +
+            'DISTRIBUCIÓN: formato vertical 4:5. Cartel del robot ocupa ~20% de la altura, centrado arriba. Los dos nodos inferiores ocupan la mitad inferior, con amplio espacio en blanco entre ellos y respecto a los bordes.\n\n' +
             'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
-            '— Nodo superior: "FORMULARIO" + subtítulo pequeño "la pregunta impresa, todavía sin respuesta"\n' +
-            '— Nodo inferior izquierdo: "Muestra la pregunta ¿Cuántos años tienes?" + etiqueta pequeña "el formulario pregunta"\n' +
+            '— Nodo superior: "CARTEL DEL ROBOT" + subtítulo pequeño "la pregunta impresa, todavía sin respuesta"\n' +
+            '— Nodo inferior izquierdo: "Muestra la pregunta ¿Cuántos años tienes?" + etiqueta pequeña "el robot pregunta"\n' +
             '— Nodo inferior derecho: "Guarda la respuesta en la caja edad" + etiqueta pequeña "recién aquí hay un dato"\n' +
             '— Leyenda inferior centrada, fuera de los nodos: "Sin la pregunta, nadie sabe qué escribir. Sin guardar la respuesta, se pierde apenas el programa sigue."',
         },

@@ -24,7 +24,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
   opening: {
     questionLines: [
       'Tienes un robot en casa. Obedece absolutamente todo, al pie de la letra.',
-      'Le dices: «prepárame un sándwich».',
+      'Le dices: «cruza la habitación».',
       '¿Qué puede salir mal?',
     ],
     options: [
@@ -59,7 +59,7 @@ export const MODULE_1_EXPERIENCE: ModuleExperienceDefinition = {
         'Nada — es un robot, sabe hacerlo': {
           label: 'Ahora lo sabes',
           text:
-            'Pensaste que el robot sabría prepararlo solo. Hoy comprobaste lo contrario: un robot no sabe nada que no le digas. «Prepárame un sándwich» no es ejecutable — le faltan el qué, el con qué y el cuánto. Que tu idea haya cambiado no es un error: es la prueba de que aprendiste.',
+            'Pensaste que el robot sabría hacerlo solo. Hoy comprobaste lo contrario: un robot no sabe nada que no le digas. «Cruza la habitación» no es ejecutable — le faltan el cuánto y el hacia dónde. Que tu idea haya cambiado no es un error: es la prueba de que aprendiste.',
         },
         'No sabría por dónde empezar': {
           label: 'Te acercaste',

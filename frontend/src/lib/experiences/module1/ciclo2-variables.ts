@@ -14,8 +14,8 @@ const READING_CONCEPT_VARIANT: ConceptVariant = {
   mediumLabel: 'Texto estructurado',
   sourceNote: 'Elegido para ti — tu perfil profundiza mejor leyendo a su ritmo.',
   body: [
-    'Imagina un programa que usa el precio de una compra tres veces: una para mostrarlo, otra para guardarlo en el recibo, otra para avisar si alcanza el saldo. Si escribes el precio suelto las tres veces y el precio cambia, tienes que corregirlo en las tres.',
-    'Una variable resuelve exactamente ese problema: le pones nombre a un valor UNA vez — precio = 4.50 — y usas ese nombre las veces que necesites. Si el precio cambia, cambias una sola línea.',
+    'Imagina un programa que usa la posición del robot tres veces: una para mostrarla en pantalla, otra para guardarla en el registro de recorrido, otra para avisar si ya llegó al destino. Si escribes la posición suelta las tres veces y la posición cambia, tienes que corregirla en las tres.',
+    'Una variable resuelve exactamente ese problema: le pones nombre a un valor UNA vez — posicion = 4 — y usas ese nombre las veces que necesites. Si la posición cambia, cambias una sola línea.',
     'Por eso una variable no es solo «guardar un dato»: es guardar un dato con un nombre que el resto del programa puede reutilizar sin repetir el valor.',
   ],
 }
@@ -57,21 +57,21 @@ const VISUAL_PRACTICE: PredictOutputPracticeDef = {
   // no solo "leer código" — misma mecánica (predict_output), pero enmarca la
   // tarea como observar dos estados de la misma caja, coherente con la
   // metáfora visual de "caja" ya usada en la teoría de este ciclo.
-  prompt: 'Observa la caja "monedas" en dos momentos: antes y después de la segunda línea. ¿Qué valor final muestra en pantalla?',
-  code: 'monedas = 5\nmonedas = monedas + 3\nprint(monedas)',
+  prompt: 'Observa la caja "tareas" en dos momentos: antes y después de la segunda línea. ¿Qué valor final muestra en pantalla?',
+  code: 'tareas = 5\ntareas = tareas + 3\nprint(tareas)',
   options: [
     { id: 'a', text: '5' },
     { id: 'b', text: '8' },
-    { id: 'c', text: 'monedas' },
+    { id: 'c', text: 'tareas' },
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'b',
-  successFeedback: 'Exacto — visualizando la caja «monedas»: empezó mostrando 5, pero «monedas = monedas + 3» la actualizó a 8 antes del print(). La caja siempre muestra su último valor, nunca el de arranque.',
-  wrongFeedback: 'Compara las dos fotos de la caja: print(monedas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  successFeedback: 'Exacto — visualizando la caja «tareas»: empezó mostrando 5, pero «tareas = tareas + 3» la actualizó a 8 antes del print(). La caja siempre muestra su último valor, nunca el de arranque.',
+  wrongFeedback: 'Compara las dos fotos de la caja: print(tareas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
   solutionExplanation: [
-    'Línea 1: monedas = 5 — crea la caja con el valor 5.',
-    'Línea 2: monedas = monedas + 3 — lee el 5 que había, le suma 3, y guarda 8 en la misma caja.',
-    'Línea 3: print(monedas) — muestra lo que hay AHORA en la caja: 8, no el 5 inicial.',
+    'Línea 1: tareas = 5 — crea la caja con el valor 5.',
+    'Línea 2: tareas = tareas + 3 — lee el 5 que había, le suma 3, y guarda 8 en la misma caja.',
+    'Línea 3: print(tareas) — muestra lo que hay AHORA en la caja: 8, no el 5 inicial.',
   ],
 }
 
@@ -101,33 +101,33 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
   ],
 }
 
-// Mismo tema (vidas) que ya predijo mentalmente en la teoría kinestésica de
-// este ciclo ("vidas = 3" / "vidas = vidas - 1") — pero con otros números,
-// para que resolverlo exija aplicar la regla, no solo recordar la respuesta
-// que la teoría ya reveló.
+// Mismo tema (baterías) que ya predijo mentalmente en la teoría kinestésica de
+// este ciclo ("baterias = 3" / "baterias = baterias - 1") — pero con otros
+// números, para que resolverlo exija aplicar la regla, no solo recordar la
+// respuesta que la teoría ya reveló.
 const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
   kind: 'predict_output',
   // Auditoría "diversidad pedagógica" (revisión post-sprint, jul 2026): copy
   // reforzado hacia "actuar la resta antes de comprobarla" — misma mecánica
   // (predict_output), pero enmarca la predicción como algo que el estudiante
-  // hace con los dedos (contar vidas restantes) antes de ver el resultado,
+  // hace con los dedos (contar baterías restantes) antes de ver el resultado,
   // coherente con la escalera manipulable de PythonBridge que ya corre en
   // este ciclo para el perfil kinestésico.
-  prompt: 'Cuenta con los dedos: empiezas con 5 vidas y pierdes 2. Antes de revisar, predice: ¿qué imprime este código?',
-  code: 'vidas = 5\nvidas = vidas - 2\nprint(vidas)',
+  prompt: 'Cuenta con los dedos: el robot empieza con 5 baterías de repuesto y usa 2. Antes de revisar, predice: ¿qué imprime este código?',
+  code: 'baterias = 5\nbaterias = baterias - 2\nprint(baterias)',
   options: [
     { id: 'a', text: '5' },
     { id: 'b', text: '3' },
-    { id: 'c', text: 'vidas' },
+    { id: 'c', text: 'baterias' },
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'b',
-  successFeedback: 'Exacto — igual que contar con los dedos, «vidas» empezó en 5 pero perdió 2 antes del print(). Se guarda el resultado, no el valor inicial. Tu cuenta física coincidió con la ejecución real.',
-  wrongFeedback: 'Vuelve a contar con los dedos: print(vidas) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
+  successFeedback: 'Exacto — igual que contar con los dedos, «baterias» empezó en 5 pero perdió 2 antes del print(). Se guarda el resultado, no el valor inicial. Tu cuenta física coincidió con la ejecución real.',
+  wrongFeedback: 'Vuelve a contar con los dedos: print(baterias) muestra lo que HAY en la caja en ESE momento, no el valor con el que se creó.',
   solutionExplanation: [
-    'Línea 1: vidas = 5 — crea la caja con el valor 5.',
-    'Línea 2: vidas = vidas - 2 — lee el 5 que había, le resta 2, y guarda 3 en la misma caja.',
-    'Línea 3: print(vidas) — muestra lo que hay AHORA en la caja: 3, no el 5 inicial.',
+    'Línea 1: baterias = 5 — crea la caja con el valor 5.',
+    'Línea 2: baterias = baterias - 2 — lee el 5 que había, le resta 2, y guarda 3 en la misma caja.',
+    'Línea 3: print(baterias) — muestra lo que hay AHORA en la caja: 3, no el 5 inicial.',
   ],
 }
 
@@ -149,17 +149,17 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       ],
     },
     secondExample: {
-      label: 'Otro caso — el casillero del gimnasio',
+      label: 'Otro caso — el compartimento de almacenamiento del robot',
       body: [
-        'Un casillero de gimnasio no es útil por ser una caja: es útil porque tiene un número, y ese número siempre te lleva al mismo contenido, aunque lo que guardes adentro cambie día a día.',
-        'Una variable funciona igual: el NOMBRE (edad, mensaje, saldo) siempre te lleva al mismo valor guardado — hasta que tú decidas guardar uno distinto.',
+        'Un compartimento del robot no es útil por ser una caja: es útil porque tiene un nombre, y ese nombre siempre te lleva al mismo contenido, aunque lo que guardes adentro cambie con cada tarea.',
+        'Una variable funciona igual: el NOMBRE (edad, mensaje, bateria) siempre te lleva al mismo valor guardado — hasta que tú decidas guardar uno distinto.',
       ],
     },
     pythonBridge: {
       label: 'Esto ya es Python',
-      code: 'casillero = "mochila azul"',
+      code: 'compartimento = "llave maestra"',
       explanation:
-        '«casillero» es el nombre; «mochila azul» es lo que guarda. En Python se escribe exactamente así: nombre = valor. Nada más que aprender todavía — solo ponerle nombre a algo que quieres recordar.',
+        '«compartimento» es el nombre; «llave maestra» es lo que guarda. En Python se escribe exactamente así: nombre = valor. Nada más que aprender todavía — solo ponerle nombre a algo que quieres recordar.',
     },
     variants: {
       visual: {
@@ -189,9 +189,9 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         mediumLabel: 'Clip narrado',
         sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
         narrationText:
-          'Piensa en un casillero de gimnasio. No te importa la caja en sí — te importa que ese número siempre te lleve al mismo contenido, y que puedas cambiar lo que hay adentro sin cambiar el número. Una variable es exactamente eso: un nombre que siempre te lleva al mismo valor guardado. Edad, igual, veinte. Ese signo igual no pregunta si son iguales — aquí significa: guarda esto aquí, con este nombre. Y una vez que lo guardaste, usar el nombre es exactamente lo mismo que usar el valor.',
+          'Piensa en el compartimento de almacenamiento del robot. No te importa la caja en sí — te importa que ese nombre siempre te lleve al mismo contenido, y que puedas cambiar lo que hay adentro sin cambiar el nombre. Una variable es exactamente eso: un nombre que siempre te lleva al mismo valor guardado. Edad, igual, veinte. Ese signo igual no pregunta si son iguales — aquí significa: guarda esto aquí, con este nombre. Y una vez que lo guardaste, usar el nombre es exactamente lo mismo que usar el valor.',
         body: [
-          'Piensa en un casillero de gimnasio. No te importa la caja en sí — te importa que ese número siempre te lleve al mismo contenido, y que puedas cambiar lo que hay adentro sin cambiar el número.',
+          'Piensa en el compartimento de almacenamiento del robot. No te importa la caja en sí — te importa que ese nombre siempre te lleve al mismo contenido, y que puedas cambiar lo que hay adentro sin cambiar el nombre.',
           'Una variable es exactamente eso: un nombre que siempre te lleva al mismo valor guardado. «edad = 20» significa: guarda 20 aquí, con el nombre edad.',
           'Una vez que lo guardaste, usar el nombre es exactamente lo mismo que usar el valor.',
         ],
@@ -201,9 +201,9 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         mediumLabel: 'Simulación',
         sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
         body: [
-          '📦 Antes de leer nada, predice: el robot ejecuta «caja_puntos = 0» y luego «caja_puntos = caja_puntos + 10». ¿Qué guarda la caja al final?',
-          'Antes de revisar tu respuesta, predice también esta otra: el robot ejecuta «vidas = 3» y después «vidas = vidas - 1». ¿Qué guarda vidas al final?',
-          'La primera caja guarda 10: crea la caja con 0 adentro, LEE lo que tenía, le suma 10, y guarda el resultado en la MISMA caja. La segunda guarda 2 — perdiste una vida, y el nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta.',
+          '📦 Antes de leer nada, predice: el robot ejecuta «pasos = 0» y luego «pasos = pasos + 10». ¿Qué guarda la caja al final?',
+          'Antes de revisar tu respuesta, predice también esta otra: el robot ejecuta «baterias = 3» y después «baterias = baterias - 1». ¿Qué guarda baterias al final?',
+          'La primera caja guarda 10: crea la caja con 0 adentro, LEE lo que tenía, le suma 10, y guarda el resultado en la MISMA caja. La segunda guarda 2 — el robot gastó una batería de repuesto, y el nombre sigue siendo el mismo, listo para volver a llenarse cuando haga falta.',
         ],
       },
     },
@@ -378,85 +378,85 @@ export const CICLO_2_VARIABLES: LearningCycle = {
       {
         kind: 'reto',
         label: 'Resolver un reto rápido',
-        title: 'Reto: el marcador del videojuego',
+        title: 'Reto: el contador de recorridos del robot',
         body: ['Misma regla: crea la caja, guarda el valor, y solo entonces úsalo. Ahora en vez de ordenar los pasos, predice qué muestra la pantalla.'],
-        // Multimodalidad profunda (jul 2026): mismo concepto (marcador de
-        // videojuego) que antes se practicaba ordenando pasos, ahora exige
+        // Multimodalidad profunda (jul 2026): mismo concepto (contador de
+        // recorridos) que antes se practicaba ordenando pasos, ahora exige
         // simular mentalmente la ejecución — una mecánica de interacción
         // genuinamente distinta, no el mismo ejercicio con otro disfraz.
         practice: {
           kind: 'predict_output',
           prompt: '¿Qué imprime este código?',
-          code: 'puntos = 0\npuntos = puntos + 10\nprint(puntos)',
+          code: 'recorridos = 0\nrecorridos = recorridos + 10\nprint(recorridos)',
           options: [
             { id: 'a', text: '0' },
             { id: 'b', text: '10' },
-            { id: 'c', text: 'puntos' },
+            { id: 'c', text: 'recorridos' },
             { id: 'd', text: 'Error' },
           ],
           correctOptionId: 'b',
-          successFeedback: 'Exacto — «puntos» empezó en 0, pero «puntos = puntos + 10» lo actualizó antes del print().',
-          wrongFeedback: 'Revisa: print(puntos) muestra lo que HAY en la caja en ESE momento, no su valor inicial.',
+          successFeedback: 'Exacto — «recorridos» empezó en 0, pero «recorridos = recorridos + 10» lo actualizó antes del print().',
+          wrongFeedback: 'Revisa: print(recorridos) muestra lo que HAY en la caja en ESE momento, no su valor inicial.',
           solutionExplanation: [
-            'Línea 1: puntos = 0 — crea la caja con el valor 0.',
-            'Línea 2: puntos = puntos + 10 — lee el 0 que había, le suma 10, y guarda 10 en la misma caja.',
-            'Línea 3: print(puntos) — muestra lo que hay AHORA en la caja: 10, no el 0 inicial.',
+            'Línea 1: recorridos = 0 — crea la caja con el valor 0.',
+            'Línea 2: recorridos = recorridos + 10 — lee el 0 que había, le suma 10, y guarda 10 en la misma caja.',
+            'Línea 3: print(recorridos) — muestra lo que hay AHORA en la caja: 10, no el 0 inicial.',
           ],
         },
       },
       {
         kind: 'ejemplo',
         label: 'Ver un ejemplo más',
-        title: 'Ejemplo: el saldo de una billetera digital',
+        title: 'Ejemplo: el nivel de batería del robot',
         medium: 'ejemplo_comentado',
         body: [
-          'Tu billetera digital no recalcula tu saldo revisando cada transacción cada vez que abres la app: guarda un número — saldo — y lo actualiza cada vez que compras o recibes dinero.',
-          '«saldo = 50» crea la variable. «saldo = saldo - 12» la actualiza: lee lo que tenía, resta 12, guarda el resultado con el mismo nombre.',
-          'Tu turno: ordena los pasos que actualizan el saldo después de una compra.',
+          'El robot no recalcula su batería revisando cada movimiento cada vez que lo consultas: guarda un número — bateria — y lo actualiza cada vez que se mueve o se recarga.',
+          '«bateria = 50» crea la variable. «bateria = bateria - 12» la actualiza: lee lo que tenía, resta 12, guarda el resultado con el mismo nombre.',
+          'Tu turno: ordena los pasos que actualizan la batería después de un recorrido.',
         ],
         practice: {
           kind: 'ordering',
-          prompt: 'Arma la secuencia que actualiza el saldo de la billetera después de una compra. Descarta la que sea la meta.',
+          prompt: 'Arma la secuencia que actualiza la batería del robot después de un recorrido. Descarta la que sea la meta.',
           items: [
-            { id: 's1', text: 'Crea una caja llamada saldo', position: 1 },
-            { id: 's2', text: 'Guarda el número 50 dentro de la caja saldo', position: 2 },
-            { id: 's3', text: 'Resta 12 al valor guardado en saldo', position: 3 },
+            { id: 's1', text: 'Crea una caja llamada bateria', position: 1 },
+            { id: 's2', text: 'Guarda el número 50 dentro de la caja bateria', position: 2 },
+            { id: 's3', text: 'Resta 12 al valor guardado en bateria', position: 3 },
             {
               id: 'sd1',
-              text: 'Revisa cuánto dinero tienes',
+              text: 'Revisa cuánta batería le queda',
               position: null,
-              whyWrong: '«Revisa cuánto dinero tienes» pregunta el resultado, no dice qué hacer con la caja saldo.',
+              whyWrong: '«Revisa cuánta batería le queda» pregunta el resultado, no dice qué hacer con la caja bateria.',
             },
           ],
-          successFeedback: 'Exacto — así se actualiza un saldo real: sin perder el nombre de la variable en ningún paso.',
-          orderFeedback: 'Restar de un saldo vacío no tiene sentido: primero debe existir el valor guardado.',
-          generalHint: 'Una de las frases pregunta el resultado, no dice qué hacer con la caja saldo.',
+          successFeedback: 'Exacto — así se actualiza una batería real: sin perder el nombre de la variable en ningún paso.',
+          orderFeedback: 'Restar de una batería vacía no tiene sentido: primero debe existir el valor guardado.',
+          generalHint: 'Una de las frases pregunta el resultado, no dice qué hacer con la caja bateria.',
           solutionExplanation: [
-            'Crear la caja, guardar 50, y solo después restar 12 — el mismo orden que necesita cualquier actualización de saldo real.',
+            'Crear la caja, guardar 50, y solo después restar 12 — el mismo orden que necesita cualquier actualización de batería real.',
           ],
         },
         pythonBridge: {
           label: 'Esto ya es Python',
-          code: 'saldo = 50\nsaldo = saldo - 12\nprint(saldo)',
+          code: 'bateria = 50\nbateria = bateria - 12\nprint(bateria)',
           explanation:
-            '«saldo» aparece tres veces, y las tres son la MISMA caja: se crea, se lee para restar, y se vuelve a guardar con el nuevo valor. Por eso «saldo = saldo - 12» no es una ecuación matemática — es «toma lo que hay en saldo, réstale 12, y guarda el resultado ahí mismo».',
+            '«bateria» aparece tres veces, y las tres son la MISMA caja: se crea, se lee para restar, y se vuelve a guardar con el nuevo valor. Por eso «bateria = bateria - 12» no es una ecuación matemática — es «toma lo que hay en bateria, réstale 12, y guarda el resultado ahí mismo».',
           practice: {
-            prompt: 'Ahora hazlo tú: crea una variable precio con el valor 25, réstale un descuento de 5, y muestra el resultado con print()',
+            prompt: 'Ahora hazlo tú: crea una variable combustible con el valor 25, réstale 5 que el robot gastó en la última tarea, y muestra el resultado con print()',
             starterCode: '# escribe tu código aquí\n',
             expectedOutput: '20',
-            hint: 'Usa el operador - para restar: primero precio = 25, después precio = precio - 5, y recién ahí print(precio).',
+            hint: 'Usa el operador - para restar: primero combustible = 25, después combustible = combustible - 5, y recién ahí print(combustible).',
             hintsByCategory: {
-              sintaxis: 'Revisa el signo = y que no falte ningún paréntesis en print(precio).',
-              variables: 'Python no encuentra precio porque nunca se creó con = antes de restarle el descuento.',
-              logica: 'Revisa el orden: primero se crea precio con 25, y solo después se le resta 5 — igual que hiciste con saldo.',
-              salida: 'print(precio) debe mostrar el número 20 — revisa que estés restando 5, no otro valor.',
+              sintaxis: 'Revisa el signo = y que no falte ningún paréntesis en print(combustible).',
+              variables: 'Python no encuentra combustible porque nunca se creó con = antes de restarle el gasto.',
+              logica: 'Revisa el orden: primero se crea combustible con 25, y solo después se le resta 5 — igual que hiciste con bateria.',
+              salida: 'print(combustible) debe mostrar el número 20 — revisa que estés restando 5, no otro valor.',
             },
             workedExample: {
-              code: 'puntos = 100\npuntos = puntos + 30\nprint(puntos)',
+              code: 'recorridos = 100\nrecorridos = recorridos + 30\nprint(recorridos)',
               output: '130',
-              explanation: 'El operador + suma en vez de restar, pero la mecánica es la misma: se lee lo que había en puntos, se le suma 30, y se guarda el resultado en la misma caja. Tu ejercicio resta en vez de sumar.',
+              explanation: 'El operador + suma en vez de restar, pero la mecánica es la misma: se lee lo que había en recorridos, se le suma 30, y se guarda el resultado en la misma caja. Tu ejercicio resta en vez de sumar.',
             },
-            solutionCode: 'precio = 25\nprecio = precio - 5\nprint(precio)',
+            solutionCode: 'combustible = 25\ncombustible = combustible - 5\nprint(combustible)',
           },
         },
       },
@@ -477,10 +477,10 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         title: 'Óyelo de otro modo',
         medium: 'clip_narrado',
         narrationText:
-          'Imagina una libreta con una sola hoja con tu nombre escrito arriba. Cada vez que anotas algo nuevo, tachas lo anterior y escribes el valor nuevo — pero la hoja sigue siendo tuya, con el mismo nombre arriba. Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que anotaste, nunca los anteriores.',
+          'Piensa en el compartimento con una sola etiqueta que ya conoces del robot. Cada vez que guardas algo nuevo, lo que había antes desaparece y queda lo nuevo — pero el compartimento sigue siendo el mismo, con la misma etiqueta. Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que guardaste, nunca los anteriores.',
         body: [
-          'Imagina una libreta con una sola hoja con tu nombre escrito arriba. Cada vez que anotas algo nuevo, tachas lo anterior y escribes el valor nuevo — pero la hoja sigue siendo tuya, con el mismo nombre arriba.',
-          'Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que anotaste, nunca los anteriores.',
+          'Piensa en el compartimento con una sola etiqueta que ya conoces del robot. Cada vez que guardas algo nuevo, lo que había antes desaparece y queda lo nuevo — pero el compartimento sigue siendo el mismo, con la misma etiqueta.',
+          'Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que guardaste, nunca los anteriores.',
         ],
       },
     ],

@@ -25,17 +25,17 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
       ],
     },
     secondExample: {
-      label: 'Otro caso — el manual de una silla',
+      label: 'Otro caso — el manual de calibración del robot',
       body: [
-        'Un manual de ensamblaje nunca dice «arma la silla»: dice «atornilla la pata en la esquina inferior izquierda con el tornillo A, hasta que quede firme». Qué pieza, dónde, con qué tornillo y hasta cuándo — nada queda a tu imaginación.',
-        'Es la misma regla del pan, en un contexto completamente distinto: una instrucción precisa no cambia según el tema, cambia según cuánto deja adivinar.',
+        'El manual de calibración del robot nunca dice «ajusta el brazo»: dice «gira el tornillo de la articulación del codo dos vueltas en sentido horario, hasta sentir resistencia». Qué pieza, cuánto, en qué dirección y hasta cuándo — nada queda a tu imaginación.',
+        'Es la misma regla de la puerta, en un contexto completamente distinto: una instrucción precisa no cambia según la tarea, cambia según cuánto deja adivinar.',
       ],
     },
     pythonBridge: {
       label: 'Esto ya es Python',
-      code: 'untar(herramienta="cuchillo", ingrediente="mantequilla", gramos=10, lado="superior")',
+      code: 'girar(grados=90, direccion="izquierda")',
       explanation:
-        'Fíjate: la instrucción precisa del pan («toma el cuchillo, unta 10 gramos...») y esta línea de Python dicen exactamente lo mismo — qué hacer, con qué, cuánto y dónde. Una función en Python es, ni más ni menos, una instrucción precisa con nombre.',
+        'Fíjate: la instrucción precisa del robot («gira 90 grados a la izquierda») y esta línea de Python dicen exactamente lo mismo — qué hacer, cuánto y hacia dónde. Una función en Python es, ni más ni menos, una instrucción precisa con nombre.',
     },
     variants: {
       visual: {
@@ -44,19 +44,19 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         sourceNote: 'Elegido para ti — tu perfil capta ideas más rápido cuando las ve.',
         infographic: {
           vague: {
-            instruction: 'Ponle mantequilla al pan',
-            questions: ['¿con qué?', '¿cuánta?', '¿en qué lado?'],
+            instruction: 'Cruza la habitación',
+            questions: ['¿cuántos pasos?', '¿hacia qué lado gira?', '¿qué hace al llegar?'],
           },
           precise: {
-            instruction: 'Toma el cuchillo. Unta 10 gramos de mantequilla sobre la cara superior de la rebanada.',
-            parts: ['qué hacer', 'con qué', 'cuánto', 'dónde'],
+            instruction: 'Gira 90 grados a la izquierda. Avanza 4 pasos. Detente frente a la puerta.',
+            parts: ['qué hacer', 'cuánto', 'hacia dónde'],
           },
           caption:
             'La diferencia no es el detalle decorativo: la instrucción precisa no deja NINGUNA decisión en manos del robot.',
         },
         body: [
           'Una instrucción es precisa cuando cualquier ejecutor — humano o máquina — produce exactamente el mismo resultado.',
-          'Una computadora no imagina nada más. Python es el lenguaje con el que le escribes instrucciones precisas — igual que las que acabas de construir para el robot.',
+          'Una computadora no imagina nada más. Python es el lenguaje con el que le escribes instrucciones precisas — igual que las que vas a construir para el robot.',
         ],
       },
       reading: {
@@ -65,8 +65,8 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         sourceNote: 'Elegido para ti — tu perfil profundiza mejor leyendo a su ritmo.',
         body: [
           'Idea: una instrucción es precisa cuando no requiere que el ejecutor adivine nada — qué objeto usar, cuánto, dónde, en qué orden.',
-          'Ejemplo: en 2018, un profesor pidió a sus estudiantes instrucciones escritas para preparar un sándwich, y las ejecutó al pie de la letra. Untó la mantequilla con la mano (nadie mencionó el cuchillo), apiló el pan sin abrir la bolsa y colocó el jamón sellado en su empaque.',
-          'Explicación: no estaba saboteando — estaba ejecutando. Cada instrucción que asumía algo («unta la mantequilla», ¿con qué?) dejaba una decisión en manos del ejecutor. Y una máquina no decide: se detiene o hace algo absurdo.',
+          'Ejemplo: imagina una demostración de robótica de servicio. A un robot doméstico se le da la instrucción «cruza la habitación» y se queda inmóvil, con un error en pantalla. No está descompuesto: «cruza» no dice cuántos pasos, hacia qué lado gira ni qué hace al llegar — y un robot no adivina nada de eso.',
+          'Explicación: el ingeniero no falló al diseñar el robot — escribió una instrucción incompleta. Cada palabra que asumía algo («cruza la habitación», ¿cuántos pasos?) dejaba una decisión en manos del robot. Y un robot no decide: se detiene o hace algo absurdo.',
           'En resumen: si tu instrucción necesita que alguien adivine algo, no es una instrucción — es un deseo. Python solo ejecuta instrucciones, nunca deseos. Ese es el primer hábito mental de la programación.',
         ],
       },
@@ -75,11 +75,11 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         mediumLabel: 'Clip narrado',
         sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
         narrationText:
-          'Imagina que le escribes instrucciones a alguien que jamás ha visto un sándwich, y que hará exactamente lo que escribiste. Pon mantequilla en el pan. ¿Con la mano? ¿Con el codo? Tú sabías que era con cuchillo, pero no lo dijiste, y el ejecutor no adivina. Esa es la regla de oro: si tu instrucción necesita que el otro adivine algo, no es una instrucción, es un deseo. Las máquinas no cumplen deseos: ejecutan instrucciones. Y una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
+          'Imagina que le das instrucciones a un robot doméstico que jamás ha hecho esta tarea antes, y que hará exactamente lo que le dijiste. Cruza la habitación. ¿Cuántos pasos? ¿Hacia qué lado giras? Tú lo tenías claro en tu cabeza, pero no lo dijiste, y el robot no adivina. Esa es la regla de oro: si tu instrucción necesita que el robot adivine algo, no es una instrucción, es un deseo. Las máquinas no cumplen deseos: ejecutan instrucciones. Y una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
         body: [
-          'Imagina que le escribes instrucciones a alguien que jamás ha visto un sándwich… y que hará EXACTAMENTE lo que escribiste. «Pon mantequilla en el pan». ¿Con la mano? ¿Con el codo? Tú sabías que era con cuchillo — pero no lo dijiste, y el ejecutor no adivina.',
-          'Esa es la regla de oro: si tu instrucción necesita que el otro adivine algo, no es una instrucción — es un deseo. Las máquinas no cumplen deseos. Ejecutan instrucciones.',
-          'Y esa regla no es solo del robot. Una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
+          'Imagina que le das instrucciones a un robot doméstico que jamás ha hecho esta tarea antes… y que hará EXACTAMENTE lo que le dijiste. «Cruza la habitación». ¿Cuántos pasos? ¿Hacia qué lado giras? Tú lo tenías claro en tu cabeza — pero no lo dijiste, y el robot no adivina.',
+          'Esa es la regla de oro: si tu instrucción necesita que el robot adivine algo, no es una instrucción — es un deseo. Las máquinas no cumplen deseos. Ejecutan instrucciones.',
+          'Y esa regla no es solo de este robot. Una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
         ],
       },
       kinesthetic: {
@@ -282,41 +282,41 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
       {
         kind: 'ejemplo',
         label: 'Ver un ejemplo más',
-        title: 'Ejemplo: el GPS de tu teléfono',
+        title: 'Ejemplo: el robot recorre otro pasillo',
         medium: 'ejemplo_comentado',
         body: [
-          'Tu GPS nunca dice «ve hacia el centro». Dice: «en 200 metros, gira a la derecha en la Av. América».',
-          'Distancia exacta, acción exacta, lugar exacto. El GPS te habla como se le habla a una máquina — por eso cualquier conductor que siga sus instrucciones llega al mismo lugar.',
-          'Un programa en Python es exactamente eso: una ruta de instrucciones precisas que la computadora sigue sin adivinar nada. Ahora hazlo tú: arma la ruta del GPS.',
+          'Este mismo robot no solo cruza una habitación: puede recorrer cualquier pasillo de la casa, siempre que le des instrucciones igual de precisas.',
+          'Distancia exacta, giro exacto, punto exacto donde detenerse. El robot no entiende «llega al final del pasillo» — solo entiende pasos, grados y un punto de parada.',
+          'Un programa en Python es exactamente eso: una ruta de instrucciones precisas que la computadora sigue sin adivinar nada. Ahora hazlo tú: arma la ruta del robot por el pasillo.',
         ],
         // BUG-003 (C-52): el ejemplo también se PRACTICA, no solo se lee.
         practice: {
           kind: 'ordering',
-          prompt: 'Arma la ruta que el GPS le daría a un conductor. Una de las frases no es una instrucción — descártala.',
+          prompt: 'Arma la ruta que el robot debe seguir para cruzar el pasillo. Una de las frases no es una instrucción — descártala.',
           items: [
-            { id: 'g2', text: 'En 200 metros, gira a la derecha en la Av. América', position: 2 },
+            { id: 'g2', text: 'Gira 90 grados a la derecha', position: 2 },
             {
               id: 'gd1',
-              text: 'Dirígete al centro de la ciudad',
+              text: 'Llega al final del pasillo',
               position: null,
-              whyWrong: '«Dirígete al centro» dice a dónde quieres llegar, no qué hacer ahora — es la meta disfrazada de paso, igual que «riega la planta».',
+              whyWrong: '«Llega al final del pasillo» dice a dónde quieres llegar, no qué hacer ahora — es la meta disfrazada de paso, igual que «riega la planta».',
             },
-            { id: 'g1', text: 'Avanza 400 metros por la Av. Larco', position: 1 },
-            { id: 'g3', text: 'Detente frente al edificio de la esquina', position: 3 },
+            { id: 'g1', text: 'Avanza 6 pasos por el pasillo', position: 1 },
+            { id: 'g3', text: 'Detente frente a la puerta del armario', position: 3 },
           ],
           successFeedback:
-            'Exacto — armaste una ruta que cualquier conductor (o máquina) ejecuta igual. Así se ve un programa: pasos precisos, en orden, sin metas disfrazadas.',
-          orderFeedback: 'El conductor no puede girar en la Av. América antes de haber avanzado por la Av. Larco.',
+            'Exacto — armaste una ruta que el robot ejecuta exactamente igual cada vez. Así se ve un programa: pasos precisos, en orden, sin metas disfrazadas.',
+          orderFeedback: 'El robot no puede girar a la derecha antes de haber avanzado los 6 pasos del pasillo.',
           generalHint: 'Una de las frases dice a DÓNDE llegar, no QUÉ hacer. Esa no es una instrucción.',
           solutionExplanation: [
-            'Primero avanzar, después girar, después detenerse — cada paso deja al conductor donde el siguiente lo necesita. «Dirígete al centro» era la meta: el GPS nunca te la dicta como paso.',
+            'Primero avanzar, después girar, después detenerse — cada paso deja al robot donde el siguiente lo necesita. «Llega al final del pasillo» era la meta: nunca se la das como paso.',
           ],
         },
         pythonBridge: {
           label: 'Esto ya es Python',
-          code: 'avanzar(metros=400, calle="Av. Larco")\ngirar(direccion="derecha", calle="Av. America")\ndetenerse(lugar="edificio de la esquina")',
+          code: 'avanzar(pasos=6)\ngirar(grados=90, direccion="derecha")\ndetenerse()',
           explanation:
-            'La ruta del GPS que acabas de armar es la misma secuencia, en Python: tres funciones, en orden, cada una con sus datos exactos — nada de "dirígete al centro".',
+            'La ruta que acabas de armar es la misma secuencia, en Python: tres funciones, en orden, cada una con sus datos exactos — nada de "llega al final del pasillo".',
         },
       },
       {
@@ -361,8 +361,8 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
           medium: 'ejemplo_comentado',
           mediumLabel: 'Ejemplo resuelto paso a paso',
           body: [
-            'Meta: que el robot apague la luz de la cocina.',
-            '1. «Camina hasta el interruptor de la cocina» — dice hasta dónde. Precisa.',
+            'Meta: que el robot apague la luz del pasillo.',
+            '1. «Camina hasta el interruptor del pasillo» — dice hasta dónde. Precisa.',
             '2. «Levanta la mano derecha hasta el interruptor» — dice qué mano y hasta dónde. Precisa.',
             '3. «Presiona el interruptor hacia abajo» — dice la acción y la dirección. Precisa.',
             'Descartada: «apaga la luz». Es la META, no un paso. No dice cómo llegar ni qué mover. Fíjate en el patrón: cada paso deja al robot listo para el siguiente.',
@@ -392,16 +392,16 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         title: 'Probemos con otra representación, y más despacio',
         conceptModality: 'alternate',
         body: [
-          'Piensa en una receta de cocina. «Prepara la masa» no es un paso: es el título. Los pasos son «vierte 200 g de harina», «añade un huevo», «mezcla durante dos minutos».',
-          'El robot solo entiende los pasos de la receta, nunca el título. Un programa en Python también es una receta: solo pasos ejecutables, nunca deseos. Ahora practica con solo dos pasos y un impostor.',
+          'Piensa en el manual de tareas del robot. «Recarga la batería» no es un paso: es el título. Los pasos son «conecta el cable al puerto de carga», «espera a que la luz se ponga verde».',
+          'El robot solo entiende los pasos del manual, nunca el título. Un programa en Python también es un manual: solo pasos ejecutables, nunca deseos. Ahora practica con solo dos pasos y un impostor.',
         ],
         illustration: {
           medium: 'diagrama',
           mediumLabel: 'Analogía visual: título vs. pasos',
           body: [
-            '📊 [ HACER UN CAFÉ ]  ← el título. El robot no sabe ejecutarlo.',
-            '     ├── «Vierte 200 ml de agua en la jarra»   ← ejecutable',
-            '     └── «Presiona el botón de encendido»      ← ejecutable',
+            '🔋 [ RECARGA LA BATERÍA ]  ← el título. El robot no sabe ejecutarlo.',
+            '     ├── «Conecta el cable al puerto de carga»   ← ejecutable',
+            '     └── «Espera hasta que la luz indicadora se ponga verde»   ← ejecutable',
             'Todo lo que esté en la caja de arriba es una meta. Todo lo que cuelga de ella son instrucciones.',
           ],
           // Auditoría "infografías" (jul 2026): hoy este `body` es texto plano
@@ -413,12 +413,12 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
             'COMPOSICIÓN: un único nodo superior centrado (la META, ambigua) del que bajan dos líneas conectoras en forma de "Y" invertida hacia dos nodos inferiores (los PASOS, ejecutables), distribuidos simétricamente izquierda/derecha.\n\n' +
             'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo ni ilustración de personas — solo formas geométricas, texto e iconos vectoriales simples, como un diagrama de flujo de producto SaaS.\n\n' +
             'COLORES: fondo casi negro #0a0a0f. Nodo superior: borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8% de opacidad. Nodos inferiores: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8% de opacidad. Líneas conectoras gris translúcido rgba(255,255,255,0.15). Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
-            'ICONOS: un signo de interrogación (?) pequeño junto al nodo superior (ambigüedad). Un check (✓) pequeño junto a cada nodo inferior (ejecutable). Un ícono outline minimalista de taza de café cerca del nodo superior, solo como ancla temática, sin volverse realista.\n\n' +
+            'ICONOS: un signo de interrogación (?) pequeño junto al nodo superior (ambigüedad). Un check (✓) pequeño junto a cada nodo inferior (ejecutable). Un ícono outline minimalista de batería junto al robot, cerca del nodo superior, solo como ancla temática, sin volverse realista.\n\n' +
             'DISTRIBUCIÓN: formato vertical 4:5. Nodo meta ocupa ~20% de la altura, centrado arriba. Los dos nodos de pasos ocupan la mitad inferior, con amplio espacio en blanco entre ellos y respecto a los bordes.\n\n' +
             'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
-            '— Nodo superior: "HACER UN CAFÉ" + subtítulo pequeño "la meta — el robot no sabe ejecutarlo"\n' +
-            '— Nodo inferior izquierdo: "Vierte 200 ml de agua en la jarra"\n' +
-            '— Nodo inferior derecho: "Presiona el botón de encendido"\n' +
+            '— Nodo superior: "RECARGA LA BATERÍA" + subtítulo pequeño "la meta — el robot no sabe ejecutarlo"\n' +
+            '— Nodo inferior izquierdo: "Conecta el cable al puerto de carga"\n' +
+            '— Nodo inferior derecho: "Espera hasta que la luz indicadora se ponga verde"\n' +
             '— Leyenda inferior centrada, fuera de los nodos: "Todo lo de arriba es una meta. Todo lo que cuelga de ella es una instrucción ejecutable."',
         },
         practice: {

@@ -95,21 +95,21 @@ const KINESTHETIC_PRACTICE: PredictOutputPracticeDef = {
   // física que el estudiante hace con su propia edad antes de comprobarla,
   // coherente con la escalera manipulable de PythonBridge que ya corre en
   // este ciclo para el perfil kinestésico.
-  prompt: 'Antes de revisar, decide con tu propia mano (arriba = sí puede votar, abajo = no): ¿qué imprime este código?',
-  code: 'edad = 20\nif edad >= 18:\n    print("Puede votar")\nelse:\n    print("Todavía no puede votar")',
+  prompt: 'Antes de revisar, decide con tu propia mano (arriba = sí sigue la ronda, abajo = no): ¿qué imprime este código?',
+  code: 'bateria = 20\nif bateria >= 20:\n    print("Sigue la ronda")\nelse:\n    print("Vuelve a cargar")',
   options: [
-    { id: 'a', text: 'Puede votar' },
-    { id: 'b', text: 'Todavía no puede votar' },
-    { id: 'c', text: 'edad' },
+    { id: 'a', text: 'Sigue la ronda' },
+    { id: 'b', text: 'Vuelve a cargar' },
+    { id: 'c', text: 'bateria' },
     { id: 'd', text: 'Error' },
   ],
   correctOptionId: 'a',
-  successFeedback: 'Exacto — edad vale 20, y 20 >= 18 es verdadero, así que Python tomó la rama del if y mostró "Puede votar". Tu predicción física coincidió con la ejecución real.',
-  wrongFeedback: 'Revisa la condición: edad vale 20. ¿20 es mayor o igual a 18?',
+  successFeedback: 'Exacto — bateria vale 20, y 20 >= 20 es verdadero, así que Python tomó la rama del if y mostró "Sigue la ronda". Tu predicción física coincidió con la ejecución real.',
+  wrongFeedback: 'Revisa la condición: bateria vale 20. ¿20 es mayor o igual a 20?',
   solutionExplanation: [
-    'Línea 1: edad = 20 — crea la variable con el valor 20.',
-    'Línea 2: if edad >= 18: — 20 >= 18 es verdadero, así que Python entra a esta rama.',
-    'Como la condición fue verdadera, se ejecuta print("Puede votar") — la rama de else nunca corre.',
+    'Línea 1: bateria = 20 — crea la variable con el valor 20.',
+    'Línea 2: if bateria >= 20: — 20 >= 20 es verdadero, así que Python entra a esta rama.',
+    'Como la condición fue verdadera, se ejecuta print("Sigue la ronda") — la rama de else nunca corre.',
   ],
 }
 
@@ -390,69 +390,69 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
           {
             kind: 'reto',
             label: 'Resolver un reto rápido',
-            title: 'Reto: la puerta automática',
+            title: 'Reto: la puerta del garaje',
             body: ['Misma regla: solo condiciones evaluables, en orden. Hay un impostor.'],
             practice: {
               kind: 'ordering',
-              prompt: 'Ordena los pasos para que la puerta automática decida si abrirse. Descarta el que sea ambiguo.',
+              prompt: 'Ordena los pasos para que la puerta del garaje decida si abrirse. Descarta el que sea ambiguo.',
               items: [
-                { id: 'a1', text: 'Consulta el sensor de peso frente a la puerta', position: 1 },
+                { id: 'a1', text: 'Consulta el sensor de peso frente a la puerta del garaje', position: 1 },
                 { id: 'a2', text: 'Si detecta peso, abre la puerta', position: 2 },
                 { id: 'a3', text: 'Si no detecta peso, mantén la puerta cerrada', position: 3 },
                 {
                   id: 'ad1',
-                  text: 'Abre cuando alguien quiera pasar',
+                  text: 'Abre cuando el robot quiera pasar',
                   position: null,
                   whyWrong:
-                    '«Cuando alguien quiera pasar» no es medible por un sensor — no dice qué condición evaluar.',
+                    '«Cuando el robot quiera pasar» no es medible por un sensor — no dice qué condición evaluar.',
                 },
               ],
               successFeedback: 'Perfecto — detectaste que la condición vaga era el impostor.',
               orderFeedback: 'La puerta no puede decidir sin haber consultado antes el sensor de peso.',
               generalHint: 'Una de esas frases no dice qué puede medir un sensor. ¿Cuál?',
               solutionExplanation: [
-                '«Abre cuando alguien quiera pasar» describe una intención, no algo medible. Las otras tres sí son evaluables: consultan un sensor real y responden SÍ o NO.',
+                '«Abre cuando el robot quiera pasar» describe una intención, no algo medible. Las otras tres sí son evaluables: consultan un sensor real y responden SÍ o NO.',
               ],
             },
           },
           {
             kind: 'ejemplo',
             label: 'Ver un ejemplo más',
-            title: 'Ejemplo: el semáforo peatonal',
+            title: 'Ejemplo: el riego automático del jardín',
             medium: 'ejemplo_comentado',
             body: [
-              'Un semáforo peatonal nunca decide «cuando haya poco tráfico»: decide con un temporizador exacto — ¿pasaron 40 segundos? SÍ o NO.',
-              'Si SÍ, cambia a verde peatonal. Si NO, sigue en rojo. Ninguna decisión queda a la imaginación del semáforo.',
-              'Un programa en Python funciona igual: cada `if` compara algo medible — un número, un texto, un resultado — nunca una idea vaga. Ahora hazlo tú: arma la decisión del semáforo.',
+              'El riego del jardín nunca decide «cuando la tierra se vea seca»: decide con un temporizador exacto — ¿pasaron 40 minutos desde el último riego? SÍ o NO.',
+              'Si SÍ, abre la válvula de riego. Si NO, sigue cerrada. Ninguna decisión queda a la imaginación del sistema.',
+              'Un programa en Python funciona igual: cada `if` compara algo medible — un número, un texto, un resultado — nunca una idea vaga. Ahora hazlo tú: arma la decisión del riego.',
             ],
             practice: {
               kind: 'ordering',
-              prompt: 'Arma la decisión que toma el semáforo peatonal. Una de las frases no es evaluable — descártala.',
+              prompt: 'Arma la decisión que toma el riego del jardín. Una de las frases no es evaluable — descártala.',
               items: [
-                { id: 's1', text: 'Consulta el temporizador: ¿pasaron 40 segundos?', position: 1 },
-                { id: 's2', text: 'Si pasaron 40 segundos, cambia a verde peatonal', position: 2 },
-                { id: 's3', text: 'Si no pasaron 40 segundos, mantente en rojo', position: 3 },
+                { id: 's1', text: 'Consulta el temporizador: ¿pasaron 40 minutos?', position: 1 },
+                { id: 's2', text: 'Si pasaron 40 minutos, abre la válvula de riego', position: 2 },
+                { id: 's3', text: 'Si no pasaron 40 minutos, mantén la válvula cerrada', position: 3 },
                 {
                   id: 'sd1',
-                  text: 'Cambia cuando haya poco tráfico',
+                  text: 'Riega cuando la tierra se vea seca',
                   position: null,
                   whyWrong:
-                    '«Poco tráfico» no tiene un umbral exacto — el semáforo no puede medirlo como SÍ o NO.',
+                    '«Se vea seca» no tiene un umbral exacto — el sistema no puede medirlo como SÍ o NO.',
                 },
               ],
               successFeedback:
-                'Exacto — armaste una decisión que cualquier semáforo (o programa) evalúa igual, sin ambigüedad.',
-              orderFeedback: 'El semáforo no puede decidir el color antes de consultar el temporizador.',
+                'Exacto — armaste una decisión que cualquier sistema de riego (o programa) evalúa igual, sin ambigüedad.',
+              orderFeedback: 'El sistema no puede decidir sin consultar antes el temporizador.',
               generalHint: 'Una de las frases no se puede medir con un número exacto. Esa no es una condición evaluable.',
               solutionExplanation: [
-                'Primero se consulta el temporizador, después se decide el color según su resultado — «poco tráfico» era la condición vaga, igual que «mal tiempo» o «cuando alguien quiera pasar».',
+                'Primero se consulta el temporizador, después se decide según su resultado — «se vea seca» era la condición vaga, igual que «mal tiempo» o «cuando el robot quiera pasar».',
               ],
             },
             pythonBridge: {
               label: 'Esto ya es Python',
-              code: 'if temporizador.transcurrio(segundos=40):\n    cambiar_a_verde_peatonal()\nelse:\n    mantener_en_rojo()',
+              code: 'if temporizador.transcurrio(minutos=40):\n    abrir_valvula_riego()\nelse:\n    mantener_valvula_cerrada()',
               explanation:
-                'La decisión del semáforo que acabas de armar es exactamente este `if`/`else`: una condición medible (¿pasaron 40 segundos?) y una acción para cada resultado — sin "poco tráfico" en ninguna parte.',
+                'La decisión de riego que acabas de armar es exactamente este `if`/`else`: una condición medible (¿pasaron 40 minutos?) y una acción para cada resultado — sin "se vea seca" en ninguna parte.',
             },
           },
           {
@@ -516,16 +516,16 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             title: 'Probemos con otra representación, y más despacio',
             conceptModality: 'alternate',
             body: [
-              'Piensa en un examen con nota mínima para aprobar. «Aprobó si le fue bien» no sirve de regla: la regla real es «aprobó si su nota es 11 o más» — un número exacto, comparado con otro.',
-              'Un `if` en Python es exactamente esa comparación: nunca «le fue bien», siempre un número o un valor exacto contra otro. Ahora practica con dos pasos y un impostor.',
+              'Piensa en un sensor de calidad de aire con un umbral exacto. «El aire está mal» no sirve de regla: la regla real es «el aire está mal si el CO2 supera 800 ppm» — un número exacto, comparado con otro.',
+              'Un `if` en Python es exactamente esa comparación: nunca «está mal», siempre un número o un valor exacto contra otro. Ahora practica con dos pasos y un impostor.',
             ],
             illustration: {
               medium: 'diagrama',
               mediumLabel: 'Analogía visual: idea vs. condición',
               body: [
-                '📊 [ APROBÓ EL EXAMEN ]  ← la idea. La máquina no sabe evaluarla.',
-                '     ├── «¿La nota es 11 o más?»   ← evaluable (SÍ/NO)',
-                '     └── «Si SÍ: aprobó. Si NO: desaprobó»   ← acción exacta por caso',
+                '📊 [ EL AIRE ESTÁ MAL ]  ← la idea. La máquina no sabe evaluarla.',
+                '     ├── «¿El CO2 supera 800 ppm?»   ← evaluable (SÍ/NO)',
+                '     └── «Si SÍ: enciende el ventilador. Si NO: lo mantiene apagado»   ← acción exacta por caso',
                 'Todo lo que esté en la caja de arriba es una idea. Todo lo que cuelga de ella es una condición evaluable.',
               ],
               // Auditoría "infografías" (jul 2026): ver misma nota en
@@ -537,36 +537,36 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
               // de diagramas de flujo, coherente con el concepto if/else.
               imagePrompt:
                 'Mini diagrama de flujo para una app educativa de programación, modo oscuro.\n\n' +
-                'COMPOSICIÓN: un nodo superior centrado (rectángulo, la IDEA vaga "aprobó el examen"), que baja a un ROMBO de decisión (la condición evaluable "¿la nota es 11 o más?"), del que salen dos ramas etiquetadas SÍ / NO hacia dos nodos rectangulares finales (los resultados "aprobó" / "desaprobó"). Es un flujo vertical de arriba hacia abajo: idea → condición → dos resultados posibles.\n\n' +
+                'COMPOSICIÓN: un nodo superior centrado (rectángulo, la IDEA vaga "el aire está mal"), que baja a un ROMBO de decisión (la condición evaluable "¿el CO2 supera 800 ppm?"), del que salen dos ramas etiquetadas SÍ / NO hacia dos nodos rectangulares finales (los resultados "enciende el ventilador" / "lo mantiene apagado"). Es un flujo vertical de arriba hacia abajo: idea → condición → dos resultados posibles.\n\n' +
                 'ESTILO: interfaz "glassmorphism" oscura, iconografía plana de diagrama de flujo real (rombo = decisión, rectángulo = proceso/resultado), sin fotorrealismo, coherente con un producto SaaS educativo.\n\n' +
                 'COLORES: fondo casi negro #0a0a0f. Nodo superior (idea vaga): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Rombo de decisión: borde SÓLIDO cian #06b6d4, relleno cian al 8%. Los dos nodos de resultado: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Líneas conectoras gris translúcido rgba(255,255,255,0.15), con las etiquetas "SÍ" y "NO" en violeta #7c3aed junto a cada rama. Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
-                'ICONOS: signo de interrogación pequeño junto al nodo superior (idea, ambigua). Un pequeño ícono de balanza o checklist dentro del rombo (evaluación). Un check (✓) verde junto al resultado "aprobó" y una equis (✗) sutil junto a "desaprobó" — ambos igual de neutrales en tamaño, ningún resultado debe verse "más importante" que el otro.\n\n' +
+                'ICONOS: signo de interrogación pequeño junto al nodo superior (idea, ambigua). Un pequeño ícono de sensor/medidor dentro del rombo (evaluación). Un ícono de ventilador junto al resultado "enciende el ventilador" y un ícono de ventilador apagado (sutil, mismo tamaño) junto a "lo mantiene apagado" — ambos igual de neutrales en tamaño, ningún resultado debe verse "más importante" que el otro.\n\n' +
                 'DISTRIBUCIÓN: formato vertical 4:5 o 3:4. Nodo idea arriba (~15% de la altura), rombo de decisión al centro (~25%), los dos resultados abajo distribuidos simétricamente izquierda/derecha (~30%), con espacio en blanco generoso entre cada nivel.\n\n' +
                 'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
-                '— Nodo superior: "APROBÓ EL EXAMEN" + subtítulo pequeño "la idea — la máquina no sabe evaluarla"\n' +
-                '— Rombo: "¿La nota es 11 o más?"\n' +
-                '— Resultado izquierdo (rama SÍ): "Aprobó"\n' +
-                '— Resultado derecho (rama NO): "Desaprobó"\n' +
+                '— Nodo superior: "EL AIRE ESTÁ MAL" + subtítulo pequeño "la idea — la máquina no sabe evaluarla"\n' +
+                '— Rombo: "¿El CO2 supera 800 ppm?"\n' +
+                '— Resultado izquierdo (rama SÍ): "Enciende el ventilador"\n' +
+                '— Resultado derecho (rama NO): "Lo mantiene apagado"\n' +
                 '— Leyenda inferior centrada, fuera de los nodos: "Todo lo de arriba es una idea. Todo lo que cuelga de ella es una condición evaluable."',
             },
             practice: {
               kind: 'ordering',
-              prompt: 'Solo dos pasos y un impostor. Ordena para que el sistema decida si el estudiante aprobó.',
+              prompt: 'Solo dos pasos y un impostor. Ordena para que el sistema decida si encender el ventilador.',
               items: [
-                { id: 'e1', text: 'Consulta la nota final del estudiante', position: 1 },
+                { id: 'e1', text: 'Consulta el sensor de CO2', position: 1 },
                 {
                   id: 'ed1',
-                  text: 'Decide si le fue bien',
+                  text: 'Decide si el aire está mal',
                   position: null,
-                  whyWrong: '«Si le fue bien» no tiene un umbral exacto — no es una condición evaluable.',
+                  whyWrong: '«Si el aire está mal» no tiene un umbral exacto — no es una condición evaluable.',
                 },
-                { id: 'e2', text: 'Si la nota es 11 o más, márcalo como aprobado', position: 2 },
+                { id: 'e2', text: 'Si el CO2 es 800 ppm o más, enciende el ventilador', position: 2 },
               ],
-              successFeedback: 'Exacto. Consultar la nota primero, comparar con 11 después — y «le fue bien» era la idea vaga.',
-              orderFeedback: 'No puedes comparar una nota que todavía no consultaste.',
+              successFeedback: 'Exacto. Consultar el sensor primero, comparar con 800 después — y «el aire está mal» era la idea vaga.',
+              orderFeedback: 'No puedes comparar un valor de CO2 que todavía no consultaste.',
               generalHint: 'Solo una de las frases NO se puede comparar con un número exacto.',
               solutionExplanation: [
-                'Primero se obtiene el dato (la nota), después se compara con un umbral exacto (11). «Le fue bien» era la idea, igual que «hace frío» o «mal tiempo».',
+                'Primero se obtiene el dato (el CO2), después se compara con un umbral exacto (800). «El aire está mal» era la idea, igual que «hace frío» o «mal tiempo».',
               ],
             },
           },
