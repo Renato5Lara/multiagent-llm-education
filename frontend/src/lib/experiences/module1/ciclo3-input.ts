@@ -86,6 +86,7 @@ export const CICLO_3_INPUT: LearningCycle = {
         medium: 'clip_narrado',
         mediumLabel: 'Clip narrado',
         sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
+        narrationAudioAsset: 'm1-c3-teoria-audio',
         narrationText:
           'Piensa en un robot guía que nunca pregunta a dónde quieres ir: simplemente te lleva siempre al mismo lugar. Funciona una vez, por casualidad, y falla con la siguiente persona. Un buen robot guía pregunta, y ESPERA tu respuesta antes de moverse. input() es exactamente ese robot: muestra la pregunta, se detiene, y solo continúa cuando tú respondiste. Lo que respondiste queda guardado, listo para usarse, igual que una variable normal — porque, de hecho, es exactamente eso.',
         body: [
@@ -395,6 +396,7 @@ export const CICLO_3_INPUT: LearningCycle = {
         label: 'Escuchar otra explicación',
         title: 'Una última explicación',
         medium: 'clip_narrado',
+        narrationAudioAsset: 'm1-c3-refuerzo-audio',
         narrationText:
           '¿Sabes lo incómodo que es cuando le preguntas algo a un robot y, sin esperar tu respuesta, sigue haciendo otra cosa? Un programa sin input() hace exactamente eso: muestra una pregunta y sigue de largo, sin escuchar nada. input() es lo que le enseña a un programa a esperar — a detenerse hasta que tú realmente respondas. Y esa respuesta no se pierde: queda guardada en una variable, lista para usarse el resto del programa.',
         body: [

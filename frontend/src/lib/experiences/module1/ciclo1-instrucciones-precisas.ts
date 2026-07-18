@@ -92,6 +92,10 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         medium: 'clip_narrado',
         mediumLabel: 'Clip narrado',
         sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
+        // Sprint UX-01 (jul 2026): clave lista para resolver contra
+        // audioAssets.ts en cuanto exista la grabación real — hasta entonces,
+        // AudioNarration usa speechSynthesis como siempre.
+        narrationAudioAsset: 'm1-c1-teoria-audio',
         narrationText:
           'Imagina que le das instrucciones a un robot doméstico que jamás ha hecho esta tarea antes, y que hará exactamente lo que le dijiste. Cruza la habitación. ¿Cuántos pasos? ¿Hacia qué lado giras? Tú lo tenías claro en tu cabeza, pero no lo dijiste, y el robot no adivina. Esa es la regla de oro: si tu instrucción necesita que el robot adivine algo, no es una instrucción, es un deseo. Las máquinas no cumplen deseos: ejecutan instrucciones. Y una computadora funciona exactamente igual. Python es la forma en que le escribes esas instrucciones. Si eres preciso, ejecuta. Si no lo eres, falla.',
         body: [
@@ -353,6 +357,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         label: 'Escuchar otra explicación',
         title: 'Escúchalo de otra forma',
         medium: 'clip_narrado',
+        narrationAudioAsset: 'm1-c1-refuerzo-audio',
         narrationText:
           'Piensa en la última vez que le explicaste algo a alguien y te entendió mal. Seguro dijiste: pero era obvio. Para una máquina, nada es obvio. Una instrucción precisa dice qué hacer, con qué, cuánto y hacia dónde. Si falta una de esas piezas, el robot va a fallar. Y Python es, simplemente, el idioma en que le escribirás esas instrucciones a tu computadora.',
         body: [

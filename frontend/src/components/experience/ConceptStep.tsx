@@ -6,6 +6,7 @@ import { useRef, useState } from 'react'
 import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, HelpCircle, CheckCircle2, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
+import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { PythonBridge } from './PythonBridge'
 import { IllustrationVisual } from './IllustrationVisual'
 import { hasIllustrationImage } from '@/lib/experiences/illustrationAssets'
@@ -136,7 +137,11 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement 
 
             {/* RC-FINAL: la variante de audio SUENA — narración con voz real */}
             {variant.narrationText && (
-              <AudioNarration text={variant.narrationText} onEngaged={() => setNarrationEngaged(true)} />
+              <AudioNarration
+                text={variant.narrationText}
+                audioSrc={resolveNarrationAudio(variant)}
+                onEngaged={() => setNarrationEngaged(true)}
+              />
             )}
 
             {/* Perfil auditivo: "escucha, no leas" — el texto completo ya no

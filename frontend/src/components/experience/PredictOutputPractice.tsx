@@ -9,6 +9,7 @@ import { CheckCircle2, GraduationCap, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { AudioNarration } from './AudioNarration'
+import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import type { PredictOutputPracticeDef } from '@/types/moduleExperience'
 import type { PracticeOutcome } from './OrderingPractice'
 
@@ -86,7 +87,9 @@ export function PredictOutputPractice({ practice, onAttempt, onFinished, revealO
           (AudioNarration, síntesis de voz real del navegador), nunca un
           componente nuevo. Ausente para lector/visual/kinestésico —
           comportamiento previo intacto. */}
-      {practice.narrationText && <AudioNarration text={practice.narrationText} />}
+      {practice.narrationText && (
+        <AudioNarration text={practice.narrationText} audioSrc={resolveNarrationAudio(practice)} />
+      )}
       <pre className="rounded-lg bg-black/30 border border-white/10 p-3 text-[13px] font-mono text-neural-text overflow-x-auto">
         {practice.code}
       </pre>

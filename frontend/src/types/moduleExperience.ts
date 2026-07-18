@@ -61,7 +61,21 @@ export interface VisualAsset {
   imagePrompt?: string
 }
 
-export interface ConceptVariant extends VisualAsset {
+/** Narración GRABADA de un contenido que ya declara `narrationText` (Sprint
+ *  UX-01, jul 2026 — el perfil auditivo no debe depender solo de la síntesis
+ *  de voz del navegador). Espejo exacto del patrón `VisualAsset`:
+ *  - `narrationAudioUrl`   — URL o ruta servida tal cual.
+ *  - `narrationAudioAsset` — clave que se resuelve contra
+ *    `lib/experiences/audioAssets.ts` (NARRATION_ASSETS), para audio
+ *    empaquetado con el build. Si la clave todavía no tiene grabación real,
+ *    se resuelve a `undefined` y AudioNarration cae a speechSynthesis —
+ *    nunca rompe, ningún contenido existente cambia de comportamiento. */
+export interface NarrationAudioRef {
+  narrationAudioUrl?: string
+  narrationAudioAsset?: string
+}
+
+export interface ConceptVariant extends VisualAsset, NarrationAudioRef {
   medium: TheoryMedium
   mediumLabel: string
   /** Párrafos de apoyo. En S1 es mock; en S2 lo alimenta el Content Discovery Agent. */
@@ -139,7 +153,7 @@ export interface PredictOutputOption {
   text: string
 }
 
-export interface PredictOutputPracticeDef {
+export interface PredictOutputPracticeDef extends NarrationAudioRef {
   kind: 'predict_output'
   prompt: string
   /** Fragmento real de Python — nunca pseudocódigo. */
@@ -167,7 +181,7 @@ export type PracticeDef = OrderingPracticeDef | PredictOutputPracticeDef
 
 export type ReinforcementKind = 'reto' | 'ejemplo' | 'animacion' | 'audio'
 
-export interface Reinforcement {
+export interface Reinforcement extends NarrationAudioRef {
   kind: ReinforcementKind
   label: string
   title: string

@@ -21,6 +21,7 @@ import { PythonBridge } from './PythonBridge'
 import { CuriosityFactCard } from './CuriosityFactCard'
 import { IllustrationVisual } from './IllustrationVisual'
 import { hasIllustrationImage } from '@/lib/experiences/illustrationAssets'
+import { resolveNarrationAudio } from '@/lib/experiences/audioAssets'
 import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { PredictOutputPractice } from './PredictOutputPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
@@ -1454,7 +1455,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           <div className="glass-panel rounded-2xl p-6 space-y-4">
             <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>
             {activeReinforcement.sceneId && <AnimatedScene sceneId={activeReinforcement.sceneId} />}
-            {activeReinforcement.narrationText && <AudioNarration text={activeReinforcement.narrationText} />}
+            {activeReinforcement.narrationText && (
+              <AudioNarration
+                text={activeReinforcement.narrationText}
+                audioSrc={resolveNarrationAudio(activeReinforcement)}
+              />
+            )}
             {activeReinforcement.body.map((paragraph, i) => (
               <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
                 {paragraph}

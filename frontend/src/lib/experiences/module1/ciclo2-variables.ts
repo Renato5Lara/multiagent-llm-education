@@ -83,6 +83,7 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
   // el prompt PROMETÍA audio ("después de escuchar...") sin reproducir nada.
   // Narra exactamente el código de arriba — el estudiante puede resolver
   // escuchando, sin necesitar leer el bloque de código en absoluto.
+  narrationAudioAsset: 'm1-c2-practica-audio',
   narrationText:
     'Escucha con atención. Primera línea: temperatura es igual a dieciocho. Segunda línea: temperatura es igual a temperatura, más cinco. Tercera línea: imprime temperatura. ¿Qué número muestra la pantalla?',
   options: [
@@ -203,6 +204,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         medium: 'clip_narrado',
         mediumLabel: 'Clip narrado',
         sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
+        narrationAudioAsset: 'm1-c2-teoria-audio',
         narrationText:
           'Piensa en el compartimento de almacenamiento del robot. No te importa la caja en sí — te importa que ese nombre siempre te lleve al mismo contenido, y que puedas cambiar lo que hay adentro sin cambiar el nombre. Una variable es exactamente eso: un nombre que siempre te lleva al mismo valor guardado. Edad, igual, veinte. Ese signo igual no pregunta si son iguales — aquí significa: guarda esto aquí, con este nombre. Y una vez que lo guardaste, usar el nombre es exactamente lo mismo que usar el valor.',
         body: [
@@ -491,6 +493,7 @@ export const CICLO_2_VARIABLES: LearningCycle = {
         label: 'Escuchar otra explicación',
         title: 'Óyelo de otro modo',
         medium: 'clip_narrado',
+        narrationAudioAsset: 'm1-c2-refuerzo-audio',
         narrationText:
           'Piensa en el compartimento con una sola etiqueta que ya conoces del robot. Cada vez que guardas algo nuevo, lo que había antes desaparece y queda lo nuevo — pero el compartimento sigue siendo el mismo, con la misma etiqueta. Una variable funciona igual: el nombre no cambia, lo que guarda sí. Y leer el nombre siempre te da el último valor que guardaste, nunca los anteriores.',
         body: [

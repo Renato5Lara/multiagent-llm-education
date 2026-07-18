@@ -69,6 +69,7 @@ const AUDIO_PRACTICE: PredictOutputPracticeDef = {
   // el prompt PROMETÍA audio ("después de escuchar...") sin reproducir nada.
   // Narra exactamente el código de arriba — el estudiante puede resolver
   // escuchando, sin necesitar leer el bloque de código en absoluto.
+  narrationAudioAsset: 'm2-c1-practica-audio',
   narrationText:
     'Escucha con atención. Primera línea: hora es igual a diecinueve. Segunda línea: si hora es mayor o igual a dieciocho, imprime "enciende las luces". De lo contrario, imprime "deja las luces apagadas". ¿Qué mensaje se muestra?',
   options: [
@@ -227,6 +228,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             medium: 'clip_narrado',
             mediumLabel: 'Clip narrado',
             sourceNote: 'Elegido para ti — tu perfil retiene mejor las ideas cuando las escucha.',
+            narrationAudioAsset: 'm2-c1-teoria-audio',
             narrationText:
               'Imagina que le dices a un robot: si hace mal tiempo, abre el paraguas. Suena razonable para una persona, pero el robot se queda congelado. ¿Qué es mal tiempo? ¿Lluvia? ¿Viento? ¿Nublado? Tú lo sabías, pero no lo dijiste de forma que un sensor pudiera medirlo. La regla es esta: una condición solo sirve si se puede responder con sí o no. El sensor detecta gotas, sí o no. La temperatura supera veintiocho grados, sí o no. Eso es una condición evaluable. Y así es exactamente como funciona un if en Python: una condición que se puede responder con sí o no, una acción para cada caso.',
             body: [
@@ -478,6 +480,7 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             label: 'Escuchar otra explicación',
             title: 'Escúchalo de otra forma',
             medium: 'clip_narrado',
+            narrationAudioAsset: 'm2-c1-refuerzo-audio',
             narrationText:
               'Piensa en una regla que sigues todos los días, como: si hace frío, me pongo casaca. Para ti, frío es obvio. Para una máquina no existe frío: existe una temperatura, un número, y una comparación exacta con ese número. Una condición evaluable siempre se puede responder con sí o no. Si no puedes responder sí o no de inmediato, todavía no es una condición: es una idea. Y Python, con if y else, solo entiende condiciones, nunca ideas.',
             body: [
