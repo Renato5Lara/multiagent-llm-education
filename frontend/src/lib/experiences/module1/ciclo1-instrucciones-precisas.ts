@@ -404,6 +404,22 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
             '     └── «Presiona el botón de encendido»      ← ejecutable',
             'Todo lo que esté en la caja de arriba es una meta. Todo lo que cuelga de ella son instrucciones.',
           ],
+          // Auditoría "infografías" (jul 2026): hoy este `body` es texto plano
+          // (ver tipo RemediationIllustration). Prompt listo para pegar en un
+          // generador de imágenes cuando se decida crear el recurso real —
+          // ningún código lo usa todavía.
+          imagePrompt:
+            'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
+            'COMPOSICIÓN: un único nodo superior centrado (la META, ambigua) del que bajan dos líneas conectoras en forma de "Y" invertida hacia dos nodos inferiores (los PASOS, ejecutables), distribuidos simétricamente izquierda/derecha.\n\n' +
+            'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo ni ilustración de personas — solo formas geométricas, texto e iconos vectoriales simples, como un diagrama de flujo de producto SaaS.\n\n' +
+            'COLORES: fondo casi negro #0a0a0f. Nodo superior: borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8% de opacidad. Nodos inferiores: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8% de opacidad. Líneas conectoras gris translúcido rgba(255,255,255,0.15). Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+            'ICONOS: un signo de interrogación (?) pequeño junto al nodo superior (ambigüedad). Un check (✓) pequeño junto a cada nodo inferior (ejecutable). Un ícono outline minimalista de taza de café cerca del nodo superior, solo como ancla temática, sin volverse realista.\n\n' +
+            'DISTRIBUCIÓN: formato vertical 4:5. Nodo meta ocupa ~20% de la altura, centrado arriba. Los dos nodos de pasos ocupan la mitad inferior, con amplio espacio en blanco entre ellos y respecto a los bordes.\n\n' +
+            'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+            '— Nodo superior: "HACER UN CAFÉ" + subtítulo pequeño "la meta — el robot no sabe ejecutarlo"\n' +
+            '— Nodo inferior izquierdo: "Vierte 200 ml de agua en la jarra"\n' +
+            '— Nodo inferior derecho: "Presiona el botón de encendido"\n' +
+            '— Leyenda inferior centrada, fuera de los nodos: "Todo lo de arriba es una meta. Todo lo que cuelga de ella es una instrucción ejecutable."',
         },
         practice: {
           kind: 'ordering',

@@ -528,6 +528,26 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
                 '     └── «Si SÍ: aprobó. Si NO: desaprobó»   ← acción exacta por caso',
                 'Todo lo que esté en la caja de arriba es una idea. Todo lo que cuelga de ella es una condición evaluable.',
               ],
+              // Auditoría "infografías" (jul 2026): ver misma nota en
+              // module1/ciclo1-instrucciones-precisas.ts — `body` es texto
+              // plano hoy; este prompt queda listo para pegar en un
+              // generador de imágenes. A diferencia de los otros tres
+              // (siempre 2 ramas rectangulares), este SÍ es una condición
+              // booleana real — el prompt usa el rombo de decisión estándar
+              // de diagramas de flujo, coherente con el concepto if/else.
+              imagePrompt:
+                'Mini diagrama de flujo para una app educativa de programación, modo oscuro.\n\n' +
+                'COMPOSICIÓN: un nodo superior centrado (rectángulo, la IDEA vaga "aprobó el examen"), que baja a un ROMBO de decisión (la condición evaluable "¿la nota es 11 o más?"), del que salen dos ramas etiquetadas SÍ / NO hacia dos nodos rectangulares finales (los resultados "aprobó" / "desaprobó"). Es un flujo vertical de arriba hacia abajo: idea → condición → dos resultados posibles.\n\n' +
+                'ESTILO: interfaz "glassmorphism" oscura, iconografía plana de diagrama de flujo real (rombo = decisión, rectángulo = proceso/resultado), sin fotorrealismo, coherente con un producto SaaS educativo.\n\n' +
+                'COLORES: fondo casi negro #0a0a0f. Nodo superior (idea vaga): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Rombo de decisión: borde SÓLIDO cian #06b6d4, relleno cian al 8%. Los dos nodos de resultado: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Líneas conectoras gris translúcido rgba(255,255,255,0.15), con las etiquetas "SÍ" y "NO" en violeta #7c3aed junto a cada rama. Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+                'ICONOS: signo de interrogación pequeño junto al nodo superior (idea, ambigua). Un pequeño ícono de balanza o checklist dentro del rombo (evaluación). Un check (✓) verde junto al resultado "aprobó" y una equis (✗) sutil junto a "desaprobó" — ambos igual de neutrales en tamaño, ningún resultado debe verse "más importante" que el otro.\n\n' +
+                'DISTRIBUCIÓN: formato vertical 4:5 o 3:4. Nodo idea arriba (~15% de la altura), rombo de decisión al centro (~25%), los dos resultados abajo distribuidos simétricamente izquierda/derecha (~30%), con espacio en blanco generoso entre cada nivel.\n\n' +
+                'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+                '— Nodo superior: "APROBÓ EL EXAMEN" + subtítulo pequeño "la idea — la máquina no sabe evaluarla"\n' +
+                '— Rombo: "¿La nota es 11 o más?"\n' +
+                '— Resultado izquierdo (rama SÍ): "Aprobó"\n' +
+                '— Resultado derecho (rama NO): "Desaprobó"\n' +
+                '— Leyenda inferior centrada, fuera de los nodos: "Todo lo de arriba es una idea. Todo lo que cuelga de ella es una condición evaluable."',
             },
             practice: {
               kind: 'ordering',

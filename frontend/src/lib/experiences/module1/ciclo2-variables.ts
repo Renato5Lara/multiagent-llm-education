@@ -543,6 +543,21 @@ export const CICLO_2_VARIABLES: LearningCycle = {
             '     └── «Guarda el número 18 dentro»           ← ahora tiene valor',
             'Sin el nombre, no hay dónde guardar nada. Sin el valor, no hay nada que leer.',
           ],
+          // Auditoría "infografías" (jul 2026): ver misma nota en
+          // ciclo1-instrucciones-precisas.ts — `body` es texto plano hoy;
+          // este prompt queda listo para pegar en un generador de imágenes.
+          imagePrompt:
+            'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
+            'COMPOSICIÓN: un nodo superior centrado con forma de CAJA/CONTENEDOR abierto y vacío (la variable sin inicializar), del que bajan dos líneas conectoras en "Y" invertida hacia dos nodos inferiores: uno muestra la misma caja con una ETIQUETA/nombre pegada, el otro muestra la caja con un VALOR numérico dentro.\n\n' +
+            'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo — formas geométricas simples (la caja es un icono de contenedor/cubo en outline, no una ilustración realista), coherente con un diagrama de flujo de producto SaaS.\n\n' +
+            'COLORES: fondo casi negro #0a0a0f. Nodo superior (caja vacía): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8% de opacidad. Nodos inferiores (caja con nombre / caja con valor): borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Líneas conectoras gris translúcido rgba(255,255,255,0.15). Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8. Acento cian #06b6d4 en la etiqueta de nombre del nodo izquierdo.\n\n' +
+            'ICONOS: la caja vacía es un icono de contenedor/cubo abierto en outline. En el nodo izquierdo, un pequeño icono de etiqueta/tag junto a la caja. En el nodo derecho, un pequeño icono de "+" o número dentro de la caja para indicar contenido.\n\n' +
+            'DISTRIBUCIÓN: formato vertical 4:5. Caja vacía ocupa ~20% de la altura, centrada arriba. Los dos nodos inferiores ocupan la mitad inferior, con amplio espacio en blanco entre ellos y respecto a los bordes.\n\n' +
+            'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+            '— Nodo superior: "CAJA VACÍA" + subtítulo pequeño "todavía no es una variable, no tiene nombre ni valor"\n' +
+            '— Nodo inferior izquierdo: "Crea una caja llamada temperatura" + etiqueta pequeña "ahora tiene nombre"\n' +
+            '— Nodo inferior derecho: "Guarda el número 18 dentro" + etiqueta pequeña "ahora tiene valor"\n' +
+            '— Leyenda inferior centrada, fuera de los nodos: "Sin el nombre, no hay dónde guardar nada. Sin el valor, no hay nada que leer."',
         },
         practice: {
           kind: 'ordering',

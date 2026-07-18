@@ -448,6 +448,21 @@ export const CICLO_3_INPUT: LearningCycle = {
             '     └── «Guarda la respuesta en la caja edad»           ← recién aquí hay un dato',
             'Sin la pregunta, nadie sabe qué escribir. Sin guardar la respuesta, se pierde apenas el programa sigue.',
           ],
+          // Auditoría "infografías" (jul 2026): ver misma nota en
+          // ciclo1-instrucciones-precisas.ts — `body` es texto plano hoy;
+          // este prompt queda listo para pegar en un generador de imágenes.
+          imagePrompt:
+            'Diagrama jerárquico minimalista para una app educativa de programación, modo oscuro.\n\n' +
+            'COMPOSICIÓN: un nodo superior centrado con forma de FORMULARIO/HOJA (un rectángulo con una línea de pregunta impresa y un espacio en blanco debajo, todavía sin respuesta), del que bajan dos líneas conectoras en "Y" invertida hacia dos nodos inferiores: uno muestra el formulario MOSTRANDO la pregunta en pantalla, el otro muestra una CAJA/contenedor guardando la respuesta.\n\n' +
+            'ESTILO: interfaz "glassmorphism" oscura, paneles translúcidos con bordes finos luminosos, sin fotorrealismo — iconografía plana tipo hoja/formulario y contenedor, coherente con un diagrama de flujo de producto SaaS.\n\n' +
+            'COLORES: fondo casi negro #0a0a0f. Nodo superior (formulario sin responder): borde PUNTEADO ámbar #f59e0b, relleno ámbar al 8%. Nodos inferiores: borde SÓLIDO verde esmeralda #10b981, relleno esmeralda al 8%. Líneas conectoras gris translúcido rgba(255,255,255,0.15). Texto principal blanco hueso #f8fafc, texto secundario gris azulado #94a3b8.\n\n' +
+            'ICONOS: icono outline de formulario/hoja con una línea punteada donde iría la respuesta, en el nodo superior. En el nodo inferior izquierdo, un icono de globo de diálogo o altavoz (la pregunta se muestra). En el nodo inferior derecho, un icono de caja/contenedor con un check dentro (el dato quedó guardado).\n\n' +
+            'DISTRIBUCIÓN: formato vertical 4:5. Formulario ocupa ~20% de la altura, centrado arriba. Los dos nodos inferiores ocupan la mitad inferior, con amplio espacio en blanco entre ellos y respecto a los bordes.\n\n' +
+            'ELEMENTOS DE TEXTO (incluir literalmente):\n' +
+            '— Nodo superior: "FORMULARIO" + subtítulo pequeño "la pregunta impresa, todavía sin respuesta"\n' +
+            '— Nodo inferior izquierdo: "Muestra la pregunta ¿Cuántos años tienes?" + etiqueta pequeña "el formulario pregunta"\n' +
+            '— Nodo inferior derecho: "Guarda la respuesta en la caja edad" + etiqueta pequeña "recién aquí hay un dato"\n' +
+            '— Leyenda inferior centrada, fuera de los nodos: "Sin la pregunta, nadie sabe qué escribir. Sin guardar la respuesta, se pierde apenas el programa sigue."',
         },
         practice: {
           kind: 'ordering',

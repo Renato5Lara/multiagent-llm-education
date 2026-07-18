@@ -183,6 +183,15 @@ export interface RemediationIllustration {
   medium: TheoryMedium
   mediumLabel: string
   body: string[]
+  /** Auditoría "infografías" (jul 2026): `medium: 'diagrama'` se renderiza
+   *  hoy como párrafos de texto plano (RemediationStepView reusa el mismo
+   *  bloque para todo `illustration`, sin distinguir medium) — el arte ASCII
+   *  del body (📊/├──/└──) no es un elemento visual real. Este campo NO
+   *  genera ninguna imagen: guarda el prompt ya redactado para pegar en un
+   *  generador de imágenes (ChatGPT/GPT Image) cuando alguien decida crear
+   *  el recurso real. Opcional a propósito — sin él, el peldaño se ve
+   *  exactamente igual que hoy (texto plano, comportamiento intacto). */
+  imagePrompt?: string
 }
 
 export interface RemediationStep {
