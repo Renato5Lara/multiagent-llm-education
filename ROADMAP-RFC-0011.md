@@ -7,8 +7,9 @@
 > "Solo el tesista aprueba RFCs").**
 
 - **Fecha:** 2026-07-24
-- **Estado:** Aprobado (tesista, 2026-07-24) — habilita el Engineering
-  Gate de RFC-0011/1
+- **Estado:** Cerrado end-to-end (tesista, 2026-07-24) — las 3
+  mini-épicas (§§7–10) están CERRADAS: `e514b15` (RFC-0011/1),
+  `867a961` (RFC-0011/2), `37852ee` (RFC-0011/3)
 - **Propietario:** RFC-0011 (nuevo, Boundary — `docs/architecture/`, no
   `docs/architecture/pedagogical/`), subordinado a RFC-0002 §3 (frontera
   Adaptar) y extensión directa de Adenda A (Arquitectura Pedagógica v1.0,
