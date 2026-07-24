@@ -102,11 +102,17 @@ export function usePyodide() {
    *  sirva, cualquier `input()` sin `simulatedInputs` sigue sin recibir
    *  valor, igual que antes de esta capacidad.
    *
-   *  Asume una sola ejecución en curso a la vez (igual que la UI real,
-   *  que deshabilita "Ejecutar" mientras `running` es true) — no hay
-   *  correlación de mensajes por id; dos `run()` concurrentes recibirían
-   *  ambos resultados cruzados. Documentado como límite conocido, no
-   *  resuelto en este commit. */
+   *  INVARIANTE DEL RUNTIME (Épica B): mientras no exista un protocolo con
+   *  correlación de mensajes por id, el Worker admite una única ejecución
+   *  activa. El consumidor NO DEBE invocar `run()` de nuevo hasta que la
+   *  anterior haya resuelto — hoy lo garantiza la UI real (deshabilita
+   *  "Ejecutar" mientras `running` es true), no este hook. Sin esa
+   *  correlación, dos `run()` concurrentes recibirían resultados cruzados
+   *  (el primer 'result' que llegue resuelve el primer listener que siga
+   *  activo, sin importar cuál lo disparó). No es una limitación a
+   *  resolver todavía — reutilizar este Worker para ejecuciones
+   *  concurrentes requiere diseñar esa correlación primero, explícitamente,
+   *  no asumirla disponible. */
   const run = async (code: string, stdinValues?: string[]): Promise<PythonRunResult> => {
     const { worker, ready: readyPromise } = getWorker()
     try {

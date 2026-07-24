@@ -79,6 +79,15 @@ No se reexplican — se citan:
 | Integración real con `usePyodide.ts` y `PythonBridge.tsx` | Entra al alcance — es el objetivo mismo de esta épica |
 | UX para `input()` cancelado o abandonado a mitad de espera | Entra al alcance — decisión de diseño dentro del plan (§5, Commit 4) |
 
+**Invariante del runtime, añadido durante el Commit 2 (no es un riesgo
+a resolver — es una restricción de diseño aceptada explícitamente):**
+mientras no exista un protocolo con correlación de mensajes por id, el
+Worker (`pyodideWorker.ts`) admite una única ejecución activa a la
+vez. Hoy lo garantiza la UI real (`PythonBridge.tsx` deshabilita
+"Ejecutar" mientras `running` es true), no el hook. Reutilizar este
+Worker para ejecuciones concurrentes requiere diseñar esa correlación
+primero — no se asume disponible en ningún commit de esta épica.
+
 ## 5. Decisión tomada: coexistencia (opción a)
 
 **Qué pasa con `simulatedInputs`:** el tipo `PythonMicroPracticeDef`
