@@ -198,6 +198,44 @@ arquitectura-vs-código, ya existentes antes de este commit y ahora
 formalmente registrados (5, 7).** Ningún hallazgo se corrigió aquí — Fase A
 es validación, no desarrollo nuevo.
 
-### Fase B — navegador real
-□ 4 escenarios con experiencia visible crítica: diagnóstico completo,
-  ciclo completo de una misión, interrumpir y volver, cambio de módulo
+### Fase B — navegador real (completa)
+
+Cuenta descartable: `e2e.validacion.c4574c67@upao.edu.pe` (sesión de demo
+real "Maria Garcia" cerrada explícitamente antes de empezar, sin mutarla).
+Recorrido completo contra el stack real (backend `:8000`, frontend
+`:5173`, Postgres real `upao_postgres`) en Chrome real, sin mocks —
+satisface la Regla de Cierre para los 4 escenarios.
+
+| # | Escenario | Correctitud | Coherencia | Observabilidad |
+|---|---|---|---|---|
+| B1 | Diagnóstico completo | ✔ Onboarding→18 preguntas VARK→perfil "visual" (conf. 80%, lectora de apoyo) coincide exactamente con el patrón de respuestas dado | ✔ Deliberación del enjambre (4 agentes + Motor de Consenso) coherente entre sí; ruta generada honra el perfil | ✔ Trace en vivo de la deliberación + panel "traza real del runtime" durante el diagnóstico |
+| B2 | Ciclo completo de una misión | ✔ 3 ciclos (Instrucciones precisas, Variables, Entrada de datos), cada uno Concepto→Práctica→Consolidar; forma automática "infografía" elegida consistentemente para el perfil visual | ✔ Andamiaje decreciente narrado explícitamente ("vamos con menos apoyo") tras cada acierto — los 5 peldaños (Observa→Cambia un detalle→Completa el código→Encuentra el error→Hazlo tú→Profundiza) se citan en el propio "por qué pasó esto"; remediación real (fallo→apoyo con ejemplo resuelto→reintento→éxito) al fallar el ejercicio de práctica del Ciclo 1 | ✔ cada paso expone "por qué pasó esto"; el feedback nunca es solo correcto/incorrecto |
+| B3 | Interrumpir y volver | ✔ Salida a mitad del Ciclo 3 (Concepto de `input()`) vía navegación al Dashboard, regreso con "Continuar misión" — resumió exactamente en el mismo punto | ✔ coincide con Adenda C: recupera el contexto exacto, no introduce información nueva | ✔ banner explícito "Bienvenido de nuevo. Continuemos justo donde lo dejaste."; el Dashboard mostró "Mis Conceptos" con el estado real (2/3 dominados, 1 pendiente) antes de reingresar |
+| B4 | Cambio de módulo | ✔ al completar la Misión 1, transición automática a la Misión 2 ("Estructuras de control") con nueva pregunta de curiosidad; la Ruta de Aprendizaje refleja "Misión 01 — Completada" + "Misión Final — Disponible" | ✔ progreso (1/2 misiones, 50%, 50/100 pts) consistente entre la pantalla de cierre de misión y la Ruta de Aprendizaje | ✔ toast "Misión completada — Tu progreso quedó guardado"; síntesis final ("Tu hipótesis inicial") conecta explícitamente la pregunta de curiosidad del inicio con lo aprendido |
+
+**Observación honesta sobre el Escenario 5 de Fase A (cierre de misión,
+plantilla cliente-side de 3 estados):** este recorrido no ejercitó
+específicamente `evaluatorVerdict` en `ModuleExperienceView.tsx` — los
+"incorrecto" que sí aparecieron durante B2 fueron feedback de ejercicio
+(`Ejecutar`/`Comprobar secuencia`), no el veredicto de cierre de ciclo. El
+hallazgo de Fase A no se confirma ni se refuta aquí; sigue documentado
+como estaba.
+
+**Resultado de Fase B: 4/4 escenarios validados en navegador real contra
+Postgres real — Correctitud y Coherencia completas en los 4; Observabilidad
+alta en los 4** (deliberación del enjambre visible en el diagnóstico, "por
+qué pasó esto" en cada paso de práctica, banner explícito de recuperación,
+toast + síntesis narrada en el cierre de misión). A diferencia de Fase A
+(que documentó 2 brechas reales), esta fase no encontró defectos nuevos:
+la experiencia visible del estudiante coincide con la arquitectura
+documentada en los 4 recorridos ejecutados.
+
+## Cierre del Commit 5
+
+Fase A (10 escenarios, API/HTTP real) + Fase B (4 escenarios, navegador
+real) completas. Hallazgos reales quedan registrados donde ocurrieron
+(Fase A, Escenarios 5 y 7) — ninguno se corrigió en este commit, consistente
+con "Fase A/B es validación, no desarrollo nuevo". Próximo paso: decisión
+del usuario sobre push a `origin/runtime/architecture` (no ejecutado sin
+confirmación explícita) y, eventualmente, una Engineering Review para la
+pregunta abierta de `andamiaje` registrada en el merge del 2026-07-24.
