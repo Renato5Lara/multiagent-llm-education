@@ -570,6 +570,22 @@ def submit_cycle_evidence(
             modalidad_estudiante=diagnostico.dominant_modality if diagnostico else None,
         )
         runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+        # Política de Selección de Forma (Adenda A, Arquitectura Pedagógica
+        # v1.0, Documento 5 §4.1): el Boundary traduce modalidad+profundidad
+        # +alternativas_descartadas (ya en `entrega.diseno`) a una forma
+        # concreta del catálogo de PP4 — nunca el frontend. Aditivo: si
+        # `diseno` es None (el walkthrough aún no adaptó), `forma` queda
+        # ausente, mismo comportamiento de siempre para quien no la lea.
+        if entrega.diseno and entrega.diseno.get("modalidad"):
+            from app.services.adaptive_form_selection import seleccionar_forma
+
+            forma, categoria = seleccionar_forma(
+                modalidad=entrega.diseno["modalidad"],
+                profundidad=entrega.diseno.get("profundidad"),
+                alternativas_descartadas=entrega.diseno.get("alternativas_descartadas", ()),
+                formas_ya_mostradas=frozenset(data.formas_ya_mostradas),
+            )
+            runtime_decision["forma"] = {"tipo": forma, "categoria_consentimiento": categoria}
         # Dataset de investigación (RESEARCH_ITERATIONS.md): un registro por
         # ciclo — modalidad diagnosticada vs. modalidad de refuerzo
         # realmente decidida por Adaptar, nunca solo el agregado pre/post

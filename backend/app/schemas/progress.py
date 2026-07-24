@@ -172,3 +172,9 @@ class CycleEvidenceSubmit(BaseModel):
     solved: bool
     hints_used: int | None = Field(None, ge=0)
     time_ms: int | None = Field(None, ge=0)
+    #: Memoria del Ciclo activo (Documento 6 §1, Arquitectura Pedagógica) —
+    #: formas del catálogo de PP4 ya mostradas en este mismo ciclo, para que
+    #: seleccionar_forma() no repita contenido ya visto (Adenda A). Nunca
+    #: información del runtime — viene del frontend, distinta procedencia
+    #: que `diseno.alternativas_descartadas`.
+    formas_ya_mostradas: list[str] = Field(default_factory=list)
