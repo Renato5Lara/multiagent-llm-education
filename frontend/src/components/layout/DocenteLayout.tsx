@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, BarChart3, GitCompare, FlaskConical, GraduationCap } from 'lucide-react'
+import { LayoutDashboard, BarChart3, Route as RouteIcon, FlaskConical, GraduationCap } from 'lucide-react'
 import Sidebar, { type SidebarItem } from './Sidebar'
 import Header from './Header'
 
@@ -7,12 +7,25 @@ import Header from './Header'
 // conserva por ahora — el Panel Pedagógico reutiliza esas mismas páginas
 // como pestañas, no las reemplaza todavía. Retirar el enlace suelto es una
 // limpieza de navegación separada, no parte de esta pieza.
+//
+// "Mis Cursos" se retiró del menú: es la UI de matrícula multi-curso
+// (crear curso, malla curricular por ciclo) heredada del modelo LMS anterior
+// al pivote a un único curso (Fundamentos de Programación). La ruta y el
+// componente se conservan por compatibilidad (CourseDetail sigue siendo
+// alcanzable desde Dashboard/Analítica por id de curso), solo se retira el
+// punto de entrada de navegación.
+//
+// "Comparación Swarm" se retiró: consumía app/replay/* (sesiones derivadas
+// de WeeklyPedagogicalPlan, sin relación con el runtime LangGraph — sus
+// session_id ni siquiera pertenecen al mismo espacio que el runtime real),
+// y su función central (comparar 2 sesiones) nunca llegó a implementarse en
+// el backend. En su lugar, "Trayectoria del estudiante" (mismo destino que
+// usa Modo Evidencia) sí muestra evidencia real del runtime por estudiante.
 const docenteItems: SidebarItem[] = [
   { label: 'Dashboard', href: '/docente', icon: LayoutDashboard },
-  { label: 'Mis Cursos', href: '/docente/courses', icon: BookOpen },
   { label: 'Panel Pedagógico', href: '/docente/panel-pedagogico', icon: GraduationCap },
   { label: 'Analítica IA', href: '/docente/analytics', icon: BarChart3 },
-  { label: 'Comparación Swarm', href: '/docente/swarm-comparison', icon: GitCompare },
+  { label: 'Trayectoria del estudiante', href: '/replay', icon: RouteIcon },
   { label: 'Modo Evidencia', href: '/evidencia', icon: FlaskConical, sectionBefore: true },
 ]
 
