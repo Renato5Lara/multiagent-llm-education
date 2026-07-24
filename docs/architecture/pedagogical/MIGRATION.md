@@ -25,21 +25,29 @@ de principios.
   `backend/scripts/seed_demo_swarm.py` (¿sigue en uso?), `PENDING_FIXES_M1.md`
   y `frontend/--full-page` (descartables, no son trabajo real)
 
-## Commit 3 — Migración del frontend
-□ `experienceOrchestrator.ts` deja de decidir la forma; consume
-  `seleccionar_forma()` vía el Boundary
-□ Conserva solo: renderizado, copywriting, selección de contenido autorado para
-  la forma recibida (determinista, sin decisión pedagógica nueva)
+## Commit 3 — Wiring + migración del frontend
+✔ `91e7ea4` (3a) — `/cycle-evidence` llama a `seleccionar_forma()`, aditivo
+  puro; `CycleEvidenceSubmit.formas_ya_mostradas` nuevo, aún vacío desde el
+  frontend en este punto. El módulo del Commit 1 deja de estar inerte.
+✔ `b45c9ae` (3b) — `experienceOrchestrator.ts` consume
+  `runtime_decision.forma.tipo` como fuente primaria;
+  `REINFORCEMENT_BY_MODALITY`/`resolveReinforcementPriority` quedan solo de
+  fallback (Boundary sin recomendación reconocible, o sin contenido
+  autorado para la forma recomendada). `visitedReinforcements` ahora viaja
+  como `formas_ya_mostradas` en cada request — cierra el círculo con la
+  corrección funcional del commit `7c9f8d3`.
+✔ Orden invertido respecto al plan original (wiring antes que frontend) por
+  seguridad: evita un adaptador frontend apuntando a un campo que el
+  backend todavía no envía.
+✔ 17/17 tests backend, tsc limpio, eslint sin errores nuevos, build de
+  producción exitoso. Sin cambio de comportamiento observable: misma
+  prioridad, ahora en el Boundary en vez de en el cliente.
 
-## Commit 4 — Wiring
-□ `runtime_bridge.py` expone el contrato en la respuesta de cycle-evidence
-□ El módulo deja de ser inerte
-
-## Commit 5 — Adenda B (Semántica del Rechazo)
+## Commit 4 — Adenda B (Semántica del Rechazo)
 □ Requiere que exista una superficie de consentimiento real (no existe hoy)
 □ Solo después de que el wiring esté en producción
 
-## Commit 6 — Validación funcional
+## Commit 5 — Validación funcional
 □ Repetir el stress-test de escenarios, ahora contra código real
 □ Cada escenario debe terminar en el comportamiento que especifican los
   documentos, no en uno inventado durante la implementación
