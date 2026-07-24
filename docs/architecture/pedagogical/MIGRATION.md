@@ -100,8 +100,15 @@ commit (no solo confiando en lo ya probado):
      dependientes de red externa (`test_retrieval_strategy.py`,
      `test_research_agent.py`), u otra deuda preexistente sin relación
      con `backend/runtime/`, el Boundary o esta migración.
-   - **Conclusión: cero regresiones nuevas en toda la sesión** (Commits
-     1–4), verificado por diff, no por inspección de una muestra.
+   - **Conclusión, formulada con la precisión que el método permite:** no
+     se identificaron regresiones nuevas atribuibles a los Commits 1–4 en
+     las suites ejecutadas y comparadas contra el baseline (2411 tests,
+     por diff exacto de nombres fallidos, no por inspección de una
+     muestra). Esto no es una prueba de ausencia total de regresión —
+     quedan fuera del alcance de esta verificación cualquier camino sin
+     cobertura de test y `tests/test_knowledge_test.py`/los 2 archivos de
+     Tavily con error de colección, excluidos de ambas corridas por
+     separado (ver más abajo).
 4. **Los datos registrados alcanzan para una futura activación** —
    matizado, no un "sí" plano: ver tabla de niveles.
 
