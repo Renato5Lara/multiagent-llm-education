@@ -474,7 +474,7 @@ def update_module(
             _path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
             _course_id = _path.course_id if _path else None
         except Exception:
-            pass
+            logger.warning("Failed to resolve course_id for path %s", module.path_id, exc_info=True)
 
         # Fase de cierre del producto: el flujo continuo de ciclos nunca abre
         # una misión con snapshot, así que complete_mission() de arriba no

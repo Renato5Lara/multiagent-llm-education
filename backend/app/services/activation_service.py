@@ -62,7 +62,7 @@ def _get_swarm_config_for_course_sync(db: Session, course: Course) -> dict:
         if profile.is_programming_course:
             return get_programming_swarm_config()
     except Exception:
-        pass
+        logger.warning("Failed to detect programming course for %s, using default swarm config", course.id, exc_info=True)
     return {
         "agents": ["diagnostic_analyzer", "path_planner", "content_recommender", "evaluation_generator"],
         "consensus_voters": ["mastery", "prereq", "sequence", "time"],
@@ -208,7 +208,7 @@ async def _get_swarm_config_for_course(db: AsyncSession, course: Course) -> dict
         if profile.is_programming_course:
             return get_programming_swarm_config()
     except Exception:
-        pass
+        logger.warning("Failed to detect programming course for %s, using default swarm config", course.id, exc_info=True)
     return {
         "agents": ["diagnostic_analyzer", "path_planner", "content_recommender", "evaluation_generator"],
         "consensus_voters": ["mastery", "prereq", "sequence", "time"],
