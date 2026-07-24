@@ -259,7 +259,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   onDone?: (outcome: PracticeOutcome) => void
   initialProfundidad?: string
 }) {
-  const { ready, loadError, run } = usePyodide()
+  const { ready, loadError, run, awaitingInput, provideInput } = usePyodide()
   const submitCycleEvidence = useSubmitCycleEvidence()
   // `stage` es la etapa EN CURSO de la progresión (practice.nextStage.
   // nextStage...) — el estudiante nunca ve "Etapa 1 de 3": es la misma
@@ -276,6 +276,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   const [solved, setSolved] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
   const [running, setRunning] = useState(false)
+  // Valor que el estudiante está escribiendo para el input() real EN CURSO
+  // (Commit 4, Épica B) — solo tiene sentido mientras `awaitingInput` es
+  // true. Nunca se usa en el mecanismo legado (simulatedInputs), por el
+  // contrato de compatibilidad ENGINEERING-GATE-EPICA-B.md §5.
+  const [inputDraft, setInputDraft] = useState('')
   // POR QUÉ falló el último intento, no solo CUÁNTAS veces — deriva del error
   // real de Pyodide (o su ausencia), nunca de un conteo. Gobierna qué pista
   // y qué diagnóstico se muestran.
@@ -438,6 +443,15 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     }
   }
 
+  /** Entrega al Worker el valor real que el estudiante escribió para el
+   *  input() en curso — provideInput() ya despierta al worker y limpia
+   *  `awaitingInput` (Commit 3, usePyodide.ts); aquí solo se limpia el
+   *  campo local para el siguiente input() si la etapa pide más de uno. */
+  const handleProvideInput = () => {
+    provideInput(inputDraft)
+    setInputDraft('')
+  }
+
   const handleContinueAfterCorrect = () => {
     if (!pendingNextStage) return
     goToStage(pendingNextStage.next, false, pendingNextStage.attempts)
@@ -504,7 +518,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       <CodeEditorPanel
         code={code}
         onChange={setCode}
-        disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
+        disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage || awaitingInput}
       />
       <div className="flex items-center gap-2 flex-wrap">
         <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running || !!pendingNextStage} className="gap-2">
@@ -528,6 +542,35 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
         )}
       </div>
       {loadError && <p className="text-sm text-red-400">{loadError}</p>}
+      {/* Panel de input() real EN VIVO (Commit 4, Épica B) — aparece solo
+          mientras el Worker está bloqueado esperando la respuesta que el
+          propio estudiante escribe, a diferencia del panel "Simularemos que
+          el usuario escribe" (arriba), que muestra un valor ya fijado ANTES
+          de ejecutar. Cancelar la ejecución completa queda para un commit
+          aparte (ENGINEERING-GATE-EPICA-B.md, decisión de alcance del
+          Commit 4) — por ahora el estudiante solo puede responder. */}
+      {awaitingInput && (
+        <div className="rounded-xl border-2 border-neural-glow/40 bg-neural-glow/[0.04] px-3 py-2.5 space-y-2">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-glow">
+            Python está esperando tu respuesta
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={inputDraft}
+              onChange={e => setInputDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleProvideInput()
+              }}
+              autoFocus
+              className="flex-1 rounded-lg border border-white/[0.1] bg-black/30 px-3 py-1.5 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50"
+            />
+            <Button size="sm" onClick={handleProvideInput}>
+              Enviar →
+            </Button>
+          </div>
+        </div>
+      )}
       {!showSolution && <ConsoleOutput output={output} error={error} />}
       {/* Tras un acierto (etapa intermedia en espera de "Continuar", o la
           última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
