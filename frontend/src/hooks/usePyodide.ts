@@ -51,14 +51,21 @@ export function classifyPythonError(error: string | null): PythonErrorCategory {
 // global, y el mecanismo legado (simulatedInputs) no lo necesita para nada.
 let workerSingleton: Worker | null = null
 let readySingleton: Promise<void> | null = null
+// Mismos buffers que recibió el Worker en 'init' — necesarios aquí también
+// para que `provideInput` (Commit 3) escriba en la misma memoria
+// compartida que el worker lee al despertar de `Atomics.wait()`.
+let signalSabSingleton: SharedArrayBuffer | undefined
+let dataSabSingleton: SharedArrayBuffer | undefined
+
+const MAX_INPUT_BYTES = 1024 // debe coincidir con el tamaño de dataSab
 
 function getWorker(): { worker: Worker; ready: Promise<void> } {
   if (!workerSingleton || !readySingleton) {
     const worker = new Worker(new URL('../workers/pyodideWorker.ts', import.meta.url), { type: 'module' })
     workerSingleton = worker
     const canUseSharedBuffers = typeof SharedArrayBuffer !== 'undefined' && self.crossOriginIsolated
-    const signalSab = canUseSharedBuffers ? new SharedArrayBuffer(4) : undefined
-    const dataSab = canUseSharedBuffers ? new SharedArrayBuffer(4 + 1024) : undefined
+    signalSabSingleton = canUseSharedBuffers ? new SharedArrayBuffer(4) : undefined
+    dataSabSingleton = canUseSharedBuffers ? new SharedArrayBuffer(4 + MAX_INPUT_BYTES) : undefined
     readySingleton = new Promise<void>((resolve, reject) => {
       const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
         if (e.data.type === 'ready') {
@@ -85,7 +92,11 @@ function getWorker(): { worker: Worker; ready: Promise<void> } {
       }
       worker.addEventListener('message', onMessage)
       worker.addEventListener('error', onError)
-      worker.postMessage({ type: 'init', signalSab, dataSab } satisfies WorkerInboundMessage)
+      worker.postMessage({
+        type: 'init',
+        signalSab: signalSabSingleton,
+        dataSab: dataSabSingleton,
+      } satisfies WorkerInboundMessage)
     })
   }
   return { worker: workerSingleton, ready: readySingleton }
@@ -94,6 +105,11 @@ function getWorker(): { worker: Worker; ready: Promise<void> } {
 export function usePyodide() {
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  // true mientras el worker está bloqueado en Atomics.wait() esperando un
+  // input() real (Commit 3) — el consumidor (Commit 4) lo usa para mostrar
+  // el panel donde el estudiante escribe el valor. Nunca se activa en el
+  // mecanismo legado (simulatedInputs), por el contrato de compatibilidad §5.
+  const [awaitingInput, setAwaitingInput] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -139,15 +155,36 @@ export function usePyodide() {
       const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
         if (e.data.type === 'result') {
           worker.removeEventListener('message', onMessage)
+          setAwaitingInput(false)
           resolve({ stdout: e.data.stdout, error: e.data.error })
+        } else if (e.data.type === 'need-input') {
+          setAwaitingInput(true)
         }
-        // 'need-input' sin manejar todavía — el Commit 3 agrega la forma
-        // en que el consumidor entrega el valor real al worker.
       }
       worker.addEventListener('message', onMessage)
       worker.postMessage({ type: 'run', code, stdinValues } satisfies WorkerInboundMessage)
     })
   }
 
-  return { ready, loadError, run }
+  /** Entrega al worker el valor real que el estudiante escribió — solo
+   *  tiene efecto mientras `awaitingInput` es true (el worker está
+   *  bloqueado en `Atomics.wait()`, patrón validado en SPIKE-B1). Sin
+   *  UI todavía que la llame (eso es el Commit 4): esta función existe
+   *  pero ningún componente la usa aún, igual que el Worker del Commit 1
+   *  no tenía wiring. Trunca defensivamente a `MAX_INPUT_BYTES` — el
+   *  buffer compartido tiene tamaño fijo (`dataSab`, Commit 1/2); un
+   *  valor más largo se recorta en vez de tirar un RangeError. */
+  const provideInput = (value: string) => {
+    if (!signalSabSingleton || !dataSabSingleton) return
+    let encoded = new TextEncoder().encode(value)
+    if (encoded.length > MAX_INPUT_BYTES) encoded = encoded.slice(0, MAX_INPUT_BYTES)
+    new DataView(dataSabSingleton).setInt32(0, encoded.length, true)
+    new Uint8Array(dataSabSingleton, 4).set(encoded)
+    const signal = new Int32Array(signalSabSingleton)
+    Atomics.store(signal, 0, 1)
+    Atomics.notify(signal, 0)
+    setAwaitingInput(false)
+  }
+
+  return { ready, loadError, run, awaitingInput, provideInput }
 }
