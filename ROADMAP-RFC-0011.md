@@ -398,3 +398,101 @@ issues preexistentes en `ModuleExperienceView.tsx`/`useStudent.ts`
 este cambio, no corregidos (fuera de alcance).
 
 **RFC-0011 (mini-épicas 1, 2 y 3) queda cerrado end-to-end.**
+
+---
+
+## 11. Retrospectiva arquitectónica (2026-07-24)
+
+Cuatro preguntas, pedidas explícitamente por el tesista al cerrar la
+épica — no una narración genérica, sino lo que realmente ocurrió en
+este RFC concreto.
+
+### 1. ¿Qué decisiones arquitectónicas resultaron acertadas?
+
+- **Extender `seleccionar_forma()`/Adenda A en vez de crear una capa de
+  decisión nueva.** Evitó reabrir RFC-0002 §3 y la Arquitectura
+  Pedagógica v1.0 (congelada un día antes de abrirse este RFC). Todo
+  el trabajo quedó en el Boundary, `backend/runtime/` nunca se tocó —
+  cero riesgo sobre el consenso ya validado (RFC-0006).
+- **`origen` como referencia, nunca como explicación fabricada.**
+  Validado en producción real: la misma decisión de Adaptar se
+  reutilizó 5 veces en una sola sesión de estudiante sin divergir —
+  una "copia interpretada" (la alternativa que se descartó) habría
+  arriesgado desincronizarse de la decisión real tarde o temprano.
+- **Separar `PATCH /recursos-generados/{id}` de `POST /cycle-evidence`.**
+  Son dos momentos distintos del mundo real (generar el prompt vs.
+  adjuntar el recurso ya producido externamente, minutos u horas
+  después) — mezclarlos habría acoplado dos responsabilidades con
+  ciclos de vida diferentes.
+- **`version_plantilla` como mecanismo de invalidación.** Permite
+  mejorar el texto de una plantilla sin migrar filas existentes ni
+  inventar un mecanismo de versionado más complejo.
+
+### 2. ¿Qué supuestos cambiaron durante la implementación?
+
+- **El cambio más grande, y ocurrió *antes* de escribir código:** de
+  un "Resource Adaptation Engine" (subsistema nuevo, consenso propio)
+  a una extensión pura del Boundary sin agente nuevo. El roadmap corto
+  (§0–§1) es precisamente lo que hizo posible detectar esto antes del
+  Engineering Gate, no durante.
+- **Trazabilidad: de "motivo" (texto libre/etiquetas) a `origen`
+  (referencia cruda).** Decidido durante la revisión del roadmap, no
+  durante la implementación — el roadmap absorbió la corrección antes
+  de que existiera código que reescribir.
+- **Hallazgo real en vivo:** `runtime_decision["recurso"]` no traía
+  `id` — invisible hasta que la Parte D (PATCH) lo necesitó de verdad.
+  Ninguna auditoría previa lo habría encontrado sin intentar construir
+  el consumidor real; se corrigió de forma aditiva, sin romper nada.
+- **Un supuesto de test resultó falso:** "sin diagnóstico → sin
+  `diseno.modalidad`" no es cierto (el runtime puede derivar modalidad
+  por otra vía, confirmado con una corrida real contra OpenAI). El
+  test se reescribió para validar el invariante estructural real
+  (`forma` y `recurso` aparecen y desaparecen juntos) en vez de un
+  escenario de sesión asumido.
+
+### 3. ¿Qué riesgos siguen abiertos para la siguiente épica?
+
+- **"Épica B" (rediseño de `input()`, consola, ejecución real vs.
+  simulada)** sigue completamente sin diseñar — ni roadmap, ni
+  auditoría, ni Engineering Gate. Es la decisión grande pendiente más
+  próxima.
+- **"Copiar prompt" nunca se confirmó visualmente en un navegador con
+  permiso de portapapeles real** — el navegador automatizado de esta
+  sesión no lo concede. El código fija un fallback silencioso por
+  diseño, pero una pasada manual del tesista en su propio navegador
+  cerraría esta duda por completo.
+- **El catálogo de `PlantillaPrompt` es mínimo** (una plantilla
+  genérica por forma, parametrizada). La calibración del contenido
+  pedagógico real de cada plantilla queda delegada al tesista
+  (ROADMAP-RFC-0011.md §6, decisión 2) — no bloqueante, pero pendiente.
+- **`referencia_recurso` no valida que el recurso corresponde al
+  prompt** (decisión consciente de v1, §2 punto 5). Sigue siendo una
+  superficie de confianza no verificada si el sistema se usa con
+  población real fuera de las cuentas de validación.
+- **RFC-0007 (Observabilidad) sigue en Borrador** — el enriquecimiento
+  visual de "por qué se generó este recurso" en la Runtime Console
+  permanece diferido hasta que esa épica se retome.
+
+### 4. ¿Qué lecciones de implementación conviene repetir?
+
+- **Auditar el código real antes de proponer conceptos nuevos.** Evitó
+  duplicar `seleccionar_forma()` y descubrió a tiempo que el pipeline
+  "similar" ya existente (`PromptEngineeringAgent`) era código BaseAgent
+  retirado, no reutilizable.
+- **Roadmap corto con decisiones explícitas resueltas *antes* del
+  Engineering Gate** — ninguna mini-épica tuvo que reabrir su diseño a
+  mitad de implementación.
+- **Cada mini-épica con su propia ficha + validación contra Postgres
+  real + ambos caminos probados (generar y reutilizar), no solo al
+  final del RFC completo.**
+- **Un commit por mini-épica, cada mensaje citando el commit
+  anterior.** Hace la historia auditable y reversible de forma
+  aislada — confirmado útil en esta misma revisión de coherencia.
+- **Validar con Postgres real y navegador real encontró 2 bugs reales
+  que ningún test unitario habría encontrado:** el índice duplicado en
+  la migración (`CREATE INDEX` sobre una columna que `index=True` ya
+  indexaba) y el `id` faltante en el contrato HTTP del `recurso`.
+- **Separar "qué se persiste" (`origen`, referencia) de "qué se
+  redacta" (ninguna explicación fabricada)** es un criterio reutilizable
+  para cualquier futura capa de trazabilidad del proyecto, no solo
+  para RFC-0011.
