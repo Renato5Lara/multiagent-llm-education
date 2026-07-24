@@ -82,6 +82,39 @@ def test_categoria_de_consentimiento_es_exhaustiva_para_el_catalogo():
         assert categoria in ("automatica", "consentimiento"), forma
 
 
+def test_formas_ya_mostradas_se_evitan_dentro_del_mismo_ciclo():
+    # visual: (animacion, ejemplo_adicional, reto_mas_pequeno, audio).
+    # "animacion" ya mostrada -> debe caer a "ejemplo_adicional".
+    forma, _ = seleccionar_forma(
+        "visual", "fundamentos",
+        formas_ya_mostradas=frozenset({"animacion"}),
+    )
+    assert forma == "ejemplo_adicional"
+
+
+def test_formas_ya_mostradas_prevalece_sobre_alternativa_descartada():
+    # reading: (ejemplo_adicional, animacion, reto_mas_pequeno, audio).
+    # "ejemplo_adicional" descartada por Adaptar Y ya mostrada -> se
+    # relaja primero la descartada (paso 2), nunca lo ya mostrado.
+    forma, _ = seleccionar_forma(
+        "reading", "fundamentos",
+        alternativas_descartadas=({"modalidad": "textual", "razon": "x"},),
+        formas_ya_mostradas=frozenset({"animacion"}),
+    )
+    # ejemplo_adicional: descartada (se salta en el paso 1).
+    # animacion: ya mostrada (se salta en el paso 1).
+    # reto_mas_pequeno: ni descartada ni mostrada -> gana.
+    assert forma == "reto_mas_pequeno"
+
+
+def test_todo_el_catalogo_de_prioridad_ya_mostrado_repite_la_de_mayor_prioridad():
+    forma, _ = seleccionar_forma(
+        "visual", "fundamentos",
+        formas_ya_mostradas=frozenset({"animacion", "ejemplo_adicional", "reto_mas_pequeno", "audio"}),
+    )
+    assert forma == "animacion"
+
+
 def test_formas_con_consentimiento_no_son_seleccionadas_por_las_prioridades_hoy():
     # Ninguna prioridad por modalidad incluye codigo_guiado ni
     # narracion_tutor hoy — confirma que la política es aditiva y no cambia

@@ -75,27 +75,40 @@ def seleccionar_forma(
     modalidad: str,
     profundidad: str | None = None,
     alternativas_descartadas: tuple[Mapping[str, str], ...] = (),
+    formas_ya_mostradas: frozenset[str] = frozenset(),
 ) -> tuple[str, CategoriaConsentimiento]:
     """(forma, categoría) para una decisión de Adaptar dada.
 
     Pura: mismos argumentos, misma salida siempre (mismo estándar de
-    determinismo que rige al runtime, ADR-0001 §4). Los tres argumentos son
-    exactamente lo que Adaptar ya produjo en su claim — nunca información
-    que el runtime no haya declarado (Adenda A, "con qué insumos": modalidad,
-    profundidad, alternativas_descartadas).
+    determinismo que rige al runtime, ADR-0001 §4).
+
+    Dos insumos de origen distinto, trazados por separado (no se combinan
+    en un único parámetro para no perder su procedencia):
+
+    - `modalidad`, `profundidad`, `alternativas_descartadas`: exactamente lo
+      que Adaptar ya produjo en su claim — nunca información que el runtime
+      no haya declarado (Adenda A, "con qué insumos").
+    - `formas_ya_mostradas`: Memoria del Ciclo activo (Documento 6 §1) — qué
+      formas ya vio el estudiante en este mismo Ciclo, nunca del runtime.
+      Corrige un vacío real detectado en revisión: `selectReinforcement`
+      (experienceOrchestrator.ts) sí usa esta señal (`visited`) y la primera
+      versión de esta función no la tenía.
 
     `profundidad == "aplicacion"` (avanzar-con-andamiaje) promueve
     `reto_mas_pequeno` al frente de la prioridad — traducción literal de
-    `preferChallenge` en `selectReinforcement` (experienceOrchestrator.ts):
-    un desafío es interactivo por naturaleza, no depende de la modalidad de
-    consumo. Con `profundidad == "fundamentos"` (reforzar) o sin dato, se usa
-    la prioridad base por modalidad, sin promoción.
+    `preferChallenge` en `selectReinforcement`. Con `profundidad ==
+    "fundamentos"` (reforzar) o sin dato, se usa la prioridad base por
+    modalidad, sin promoción.
 
-    Filtra formas cuya modalidad de origen ya fue descartada por Adaptar
-    (PP5: no-repetición de forma) antes de aplicar la prioridad. Si la
-    prioridad completa queda descartada, se repite la de mayor prioridad —
-    PP5 exige no repetir la ÚLTIMA forma que falló, no agotar el catálogo
-    entero antes de repetir ninguna.
+    Orden de relajación al filtrar (más estricto → menos estricto), mismo
+    comportamiento que el `visited.has()` de `selectReinforcement` conservaba
+    incluso en su propio fallback:
+    1. excluye alternativas_descartadas (PP5) Y formas_ya_mostradas (Memoria);
+    2. si nada calza, excluye solo formas_ya_mostradas — Adaptar discrepó de
+       una modalidad, pero repetirla es preferible a repetir literalmente lo
+       que el estudiante ya vio en este Ciclo;
+    3. si todo el catálogo ya se mostró en este Ciclo, se repite la de mayor
+       prioridad — no hay nada mejor que ofrecer.
     """
     formas_descartadas = {
         _MODALIDAD_DESCARTADA_A_FORMA[alt["modalidad"]]
@@ -108,8 +121,11 @@ def seleccionar_forma(
         if profundidad == "aplicacion"
         else base
     )
-    for forma in prioridad:
-        if forma not in formas_descartadas:
-            return forma, FORM_CONSENT_CATEGORY[forma]
+    for excluir in (formas_descartadas | formas_ya_mostradas, formas_ya_mostradas):
+        for forma in prioridad:
+            if forma not in excluir:
+                return forma, FORM_CONSENT_CATEGORY[forma]
+    # Todo el catálogo ya se mostró en este Ciclo: no hay nada mejor que
+    # repetir la de mayor prioridad.
     forma = prioridad[0]
     return forma, FORM_CONSENT_CATEGORY[forma]

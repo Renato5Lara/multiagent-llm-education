@@ -15,9 +15,20 @@ frontera ya declarada en `adaptar/productor.py`: "categorías pedagógicas, nunc
 ni la interfaz (reintroduciría subjetividad de diseño sobre algo que sigue siendo
 pedagógico, violando PP1).
 
-**Con qué insumos:** exclusivamente lo que Adaptar ya produjo — modalidad,
-profundidad, y `alternativas_descartadas` cuando exista señal de Tutorizar (PP5).
-Nunca información que el runtime no haya declarado.
+**Con qué insumos:** dos orígenes distintos, trazados por separado — nunca
+combinados en un único parámetro sin distinguir su procedencia.
+
+1. Lo que Adaptar ya produjo — modalidad, profundidad, y
+   `alternativas_descartadas` cuando exista señal de Tutorizar (PP5). Nunca
+   información que el runtime no haya declarado.
+2. Memoria del Ciclo activo (Documento 6 §1) — qué formas ya vio el
+   estudiante en este mismo Ciclo. *(Corrección de implementación,
+   2026-07-23: la primera versión del contrato solo listaba el insumo 1;
+   una revisión funcional contra `selectReinforcement`
+   (`experienceOrchestrator.ts`, insumo `visited`) encontró que ese
+   comportamiento ya existía y no estaba cubierto — se añadió sin cambiar
+   "quién decide" ni "con qué insumos del runtime", solo completando el
+   insumo de Memoria que ya reconocía el Documento 6.)*
 
 **Restricción de la política:** la función (modalidad, profundidad,
 alternativas_descartadas) → forma concreta debe ser determinista y declarada
