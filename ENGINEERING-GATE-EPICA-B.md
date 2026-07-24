@@ -122,10 +122,22 @@ Commit 1 — Worker runtime aislado
   Verificable: build limpia, sin comportamiento visible nuevo.
 
 Commit 2 — usePyodide.ts adaptado al Worker
-  Mismo contrato público { ready, loadError, run } — el motor interno
-  cambia (Worker + SharedArrayBuffer), los consumidores no se tocan.
-  Verificable: mismas pruebas/comportamiento que hoy con
-  simulatedInputs (regresión cero).
+  Mismo contrato público { ready, loadError, run } en forma — el motor
+  interno cambia (Worker + SharedArrayBuffer). Verificable: mismo
+  comportamiento que hoy con simulatedInputs (regresión cero).
+
+  EXCEPCIÓN DE ALCANCE (descubierta al planificar el Commit 2, no
+  anticipada al escribir este Gate): postMessage es inherentemente
+  asíncrono, así que run() pasa de PythonRunResult síncrono a
+  Promise<PythonRunResult> — no es una decisión de diseño, es
+  consecuencia obligada de comunicarse con un Worker (mantenerlo
+  síncrono exigiría Atomics.wait() en el hilo principal, exactamente
+  el bloqueo de pestaña que el Worker existe para evitar). Esto rompe
+  la compilación de PythonBridge.tsx:handleRun() si no se ajusta, así
+  que el Commit 2 incluye un ajuste MECÁNICO ahí: handleRun async +
+  await run(...), nada más — cero UI nueva, cero estado nuevo, mismo
+  comportamiento observable exacto. El panel de input() real (Commit
+  4) sigue intacto y sin tocar.
 
 Commit 3 — Protocolo de stdin real (Atomics.wait)
   La función que expone el hook para que el consumidor entregue el
