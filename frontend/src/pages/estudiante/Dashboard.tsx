@@ -1,27 +1,22 @@
 import {
-  Brain, Zap, Lock, CheckCircle, Circle, ArrowRight,
-  BookOpen, ChevronRight, MessageCircle, Loader2,
+  Brain, Zap, ArrowRight, CheckCircle,
+  Loader2, Gauge, Layers, ListChecks,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useMyCourses, useLearningPath, useStudentProfile } from '@/hooks/useStudent'
+import { useMyCourses, useLearningPath, useStudentProfile, useAdaptiveDecision } from '@/hooks/useStudent'
 import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
 import { MODALITY_LABELS } from '@/lib/constants'
 import type { CourseProgress, LearningPathItem } from '@/types/student'
+import LearningMap from '@/components/dashboard/LearningMap'
+import TutorInsightsPanel from '@/components/dashboard/TutorInsightsPanel'
+import AchievementsStrip from '@/components/dashboard/AchievementsStrip'
+import QuickAccessRow from '@/components/dashboard/QuickAccessRow'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-
-const MODALITY_DARK: Record<string, string> = {
-  visual:      'border-purple-400/40 text-purple-300 bg-purple-400/10',
-  video:       'border-blue-400/40 text-blue-300 bg-blue-400/10',
-  audio:       'border-orange-400/40 text-orange-300 bg-orange-400/10',
-  reading:     'border-green-400/40 text-green-300 bg-green-400/10',
-  kinesthetic: 'border-red-400/40 text-red-300 bg-red-400/10',
-  game:        'border-amber-400/40 text-amber-300 bg-amber-400/10',
-}
 
 // La experiencia activa la marca el backend (is_active_experience); el frontend
 // nunca busca por código de curso ni conoce "IS301".
@@ -38,7 +33,7 @@ function getGreeting() {
 
 function Greeting({ name }: { name: string }) {
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <p className="text-neural-muted text-sm font-mono tracking-wider uppercase mb-1">
         {getGreeting()}
       </p>
@@ -48,236 +43,124 @@ function Greeting({ name }: { name: string }) {
   )
 }
 
-function FdPHeroCard({ course, missions, currentMission, navigate }: {
-  course: CourseProgress
-  /** Progreso real por misiones (desde la ruta ya cargada); null si aún no hay ruta */
-  missions: { completed: number; total: number } | null
-  /** Primera misión disponible — el punto de continuación del estudiante */
-  currentMission: LearningPathItem | null
-  navigate: ReturnType<typeof useNavigate>
-}) {
-  const modColor = course.dominant_modality ? MODALITY_DARK[course.dominant_modality] : ''
-  // Post-Test: se ofrece al cerrar el recorrido (todas las misiones completadas),
-  // solo si el pre-test existe y el post aún no se rindió.
-  const ktStatus = useKnowledgeTestStatus(course.course_id)
-  const allMissionsDone = missions !== null && missions.total > 0 && missions.completed === missions.total
-  const posttestPending =
-    allMissionsDone &&
-    ktStatus.data?.pretest?.status === 'completed' &&
-    ktStatus.data?.posttest?.status !== 'completed'
-  // El progreso que ve el estudiante es el de sus MISIONES, no el de recursos
-  // (completar misiones no movía el % anterior — dashboard "0%" engañoso).
-  const pct = missions && missions.total > 0
-    ? Math.round((missions.completed / missions.total) * 100)
-    : course.progress_percentage
+/** Nivel de dominio real (pre-test de conocimiento), no un "nivel" de XP inventado. */
+function DifficultyLevelCard({ courseId }: { courseId: string }) {
+  const { data, isLoading } = useKnowledgeTestStatus(courseId)
+  const pretest = data?.pretest
 
   return (
-    <div className="glass-panel rounded-2xl p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-neural-glow/6 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-neural-violet/6 blur-3xl pointer-events-none" />
+    <div className="glass-panel rounded-2xl p-5 flex flex-col items-center text-center">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-neural-muted/70 mb-3">
+        Nivel de dominio actual
+      </p>
 
-      <div className="relative z-10">
-        {/* Header row */}
-        <div className="flex items-start justify-between mb-5">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-mono text-neural-glow tracking-[0.15em] uppercase bg-neural-glow/10 border border-neural-glow/20 rounded px-2 py-0.5">
-                Experiencia adaptativa
-              </span>
-              {course.dominant_modality && (
-                <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${modColor}`}>
-                  Perfil {MODALITY_LABELS[course.dominant_modality] || course.dominant_modality}
-                </Badge>
-              )}
+      {isLoading ? (
+        <Skeleton className="h-24 w-24 rounded-full" />
+      ) : pretest?.status === 'completed' ? (
+        <>
+          <div className="relative h-24 w-24 flex items-center justify-center mb-2">
+            <svg className="h-24 w-24 -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="8" className="text-white/[0.06]" />
+              <circle
+                cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round"
+                className="text-neural-violet transition-all duration-700"
+                strokeDasharray={`${2 * Math.PI * 42}`}
+                strokeDashoffset={`${2 * Math.PI * 42 * (1 - (pretest.percentage ?? 0) / 100)}`}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-sm font-bold text-neural-text leading-none">{pretest.level_label}</span>
             </div>
-            <h2 className="text-lg font-bold text-neural-text leading-tight">{course.course_name}</h2>
           </div>
-
-          {/* Big progress number */}
-          <div className="text-right flex-shrink-0 ml-4">
-            <p className="text-4xl font-bold font-mono text-neural-glow leading-none">
-              {pct}
-            </p>
-            <p className="text-[10px] text-neural-muted/60 font-mono mt-0.5">% completado</p>
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full bg-white/[0.06] rounded-full h-2 mb-2">
-          <div
-            className="bg-neural-glow h-2 rounded-full neural-glow-sm transition-all duration-700"
-            style={{ width: `${Math.max(pct, 2)}%` }}
-          />
-        </div>
-        {missions && missions.total > 0 && (
-          <p className="text-[10px] font-mono text-neural-muted/50 mb-5">
-            {missions.completed}/{missions.total} misiones completadas
+          <p className="text-[11px] text-neural-muted/60 leading-relaxed">
+            {pretest.percentage}% en tu evaluación diagnóstica de conocimiento.
           </p>
-        )}
-        {(!missions || missions.total === 0) && <div className="mb-5" />}
+        </>
+      ) : (
+        <p className="text-xs text-neural-muted/60 py-6">
+          Tu nivel se calculará al completar la evaluación diagnóstica.
+        </p>
+      )}
+    </div>
+  )
+}
 
-        {/* Status indicators */}
-        <div className="flex items-center gap-4 mb-5">
-          <div className={`flex items-center gap-1.5 text-xs ${course.has_diagnostic ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
-            {course.has_diagnostic ? <CheckCircle className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-            Diagnóstico
-          </div>
-          <div className={`flex items-center gap-1.5 text-xs ${course.has_learning_path ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
-            {course.has_learning_path ? <CheckCircle className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-            Ruta personalizada
-          </div>
-          <div className={`flex items-center gap-1.5 text-xs ${course.has_learning_path ? 'text-neural-pulse' : 'text-neural-muted/40'}`}>
-            {course.has_learning_path ? <MessageCircle className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-            Tutor IA
-          </div>
-        </div>
+function NextMissionCard({
+  course, currentMission, posttestPending, navigate,
+}: {
+  course: CourseProgress
+  currentMission: LearningPathItem | null
+  posttestPending: boolean
+  navigate: ReturnType<typeof useNavigate>
+}) {
+  return (
+    <div className="glass-panel rounded-2xl p-5 relative overflow-hidden h-full flex flex-col">
+      <div className="absolute top-0 right-0 w-48 h-48 bg-neural-glow/6 blur-3xl pointer-events-none" />
+      <div className="relative z-10 flex flex-col flex-1">
+        <span className="text-[10px] font-mono text-neural-glow tracking-[0.15em] uppercase bg-neural-glow/10 border border-neural-glow/20 rounded px-2 py-0.5 self-start mb-3">
+          Siguiente paso recomendado
+        </span>
 
-        {/* CTA — conduce a la misión actual (la Misión Activa reanuda sola) */}
         {!course.has_diagnostic ? (
-          <Button className="gap-2" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
-            <Brain className="h-4 w-4" />
-            Comenzar diagnóstico
-          </Button>
+          <>
+            <h3 className="text-base font-bold text-neural-text mb-1">Evaluación diagnóstica</h3>
+            <p className="text-xs text-neural-muted/70 mb-4 flex-1">
+              El sistema multiagente necesita conocerte para construir tu ruta personalizada.
+            </p>
+            <Button className="gap-2 self-start" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
+              <Brain className="h-4 w-4" /> Comenzar diagnóstico
+            </Button>
+          </>
         ) : posttestPending ? (
-          <Button className="gap-2" onClick={() => navigate(`/estudiante/post-test/${course.course_id}`)}>
-            <CheckCircle className="h-4 w-4" />
-            Rendir Post-Test
-          </Button>
+          <>
+            <h3 className="text-base font-bold text-neural-text mb-1">Post-Test</h3>
+            <p className="text-xs text-neural-muted/70 mb-4 flex-1">
+              Completaste todas tus misiones. Cierra el recorrido midiendo cuánto avanzaste.
+            </p>
+            <Button className="gap-2 self-start" onClick={() => navigate(`/estudiante/post-test/${course.course_id}`)}>
+              <CheckCircle className="h-4 w-4" /> Rendir Post-Test
+            </Button>
+          </>
         ) : currentMission ? (
-          <div className="flex items-center gap-3 flex-wrap">
+          <>
+            <h3 className="text-base font-bold text-neural-text mb-1 line-clamp-2">{currentMission.title}</h3>
+            <p className="text-xs text-neural-muted/70 mb-4 flex-1">
+              Continúa exactamente donde lo dejaste — tu ruta se adapta a tu progreso real.
+            </p>
             <Button
-              className="gap-2"
+              className="gap-2 self-start"
               onClick={() => navigate(
                 `/estudiante/module/${currentMission.id}?courseId=${course.course_id}&title=${encodeURIComponent(currentMission.title)}`
               )}
             >
-              <ArrowRight className="h-4 w-4" />
-              Continuar misión
+              <ArrowRight className="h-4 w-4" /> Continuar misión
             </Button>
-            <span className="text-xs text-neural-muted/70 truncate max-w-[260px]">
-              {currentMission.title}
-            </span>
-          </div>
+          </>
         ) : (
-          <Button className="gap-2" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
-            <Zap className="h-4 w-4" />
-            Ver ruta adaptativa
-          </Button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-const MODULE_STATUS = {
-  completed: { icon: CheckCircle, color: 'text-neural-pulse', ring: 'border-neural-pulse/30 bg-neural-pulse/5' },
-  available: { icon: Circle,       color: 'text-neural-glow',  ring: 'border-neural-glow/30 bg-neural-glow/5' },
-  locked:    { icon: Lock,         color: 'text-neural-muted/30', ring: 'border-white/[0.06] bg-white/[0.02]' },
-} as const
-
-function ModuleTimeline({
-  items, courseId, navigate,
-}: { items: LearningPathItem[]; courseId: string; navigate: ReturnType<typeof useNavigate> }) {
-  const currentIdx = items.findIndex(i => i.status === 'available')
-  const start = Math.max(0, (currentIdx === -1 ? items.length - 1 : currentIdx) - 1)
-  const visible = items.slice(start, start + 5)
-
-  return (
-    <div className="glass-panel rounded-2xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-neural-text flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-neural-glow" />
-          Ruta de aprendizaje
-        </h3>
-        <button
-          onClick={() => navigate(`/estudiante/path/${courseId}`)}
-          className="text-xs text-neural-muted hover:text-neural-glow flex items-center gap-1 transition-colors font-mono"
-        >
-          Ver completa <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        {visible.map((item, idx) => {
-          const cfg = MODULE_STATUS[item.status as keyof typeof MODULE_STATUS] ?? MODULE_STATUS.locked
-          const Icon = cfg.icon
-          const isActive = item.status === 'available'
-
-          return (
-            <button
-              key={item.id}
-              disabled={item.status === 'locked'}
-              // A la MISIÓN (reanuda o repasa vía Misión Activa), no al viewer
-              // legacy de recursos — antes era botón muerto sin resource_id.
-              onClick={() => navigate(
-                `/estudiante/module/${item.id}?courseId=${courseId}&title=${encodeURIComponent(item.title)}`
-              )}
-              className={[
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-200 text-left',
-                cfg.ring,
-                item.status === 'locked' ? 'cursor-not-allowed opacity-50' : 'hover:border-neural-glow/30 cursor-pointer',
-                isActive ? 'ring-1 ring-neural-glow/20' : '',
-              ].join(' ')}
-            >
-              <Icon className={`h-4 w-4 flex-shrink-0 ${cfg.color}`} />
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium truncate ${item.status === 'locked' ? 'text-neural-muted/40' : 'text-neural-text'}`}>
-                  {item.title}
-                </p>
-                {item.resource_type && (
-                  <p className="text-[10px] text-neural-muted/50 font-mono uppercase tracking-wider mt-0.5">
-                    {item.resource_type}
-                  </p>
-                )}
-              </div>
-              <span className="text-[10px] font-mono text-neural-muted/40 flex-shrink-0">
-                {start + idx + 1}/{items.length}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function AdaptiveProfileCard({
-  name, initials, modality, currentModuleTitle,
-}: {
-  name: string; initials: string; modality: string | null; currentModuleTitle?: string
-}) {
-  const modColor = modality ? MODALITY_DARK[modality] : ''
-
-  return (
-    <div className="glass-panel rounded-2xl p-5">
-      <div className="flex items-center gap-3 mb-5">
-        <div className="w-10 h-10 rounded-full bg-neural-glow/15 border border-neural-glow/30 flex items-center justify-center flex-shrink-0">
-          <span className="text-neural-glow font-bold text-sm">{initials}</span>
-        </div>
-        <div>
-          <p className="text-neural-text font-semibold text-sm">{name}</p>
-          <p className="text-neural-muted text-xs">Perfil adaptativo</p>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        {modality && (
-          <div className="flex items-center justify-between bg-neural-lowest/60 rounded-xl px-3 py-2.5">
-            <span className="text-xs text-neural-muted">Perfil</span>
-            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${modColor}`}>
-              {MODALITY_LABELS[modality] || modality}
-            </Badge>
-          </div>
-        )}
-
-        {currentModuleTitle && (
-          <div className="bg-neural-lowest/60 rounded-xl px-3 py-2.5">
-            <p className="text-[10px] text-neural-muted mb-1">Recomendación</p>
-            <p className="text-xs text-neural-text leading-snug">
-              Continuar con <span className="text-neural-glow font-medium">{currentModuleTitle}</span>
+          <>
+            <h3 className="text-base font-bold text-neural-text mb-1">Ruta adaptativa</h3>
+            <p className="text-xs text-neural-muted/70 mb-4 flex-1">
+              Tu ruta personalizada ya está lista para empezar.
             </p>
-          </div>
+            <Button className="gap-2 self-start" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
+              <Zap className="h-4 w-4" /> Ver ruta adaptativa
+            </Button>
+          </>
         )}
+      </div>
+    </div>
+  )
+}
+
+function StatTile({ icon: Icon, label, value }: { icon: typeof Gauge; label: string; value: string | number }) {
+  return (
+    <div className="glass-panel rounded-2xl p-4 flex items-center gap-3">
+      <div className="h-9 w-9 rounded-xl bg-neural-glow/10 border border-neural-glow/20 flex items-center justify-center flex-shrink-0">
+        <Icon className="h-4 w-4 text-neural-glow" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-bold text-neural-text leading-none">{value}</p>
+        <p className="text-[10px] text-neural-muted/60 mt-1 leading-tight">{label}</p>
       </div>
     </div>
   )
@@ -299,15 +182,20 @@ function NoCourseState() {
 function DashboardSkeleton() {
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-6">
         <Skeleton className="h-4 w-24 mb-2" />
         <Skeleton className="h-7 w-48 mb-1" />
         <Skeleton className="h-4 w-56" />
       </div>
-      <Skeleton className="h-52 rounded-2xl mb-6" />
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 mb-6">
         <Skeleton className="h-64 rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
+        <div className="space-y-6">
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-48 rounded-2xl" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 rounded-2xl" />)}
       </div>
     </div>
   )
@@ -324,6 +212,8 @@ export default function EstudianteDashboard() {
 
   const fdp = findActiveExperience(courses)
   const { data: path, isLoading: pathLoading } = useLearningPath(fdp?.course_id)
+  const ktStatus = useKnowledgeTestStatus(fdp?.course_id)
+  const { data: adaptiveDecision } = useAdaptiveDecision(fdp?.course_id)
 
   if (coursesLoading || (fdp?.has_learning_path && pathLoading)) return <DashboardSkeleton />
 
@@ -336,7 +226,22 @@ export default function EstudianteDashboard() {
   const missions = items.length > 0
     ? { completed: items.filter(i => i.status === 'completed').length, total: items.length }
     : null
-  const currentModuleTitle = currentMission?.title
+  const pct = fdp ? (missions && missions.total > 0
+    ? Math.round((missions.completed / missions.total) * 100)
+    : fdp.progress_percentage) : 0
+
+  const allMissionsDone = missions !== null && missions.total > 0 && missions.completed === missions.total
+  const posttestPending =
+    allMissionsDone &&
+    ktStatus.data?.pretest?.status === 'completed' &&
+    ktStatus.data?.posttest?.status !== 'completed'
+
+  // Competencias distintas cubiertas por misiones ya completadas + las que
+  // Diagnosticar ya interpretó como dominadas (misma fuente que el panel del Tutor).
+  const competenciasDominadas = new Set([
+    ...items.filter(i => i.status === 'completed').flatMap(i => i.competencies),
+    ...(adaptiveDecision?.skip_hint_topics ?? []),
+  ]).size
 
   return (
     <div>
@@ -346,28 +251,85 @@ export default function EstudianteDashboard() {
         <NoCourseState />
       ) : (
         <div className="space-y-6">
-          {/* ── Hero — ancho completo ─────────────────────── */}
-          <FdPHeroCard
-            course={fdp}
-            missions={missions}
-            currentMission={currentMission}
-            navigate={navigate}
-          />
+          {/* ── Mapa de aprendizaje — protagonista, ancho completo ────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div className="glass-panel rounded-2xl p-6 relative overflow-hidden">
+              <div className="absolute inset-0 hex-bg opacity-50 pointer-events-none" />
+              <div className="absolute -top-10 -right-10 w-64 h-64 bg-neural-glow/8 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-neural-violet/8 blur-3xl pointer-events-none" />
 
-          {/* ── Timeline + Perfil — 2 columnas ───────────── */}
-          {fdp.has_learning_path && (
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
-              {path?.items.length ? (
-                <ModuleTimeline items={path.items} courseId={fdp.course_id} navigate={navigate} />
-              ) : <div />}
-              <AdaptiveProfileCard
-                name={name}
-                initials={initials}
-                modality={modality}
-                currentModuleTitle={currentModuleTitle}
-              />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-1 flex-wrap gap-3">
+                  <h2 className="text-base font-bold text-neural-text flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-neural-glow" />
+                    Mapa de aprendizaje
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-neural-glow/30 text-neural-glow bg-neural-glow/10">
+                      {pct}% completado
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-6 h-6 rounded-full bg-neural-glow/15 border border-neural-glow/30 flex items-center justify-center flex-shrink-0">
+                    <span className="text-neural-glow font-bold text-[9px]">{initials}</span>
+                  </div>
+                  <p className="text-xs text-neural-muted">
+                    {fdp.course_name}
+                    {modality && (
+                      <> · <span className="text-neural-glow">{MODALITY_LABELS[modality] || modality}</span></>
+                    )}
+                  </p>
+                </div>
+
+                {items.length > 0 ? (
+                  <div className="min-h-[240px] flex items-center py-4">
+                    <LearningMap items={items} courseId={fdp.course_id} />
+                  </div>
+                ) : (
+                  <p className="text-xs text-neural-muted/60 py-8 text-center">
+                    Tu ruta aparecerá aquí en cuanto completes el diagnóstico.
+                  </p>
+                )}
+              </div>
             </div>
-          )}
+
+            <DifficultyLevelCard courseId={fdp.course_id} />
+          </div>
+
+          {/* ── Indicadores de progreso — ancho completo ─────────────────── */}
+          <div id="progreso" className="grid grid-cols-2 sm:grid-cols-4 gap-4 scroll-mt-6">
+            <StatTile icon={Gauge} label="Avance general" value={`${pct}%`} />
+            <StatTile
+              icon={ListChecks}
+              label="Misiones completadas"
+              value={missions ? `${missions.completed}/${missions.total}` : '0/0'}
+            />
+            <StatTile icon={Layers} label="Competencias dominadas" value={competenciasDominadas} />
+            <StatTile
+              icon={Brain}
+              label="Dificultad actual"
+              value={ktStatus.data?.pretest?.level_label ?? 'Pendiente'}
+            />
+          </div>
+
+          {/* ── Próxima misión + Tutor IA — 2 columnas ───────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
+            <NextMissionCard
+              course={fdp}
+              currentMission={currentMission}
+              posttestPending={!!posttestPending}
+              navigate={navigate}
+            />
+            <TutorInsightsPanel courseId={fdp.course_id} nextMissionTitle={currentMission?.title} />
+          </div>
+
+          {/* ── Logros académicos — ancho completo ───────────────────────── */}
+          <AchievementsStrip items={items} />
+
+          {/* ── Accesos rápidos ───────────────────────────────────────────── */}
+          <QuickAccessRow courseId={fdp.course_id} currentMission={currentMission} />
         </div>
       )}
     </div>
