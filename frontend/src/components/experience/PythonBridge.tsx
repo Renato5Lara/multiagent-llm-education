@@ -7,7 +7,7 @@
 // el estudiante escribe Python real, ejecutado con Pyodide en el propio
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
-import { useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
@@ -84,7 +84,12 @@ const ERROR_CATEGORY_LABEL: Record<PythonErrorCategory, string> = {
  *  se desplaza (encontrado validando manualmente, no en revisión de
  *  código: el gutter quedaba fijo en 1-12 mientras el textarea ya
  *  mostraba líneas más abajo). Contenido autorado hoy llega como máximo
- *  a 6 líneas, pero el editor debe sostenerse igual si eso cambia. */
+ *  a 6 líneas, pero el editor debe sostenerse igual si eso cambia.
+ *
+ *  La altura del gutter se MIDE del propio DOM (altura real de una de
+ *  sus líneas, que comparte fuente/leading exactos con el `<textarea>`)
+ *  en vez de un valor fijo — así no se desincroniza si cambia la
+ *  tipografía o el `leading` de estas clases más adelante. */
 function CodeEditorPanel({
   code,
   onChange,
@@ -95,8 +100,18 @@ function CodeEditorPanel({
   disabled: boolean
 }) {
   const gutterRef = useRef<HTMLDivElement>(null)
+  // Estimación previa a medir (13px * leading-relaxed 1.625) — solo evita
+  // un salto de layout en el primer render; useLayoutEffect la reemplaza
+  // por la altura real antes de que el navegador pinte.
+  const [lineHeightPx, setLineHeightPx] = useState(21.125)
   const lineCount = code.split('\n').length
   const visibleRows = Math.min(12, Math.max(3, lineCount))
+
+  useLayoutEffect(() => {
+    const firstLine = gutterRef.current?.firstElementChild
+    if (firstLine) setLineHeightPx(firstLine.getBoundingClientRect().height)
+  }, [])
+
   return (
     <div className="rounded-xl border border-white/[0.1] bg-black/30 overflow-hidden transition-colors focus-within:border-neural-glow/50">
       <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-white/[0.06] bg-white/[0.02]">
@@ -109,7 +124,7 @@ function CodeEditorPanel({
         <div
           ref={gutterRef}
           aria-hidden
-          style={{ maxHeight: `${visibleRows * 21.125}px` }}
+          style={{ maxHeight: `${visibleRows * lineHeightPx}px` }}
           className="select-none overflow-hidden py-2 pl-3 pr-2 text-right font-mono text-[13px] leading-relaxed text-neural-muted/25"
         >
           {Array.from({ length: lineCount }, (_, i) => (
