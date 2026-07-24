@@ -50,11 +50,18 @@ de principios.
   todos los ciclos estén completamente adaptados con contenido autorado para
   cada una, evaluar eliminar definitivamente el fallback — no antes.
 
-## Commit 4 — Adenda B (Semántica del Rechazo)
-□ Requiere que exista una superficie de consentimiento real (no existe hoy)
-□ Precedido por [NOTA-INTERACCION-CONSENTIMIENTO.md](NOTA-INTERACCION-CONSENTIMIENTO.md)
-  — preguntas de diseño de interacción que Adenda B no responde a ese nivel
-□ Solo después de que el wiring esté en producción
+## Commit 4 — Infraestructura de la Adenda B (no "Adenda B completa")
+□ [NOTA-INTERACCION-CONSENTIMIENTO.md](NOTA-INTERACCION-CONSENTIMIENTO.md) ya
+  cerró las 2 decisiones que faltaban — desbloqueado.
+□ Ámbito: contrato, persistencia (Memoria del rechazo), eventos, pruebas —
+  aunque ningún caso real del runtime la active todavía (ninguna prioridad
+  de `_PRIORIDAD_POR_MODALIDAD` selecciona `codigo_guiado`/`narracion_tutor`
+  hoy; ver NOTA §3). Misma situación en la que estuvo
+  `adaptive_form_selection.py` entre el Commit 1 y el Commit 3 — construir
+  la infraestructura ahora evita tener que tocar varias capas a la vez
+  cuando una prioridad futura sí la active.
+□ Oferta proactiva (esto) y solicitud voluntaria (botón Ayuda) quedan
+  desacopladas por diseño — un rechazo nunca bloquea la segunda (NOTA §7).
 
 ## Commit 5 — Validación funcional
 □ Repetir el stress-test de escenarios, ahora contra código real

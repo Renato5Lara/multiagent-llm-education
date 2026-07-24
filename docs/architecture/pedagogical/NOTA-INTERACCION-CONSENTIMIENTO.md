@@ -30,16 +30,22 @@ transiciones de mayor escala hasta que exista un productor del runtime que
 las origine.**
 
 Precisión importante que hay que dejar registrada antes de implementar: bajo
-esa acotación, **el ámbito real hoy es vacío**. `_PRIORIDAD_POR_MODALIDAD`
-(`adaptive_form_selection.py`) nunca selecciona `codigo_guiado` ni
-`narracion_tutor` — las dos únicas formas del catálogo de PP4 marcadas
-"consentimiento" en `FORM_CONSENT_CATEGORY` — porque ninguna prioridad las
-incluye (confirmado por `test_formas_con_consentimiento_no_son_seleccionadas_
-por_las_prioridades_hoy`, commit `1ba66ed`). "Iniciar un laboratorio guiado",
-"cambiar completamente de actividad" e "iniciar una remediación extensa"
-(ejemplos originales de Doc 5 §4.1) tampoco son formas del catálogo — son
-transiciones que ni `adaptive_form_selection.py` ni `DISENO_POR_ACCION`
-producen.
+esa acotación, **el ámbito real es vacío en el estado actual del runtime —
+un hecho de la implementación presente, no una propiedad permanente de la
+arquitectura.** La Constitución y la Adenda A ya declaran `codigo_guiado` y
+`narracion_tutor` como formas legítimas del catálogo de PP4
+(`FORM_CONSENT_CATEGORY`); lo que falta es que alguna prioridad del runtime
+las produzca — hoy `_PRIORIDAD_POR_MODALIDAD` (`adaptive_form_selection.py`)
+nunca las selecciona (confirmado por
+`test_formas_con_consentimiento_no_son_seleccionadas_por_las_prioridades_hoy`,
+commit `1ba66ed`). Cuando eso ocurra —ampliando esa tabla o vía un productor
+nuevo por RFC— el ámbito deja de ser vacío sin que ningún documento de esta
+cadena tenga que cambiar de criterio: la arquitectura no cambió, la
+implementación alcanzó lo que ya estaba previsto. "Iniciar un laboratorio
+guiado", "cambiar completamente de actividad" e "iniciar una remediación
+extensa" (ejemplos originales de Doc 5 §4.1) tampoco son formas del
+catálogo — son transiciones que ni `adaptive_form_selection.py` ni
+`DISENO_POR_ACCION` producen.
 
 **Consecuencia para la implementación:** la Adenda B, acotada así, no tiene
 todavía ningún caso real que gobernar. Su semántica de rechazo se implementa
@@ -99,7 +105,7 @@ silencio.
 | Pregunta | Estado |
 |---|---|
 | 1, 2, 4, 6 | Ya resueltas por documentos existentes — sin trabajo nuevo |
-| 3 | **Decidido:** Adenda B acotada a formas que el Boundary ya puede producir — ámbito real hoy es vacío (ninguna forma "consentimiento" es seleccionada por ninguna prioridad todavía) |
+| 3 | **Decidido:** Adenda B acotada a formas que el Boundary ya puede producir — ámbito vacío en el estado *actual* del runtime (ninguna prioridad selecciona una forma "consentimiento" todavía); no es un límite permanente de la arquitectura |
 | 5 | Decisión de implementación (esquema de Memoria), no de arquitectura |
 | 7 | **Decidido:** oferta proactiva (Adenda B) y solicitud voluntaria (botón Ayuda) son gestos independientes; un rechazo nunca bloquea la segunda |
 
