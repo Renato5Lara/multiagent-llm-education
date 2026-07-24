@@ -399,9 +399,13 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     )
   }
 
-  const handleRun = () => {
+  const handleRun = async () => {
     setRunning(true)
-    const result = run(code, stage.simulatedInputs)
+    // run() es async desde Épica B/Commit 2 (usePyodide.ts delega en un
+    // Worker vía postMessage) — mismo comportamiento observable, solo
+    // async donde antes era síncrono. Ver ENGINEERING-GATE-EPICA-B.md
+    // §6, excepción de alcance del Commit 2.
+    const result = await run(code, stage.simulatedInputs)
     setRunning(false)
     setOutput(result.stdout)
     setError(result.error)

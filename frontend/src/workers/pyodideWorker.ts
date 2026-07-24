@@ -32,10 +32,17 @@ async function importLoadPyodide(): Promise<(config: { indexURL: string }) => Pr
 }
 
 // Protocolo de mensajes worker↔hilo principal — tipos exportados para
-// que el hook del Commit 2 los reutilice sin duplicarlos.
+// que usePyodide.ts (Commit 2) los reutilice sin duplicarlos.
+//
+// `signalSab`/`dataSab` son opcionales: sin cabeceras COOP/COEP
+// (pendiente hasta el Commit 5), `SharedArrayBuffer` no existe en el
+// hilo principal — el hook de todos modos debe poder inicializar el
+// Worker para el mecanismo legado (simulatedInputs, síncrono dentro
+// del worker, nunca necesitó SharedArrayBuffer). Solo el mecanismo
+// interactivo real (Atomics.wait) los requiere.
 export type WorkerInboundMessage =
-  | { type: 'init'; signalSab: SharedArrayBuffer; dataSab: SharedArrayBuffer }
-  | { type: 'run'; code: string }
+  | { type: 'init'; signalSab?: SharedArrayBuffer; dataSab?: SharedArrayBuffer }
+  | { type: 'run'; code: string; stdinValues?: string[] }
 
 export type WorkerOutboundMessage =
   | { type: 'ready' }
@@ -51,9 +58,16 @@ let pyodide: PyodideInterface | null = null
 /** Callback SÍNCRONO de stdin que exige `pyodide.setStdin` — bloquea el
  *  hilo del worker de verdad con `Atomics.wait()` hasta que el hilo
  *  principal escriba el valor y llame `Atomics.notify()`. Mismo patrón
- *  ya reproducido dos veces en el Spike B-1. */
+ *  ya reproducido dos veces en el Spike B-1. Sin SharedArrayBuffer
+ *  (COOP/COEP todavía sin configurar, Commit 5) no hay forma de
+ *  bloquear de verdad — se degrada devolviendo '' en vez de colgar el
+ *  worker; ningún contenido real llama a esta rama hoy (auditoría:
+ *  todo `input()` autorado trae `simulatedInputs`). */
 function stdinSync(): string {
-  if (!signal || !lenView || !dataBytes) return ''
+  if (!signal || !lenView || !dataBytes) {
+    console.error('pyodideWorker: stdin interactivo pedido sin SharedArrayBuffer (COOP/COEP pendiente, Commit 5).')
+    return ''
+  }
   Atomics.store(signal, 0, 0)
   self.postMessage({ type: 'need-input' } satisfies WorkerOutboundMessage)
   Atomics.wait(signal, 0, 0)
@@ -61,12 +75,21 @@ function stdinSync(): string {
   return new TextDecoder().decode(dataBytes.slice(0, len))
 }
 
+/** Cola FIFO de valores precargados — mecanismo legado
+ *  (`simulatedInputs`), idéntico en efecto al que `usePyodide.ts`
+ *  implementaba antes de este commit, solo que ahora corre dentro del
+ *  Worker. Contrato de compatibilidad, ENGINEERING-GATE-EPICA-B.md §5. */
+function stdinFifo(values: string[]): () => string {
+  let cursor = 0
+  return () => (cursor < values.length ? values[cursor++] : '')
+}
+
 self.onmessage = async (e: MessageEvent<WorkerInboundMessage>) => {
   const msg = e.data
   if (msg.type === 'init') {
-    signal = new Int32Array(msg.signalSab)
-    lenView = new DataView(msg.dataSab)
-    dataBytes = new Uint8Array(msg.dataSab, 4)
+    signal = msg.signalSab ? new Int32Array(msg.signalSab) : null
+    lenView = msg.dataSab ? new DataView(msg.dataSab) : null
+    dataBytes = msg.dataSab ? new Uint8Array(msg.dataSab, 4) : null
     try {
       const loadPyodide = await importLoadPyodide()
       pyodide = await loadPyodide({ indexURL: PYODIDE_CDN })
@@ -83,7 +106,12 @@ self.onmessage = async (e: MessageEvent<WorkerInboundMessage>) => {
     if (!pyodide) return
     const lines: string[] = []
     pyodide.setStdout({ batched: (output: string) => lines.push(output) })
-    pyodide.setStdin({ stdin: stdinSync })
+    // Contrato de compatibilidad (§5): stdinValues presente → legado
+    // (FIFO); ausente → interactivo real. Nunca ambos — la selección
+    // es automática, nunca configurable.
+    pyodide.setStdin({
+      stdin: msg.stdinValues && msg.stdinValues.length > 0 ? stdinFifo(msg.stdinValues) : stdinSync,
+    })
     try {
       pyodide.runPython(msg.code)
       self.postMessage({ type: 'result', stdout: lines.join('\n'), error: null } satisfies WorkerOutboundMessage)

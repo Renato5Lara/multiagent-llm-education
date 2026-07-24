@@ -3,49 +3,19 @@
 // producen sus intentos. Carga perezosa y compartida: el WASM (~6-10MB) solo
 // se descarga la primera vez que una micropráctica de Python aparece en
 // pantalla, y una sola instancia se reutiliza en toda la sesión del navegador.
+//
+// Épica B, Commit 2 (ENGINEERING-GATE-EPICA-B.md §6): Pyodide corre dentro
+// de un Worker dedicado (frontend/src/workers/pyodideWorker.ts) en vez del
+// hilo principal — necesario para poder bloquear stdin de verdad más
+// adelante (Commit 3), validado con código real en SPIKE-B1. `run()` pasa
+// de síncrono a `Promise<PythonRunResult>` como consecuencia obligada de
+// comunicarse por `postMessage` (no una decisión de diseño — mantenerlo
+// síncrono exigiría `Atomics.wait()` en el hilo principal, el mismo
+// bloqueo de pestaña que el Worker existe para evitar). El resto del
+// contrato público (`{ ready, loadError, run }`) no cambia de forma.
 
-import { useEffect, useRef, useState } from 'react'
-
-const PYODIDE_VERSION = '0.26.2'
-const PYODIDE_CDN = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
-
-interface PyodideInterface {
-  runPython: (code: string) => unknown
-  setStdout: (options: { batched: (output: string) => void }) => void
-  setStdin: (options: { stdin: () => string }) => void
-}
-
-declare global {
-  interface Window {
-    loadPyodide?: (config: { indexURL: string }) => Promise<PyodideInterface>
-  }
-}
-
-let pyodideSingleton: Promise<PyodideInterface> | null = null
-
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve()
-      return
-    }
-    const script = document.createElement('script')
-    script.src = src
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('No se pudo cargar Python en el navegador.'))
-    document.head.appendChild(script)
-  })
-}
-
-function getPyodide(): Promise<PyodideInterface> {
-  if (!pyodideSingleton) {
-    pyodideSingleton = loadScript(`${PYODIDE_CDN}pyodide.js`).then(() => {
-      if (!window.loadPyodide) throw new Error('Python no se inicializó correctamente.')
-      return window.loadPyodide({ indexURL: PYODIDE_CDN })
-    })
-  }
-  return pyodideSingleton
-}
+import { useEffect, useState } from 'react'
+import type { WorkerInboundMessage, WorkerOutboundMessage } from '@/workers/pyodideWorker'
 
 export interface PythonRunResult {
   stdout: string
@@ -72,18 +42,49 @@ export function classifyPythonError(error: string | null): PythonErrorCategory {
   return 'logica'
 }
 
+// Singleton del Worker + su promesa de "listo" — mismo criterio que el
+// singleton de Pyodide en el hilo principal que este commit reemplaza (una
+// sola instancia por sesión de navegador, compartida por todos los usos de
+// `usePyodide()`). `signalSab`/`dataSab` solo se crean si el documento está
+// cross-origin isolated (COOP/COEP, Commit 5 — todavía sin configurar en
+// este proyecto): sin eso, `SharedArrayBuffer` ni siquiera existe como
+// global, y el mecanismo legado (simulatedInputs) no lo necesita para nada.
+let workerSingleton: Worker | null = null
+let readySingleton: Promise<void> | null = null
+
+function getWorker(): { worker: Worker; ready: Promise<void> } {
+  if (!workerSingleton || !readySingleton) {
+    const worker = new Worker(new URL('../workers/pyodideWorker.ts', import.meta.url), { type: 'module' })
+    workerSingleton = worker
+    const canUseSharedBuffers = typeof SharedArrayBuffer !== 'undefined' && self.crossOriginIsolated
+    const signalSab = canUseSharedBuffers ? new SharedArrayBuffer(4) : undefined
+    const dataSab = canUseSharedBuffers ? new SharedArrayBuffer(4 + 1024) : undefined
+    readySingleton = new Promise<void>((resolve, reject) => {
+      const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
+        if (e.data.type === 'ready') {
+          worker.removeEventListener('message', onMessage)
+          resolve()
+        } else if (e.data.type === 'load-error') {
+          worker.removeEventListener('message', onMessage)
+          reject(new Error(e.data.message))
+        }
+      }
+      worker.addEventListener('message', onMessage)
+      worker.postMessage({ type: 'init', signalSab, dataSab } satisfies WorkerInboundMessage)
+    })
+  }
+  return { worker: workerSingleton, ready: readySingleton }
+}
+
 export function usePyodide() {
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const pyodideRef = useRef<PyodideInterface | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    getPyodide()
-      .then(py => {
-        if (cancelled) return
-        pyodideRef.current = py
-        setReady(true)
+    getWorker()
+      .ready.then(() => {
+        if (!cancelled) setReady(true)
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -95,23 +96,36 @@ export function usePyodide() {
   }, [])
 
   /** `stdinValues`: respuestas simuladas de input(), en el orden en que el
-   *  código las consume. Sin este parámetro, input() falla con OSError (sin
-   *  stdin conectado) — igual que antes de esta capacidad. */
-  const run = (code: string, stdinValues?: string[]): PythonRunResult => {
-    const py = pyodideRef.current
-    if (!py) return { stdout: '', error: 'Python todavía no está listo.' }
-    const lines: string[] = []
-    py.setStdout({ batched: (output: string) => lines.push(output) })
-    if (stdinValues && stdinValues.length > 0) {
-      let cursor = 0
-      py.setStdin({ stdin: () => (cursor < stdinValues.length ? stdinValues[cursor++] : '') })
-    }
+   *  código las consume (mecanismo legado, contrato de compatibilidad
+   *  ENGINEERING-GATE-EPICA-B.md §5). Sin este parámetro, el worker usa el
+   *  mecanismo interactivo real (Commit 3 en adelante) — hoy, sin UI que lo
+   *  sirva, cualquier `input()` sin `simulatedInputs` sigue sin recibir
+   *  valor, igual que antes de esta capacidad.
+   *
+   *  Asume una sola ejecución en curso a la vez (igual que la UI real,
+   *  que deshabilita "Ejecutar" mientras `running` es true) — no hay
+   *  correlación de mensajes por id; dos `run()` concurrentes recibirían
+   *  ambos resultados cruzados. Documentado como límite conocido, no
+   *  resuelto en este commit. */
+  const run = async (code: string, stdinValues?: string[]): Promise<PythonRunResult> => {
+    const { worker, ready: readyPromise } = getWorker()
     try {
-      py.runPython(code)
-      return { stdout: lines.join('\n'), error: null }
-    } catch (err) {
-      return { stdout: lines.join('\n'), error: err instanceof Error ? err.message : String(err) }
+      await readyPromise
+    } catch {
+      return { stdout: '', error: 'Python todavía no está listo.' }
     }
+    return new Promise<PythonRunResult>(resolve => {
+      const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
+        if (e.data.type === 'result') {
+          worker.removeEventListener('message', onMessage)
+          resolve({ stdout: e.data.stdout, error: e.data.error })
+        }
+        // 'need-input' sin manejar todavía — el Commit 3 agrega la forma
+        // en que el consumidor entrega el valor real al worker.
+      }
+      worker.addEventListener('message', onMessage)
+      worker.postMessage({ type: 'run', code, stdinValues } satisfies WorkerInboundMessage)
+    })
   }
 
   return { ready, loadError, run }
