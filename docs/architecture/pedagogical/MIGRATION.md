@@ -159,7 +159,45 @@ alcance del Boundary permanentemente? No se decide en este merge — el
 comentario inline en `ModuleExperienceView.tsx` remite aquí en vez de
 repetir esta explicación completa.
 
-## Commit 5 — Validación funcional
-□ Repetir el stress-test de escenarios, ahora contra código real
-□ Cada escenario debe terminar en el comportamiento que especifican los
-  documentos, no en uno inventado durante la implementación
+## Commit 5 — Validación de Aceptación Arquitectónica
+
+Renombrado del usuario: ya no es solo "stress-test", son tres criterios
+explícitos por escenario — **Correctitud** (¿el comportamiento coincide
+con lo documentado?), **Coherencia** (¿ninguna decisión contradice
+Adenda A/B/C, Boundary, Runtime?), **Observabilidad** (¿puede explicarse
+qué decidió el Runtime, qué devolvió el Boundary, qué vio el estudiante?).
+
+### Fase A — API/HTTP real (completa)
+
+**Nota de metodología, con honestidad:** toda la suite de pytest —
+incluidas estas pruebas nuevas y las de los Commits 1-4 — corre contra
+SQLite en memoria (`tests/conftest.py`), no PostgreSQL. Es una convención
+preexistente de todo el proyecto, no introducida aquí. La Regla de Cierre
+(CLAUDE.md) exige Postgres real para declarar un recorrido cerrado — por
+eso, además de la suite, se corrió un spot-check directo contra el
+Postgres real en ejecución (`registrar_evidencia_evaluacion` +
+`seleccionar_forma()`, sin HTTP ni SQLite de por medio) para el flujo más
+crítico (Escenario 2/8). El resto de Fase A se apoya en SQLite — suficiente
+para Correctitud a nivel de lógica, no un sustituto de Postgres real.
+
+| # | Escenario | Correctitud | Coherencia | Observabilidad |
+|---|---|---|---|---|
+| 1 | Dominio alto | ✔ `test_escenario_1...` — HTTP real, cadena completa | ✔ forma automática, nunca consentimiento | ✔ `runtime_decision` expone asunto/diseño/forma |
+| 2/8 | Bloqueado / automática | ✔ `test_cycle_evidence_dataset.py` + **spot-check contra Postgres real** (no solo SQLite) | ✔ respeta `alternativas_descartadas` de Adaptar (confirmado con señal real de frustración) | ✔ misma respuesta HTTP, trazable |
+| 3/9 | Acepta ayuda / con consentimiento | ⚠ Endpoint probado aislado (`test_consent_response.py`) — **sin caso real activable**: ninguna prioridad selecciona hoy una forma "consentimiento" (ver Adenda A/NOTA §3) | ✔ consistente con la acotación decidida — no se simula un caso inexistente | ✔ el propio vacío es observable (documentado, no oculto) |
+| 4 | Rechaza ayuda | ⚠ Mismo límite que 3/9 — el mecanismo de exclusión (`formas_ya_mostradas`) está probado, pero nada dispara un rechazo real hoy | ✔ Adenda B (oferta vs. solicitud) se respeta por diseño | ✔ |
+| 5 | Cierre de misión | ✗ **Hallazgo, no bug:** la Síntesis Pedagógica de 3 estados (Doc5 §4.2) no existe en código — `evaluatorVerdict` en `ModuleExperienceView.tsx` sigue siendo la plantilla cliente-side de 3 opciones que ya documentó la Auditoría original (Doc1 §7, punto 12) | ✗ contradice PP3 (el cierre debe ser síntesis de Validar, no una plantilla) | ✔ el hallazgo es explícito, no se ocultó |
+| 6 | Retorno al día siguiente | ✔ `tests/runtime/invariants/test_ADR_0008_almacen_memoria.py` | ✔ consolidación solo al cerrar sesión (RFC-0005), restricción ya conocida | ✔ |
+| 7 | Transición entre módulos | ✔ `test_escenario_7...` — confirma el comportamiento real | ⚠ **Hallazgo:** PP2 describe la agregación deseada; el desbloqueo sigue siendo snapshot del pre-test, no recalculado dinámicamente (Modelo de Evolución, Categoría A1 — wiring identificado, no construido) | ✔ el test documenta exactamente dónde está la brecha |
+| 10 | Recuperación tras interrupción | ✔ `tests/runtime/reconstruction/test_R3_reconstruccion_learning_state.py` | ✔ reconstrucción determinista desde la cadena de transiciones | ✔ |
+
+**Resultado de Fase A: 4/10 escenarios completamente correctos y coherentes
+(1, 2/8, 6, 10); 2/10 con límite honesto de activación, no de
+implementación (3/9, 4); 2/10 con hallazgos reales de brecha
+arquitectura-vs-código, ya existentes antes de este commit y ahora
+formalmente registrados (5, 7).** Ningún hallazgo se corrigió aquí — Fase A
+es validación, no desarrollo nuevo.
+
+### Fase B — navegador real
+□ 4 escenarios con experiencia visible crítica: diagnóstico completo,
+  ciclo completo de una misión, interrumpir y volver, cambio de módulo
