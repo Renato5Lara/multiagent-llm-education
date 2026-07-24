@@ -730,21 +730,12 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // Mismo mecanismo de auto-refuerzo ya existente, ningún concepto
           // nuevo en el Runtime ni recurso inventado en el frontend.
           const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
-          // Reconciliación de merge (2026-07-24): origin/runtime/architecture
-          // introdujo `andamiaje` (4a dimensión de Adaptar, RFC-0002 §3/R3)
-          // consumida directamente aquí para decidir la forma del refuerzo
-          // — en conflicto con la Adenda A (Documento 5 §4.1, Arquitectura
-          // Pedagógica v1.0): "el frontend nunca deriva la forma, solo el
-          // Boundary". Decisión explícita del usuario al resolver el
-          // conflicto: seleccionar_forma()/formaDelBoundary sigue siendo la
-          // única autoridad; `andamiaje` permanece disponible en `diseno`
-          // (ver más arriba, modalidadHonrada/fluencyStreak — un uso de
-          // MODALIDAD, dimensión que el frontend ya leía directo de
-          // `diseno.modalidad` desde antes de la Adenda A, no de FORMA) pero
-          // no vuelve a decidir qué refuerzo mostrar. Pendiente como
-          // Engineering Review aparte: si `andamiaje` debe convertirse en un
-          // insumo declarado de `seleccionar_forma()` (extensión formal de
-          // la Adenda A) — no se decide en este merge.
+          // `formaDelBoundary` sigue siendo la única autoridad para la
+          // selección de PP4 (Adenda A) — `andamiaje` (Adaptar,
+          // RFC-0002 §3/R3) queda disponible como metadato del Runtime,
+          // sin volver a decidir el refuerzo aquí. Contexto completo y
+          // pregunta abierta: docs/architecture/pedagogical/MIGRATION.md
+          // §"Merge con origin/runtime/architecture".
           const reinforcementPriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
           const reinforcement = profundidad === 'fundamentos'
             ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false, reinforcementPriority, formaDelBoundary)

@@ -121,6 +121,37 @@ una regresión de esta migración, es deuda preexistente fuera de alcance.
 | 2 | Memoria del ciclo (evitar repetir ofertas en el mismo ciclo) | **No aplica a este endpoint** — esa responsabilidad ya la resuelve `formas_ya_mostradas` (Commit 3), client-side, por ciclo. Este endpoint no necesita evolucionar hacia esto porque el mecanismo ya existe en otro lugar. |
 | 3 | Evento de dominio (afectar decisiones futuras del runtime) | **No, tal como está.** Falta una referencia causal a la decisión de Adaptar que originó la oferta (un `EntryId`/asunto) — sin eso, un fact/claim nuevo violaría INV-5 (todo claim exige respaldo) y P6 (la explicación se recorre). Si algún día se decide activar este nivel, el esquema necesita ese campo antes, no después. |
 
+## Merge con origin/runtime/architecture (2026-07-24)
+✔ `f298372` — 44 commits desarrollados en paralelo (Runtime, PythonBridge,
+  ConceptPrimerCard) fusionados con los Commits 1-4 de esta bitácora.
+  Backup: `backup/runtime-before-merge`. 363/363 tests, tsc y build
+  limpios tras resolver.
+
+**Pendiente de Engineering Review — colisión arquitectónica real,
+no resuelta aquí, solo contenida:** el merge introdujo `andamiaje`
+(4a dimensión de Adaptar, RFC-0002 §3/R3 — `runtime/domain/adaptar/
+productor.py`, valores `ejemplo`/`alternar-modalidad`/`reto` derivados
+de la señal de Tutorizar) que la rama remota consumía directamente en
+`ModuleExperienceView.tsx` para decidir la forma del refuerzo — en
+conflicto con la Adenda A (Documento 5 §4.1: "el frontend nunca deriva
+la forma, solo el Boundary").
+
+Decisión al resolver el conflicto: `seleccionar_forma()`/
+`formaDelBoundary` sigue siendo la única autoridad sobre la forma;
+`andamiaje` queda disponible en `diseno` (ya se usa para `modalidadHonrada`/
+`fluencyStreak` — eso es selección de MODALIDAD, dimensión que el
+frontend ya leía directo de `diseno.modalidad` desde antes de la Adenda A,
+no de FORMA) pero no vuelve a decidir el refuerzo. La lógica de origen
+que sí lo hacía (`andamiaje === 'ejemplo'`/`'reto'` reordenando o
+sustituyendo la selección) se descartó en esta resolución.
+
+**Pregunta abierta para la Review:** ¿`andamiaje` debe convertirse en un
+cuarto insumo declarado de `seleccionar_forma()` (extensión formal de la
+Adenda A, ya que RFC-0002 §3/R3 lo respalda), o debe quedar fuera del
+alcance del Boundary permanentemente? No se decide en este merge — el
+comentario inline en `ModuleExperienceView.tsx` remite aquí en vez de
+repetir esta explicación completa.
+
 ## Commit 5 — Validación funcional
 □ Repetir el stress-test de escenarios, ahora contra código real
 □ Cada escenario debe terminar en el comportamiento que especifican los
