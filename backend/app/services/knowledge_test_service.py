@@ -178,6 +178,24 @@ def start_attempt(
                     "Debes completar el Pre-Test antes de rendir el Post-Test",
                 )
 
+            path = (
+                db.query(LearningPath)
+                .filter(
+                    LearningPath.student_id == student_id,
+                    LearningPath.course_id == course_id,
+                )
+                .first()
+            )
+            if (
+                path is None
+                or path.total_modules == 0
+                or path.completed_modules < path.total_modules
+            ):
+                raise KnowledgeTestError(
+                    "LEARNING_PATH_INCOMPLETE",
+                    "Debes completar toda la Ruta de Aprendizaje antes de rendir el Post-Test",
+                )
+
         attempt = KnowledgeTestAttempt(
             student_id=student_id,
             course_id=course_id,

@@ -12,8 +12,12 @@ from app.models.knowledge_test import KnowledgeTestQuestion
 from app.services import research_export_service
 
 
-def _complete_pre_and_post(client, token, course_id, db, pre_correct_ratio=0.0):
-    """Rinde pre (con la fracción de aciertos dada) y post (todo correcto)."""
+def _complete_pre_and_post(client, token, course_id, db, student_id, pre_correct_ratio=0.0):
+    """Rinde pre (con la fracción de aciertos dada) y post (todo correcto).
+
+    El Post-Test exige una Ruta de Aprendizaje completa (recorrido real): se
+    simula que el estudiante ya terminó sus módulos antes de rendirlo.
+    """
     bank = {q.id: q.correct_index for q in db.query(KnowledgeTestQuestion).all()}
 
     start = client.post(
@@ -31,6 +35,19 @@ def _complete_pre_and_post(client, token, course_id, db, pre_correct_ratio=0.0):
         headers=auth_header(token),
         json={"answers": answers},
     )
+
+    from app.models.student_progress import LearningPath
+
+    db.add(
+        LearningPath(
+            student_id=student_id,
+            course_id=course_id,
+            total_modules=2,
+            completed_modules=2,
+            status="active",
+        )
+    )
+    db.commit()
 
     start = client.post(
         f"/api/students/knowledge-test/{course_id}/start",
@@ -55,10 +72,10 @@ def test_summary_empty_database(client, db):
 
 
 def test_summary_reflects_real_attempts(
-    client, estudiante_token, curso_publicado, db
+    client, estudiante_token, curso_publicado, db, estudiante_user
 ):
     seed_knowledge_test_bank(db)
-    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db)
+    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
     body = client.get("/api/research/summary").json()
     assert body["n_students_pretested"] == 1
@@ -71,9 +88,9 @@ def test_summary_reflects_real_attempts(
     assert body["level_distribution_post"]["avanzado"] == 1
 
 
-def test_students_rows_dataset(client, estudiante_token, curso_publicado, db):
+def test_students_rows_dataset(client, estudiante_token, curso_publicado, db, estudiante_user):
     seed_knowledge_test_bank(db)
-    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db)
+    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
     body = client.get("/api/research/students").json()
     assert body["total"] == 1
@@ -87,9 +104,9 @@ def test_students_rows_dataset(client, estudiante_token, curso_publicado, db):
     assert row["date"] is not None
 
 
-def test_export_csv_is_spss_ready(client, estudiante_token, curso_publicado, db):
+def test_export_csv_is_spss_ready(client, estudiante_token, curso_publicado, db, estudiante_user):
     seed_knowledge_test_bank(db)
-    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db)
+    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
     resp = client.get("/api/research/export?fmt=csv")
     assert resp.status_code == 200
@@ -109,9 +126,9 @@ def test_export_csv_is_spss_ready(client, estudiante_token, curso_publicado, db)
     }
 
 
-def test_export_xlsx_when_available(client, estudiante_token, curso_publicado, db):
+def test_export_xlsx_when_available(client, estudiante_token, curso_publicado, db, estudiante_user):
     seed_knowledge_test_bank(db)
-    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db)
+    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
     resp = client.get("/api/research/export?fmt=xlsx")
     assert resp.status_code == 200
@@ -159,7 +176,7 @@ def test_export_experiment_has_three_sheets(
     )
     db.commit()
 
-    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db)
+    _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
     # attempts>=2 y solved=False fuerza "reforzar" (scoring-v1: errores>=2 ⇒
     # no dominada) — el caso donde Adaptar debe honrar la modalidad
