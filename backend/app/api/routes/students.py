@@ -589,6 +589,35 @@ def submit_cycle_evidence(
                 formas_ya_mostradas=frozenset(data.formas_ya_mostradas),
             )
             runtime_decision["forma"] = {"tipo": forma, "categoria_consentimiento": categoria}
+            # Generación de Recursos Pedagógicos (RFC-0011/2, Parte C —
+            # ROADMAP-RFC-0011.md): traduce la forma ya elegida a un
+            # Recurso Pedagógico Generado (prompt reutilizable), con
+            # reutilización transparente vía el Registro (Parte B). No
+            # decide pedagogía — mismo criterio aditivo que `forma`:
+            # si algo falla, runtime_decision["recurso"] simplemente
+            # queda ausente (capturado por el except de este bloque).
+            # Import local deliberado, no por ciclo (resource_registry_service
+            # no importa nada de app.api.routes): sigue el mismo patrón que
+            # seleccionar_forma() arriba y el resto de este archivo (12+
+            # imports locales por función) — cada handler se mantiene
+            # autocontenido en este router.
+            from app.services.resource_registry_service import obtener_o_generar_recurso
+
+            recurso = obtener_o_generar_recurso(
+                db,
+                forma=forma,
+                modalidad=entrega.diseno["modalidad"],
+                asunto=entrega.asunto,
+                concepto=data.competencia,
+                nivel=entrega.diseno.get("profundidad"),
+                alternativas_descartadas=entrega.diseno.get("alternativas_descartadas", ()),
+            )
+            runtime_decision["recurso"] = {
+                "texto_prompt": recurso.texto_prompt,
+                "version_plantilla": recurso.version_plantilla,
+                "referencia_recurso": recurso.referencia_recurso,
+                "origen": recurso.origen,
+            }
         # Dataset de investigación (RESEARCH_ITERATIONS.md): un registro por
         # ciclo — modalidad diagnosticada vs. modalidad de refuerzo
         # realmente decidida por Adaptar, nunca solo el agregado pre/post

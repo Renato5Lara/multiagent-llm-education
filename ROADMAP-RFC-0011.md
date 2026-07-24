@@ -204,7 +204,7 @@ ficha de una página antes de empezar. Agrupación propuesta:
 | Mini-épica | Partes | Resultado observable al cerrar |
 |---|---|---|
 | RFC-0011/1 — Contrato y persistencia | 0 + A | `generar_prompt_recurso()` puro y testeado contra el catálogo mínimo de plantillas; tabla del Registro creada. Sin cambio de comportamiento visible — cero consumidores todavía. **CERRADO.** |
-| RFC-0011/2 — Reutilización y wiring | B + C | `/cycle-evidence` empieza a devolver `runtime_decision["recurso"]`; reutilización real verificada contra Postgres. |
+| RFC-0011/2 — Reutilización y wiring | B + C | `/cycle-evidence` empieza a devolver `runtime_decision["recurso"]`; reutilización real verificada contra Postgres. **CERRADO.** |
 | RFC-0011/3 — Frontend y cierre E2E | D + E | El estudiante ve el prompt generado, puede copiarlo y adjuntar la referencia del recurso ya generado externamente; validado con Postgres real + navegador real, incluyendo el caso de reutilización (segunda ocurrencia no regenera). |
 
 Ficha por mini-épica (plantilla idéntica a la de RFC-0006 §7): Objetivo,
@@ -256,6 +256,50 @@ una entidad real). 22/22 tests backend en verde (9 nuevos +
 importa sin error — el modelo nuevo no colisiona con `Resource`/
 `resources`. Sin consumidores todavía — Boundary, HTTP, Frontend y E2E
 no cambiaron, tal como exigía la ficha.
+
+## 8. Ficha — RFC-0011/2: Reutilización y wiring — CERRADO (2026-07-24)
+
+```
+Objetivo:        obtener_o_generar_recurso() (Parte B) + wiring aditivo en
+                 POST /cycle-evidence (Parte C): runtime_decision["recurso"]
+                 aparece solo cuando ya existe forma; reutilización real.
+Partes:          B + C
+Dependencias:    RFC-0011/1 (CERRADO)
+Restricciones exigidas por el tesista (todas cumplidas):
+  ✅ seleccionar_forma() sin modificar (Adenda A intacta)
+  ✅ ninguna decisión pedagógica nueva — forma/modalidad ya venían decididas
+  ✅ generar_prompt_recurso() se ejecuta solo dentro del bloque
+     `if entrega.diseno and entrega.diseno.get("modalidad")`, después de
+     seleccionar_forma()
+  ✅ reutilización transparente: existe -> reutiliza; no existe -> genera
+     y persiste (incluye manejo de condición de carrera vía UniqueConstraint)
+  ✅ contrato HTTP solo se enriquece con runtime_decision["recurso"];
+     ninguna respuesta existente cambió de forma
+  ✅ frontend sin cambios
+  ✅ pruebas de integración para ambos caminos (generación y reutilización)
+Motor:           no cambia.
+Boundary:        nuevo backend/app/services/resource_registry_service.py.
+HTTP:            aditivo — students.py, dentro del bloque ya existente de `forma`.
+Frontend:        no cambia (RFC-0011/3).
+E2E:             runtime_completo.py no se ve afectado (no toca backend/runtime/);
+                 tests HTTP existentes de cycle-evidence (test_cycle_evidence_dataset.py)
+                 siguen en verde sin modificarse.
+
+Validación: 6/6 tests nuevos (test_resource_registry_service.py, incluida
+la condición de carrera simulada) + 36/36 tests del alcance combinado
+(RFC-0011/1 + RFC-0011/2 + cycle-evidence + consent-response) en verde.
+Reutilización verificada contra Postgres real (no solo SQLite de test):
+segunda llamada con la misma clave devuelve la misma fila,
+veces_reutilizado=1, sin fila duplicada.
+
+Hallazgo no bloqueante (fuera de alcance, no corregido): al correr el
+resto de la suite aparecieron 2 fallos preexistentes, ninguno causado
+por este cambio — `test_tavily_cache.py`/`test_tavily_client.py`
+(error de import, símbolos inexistentes en `app.integrations.tavily`) y
+`test_export_experiment_has_three_sheets` (503 porque `openpyxl` no
+está instalado en este entorno). Los tres quedan registrados como deuda
+técnica ajena a RFC-0011.
+```
 
 
 
