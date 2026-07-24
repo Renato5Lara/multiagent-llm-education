@@ -7,7 +7,7 @@
 // Módulo, solo que ahora también se dispara aquí.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map } from 'lucide-react'
+import { ArrowLeft, BookOpen, Compass, FlaskConical, GraduationCap, LifeBuoy, Map, MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { CuriosityOpening } from './CuriosityOpening'
@@ -61,6 +61,26 @@ type Phase =
   | 'reinforcement'
   | 'remediation'
   | 'slice_end'
+
+// Indicador de sub-paso dentro del ciclo: 3 macro-pasos fijos en vez de un
+// paso por cada `Phase` — remediation/reinforcement son desvíos condicionales
+// (no todo estudiante los pisa), mapearlos 1:1 daría la falsa sensación de
+// "pasos saltados". `null` = fases sin ciclo en curso (no se muestra el indicador).
+const SUBSTEPS = ['concept', 'practice', 'decision'] as const
+type Substep = typeof SUBSTEPS[number]
+const SUBSTEP_LABELS: Record<Substep, string> = {
+  concept: 'Concepto', practice: 'Práctica', decision: 'Consolidar',
+}
+function substepFor(phase: Phase): Substep | null {
+  switch (phase) {
+    case 'concept': return 'concept'
+    case 'practice':
+    case 'remediation': return 'practice'
+    case 'decision':
+    case 'reinforcement': return 'decision'
+    default: return null
+  }
+}
 
 // Narración real (no agentes inventados, sin cifras de confianza fabricadas):
 // describe el mismo tramo Adaptar que ya corre en el backend mientras la
@@ -799,6 +819,24 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               Territorio: {definition.territory}
             </span>
           </div>
+
+          {definition.cycles.length > 0 && (
+            <div className="text-left rounded-xl border border-white/[0.08] bg-neural-lowest/60 px-4 py-3.5">
+              <p className="flex items-center gap-1.5 text-[10px] font-mono tracking-[0.15em] uppercase text-neural-muted/70 mb-2">
+                <GraduationCap className="h-3.5 w-3.5 text-neural-glow" />
+                En esta misión vas a construir
+              </p>
+              <ul className="space-y-1.5">
+                {definition.cycles.map(c => (
+                  <li key={c.id} className="flex items-center gap-2 text-sm text-neural-text/90">
+                    <span className="h-1 w-1 rounded-full bg-neural-glow flex-shrink-0" />
+                    {c.conceptLabel}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <Button className="w-full gap-2" onClick={() => setPhase('concept')}>
             Comenzar →
           </Button>
@@ -964,15 +1002,74 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-muted/60 truncate">
           {definition.missionTitle}
         </p>
-        <span
-          className={cn(
-            'text-[10px] font-mono px-2 py-1 rounded-full border shrink-0',
-            'border-neural-violet/30 text-neural-violet bg-neural-violet/5',
-          )}
-        >
-          Ciclo {cycleIndex + 1} de {definition.cycles.length}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            className={cn(
+              'text-[10px] font-mono px-2 py-1 rounded-full border',
+              'border-neural-violet/30 text-neural-violet bg-neural-violet/5',
+            )}
+          >
+            Ciclo {cycleIndex + 1} de {definition.cycles.length}
+          </span>
+          <Button
+            variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-neural-muted hover:text-neural-glow"
+            onClick={() => window.dispatchEvent(new Event('open-tutor'))}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-[11px]">Ayuda</span>
+          </Button>
+        </div>
       </div>
+
+      {substepFor(phase) && (() => {
+        // Progreso general del recorrido: ciclo actual + avance dentro de sus
+        // 3 sub-pasos, sobre el total de ciclos — más granular que solo
+        // "Ciclo X de Y", sin inventar una unidad de progreso nueva.
+        const totalSteps = definition.cycles.length * SUBSTEPS.length
+        const doneSteps = cycleIndex * SUBSTEPS.length + SUBSTEPS.indexOf(substepFor(phase)!)
+        const overallPct = totalSteps > 0 ? Math.min(100, Math.round((doneSteps / totalSteps) * 100)) : 0
+        return (
+          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-neural-glow transition-all duration-500"
+              style={{ width: `${Math.max(overallPct, 4)}%` }}
+            />
+          </div>
+        )
+      })()}
+
+      {substepFor(phase) && (
+        <div className="flex items-center gap-2">
+          {SUBSTEPS.map((step, idx) => {
+            const current = substepFor(phase)
+            const isCurrent = step === current
+            const isPast = SUBSTEPS.indexOf(current!) > idx
+            return (
+              <div key={step} className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className={cn(
+                      'h-1.5 w-1.5 rounded-full shrink-0',
+                      isCurrent ? 'bg-neural-glow' : isPast ? 'bg-neural-glow/50' : 'bg-white/10',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'text-[10px] font-mono uppercase tracking-wider truncate',
+                      isCurrent ? 'text-neural-glow' : isPast ? 'text-neural-muted' : 'text-neural-muted/30',
+                    )}
+                  >
+                    {SUBSTEP_LABELS[step]}
+                  </span>
+                </div>
+                {idx < SUBSTEPS.length - 1 && (
+                  <div className={cn('h-px flex-1', isPast ? 'bg-neural-glow/30' : 'bg-white/[0.06]')} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {welcomeBackMessage && (
         <div className="rounded-xl border border-neural-glow/25 bg-neural-glow/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-500">
