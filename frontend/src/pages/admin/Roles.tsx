@@ -21,7 +21,7 @@ export default function RolesPage() {
     return (
         <div>
             <PageHeader title="Gestión de Roles" description="Cambia los roles de los usuarios del sistema" />
-            <div className="border rounded-lg bg-white">
+            <div className="border rounded-lg bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>

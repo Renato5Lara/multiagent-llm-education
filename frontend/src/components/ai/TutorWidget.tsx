@@ -95,7 +95,7 @@ export default function TutorWidget({
               </div>
             </div>
 
-            <div className="h-80 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            <div className="h-80 overflow-y-auto p-4 space-y-3 bg-muted/30">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                   {msg.role === 'tutor' && (
@@ -107,7 +107,7 @@ export default function TutorWidget({
                     className={`max-w-[80%] rounded-lg p-3 text-sm ${
                       msg.role === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-white border shadow-sm'
+                        : 'bg-card border shadow-sm'
                     }`}
                   >
                     {msg.content}
@@ -124,7 +124,7 @@ export default function TutorWidget({
                   <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="bg-white border rounded-lg p-3">
+                  <div className="bg-card border rounded-lg p-3">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 </div>
@@ -132,7 +132,7 @@ export default function TutorWidget({
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-3 border-t bg-white rounded-b-lg">
+            <div className="p-3 border-t bg-card rounded-b-lg">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -140,7 +140,7 @@ export default function TutorWidget({
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Escribe tu duda..."
-                  className="flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="flex-1 px-3 py-2 text-sm bg-background text-foreground border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
                   disabled={chatMutation.isPending}
                 />
                 <Button
