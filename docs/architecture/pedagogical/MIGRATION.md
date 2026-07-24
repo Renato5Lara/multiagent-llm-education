@@ -77,9 +77,31 @@ commit (no solo confiando en lo ya probado):
 2. **Ningún flujo actual lo consume** — cero referencias a
    `useSubmitConsentResponse`/`consent-response` fuera de su propia
    definición, en frontend y backend.
-3. **Su presencia no modifica el comportamiento observable** — suite
-   completa del backend corrida de nuevo (no solo los archivos tocados),
-   ver resultado abajo.
+3. **Su presencia no modifica el comportamiento observable** — **verificado
+   con diff exacto, no solo re-corrida.** Suite completa (2411 tests, excluidos
+   los 2 archivos de colección rota de Tavily) corrida en el estado actual
+   (79 failed, 7 errors) y comparada contra un worktree del commit
+   `076f9f6` (el estado exacto previo a toda esta sesión — Boundary,
+   Adendas, higiene del repo, todo). Diff de nombres de test fallidos:
+   - **6 "nuevos" resultaron ser un artefacto del método de comparación**,
+     no una regresión: `tests/test_config.py` (6 tests sobre API keys por
+     defecto) leen el `.env` real del directorio de trabajo — el worktree
+     temporal no tenía `.env` (no versionado), así que ahí pasaban con
+     valores vacíos por accidente. Confirmado corriendo el mismo archivo
+     en ambos directorios: mismatch de `.env`, no de código.
+   - **1 test que fallaba en el baseline ahora pasa**:
+     `test_evidence_service_runtime_trace.py::test_narrativa_por_
+     concepto_usa_razonamiento_real_del_claim` — mismo módulo que toca el
+     fix STAB-01 (`evidence_service.py`, commit `d4ccf65`), mejora
+     incidental ya documentada en ese commit, no una sorpresa.
+   - **Los 74 fallos restantes son idénticos en baseline y estado
+     actual** — legacy (`test_swarm_activation.py`/`test_swarm_
+     transactions.py`, BaseAgent confirmado muerto desde la Auditoría),
+     dependientes de red externa (`test_retrieval_strategy.py`,
+     `test_research_agent.py`), u otra deuda preexistente sin relación
+     con `backend/runtime/`, el Boundary o esta migración.
+   - **Conclusión: cero regresiones nuevas en toda la sesión** (Commits
+     1–4), verificado por diff, no por inspección de una muestra.
 4. **Los datos registrados alcanzan para una futura activación** —
    matizado, no un "sí" plano: ver tabla de niveles.
 
