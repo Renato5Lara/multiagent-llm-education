@@ -24,25 +24,31 @@ declarar.
 
 ## 3. ¿Qué significa "rechazar" cada tipo de ayuda?
 
-**Aquí sí hay una brecha real, no cubierta por Adenda B.** Adenda B trata el
-rechazo de forma uniforme para cualquier forma "con consentimiento". Pero
-revisando la lista original de Doc 5 §4.1, las formas con consentimiento no son
-homogéneas:
+**Decisión del usuario (2026-07-23): la primera implementación de la Adenda B
+gobierna únicamente las formas que hoy puede producir el Boundary — nunca las
+transiciones de mayor escala hasta que exista un productor del runtime que
+las origine.**
 
-- `codigo_guiado`, `narracion_tutor` (abrir el tutor) — SÍ son formas del
-  catálogo de PP4, cubiertas por Adenda A/B tal cual.
-- "iniciar un laboratorio guiado", "cambiar completamente el tipo de
-  actividad", "iniciar una remediación extensa" — estos tres, listados como
-  ejemplos en Doc 5 §4.1, **no son formas del catálogo de PP4 hoy**: son
-  transiciones de flujo de mayor escala, que ni `adaptive_form_selection.py`
-  ni `DISENO_POR_ACCION` producen como decisión. No hay todavía un mecanismo
-  del runtime que las origine, así que Adenda B no puede cubrir su semántica
-  de rechazo — no existe la decisión que rechazar.
+Precisión importante que hay que dejar registrada antes de implementar: bajo
+esa acotación, **el ámbito real hoy es vacío**. `_PRIORIDAD_POR_MODALIDAD`
+(`adaptive_form_selection.py`) nunca selecciona `codigo_guiado` ni
+`narracion_tutor` — las dos únicas formas del catálogo de PP4 marcadas
+"consentimiento" en `FORM_CONSENT_CATEGORY` — porque ninguna prioridad las
+incluye (confirmado por `test_formas_con_consentimiento_no_son_seleccionadas_
+por_las_prioridades_hoy`, commit `1ba66ed`). "Iniciar un laboratorio guiado",
+"cambiar completamente de actividad" e "iniciar una remediación extensa"
+(ejemplos originales de Doc 5 §4.1) tampoco son formas del catálogo — son
+transiciones que ni `adaptive_form_selection.py` ni `DISENO_POR_ACCION`
+producen.
 
-**Consecuencia:** antes de implementar cualquier UI de rechazo, hay que decidir
-si esos tres casos son (a) fuera de alcance de la Adenda B actual —
-Adenda B cubre solo lo que el catálogo de PP4 ya produce — o (b) requieren su
-propia extensión de Adaptar, vía RFC. No lo decido aquí.
+**Consecuencia para la implementación:** la Adenda B, acotada así, no tiene
+todavía ningún caso real que gobernar. Su semántica de rechazo se implementa
+y se prueba, pero permanece inerte — igual que `adaptive_form_selection.py`
+permaneció inerte entre el Commit 1 y el Commit 3 — hasta que alguna de estas
+dos cosas ocurra, **ninguna de las cuales se decide en esta nota**: (a) las
+tablas de prioridad se amplían para recomendar `codigo_guiado`/
+`narracion_tutor` en casos reales, o (b) aparece, vía RFC, un productor del
+runtime para las transiciones de mayor escala.
 
 ## 4. ¿Cómo continúa el ciclo?
 
@@ -68,24 +74,37 @@ cada `cycle-evidence`, sin inventar una segunda vía de exclusión.
 
 ## 7. ¿Qué ocurre si el estudiante cambia de opinión?
 
-**Vacío real, no cubierto por ningún documento.** Hay una distinción implícita
-en toda la cadena que nunca se hizo explícita: el Tutor ya es accesible hoy por
-una vía *distinta* al consentimiento reactivo — el botón "Ayuda" existente
-(commit `9f2b94e`) es una solicitud **iniciada por el estudiante**, no una
-oferta del sistema que se acepta o rechaza. Rechazar una oferta proactiva del
-sistema no debería cerrar la vía de solicitud voluntaria — son dos gestos de
-consentimiento distintos (PP1 no distingue esto; ninguno de los 7 documentos
-lo nombra). Antes de implementar la Adenda B, vale la pena que esta distinción
-quede declarada explícitamente en algún documento (probablemente una
-ampliación breve de la propia Adenda B) — no la resuelvo aquí por disciplina.
+**Decisión del usuario (2026-07-23):**
+
+> **La semántica de rechazo (Adenda B) gobierna únicamente ofertas
+> iniciadas por el sistema. Las solicitudes iniciadas por el estudiante
+> (el botón "Ayuda", commit `9f2b94e`) siguen un flujo independiente — no
+> constituyen consentimiento solicitado por el sistema, y un rechazo
+> previo nunca las bloquea ni las condiciona.**
+
+Es decir: rechazar una ayuda que el sistema ofreció proactivamente no debería
+impedir que, cinco segundos después, el estudiante pulse "Ayuda" por
+iniciativa propia. Son dos gestos distintos — uno donde el sistema pregunta y
+el estudiante responde (Adenda B), y otro donde el estudiante pregunta
+directamente (ya existente, sin relación con el consentimiento). Ninguno de
+los 7 documentos lo distinguía explícitamente hasta ahora; esta nota lo deja
+registrado como la interpretación vigente de PP1 en este punto — Adenda B
+debe redactarse citando esta distinción cuando se implemente, no asumirla en
+silencio.
 
 ---
 
-## Resumen — qué falta decidir antes de la Adenda B
+## Resumen — estado final, listo para implementar
 
 | Pregunta | Estado |
 |---|---|
 | 1, 2, 4, 6 | Ya resueltas por documentos existentes — sin trabajo nuevo |
-| 3 | Vacío real: 3 de 5 ejemplos de "consentimiento" en Doc5 §4.1 no tienen decisión de runtime que origine su rechazo |
+| 3 | **Decidido:** Adenda B acotada a formas que el Boundary ya puede producir — ámbito real hoy es vacío (ninguna forma "consentimiento" es seleccionada por ninguna prioridad todavía) |
 | 5 | Decisión de implementación (esquema de Memoria), no de arquitectura |
-| 7 | Vacío real: falta distinguir oferta proactiva del sistema vs. solicitud voluntaria del estudiante |
+| 7 | **Decidido:** oferta proactiva (Adenda B) y solicitud voluntaria (botón Ayuda) son gestos independientes; un rechazo nunca bloquea la segunda |
+
+Con esto, las dos preguntas abiertas quedan cerradas. La Adenda B puede
+implementarse sabiendo que, en el estado actual del runtime, gobierna una
+superficie que existe en el código pero que ningún caso real activa
+todavía — exactamente la misma situación en la que estuvo
+`adaptive_form_selection.py` entre el Commit 1 y el Commit 3.
