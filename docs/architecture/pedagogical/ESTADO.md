@@ -28,6 +28,34 @@
 - Las decisiones de producto se documentan fuera de esta cadena, salvo que alteren
   el comportamiento pedagógico.
 
+## Criterios de implementación (post-congelación, observados desde el Commit 1)
+
+Dos propiedades que la secuencia de commits de
+[MIGRATION.md](MIGRATION.md) mostró cumplir de forma consistente — se
+registran aquí como criterio a mantener en implementaciones futuras, no
+como regla nueva de la arquitectura documental:
+
+**Monotonicidad.** Cada commit de implementación añade una capacidad sin
+alterar el comportamiento de las anteriores: el Boundary existió sin
+consumidores (Commit 1) antes de ser consumido (Commit 3); la
+infraestructura de consentimiento existe sin activarse (Commit 4). Ningún
+commit reinterpretó lo que el commit anterior ya dejó funcionando.
+
+**Dos líneas evolutivas distintas, que conviene no mezclar en un mismo
+commit:**
+
+- **Línea A — capacidad del runtime:** que el motor pedagógico llegue a
+  producir nuevas decisiones (ampliar `_PRIORIDAD_POR_MODALIDAD`, un
+  productor nuevo vía RFC). Cambia *qué* puede decidir el sistema.
+- **Línea B — capacidad de la infraestructura:** que la plataforma ya
+  sepa qué hacer cuando esas decisiones existan (contrato, endpoint,
+  persistencia, eventos, pruebas, UI). Cambia *cómo* el sistema ejecuta
+  lo que ya puede decidir.
+
+El Commit 4 pertenece enteramente a la Línea B. Activar `codigo_guiado`/
+`narracion_tutor` pertenece a la Línea A y es un commit distinto, cuando
+corresponda.
+
 ## Validación aplicada antes de congelar
 
 Un stress-test horizontal (matriz de diez escenarios × siete documentos, criterio:

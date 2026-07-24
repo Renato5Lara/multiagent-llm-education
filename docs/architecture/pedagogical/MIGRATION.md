@@ -68,6 +68,37 @@ de principios.
   que `codigo_guiado`/`narracion_tutor` empiecen a seleccionarse; recién
   ahí construir la UI que ofrezca consentimiento visible.
 
+## Verificación de aislamiento (Commit 4, post-cierre)
+
+Los 4 puntos que propuso el usuario, verificados independientemente del
+commit (no solo confiando en lo ya probado):
+
+1. **El endpoint existe** — `POST /api/students/consent-response`, confirmado.
+2. **Ningún flujo actual lo consume** — cero referencias a
+   `useSubmitConsentResponse`/`consent-response` fuera de su propia
+   definición, en frontend y backend.
+3. **Su presencia no modifica el comportamiento observable** — suite
+   completa del backend corrida de nuevo (no solo los archivos tocados),
+   ver resultado abajo.
+4. **Los datos registrados alcanzan para una futura activación** —
+   matizado, no un "sí" plano: ver tabla de niveles.
+
+**Hallazgo colateral, sin relación con este trabajo:** la corrida completa
+encontró 2 errores de colección preexistentes —
+`tests/test_tavily_cache.py` y `tests/test_tavily_client.py` importan
+`get_tavily_cache`/`get_tavily_client`, funciones que ya no existen en
+`app/integrations/tavily/`. Cero cambios sin commitear en esos archivos
+(`git status` limpio, último commit real de hace varias sesiones) — no es
+una regresión de esta migración, es deuda preexistente fuera de alcance.
+
+### Niveles de evolución del endpoint de consentimiento
+
+| Nivel | Uso | ¿El payload actual alcanza? |
+|---|---|---|
+| 1 (actual) | Registro analítico (`research_metrics`) | Sí — es literalmente lo que hace hoy |
+| 2 | Memoria del ciclo (evitar repetir ofertas en el mismo ciclo) | **No aplica a este endpoint** — esa responsabilidad ya la resuelve `formas_ya_mostradas` (Commit 3), client-side, por ciclo. Este endpoint no necesita evolucionar hacia esto porque el mecanismo ya existe en otro lugar. |
+| 3 | Evento de dominio (afectar decisiones futuras del runtime) | **No, tal como está.** Falta una referencia causal a la decisión de Adaptar que originó la oferta (un `EntryId`/asunto) — sin eso, un fact/claim nuevo violaría INV-5 (todo claim exige respaldo) y P6 (la explicación se recorre). Si algún día se decide activar este nivel, el esquema necesita ese campo antes, no después. |
+
 ## Commit 5 — Validación funcional
 □ Repetir el stress-test de escenarios, ahora contra código real
 □ Cada escenario debe terminar en el comportamiento que especifican los
