@@ -205,7 +205,7 @@ ficha de una página antes de empezar. Agrupación propuesta:
 |---|---|---|
 | RFC-0011/1 — Contrato y persistencia | 0 + A | `generar_prompt_recurso()` puro y testeado contra el catálogo mínimo de plantillas; tabla del Registro creada. Sin cambio de comportamiento visible — cero consumidores todavía. **CERRADO.** |
 | RFC-0011/2 — Reutilización y wiring | B + C | `/cycle-evidence` empieza a devolver `runtime_decision["recurso"]`; reutilización real verificada contra Postgres. **CERRADO.** |
-| RFC-0011/3 — Frontend y cierre E2E | D + E | El estudiante ve el prompt generado, puede copiarlo y adjuntar la referencia del recurso ya generado externamente; validado con Postgres real + navegador real, incluyendo el caso de reutilización (segunda ocurrencia no regenera). |
+| RFC-0011/3 — Frontend y cierre E2E | D + E | El estudiante ve el prompt generado, puede copiarlo y adjuntar la referencia del recurso ya generado externamente; validado con Postgres real + navegador real, incluyendo el caso de reutilización (segunda ocurrencia no regenera). **CERRADO.** |
 
 Ficha por mini-épica (plantilla idéntica a la de RFC-0006 §7): Objetivo,
 Partes, Dependencias, Riesgos, capas que cambian (Motor/Boundary/HTTP/
@@ -346,3 +346,54 @@ Criterios de cierre:
   ✅ Tests backend pasan (pytest backend/tests/test_resource_prompt_generation.py)
   ✅ No aparecen TODO/FIXME nuevos
 ```
+
+## 9. Ficha — RFC-0011/2: Reutilización y wiring — CERRADO (2026-07-24)
+
+Ver detalle en el commit `867a961` y en la memoria de proyecto. Resumen:
+`obtener_o_generar_recurso()` (Parte B) + wiring aditivo en
+`POST /cycle-evidence` (Parte C) dentro del mismo bloque de `forma`,
+sin tocar `seleccionar_forma()`. 6/6 tests nuevos (incluida condición
+de carrera simulada) + 36/36 del alcance combinado. Reutilización
+validada contra Postgres real.
+
+## 10. Ficha — RFC-0011/3: Frontend y cierre E2E — CERRADO (2026-07-24)
+
+`GeneratedResourcePromptCard.tsx` (mismo locus que
+`ExternalResourceCard.tsx`, estilo `neural-glow`/glass): muestra
+`texto_prompt`, badge de `version_plantilla`, línea de `origen`
+(referencia cruda, nunca interpretada), botón "Copiar prompt" y
+campo+botón para adjuntar `referencia_recurso` vía el nuevo endpoint
+`PATCH /students/recursos-generados/{id}` (corrección en vivo: `runtime_
+decision["recurso"]` no traía `id` — se añadió, aditivo, cero riesgo
+porque `recurso` no tenía consumidores todavía). Wireado en
+`ModuleExperienceView.tsx` como estado efímero por ciclo (mismo patrón
+que `externalResource`), sin tocar `selectReinforcement` ni ninguna
+rama de decisión pedagógica existente.
+
+**Validado en navegador real, sesión completa de un estudiante real**
+(cuenta de validación E2E existente, no una entidad mutada a mano):
+recorrido completo Concepto → Práctica (con `PythonBridge`, real OpenAI
+generando los siguientes pasos) → Consolidar, forzando "aplicacion"
+(reto) tras fallar la práctica de ordenamiento 3 veces. La tarjeta
+apareció con datos reales: `origen: decisión pedagógica existente
+(modalidad(algorithms))`, prompt parametrizado real ("Diseña un reto de
+práctica más pequeño... nivel aplicacion... perfil mixta"). Verificado
+directamente contra Postgres: **5 llamadas reales al mismo recurso
+durante la sesión (cada paso del flujo dispara su propio
+cycle-evidence) resultaron en una única fila** — la Parte B demostró
+deduplicación real bajo uso real, no solo bajo tests. `PATCH` con una
+URL real persistió `referencia_recurso` sin alterar `texto_prompt` ni
+`origen` (confirmado con consulta SQL directa tras recargar la página).
+"Copiar prompt" no pudo confirmarse visualmente (el navegador
+automatizado de esta sesión no concede permiso de portapapeles) —
+limitación del entorno de automatización, no evidencia de un defecto;
+el código falla en silencio por diseño si el Clipboard API no está
+disponible, dejando el prompt visible para copia manual.
+
+`rtk tsc`: sin errores. `rtk lint`: 0 issues en los archivos nuevos; 2
+issues preexistentes en `ModuleExperienceView.tsx`/`useStudent.ts`
+(línea 405, `react-hooks/set-state-in-effect`; directiva
+`eslint-disable` no usada en línea 23) — verificados como anteriores a
+este cambio, no corregidos (fuera de alcance).
+
+**RFC-0011 (mini-épicas 1, 2 y 3) queda cerrado end-to-end.**

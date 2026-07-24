@@ -31,6 +31,7 @@ from app.schemas.progress import (
     MissionProgressUpdate,
     CycleEvidenceSubmit,
     ConsentResponseSubmit,
+    RecursoReferenciaUpdate,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.schemas.auth import MessageResponse, TutorRequest
@@ -613,6 +614,7 @@ def submit_cycle_evidence(
                 alternativas_descartadas=entrega.diseno.get("alternativas_descartadas", ()),
             )
             runtime_decision["recurso"] = {
+                "id": recurso.id,
                 "texto_prompt": recurso.texto_prompt,
                 "version_plantilla": recurso.version_plantilla,
                 "referencia_recurso": recurso.referencia_recurso,
@@ -643,6 +645,28 @@ def submit_cycle_evidence(
     except Exception as e:  # noqa: BLE001
         logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
     return {"ok": True, "runtime_decision": runtime_decision}
+
+
+@router.patch("/recursos-generados/{recurso_id}")
+def actualizar_referencia_recurso_generado(
+    recurso_id: str,
+    data: RecursoReferenciaUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """RFC-0011/3 (ROADMAP-RFC-0011.md, Parte D): asocia la referencia de
+    un recurso generado externamente a un `RegistroRecurso` ya existente.
+    Responsabilidad separada de `POST /cycle-evidence` (que solo genera
+    o reutiliza el prompt) — esta llamada ocurre después, cuando el
+    recurso físico ya existe fuera de la plataforma. Solo escribe
+    `referencia_recurso`; el resto de los campos del registro son
+    inmutables."""
+    from app.services.resource_registry_service import actualizar_referencia_recurso
+
+    recurso = actualizar_referencia_recurso(db, recurso_id, data.referencia_recurso)
+    if recurso is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso no encontrado")
+    return {"id": recurso.id, "referencia_recurso": recurso.referencia_recurso}
 
 
 @router.post("/consent-response")

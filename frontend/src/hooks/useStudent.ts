@@ -419,6 +419,39 @@ export function useSubmitCycleEvidence() {
   })
 }
 
+/** Recurso Pedagógico Generado (RFC-0011, ROADMAP-RFC-0011.md §2, punto
+ *  1) — la forma de `runtime_decision.recurso` en la respuesta de
+ *  `POST /cycle-evidence`. Único tipo compartido para este campo: antes
+ *  de RFC-0011/3 cada callsite tipaba `runtime_decision` inline y
+ *  parcialmente (ModuleExperienceView.tsx, PythonBridge.tsx) — ninguno
+ *  leía `recurso` todavía. `origen` es la referencia a la decisión de
+ *  Adaptar que lo motivó (asunto + alternativas_descartadas) — nunca
+ *  una explicación fabricada por el frontend; se muestra tal cual, no
+ *  se interpreta. */
+export interface RecursoGenerado {
+  id: string
+  texto_prompt: string
+  version_plantilla: string
+  referencia_recurso: string | null
+  origen: { asunto: string; alternativas_descartadas: unknown[] }
+}
+
+/** RFC-0011/3, Parte D: asocia la referencia del recurso ya generado
+ *  externamente (imagen/audio/video/documento) a un RecursoGenerado
+ *  existente. Responsabilidad separada de useSubmitCycleEvidence —
+ *  ocurre después, cuando el recurso físico ya existe fuera de la
+ *  plataforma; nunca en la misma llamada que genera el prompt. */
+export function useActualizarReferenciaRecurso() {
+  return useMutation({
+    mutationFn: async ({ recursoId, referenciaRecurso }: { recursoId: string; referenciaRecurso: string }) => {
+      const resp = await api.patch(`/api/students/recursos-generados/${recursoId}`, {
+        referencia_recurso: referenciaRecurso,
+      })
+      return resp.data as { id: string; referencia_recurso: string }
+    },
+  })
+}
+
 export interface ConsentResponsePayload {
   courseId: string
   competencia: string

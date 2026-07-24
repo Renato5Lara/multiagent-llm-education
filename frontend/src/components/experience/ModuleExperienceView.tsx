@@ -24,8 +24,9 @@ import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { PredictOutputPractice } from './PredictOutputPractice'
 import { DecisionMenu, type DecisionChoice } from './DecisionMenu'
 import { ExternalResourceCard } from './ExternalResourceCard'
+import { GeneratedResourcePromptCard } from './GeneratedResourcePromptCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
-import { useLearningPath, useSubmitCycleEvidence } from '@/hooks/useStudent'
+import { useLearningPath, useSubmitCycleEvidence, type RecursoGenerado } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
 import {
   alternateModality, describeAdaptation, describeResourceFraming,
@@ -365,6 +366,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // — null casi siempre hoy (repositorio vacío para IS301), nunca persistido
   // en el cursor porque es un intento de red, no estado de progreso.
   const [externalResource, setExternalResource] = useState<CourseResource | null>(null)
+  // RFC-0011/3 (ROADMAP-RFC-0011.md, Parte D): recurso generado por el
+  // Boundary para ESTE ciclo — ephemeral, igual que externalResource,
+  // nunca persistido en el cursor (se recibe de nuevo en cada cycle-evidence).
+  const [recursoGenerado, setRecursoGenerado] = useState<RecursoGenerado | null>(null)
   // PED-005 — refuerzos ya explorados en el ciclo actual: al terminar uno se
   // vuelve al menú (elegir nunca es un callejón) y el dominio del refuerzo se
   // acredita solo la primera vez por tipo.
@@ -677,10 +682,16 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           runtime_decision?: {
             diseno?: Record<string, unknown> | null
             forma?: { tipo: string; categoria_consentimiento: string } | null
+            recurso?: RecursoGenerado | null
           } | null
         }) => {
           const diseno = data?.runtime_decision?.diseno
           const formaDelBoundary = data?.runtime_decision?.forma?.tipo
+          // RFC-0011/3: aditivo — si el backend no trae `recurso` (sesión
+          // sin decisión de Adaptar todavía, o registro previo a esta
+          // mini-épica), simplemente queda null y la tarjeta no se
+          // muestra; el resto del flujo sigue exactamente igual que antes.
+          setRecursoGenerado(data?.runtime_decision?.recurso ?? null)
           const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
           // Persiste para el SIGUIENTE ciclo (teoría + micropráctica de
           // Python) — antes solo vivía en este closure para el mensaje de
@@ -1530,6 +1541,9 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               resource={externalResource}
               framing={describeResourceFraming(effectiveModality, cycle.conceptLabel)}
             />
+          )}
+          {recursoGenerado && (
+            <GeneratedResourcePromptCard recurso={recursoGenerado} />
           )}
           <div className="glass-panel rounded-2xl p-6 space-y-4">
             <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>

@@ -10,7 +10,10 @@ from unittest.mock import patch
 
 from app.models.registro_recurso import RegistroRecurso
 from app.services import resource_registry_service
-from app.services.resource_registry_service import obtener_o_generar_recurso
+from app.services.resource_registry_service import (
+    actualizar_referencia_recurso,
+    obtener_o_generar_recurso,
+)
 
 
 def test_primera_generacion_persiste_sin_reutilizar(db):
@@ -97,3 +100,23 @@ def test_race_concurrente_reutiliza_en_vez_de_fallar(db, monkeypatch):
     )
     assert perdedor.id == ganador.id
     assert db.query(RegistroRecurso).count() == 1
+
+
+def test_actualizar_referencia_recurso_persiste_solo_ese_campo(db):
+    fila = obtener_o_generar_recurso(
+        db, "audio", "audio", "modalidad(recursividad)", "Recursividad",
+    )
+    texto_prompt_original = fila.texto_prompt
+    origen_original = dict(fila.origen)
+
+    actualizado = actualizar_referencia_recurso(db, fila.id, "url:https://ejemplo.test/audio.mp3")
+
+    assert actualizado is not None
+    assert actualizado.referencia_recurso == "url:https://ejemplo.test/audio.mp3"
+    # Inmutables: no se recalculan ni se alteran al adjuntar la referencia.
+    assert actualizado.texto_prompt == texto_prompt_original
+    assert actualizado.origen == origen_original
+
+
+def test_actualizar_referencia_recurso_inexistente_devuelve_none(db):
+    assert actualizar_referencia_recurso(db, "id-que-no-existe", "url:x") is None

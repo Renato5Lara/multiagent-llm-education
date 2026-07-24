@@ -105,3 +105,21 @@ def obtener_o_generar_recurso(
 
     db.refresh(fila)
     return fila
+
+
+def actualizar_referencia_recurso(
+    db: Session, recurso_id: str, referencia_recurso: str
+) -> RegistroRecurso | None:
+    """Asocia `referencia_recurso` a un `RegistroRecurso` ya existente
+    (RFC-0011/3, Parte D). Solo escribe ese campo — `texto_prompt`,
+    `origen` y `version_plantilla` permanecen inmutables, nunca
+    recalculados aquí. `None` si `recurso_id` no existe (el llamador
+    HTTP lo traduce a 404).
+    """
+    fila = db.get(RegistroRecurso, recurso_id)
+    if fila is None:
+        return None
+    fila.referencia_recurso = referencia_recurso
+    db.commit()
+    db.refresh(fila)
+    return fila

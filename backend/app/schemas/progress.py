@@ -198,3 +198,17 @@ class ConsentResponseSubmit(BaseModel):
     #: categoria_consentimiento="consentimiento".
     forma_tipo: str
     respuesta: Literal["aceptado", "rechazado"]
+
+
+class RecursoReferenciaUpdate(BaseModel):
+    """RFC-0011/3 (ROADMAP-RFC-0011.md, Parte D): asocia la referencia de
+    un recurso generado externamente (imagen/audio/video/documento) a un
+    `RegistroRecurso` ya existente — nunca en la misma llamada que
+    genera el prompt (`POST /cycle-evidence`), porque ocurre en un
+    momento posterior e independiente (el prompt se copia, se genera
+    externamente, y solo entonces se pega la referencia). Solo modifica
+    `referencia_recurso`; `texto_prompt`, `origen` y `version_plantilla`
+    son inmutables. Sin validación automática de que el recurso
+    corresponde al prompt (decisión del tesista, ROADMAP-RFC-0011.md
+    §2, punto 5)."""
+    referencia_recurso: str = Field(..., min_length=1, max_length=512)
