@@ -30,6 +30,7 @@ from app.schemas.progress import (
     LearningPathItem,
     MissionProgressUpdate,
     CycleEvidenceSubmit,
+    ConsentResponseSubmit,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.schemas.auth import MessageResponse, TutorRequest
@@ -611,6 +612,43 @@ def submit_cycle_evidence(
     except Exception as e:  # noqa: BLE001
         logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
     return {"ok": True, "runtime_decision": runtime_decision}
+
+
+@router.post("/consent-response")
+def submit_consent_response(
+    data: ConsentResponseSubmit,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Infraestructura de la Adenda B (Semántica del Rechazo, Documento 5
+    §4.1 — Arquitectura Pedagógica v1.0), Commit 4 de docs/architecture/
+    pedagogical/MIGRATION.md: registra la respuesta del estudiante a una
+    forma "con consentimiento" — solo dataset de investigación, jamás
+    un fact/claim del runtime (NOTA-INTERACCION-CONSENTIMIENTO.md §3).
+
+    Inerte por diseño hoy: ninguna prioridad de adaptive_form_selection.py
+    selecciona todavía una forma con categoria_consentimiento="consentimiento"
+    (verificado en test_adaptive_form_selection.py), así que ningún flujo
+    real del estudiante llama a este endpoint todavía — existe para que,
+    cuando eso cambie, la infraestructura ya esté lista sin tocar varias
+    capas a la vez. No requiere runtime_bridge: gobierna únicamente la
+    oferta proactiva del sistema, nunca la solicitud voluntaria del
+    estudiante (botón Ayuda, NOTA §7), que no pasa por aquí."""
+    try:
+        research_metrics_service.record_metric(
+            db,
+            metric_type=research_metrics_service.CONSENT_RESPONSE,
+            student_id=current_user.id,
+            course_id=data.course_id,
+            payload={
+                "competencia": data.competencia,
+                "forma_tipo": data.forma_tipo,
+                "respuesta": data.respuesta,
+            },
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"research_metrics failed for consent-response ({data.competencia}): {e}")
+    return {"ok": True}
 
 
 @router.get("/course-resource/{course_id}", response_model=ResourceResponse | None)

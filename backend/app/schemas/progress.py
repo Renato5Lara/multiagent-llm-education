@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -178,3 +178,23 @@ class CycleEvidenceSubmit(BaseModel):
     #: información del runtime — viene del frontend, distinta procedencia
     #: que `diseno.alternativas_descartadas`.
     formas_ya_mostradas: list[str] = Field(default_factory=list)
+
+
+class ConsentResponseSubmit(BaseModel):
+    """Adenda B (Semántica del Rechazo, Documento 5 §4.1 — Arquitectura
+    Pedagógica v1.0): respuesta del estudiante a una forma "con
+    consentimiento" ofrecida por el sistema (`categoria_consentimiento`
+    de `seleccionar_forma()`, Adenda A). Contrato puro de registro —
+    nunca produce un fact/claim del runtime (NOTA-INTERACCION-
+    CONSENTIMIENTO.md §3, punto 2 de Adenda B: tratar el rechazo como
+    evidencia formal excede esta pieza, exigiría RFC sobre
+    backend/runtime/). Gobierna únicamente ofertas proactivas del
+    sistema — nunca solicitudes voluntarias del estudiante (botón Ayuda,
+    NOTA §7), que no pasan por este contrato."""
+    course_id: str
+    competencia: str
+    #: Forma del catálogo de PP4 que se ofreció (p. ej. "codigo_guiado",
+    #: "narracion_tutor") — la que `seleccionar_forma()` ya devolvió con
+    #: categoria_consentimiento="consentimiento".
+    forma_tipo: str
+    respuesta: Literal["aceptado", "rechazado"]

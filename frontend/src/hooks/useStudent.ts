@@ -381,3 +381,36 @@ export function useSubmitCycleEvidence() {
     },
   })
 }
+
+export interface ConsentResponsePayload {
+  courseId: string
+  competencia: string
+  /** Forma del catálogo de PP4 ofrecida — la misma que llegó en
+   *  `runtime_decision.forma.tipo` con `categoria_consentimiento ===
+   *  'consentimiento'`. */
+  formaTipo: string
+  respuesta: 'aceptado' | 'rechazado'
+}
+
+/** Infraestructura de la Adenda B (Semántica del Rechazo, Documento 5
+ *  §4.1 — Arquitectura Pedagógica v1.0), Commit 4 de docs/architecture/
+ *  pedagogical/MIGRATION.md. Contrato listo, sin wiring a ningún
+ *  componente todavía: no existe hoy ninguna superficie de UI que ofrezca
+ *  una forma "con consentimiento" (NOTA-INTERACCION-CONSENTIMIENTO.md §3
+ *  — ninguna prioridad de adaptive_form_selection.py la selecciona
+ *  todavía). Gobierna únicamente la respuesta a una oferta proactiva del
+ *  sistema — nunca la solicitud voluntaria del estudiante (botón Ayuda),
+ *  que no pasa por este hook (NOTA §7). */
+export function useSubmitConsentResponse() {
+  return useMutation({
+    mutationFn: async (payload: ConsentResponsePayload) => {
+      const resp = await api.post('/api/students/consent-response', {
+        course_id: payload.courseId,
+        competencia: payload.competencia,
+        forma_tipo: payload.formaTipo,
+        respuesta: payload.respuesta,
+      })
+      return resp.data
+    },
+  })
+}
