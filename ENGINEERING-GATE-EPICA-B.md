@@ -250,17 +250,32 @@ de "punto seguro" para este caso; es distinto de
 `setInterruptBuffer`/`KeyboardInterrupt` (que interrumpe Python de
 forma controlada) y ese mecanismo queda fuera de alcance aquí.
 
+**¿Qué pasa si `cancelRun()` y el mensaje `'result'` del Worker
+compiten por cerrar la misma ejecución?** (pregunta añadida tras
+revisión, antes de codear) Aunque JavaScript es de un solo hilo, el
+orden en que llegan `provideInput()`→`'result'` del worker vs. un
+clic en "Cancelar" no está garantizado por el diseño — ambos son
+manejadores de evento independientes. **Invariante a preservar: cada
+`run()` se resuelve exactamente una vez.** Se logra con una única
+referencia module-level `pendingRun` (no solo el `resolve` suelto) que
+se pone en `null` de forma ATÓMICA (dentro del mismo tick, antes de
+resolver) apenas uno de los dos caminos la consume — el que llegue
+primero gana y limpia la referencia; el que llegue después la
+encuentra en `null` y no hace nada (la ejecución ya se cerró). Ningún
+camino debe resolver sin antes confirmar que `pendingRun` seguía
+activo.
+
 ### Alcance
 
 **Entra:**
 - `usePyodide.ts`: nueva función `cancelRun()` — `worker.terminate()`,
   reset de `workerSingleton`/`readySingleton`/`signalSabSingleton`/
-  `dataSabSingleton`, `setAwaitingInput(false)`, y resolver la promesa
-  `run()` pendiente (requiere una referencia module-level al resolver
-  activo — consistente con el invariante de ejecución única: solo
-  puede haber un `run()` pendiente a la vez, así que un único
-  `pendingRunResolve` module-level es correcto, no una simplificación
-  indebida).
+  `dataSabSingleton`, `setAwaitingInput(false)`, y resolver la
+  ejecución pendiente vía `pendingRun` (objeto module-level, no solo
+  un `resolve` suelto — consistente con el invariante de ejecución
+  única: solo puede haber una activa a la vez, y su resolución debe
+  ocurrir exactamente una vez pese a la carrera cancelar-vs-result
+  documentada arriba).
 - `PythonBridge.tsx`: botón "Cancelar" visible solo junto al panel de
   `awaitingInput` (no un botón general de "detener" mientras el
   código corre sin pedir input) — llama a `cancelRun()`.
