@@ -156,7 +156,9 @@ Commit 3 — Protocolo de stdin real (Atomics.wait)
 
 Commit 4 — UI de solicitud de entrada real en PythonBridge.tsx
   El campo donde el estudiante escribe el valor cuando Python lo pide
-  EN VIVO. Incluye la decisión de UX de cancelación (§4).
+  EN VIVO. CERRADO sin cancelación (decisión de alcance confirmada
+  antes de codear: terminar el Worker compartido no es una decisión de
+  UI, es ciclo de vida del runtime — ver Commit 4b, §7).
 
 Commit 5 — Cabeceras COOP/COEP en Vite dev + auditoría cross-origin
   vite.config.ts (dev) + verificación de qué recursos externos del
@@ -171,7 +173,117 @@ No es la secuencia final obligatoria — es la propuesta a validar
 contra el código real al empezar el Commit 1 (Engineering Gate por
 commit sigue vigente, `CLAUDE.md`: 4 preguntas antes de cada uno).
 
-## 7. Criterios de salida
+## 7. Commit 4b — Cancelación de una ejecución en curso
+
+> Gate propio, separado del Commit 4 (confirmado antes de codear):
+> terminar el Worker compartido no es una decisión de UI — es ciclo de
+> vida del runtime, toca el invariante de ejecución única ya
+> documentado (§4) y vuelve a modificar `usePyodide.ts`.
+
+**Objetivo:** el estudiante puede cancelar la ejecución completa
+mientras el panel de `input()` real está visible (`awaitingInput`),
+sin quedar bloqueado indefinidamente si no quiere o no sabe qué
+responder.
+
+```
+Estado normal
+    │
+    ▼
+run()
+    │
+    ▼
+Worker ejecutando
+    │
+    ▼
+need-input (awaitingInput = true)
+    │
+ ┌──┴────────────┐
+ │                │
+ ▼                ▼
+provideInput()    cancelRun()
+ │                │
+ ▼                ▼
+continúa          worker.terminate()
+                   limpiar singleton (worker/ready/signalSab/dataSab)
+                   awaitingInput = false
+                   resolver run() pendiente con resultado de cancelación
+                   (el próximo run() crea un Worker nuevo, perezoso)
+```
+
+### Preguntas semánticas (respondidas aquí, no en el código)
+
+**¿`run()` resuelve o rechaza al cancelar?** Resuelve, con
+`{ stdout: '', error: 'Ejecución cancelada por el estudiante.' }` —
+mismo patrón que ya usa `run()` cuando `readyPromise` rechaza
+(`{ stdout: '', error: 'Python todavía no está listo.' }`, línea 152
+actual de `usePyodide.ts`). Rechazar exigiría que `PythonBridge.tsx`
+agregue `try/catch` alrededor de `await run(...)` — superficie
+adicional que resolver evita, y mantiene el contrato `PythonRunResult`
+sin excepciones para el consumidor.
+
+**¿Qué pasa con el stdout parcial?** Se pierde — no se preserva. El
+`stdout` acumulado (`lines` en `pyodideWorker.ts`) vive dentro del
+closure del Worker, nunca se transmite al hilo principal hasta el
+mensaje `'result'` final. `worker.terminate()` mata el Worker
+instantáneamente sin darle oportunidad de enviar ese buffer. Preservarlo
+exigiría que el worker transmitiera stdout de forma incremental
+(cambio de protocolo mayor, explícitamente fuera de alcance de este
+commit) — se documenta como limitación real, no se finge que se
+preserva.
+
+**¿A qué estado vuelve `awaitingInput`?** `false`, inmediatamente —
+mismo efecto que una resolución normal por `'result'`.
+
+**¿Cuándo se crea el Worker nuevo?** Perezosamente, en la próxima
+llamada a `run()` (que ya invoca `getWorker()`, y ese ve el singleton
+en `null` y crea uno desde cero) — mismo patrón de recuperación que ya
+usa el `onError` del Commit 3. `cancelRun()` NO recrea el Worker de
+inmediato: recargar Pyodide toma varios segundos: hacerlo eagerly
+gastaría ese tiempo aunque el estudiante no vuelva a ejecutar código
+enseguida.
+
+**¿La cancelación es inmediata o espera un punto seguro?** Inmediata.
+`Worker.terminate()` es una API del navegador que mata la ejecución
+del Worker de forma incondicional, incluso en medio de un
+`Atomics.wait()` bloqueante — no existe (ni se necesita) un mecanismo
+de "punto seguro" para este caso; es distinto de
+`setInterruptBuffer`/`KeyboardInterrupt` (que interrumpe Python de
+forma controlada) y ese mecanismo queda fuera de alcance aquí.
+
+### Alcance
+
+**Entra:**
+- `usePyodide.ts`: nueva función `cancelRun()` — `worker.terminate()`,
+  reset de `workerSingleton`/`readySingleton`/`signalSabSingleton`/
+  `dataSabSingleton`, `setAwaitingInput(false)`, y resolver la promesa
+  `run()` pendiente (requiere una referencia module-level al resolver
+  activo — consistente con el invariante de ejecución única: solo
+  puede haber un `run()` pendiente a la vez, así que un único
+  `pendingRunResolve` module-level es correcto, no una simplificación
+  indebida).
+- `PythonBridge.tsx`: botón "Cancelar" visible solo junto al panel de
+  `awaitingInput` (no un botón general de "detener" mientras el
+  código corre sin pedir input) — llama a `cancelRun()`.
+
+**No entra:**
+- Cancelación de una ejecución que NO está esperando input (código
+  corriendo largo sin `input()`) — el único punto de cancelación es el
+  panel de entrada, por diseño de esta mini-épica.
+- Preservar stdout parcial (ver arriba).
+- `setInterruptBuffer`/Ctrl-C — mecanismo distinto, no este commit.
+
+### Criterios de salida del Commit 4b
+- El botón "Cancelar" solo aparece junto al panel de `awaitingInput`.
+- Cancelar durante un `input()` real detiene la ejecución de inmediato
+  (validado en navegador real, no solo revisión de código).
+- El componente vuelve a un estado limpio: editor habilitado,
+  `awaitingInput` false, mensaje de cancelación visible.
+- Ejecutar de nuevo después de cancelar funciona (Worker nuevo se crea
+  solo, sin acción manual del estudiante).
+- Sin regresión del mecanismo legado ni del flujo interactivo sin
+  cancelar (Commits 3/4 siguen funcionando igual).
+
+## 8. Criterios de salida (Épica B completa)
 
 El Gate se considera cerrado (la épica, completa) solo si:
 - `ciclo3-input.ts` funciona con `input()` real en navegador real, no
