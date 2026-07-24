@@ -66,6 +66,89 @@ const ERROR_CATEGORY_LABEL: Record<PythonErrorCategory, string> = {
   salida: 'Tu código corrió sin errores — pero lo que muestra no es exactamente lo pedido.',
 }
 
+// ── Editor / consola — puramente presentacionales (Sprint 1A) ──────────────
+// Ningún componente de esta sección lee ni decide estado: reciben value/
+// onChange/disabled ya calculados por PythonMicroPractice y solo cambian
+// cómo se ven. Mismo contrato que el <textarea> plano que reemplazan.
+
+/** "Ventana" de editor con gutter de líneas — mismo <textarea> controlado
+ *  de siempre (value/onChange/disabled), solo con chrome visual alrededor.
+ *  `wrap="off"` es la única diferencia de comportamiento del navegador: sin
+ *  eso, una línea larga que envuelve visualmente desalinea el número de
+ *  línea del gutter contra la línea real. No cambia el string que ve
+ *  Pyodide (el wrap "soft" nunca insertaba saltos reales). */
+function CodeEditorPanel({
+  code,
+  onChange,
+  disabled,
+}: {
+  code: string
+  onChange: (value: string) => void
+  disabled: boolean
+}) {
+  const visibleRows = Math.min(12, Math.max(3, code.split('\n').length))
+  return (
+    <div className="rounded-xl border border-white/[0.1] bg-black/30 overflow-hidden transition-colors focus-within:border-neural-glow/50">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-white/[0.06] bg-white/[0.02]">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400/30" />
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-400/30" />
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/30" />
+        <span className="ml-2 text-[10px] font-mono text-neural-muted/40 tracking-wide">python3</span>
+      </div>
+      <div className="flex">
+        <div
+          aria-hidden
+          className="select-none py-2 pl-3 pr-2 text-right font-mono text-[13px] leading-relaxed text-neural-muted/25"
+        >
+          {Array.from({ length: visibleRows }, (_, i) => (
+            <div key={i}>{i + 1}</div>
+          ))}
+        </div>
+        <textarea
+          value={code}
+          onChange={e => onChange(e.target.value)}
+          disabled={disabled}
+          rows={visibleRows}
+          wrap="off"
+          spellCheck={false}
+          className="flex-1 bg-transparent px-3 py-2 font-mono text-[13px] leading-relaxed text-neural-text focus:outline-none disabled:opacity-70 overflow-x-auto"
+        />
+      </div>
+    </div>
+  )
+}
+
+/** Panel de salida tipo consola — mismo texto/condicionales de siempre
+ *  (output/error), solo con chrome de terminal y un punto de estado en el
+ *  header (neutral / advertencia) sin duplicar el mensaje textual que ya
+ *  trae cada caso. */
+function ConsoleOutput({
+  output,
+  error,
+}: {
+  output: string | null
+  error: string | null
+}) {
+  if (output === null && !error) return null
+  const dotColor = error ? 'bg-amber-400/60' : 'bg-neural-glow/50'
+  return (
+    <div className="rounded-xl border border-white/[0.08] bg-black/40 overflow-hidden">
+      <div className="flex items-center gap-1.5 px-3 py-1 border-b border-white/[0.06] bg-white/[0.02]">
+        <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+        <span className="text-[10px] font-mono text-neural-muted/40 tracking-wide">consola</span>
+      </div>
+      <div className="px-3 py-2 space-y-1.5">
+        {output !== null && (
+          <pre className="font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
+            {output || '(sin salida)'}
+          </pre>
+        )}
+        {error && <p className="text-sm text-amber-400">{error}</p>}
+      </div>
+    </div>
+  )
+}
+
 interface Props {
   bridge: PythonBridgeDef
   /** Solo obligatorios cuando `bridge.practice` existe (evidencia de la
@@ -348,9 +431,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
 
   return (
     <div className="border-t border-neural-glow/15 px-5 py-4 space-y-3">
-      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+      <span className="inline-flex items-center rounded-full border border-neural-violet/25 bg-neural-violet/5 px-2.5 py-1 text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
         {MODE_LABEL[stage.mode ?? 'escribir_parcial']}
-      </p>
+      </span>
       {/* Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
           de mostrar la siguiente — breve (best-effort, nunca más de una
           llamada), pero real: la etapa que aparece después ya cambia según
@@ -373,24 +456,21 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
           valor simulado, se muestra explícitamente — el estudiante ve QUÉ
           escribe el usuario simulado, nunca un dato que aparece de la nada. */}
       {stage.simulatedInputs && stage.simulatedInputs.length > 0 && (
-        <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1.5">
-          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+        <div className="rounded-xl border border-neural-violet/20 bg-neural-violet/[0.04] px-3 py-2.5 space-y-1">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet/80 mb-1">
             Simularemos que el usuario escribe
           </p>
           {stage.simulatedInputs.map((value, i) => (
             <p key={i} className="font-mono text-[13px] text-neural-text/90">
-              {value}
+              <span className="text-neural-violet/50">{'>'}</span> {value}
             </p>
           ))}
         </div>
       )}
-      <textarea
-        value={code}
-        onChange={e => setCode(e.target.value)}
+      <CodeEditorPanel
+        code={code}
+        onChange={setCode}
         disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
-        rows={3}
-        spellCheck={false}
-        className="w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70"
       />
       <div className="flex items-center gap-2 flex-wrap">
         <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running || !!pendingNextStage} className="gap-2">
@@ -414,12 +494,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
         )}
       </div>
       {loadError && <p className="text-sm text-red-400">{loadError}</p>}
-      {output !== null && !showSolution && (
-        <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
-          {output || '(sin salida)'}
-        </div>
-      )}
-      {error && !showSolution && <p className="text-sm text-amber-400">{error}</p>}
+      {!showSolution && <ConsoleOutput output={output} error={error} />}
       {/* Tras un acierto (etapa intermedia en espera de "Continuar", o la
           última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
           frase que conecta concepto+instrucción+resultado, cuando el
