@@ -51,17 +51,22 @@ de principios.
   cada una, evaluar eliminar definitivamente el fallback — no antes.
 
 ## Commit 4 — Infraestructura de la Adenda B (no "Adenda B completa")
-□ [NOTA-INTERACCION-CONSENTIMIENTO.md](NOTA-INTERACCION-CONSENTIMIENTO.md) ya
-  cerró las 2 decisiones que faltaban — desbloqueado.
-□ Ámbito: contrato, persistencia (Memoria del rechazo), eventos, pruebas —
-  aunque ningún caso real del runtime la active todavía (ninguna prioridad
-  de `_PRIORIDAD_POR_MODALIDAD` selecciona `codigo_guiado`/`narracion_tutor`
-  hoy; ver NOTA §3). Misma situación en la que estuvo
-  `adaptive_form_selection.py` entre el Commit 1 y el Commit 3 — construir
-  la infraestructura ahora evita tener que tocar varias capas a la vez
-  cuando una prioridad futura sí la active.
-□ Oferta proactiva (esto) y solicitud voluntaria (botón Ayuda) quedan
-  desacopladas por diseño — un rechazo nunca bloquea la segunda (NOTA §7).
+✔ `e6c86a3` — `POST /api/students/consent-response` (contrato +
+  registro en `research_metrics`, `CONSENT_RESPONSE`) + `useSubmitConsentResponse`
+  en el frontend, sin wiring a ningún componente.
+✔ Checklist de aceptación (5/5): sin cambio de comportamiento observable
+  (endpoint y hook nuevos, sin consumidor); ninguna decisión pedagógica
+  nueva (nunca llama a `runtime_bridge`, verificado con test); permanece
+  inactiva (ninguna prioridad selecciona una forma "consentimiento" hoy);
+  4/4 tests (contrato, persistencia, verificación negativa de no-toca-
+  runtime); oferta proactiva y solicitud voluntaria no comparten código.
+✔ `ModuleExperienceView.tsx` no se tocó — cero riesgo por construcción,
+  no solo por intención. Backend importa limpio, tsc/eslint/build
+  limpios.
+□ Activación futura (fuera de este commit): ampliar
+  `_PRIORIDAD_POR_MODALIDAD` o un productor nuevo del runtime (RFC) para
+  que `codigo_guiado`/`narracion_tutor` empiecen a seleccionarse; recién
+  ahí construir la UI que ofrezca consentimiento visible.
 
 ## Commit 5 — Validación funcional
 □ Repetir el stress-test de escenarios, ahora contra código real
