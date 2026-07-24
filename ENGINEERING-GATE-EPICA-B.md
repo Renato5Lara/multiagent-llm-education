@@ -79,25 +79,38 @@ No se reexplican — se citan:
 | Integración real con `usePyodide.ts` y `PythonBridge.tsx` | Entra al alcance — es el objetivo mismo de esta épica |
 | UX para `input()` cancelado o abandonado a mitad de espera | Entra al alcance — decisión de diseño dentro del plan (§5, Commit 4) |
 
-## 5. Decisión abierta previa al Commit 1 (no asumida en este documento)
+## 5. Decisión tomada: coexistencia (opción a)
 
-**¿Qué pasa con `simulatedInputs`?** El tipo `PythonMicroPracticeDef`
-(`moduleExperience.ts:303`) ya lo declara opcional. Tres caminos
-posibles, sin decidir aquí cuál:
-- (a) Coexistencia: `simulatedInputs` presente conserva el
-  comportamiento actual (compatibilidad total con el contenido
-  autorado hoy — `ciclo3-input.ts` y cualquier otro ciclo con
-  `input()`); su ausencia en una etapa que use `input()` activa el
-  mecanismo nuevo.
-- (b) Reemplazo total: se retira `simulatedInputs` y se re-autora todo
-  el contenido existente para el mecanismo nuevo.
-- (c) Mecanismo nuevo como *fallback* explícito activable, sin tocar
-  contenido existente, autorando solo casos nuevos con él.
+**Qué pasa con `simulatedInputs`:** el tipo `PythonMicroPracticeDef`
+(`moduleExperience.ts:303`) ya lo declara opcional — el tesista
+confirmó coexistencia con migración progresiva, no reemplazo total ni
+fallback aparte. Razón registrada: mínimo cambio necesario para
+validar la capacidad nueva sin romper contenido existente; riesgo de
+regresión mínimo (solo migran las etapas que lo decidan
+explícitamente); rollback trivial por etapa durante una mini-épica
+todavía experimental; permite migración módulo por módulo en vez de
+una migración masiva de una sola vez.
 
-Recomendación (no decisión): (a) — es la que menos contenido rompe y
-la que permite un rollback trivial por etapa si algo falla en
-producción. Corresponde al tesista confirmarla antes de abrir el
-Commit 1.
+**Contrato de compatibilidad (obligatorio para el Commit 2 en
+adelante):**
+
+```
+Si simulatedInputs existe en la etapa → usar simulatedInputs (legado).
+Si simulatedInputs NO existe en la etapa → usar stdin interactivo (Worker+Atomics).
+
+Nunca ambos mecanismos activos para la misma ejecución — la selección
+es automática y mutuamente excluyente, no una preferencia configurable.
+```
+
+Esto es un contrato, no una sugerencia — cualquier implementación que
+permita ambigüedad (p. ej. `simulatedInputs` presente pero el código
+también dispara el flujo interactivo) rompe el Engineering Gate de ese
+commit.
+
+**Próximo paso, cuando corresponda (fuera del alcance de esta épica):**
+una vez que el mecanismo esté estabilizado y validado con varios
+recorridos E2E reales, retirar `simulatedInputs` es una mini-épica
+aparte — no se decide ni se ejecuta aquí.
 
 ## 6. Estrategia de implementación (commits pequeños, un cambio por responsabilidad)
 
@@ -116,8 +129,9 @@ Commit 2 — usePyodide.ts adaptado al Worker
 
 Commit 3 — Protocolo de stdin real (Atomics.wait)
   La función que expone el hook para que el consumidor entregue el
-  valor cuando el estudiante lo escribe (reemplaza/complementa el
-  consumo FIFO de simulatedInputs, según la decisión de §5).
+  valor cuando el estudiante lo escribe — coexiste con el consumo FIFO
+  de simulatedInputs sin reemplazarlo (contrato de compatibilidad
+  §5: mutuamente excluyentes por etapa, nunca ambos a la vez).
 
 Commit 4 — UI de solicitud de entrada real en PythonBridge.tsx
   El campo donde el estudiante escribe el valor cuando Python lo pide
