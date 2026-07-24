@@ -43,8 +43,17 @@ de principios.
   producción exitoso. Sin cambio de comportamiento observable: misma
   prioridad, ahora en el Boundary en vez de en el cliente.
 
+## Deuda técnica registrada (no se resuelve ahora)
+□ `REINFORCEMENT_BY_MODALITY`/`resolveReinforcementPriority`
+  (`experienceOrchestrator.ts`) quedan como fallback local desde el Commit 3.
+  Cuando el Boundary pueda recomendar todas las formas del catálogo de PP4 y
+  todos los ciclos estén completamente adaptados con contenido autorado para
+  cada una, evaluar eliminar definitivamente el fallback — no antes.
+
 ## Commit 4 — Adenda B (Semántica del Rechazo)
 □ Requiere que exista una superficie de consentimiento real (no existe hoy)
+□ Precedido por [NOTA-INTERACCION-CONSENTIMIENTO.md](NOTA-INTERACCION-CONSENTIMIENTO.md)
+  — preguntas de diseño de interacción que Adenda B no responde a ese nivel
 □ Solo después de que el wiring esté en producción
 
 ## Commit 5 — Validación funcional

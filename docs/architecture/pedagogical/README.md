@@ -52,7 +52,9 @@ permite identificar exactamente qué documentos posteriores lo heredarían — v
 | [Adenda A](ADENDA-A-seleccion-forma.md) | Política de Selección de Forma | Cierra Doc 5 |
 | [Adenda B](ADENDA-B-semantica-rechazo.md) | Semántica del Rechazo | Cierra Doc 5 |
 | [Adenda C](ADENDA-C-recuperacion-memoria.md) | Política de Recuperación de Memoria | Cierra Doc 6 |
+| [Nota — Interacción de Consentimiento](NOTA-INTERACCION-CONSENTIMIENTO.md) | Preguntas de diseño de interacción, precede la implementación de Adenda B | 2 vacíos declarados |
 | [ESTADO.md](ESTADO.md) | Gobernanza y regla de evolución | v1.0 |
+| [MIGRATION.md](MIGRATION.md) | Bitácora de implementación (commits reales) | En curso |
 
 ## Próximo paso
 

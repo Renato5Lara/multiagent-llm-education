@@ -93,7 +93,10 @@ export function formasBoundaryDeVisitados(visited: Set<ReinforcementKind>): stri
 
 /** Fallback local, SOLO para cuando el Boundary no recomendó nada
  *  reconocible o su forma no tiene contenido autorado en este ciclo —
- *  nunca la ruta primaria. Prioridad de Etapa 1 (Pilar 1 + Pilar 2): el
+ *  nunca la ruta primaria (deuda técnica registrada en MIGRATION.md:
+ *  candidato a eliminación cuando el Boundary cubra todo el catálogo de
+ *  PP4 y todo ciclo tenga contenido autorado para cada forma — no antes).
+ *  Prioridad de Etapa 1 (Pilar 1 + Pilar 2): el
  *  tipo de ACTIVIDAD que mejor corresponde a cómo aprende el estudiante en
  *  general, cuando el ciclo no define una receta con su propia prioridad. */
 const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> = {
