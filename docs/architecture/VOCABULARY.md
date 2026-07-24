@@ -24,6 +24,7 @@
 | D1/D2/D3, regla de la raíz, tensión latente/bloqueante, «la deliberación selecciona, jamás crea» (elevada a P15), regla de oro del espacio de resultados, aplazamiento productivo, decisión provisional, deliberación enlazada | CONCEPT-0002 |
 | Contrato de Reconstrucción (R1–R6), unidad de persistencia, reconstrucción, re-derivación contrafactual, serialización canónica (contrato; su forma concreta → ADR-0001) | RFC-0008 |
 | Grieta A (hechos del mundo), Grieta B (dominio del respaldo) | WALKTHROUGH-0001 |
+| Recurso Pedagógico Generado, Plantilla de Prompt, Registro de Recursos, Referencia de Recurso, `origen` (referencia de trazabilidad, nunca explicación fabricada) | ROADMAP-RFC-0011.md |
 
 ## Notas semánticas
 
