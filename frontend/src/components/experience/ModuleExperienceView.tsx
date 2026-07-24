@@ -25,7 +25,8 @@ import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
 import {
   alternateModality, describeAdaptation, describeResourceFraming,
-  MODALITY_ORDER, orderingFallbackOf, resolveConceptForRender, resolvePractice,
+  formasBoundaryDeVisitados, MODALITY_ORDER, orderingFallbackOf,
+  resolveConceptForRender, resolvePractice,
   resolveReinforcementPriority, selectReinforcement,
 } from '@/lib/experiences/experienceOrchestrator'
 import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
@@ -513,10 +514,19 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     const timeMs = (practiceOutcome?.timeMs ?? 0) + (pythonOutcome?.timeMs ?? 0)
     setPhase('adapting')
     submitCycleEvidence.mutate(
-      { courseId, competencia: cycle.conceptId, attempts, solved, hintsUsed: remediationLevel, timeMs },
       {
-        onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+        courseId, competencia: cycle.conceptId, attempts, solved, hintsUsed: remediationLevel, timeMs,
+        formasYaMostradas: formasBoundaryDeVisitados(visitedReinforcements),
+      },
+      {
+        onSuccess: (data: {
+          runtime_decision?: {
+            diseno?: Record<string, unknown> | null
+            forma?: { tipo: string; categoria_consentimiento: string } | null
+          } | null
+        }) => {
           const diseno = data?.runtime_decision?.diseno
+          const formaDelBoundary = data?.runtime_decision?.forma?.tipo
           const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
           // Adaptar también recomienda una modalidad real
           // (runtime/domain/adaptar/productor.py: DISENO_POR_ACCION) — antes
@@ -544,9 +554,9 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
           const reinforcementPriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
           const reinforcement = profundidad === 'fundamentos'
-            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false, reinforcementPriority)
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false, reinforcementPriority, formaDelBoundary)
             : profundidad === 'aplicacion'
-              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, reinforcementPriority)
+              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, reinforcementPriority, formaDelBoundary)
               : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una

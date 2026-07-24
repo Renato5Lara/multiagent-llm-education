@@ -354,6 +354,10 @@ export interface CycleEvidencePayload {
   hintsUsed?: number
   /** Suma de práctica + puente Python, en ms — dataset: "tiempo por ciclo". */
   timeMs?: number
+  /** Memoria del Ciclo activo (Documento 6 §1, Arquitectura Pedagógica) —
+   *  formas del catálogo de PP4 ya mostradas en este ciclo (Adenda A),
+   *  para que el Boundary no repita contenido ya visto. */
+  formasYaMostradas?: string[]
 }
 
 /** Evaluación continua (refinamiento de experiencia, jul 2026): la
@@ -371,6 +375,7 @@ export function useSubmitCycleEvidence() {
         solved: payload.solved,
         hints_used: payload.hintsUsed,
         time_ms: payload.timeMs,
+        formas_ya_mostradas: payload.formasYaMostradas,
       }, { timeout: 120_000 })
       return resp.data
     },
