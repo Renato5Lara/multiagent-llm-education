@@ -132,6 +132,26 @@ técnica como la que este spike sí resolvía.
 - Prototipo funcional conservado en
   `spikes/b1-pyodide-worker-stdin/` (`worker.js`, `main.js`,
   `index.html`, `server.mjs`) — reproducible con `node server.mjs`.
+- **Reproducido de forma independiente** (misma sesión, instancia de
+  servidor nueva en otro puerto, código de prueba distinto — tres
+  `input()` consecutivos en vez de dos): `a=10, b=20, c=30` →
+  `print(a,b,c)` = `10 20 30`, `int(a)+int(b)+int(c)` = `60`, correcto.
+  Confirma que el resultado no depende de un estado particular del
+  primer experimento.
+
+## Riesgos residuales (no resueltos por este spike — pendientes para el Engineering Gate)
+
+| Riesgo | Estado |
+|---|---|
+| Compatibilidad de COOP/COEP con el resto de recursos cross-origin del frontend | Pendiente de auditoría |
+| Compatibilidad en Firefox/Safari reales (solo se probó Chrome) | Pendiente |
+| Impacto sobre el hosting de producción (Render.com — cabeceras COOP/COEP en el servidor real) | Pendiente |
+| Integración real con `usePyodide.ts` y `PythonBridge.tsx` existentes | Pendiente |
+| UX para `input()` cancelado o abandonado a mitad de espera | Pendiente |
+
+Lo que este spike resuelve es la **viabilidad técnica del mecanismo**
+(sí funciona, con código real, reproducido dos veces) — no la
+integración completa en la aplicación.
 
 ## Decisión
 
