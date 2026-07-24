@@ -69,7 +69,22 @@ function getWorker(): { worker: Worker; ready: Promise<void> } {
           reject(new Error(e.data.message))
         }
       }
+      // Sin esto, si el propio script del worker falla al cargar (p. ej. un
+      // 503 transitorio del dev server, encontrado validando el Commit 3 en
+      // navegador real), el evento 'error' del Worker nunca tenía quién lo
+      // escuchara — la promesa quedaba colgada para siempre y el laboratorio
+      // quedaba roto hasta recargar la página completa. Al rechazar y
+      // limpiar el singleton, una futura llamada a `usePyodide()` puede
+      // reintentar desde cero en vez de heredar el estado roto.
+      const onError = (e: ErrorEvent) => {
+        worker.removeEventListener('message', onMessage)
+        worker.removeEventListener('error', onError)
+        workerSingleton = null
+        readySingleton = null
+        reject(new Error(e.message || 'No se pudo cargar el worker de Python.'))
+      }
       worker.addEventListener('message', onMessage)
+      worker.addEventListener('error', onError)
       worker.postMessage({ type: 'init', signalSab, dataSab } satisfies WorkerInboundMessage)
     })
   }
