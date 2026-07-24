@@ -569,6 +569,8 @@ def submit_cycle_evidence(
             items_incorrectos=list(range(errores)),
             items_totales=data.attempts,
             modalidad_estudiante=diagnostico.dominant_modality if diagnostico else None,
+            hints_used=data.hints_used,
+            time_ms=data.time_ms,
         )
         runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
         # Política de Selección de Forma (Adenda A, Arquitectura Pedagógica

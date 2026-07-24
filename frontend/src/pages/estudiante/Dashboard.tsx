@@ -16,6 +16,12 @@ import TutorInsightsPanel from '@/components/dashboard/TutorInsightsPanel'
 import AchievementsStrip from '@/components/dashboard/AchievementsStrip'
 import QuickAccessRow from '@/components/dashboard/QuickAccessRow'
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} Dashboard:${event}`, extra ?? '')
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 // La experiencia activa la marca el backend (is_active_experience); el frontend
@@ -107,7 +113,13 @@ function NextMissionCard({
             <p className="text-xs text-neural-muted/70 mb-4 flex-1">
               El sistema multiagente necesita conocerte para construir tu ruta personalizada.
             </p>
-            <Button className="gap-2 self-start" onClick={() => navigate(`/estudiante/diagnostic/${course.course_id}`)}>
+            <Button
+              className="gap-2 self-start"
+              onClick={() => {
+                debugDiagLog('click:comenzar-diagnostico', { courseId: course.course_id })
+                navigate(`/estudiante/diagnostic/${course.course_id}`)
+              }}
+            >
               <Brain className="h-4 w-4" /> Comenzar diagnóstico
             </Button>
           </>
@@ -215,7 +227,15 @@ export default function EstudianteDashboard() {
   const ktStatus = useKnowledgeTestStatus(fdp?.course_id)
   const { data: adaptiveDecision } = useAdaptiveDecision(fdp?.course_id)
 
-  if (coursesLoading || (fdp?.has_learning_path && pathLoading)) return <DashboardSkeleton />
+  debugDiagLog('render', {
+    coursesLoading, pathLoading,
+    hasFdp: !!fdp, hasLearningPath: fdp?.has_learning_path, hasDiagnostic: fdp?.has_diagnostic,
+  })
+
+  if (coursesLoading || (fdp?.has_learning_path && pathLoading)) {
+    debugDiagLog('render:skeleton-branch', { coursesLoading, pathLoading, hasLearningPath: fdp?.has_learning_path })
+    return <DashboardSkeleton />
+  }
 
   const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Estudiante'
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'

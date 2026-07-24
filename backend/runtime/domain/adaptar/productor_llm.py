@@ -86,6 +86,9 @@ def producir(
             f'"textual", "mixta", "guiado", "practica", "autonomo", '
             f'"solo-texto", "ejemplo-codigo"), luego "profundidad" '
             f'(STRING, exactamente uno de: "fundamentos", "aplicacion"), '
+            f'luego "andamiaje" (STRING, exactamente uno de: "ejemplo" si '
+            f'senal="confusion", "alternar-modalidad" si senal="frustracion", '
+            f'"reto" si senal="fluidez"; omite este campo si no hay señal), '
             f'luego "alternativas_descartadas" (ARRAY de objetos '
             f'{{"modalidad": uno de la misma lista anterior, "razon": '
             f'STRING breve}}, al menos 1 elemento), luego "confianza" '
@@ -98,6 +101,13 @@ def producir(
             campos_requeridos=("modalidad", "profundidad", "confianza"),
         )
         respaldo = (decision.id,) if senal_fact is None else (decision.id, senal_fact.id)
+        afirmacion = {
+            "modalidad": respuesta["modalidad"],
+            "profundidad": respuesta["profundidad"],
+            "alternativas_descartadas": respuesta.get("alternativas_descartadas", []),
+        }
+        if respuesta.get("andamiaje") is not None:
+            afirmacion["andamiaje"] = respuesta["andamiaje"]
         return (
             TransitionIntent(
                 productor=Capacidad.ADAPTAR,
@@ -106,13 +116,7 @@ def producir(
                     "autor": Capacidad.ADAPTAR,
                     "tipo": TipoClaim.PROPUESTA,
                     "asunto": f"modalidad({competencia})",
-                    "afirmacion": {
-                        "modalidad": respuesta["modalidad"],
-                        "profundidad": respuesta["profundidad"],
-                        "alternativas_descartadas": respuesta.get(
-                            "alternativas_descartadas", []
-                        ),
-                    },
+                    "afirmacion": afirmacion,
                     "respaldo": respaldo,
                     "confianza": Decimal(str(respuesta["confianza"])),
                     "provenance": Provenance.de(

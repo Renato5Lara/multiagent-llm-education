@@ -22,16 +22,26 @@ def _identidad() -> Identidad:
     )
 
 
-def _estado_con_evaluacion(incorrectos: list[int], total: int) -> LearningState:
+def _estado_con_evaluacion(
+    incorrectos: list[int],
+    total: int,
+    hints_used: int | None = None,
+    time_ms: int | None = None,
+) -> LearningState:
     estado = LearningState(identidad=_identidad(), contexto={"ruta": "condicionales"})
+    contenido = {
+        "competencia": "COMP-2",
+        "items_incorrectos": incorrectos,
+        "items_totales": total,
+    }
+    if hints_used is not None:
+        contenido["hints_used"] = hints_used
+    if time_ms is not None:
+        contenido["time_ms"] = time_ms
     r1 = registrar_fact(
         estado,
         autor=Capacidad.EVALUAR,
-        contenido={
-            "competencia": "COMP-2",
-            "items_incorrectos": incorrectos,
-            "items_totales": total,
-        },
+        contenido=contenido,
         provenance=Provenance.de(OrigenProvenance.INSTRUMENTO, banco="v2"),
     )
     assert isinstance(r1, Aplicado)
@@ -94,3 +104,54 @@ class TestP13_TutorizarContratoCompartido:
         resultado = registrar_fact(estado, **intent.argumentos)
         assert isinstance(resultado, Aplicado)
         assert producir(resultado.estado) == ()
+
+    def test_sin_hints_ni_tiempo_conserva_el_comportamiento_previo(self):
+        # Retrocompatibilidad: hechos sin `hints_used`/`time_ms` (todo el
+        # historial anterior a este sprint) clasifican exactamente igual
+        # que antes — ninguna de las claves nuevas aparece en el contenido.
+        (intent,) = producir(_estado_con_evaluacion([1], 4))
+        contenido = intent.argumentos["contenido"]
+        assert contenido["senal"] == "confusion"
+        assert "hints_used" not in contenido
+        assert "time_ms" not in contenido
+
+    def test_acierto_con_muchas_ayudas_o_tiempo_lento_no_es_fluidez_real(self):
+        # RFC-0002 R4: la señal deja de usar la proporción de errores como
+        # ÚNICO proxy — acertar apoyándose en muchas ayudas o tardando
+        # mucho no debe leerse como la misma fluidez que acertar rápido y
+        # sin apoyo (el usuario, 2026-07-17: "¿está aprendiendo?", no solo
+        # "¿respondió bien?").
+        (con_ayudas,) = producir(_estado_con_evaluacion([], 4, hints_used=2))
+        (lento,) = producir(_estado_con_evaluacion([], 4, time_ms=120_000))
+        (fluidez_real,) = producir(
+            _estado_con_evaluacion([], 4, hints_used=0, time_ms=10_000)
+        )
+        assert con_ayudas.argumentos["contenido"]["senal"] == "confusion"
+        assert lento.argumentos["contenido"]["senal"] == "confusion"
+        assert fluidez_real.argumentos["contenido"]["senal"] == "fluidez"
+
+    def test_falla_parcial_muy_rapida_es_confusion_no_frustracion(self):
+        # Falla parcial + muy rápido: probable intento apresurado, no
+        # frustración genuina — sigue siendo la señal que ya dispara
+        # cambiar de ejemplo (ALTERNATIVAS_POR_SENAL en Adaptar).
+        (intent,) = producir(_estado_con_evaluacion([1], 4, time_ms=2_000))
+        assert intent.argumentos["contenido"]["senal"] == "confusion"
+
+    def test_falla_parcial_con_muchas_ayudas_y_tiempo_lento_escala_a_frustracion(self):
+        # Falla parcial + mucho apoyo + mucho tiempo: seguir insistiendo
+        # con el mismo enfoque ya no basta — se trata como frustración
+        # (dispara alternativas de acompañamiento, no solo otro ejemplo).
+        (intent,) = producir(
+            _estado_con_evaluacion([1], 4, hints_used=3, time_ms=100_000)
+        )
+        assert intent.argumentos["contenido"]["senal"] == "frustracion"
+
+    def test_hints_y_tiempo_se_propagan_igual_en_ambas_versiones(self):
+        estado = _estado_con_evaluacion([1], 4, hints_used=2, time_ms=95_000)
+        (intent_regla,) = producir(estado)
+        (intent_llm,) = producir_llm(estado, proveedor=FakeLLMProvider())
+        for intent in (intent_regla, intent_llm):
+            contenido = intent.argumentos["contenido"]
+            assert contenido["senal"] == "frustracion"
+            assert contenido["hints_used"] == 2
+            assert contenido["time_ms"] == 95_000

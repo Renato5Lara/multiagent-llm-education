@@ -179,20 +179,30 @@ function getModuleMessages(ctx?: ModuleContext) {
 function getPathMessages(ctx?: PathContext) {
   const strongestPct = ctx?.strongestPct !== undefined ? ` (${Math.round(ctx.strongestPct)}%)` : ''
   const focusPct = ctx?.focusPct !== undefined ? ` (${Math.round(ctx.focusPct)}%)` : ''
+  // Si el foco ya está dominado (>=70%, mismo umbral que el backend), no hay
+  // vacío real que reforzar — contradiría "tu base más sólida es X" cuando X
+  // es la misma competencia (ver fix(learning-path) en KnowledgeTest.tsx).
+  const mastered = ctx?.focusPct !== undefined && ctx.focusPct >= 70
   const opening = ctx?.strongestLabel
     ? `Detecté estos patrones en tus respuestas: tu base más sólida es «${ctx.strongestLabel}»${strongestPct}.`
     : 'Terminé de leer tu diagnóstico. Ya identifiqué los patrones de tus respuestas.'
-  const counter = ctx?.focusLabel
-    ? `Yo vi otros: «${ctx.focusLabel}»${focusPct} es donde más apoyo vas a necesitar.`
-    : ctx?.weaknesses?.length
-      ? `Yo vi otros: conviene reforzar ${ctx.weaknesses.slice(0, 2).join(' y ')} antes de avanzar.`
-      : 'Yo no encontré temas críticos — puedes avanzar a buen ritmo.'
+  const counter = mastered
+    ? 'Yo también lo vi: dominas todas las competencias evaluadas — no hay vacíos que reforzar.'
+    : ctx?.focusLabel
+      ? `Yo vi otros: «${ctx.focusLabel}»${focusPct} es donde más apoyo vas a necesitar.`
+      : ctx?.weaknesses?.length
+        ? `Yo vi otros: conviene reforzar ${ctx.weaknesses.slice(0, 2).join(' y ')} antes de avanzar.`
+        : 'Yo no encontré temas críticos — puedes avanzar a buen ritmo.'
 
   return [
     { agent: 'Agente Diagnóstico', text: opening },
     { agent: 'Agente Perfil',      text: counter },
-    { agent: 'Agente Adaptación',  text: 'Entonces propongo ordenar los módulos para reforzar eso primero, sin frenar tu avance.' },
-    { agent: 'Agente Tutor',       text: 'De acuerdo. Prepararé explicaciones y práctica adicional donde el diagnóstico mostró vacíos.' },
+    { agent: 'Agente Adaptación',  text: mastered
+        ? 'Entonces propongo retos de mayor nivel en vez de repaso, para no frenar tu avance.'
+        : 'Entonces propongo ordenar los módulos para reforzar eso primero, sin frenar tu avance.' },
+    { agent: 'Agente Tutor',       text: mastered
+        ? 'De acuerdo. Prepararé desafíos avanzados en lugar de refuerzo básico.'
+        : 'De acuerdo. Prepararé explicaciones y práctica adicional donde el diagnóstico mostró vacíos.' },
     { agent: 'Motor de Consenso',  text: 'Consenso alcanzado. Tu ruta de aprendizaje quedó aprobada — abriéndola ahora.' },
   ]
 }

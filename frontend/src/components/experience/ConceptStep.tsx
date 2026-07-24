@@ -2,8 +2,8 @@
 // En S1 el medio es un guion mock enmarcado; en S2 el Content Discovery Agent
 // lo reemplaza por el recurso curado real sin tocar este componente.
 
-import { useRef } from 'react'
-import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Film, Headphones, Image as ImageIcon, BookOpen, Joystick, FileText, HelpCircle, CheckCircle2, ArrowDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AudioNarration } from './AudioNarration'
 import { PythonBridge } from './PythonBridge'
@@ -30,10 +30,18 @@ interface Props {
   concept: CycleConcept
   modality: LearningModality
   onContinue: (dwellMs: number) => void
+  /** Refuerzo previo a la práctica cuando el pre-test ya marcó "fundamentos"
+   *  para este ciclo (Sprint "Adaptación real", Fase B item 1): reutiliza el
+   *  MISMO ejemplo resuelto que ya existe en remediation.steps[0].illustration
+   *  — antes solo se mostraba reactivamente, después de fallar la práctica;
+   *  ahora también se ofrece proactivamente, antes de intentarla. Ningún
+   *  campo ni componente nuevo — mismo contenido, mostrado antes. */
+  earlyReinforcement?: { mediumLabel: string; body: string[] }
 }
 
-export function ConceptStep({ concept, modality, onContinue }: Props) {
+export function ConceptStep({ concept, modality, onContinue, earlyReinforcement }: Props) {
   const startRef = useRef(Date.now())
+  const [showTranscript, setShowTranscript] = useState(false)
   const variant: ConceptVariant = concept.variants[modality] ?? concept.variants.reading
   const Icon = MEDIUM_ICON[variant.medium] ?? BookOpen
   const framed = FRAMED_MEDIA.includes(variant.medium)
@@ -55,11 +63,17 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
 
         <div className={framed ? 'bg-neural-lowest/60 px-6 py-6' : 'px-6 py-6'}>
           <div className="space-y-4">
-            {/* RC-FINAL: la variante visual ES visual — comparación gráfica real */}
+            {/* RC-FINAL: la variante visual ES visual — diagrama real, no solo texto
+                coloreado. El nodo "ambigua" usa borde punteado (forma = idea difusa);
+                el nodo "precisa" usa borde sólido con ícono de verificación (forma =
+                idea resuelta), conectados por una flecha de transformación. */}
             {variant.infographic && (
-              <div className="space-y-3">
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
-                  <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-amber-400">✗ Ambigua</p>
+              <div className="space-y-0">
+                <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <HelpCircle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                    <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-amber-400">Ambigua</p>
+                  </div>
                   <p className="text-sm md:text-base text-neural-text font-medium">
                     «{variant.infographic.vague.instruction}»
                   </p>
@@ -71,8 +85,17 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
                     ))}
                   </div>
                 </div>
-                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
-                  <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-emerald-400">✓ Precisa</p>
+
+                <div className="flex flex-col items-center py-1.5">
+                  <ArrowDown className="h-4 w-4 text-neural-glow" />
+                  <p className="text-[10px] text-neural-muted uppercase tracking-wide">se vuelve evaluable</p>
+                </div>
+
+                <div className="rounded-xl border border-solid border-emerald-500/40 bg-emerald-500/5 p-4 space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-emerald-400">Precisa</p>
+                  </div>
                   <p className="text-sm md:text-base text-neural-text font-medium">
                     «{variant.infographic.precise.instruction}»
                   </p>
@@ -84,18 +107,49 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-neural-muted italic px-1">{variant.infographic.caption}</p>
+                <p className="text-xs text-neural-muted italic px-1 pt-3">{variant.infographic.caption}</p>
               </div>
             )}
 
             {/* RC-FINAL: la variante de audio SUENA — narración con voz real */}
             {variant.narrationText && <AudioNarration text={variant.narrationText} />}
 
-            {variant.body.map((paragraph, i) => (
-              <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
-                {paragraph}
-              </p>
-            ))}
+            {/* Perfil auditivo: "escucha, no leas" — el texto completo ya no
+                queda visible de entrada debajo del reproductor (eso invitaba
+                a leer en vez de escuchar); se oculta tras una transcripción
+                colapsada, igual que exige la accesibilidad real. */}
+            {variant.narrationText ? (
+              showTranscript ? (
+                <div className="space-y-4">
+                  {variant.body.map((paragraph, i) => (
+                    <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
+                      {paragraph}
+                    </p>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowTranscript(false)}
+                    className="text-xs text-neural-muted underline underline-offset-2"
+                  >
+                    Ocultar transcripción
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowTranscript(true)}
+                  className="text-xs text-neural-muted underline underline-offset-2"
+                >
+                  Ver transcripción
+                </button>
+              )
+            ) : (
+              variant.body.map((paragraph, i) => (
+                <p key={i} className="text-sm md:text-base text-neural-text/90 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -112,6 +166,19 @@ export function ConceptStep({ concept, modality, onContinue }: Props) {
             {concept.secondExample.label}
           </p>
           {concept.secondExample.body.map((paragraph, i) => (
+            <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      )}
+
+      {earlyReinforcement && (
+        <div className="glass-panel rounded-2xl p-5 space-y-3">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+            {earlyReinforcement.mediumLabel} — repaso antes de practicar
+          </p>
+          {earlyReinforcement.body.map((paragraph, i) => (
             <p key={i} className="text-sm text-neural-text/90 leading-relaxed">
               {paragraph}
             </p>

@@ -40,11 +40,38 @@ export function resolveRecipe(cycle: LearningCycle, modality: LearningModality):
 
 /** CycleConcept listo para ConceptStep: si hay receta, su `concept`
  *  reemplaza solo la variante de esa modalidad — secondExample/pythonBridge
- *  del ciclo se conservan intactos, nunca se inventan de la receta. */
-export function resolveConceptForRender(cycle: LearningCycle, modality: LearningModality): CycleConcept {
+ *  del ciclo se conservan intactos, nunca se inventan de la receta.
+ *
+ *  `profundidad` (jul 2026, Sprint "Adaptación desde el primer segundo"):
+ *  mismo valor real que Adaptar ya decide (fundamentos/aplicacion, sembrado
+ *  desde el pre-test o actualizado por cycle-evidence — nunca una señal
+ *  nueva). "aplicacion" con `quickRecap` disponible reemplaza la variante
+ *  de la modalidad por el recordatorio corto y retira secondExample/
+ *  pythonBridge pasivo (refuerzo por repetición del MISMO concepto, no
+ *  contenido distinto) — sin `quickRecap` o sin profundidad, el ciclo se
+ *  comporta exactamente igual que antes. */
+export function resolveConceptForRender(
+  cycle: LearningCycle,
+  modality: LearningModality,
+  profundidad?: string,
+): CycleConcept {
   const recipe = resolveRecipe(cycle, modality)
-  if (!recipe) return cycle.concept
-  return { ...cycle.concept, variants: { ...cycle.concept.variants, [modality]: recipe.concept } }
+  const base = recipe
+    ? { ...cycle.concept, variants: { ...cycle.concept.variants, [modality]: recipe.concept } }
+    : cycle.concept
+
+  if (profundidad !== 'aplicacion' || !cycle.concept.quickRecap) return base
+
+  const variant = base.variants[modality]
+  return {
+    ...base,
+    variants: {
+      ...base.variants,
+      [modality]: { ...variant, body: cycle.concept.quickRecap.body, infographic: undefined },
+    },
+    secondExample: undefined,
+    pythonBridge: undefined,
+  }
 }
 
 /** Práctica principal: la de la receta si existe, si no la resolución de
@@ -55,10 +82,18 @@ export function resolvePractice(cycle: LearningCycle, modality: LearningModality
 
 export const MODALITY_ORDER: LearningModality[] = ['visual', 'reading', 'audio', 'kinesthetic']
 
-/** Otra representación del mismo concepto (Nivel 2 de remediación): la
- *  primera modalidad disponible distinta a la del perfil del estudiante. */
+/** Otra representación del mismo concepto (Nivel 2 de remediación, y
+ *  desde el sprint "andamiaje" también frustración real de Tutorizar):
+ *  rotación real sobre MODALITY_ORDER, no "la primera distinta a la
+ *  actual" — con esa regla anterior, como 'visual' es el primer
+ *  elemento, CUALQUIER modalidad no-visual (reading/audio/kinesthetic)
+ *  caía siempre en 'visual', nunca en las otras dos representaciones
+ *  igual de reales que ya existen (audio narrado, simulación). Ahora
+ *  cada modalidad tiene su propia alternativa distinta: visual→reading,
+ *  reading→audio, audio→kinesthetic, kinesthetic→visual. */
 export function alternateModality(current: LearningModality): LearningModality {
-  return MODALITY_ORDER.find(m => m !== current) ?? current
+  const index = MODALITY_ORDER.indexOf(current)
+  return MODALITY_ORDER[(index + 1) % MODALITY_ORDER.length]
 }
 
 /** Adenda A (Documento 5 §4.1, Arquitectura Pedagógica v1.0): quién decide
@@ -166,17 +201,37 @@ const REINFORCEMENT_OFFER: Record<ReinforcementKind, string> = {
 
 /** Conversación pedagógica de la transición entre ciclos (Pilar 3 —
  *  continuidad): nombra el concepto que el estudiante acaba de dominar y,
- *  cuando lo hay, el siguiente — nunca "esta parte" genérico. `reinforcement`
- *  ya viene filtrado por "no visitado"; su sola presencia significa que el
- *  Runtime decidió reforzar (profundidad=fundamentos). */
+ *  cuando lo hay, el siguiente — nunca "esta parte" genérico.
+ *
+ *  Sprint "coherencia adaptativa" (jul 2026) — corrección de un bug real
+ *  detectado en QA: `reinforcement` ya viene filtrado por "no visitado", pero
+ *  su sola presencia NO significa que el Runtime decidió reforzar. Antes,
+ *  esta función asumía justo eso (comentario previo: "su sola presencia
+ *  significa que el Runtime decidió reforzar") y caía siempre al mensaje de
+ *  "todavía te está costando" cuando `profundidad` no era exactamente
+ *  'aplicacion' — pero `profundidad` y `andamiaje` son DOS dimensiones
+ *  independientes del mismo runtime_decision.diseno (RFC-0002 §3): un ciclo
+ *  puede cerrar con `andamiaje: 'reto'` (fluidez ya confirmada por Tutorizar
+ *  con tiempo/ayudas reales) sin que `profundidad` valga 'aplicacion' en ese
+ *  mismo instante. El resultado observable: el estudiante veía "ya dominas
+ *  esto" en el menú de decisión, pulsaba Continuar, y la propia adaptación le
+ *  decía "todavía te está costando" — dos mensajes que se contradicen sobre
+ *  la MISMA decisión. `andamiaje === 'reto'` es una señal inequívoca de
+ *  dominio (nunca de dificultad): cuando el Runtime elige ese andamiaje, el
+ *  `reinforcement` resultante es SIEMPRE de kind 'reto' (ver advanceCycle en
+ *  ModuleExperienceView.tsx — nunca otro kind), así que se prioriza sobre el
+ *  fallback genérico. Ningún criterio de dominio ni cálculo de competencia
+ *  cambia aquí — solo qué frase corresponde a la decisión que el Runtime YA
+ *  tomó. */
 export function describeAdaptation(
   profundidad: string | undefined,
   reinforcement: Reinforcement | undefined,
   conceptLabel: string,
   nextConceptLabel: string | undefined,
+  andamiaje?: string,
 ): string {
   const concept = conceptLabel.toLowerCase()
-  if (profundidad === 'aplicacion' && reinforcement) {
+  if ((andamiaje === 'reto' || profundidad === 'aplicacion') && reinforcement) {
     return `Ya dominas ${concept} — ${REINFORCEMENT_OFFER[reinforcement.kind]}`
   }
   if (reinforcement) {

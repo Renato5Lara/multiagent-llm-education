@@ -1,14 +1,25 @@
-// "¿Sabías que...?" — recuperada del flujo legacy (EngageGateway) pero con la
-// identidad visual del patrón de experiencia (oscuro, glass-panel), no la
-// tarjeta clara original. Rompe la monotonía teoría→práctica antes de que
-// empiece el concepto.
+// "¿Sabías que...?" — pantalla propia al inicio del ciclo (sprint "UX ¿Sabías
+// que...?", jul 2026): antes aparecía mezclada arriba del concepto, dentro de
+// la misma pantalla que la teoría; ahora es su propio paso — dato, fuente
+// verificable y un "Continuar" explícito, antes de pasar al contenido
+// principal. Misma identidad visual que tenía (glass, borde ámbar, ícono +
+// etiqueta mono) y el mismo componente de siempre — solo con fuente y botón.
 
 import { Lightbulb } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { CuriosityFact } from '@/types/moduleExperience'
 
-export function CuriosityFactCard({ fact }: { fact: CuriosityFact }) {
+interface Props {
+  fact: CuriosityFact
+  /** Cuando se omite, la tarjeta se comporta como antes del sprint (sin
+   *  botón propio) — hoy siempre se pasa, porque "¿Sabías que...?" es su
+   *  propia pantalla con su propio paso de avance. */
+  onContinue?: () => void
+}
+
+export function CuriosityFactCard({ fact, onContinue }: Props) {
   return (
-    <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-5 space-y-2.5 animate-in fade-in duration-500">
+    <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-5 space-y-3 animate-in fade-in duration-500">
       <div className="flex items-center gap-2.5">
         <Lightbulb className="h-4 w-4 text-amber-300 shrink-0" />
         <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-amber-300">
@@ -18,9 +29,19 @@ export function CuriosityFactCard({ fact }: { fact: CuriosityFact }) {
       <p className="text-sm md:text-base text-neural-text/90 leading-relaxed">
         {fact.fact}
       </p>
-      <p className="text-xs text-neural-muted leading-relaxed border-t border-amber-400/15 pt-2.5">
+      <p className="text-sm text-neural-muted leading-relaxed border-t border-amber-400/15 pt-3">
         {fact.connection}
       </p>
+      <p className="text-xs text-neural-muted/70 italic">
+        Fuente: {fact.source}
+      </p>
+      {onContinue && (
+        <div className="flex justify-end pt-1">
+          <Button onClick={onContinue} className="gap-2">
+            Continuar →
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

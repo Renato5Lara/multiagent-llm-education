@@ -64,6 +64,14 @@ export interface CycleConcept {
   /** Puente a Python del PROPIO ejemplo de la teoría (no el de la práctica) —
    *  aparece durante el desarrollo del concepto, antes de la actividad. */
   pythonBridge?: PythonBridge
+  /** Recordatorio breve del MISMO concepto (no un concepto distinto) para un
+   *  estudiante que el pre-test ya mostró que domina el tema — Adaptar
+   *  (profundidad="aplicacion") condensa en vez de repetir la explicación
+   *  completa + segundo ejemplo + puente pasivo, que son refuerzo por
+   *  repetición: apropiado para quien recién lo ve, redundante para quien
+   *  ya lo demostró. Sin este campo, el ciclo se comporta exactamente igual
+   *  que antes (resolveConceptForRender cae al comportamiento de siempre). */
+  quickRecap?: { body: string[] }
 }
 
 // ── Práctica universal (idéntica para todas las modalidades) ──────────────────
@@ -112,6 +120,14 @@ export interface PredictOutputPracticeDef {
   wrongFeedback: string
   /** Explicación paso a paso de la ejecución — se muestra tras agotar los intentos. */
   solutionExplanation: string[]
+  /** Narra el enunciado con voz real (AudioNarration, el MISMO componente que
+   *  ya usa la teoría) — auditoría "diversidad pedagógica" (jul 2026, revisión
+   *  post-sprint): sin esto, un ejercicio para el perfil auditivo podía decir
+   *  "después de escuchar..." sin reproducir ningún audio — una etiqueta que
+   *  prometía una modalidad que la pantalla no entregaba. Opcional: sin este
+   *  campo, la práctica se ve exactamente igual que antes (comportamiento
+   *  previo intacto para lector/visual/kinestésico, que nunca lo necesitaron). */
+  narrationText?: string
 }
 
 export type PracticeDef = OrderingPracticeDef | PredictOutputPracticeDef
@@ -195,6 +211,13 @@ export interface CuriosityFact {
   fact: string
   /** Por qué este dato conecta con lo que el estudiante está por aprender. */
   connection: string
+  /** Origen verificable del dato (sprint "UX ¿Sabías que...?", jul 2026) —
+   *  nunca una referencia inventada. No es cita APA: solo el nombre de la
+   *  fuente real donde el dato puede confirmarse (p. ej. "Computer History
+   *  Museum", "National Inventors Hall of Fame", "Python.org", "PEP 20",
+   *  "Real Python", "MDN"). Obligatorio: un dato sin fuente verificable no
+   *  debería mostrarse como curiosidad. */
+  source: string
 }
 
 // ── Puente a Python ─────────────────────────────────────────────────────────────
@@ -216,7 +239,25 @@ export interface PythonBridge {
   practice?: PythonMicroPracticeDef
 }
 
+// Andamiaje de Python (jul 2026, Sprint "Andamiaje completo"): cada peldaño
+// de la MISMA escalera que ya describía el comentario de `nextStage` más
+// abajo ("arrastrar → completar → escribir → modificar → aplicar"), ahora
+// nombrada explícitamente para que la UI pueda variar su interacción sin
+// inventar un componente nuevo por peldaño. `undefined` = comportamiento
+// previo exacto (editor libre, con o sin starterCode según `profundidad`).
+export type PythonPracticeMode =
+  | 'observar' // el código YA está completo y es correcto: el estudiante solo lo ejecuta y ve qué hace, sin escribir nada.
+  | 'manipular' // el código funciona; el estudiante cambia SOLO el detalle que el prompt señala (un valor, un texto).
+  | 'completar' // el código tiene un hueco explícito (ej. una línea con ____); el estudiante completa esa parte.
+  | 'corregir' // el código tiene un error deliberado; el estudiante lo encuentra y lo corrige.
+  | 'escribir_parcial' // el estudiante escribe desde un scaffold (starterCode no vacío).
+  | 'escribir_completo' // el estudiante escribe todo, sin scaffold (starterCode vacío).
+
 export interface PythonMicroPracticeDef {
+  /** Peldaño de la escalera de andamiaje — gobierna cómo se presenta el
+   *  editor (solo lectura en 'observar', libre en el resto). Ausente =
+   *  comportamiento previo (editor libre siempre). */
+  mode?: PythonPracticeMode
   /** Qué debe lograr el código que escriba (consigna corta, 1-2 líneas). */
   prompt: string
   /** Scaffold inicial del editor — nunca la solución. */
@@ -243,6 +284,14 @@ export interface PythonMicroPracticeDef {
     output: string
     explanation: string
   }
+  /** Explicación breve que conecta, tras una ejecución CORRECTA, el
+   *  concepto con la instrucción usada y el resultado observado (sprint
+   *  "PythonBridge como entorno de aprendizaje real", jul 2026) — el
+   *  estudiante debe ver código→ejecución→salida→explicación en TODOS los
+   *  peldaños, no solo en el último. Opcional: sin ella, el peldaño sigue
+   *  mostrando código, salida y el mensaje de acierto, solo sin la frase
+   *  adicional que conecta sintaxis y concepto. */
+  resultExplanation?: string
   /** Solución — se ofrece solo tras agotar los intentos, nunca antes. */
   solutionCode: string
   /** Valor(es) que "escribe" el usuario simulado, en el mismo orden en que el
@@ -256,7 +305,9 @@ export interface PythonMicroPracticeDef {
    *  mínima, no el diseño final del flujo adaptativo): al resolver esta etapa,
    *  si existe nextStage se muestra en el mismo componente, sin pantalla
    *  nueva ni "Etapa X de Y" — el estudiante nunca cambia de actividad, solo
-   *  profundiza (arrastrar → completar → escribir → modificar → aplicar).
+   *  profundiza. Con `mode` (Sprint "Andamiaje completo"), la cadena
+   *  encadena los peldaños reales: observar → manipular → completar →
+   *  corregir → escribir parcial → escribir completo.
    *  Cadena lineal por ahora: decidir cuándo reforzar, repetir o saltar una
    *  etapa según evidencia queda para una iteración futura, no esta. */
   nextStage?: PythonMicroPracticeDef
@@ -298,6 +349,28 @@ export interface ExperienceRecipe {
 
 export type ExperienceRecipeBook = Partial<Record<LearningModality, ExperienceRecipe>>
 
+// ── Microexplicación de concepto ────────────────────────────────────────────
+// Tarjeta MUY corta (menos de un minuto) que nombra un término de Python justo
+// ANTES de que el ciclo lo use por primera vez — antes, `print`, `if`, etc.
+// aparecían directamente dentro del código de PythonBridge sin que ningún
+// lugar del recorrido dijera qué es o para qué sirve (sprint "mejora
+// pedagógica", jul 2026). No es la teoría del ciclo (eso ya lo cubre
+// CycleConcept: la analogía completa) ni parte de PythonBridge (que sigue
+// intacto): es una definición mínima y reutilizable del TÉRMINO en sí.
+export interface ConceptPrimer {
+  /** El término tal como aparece en Python, p. ej. "print". */
+  term: string
+  /** Definición de una frase — nunca un párrafo. */
+  whatIsIt: string
+  /** Para qué sirve, en una frase. */
+  whatFor: string
+  /** Ejemplo mínimo, siempre código real ejecutable — nunca pseudocódigo. */
+  example: {
+    code: string
+    result: string
+  }
+}
+
 // ── Ciclo de aprendizaje ───────────────────────────────────────────────────────
 
 export interface LearningCycle {
@@ -319,6 +392,11 @@ export interface LearningCycle {
   pythonBridge?: PythonBridge
   /** Se muestra antes del concepto — la pausa "¿Sabías que...?". */
   curiosityFact?: CuriosityFact
+  /** Microexplicaciones a mostrar, EN ORDEN, antes de curiosityFact/concept —
+   *  una por término nuevo que este ciclo introduce por primera vez (p. ej.
+   *  ["print"], o ["if", "else"] cuando ambos aparecen juntos). Sin este
+   *  campo, el ciclo se comporta exactamente igual que antes. */
+  conceptPrimers?: ConceptPrimer[]
   /** Experiencias completas por modalidad (Etapa 2 del Experience
    *  Orchestrator) — cuando existe una receta para la modalidad efectiva,
    *  gobierna teoría+práctica+prioridad de refuerzo como una sola unidad,

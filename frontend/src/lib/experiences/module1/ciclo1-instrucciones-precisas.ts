@@ -2,20 +2,28 @@
 // Extraído de module1.ts (refactor mecánico, sin cambio de comportamiento).
 
 import type { LearningCycle } from '@/types/moduleExperience'
+import { PRINT_PRIMER } from '../conceptPrimers'
 
 export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
   id: 'ciclo-1',
   conceptId: 'instrucciones_precisas',
   conceptLabel: 'Instrucciones precisas',
   priorMastery: 0.2,
+  conceptPrimers: [PRINT_PRIMER],
   curiosityFact: {
     fact:
       'En 1801, el telar de Jacquard tejía patrones complejos usando tarjetas perforadas: cada agujero (o su ausencia) le decía a la máquina exactamente qué hilo levantar. Sin una tarjeta ambigua — el telar no sabía "interpretar", solo ejecutar.',
     connection:
       'Ese telar resolvía el mismo problema que vas a resolver hoy, más de un siglo antes de la primera computadora: cómo darle instrucciones a una máquina que no puede adivinar nada.',
+    source: 'Computer History Museum',
   },
   concept: {
     title: '¿Qué hace precisa a una instrucción?',
+    quickRecap: {
+      body: [
+        'Recordatorio rápido: una instrucción es precisa cuando no deja nada a la imaginación de quien la ejecuta — qué hacer, con qué, cuánto y hacia dónde. Una computadora funciona igual: Python ejecuta exactamente lo que escribes, ni más ni menos.',
+      ],
+    },
     secondExample: {
       label: 'Otro caso — el manual de una silla',
       body: [
@@ -56,10 +64,10 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         mediumLabel: 'Texto estructurado',
         sourceNote: 'Elegido para ti — tu perfil profundiza mejor leyendo a su ritmo.',
         body: [
-          'En 2018, un profesor pidió a sus estudiantes instrucciones escritas para preparar un sándwich, y las ejecutó al pie de la letra. Untó la mantequilla con la mano (nadie mencionó el cuchillo), apiló el pan sin abrir la bolsa y colocó el jamón sellado en su empaque.',
-          'No estaba saboteando: estaba ejecutando. Cada instrucción que asumía algo — «unta la mantequilla», ¿con qué? — dejaba una decisión en manos del ejecutor. Y una máquina no decide: se detiene o hace algo absurdo.',
-          'Una instrucción es precisa cuando no requiere que el ejecutor adivine nada: qué objeto usar, cuánto, dónde, en qué orden. Ese es el primer hábito mental de la programación.',
-          'Una computadora funciona exactamente igual que este robot: ejecuta lo que le dices, ni más ni menos. Python es una forma de escribir esas instrucciones — y la misma regla aplica: si tu instrucción asume algo que la computadora no puede adivinar, falla.',
+          'Idea: una instrucción es precisa cuando no requiere que el ejecutor adivine nada — qué objeto usar, cuánto, dónde, en qué orden.',
+          'Ejemplo: en 2018, un profesor pidió a sus estudiantes instrucciones escritas para preparar un sándwich, y las ejecutó al pie de la letra. Untó la mantequilla con la mano (nadie mencionó el cuchillo), apiló el pan sin abrir la bolsa y colocó el jamón sellado en su empaque.',
+          'Explicación: no estaba saboteando — estaba ejecutando. Cada instrucción que asumía algo («unta la mantequilla», ¿con qué?) dejaba una decisión en manos del ejecutor. Y una máquina no decide: se detiene o hace algo absurdo.',
+          'En resumen: si tu instrucción necesita que alguien adivine algo, no es una instrucción — es un deseo. Python solo ejecuta instrucciones, nunca deseos. Ese es el primer hábito mental de la programación.',
         ],
       },
       audio: {
@@ -76,13 +84,10 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
       },
       kinesthetic: {
         medium: 'simulacion',
-        mediumLabel: 'Simulación',
-        sourceNote: 'Elegido para ti — tu perfil construye comprensión haciendo.',
+        mediumLabel: 'Manos a la obra',
+        sourceNote: 'Elegido para ti — tu perfil aprende haciendo, no leyendo.',
         body: [
-          '🤖 Antes de leer nada, predice: el robot recibe «pon la mantequilla en el pan». Tiene un cuchillo, una cuchara y sus pinzas metálicas. ¿Qué usará?',
-          'Respuesta: ninguna de las tres — se detiene con error. La instrucción no dice QUÉ usar, y el robot no elige por ti.',
-          'Ahora predice con esta otra: «toma el cuchillo con la pinza derecha y unta la mantequilla sobre la cara superior de la rebanada». ¿Se detiene? No: ejecuta. Nada quedó a su imaginación — eso es una instrucción precisa.',
-          'Ese mismo robot mental es el modelo que usarás cuando programes. Una computadora recibe instrucciones escritas — Python es el lenguaje en que las escribes — y las ejecuta exactamente como tú las escribiste.',
+          'Nada de teoría por ahora: abajo tú mismo le vas a dar al robot la secuencia de instrucciones para cruzar la habitación. Si alguna es ambigua, el robot se detiene con error — pruébalo.',
         ],
       },
     },
@@ -90,7 +95,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
   practice: {
     kind: 'ordering',
     prompt:
-      'El robot debe cruzar la habitación y abrir la puerta sin chocar. Construye la secuencia usando SOLO instrucciones precisas — una de la lista es ambigua y debes descartarla.',
+      'Pon a prueba lo que acabas de leer: el robot debe cruzar la habitación y abrir la puerta sin chocar. Construye la secuencia usando SOLO instrucciones precisas — una de la lista es ambigua y debes descartarla.',
     // Decisión PO (Opción A, jul 2026): "Ve hacia la puerta" se eliminó del
     // banco — admitía leerse como objetivo+detalle junto a "Avanza 4 pasos"
     // y esa ambigüedad interpretativa no es la que el ejercicio enseña.
@@ -123,44 +128,123 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
     label: 'Esto ya es Python',
     code: 'girar(grados=90, direccion="izquierda")\navanzar(pasos=4)\ndetenerse()\nextender_mano()\ngirar_manija()',
     explanation:
-      'La secuencia que acabas de construir es, literalmente, un programa: cada línea es una instrucción precisa que Python ejecuta de arriba hacia abajo, exactamente en el orden en que la escribiste — ni una línea más, ni una menos de lo que dijiste.',
+      'La secuencia que acabas de construir es, literalmente, un programa: cada línea es una instrucción precisa que Python ejecuta de arriba hacia abajo, exactamente en el orden en que la escribiste — ni una línea más, ni una menos de lo que dijiste. Ahora vas a usar esa misma idea — una función con datos exactos — para que el propio robot te cuente lo que hizo.',
+    // Andamiaje completo (jul 2026, Sprint 2; retemado jul 2026 — consolidación
+    // Ciclo 1): la MISMA tarjeta encadena los seis peldaños reales — nunca
+    // "Etapa X de 6", el estudiante solo ve una consigna que cambia. Los seis
+    // peldaños reportan sobre la MISMA misión que el estudiante acaba de
+    // resolver arriba (cruzar la habitación, abrir la puerta — "Territorio:
+    // Explorador" de la apertura de la misión), nunca un tema nuevo sin
+    // relación: antes decían "Robot listo"/"Sistema listo", una serie de
+    // mensajes genéricos sin conexión con la práctica que los precede — la
+    // ruptura de continuidad más visible del ciclo.
     practice: {
-      prompt: 'Ahora hazlo tú: escribe una instrucción precisa en Python real para que la consola muestre exactamente Robot listo',
-      starterCode: '# escribe tu instrucción aquí\n',
-      expectedOutput: 'Robot listo',
-      hint: 'Usa la función print() con el texto exacto entre comillas: print("Robot listo")',
-      hintsByCategory: {
-        sintaxis: 'Revisa que las comillas y los paréntesis estén completos: print("texto") necesita abrir y cerrar ambos.',
-        variables: 'No necesitas ninguna variable aquí — escribe el texto directamente entre comillas, dentro de print(...).',
-        logica: 'print() solo necesita el texto entre paréntesis — no hace falta llamar a ninguna otra función.',
-        salida: 'Revisa mayúsculas, espacios y signos: debe coincidir letra por letra con "Robot listo".',
-      },
-      workedExample: {
-        code: 'print("Hola")',
-        output: 'Hola',
-        explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Robot listo".',
-      },
-      solutionCode: 'print("Robot listo")',
-      // Progresión pedagógica v1 (misma tarjeta, sin pantalla nueva): tras
-      // acertar, profundiza el MISMO concepto — modificar el mensaje —
-      // en vez de terminar aquí.
+      mode: 'observar',
+      prompt: 'Obsérvalo: el robot ya cruzó la habitación y abrió la puerta. Ejecuta esta línea y mira cómo te lo reporta.',
+      starterCode: 'print("Puerta abierta")\n',
+      expectedOutput: 'Puerta abierta',
+      hint: 'El código ya está completo — solo presiona Ejecutar para ver qué muestra.',
+      resultExplanation: 'print("Puerta abierta") le dijo a Python: muestra exactamente ese texto en pantalla. Por eso lo que ves arriba, "Puerta abierta", es lo que había entre las comillas — ni más, ni menos.',
+      solutionCode: 'print("Puerta abierta")',
       nextStage: {
-        prompt: 'Ahora profundiza: cambia el mensaje para que la consola muestre exactamente Sistema listo',
-        starterCode: 'print("Robot listo")\n',
-        expectedOutput: 'Sistema listo',
-        hint: 'Solo cambia el texto entre comillas — el resto de la línea no necesita tocarse: print("Sistema listo")',
+        mode: 'manipular',
+        prompt: 'Ahora tú: cambia SOLO el texto entre comillas para que el robot reporte exactamente Misión cumplida',
+        starterCode: 'print("Puerta abierta")\n',
+        expectedOutput: 'Misión cumplida',
+        hint: 'Solo cambia el texto entre comillas — el resto de la línea no necesita tocarse: print("Misión cumplida")',
         hintsByCategory: {
           sintaxis: 'Revisa que las comillas sigan completas después de cambiar el texto.',
-          variables: 'No necesitas ninguna variable — sigue siendo un texto directo entre comillas.',
+          variables: 'Si borraste alguna comilla, Python deja de ver "Misión cumplida" como texto y busca variables llamadas Misión y cumplida — y ninguna existe.',
           logica: 'Solo cambia lo que está entre comillas; print() no cambia.',
-          salida: 'Revisa que el texto sea exactamente "Sistema listo" — mayúscula inicial, sin comillas de más.',
+          salida: 'Revisa que el texto sea exactamente "Misión cumplida" — mayúscula inicial, sin comillas de más.',
         },
         workedExample: {
-          code: 'print("Motor listo")',
-          output: 'Motor listo',
-          explanation: 'Cambiar el mensaje es escribir un texto distinto entre las mismas comillas — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Sistema listo".',
+          code: 'print("Camino libre")',
+          output: 'Camino libre',
+          explanation: 'Cambiar el reporte es escribir un texto distinto entre las mismas comillas — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Misión cumplida".',
         },
-        solutionCode: 'print("Sistema listo")',
+        resultExplanation: 'Cambiaste el texto entre comillas y print() mostró exactamente ese texto nuevo — la función no cambió, solo el dato que le diste. Eso es lo que separa la instrucción (print) del valor exacto que reporta.',
+        solutionCode: 'print("Misión cumplida")',
+        nextStage: {
+          mode: 'completar',
+          prompt: 'Completa el código: falta la función que hace que el robot reporte su estado en pantalla. Reemplaza el espacio en blanco para que muestre exactamente Explorador listo',
+          starterCode: '_____("Explorador listo")\n',
+          expectedOutput: 'Explorador listo',
+          hint: 'La función que reporta texto en pantalla es print — reemplaza los guiones bajos por esa palabra exacta, sin dejar nada de ellos.',
+          hintsByCategory: {
+            sintaxis: 'Revisa que no queden guiones bajos ni espacios de más antes del paréntesis.',
+            variables: 'Python busca algo llamado "_____" porque todavía no reemplazaste el espacio en blanco por print.',
+            logica: 'Solo falta el nombre de la función — el paréntesis y el texto entre comillas ya están completos.',
+            salida: 'Revisa que el texto siga siendo exactamente "Explorador listo".',
+          },
+          workedExample: {
+            code: '_____("Camino libre")\n# se completa así:\nprint("Camino libre")',
+            output: 'Camino libre',
+            explanation: 'El hueco siempre se completa con el nombre de una función que ya conoces — aquí, print. Fíjate en el patrón: el texto entre comillas no cambia, solo el espacio en blanco.',
+          },
+          resultExplanation: 'Al escribir print en el hueco, Python pudo por fin reconocer la instrucción — el texto entre comillas ya estaba bien, solo faltaba nombrar la función que lo muestra en pantalla.',
+          solutionCode: 'print("Explorador listo")',
+          nextStage: {
+            mode: 'corregir',
+            prompt: 'Este código tiene un error: le falta algo para que "Territorio cruzado" sea reconocido como texto. Encuéntralo y corrígelo.',
+            starterCode: 'print(Territorio cruzado)\n',
+            expectedOutput: 'Territorio cruzado',
+            hint: 'A "Territorio cruzado" le faltan las comillas — sin ellas, Python cree que son nombres de variables que no existen.',
+            hintsByCategory: {
+              sintaxis: 'Python no reconoce Territorio cruzado como texto porque no está entre comillas.',
+              variables: 'Sin comillas, Python busca dos variables llamadas Territorio y cruzado — y ninguna existe.',
+              logica: 'La estructura print(...) ya es correcta; el problema es lo que hay dentro del paréntesis.',
+              salida: 'Una vez corregido, debe mostrar exactamente "Territorio cruzado".',
+            },
+            workedExample: {
+              code: 'print(Puerta abierta)\n# el error es la falta de comillas:\nprint("Puerta abierta")',
+              output: 'Puerta abierta',
+              explanation: 'Sin comillas, Python interpreta las palabras como nombres de variables — con comillas, las reconoce como texto. Ese es el mismo error que debes corregir aquí.',
+            },
+            resultExplanation: 'Agregar las comillas fue lo que arregló el código: sin ellas Python buscaba variables llamadas Territorio y cruzado; con ellas, reconoce el mismo texto como algo que solo hay que mostrar, no buscar.',
+            solutionCode: 'print("Territorio cruzado")',
+            nextStage: {
+              mode: 'escribir_parcial',
+              prompt: 'Ahora hazlo tú: usa print() para que el robot reporte exactamente Sala superada. El comentario de abajo es solo un recordatorio del patrón, no se ejecuta.',
+              starterCode: '# print("texto entre comillas")\n',
+              expectedOutput: 'Sala superada',
+              hint: 'Escribe tu propia línea con print("Sala superada") — el comentario de arriba no cuenta como código, solo te recuerda el patrón.',
+              hintsByCategory: {
+                sintaxis: 'Revisa que tu línea (no el comentario) tenga comillas y paréntesis completos.',
+                variables: 'Si escribes Sala superada sin comillas, Python busca variables llamadas Sala y superada — y ninguna existe.',
+                logica: 'El comentario que empieza con # no se ejecuta — necesitas escribir una línea nueva sin el #.',
+                salida: 'Revisa que el texto sea exactamente "Sala superada".',
+              },
+              workedExample: {
+                code: '# print("texto entre comillas")\nprint("Ruta despejada")',
+                output: 'Ruta despejada',
+                explanation: 'El comentario (la línea con #) es solo una nota para ti — Python la ignora. La línea real que se ejecuta es la que escribes debajo, sin el #.',
+              },
+              resultExplanation: 'Escribiste tu propia línea con print("Sala superada") y Python la ejecutó tal cual — el comentario de arriba nunca corrió, solo tu línea real produjo esta salida.',
+              solutionCode: 'print("Sala superada")',
+              nextStage: {
+                mode: 'escribir_completo',
+                prompt: 'Ahora profundiza: escribe tú mismo, desde cero, una instrucción que haga que el robot reporte exactamente Recorrido terminado',
+                starterCode: '',
+                expectedOutput: 'Recorrido terminado',
+                hint: 'Usa la función print() con el texto exacto entre comillas: print("Recorrido terminado")',
+                hintsByCategory: {
+                  sintaxis: 'Revisa que las comillas y los paréntesis estén completos: print("texto") necesita abrir y cerrar ambos.',
+                  variables: 'Si escribes Recorrido terminado sin comillas, Python busca variables llamadas Recorrido y terminado — y ninguna existe.',
+                  logica: 'print() solo necesita el texto entre paréntesis — no hace falta llamar a ninguna otra función.',
+                  salida: 'Revisa mayúsculas, espacios y signos: debe coincidir letra por letra con "Recorrido terminado".',
+                },
+                workedExample: {
+                  code: 'print("Puerta abierta")',
+                  output: 'Puerta abierta',
+                  explanation: 'print() siempre muestra exactamente el texto que le des entre comillas — ni más, ni menos. Fíjate en el patrón, no copies el mensaje: el tuyo es "Recorrido terminado".',
+                },
+                resultExplanation: 'Desde cero, print("Recorrido terminado") volvió a producir exactamente el texto entre comillas — la misma regla de los cinco peldaños anteriores, ahora escrita enteramente por ti.',
+                solutionCode: 'print("Recorrido terminado")',
+              },
+            },
+          },
+        },
       },
     },
   },

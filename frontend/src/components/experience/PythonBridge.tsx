@@ -7,16 +7,53 @@
 // el estudiante escribe Python real, ejecutado con Pyodide en el propio
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
-import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef } from '@/types/moduleExperience'
+import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef, PythonPracticeMode } from '@/types/moduleExperience'
 import type { PracticeOutcome } from './OrderingPractice'
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
+
+/** Progresión gradual para fluidez sostenida (ExperienceCursor.
+ *  fluencyStreak en ModuleExperienceView, "un solo slice, sin Runtime, sin
+ *  contenido nuevo"): en vez de arrancar siempre en el primer peldaño
+ *  (observar — el más trivial: mirar el código correr, sin escribir nada),
+ *  un estudiante con varios ciclos fluidos seguidos entra directamente unos
+ *  peldaños más adelante en la MISMA cadena ya autorada (practice.
+ *  nextStage...) — reutiliza exactamente el contenido existente, nunca
+ *  genera uno nuevo. `n` acotado por el propio llamador (máx. 2, nunca
+ *  aterriza en escritura libre) y por el largo real de la cadena aquí. */
+function skipAhead(practice: PythonMicroPracticeDef, n: number): PythonMicroPracticeDef {
+  let stage = practice
+  for (let i = 0; i < n && stage.nextStage; i++) stage = stage.nextStage
+  return stage
+}
+
+/** Encabezado de la tarjeta por peldaño — nombra la actividad real (nunca
+ *  "Etapa X de Y"), mismo espíritu que `describeStageAdaptation`. Ausente
+ *  `mode` (contenido previo al Sprint "Andamiaje completo") conserva el
+ *  título original. */
+const MODE_LABEL: Record<PythonPracticeMode, string> = {
+  observar: 'Obsérvalo',
+  manipular: 'Ahora tú: cambia un detalle',
+  completar: 'Completa el código',
+  corregir: 'Encuentra y corrige el error',
+  escribir_parcial: 'Ahora hazlo tú',
+  escribir_completo: 'Ahora profundiza',
+}
+
+/** Solo los peldaños de ESCRITURA (o contenido previo al andamiaje, sin
+ *  `mode`) ceden ante "aplicacion" y arrancan en blanco — observar/
+ *  manipular/completar/corregir dependen de que el scaffold autorado esté
+ *  presente: es el ejercicio en sí, no un apoyo que un buen desempeño deba
+ *  retirar. */
+function shouldStartBlank(mode: PythonPracticeMode | undefined, profundidad: string | undefined): boolean {
+  return profundidad === 'aplicacion' && (mode === undefined || mode === 'escribir_parcial' || mode === 'escribir_completo')
+}
 
 /** Diagnóstico genérico por categoría — verdadero para cualquier ejercicio,
  *  no autorado por contenido (a diferencia de `hintsByCategory`, que sí lo
@@ -46,9 +83,23 @@ interface Props {
    *  (`PracticeOutcome`) que la práctica de ordenamiento, para que el llamador
    *  pueda combinar ambas señales en la evidencia que recibe el Runtime. */
   onPracticeDone?: (outcome: PracticeOutcome) => void
+  /** Profundidad ya decidida por Adaptar ANTES de esta micropráctica (RFC-0002
+   *  §3): el pre-test registra evidencia real por competencia desde el primer
+   *  día (Diagnosticar→Remediar/Orientar→Adaptar, sin capacidad nueva), pero
+   *  esa cadena queda atada a la competencia del pre-test — la primera etapa
+   *  de un módulo nunca la había leído y arrancaba siempre en el valor por
+   *  defecto (más apoyo), sin importar el resultado real. Mismo vocabulario y
+   *  mismo efecto que `applyStage` ya aplica ENTRE etapas — aquí solo siembra
+   *  el mismo criterio en la etapa inicial. `undefined` conserva el
+   *  comportamiento previo exacto (starterCode + sin aviso). */
+  initialProfundidad?: string
+  /** Peldaños de la escalera a saltar antes de mostrar el primero — ver
+   *  `skipAhead()` arriba. `0`/`undefined` conserva el comportamiento previo
+   *  exacto (arranca siempre en `bridge.practice`, el peldaño "observar"). */
+  initialSkipStages?: number
 }
 
-export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone }: Props) {
+export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, onPracticeDone, initialProfundidad, initialSkipStages = 0 }: Props) {
   return (
     <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
@@ -65,11 +116,12 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
       </p>
       {bridge.practice && (
         <PythonMicroPractice
-          practice={bridge.practice}
+          practice={skipAhead(bridge.practice, initialSkipStages)}
           moduleId={moduleId}
           conceptId={conceptId}
           courseId={courseId}
           onDone={onPracticeDone}
+          initialProfundidad={initialProfundidad}
         />
       )}
     </div>
@@ -86,12 +138,13 @@ function describeStageAdaptation(profundidad: string | undefined): string | null
   return null
 }
 
-function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }: {
+function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, initialProfundidad }: {
   practice: PythonMicroPracticeDef
   moduleId: string
   conceptId: string
   courseId?: string
   onDone?: (outcome: PracticeOutcome) => void
+  initialProfundidad?: string
 }) {
   const { ready, loadError, run } = usePyodide()
   const submitCycleEvidence = useSubmitCycleEvidence()
@@ -100,7 +153,10 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   // tarjeta que va cambiando de prompt/código a medida que profundiza en el
   // mismo concepto. `practice` (el prop) sigue siendo la primera etapa.
   const [stage, setStage] = useState<PythonMicroPracticeDef>(practice)
-  const [code, setCode] = useState(practice.starterCode)
+  // Mismo criterio que applyStage: "aplicacion" retira el andamiaje desde el
+  // arranque (reto en blanco), "fundamentos"/sin dato conserva el starter
+  // precargado de siempre.
+  const [code, setCode] = useState(shouldStartBlank(practice.mode, initialProfundidad) ? '' : practice.starterCode)
   const [attempts, setAttempts] = useState(0)
   const [output, setOutput] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -116,21 +172,56 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   // progresión completa (cycle-evidence de cierre de ciclo, sin cambios).
   // Lo nuevo es la llamada ADICIONAL por etapa, abajo: evidencia real ENTRE
   // etapas del mismo concepto, no solo al final.
+  //
+  // `priorAttempts` acumula ERRORES reales, no intentos ni peldaños (bug
+  // real de la escalera, jul 2026): un peldaño resuelto al primer intento
+  // aporta 0, nunca 1 — de lo contrario, superar los 6 peldaños de la
+  // escalera sin ningún error se reportaba como "6 intentos" y el Runtime
+  // (que resta 1 y compara contra un umbral de 2) marcaba erróneamente al
+  // estudiante como "no dominada" solo por haber recorrido más pantallas.
+  // La escalera es un mecanismo de aprendizaje, no de evaluación: superarla
+  // completa sin errores debe seguir significando cero errores.
   const [priorAttempts, setPriorAttempts] = useState(0)
   const [priorSolutionShown, setPriorSolutionShown] = useState(false)
+  // Regla 6 (jul 2026) — conteo informativo de peldaños, solo evidencia
+  // local (recordEvidence, nunca cycle-evidence): no cambia ninguna decisión
+  // del Runtime hoy, pero preserva la señal para una futura adaptación más
+  // rica sin romper compatibilidad con `attempts`.
+  const totalSteps = useMemo(() => {
+    let n = 1
+    let cur: PythonMicroPracticeDef | undefined = practice
+    while (cur?.nextStage) {
+      n += 1
+      cur = cur.nextStage
+    }
+    return n
+  }, [practice])
+  const [stepIndex, setStepIndex] = useState(1)
   // Nota real de adaptación entre etapas (Pilar 2 — adaptación no solo entre
   // ciclos): se llena con la respuesta REAL de cycle-evidence, nunca un
-  // texto fijo; `null` mientras no hay nada que decir todavía.
-  const [stageNote, setStageNote] = useState<string | null>(null)
+  // texto fijo; `null` mientras no hay nada que decir todavía. En la etapa
+  // inicial, si el pre-test ya decidió una profundidad para este módulo, se
+  // siembra con el mismo mensaje que usaría applyStage entre etapas — nunca
+  // texto nuevo, misma función.
+  const [stageNote, setStageNote] = useState<string | null>(describeStageAdaptation(initialProfundidad))
   // Espera breve mientras el Runtime real decide la siguiente etapa — nunca
   // más de una llamada real (best-effort, ver applyStage/goToStage).
   const [deciding, setDeciding] = useState(false)
+  // Etapa intermedia recién resuelta, esperando confirmación del estudiante
+  // antes de avanzar (sprint "PythonBridge como entorno de aprendizaje
+  // real", jul 2026): antes, un acierto en una etapa con `nextStage` movía
+  // `applyStage`/`goToStage` en el MISMO ciclo síncrono que fijaba `output`,
+  // así que React nunca llegaba a renderizar la salida correcta — el
+  // estudiante avanzaba sin verla (bug real, no solo falta de explicación).
+  // Ahora la etapa siguiente queda en espera aquí y la salida permanece
+  // visible hasta que el estudiante confirma.
+  const [pendingNextStage, setPendingNextStage] = useState<{ next: PythonMicroPracticeDef; attempts: number } | null>(null)
   // La decisión real ya NO solo cambia el texto: "fundamentos" adelanta el
   // apoyo (caso resuelto visible antes, solución disponible antes) y
   // "aplicacion" retira el andamiaje (arranca en blanco, sin la respuesta
   // anterior precargada) — mismo criterio de la escalera de remediación
   // (más o menos acompañamiento), aplicado ahora dentro de la progresión.
-  const [earlyHelp, setEarlyHelp] = useState(false)
+  const [earlyHelp, setEarlyHelp] = useState(initialProfundidad === 'fundamentos')
 
   // Mostrar la solución de una etapa intermedia NO termina la cadena de
   // golpe: el estudiante pidió verla, se queda visible hasta que decide
@@ -142,9 +233,8 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   const exhausted = attempts >= attemptsBeforeSolution
 
   const applyStage = (next: PythonMicroPracticeDef, profundidad: string | undefined) => {
-    const openChallenge = profundidad === 'aplicacion'
     setStage(next)
-    setCode(openChallenge ? '' : next.starterCode)
+    setCode(shouldStartBlank(next.mode, profundidad) ? '' : next.starterCode)
     setEarlyHelp(profundidad === 'fundamentos')
     setAttempts(0)
     setOutput(null)
@@ -153,16 +243,26 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
     setShowSolution(false)
     setStageNote(describeStageAdaptation(profundidad))
     setDeciding(false)
+    setPendingNextStage(null)
   }
 
   /** `stageAttempts` se recibe explícito, nunca leído de `attempts` por
    *  closure: cuando se llama justo tras `setAttempts(nextAttempts)` en el
    *  mismo evento (handleRun), React todavía no aplicó ese update — leerlo
    *  del closure enviaba `attempts: 0` al backend, que exige `ge=1` (bug
-   *  real encontrado validando en navegador, no en revisión de código). */
+   *  real encontrado validando en navegador, no en revisión de código).
+   *
+   *  `stageAttempts` sigue siendo el conteo crudo de intentos de ESTA etapa
+   *  (se envía tal cual al cycle-evidence POR ETAPA, abajo — el backend ya
+   *  resta 1 correctamente ahí). Lo que se ACUMULA en `priorAttempts` es
+   *  distinto: los ERRORES reales de esta etapa (0 si se resolvió al primer
+   *  intento), para que la suma final entre etapas siga significando
+   *  "errores totales", nunca "intentos" ni "peldaños recorridos". */
   const goToStage = (next: PythonMicroPracticeDef, solutionShownHere: boolean, stageAttempts: number) => {
-    setPriorAttempts(prev => prev + stageAttempts)
+    const stageErrors = solutionShownHere ? stageAttempts : Math.max(0, stageAttempts - 1)
+    setPriorAttempts(prev => prev + stageErrors)
     setPriorSolutionShown(prev => prev || solutionShownHere)
+    setStepIndex(prev => prev + 1)
     setStageNote(null)
     // Evidencia real de ESTA etapa (no la acumulada) hacia el mismo Runtime
     // que ya evalúa el ciclo completo — misma competencia, mismo endpoint,
@@ -199,7 +299,10 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       type: 'practice_attempt',
       moduleId,
       conceptId,
-      detail: { practice: 'python', attempt: nextAttempts, status: correct ? 'correct' : 'incorrect', correct },
+      detail: {
+        practice: 'python', attempt: nextAttempts, status: correct ? 'correct' : 'incorrect', correct,
+        stepIndex, stepsTotal: totalSteps,
+      },
     })
     if (!correct) {
       setLastCategory(classifyPythonError(result.error))
@@ -207,11 +310,20 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
     }
     setLastCategory(null)
     if (stage.nextStage) {
-      goToStage(stage.nextStage, false, nextAttempts)
+      // No avanzar todavía: dejar la salida real visible (código→ejecución→
+      // salida→explicación) hasta que el estudiante confirme con "Continuar".
+      setPendingNextStage({ next: stage.nextStage, attempts: nextAttempts })
     } else {
       setSolved(true)
-      onDone?.({ attempts: priorAttempts + nextAttempts, timeMs: 0, solutionShown: priorSolutionShown })
+      // Última etapa: solo los intentos FALLIDOS de esta etapa son errores
+      // (Regla 1) — el intento que acaba de acertar no se cuenta.
+      onDone?.({ attempts: priorAttempts + Math.max(0, nextAttempts - 1), timeMs: 0, solutionShown: priorSolutionShown })
     }
+  }
+
+  const handleContinueAfterCorrect = () => {
+    if (!pendingNextStage) return
+    goToStage(pendingNextStage.next, false, pendingNextStage.attempts)
   }
 
   const handleShowSolution = () => {
@@ -219,10 +331,12 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       type: 'practice_attempt',
       moduleId,
       conceptId,
-      detail: { practice: 'python', attempts, solutionShown: true, final: true },
+      detail: { practice: 'python', attempts, solutionShown: true, final: true, stepIndex, stepsTotal: totalSteps },
     })
     setShowSolution(true)
     if (!stage.nextStage) {
+      // Nunca se resolvió esta etapa: todos los intentos fueron errores
+      // reales (mismo criterio que ya usaba el backend para este caso).
       onDone?.({ attempts: priorAttempts + attempts, timeMs: 0, solutionShown: true })
     }
   }
@@ -235,7 +349,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
   return (
     <div className="border-t border-neural-glow/15 px-5 py-4 space-y-3">
       <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
-        Ahora hazlo tú
+        {MODE_LABEL[stage.mode ?? 'escribir_parcial']}
       </p>
       {/* Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
           de mostrar la siguiente — breve (best-effort, nunca más de una
@@ -273,23 +387,28 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       <textarea
         value={code}
         onChange={e => setCode(e.target.value)}
-        disabled={done || showSolution}
+        disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
         rows={3}
         spellCheck={false}
         className="w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70"
       />
       <div className="flex items-center gap-2 flex-wrap">
-        <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running} className="gap-2">
+        <Button size="sm" onClick={handleRun} disabled={!ready || done || showSolution || running || !!pendingNextStage} className="gap-2">
           {running && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           {ready ? 'Ejecutar →' : 'Cargando Python…'}
         </Button>
-        {!done && !showSolution && exhausted && (
+        {!done && !showSolution && !pendingNextStage && exhausted && (
           <Button size="sm" variant="ghost" onClick={handleShowSolution}>
             Ver solución
           </Button>
         )}
         {pendingContinue && (
           <Button size="sm" onClick={handleContinueAfterSolution} className="gap-2">
+            Continuar →
+          </Button>
+        )}
+        {pendingNextStage && (
+          <Button size="sm" onClick={handleContinueAfterCorrect} className="gap-2">
             Continuar →
           </Button>
         )}
@@ -301,6 +420,18 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
         </div>
       )}
       {error && !showSolution && <p className="text-sm text-amber-400">{error}</p>}
+      {/* Tras un acierto (etapa intermedia en espera de "Continuar", o la
+          última etapa ya resuelta): la salida ya se ve arriba — aquí solo la
+          frase que conecta concepto+instrucción+resultado, cuando el
+          contenido la trae (sprint "PythonBridge como entorno de aprendizaje
+          real"). Sin `resultExplanation` autorada, el peldaño se ve igual
+          que antes de este sprint. */}
+      {(pendingNextStage || solved) && stage.resultExplanation && (
+        <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/5 px-3 py-2 space-y-1">
+          <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-emerald-400">Por qué pasó esto</p>
+          <p className="text-sm text-neural-text/80 leading-relaxed">{stage.resultExplanation}</p>
+        </div>
+      )}
       {/* La ayuda responde a POR QUÉ falló (lastCategory), no solo a cuántas
           veces — antes, un error real (SyntaxError/NameError) nunca mostraba
           pista alguna; ahora toda categoría tiene su propio diagnóstico. */}
@@ -318,7 +449,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       {/* Apoyo tras el 2º intento fallido — un caso ANÁLOGO, nunca la solución
           del propio ejercicio (mismo criterio que la escalera de remediación:
           más acompañamiento antes de ofrecer la respuesta, nunca en su lugar). */}
-      {!done && !showSolution && attempts >= workedExampleThreshold && stage.workedExample && (
+      {!done && !showSolution && !pendingNextStage && attempts >= workedExampleThreshold && stage.workedExample && (
         <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2.5 space-y-2">
           <div className="flex items-center gap-2">
             <LifeBuoy className="h-3.5 w-3.5 text-neural-violet shrink-0" />
@@ -334,6 +465,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone }
       {solved && (
         <p className="text-sm text-emerald-400">
           ✓ Exacto — eso es Python real haciendo lo que pediste.
+        </p>
+      )}
+      {pendingNextStage && (
+        <p className="text-sm text-emerald-400">
+          ✓ Exacto — así se ve en pantalla.
         </p>
       )}
       {showSolution && (

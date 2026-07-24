@@ -9,6 +9,7 @@ import api from '@/lib/api'
 import { AgentActivityPanel } from '@/components/swarm/AgentActivityPanel'
 import { useAuthStore } from '@/stores/authStore'
 import { sesionDelCurso } from '@/lib/runtimeSession'
+import { getErrorMessage } from '@/lib/errors'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -270,6 +271,12 @@ function ErrorScreen({
   )
 }
 
+// DEBUG-DIAG-LOOP (temporal — quitar tras capturar una ocurrencia real):
+function debugDiagLog(event: string, extra?: Record<string, unknown>) {
+  // eslint-disable-next-line no-console
+  console.log(`[DEBUG-DIAG-LOOP] ${new Date().toISOString()} DiagnosticTest:${event}`, extra ?? '')
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function DiagnosticTest() {
@@ -280,6 +287,8 @@ export default function DiagnosticTest() {
 
   const submitDiagnostic = useSubmitDiagnostic()
   const generatePath = useGeneratePath()
+
+  debugDiagLog('mount-or-render', { courseId, studentId })
 
   const [phase, setPhase] = useState<Phase>('section_a')
   const [sectionAIdx, setSectionAIdx] = useState(0)
@@ -298,10 +307,15 @@ export default function DiagnosticTest() {
     if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current)
   }, [])
 
+  useEffect(() => {
+    debugDiagLog('phase-change', { phase })
+  }, [phase])
+
   // Fire API calls when swarm_thinking phase starts
   useEffect(() => {
     if (phase !== 'swarm_thinking' || !courseId) return
 
+    debugDiagLog('swarm_thinking:effect-start', { courseId })
     apiResultRef.current = null
     setApiReady(false)
 
@@ -309,26 +323,35 @@ export default function DiagnosticTest() {
       try {
         const formatted: Record<string, number> = {}
         Object.entries(answersRef.current).forEach(([k, v]) => { formatted[k] = v })
+        debugDiagLog('swarm_thinking:submitDiagnostic:start')
         await submitDiagnostic.mutateAsync({ courseId, answers: formatted })
+        debugDiagLog('swarm_thinking:submitDiagnostic:done')
         // Flujo diagnóstico unificado: si el pre-test de conocimiento está
         // pendiente, la ruta se genera después de rendirlo (fail-open si el
         // status no responde: comportamiento histórico intacto).
         let pretestNext = false
         try {
+          debugDiagLog('swarm_thinking:knowledge-test-status:start')
           const st = await api.get<{ pretest_required: boolean }>(
             `/api/students/knowledge-test/${courseId}/status`,
           )
           pretestNext = !!st.data?.pretest_required
-        } catch {
+          debugDiagLog('swarm_thinking:knowledge-test-status:done', { pretestNext })
+        } catch (err) {
+          debugDiagLog('swarm_thinking:knowledge-test-status:error', { message: getErrorMessage(err) })
           pretestNext = false
         }
         if (!pretestNext) {
+          debugDiagLog('swarm_thinking:generatePath:start')
           await generatePath.mutateAsync(courseId)
+          debugDiagLog('swarm_thinking:generatePath:done')
         }
         apiResultRef.current = { success: true, pretestNext }
+        debugDiagLog('swarm_thinking:effect-success', { pretestNext })
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Error al procesar el diagnóstico'
         apiResultRef.current = { success: false, error: msg }
+        debugDiagLog('swarm_thinking:effect-error', { message: msg })
       }
       setApiReady(true)
     }

@@ -49,6 +49,8 @@ def producir(
         total = fact.contenido.get("items_totales")
         if not total:
             continue
+        hints_used = fact.contenido.get("hints_used")
+        time_ms = fact.contenido.get("time_ms")
         prompt = (
             f"El sistema calculó incorrectos={incorrectos} total={total}. "
             f"Confirma que el proveedor está disponible respondiendo JSON "
@@ -61,18 +63,23 @@ def producir(
         # respuesta (ver docstring del módulo — el LLM confirma, no
         # clasifica).
         ejecutar_roundtrip(proveedor, prompt, campos_requeridos=("senal",))
+        contenido = {
+            "senal": _senal(incorrectos, total, hints_used, time_ms),
+            "fact_origen": str(fact.id),
+            "items_incorrectos": incorrectos,
+            "items_totales": total,
+        }
+        if hints_used is not None:
+            contenido["hints_used"] = hints_used
+        if time_ms is not None:
+            contenido["time_ms"] = time_ms
         return (
             TransitionIntent(
                 productor=Capacidad.TUTORIZAR,
                 operacion="registrar_fact",
                 argumentos={
                     "autor": Capacidad.TUTORIZAR,
-                    "contenido": {
-                        "senal": _senal(incorrectos, total),
-                        "fact_origen": str(fact.id),
-                        "items_incorrectos": incorrectos,
-                        "items_totales": total,
-                    },
+                    "contenido": contenido,
                     "provenance": Provenance.de(
                         OrigenProvenance.LLM,
                         modelo=proveedor.modelo,
