@@ -7,7 +7,7 @@
 // el estudiante escribe Python real, ejecutado con Pyodide en el propio
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
@@ -76,7 +76,15 @@ const ERROR_CATEGORY_LABEL: Record<PythonErrorCategory, string> = {
  *  `wrap="off"` es la única diferencia de comportamiento del navegador: sin
  *  eso, una línea larga que envuelve visualmente desalinea el número de
  *  línea del gutter contra la línea real. No cambia el string que ve
- *  Pyodide (el wrap "soft" nunca insertaba saltos reales). */
+ *  Pyodide (el wrap "soft" nunca insertaba saltos reales).
+ *
+ *  El gutter numera TODAS las líneas reales (no solo `visibleRows`) y
+ *  sincroniza su scroll vertical con el del `<textarea>` — sin esto, un
+ *  código de más de 12 líneas desalinea los números apenas el estudiante
+ *  se desplaza (encontrado validando manualmente, no en revisión de
+ *  código: el gutter quedaba fijo en 1-12 mientras el textarea ya
+ *  mostraba líneas más abajo). Contenido autorado hoy llega como máximo
+ *  a 6 líneas, pero el editor debe sostenerse igual si eso cambia. */
 function CodeEditorPanel({
   code,
   onChange,
@@ -86,7 +94,9 @@ function CodeEditorPanel({
   onChange: (value: string) => void
   disabled: boolean
 }) {
-  const visibleRows = Math.min(12, Math.max(3, code.split('\n').length))
+  const gutterRef = useRef<HTMLDivElement>(null)
+  const lineCount = code.split('\n').length
+  const visibleRows = Math.min(12, Math.max(3, lineCount))
   return (
     <div className="rounded-xl border border-white/[0.1] bg-black/30 overflow-hidden transition-colors focus-within:border-neural-glow/50">
       <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-white/[0.06] bg-white/[0.02]">
@@ -97,16 +107,21 @@ function CodeEditorPanel({
       </div>
       <div className="flex">
         <div
+          ref={gutterRef}
           aria-hidden
-          className="select-none py-2 pl-3 pr-2 text-right font-mono text-[13px] leading-relaxed text-neural-muted/25"
+          style={{ maxHeight: `${visibleRows * 21.125}px` }}
+          className="select-none overflow-hidden py-2 pl-3 pr-2 text-right font-mono text-[13px] leading-relaxed text-neural-muted/25"
         >
-          {Array.from({ length: visibleRows }, (_, i) => (
+          {Array.from({ length: lineCount }, (_, i) => (
             <div key={i}>{i + 1}</div>
           ))}
         </div>
         <textarea
           value={code}
           onChange={e => onChange(e.target.value)}
+          onScroll={e => {
+            if (gutterRef.current) gutterRef.current.scrollTop = e.currentTarget.scrollTop
+          }}
           disabled={disabled}
           rows={visibleRows}
           wrap="off"
