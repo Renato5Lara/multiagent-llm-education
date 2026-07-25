@@ -144,18 +144,22 @@ corazón de la tesis — estaba limpio salvo un docstring desactualizado.
 6. ✅ venv local corregido (`openpyxl`, hallazgo #12) — export Excel
    real verificado, no solo su degradación a CSV.
 
-**Pendiente, no bloqueante para continuar:**
-
-- ⏳ Confirmar en el dashboard de Render si `/var/data/uploads` tiene
-  disco persistente (hallazgo #6) — no se puede verificar ni corregir
-  desde el repo, requiere acceso a la cuenta de Render.
+**Hallazgo #6 (Persistent Disk en Render) — decisión tomada, no
+verificación pendiente:** la demo no subirá archivos nuevos en vivo —
+cursos y contenido ya estarán cargados de antemano. Bajo ese uso, la
+ausencia (o presencia) de un disco persistente en `/var/data/uploads`
+no afecta la sustentación. Queda documentado como limitación conocida,
+a revisar solo si el uso real del sistema después de la tesis empieza
+a depender de subir contenido en producción.
 
 El resto de hallazgos (lockfiles, sandbox endpoint muerto, `vercel.json`,
 lint histórico, ~51 tests sin verificar del todo) son reales pero no
 urgentes — quedan como backlog razonable, no como bloqueo.
 
-**Siguiente paso:** rebuild + smoke test del despliegue, y publicar,
-una vez resuelto o aceptado el punto pendiente de Render.
+**Este es el primer despliegue real del proyecto** — Render y Vercel
+todavía no están conectados al repositorio. El siguiente paso es la
+configuración inicial (ver `DEPLOYMENT.md` § 5), guiada paso a paso,
+antes de cualquier smoke test contra una URL real.
 
 ## Nota operativa
 
