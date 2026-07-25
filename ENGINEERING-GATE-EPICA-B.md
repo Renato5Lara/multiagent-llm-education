@@ -466,10 +466,14 @@ accidental contra un `stdout` real que también esté vacío ahí,
 marcando "correcto" algo que en realidad refleja contenido mal
 autorado. En su lugar: la resolución del template devuelve un
 resultado nulo/distinguible, `correct` se fuerza a `false` de forma
-determinista sin comparar `stdout`, y se deja un diagnóstico en
-consola (`console.error`, con el template y los valores recibidos)
-para que el problema sea visible durante la autoría/QA del contenido,
-no un fallo silencioso que solo se nota por casualidad.
+determinista sin comparar `stdout`, y se registra un diagnóstico
+mediante el mecanismo de logging disponible (hoy, `console.error` —
+no existe otro logger en el frontend, verificado; si el proyecto
+incorpora uno estructurado más adelante, el contrato es "dejar
+constancia visible del template y los valores recibidos", no
+"llamar a `console.error` específicamente") para que el problema sea
+visible durante la autoría/QA del contenido, no un fallo silencioso
+que solo se nota por casualidad.
 
 ### 3. ¿Cómo se mantiene compatibilidad con laboratorios antiguos?
 
