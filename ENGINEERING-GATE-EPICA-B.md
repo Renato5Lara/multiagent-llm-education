@@ -394,6 +394,23 @@ tiene nada que romper.
 > inicial — verificado en dev; en producción, solo si el tesista
 > autoriza el deploy de verificación.
 
+### Commit 5 (dev) — CERRADO
+
+**QA Evidence (dev):** validado en navegador real del tesista (Chrome,
+checkout Windows, `npm run dev` con `vite.config.ts` ya con las
+cabeceras permanentes, sin arnés temporal). `self.crossOriginIsolated`
+= `true` tras navegación fresca; cero errores en consola; Google
+Fonts —`fonts.googleapis.com/css2?...` y
+`fonts.gstatic.com/.../outfit...woff2`— cargaron `200 OK` bajo
+`COEP: require-corp`, confirmando en vivo lo que predijo la auditoría
+estática; UI (tipografía, layout) sin degradación visible.
+
+**Producción (Vercel) — NO verificada en esta sesión.** `vercel.json`
+tiene la configuración lista (`"headers"` con las mismas dos
+cabeceras), pero desplegarla es una acción sobre infraestructura
+compartida real que requiere autorización explícita aparte — no se
+ejecuta como parte de cerrar este Gate.
+
 ## 9. Criterios de salida (Épica B completa)
 
 El Gate se considera cerrado (la épica, completa) solo si:
