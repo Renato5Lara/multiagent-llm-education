@@ -104,7 +104,6 @@ function substepFor(phase: Phase): Substep | null {
     case 'concept': return 'concept'
     case 'practice':
     case 'remediation': return 'practice'
-    case 'decision':
     case 'reinforcement': return 'decision'
     default: return null
   }
@@ -219,7 +218,7 @@ function loadCursor(moduleId: string, definition: ModuleExperienceDefinition): E
   try {
     const raw = localStorage.getItem(cursorKey(moduleId))
     if (!raw) return { ...emptyCursor(base), resumed: false }
-    const saved = JSON.parse(raw) as Partial<ExperienceCursor> & { phase?: string }
+    const saved = JSON.parse(raw) as Omit<Partial<ExperienceCursor>, 'phase'> & { phase?: string }
     const cycleIndex = Math.min(Math.max(saved.cycleIndex ?? 0, 0), definition.cycles.length - 1)
     // UX-03: cursores guardados antes del sprint pueden traer 'decision' (el
     // menú eliminado) — se reanudan en 'practice', donde el Continuar ya
@@ -627,7 +626,6 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     setPythonPracticeDone(false)
     setPythonOutcome(null)
     setAdaptationMessage(null)
-    setPrimerIndex(0)
     if (cycleIndex + 1 < definition.cycles.length) {
       setCycleIndex(i => i + 1)
       setPhase(firstPhaseFor(definition.cycles[cycleIndex + 1]))
