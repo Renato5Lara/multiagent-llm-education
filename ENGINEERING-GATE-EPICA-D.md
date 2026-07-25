@@ -117,6 +117,49 @@ máquina entiende"): `Ejecutar →` corre el código (cian), tras acierto
 aparece `Continuar →` (violeta) junto a él, distinción visual clara.
 Capturas en `docs/qa/epica-d-lab/`.
 
+**Revisión de equilibrio visual (pausa pedida por el tesista antes de
+avanzar a Navegación) — 4 preguntas, respondidas contra la captura
+real:**
+
+1. *¿El botón violeta compite con el editor?* No — `size="sm"`, va
+   junto a Ejecutar, debajo del editor/consola; el editor sigue
+   siendo el elemento de mayor contraste y espacio de la pantalla.
+2. *¿Se percibe el cambio de contexto?* Sí — color y texto distintos
+   (doble señal), lado a lado con Ejecutar, comparación inmediata.
+3. *¿La transición es natural?* Sí — cian (Ejecutar) → verde
+   ("✓ Exacto") → violeta (Continuar) ya se lee como una progresión
+   tipo semáforo, sin inventar un patrón nuevo.
+4. *¿Rompe el equilibrio del Lab?* No — el violeta ya aparecía en la
+   misma pantalla (chip `OBSÉRVALO`, `neural-violet` existente) antes
+   de este commit; gana un segundo uso coherente, no un color nuevo
+   irrumpiendo.
+
+Con esto, la Fase 1 (Foundation: Dashboard + Lab) queda validada
+visualmente. Continúa Fase 2 (Navegación) con el mismo alcance
+acotado.
+
+## Sistema semántico de color (formalizado tras revisión del Lab)
+
+No es una paleta nueva — es la semántica que ya emergió en los
+Commits 1–2, documentada explícitamente para que cualquier
+componente nuevo de esta épica sepa qué token usar sin adivinar.
+Auditado contra el código real, no supuesto:
+
+| Semántica | Token | Dónde vive hoy |
+|---|---|---|
+| **Marca / CTA principal / avanzar** | `neural-brand` (#7c3aed, nuevo) | `NextMissionCard` (Dashboard), `Continuar →` (`PythonBridge.tsx`) |
+| **En vivo / ejecución / activo** | `neural-glow` (#00dbe7, existente) | `Ejecutar`, `Enviar`, `Comprobar`, stat tiles, nodo "ACTIVO", badge de progreso |
+| **Éxito / completado** | `emerald-400`/`neural-pulse` (#00fb83, existentes, ya coherentes entre sí) | "✓ Exacto", nodo completado del mapa de aprendizaje, logros |
+| **Diagnóstico recuperable** (el estudiante puede reintentar) | `amber-400`/`amber-500` (existente) | `PythonErrorCard` — un error de Python NUNCA es rojo aquí a propósito: es material de aprendizaje, no una falla del sistema |
+| **Falla crítica** (el sistema, no el estudiante, falló) | `red-400`/`destructive` (existente) | `loadError` (Pyodide no cargó), errores de red/servidor |
+| **Acento secundario existente** (sin rol nuevo) | `neural-violet` (#ce5dff, existente) | Anillo de dominio, chip de modo (`OBSÉRVALO`, etc.), acentos del tutor — no se reasigna a "marca" para no romper significado ya aprendido por el usuario |
+
+**Regla de aplicación:** ante un componente nuevo, la pregunta no es
+"qué color se ve mejor" sino "¿qué representa esta acción?" — si
+mueve al estudiante a lo siguiente, `neural-brand`; si es el sistema
+trabajando/ejecutando ahora mismo, `neural-glow`; el resto ya tiene
+dueño en la tabla de arriba.
+
 ## Próximos pasos (no en este commit)
 
 - `feature/epica-d-dashboard` (continuación): resto de tarjetas de
