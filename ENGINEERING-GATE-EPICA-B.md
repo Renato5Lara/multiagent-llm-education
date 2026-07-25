@@ -592,7 +592,7 @@ Con el Commit 6 cerrado, las 6 unidades de trabajo de
 | 3 | Protocolo de stdin real (`Atomics.wait`) | ✅ CERRADO (`c40e1d1`) |
 | 4 | Panel de `input()` real en `PythonBridge.tsx` | ✅ CERRADO (`4656dad`) |
 | 4b | Cancelación de ejecución en curso | ✅ CERRADO (`b20b5a2`) |
-| 5 | COOP/COEP permanentes (dev validado; prod configurado, sin desplegar) | ✅ CERRADO en dev (`7b1d612`) |
+| 5 | COOP/COEP permanentes (dev + prod) | ✅ **CERRADO EN DESARROLLO** (`7b1d612`) — validado en navegador real dev; **producción configurada en `vercel.json` pero NO validada** — pendiente únicamente de un despliegue autorizado en Vercel, no de trabajo adicional |
 | 6 | Validación dinámica + integración con contenido real | ✅ CERRADO (`ffffb95`) |
 
 **Lo que la épica entrega:** un estudiante real, en la última etapa de
