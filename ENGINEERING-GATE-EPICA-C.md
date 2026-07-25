@@ -99,6 +99,18 @@ que se corrigió en `escribir_completo` durante el Commit 6.
   completa, es un `NameError` (nombre no definido) — mismo
   razonamiento: falla antes de llegar a `input()`, ya cubierto.
 
+**Regla de calidad de contenido para cada commit del plan de
+migración (§6), no solo técnica:** cada etapa migrada debe eliminar
+TODOS los valores de entrada hardcodeados asociados a la interacción
+que sean visibles para el estudiante — `expectedOutput`,
+`hintsByCategory.salida`, y cualquier otro texto de pista o
+explicación que cite el nombre simulado (`prompt`, `hint`,
+`resultExplanation`, `workedExample` si aplica). No alcanza con migrar
+`expectedOutput` y dejar una pista que sigue citando "Ana" o "Nico" —
+sería una regresión de contenido, aunque la validación técnica
+funcione. Este criterio se aplica en cada uno de los 4 commits, no se
+verifica una sola vez al final.
+
 ## 5. Riesgos
 
 - Bajo. El modelo `{inputN}` y `resolveExpectedOutput` ya están
@@ -142,8 +154,11 @@ narrada (`CLAUDE.md`, "Engineering Review dirigida").
   `escribir_parcial`) usan `input()` real, validado con un valor
   dinámico real en navegador (no el valor legado hardcodeado).
 - `observar` sigue exactamente igual que hoy — sin tocar.
-- Ninguna pista (`hintsByCategory.salida`) cita un nombre hardcodeado
-  que ya no corresponde a lo que el estudiante realmente escribió.
+- Ningún texto visible para el estudiante (`hintsByCategory.salida`,
+  `hint`, `resultExplanation`, `workedExample`) cita un nombre
+  hardcodeado que ya no corresponde a lo que realmente escribió —
+  regla de calidad de contenido de §4, verificada por etapa, no solo
+  al final.
 - Recorrido lineal completo (`observar` → `escribir_completo`, las 6
   etapas, una sola sesión de navegador, un estudiante real) — cierra
   la precisión que el Commit 6 de Épica B dejó pendiente.
