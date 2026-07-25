@@ -21,16 +21,23 @@
 
 ## 1. Lista priorizada de problemas
 
+> **Estado de estabilización (post-auditoría):** de los 6 hallazgos
+> 🟠 Alta, 4 ya están corregidos (rama `rc1/stabilization-fixes`,
+> commits `8847845`/`e5b6971`/`2f5b464`/`7f2b823`), 1 se decidió y
+> corrigió tras confirmar con el tesista, y 1 sigue pendiente de
+> verificación externa (no se puede resolver desde el repo). Ver ✅/⏳
+> por hallazgo.
+
 ### 🟠 Alta
 
 | # | Hallazgo | Archivo | Impacto | Fix | ¿Bloquea despliegue? |
 |---|---|---|---|---|---|
-| 1 | `/api/research/*` (Dashboard Investigador) sin autenticación — expone PII de estudiantes y export completo del experimento | `backend/app/api/routes/research.py` | Si la URL pública de Render se usa sin cambios durante la sustentación, cualquiera en internet puede exportar los datos por estudiante | Gate mínimo (token compartido / restricción IP) o mantenerlo solo accesible en `localhost` durante la demo — **requiere una decisión tuya explícita, no un default** | No para Render tal cual está documentado hoy; sí si se expone la URL pública sin cambios |
-| 2 | 4ª instancia del bug de Design System de Épica E en `table.tsx` (`TableRow` hover/selected con `bg-gray-50`/`bg-gray-100`) | `frontend/src/components/ui/table.tsx:27` | Visible en 4 pantallas reales: Admin Usuarios/Roles, Docente CourseDetail, Replay StudentTrajectory | Mismo patrón ya aplicado 3 veces: `hover:bg-white/[0.06] data-[state=selected]:bg-white/[0.08]` | No, pero visible si el jurado navega Admin/Docente |
-| 3 | `DEMO_RECOVERY.md` no cubre el bug conocido de diagnóstico (~7-8% de cuentas nuevas atascadas, commit `95d8a53`) | `DEMO_RECOVERY.md` (ausente) | Si se crea una cuenta nueva en vivo frente al jurado, riesgo real de bloqueo sin plan de recuperación documentado | Agregar entrada + decidir mitigación (p. ej. usar cuenta ya diagnosticada en vez de una nueva en vivo) | No bloquea despliegue; sí es riesgo directo de sustentación |
-| 4 | Regresión silenciosa del fix de driver Postgres (`55a752c`) — la reescritura `postgresql://`→`postgresql+psycopg://` se perdió en un merge posterior (`6b6475b`) | `backend/app/core/config.py` (`fix_postgres_scheme`) | Hoy no rompe nada (fallback implícito a `psycopg2-binary`), pero es el mismo patrón que causó el incidente original — si alguien limpia esa dependencia "no usada", el engine sync se rompe sin aviso | Reintroducir la segunda reescritura en `fix_postgres_scheme` | No hoy (enmascarado); sí es una regresión real |
+| 1 | ✅ **RESUELTO** — `/api/research/*` (Dashboard Investigador) sin autenticación — expone PII de estudiantes y export completo del experimento | `backend/app/api/routes/research.py` | Si la URL pública de Render se usa sin cambios durante la sustentación, cualquiera en internet puede exportar los datos por estudiante | Decisión tomada con el tesista: se auditó la base de datos real y se encontró una cuenta (`jramires6@upao.edu.pe`) que no corresponde a ningún patrón seed/QA/E2E conocido; sin poder confirmar si es una persona real, se trató como tal por precaución. Los 6 endpoints ahora requieren rol admin o docente (`get_current_admin_or_docente`, commit `7f2b823`) — mismo patrón que las dependencias de rol ya existentes. 9/9 tests pasan. | No |
+| 2 | ✅ **RESUELTO** — 4ª instancia del bug de Design System de Épica E en `table.tsx` (`TableRow` hover/selected con `bg-gray-50`/`bg-gray-100`) | `frontend/src/components/ui/table.tsx:27` | Visible en 4 pantallas reales: Admin Usuarios/Roles, Docente CourseDetail, Replay StudentTrajectory | Corregido con el mismo patrón aplicado 3 veces en Épica E: `hover:bg-white/[0.06] data-[state=selected]:bg-white/[0.08]` (commit `8847845`). Build limpio. | No |
+| 3 | ✅ **RESUELTO** — `DEMO_RECOVERY.md` no cubre el bug conocido de diagnóstico (~7-8% de cuentas nuevas atascadas, commit `95d8a53`) | `DEMO_RECOVERY.md` | Si se crea una cuenta nueva en vivo frente al jurado, riesgo real de bloqueo sin plan de recuperación documentado | Entrada `[15]` agregada con mitigación recomendada (usar cuenta con diagnóstico ya completado en vez de una nueva en vivo) — commit `2f5b464`. | No |
+| 4 | ✅ **RESUELTO** — Regresión silenciosa del fix de driver Postgres (`55a752c`) — la reescritura `postgresql://`→`postgresql+psycopg://` se perdió en un merge posterior (`6b6475b`) | `backend/app/core/config.py` (`fix_postgres_scheme`) | Hoy no rompe nada (fallback implícito a `psycopg2-binary`), pero es el mismo patrón que causó el incidente original — si alguien limpia esa dependencia "no usada", el engine sync se rompe sin aviso | Reintroducida exactamente como en `55a752c` (commit `e5b6971`). Verificado: los 3 casos de URL (`postgres://`, `postgresql://` plano, ya con `+psycopg`) resuelven al mismo driver forzado. | No |
 | 5 | Dos lockfiles de Python en conflicto (`requirements.lock` vs `requirements-lock.txt`), y Render no usa ninguno (`buildCommand` instala desde `requirements.txt` sin fijar) | `backend/requirements.lock`, `backend/requirements-lock.txt`, `render.yaml` | La promesa de "instalación reproducible" de `RELEASE.md`/`REPRODUCIBILITY.md` no aplica al despliegue real | Elegir un lockfile canónico, archivar el otro, decidir si Render debe fijar versiones | No, pero compromete la reproducibilidad documentada |
-| 6 | Posible pérdida de uploads en Render — sin bloque `disk:` en `render.yaml` para `/var/data/uploads` (sí existe volumen persistente en `docker-compose.prod.yml`) | `render.yaml` | Si el plan de Render no respalda esa ruta, archivos subidos por un docente se pierden en el próximo redeploy | **Verificar en el dashboard real de Render** si hay disco persistente montado — no se puede confirmar solo desde el repo | No de forma inmediata; sí para cualquier demo que dependa de contenido subido sobreviviendo un redeploy |
+| 6 | ⏳ **PENDIENTE — requiere verificación externa** — Posible pérdida de uploads en Render — sin bloque `disk:` en `render.yaml` para `/var/data/uploads` (sí existe volumen persistente en `docker-compose.prod.yml`) | `render.yaml` | Si el plan de Render no respalda esa ruta, archivos subidos por un docente se pierden en el próximo redeploy | **Verificar en el dashboard real de Render** (Settings → Disks del servicio backend) si hay disco persistente montado — no se puede confirmar ni corregir solo desde el repo | No de forma inmediata; sí para cualquier demo que dependa de contenido subido sobreviviendo un redeploy |
 
 ### 🟡 Media
 
@@ -40,8 +47,8 @@
 | 8 | `/api/sandbox/execute` sin autenticación y sin uso real (frontend usa Pyodide, no este endpoint) | `backend/app/api/routes/sandbox.py` | Superficie de ataque innecesaria; en Render (`runtime: python`, sin Docker) probablemente ni funciona | No |
 | 9 | `vercel.json` usa `npm install` en vez de `npm ci` | `vercel.json` | `package-lock.json` está consistente hoy; frágil a futuro si diverge | No |
 | 10 | Docstring desactualizado en `traza_sesion.py` dice que Modo Evidencia es "100% legacy" cuando `evidence_service.py` ya lo consume en producción | `backend/runtime/boundary/surfaces/traza_sesion.py` | Un jurado técnico que lea ese archivo podría dudar de la integración real | No |
-| 11 | `CHANGELOG.md` no refleja el cierre de Épica E | `CHANGELOG.md:37-38` | Cualquiera que lo lea ve el proyecto un hito atrás | No |
-| 12 | `test_export_experiment_has_three_sheets` falla en este entorno local por `openpyxl` no instalado en el venv (el código degrada correctamente a CSV) | venv local, no código | Drift de entorno local, no bug — pero impide verificar la exportación Excel real antes de la sustentación | No, pero corregir el venv antes de confiar en el export Excel |
+| 11 | ✅ **RESUELTO** — `CHANGELOG.md` no refleja el cierre de Épica E | `CHANGELOG.md:37-38` | Cualquiera que lo lea ve el proyecto un hito atrás | Entrada `epica-e-complete` agregada, "próxima línea de trabajo" actualizada a RC-1 (commit `2f5b464`) | No |
+| 12 | ✅ **RESUELTO** — `test_export_experiment_has_three_sheets` fallaba en este entorno local por `openpyxl` no instalado en el venv (el código degrada correctamente a CSV) | venv local, no código | Drift de entorno local, no bug — pero impedía verificar la exportación Excel real antes de la sustentación | `pip install openpyxl==3.1.5` (ya en `requirements.txt`, solo faltaba en el venv). 9/9 tests de `test_research_dashboard.py` pasan, incluyendo el export Excel real. | No |
 | 13 | 22 errores/11 warnings de lint pre-existentes (desde antes de esta sesión), incluyendo `Date.now()` llamado durante el render en varios componentes | `DetonatingQuestionCard.tsx`, `MiniQuizCard.tsx`, `ModuleLearningView.tsx`, otros | Podría producir valores de tiempo inestables entre re-renders — relevante porque alimenta métricas de tiempo invertido que el propio Post-Test de Épica E ahora muestra | No, pero es deuda real, no solo estilo |
 | 14 | ~51 de 103 fallas del suite de tests backend sin verificación individual profunda (hipótesis por patrón: mismo clúster legacy/shared-memory ya confirmado muerto en archivos hermanos) | Ver § Backend — Calidad | Riesgo residual bajo pero no nulo de que una de ellas oculte una regresión real | No hoy; recomendado verificar antes del tag final |
 | 15 | `ANTHROPIC_API_KEY` documentado como alternativa válida pero no implementado en `Settings` | `DEPLOYMENT.md`, `.env.example`, `config.py` | Documentación promete una capacidad que el código no tiene (OpenAI solo ya satisface `has_llm`) | No |
@@ -114,35 +121,41 @@ Ningún hallazgo alcanzó severidad 🔴 crítica.
 
 ## 4. Decisión final
 
-## ⚠ LISTO CON OBSERVACIONES
+## ⚠ LISTO CON OBSERVACIONES → estabilización en curso
 
-No hay ningún hallazgo que bloquee técnicamente el despliegue documentado
-en Render tal como está escrito hoy. El sistema compila limpio, el 95.1%
-de los tests pasa (y de los que fallan, ninguno de los investigados a
-fondo reveló una regresión real), y el sistema multiagente — el corazón
-de la tesis — está limpio salvo un docstring desactualizado.
+Veredicto original de la auditoría: ningún hallazgo bloqueaba
+técnicamente el despliegue documentado en Render. El sistema compilaba
+limpio, el 95.1% de los tests pasaba (ninguna falla investigada a
+fondo reveló una regresión real), y el sistema multiagente — el
+corazón de la tesis — estaba limpio salvo un docstring desactualizado.
 
-Antes de considerar esto verdaderamente cerrado, recomendaría resolver
-primero (son correcciones, no funcionalidades — caben dentro de la
-regla de alcance de RC-1):
+**Estabilización ya ejecutada** (rama `rc1/stabilization-fixes`):
 
-1. El fix de una línea en `table.tsx` (hallazgo #2) — mismo patrón ya
-   aplicado 3 veces en Épica E.
-2. Agregar la entrada del bug de diagnóstico a `DEMO_RECOVERY.md`
-   (hallazgo #3) y decidir la mitigación para la demo.
-3. Reintroducir la segunda reescritura en `fix_postgres_scheme`
-   (hallazgo #4) — es la regresión más silenciosa y más barata de cerrar.
+1. ✅ Fix de una línea en `table.tsx` (hallazgo #2).
+2. ✅ Entrada del bug de diagnóstico en `DEMO_RECOVERY.md` + mitigación
+   documentada (hallazgo #3).
+3. ✅ Reintroducida la segunda reescritura en `fix_postgres_scheme`
+   (hallazgo #4).
+4. ✅ `CHANGELOG.md` actualizado (hallazgo #11).
+5. ✅ Decisión tomada y ejecutada sobre `/api/research/*` (hallazgo #1):
+   se encontró una cuenta real no identificada en la base de datos
+   (`jramires6@upao.edu.pe`) y, por precaución, se protegieron los 6
+   endpoints con rol admin/docente.
+6. ✅ venv local corregido (`openpyxl`, hallazgo #12) — export Excel
+   real verificado, no solo su degradación a CSV.
 
-Y decidir explícitamente (no dejar como default silencioso):
+**Pendiente, no bloqueante para continuar:**
 
-4. Qué hacer con `/api/research/*` sin autenticación (hallazgo #1) si
-   se va a usar la URL pública de Render durante la sustentación.
-5. Confirmar en el dashboard de Render si `/var/data/uploads` tiene
-   disco persistente (hallazgo #6).
+- ⏳ Confirmar en el dashboard de Render si `/var/data/uploads` tiene
+  disco persistente (hallazgo #6) — no se puede verificar ni corregir
+  desde el repo, requiere acceso a la cuenta de Render.
 
 El resto de hallazgos (lockfiles, sandbox endpoint muerto, `vercel.json`,
-lint histórico, tests sin verificar del todo) son reales pero no
+lint histórico, ~51 tests sin verificar del todo) son reales pero no
 urgentes — quedan como backlog razonable, no como bloqueo.
+
+**Siguiente paso:** rebuild + smoke test del despliegue, y publicar,
+una vez resuelto o aceptado el punto pendiente de Render.
 
 ## Nota operativa
 
