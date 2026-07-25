@@ -172,14 +172,17 @@ export const CICLO_3_INPUT: LearningCycle = {
           mode: 'completar',
           prompt: 'Completa el código: falta la función que pausa el programa y espera tu respuesta. Reemplaza el espacio en blanco',
           starterCode: 'nombre = _____("¿Cómo te llamas? ")\nprint("Hola,", nombre)\n',
-          expectedOutput: '¿Cómo te llamas? Hola, Ana',
-          simulatedInputs: ['Ana'],
+          // Épica C, Commit 2: sin simulatedInputs, input() real —
+          // {input1} se sustituye por lo que el estudiante escriba
+          // (ENGINEERING-GATE-EPICA-C.md, mismo modelo del Commit 6 de
+          // Épica B).
+          expectedOutput: '¿Cómo te llamas? Hola, {input1}',
           hint: 'La función que pregunta y espera una respuesta es input — reemplaza los guiones bajos por esa palabra exacta.',
           hintsByCategory: {
             sintaxis: 'Revisa que no queden guiones bajos ni espacios de más antes del paréntesis.',
             variables: 'nombre no puede guardar nada todavía porque la función que pregunta y espera sigue sin nombre.',
             logica: 'La pregunta y las comillas ya están completas; solo falta el nombre de la función.',
-            salida: 'Una vez completado, debe mostrar exactamente "¿Cómo te llamas? Hola, Ana".',
+            salida: 'Una vez completado, debe mostrar exactamente "¿Cómo te llamas? Hola, " seguido de lo que escribiste cuando Python te lo pidió.',
           },
           workedExample: {
             code: 'ciudad = _____("¿En qué ciudad vives? ")\nprint("Vives en", ciudad)\n# se completa así:\nciudad = input("¿En qué ciudad vives? ")',
