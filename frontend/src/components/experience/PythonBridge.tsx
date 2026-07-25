@@ -55,6 +55,44 @@ function shouldStartBlank(mode: PythonPracticeMode | undefined, profundidad: str
   return profundidad === 'aplicacion' && (mode === undefined || mode === 'escribir_parcial' || mode === 'escribir_completo')
 }
 
+/** Resuelve marcadores `{input1}`, `{input2}`, ... en `expectedOutput`
+ *  contra los valores reales que el estudiante escribió en input() real
+ *  (Commit 6, Épica B — ENGINEERING-GATE-EPICA-B.md §9), en el mismo
+ *  orden en que los escribió. Posicional, no nominal (`{nombre}`): este
+ *  componente nunca parsea el código del estudiante, solo conoce el
+ *  ORDEN en que los valores llegaron por `provideInput()`.
+ *
+ *  Sin marcadores, `template` vuelve exactamente igual — compatibilidad
+ *  total con el mecanismo legado y con cualquier otro laboratorio de la
+ *  plataforma que nunca use esta sintaxis.
+ *
+ *  Un `{inputN}` sin un input() real correspondiente (desajuste entre
+ *  el código de referencia y el propio `expectedOutput` — error de
+ *  autoría del contenido, no del estudiante) NO se reemplaza por ''
+ *  en silencio: eso arriesgaría una coincidencia accidental contra un
+ *  stdout real también vacío ahí, marcando "correcto" contenido mal
+ *  autorado. Devuelve `null` para forzar `correct: false` de forma
+ *  determinista, sin comparar `stdout`, dejando un diagnóstico visible
+ *  (regla explícita del tesista, ENGINEERING-GATE-EPICA-B.md §9). */
+function resolveExpectedOutput(template: string, providedValues: string[]): string | null {
+  let hasUnresolvedMarker = false
+  const resolved = template.replace(/\{input(\d+)\}/g, (_match, n: string) => {
+    const index = Number(n) - 1
+    if (index < 0 || index >= providedValues.length) {
+      hasUnresolvedMarker = true
+      return ''
+    }
+    return providedValues[index]
+  })
+  if (hasUnresolvedMarker) {
+    console.error(
+      `PythonBridge: expectedOutput referencia un {inputN} sin un input() real correspondiente — posible error de autoría de contenido. template="${template}" valoresRecibidos=${JSON.stringify(providedValues)}`,
+    )
+    return null
+  }
+  return resolved
+}
+
 /** Diagnóstico genérico por categoría — verdadero para cualquier ejercicio,
  *  no autorado por contenido (a diferencia de `hintsByCategory`, que sí lo
  *  es). Nunca revela nada del ejercicio concreto, solo nombra lo que Python
@@ -281,6 +319,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   // true. Nunca se usa en el mecanismo legado (simulatedInputs), por el
   // contrato de compatibilidad ENGINEERING-GATE-EPICA-B.md §5.
   const [inputDraft, setInputDraft] = useState('')
+  // Valores reales que el estudiante escribió en ESTA ejecución, en el orden
+  // en que los escribió (Commit 6) — se resetea al iniciar cada handleRun,
+  // se acumula en cada handleProvideInput. useRef, no useState: no necesita
+  // re-render propio, solo debe estar listo cuando result.stdout llega.
+  const providedValuesRef = useRef<string[]>([])
   // POR QUÉ falló el último intento, no solo CUÁNTAS veces — deriva del error
   // real de Pyodide (o su ausencia), nunca de un conteo. Gobierna qué pista
   // y qué diagnóstico se muestran.
@@ -406,6 +449,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
 
   const handleRun = async () => {
     setRunning(true)
+    // Reinicia el registro de valores reales de ESTA ejecución (Commit 6) —
+    // antes de llamar a run(), para que handleProvideInput (que puede
+    // dispararse varias veces mientras run() sigue pendiente) siempre
+    // acumule sobre el array correcto.
+    providedValuesRef.current = []
     // run() es async desde Épica B/Commit 2 (usePyodide.ts delega en un
     // Worker vía postMessage) — mismo comportamiento observable, solo
     // async donde antes era síncrono. Ver ENGINEERING-GATE-EPICA-B.md
@@ -423,7 +471,13 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     if (result.error === CANCELLED_RESULT_ERROR) return
     const nextAttempts = attempts + 1
     setAttempts(nextAttempts)
-    const correct = !result.error && result.stdout.trim() === stage.expectedOutput.trim()
+    // Commit 6: expectedOutput puede traer {inputN} — se resuelve contra los
+    // valores reales que el estudiante escribió (vacío en el mecanismo
+    // legado, donde expectedOutput nunca usa esta sintaxis). expectedOutput
+    // === null significa un {inputN} mal autorado (§9) — fuerza incorrecto
+    // sin comparar stdout, nunca una coincidencia accidental.
+    const expectedOutput = resolveExpectedOutput(stage.expectedOutput, providedValuesRef.current)
+    const correct = !result.error && expectedOutput !== null && result.stdout.trim() === expectedOutput.trim()
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
@@ -455,6 +509,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
    *  `awaitingInput` (Commit 3, usePyodide.ts); aquí solo se limpia el
    *  campo local para el siguiente input() si la etapa pide más de uno. */
   const handleProvideInput = () => {
+    // Commit 6: registra el valor real ANTES de enviarlo — resolveExpectedOutput
+    // lo necesita cuando llegue 'result' para sustituir {inputN}.
+    providedValuesRef.current.push(inputDraft)
     provideInput(inputDraft)
     setInputDraft('')
   }

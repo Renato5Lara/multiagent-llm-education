@@ -227,16 +227,18 @@ export const CICLO_3_INPUT: LearningCycle = {
               solutionCode: 'apodo = input("¿Cuál es tu apodo? ")\nprint("Hola,", apodo)',
               nextStage: {
                 mode: 'escribir_completo',
-                prompt: 'Ahora profundiza: escribe tú mismo, desde cero, el código que pregunte ¿Cómo te llamas? y salude exactamente con el patrón Mucho gusto, <nombre>',
+                prompt: 'Ahora profundiza: escribe tú mismo, desde cero, el código que pregunte ¿Cómo te llamas? y salude exactamente con el patrón Mucho gusto, <nombre> — esta vez input() es real: la respuesta la escribes tú, no un valor ya fijado.',
                 starterCode: '',
-                expectedOutput: '¿Cómo te llamas? Mucho gusto, Camila',
-                simulatedInputs: ['Camila'],
+                // Commit 6, Épica B: sin simulatedInputs, input() real —
+                // {input1} se sustituye por lo que el estudiante escriba
+                // (ENGINEERING-GATE-EPICA-B.md §9, moduleExperience.ts).
+                expectedOutput: '¿Cómo te llamas? Mucho gusto, {input1}',
                 hint: 'Usa las mismas dos líneas de siempre: nombre = input("¿Cómo te llamas? ") y print("Mucho gusto,", nombre)',
                 hintsByCategory: {
                   sintaxis: 'Revisa que input() y print() tengan sus paréntesis y comillas completos.',
                   variables: 'Necesitas crear nombre con input() antes de que print() pueda usarla.',
                   logica: 'El orden es: primero input() pregunta y guarda, y solo después print() saluda.',
-                  salida: 'Revisa que diga exactamente "Mucho gusto, Camila".',
+                  salida: 'Revisa que tu saludo siga exactamente el patrón "Mucho gusto, " seguido de lo que escribiste cuando Python te lo pidió.',
                 },
                 workedExample: {
                   code: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
