@@ -62,8 +62,8 @@ def _complete_pre_and_post(client, token, course_id, db, student_id, pre_correct
     )
 
 
-def test_summary_empty_database(client, db):
-    resp = client.get("/api/research/summary")
+def test_summary_empty_database(client, db, admin_token):
+    resp = client.get("/api/research/summary", headers=auth_header(admin_token))
     assert resp.status_code == 200
     body = resp.json()
     assert body["n_students_pretested"] == 0
@@ -71,13 +71,23 @@ def test_summary_empty_database(client, db):
     assert body["group_label"] == "Experimental"
 
 
+def test_summary_requires_admin_or_docente_role(client, estudiante_token):
+    resp = client.get("/api/research/summary", headers=auth_header(estudiante_token))
+    assert resp.status_code == 403
+
+
+def test_summary_rejects_unauthenticated(client):
+    resp = client.get("/api/research/summary")
+    assert resp.status_code == 401
+
+
 def test_summary_reflects_real_attempts(
-    client, estudiante_token, curso_publicado, db, estudiante_user
+    client, estudiante_token, admin_token, curso_publicado, db, estudiante_user
 ):
     seed_knowledge_test_bank(db)
     _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
-    body = client.get("/api/research/summary").json()
+    body = client.get("/api/research/summary", headers=auth_header(admin_token)).json()
     assert body["n_students_pretested"] == 1
     assert body["n_students_posttested"] == 1
     assert body["n_compared"] == 1
@@ -88,11 +98,13 @@ def test_summary_reflects_real_attempts(
     assert body["level_distribution_post"]["avanzado"] == 1
 
 
-def test_students_rows_dataset(client, estudiante_token, curso_publicado, db, estudiante_user):
+def test_students_rows_dataset(
+    client, estudiante_token, admin_token, curso_publicado, db, estudiante_user
+):
     seed_knowledge_test_bank(db)
     _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
-    body = client.get("/api/research/students").json()
+    body = client.get("/api/research/students", headers=auth_header(admin_token)).json()
     assert body["total"] == 1
     row = body["rows"][0]
     assert row["group"] == "Experimental"
@@ -104,11 +116,13 @@ def test_students_rows_dataset(client, estudiante_token, curso_publicado, db, es
     assert row["date"] is not None
 
 
-def test_export_csv_is_spss_ready(client, estudiante_token, curso_publicado, db, estudiante_user):
+def test_export_csv_is_spss_ready(
+    client, estudiante_token, admin_token, curso_publicado, db, estudiante_user
+):
     seed_knowledge_test_bank(db)
     _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
-    resp = client.get("/api/research/export?fmt=csv")
+    resp = client.get("/api/research/export?fmt=csv", headers=auth_header(admin_token))
     assert resp.status_code == 200
     assert "text/csv" in resp.headers["content-type"]
     assert "attachment" in resp.headers["content-disposition"]
@@ -126,11 +140,13 @@ def test_export_csv_is_spss_ready(client, estudiante_token, curso_publicado, db,
     }
 
 
-def test_export_xlsx_when_available(client, estudiante_token, curso_publicado, db, estudiante_user):
+def test_export_xlsx_when_available(
+    client, estudiante_token, admin_token, curso_publicado, db, estudiante_user
+):
     seed_knowledge_test_bank(db)
     _complete_pre_and_post(client, estudiante_token, curso_publicado.id, db, estudiante_user.id)
 
-    resp = client.get("/api/research/export?fmt=xlsx")
+    resp = client.get("/api/research/export?fmt=xlsx", headers=auth_header(admin_token))
     assert resp.status_code == 200
     if research_export_service.excel_available():
         assert "spreadsheetml" in resp.headers["content-type"]
@@ -145,13 +161,13 @@ def test_export_xlsx_when_available(client, estudiante_token, curso_publicado, d
         assert "text/csv" in resp.headers["content-type"]
 
 
-def test_export_rejects_unknown_format(client):
-    resp = client.get("/api/research/export?fmt=pdf")
+def test_export_rejects_unknown_format(client, admin_token):
+    resp = client.get("/api/research/export?fmt=pdf", headers=auth_header(admin_token))
     assert resp.status_code == 422
 
 
 def test_export_experiment_has_three_sheets(
-    client, estudiante_token, curso_publicado, db, estudiante_user
+    client, estudiante_token, admin_token, curso_publicado, db, estudiante_user
 ):
     """Exportar experimento: un archivo, tres hojas — resumen, ciclos y
     estadísticas — sin recalcular nada que /students o /export ya cubran."""
@@ -196,7 +212,7 @@ def test_export_experiment_has_three_sheets(
     )
     assert resp.status_code == 200
 
-    resp = client.get("/api/research/export-experiment")
+    resp = client.get("/api/research/export-experiment", headers=auth_header(admin_token))
     assert resp.status_code == 200
     assert "spreadsheetml" in resp.headers["content-type"]
 

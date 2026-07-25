@@ -1,8 +1,8 @@
 """
 Endpoints del Dashboard del Investigador (Modo Evidencia).
 
-Misma política de acceso que /api/evidence: sin autenticación, pensado para
-la sustentación. Expone solo agregados e identificadores — todas las métricas
+Requiere rol admin o docente (misma audiencia documentada para el acceso a
+/evidencia). Expone solo agregados e identificadores — todas las métricas
 salen de tablas persistidas por el flujo real, sin datos simulados.
 """
 
@@ -13,7 +13,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_admin_or_docente, get_db
+from app.models.user import User
 from app.services import research_dashboard_service, research_export_service
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ router = APIRouter(prefix="/api/research", tags=["Investigación"])
 def get_summary(
     course_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_docente),
 ):
     return research_dashboard_service.get_research_summary(db, course_id)
 
@@ -33,6 +35,7 @@ def get_summary(
 def get_students(
     course_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_docente),
 ):
     rows = research_dashboard_service.get_student_result_rows(db, course_id)
     return {"total": len(rows), "rows": rows}
@@ -42,6 +45,7 @@ def get_students(
 def get_cycle_aggregates(
     course_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_docente),
 ):
     """Tiempo por concepto, tasa de remediación, frecuencia de rutas
     adaptativas y distribución de profundidad — agregados en vivo sobre
@@ -54,6 +58,7 @@ def get_student_cycles(
     student_id: str,
     course_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_docente),
 ):
     """Traza de explicabilidad de un estudiante: evidencia real de cada
     ciclo, la decisión de Adaptar y una justificación generada — nunca
@@ -67,6 +72,7 @@ def export_results(
     fmt: str = "csv",
     course_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_docente),
 ):
     if fmt not in ("csv", "xlsx"):
         raise HTTPException(
@@ -106,6 +112,7 @@ def export_results(
 def export_experiment(
     course_id: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_or_docente),
 ):
     """Exportar experimento — un clic, un archivo: resumen por estudiante,
     detalle por ciclo (modalidad diagnosticada vs. modalidad de refuerzo) y
