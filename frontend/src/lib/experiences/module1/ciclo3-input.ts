@@ -195,14 +195,17 @@ export const CICLO_3_INPUT: LearningCycle = {
             mode: 'corregir',
             prompt: 'Este código tiene un error: a la pregunta de input() le faltan las comillas. Encuéntralo y corrígelo.',
             starterCode: 'nombre = input(¿Cómo te llamas? )\nprint("Hola,", nombre)\n',
-            expectedOutput: '¿Cómo te llamas? Hola, Ana',
-            simulatedInputs: ['Ana'],
+            // Épica C, Commit 3: sin simulatedInputs, input() real —
+            // {input1} se sustituye por lo que el estudiante escriba
+            // (ENGINEERING-GATE-EPICA-C.md, mismo modelo del Commit 6 de
+            // Épica B).
+            expectedOutput: '¿Cómo te llamas? Hola, {input1}',
             hint: 'A la pregunta ¿Cómo te llamas? le faltan las comillas — sin ellas, Python no puede leerla como texto.',
             hintsByCategory: {
               sintaxis: 'Python no reconoce ¿Cómo te llamas? como texto porque no está entre comillas — por eso ni siquiera puede ejecutar la línea.',
               variables: 'El problema no es una variable — es que la pregunta de input() necesita comillas para ser texto.',
               logica: 'La estructura input(...) ya es correcta; el problema es lo que hay dentro del paréntesis.',
-              salida: 'Una vez corregido, debe mostrar exactamente "¿Cómo te llamas? Hola, Ana".',
+              salida: 'Una vez corregido, debe mostrar exactamente "¿Cómo te llamas? Hola, " seguido de lo que escribiste cuando Python te lo pidió.',
             },
             workedExample: {
               code: 'ciudad = input(¿En qué ciudad vives? )\nprint("Vives en", ciudad)\n# el error es la falta de comillas:\nciudad = input("¿En qué ciudad vives? ")',
