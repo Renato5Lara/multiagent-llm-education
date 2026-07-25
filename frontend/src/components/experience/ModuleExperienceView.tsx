@@ -8,7 +8,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  ArrowLeft, BookOpen, CheckCircle2, Compass, FlaskConical, GraduationCap, LifeBuoy, Map, Route, TrendingUp,
+  ArrowLeft, BookOpen, CheckCircle2, Compass, FlaskConical, GraduationCap, LifeBuoy, Map,
+  MessageCircle, Route, TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -25,12 +26,14 @@ import { OrderingPractice, type PracticeOutcome } from './OrderingPractice'
 import { PredictOutputPractice } from './PredictOutputPractice'
 import { ExternalResourceCard } from './ExternalResourceCard'
 import { LearningAnchor } from './LearningAnchor'
+import { GeneratedResourcePromptCard } from './GeneratedResourcePromptCard'
 import { readEvidence, recordEvidence, type RemediationEvidence } from '@/lib/experiences/evidence'
-import { useLearningPath, useSubmitCycleEvidence } from '@/hooks/useStudent'
+import { useLearningPath, useSubmitCycleEvidence, type RecursoGenerado } from '@/hooks/useStudent'
 import { correctSequence } from '@/lib/experiences/ordering'
 import {
   alternateModality, describeAdaptation, describeResourceFraming,
-  MODALITY_ORDER, orderingFallbackOf, resolveConceptForRender, resolvePractice,
+  formasBoundaryDeVisitados, MODALITY_ORDER, orderingFallbackOf,
+  resolveConceptForRender, resolvePractice,
   resolveReinforcementPriority, selectReinforcement,
 } from '@/lib/experiences/experienceOrchestrator'
 import { fetchCourseResource, resourceTypeForModality, type CourseResource } from '@/lib/courseResource'
@@ -86,6 +89,26 @@ type Phase =
   | 'reinforcement'
   | 'remediation'
   | 'slice_end'
+
+// Indicador de sub-paso dentro del ciclo: 3 macro-pasos fijos en vez de un
+// paso por cada `Phase` — remediation/reinforcement son desvíos condicionales
+// (no todo estudiante los pisa), mapearlos 1:1 daría la falsa sensación de
+// "pasos saltados". `null` = fases sin ciclo en curso (no se muestra el indicador).
+const SUBSTEPS = ['concept', 'practice', 'decision'] as const
+type Substep = typeof SUBSTEPS[number]
+const SUBSTEP_LABELS: Record<Substep, string> = {
+  concept: 'Concepto', practice: 'Práctica', decision: 'Consolidar',
+}
+function substepFor(phase: Phase): Substep | null {
+  switch (phase) {
+    case 'concept': return 'concept'
+    case 'practice':
+    case 'remediation': return 'practice'
+    case 'decision':
+    case 'reinforcement': return 'decision'
+    default: return null
+  }
+}
 
 // Narración real (no agentes inventados, sin cifras de confianza fabricadas):
 // describe el mismo tramo Adaptar que ya corre en el backend mientras la
@@ -355,6 +378,10 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
   // — null casi siempre hoy (repositorio vacío para IS301), nunca persistido
   // en el cursor porque es un intento de red, no estado de progreso.
   const [externalResource, setExternalResource] = useState<CourseResource | null>(null)
+  // RFC-0011/3 (ROADMAP-RFC-0011.md, Parte D): recurso generado por el
+  // Boundary para ESTE ciclo — ephemeral, igual que externalResource,
+  // nunca persistido en el cursor (se recibe de nuevo en cada cycle-evidence).
+  const [recursoGenerado, setRecursoGenerado] = useState<RecursoGenerado | null>(null)
   // PED-005 — refuerzos ya explorados en el ciclo actual: al terminar uno se
   // vuelve al menú (elegir nunca es un callejón) y el dominio del refuerzo se
   // acredita solo la primera vez por tipo.
@@ -659,10 +686,25 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     const timeMs = (practiceOutcome?.timeMs ?? 0) + (pythonOutcome?.timeMs ?? 0)
     setPhase('adapting')
     submitCycleEvidence.mutate(
-      { courseId, competencia: cycle.conceptId, attempts, solved, hintsUsed: remediationLevel, timeMs },
       {
-        onSuccess: (data: { runtime_decision?: { diseno?: Record<string, unknown> | null } | null }) => {
+        courseId, competencia: cycle.conceptId, attempts, solved, hintsUsed: remediationLevel, timeMs,
+        formasYaMostradas: formasBoundaryDeVisitados(visitedReinforcements),
+      },
+      {
+        onSuccess: (data: {
+          runtime_decision?: {
+            diseno?: Record<string, unknown> | null
+            forma?: { tipo: string; categoria_consentimiento: string } | null
+            recurso?: RecursoGenerado | null
+          } | null
+        }) => {
           const diseno = data?.runtime_decision?.diseno
+          const formaDelBoundary = data?.runtime_decision?.forma?.tipo
+          // RFC-0011/3: aditivo — si el backend no trae `recurso` (sesión
+          // sin decisión de Adaptar todavía, o registro previo a esta
+          // mini-épica), simplemente queda null y la tarjeta no se
+          // muestra; el resto del flujo sigue exactamente igual que antes.
+          setRecursoGenerado(data?.runtime_decision?.recurso ?? null)
           const profundidad = diseno?.profundidad ? String(diseno.profundidad) : undefined
           // Persiste para el SIGUIENTE ciclo (teoría + micropráctica de
           // Python) — antes solo vivía en este closure para el mensaje de
@@ -712,42 +754,17 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           // Mismo mecanismo de auto-refuerzo ya existente, ningún concepto
           // nuevo en el Runtime ni recurso inventado en el frontend.
           const modalidadParaRefuerzo = modalidadHonrada ?? effectiveModality
-          const basePriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
-          // "ejemplo" (señal de confusión): el objetivo es cambiar la
-          // REPRESENTACIÓN del concepto, no solo repetirlo con otras
-          // palabras — pero el propio kind "ejemplo" (ver los 4 ciclos
-          // autorados) nunca trae `sceneId` ni `narrationText`, solo
-          // `body` (texto plano); es el ÚNICO kind que garantiza la misma
-          // representación de siempre, sin importar la modalidad. Antes
-          // esta línea lo forzaba justo a él al frente de la prioridad —
-          // el peor caso posible para confusión. Ahora se le resta
-          // prioridad (va al final): "animacion" (AnimatedScene,
-          // sceneId ya autorado) y "audio" (AudioNarration, narrationText
-          // ya autorado) — ambos con representación real distinta al
-          // texto — pasan primero, reutilizando exactamente lo que cada
-          // ciclo ya trae.
-          const reinforcementPriority = andamiaje === 'ejemplo'
-            ? ([...basePriority.filter(k => k !== 'ejemplo'), 'ejemplo'] as typeof basePriority)
-            : basePriority
-          const preferChallenge = profundidad === 'aplicacion'
-          // "reto" (señal de fluidez, ya confirmada por Tutorizar con
-          // tiempo/ayudas reales): los 4 ciclos autorados YA traen un
-          // Reinforcement kind="reto" con su propia práctica real
-          // (ordering/predict_output) — una oportunidad de aprendizaje
-          // genuina, no una repetición. El sprint anterior lo descartaba
-          // siempre (reinforcement = undefined) para evitar el bug real
-          // de caer a un refuerzo fácil cuando el ciclo no traía "reto" —
-          // pero de paso también descartaba el "reto" cuando SÍ existía.
-          // Ahora: si el ciclo trae un "reto" real, se muestra (avanza
-          // rápido → desafío mayor, en vez de solo avanzar); si no lo
-          // trae, sigue sin ofrecer nada — nunca cae a un tipo distinto.
-          const retoDisponible = andamiaje === 'reto'
-            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, ['reto'])
-            : undefined
-          const reinforcement = andamiaje === 'reto'
-            ? retoDisponible?.kind === 'reto' ? retoDisponible : undefined
-            : profundidad === 'fundamentos' || profundidad === 'aplicacion'
-              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, preferChallenge, reinforcementPriority)
+          // `formaDelBoundary` sigue siendo la única autoridad para la
+          // selección de PP4 (Adenda A) — `andamiaje` (Adaptar,
+          // RFC-0002 §3/R3) queda disponible como metadato del Runtime,
+          // sin volver a decidir el refuerzo aquí. Contexto completo y
+          // pregunta abierta: docs/architecture/pedagogical/MIGRATION.md
+          // §"Merge con origin/runtime/architecture".
+          const reinforcementPriority = resolveReinforcementPriority(cycle, modalidadParaRefuerzo)
+          const reinforcement = profundidad === 'fundamentos'
+            ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, false, reinforcementPriority, formaDelBoundary)
+            : profundidad === 'aplicacion'
+              ? selectReinforcement(cycle.decision?.reinforcements, visitedReinforcements, modalidadParaRefuerzo, true, reinforcementPriority, formaDelBoundary)
               : undefined
           // Capa conversacional (nunca jerga técnica: sin Runtime, agentes ni
           // modalidad) — se muestra dentro de la propia fase 'adapting', una
@@ -1014,6 +1031,24 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               Territorio: {definition.territory}
             </span>
           </div>
+
+          {definition.cycles.length > 0 && (
+            <div className="text-left rounded-xl border border-white/[0.08] bg-neural-lowest/60 px-4 py-3.5">
+              <p className="flex items-center gap-1.5 text-[10px] font-mono tracking-[0.15em] uppercase text-neural-muted/70 mb-2">
+                <GraduationCap className="h-3.5 w-3.5 text-neural-glow" />
+                En esta misión vas a construir
+              </p>
+              <ul className="space-y-1.5">
+                {definition.cycles.map(c => (
+                  <li key={c.id} className="flex items-center gap-2 text-sm text-neural-text/90">
+                    <span className="h-1 w-1 rounded-full bg-neural-glow flex-shrink-0" />
+                    {c.conceptLabel}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <Button className="w-full gap-2" onClick={() => setPhase(firstPhaseFor(cycle))}>
             Comenzar →
           </Button>
@@ -1389,7 +1424,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
         <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-muted/60 truncate">
           {definition.missionTitle}
         </p>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Sprint UX-01 — adaptación visible: la versión de la experiencia
               que este estudiante está viendo, siempre a la vista, nunca solo
               en notas sueltas. Mismo vocabulario de color que ya usa
@@ -1431,8 +1466,65 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
               🔥 Dominio ×{fluencyStreak}
             </span>
           )}
+          <Button
+            variant="ghost" size="sm" className="h-7 px-2 gap-1.5 text-neural-muted hover:text-neural-glow"
+            onClick={() => window.dispatchEvent(new Event('open-tutor'))}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-[11px]">Ayuda</span>
+          </Button>
         </div>
       </div>
+
+      {substepFor(phase) && (() => {
+        // Progreso general del recorrido: ciclo actual + avance dentro de sus
+        // 3 sub-pasos, sobre el total de ciclos — más granular que solo
+        // "Ciclo X de Y", sin inventar una unidad de progreso nueva.
+        const totalSteps = definition.cycles.length * SUBSTEPS.length
+        const doneSteps = cycleIndex * SUBSTEPS.length + SUBSTEPS.indexOf(substepFor(phase)!)
+        const overallPct = totalSteps > 0 ? Math.min(100, Math.round((doneSteps / totalSteps) * 100)) : 0
+        return (
+          <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-neural-glow transition-all duration-500"
+              style={{ width: `${Math.max(overallPct, 4)}%` }}
+            />
+          </div>
+        )
+      })()}
+
+      {substepFor(phase) && (
+        <div className="flex items-center gap-2">
+          {SUBSTEPS.map((step, idx) => {
+            const current = substepFor(phase)
+            const isCurrent = step === current
+            const isPast = SUBSTEPS.indexOf(current!) > idx
+            return (
+              <div key={step} className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span
+                    className={cn(
+                      'h-1.5 w-1.5 rounded-full shrink-0',
+                      isCurrent ? 'bg-neural-glow' : isPast ? 'bg-neural-glow/50' : 'bg-white/10',
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      'text-[10px] font-mono uppercase tracking-wider truncate',
+                      isCurrent ? 'text-neural-glow' : isPast ? 'text-neural-muted' : 'text-neural-muted/30',
+                    )}
+                  >
+                    {SUBSTEP_LABELS[step]}
+                  </span>
+                </div>
+                {idx < SUBSTEPS.length - 1 && (
+                  <div className={cn('h-px flex-1', isPast ? 'bg-neural-glow/30' : 'bg-white/[0.06]')} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {welcomeBackMessage && (
         <div className="rounded-xl border border-neural-glow/25 bg-neural-glow/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-500">
@@ -1583,6 +1675,9 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
                 resource={externalResource}
                 framing={describeResourceFraming(effectiveModality, cycle.conceptLabel)}
               />
+            )}
+            {recursoGenerado && (
+              <GeneratedResourcePromptCard recurso={recursoGenerado} />
             )}
             <div className="glass-panel rounded-2xl p-5 space-y-4">
               <h3 className="text-base font-semibold text-neural-text">{activeReinforcement.title}</h3>

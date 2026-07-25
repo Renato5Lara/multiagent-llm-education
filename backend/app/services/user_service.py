@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
-from app.services.academic_activation_service import academic_activation_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ def create_user(
     area: Optional[str] = None,
     current_cycle: Optional[int] = None,
 ) -> User:
-    """Crea un usuario y activa el flujo academico si es estudiante con ciclo."""
+    """Crea un usuario. current_cycle es informativo: no dispara matricula legada."""
     user = User(
         email=email,
         hashed_password=get_password_hash(password),
@@ -71,10 +70,6 @@ def create_user(
     )
     db.add(user)
     db.flush()
-
-    if role == UserRole.ESTUDIANTE and current_cycle:
-        academic_activation_pipeline.activate_student(db, user)
-
     db.commit()
     db.refresh(user)
     return user
@@ -85,23 +80,13 @@ def update_user(
     user: User,
     update_data: dict,
 ) -> User:
-    """Actualiza campos del usuario y reactiva malla si cambia el ciclo."""
-    old_cycle = user.current_cycle
-
+    """Actualiza campos del usuario. current_cycle es informativo: no dispara matricula legada."""
     for field, value in update_data.items():
         if value is not None:
             if field == "password":
                 user.hashed_password = get_password_hash(value)
             else:
                 setattr(user, field, value)
-
-    new_cycle = user.current_cycle
-    if (
-        user.role == UserRole.ESTUDIANTE
-        and new_cycle is not None
-        and new_cycle != old_cycle
-    ):
-        academic_activation_pipeline.activate_student(db, user)
 
     db.commit()
     db.refresh(user)
@@ -124,8 +109,6 @@ def reactivate_user(db: Session, user: User) -> User:
 
 def change_user_role(db: Session, user: User, new_role: UserRole) -> User:
     user.role = new_role
-    if new_role == UserRole.ESTUDIANTE and user.current_cycle:
-        academic_activation_pipeline.activate_student(db, user)
     db.commit()
     db.refresh(user)
     return user
@@ -194,8 +177,6 @@ def bulk_create_users_from_csv(db: Session, csv_content: str) -> dict:
             )
             db.add(user)
             db.flush()
-            if role == UserRole.ESTUDIANTE and current_cycle:
-                academic_activation_pipeline.activate_student(db, user)
             result["success"] += 1
         except Exception as e:
             logger.exception("Error en fila CSV %s: %s", i, e)

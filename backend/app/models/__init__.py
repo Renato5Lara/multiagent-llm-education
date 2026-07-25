@@ -32,6 +32,7 @@ from app.models.knowledge_test import (
     KnowledgeTestAnswer,
 )
 from app.models.research import ExperimentResult, ResearchMetric
+from app.models.registro_recurso import RegistroRecurso
 
 __all__ = [
     "User", "UserRole",
@@ -64,4 +65,5 @@ __all__ = [
     "RetrievalCache", "RetrievalHistory", "ResearchSession",
     "KnowledgeTestQuestion", "KnowledgeTestAttempt", "KnowledgeTestAnswer",
     "ExperimentResult", "ResearchMetric",
+    "RegistroRecurso",
 ]

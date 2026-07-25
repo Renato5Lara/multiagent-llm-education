@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -172,3 +172,43 @@ class CycleEvidenceSubmit(BaseModel):
     solved: bool
     hints_used: int | None = Field(None, ge=0)
     time_ms: int | None = Field(None, ge=0)
+    #: Memoria del Ciclo activo (Documento 6 §1, Arquitectura Pedagógica) —
+    #: formas del catálogo de PP4 ya mostradas en este mismo ciclo, para que
+    #: seleccionar_forma() no repita contenido ya visto (Adenda A). Nunca
+    #: información del runtime — viene del frontend, distinta procedencia
+    #: que `diseno.alternativas_descartadas`.
+    formas_ya_mostradas: list[str] = Field(default_factory=list)
+
+
+class ConsentResponseSubmit(BaseModel):
+    """Adenda B (Semántica del Rechazo, Documento 5 §4.1 — Arquitectura
+    Pedagógica v1.0): respuesta del estudiante a una forma "con
+    consentimiento" ofrecida por el sistema (`categoria_consentimiento`
+    de `seleccionar_forma()`, Adenda A). Contrato puro de registro —
+    nunca produce un fact/claim del runtime (NOTA-INTERACCION-
+    CONSENTIMIENTO.md §3, punto 2 de Adenda B: tratar el rechazo como
+    evidencia formal excede esta pieza, exigiría RFC sobre
+    backend/runtime/). Gobierna únicamente ofertas proactivas del
+    sistema — nunca solicitudes voluntarias del estudiante (botón Ayuda,
+    NOTA §7), que no pasan por este contrato."""
+    course_id: str
+    competencia: str
+    #: Forma del catálogo de PP4 que se ofreció (p. ej. "codigo_guiado",
+    #: "narracion_tutor") — la que `seleccionar_forma()` ya devolvió con
+    #: categoria_consentimiento="consentimiento".
+    forma_tipo: str
+    respuesta: Literal["aceptado", "rechazado"]
+
+
+class RecursoReferenciaUpdate(BaseModel):
+    """RFC-0011/3 (ROADMAP-RFC-0011.md, Parte D): asocia la referencia de
+    un recurso generado externamente (imagen/audio/video/documento) a un
+    `RegistroRecurso` ya existente — nunca en la misma llamada que
+    genera el prompt (`POST /cycle-evidence`), porque ocurre en un
+    momento posterior e independiente (el prompt se copia, se genera
+    externamente, y solo entonces se pega la referencia). Solo modifica
+    `referencia_recurso`; `texto_prompt`, `origen` y `version_plantilla`
+    son inmutables. Sin validación automática de que el recurso
+    corresponde al prompt (decisión del tesista, ROADMAP-RFC-0011.md
+    §2, punto 5)."""
+    referencia_recurso: str = Field(..., min_length=1, max_length=512)

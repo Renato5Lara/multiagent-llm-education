@@ -2,8 +2,7 @@ from app.models.course import Course, CourseStatus
 from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.models.event_outbox import EventOutbox
 from app.models.institutional_course import InstitutionalCourse
-from app.models.learning_objective import LearningObjective
-from app.models.student_progress import LearningPath, PathModule
+from app.models.student_progress import LearningPath
 from app.models.teacher_assignment import TeacherAssignment
 from app.models.user import UserRole
 from app.services.academic_activation_service import (
@@ -13,7 +12,11 @@ from app.services.academic_activation_service import (
 from app.services.user_service import create_user
 
 
-def test_create_student_activates_full_academic_flow(db, docente_user):
+def test_create_student_does_not_trigger_legacy_pipeline(db, docente_user):
+    """current_cycle es informativo desde la decision de desacoplar Ciclo del
+    flujo moderno (Diagnostico -> Ruta Adaptativa): create_user ya no invoca
+    la matricula legada por malla. activate_student() sigue disponible para
+    quien la invoque directamente (ver test_activation_is_idempotent)."""
     institutional = InstitutionalCourse(
         code="MAT-101",
         name="Matematica I",
@@ -41,39 +44,10 @@ def test_create_student_activates_full_academic_flow(db, docente_user):
         current_cycle=1,
     )
 
-    course = db.query(Course).filter(Course.institutional_course_id == institutional.id).one()
-    assert course.status == CourseStatus.PUBLICADO
-    assert course.teacher_id == docente_user.id
-
-    enrollment = (
-        db.query(Enrollment)
-        .filter(Enrollment.student_id == student.id, Enrollment.course_id == course.id)
-        .one()
-    )
-    assert enrollment.status == EnrollmentStatus.ACTIVO
-
-    path = (
-        db.query(LearningPath)
-        .filter(LearningPath.student_id == student.id, LearningPath.course_id == course.id)
-        .one()
-    )
-    modules = (
-        db.query(PathModule)
-        .filter(PathModule.path_id == path.id)
-        .order_by(PathModule.week_number)
-        .all()
-    )
-    assert path.total_modules == 4
-    assert [module.week_number for module in modules] == [1, 2, 3, 4]
-    assert modules[0].status == "available"
-    assert all(module.title.startswith("Semana ") for module in modules)
-
-    assert (
-        db.query(LearningObjective)
-        .filter(LearningObjective.course_id == course.id)
-        .count()
-        == 4
-    )
+    assert student.current_cycle == 1
+    assert db.query(Course).filter(Course.institutional_course_id == institutional.id).count() == 0
+    assert db.query(Enrollment).filter(Enrollment.student_id == student.id).count() == 0
+    assert db.query(LearningPath).filter(LearningPath.student_id == student.id).count() == 0
     assert (
         db.query(EventOutbox)
         .filter(
@@ -81,7 +55,7 @@ def test_create_student_activates_full_academic_flow(db, docente_user):
             EventOutbox.aggregate_id == student.id,
         )
         .count()
-        == 1
+        == 0
     )
 
 

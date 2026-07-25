@@ -360,7 +360,25 @@ export interface PythonMicroPracticeDef {
   prompt: string
   /** Scaffold inicial del editor — nunca la solución. */
   starterCode: string
-  /** Salida esperada por stdout (comparación exacta, recortando espacios). */
+  /** Salida esperada por stdout (comparación exacta, recortando espacios).
+   *
+   *  Para etapas SIN `simulatedInputs` (input() real, Commit 4 en adelante):
+   *  puede contener marcadores posicionales `{input1}`, `{input2}`, ... que
+   *  `PythonBridge.tsx` sustituye por los valores reales que el estudiante
+   *  escribió, en el mismo orden (Commit 6, ENGINEERING-GATE-EPICA-B.md §9).
+   *  Posicional, nunca nominal (`{nombre}`): el runtime nunca parsea el
+   *  código del estudiante, solo conoce el orden de entrega. Ejemplo:
+   *  antes (legado, `simulatedInputs: ['Camila']`):
+   *    `'¿Cómo te llamas? Mucho gusto, Camila'`
+   *  ahora (input() real, sin `simulatedInputs`):
+   *    `'¿Cómo te llamas? Mucho gusto, {input1}'`
+   *  Sin marcadores, el comportamiento es idéntico al de siempre —
+   *  compatibilidad total con etapas legadas. Un `{inputN}` para el que no
+   *  hubo un `input()` real correspondiente (desajuste con el código de
+   *  referencia) NUNCA se resuelve como cadena vacía — fuerza la etapa a
+   *  "incorrecto" de forma determinista y deja un diagnóstico visible
+   *  (`resolveExpectedOutput` en `PythonBridge.tsx`), en vez de arriesgar
+   *  una coincidencia accidental. */
   expectedOutput: string
   /** Pista genérica tras el primer intento fallido — fallback cuando la
    *  categoría del error (sintaxis/variables/lógica/salida, derivada del

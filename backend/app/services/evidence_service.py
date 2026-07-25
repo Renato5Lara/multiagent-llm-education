@@ -311,7 +311,10 @@ def get_student_trajectory(db: Session, student_id: str, course_id: str | None =
     ]
 
     completed_modules = sum(1 for m in modules if m.status == "completed")
-    ratios = [e.score / e.max_score for e in evaluations if e.max_score]
+    # Un intento sin terminar (abandonado a mitad de camino) deja max_score
+    # ya fijado pero score en None — no participa del promedio, aunque sí
+    # queda visible tal cual en evaluations_payload (score: null por fila).
+    ratios = [e.score / e.max_score for e in evaluations if e.max_score and e.score is not None]
     avg_evaluation_score = round(sum(ratios) / len(ratios) * 100) if ratios else None
     has_bloom_progression = any(m.bloom_level is not None for m in modules)
 

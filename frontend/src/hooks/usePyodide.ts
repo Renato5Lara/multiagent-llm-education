@@ -3,61 +3,30 @@
 // producen sus intentos. Carga perezosa y compartida: el WASM (~6-10MB) solo
 // se descarga la primera vez que una micropráctica de Python aparece en
 // pantalla, y una sola instancia se reutiliza en toda la sesión del navegador.
+//
+// Épica B, Commit 2 (ENGINEERING-GATE-EPICA-B.md §6): Pyodide corre dentro
+// de un Worker dedicado (frontend/src/workers/pyodideWorker.ts) en vez del
+// hilo principal — necesario para poder bloquear stdin de verdad más
+// adelante (Commit 3), validado con código real en SPIKE-B1. `run()` pasa
+// de síncrono a `Promise<PythonRunResult>` como consecuencia obligada de
+// comunicarse por `postMessage` (no una decisión de diseño — mantenerlo
+// síncrono exigiría `Atomics.wait()` en el hilo principal, el mismo
+// bloqueo de pestaña que el Worker existe para evitar). El resto del
+// contrato público (`{ ready, loadError, run }`) no cambia de forma.
 
-import { useEffect, useRef, useState } from 'react'
-
-const PYODIDE_VERSION = '0.26.2'
-const PYODIDE_CDN = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`
-
-interface PyodideInterface {
-  runPython: (code: string) => unknown
-  setStdout: (options: { write: (buffer: Uint8Array) => number }) => void
-  setStdin: (options: { stdin: () => string | null }) => void
-}
-
-declare global {
-  interface Window {
-    loadPyodide?: (config: { indexURL: string }) => Promise<PyodideInterface>
-  }
-}
-
-let pyodideSingleton: Promise<PyodideInterface> | null = null
-
-/** Borra los nombres creados por el estudiante en ejecuciones anteriores
- *  (el intérprete es un singleton compartido por toda la sesión). Solo los
- *  nombres "visibles" — los internos (`__builtins__`, etc.) empiezan con
- *  guion bajo y se conservan. */
-const RESET_USER_GLOBALS =
-  'for _k in [k for k in list(globals()) if not k.startswith("_")]:\n    del globals()[_k]'
-
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      resolve()
-      return
-    }
-    const script = document.createElement('script')
-    script.src = src
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('No se pudo cargar Python en el navegador.'))
-    document.head.appendChild(script)
-  })
-}
-
-function getPyodide(): Promise<PyodideInterface> {
-  if (!pyodideSingleton) {
-    pyodideSingleton = loadScript(`${PYODIDE_CDN}pyodide.js`).then(() => {
-      if (!window.loadPyodide) throw new Error('Python no se inicializó correctamente.')
-      return window.loadPyodide({ indexURL: PYODIDE_CDN })
-    })
-  }
-  return pyodideSingleton
-}
+import { useEffect, useState } from 'react'
+import type { WorkerInboundMessage, WorkerOutboundMessage } from '@/workers/pyodideWorker'
 
 export interface PythonRunResult {
   stdout: string
   error: string | null
 }
+
+/** Mensaje exacto que `run()` devuelve cuando `cancelRun()` interrumpe una
+ *  ejecución en curso (Commit 4b) — exportado para que el consumidor
+ *  (PythonBridge.tsx) pueda distinguir una cancelación real de un error de
+ *  Python, sin duplicar el string a mano en dos archivos. */
+export const CANCELLED_RESULT_ERROR = 'Ejecución cancelada por el estudiante.'
 
 /** En qué se equivocó el estudiante — no CUÁNTAS veces, sino DE QUÉ tipo. */
 export type PythonErrorCategory = 'sintaxis' | 'variables' | 'logica' | 'salida'
@@ -129,18 +98,92 @@ export function parsePythonError(error: string): ParsedPythonError {
   return { name, message, line, translation: ERROR_TRANSLATION[name] ?? null }
 }
 
+// Singleton del Worker + su promesa de "listo" — mismo criterio que el
+// singleton de Pyodide en el hilo principal que este commit reemplaza (una
+// sola instancia por sesión de navegador, compartida por todos los usos de
+// `usePyodide()`). `signalSab`/`dataSab` solo se crean si el documento está
+// cross-origin isolated (COOP/COEP, Commit 5 — todavía sin configurar en
+// este proyecto): sin eso, `SharedArrayBuffer` ni siquiera existe como
+// global, y el mecanismo legado (simulatedInputs) no lo necesita para nada.
+let workerSingleton: Worker | null = null
+let readySingleton: Promise<void> | null = null
+// Mismos buffers que recibió el Worker en 'init' — necesarios aquí también
+// para que `provideInput` (Commit 3) escriba en la misma memoria
+// compartida que el worker lee al despertar de `Atomics.wait()`.
+let signalSabSingleton: SharedArrayBuffer | undefined
+let dataSabSingleton: SharedArrayBuffer | undefined
+
+const MAX_INPUT_BYTES = 1024 // debe coincidir con el tamaño de dataSab
+
+/** Referencia a la ÚNICA ejecución `run()` activa (Commit 4b,
+ *  ENGINEERING-GATE-EPICA-B.md §7) — consistente con el invariante de
+ *  ejecución única ya documentado. No es solo el `resolve` suelto: se
+ *  limpia a `null` de forma atómica (dentro del mismo tick, ANTES de
+ *  llamar a `resolve`) apenas uno de los dos caminos posibles la
+ *  consume — el mensaje `'result'` real del worker, o `cancelRun()`.
+ *  Quien llegue primero gana y resuelve; el que llegue después encuentra
+ *  `pendingRun !== current` (o ya `null`) y no hace nada. Garantiza que
+ *  cada `run()` se resuelve EXACTAMENTE una vez, incluso si ambos
+ *  caminos compiten por cerrar la misma ejecución casi al mismo tiempo. */
+let pendingRun: { resolve: (result: PythonRunResult) => void } | null = null
+
+function getWorker(): { worker: Worker; ready: Promise<void> } {
+  if (!workerSingleton || !readySingleton) {
+    const worker = new Worker(new URL('../workers/pyodideWorker.ts', import.meta.url), { type: 'module' })
+    workerSingleton = worker
+    const canUseSharedBuffers = typeof SharedArrayBuffer !== 'undefined' && self.crossOriginIsolated
+    signalSabSingleton = canUseSharedBuffers ? new SharedArrayBuffer(4) : undefined
+    dataSabSingleton = canUseSharedBuffers ? new SharedArrayBuffer(4 + MAX_INPUT_BYTES) : undefined
+    readySingleton = new Promise<void>((resolve, reject) => {
+      const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
+        if (e.data.type === 'ready') {
+          worker.removeEventListener('message', onMessage)
+          resolve()
+        } else if (e.data.type === 'load-error') {
+          worker.removeEventListener('message', onMessage)
+          reject(new Error(e.data.message))
+        }
+      }
+      // Sin esto, si el propio script del worker falla al cargar (p. ej. un
+      // 503 transitorio del dev server, encontrado validando el Commit 3 en
+      // navegador real), el evento 'error' del Worker nunca tenía quién lo
+      // escuchara — la promesa quedaba colgada para siempre y el laboratorio
+      // quedaba roto hasta recargar la página completa. Al rechazar y
+      // limpiar el singleton, una futura llamada a `usePyodide()` puede
+      // reintentar desde cero en vez de heredar el estado roto.
+      const onError = (e: ErrorEvent) => {
+        worker.removeEventListener('message', onMessage)
+        worker.removeEventListener('error', onError)
+        workerSingleton = null
+        readySingleton = null
+        reject(new Error(e.message || 'No se pudo cargar el worker de Python.'))
+      }
+      worker.addEventListener('message', onMessage)
+      worker.addEventListener('error', onError)
+      worker.postMessage({
+        type: 'init',
+        signalSab: signalSabSingleton,
+        dataSab: dataSabSingleton,
+      } satisfies WorkerInboundMessage)
+    })
+  }
+  return { worker: workerSingleton, ready: readySingleton }
+}
+
 export function usePyodide() {
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const pyodideRef = useRef<PyodideInterface | null>(null)
+  // true mientras el worker está bloqueado en Atomics.wait() esperando un
+  // input() real (Commit 3) — el consumidor (Commit 4) lo usa para mostrar
+  // el panel donde el estudiante escribe el valor. Nunca se activa en el
+  // mecanismo legado (simulatedInputs), por el contrato de compatibilidad §5.
+  const [awaitingInput, setAwaitingInput] = useState(false)
 
   useEffect(() => {
     let cancelled = false
-    getPyodide()
-      .then(py => {
-        if (cancelled) return
-        pyodideRef.current = py
-        setReady(true)
+    getWorker()
+      .ready.then(() => {
+        if (!cancelled) setReady(true)
       })
       .catch((err: unknown) => {
         if (cancelled) return
@@ -152,47 +195,94 @@ export function usePyodide() {
   }, [])
 
   /** `stdinValues`: respuestas simuladas de input(), en el orden en que el
-   *  código las consume.
+   *  código las consume (mecanismo legado, contrato de compatibilidad
+   *  ENGINEERING-GATE-EPICA-B.md §5). Sin este parámetro, el worker usa el
+   *  mecanismo interactivo real (Commit 3 en adelante) — hoy, sin UI que lo
+   *  sirva, cualquier `input()` sin `simulatedInputs` sigue sin recibir
+   *  valor, igual que antes de esta capacidad.
    *
-   *  Sprint UX-04 — cada ejecución es un mundo limpio (tres bugs reales,
-   *  verificados en navegador):
-   *  1. stdout se captura por BYTES (`write`), no por líneas (`batched`):
-   *     antes, el prompt de input() (sin salto de línea) se PERDÍA cuando el
-   *     código fallaba después — el estudiante veía la consola vacía y un
-   *     traceback, nunca la pregunta que su programa sí alcanzó a mostrar.
-   *  2. stdin se REINICIA siempre: antes, las respuestas simuladas de una
-   *     ejecución anterior quedaban pegadas al intérprete compartido — "Ana"
-   *     aparecía como respuesta automática en ejercicios que no la pedían.
-   *     Agotadas las respuestas (o sin ninguna), input() recibe fin de
-   *     entrada (EOFError) — un error explicable, nunca un '' silencioso.
-   *  3. los globals del estudiante se LIMPIAN antes de cada ejecución: una
-   *     variable creada en una etapa anterior ya no puede hacer pasar (ni
-   *     fallar) el código de la siguiente — cada Run se comporta como
-   *     Python de verdad ejecutando un archivo desde cero. */
-  const run = (code: string, stdinValues?: string[]): PythonRunResult => {
-    const py = pyodideRef.current
-    if (!py) return { stdout: '', error: 'Python todavía no está listo.' }
-    const decoder = new TextDecoder()
-    let captured = ''
-    py.setStdout({
-      write: (buffer: Uint8Array) => {
-        captured += decoder.decode(buffer, { stream: true })
-        return buffer.length
-      },
-    })
-    let cursor = 0
-    const values = stdinValues ?? []
-    py.setStdin({ stdin: () => (cursor < values.length ? values[cursor++] : null) })
+   *  INVARIANTE DEL RUNTIME (Épica B): mientras no exista un protocolo con
+   *  correlación de mensajes por id, el Worker admite una única ejecución
+   *  activa. El consumidor NO DEBE invocar `run()` de nuevo hasta que la
+   *  anterior haya resuelto — hoy lo garantiza la UI real (deshabilita
+   *  "Ejecutar" mientras `running` es true), no este hook. Sin esa
+   *  correlación, dos `run()` concurrentes recibirían resultados cruzados
+   *  (el primer 'result' que llegue resuelve el primer listener que siga
+   *  activo, sin importar cuál lo disparó). No es una limitación a
+   *  resolver todavía — reutilizar este Worker para ejecuciones
+   *  concurrentes requiere diseñar esa correlación primero, explícitamente,
+   *  no asumirla disponible. */
+  const run = async (code: string, stdinValues?: string[]): Promise<PythonRunResult> => {
+    const { worker, ready: readyPromise } = getWorker()
     try {
-      py.runPython(RESET_USER_GLOBALS)
-      py.runPython(code)
-      captured += decoder.decode()
-      return { stdout: captured, error: null }
-    } catch (err) {
-      captured += decoder.decode()
-      return { stdout: captured, error: err instanceof Error ? err.message : String(err) }
+      await readyPromise
+    } catch {
+      return { stdout: '', error: 'Python todavía no está listo.' }
     }
+    return new Promise<PythonRunResult>(resolve => {
+      const current = { resolve }
+      pendingRun = current
+      const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
+        if (e.data.type === 'result') {
+          worker.removeEventListener('message', onMessage)
+          // Carrera cancelar-vs-result (Commit 4b, §7): si cancelRun() ya
+          // resolvió esta misma ejecución, pendingRun ya no es `current` (o
+          // ya es null) — no resolver de nuevo.
+          if (pendingRun !== current) return
+          pendingRun = null
+          setAwaitingInput(false)
+          resolve({ stdout: e.data.stdout, error: e.data.error })
+        } else if (e.data.type === 'need-input') {
+          setAwaitingInput(true)
+        }
+      }
+      worker.addEventListener('message', onMessage)
+      worker.postMessage({ type: 'run', code, stdinValues } satisfies WorkerInboundMessage)
+    })
   }
 
-  return { ready, loadError, run }
+  /** Cancela la ejecución en curso — solo tiene efecto real mientras el
+   *  Worker está bloqueado esperando un `input()` real (`awaitingInput`);
+   *  la UI solo expone el botón que la llama en ese estado
+   *  (ENGINEERING-GATE-EPICA-B.md §7, alcance: no es un "detener"
+   *  general). `worker.terminate()` mata la ejecución de inmediato, sin
+   *  punto seguro — no existe (ni se necesita) uno para un
+   *  `Atomics.wait()` bloqueante. El stdout que el worker ya había
+   *  acumulado internamente se PIERDE (vive en su closure, nunca llegó
+   *  al hilo principal) — límite real, no se finge que se preserva. El
+   *  Worker siguiente se crea perezosamente en el próximo `run()`, no
+   *  aquí (recargar Pyodide toma varios segundos). */
+  const cancelRun = () => {
+    const current = pendingRun
+    pendingRun = null
+    if (workerSingleton) workerSingleton.terminate()
+    workerSingleton = null
+    readySingleton = null
+    signalSabSingleton = undefined
+    dataSabSingleton = undefined
+    setAwaitingInput(false)
+    current?.resolve({ stdout: '', error: CANCELLED_RESULT_ERROR })
+  }
+
+  /** Entrega al worker el valor real que el estudiante escribió — solo
+   *  tiene efecto mientras `awaitingInput` es true (el worker está
+   *  bloqueado en `Atomics.wait()`, patrón validado en SPIKE-B1). Sin
+   *  UI todavía que la llame (eso es el Commit 4): esta función existe
+   *  pero ningún componente la usa aún, igual que el Worker del Commit 1
+   *  no tenía wiring. Trunca defensivamente a `MAX_INPUT_BYTES` — el
+   *  buffer compartido tiene tamaño fijo (`dataSab`, Commit 1/2); un
+   *  valor más largo se recorta en vez de tirar un RangeError. */
+  const provideInput = (value: string) => {
+    if (!signalSabSingleton || !dataSabSingleton) return
+    let encoded = new TextEncoder().encode(value)
+    if (encoded.length > MAX_INPUT_BYTES) encoded = encoded.slice(0, MAX_INPUT_BYTES)
+    new DataView(dataSabSingleton).setInt32(0, encoded.length, true)
+    new Uint8Array(dataSabSingleton, 4).set(encoded)
+    const signal = new Int32Array(signalSabSingleton)
+    Atomics.store(signal, 0, 1)
+    Atomics.notify(signal, 0)
+    setAwaitingInput(false)
+  }
+
+  return { ready, loadError, run, awaitingInput, provideInput, cancelRun }
 }

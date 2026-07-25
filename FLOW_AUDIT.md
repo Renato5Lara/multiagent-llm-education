@@ -402,3 +402,12 @@ Credenciales seed: admin@upao.edu.pe / Admin2026!
 - **Routers duplicados (Backend, consolidación):** `estudiantes.py` (`/api/estudiante`)
   parece un módulo ES paralelo a `students.py` (`/api/students`); ambos delegan en los
   mismos servicios. Posible consolidación post-sustentación.
+- **Endpoint de sandbox sin autenticación (Backend, seguridad):**
+  `POST /api/sandbox/execute` y `/execute/stream`
+  (`backend/app/api/routes/sandbox.py`) no tienen ningún `Depends` de
+  usuario — cualquiera con la URL puede invocar `SandboxRunner`
+  directamente. Hallazgo de `AUDITORIA-EPICA-B.md` §3/§6, no de la
+  Épica B en sí (el endpoint no tiene llamador real en el flujo del
+  estudiante hoy — ver esa auditoría). No bloquea ningún recorrido
+  actual; corregir antes de exponer este endpoint a cualquier
+  consumidor real, sea de la Épica B o de otra evolución.

@@ -170,6 +170,20 @@ a una referencia de una línea en cuanto su conocimiento queda absorbido
 por el código, los tests o un RFC definitivo — es un criterio de cierre
 de la mini-épica que lo produjo, no una limpieza aplazable.**
 
+**Regla de continuidad documental.** Los documentos de auditoría,
+spikes y RFC ya commiteados son fuentes primarias. El trabajo
+posterior debe construir sobre ellos —citándolos— no regenerarlos: no
+se repite una búsqueda, un fetch de documentación externa ni una
+investigación ya resuelta y documentada, salvo que exista una
+contradicción real o una hipótesis genuinamente nueva que el documento
+existente no cubre. Si excepcionalmente hace falta modificar un
+documento ya commiteado, el cambio se justifica explícitamente y se
+verifica con `git diff` contra el último commit antes de darse por
+válido — nunca se asume que una reescritura "con la misma información"
+es inocua sin comprobarlo. Esta regla aplica también dentro de un
+handoff hacia una sesión nueva: la sesión que recibe el contexto debe
+citar y ampliar el trabajo ya validado, no reproducirlo desde cero.
+
 **RFCs grandes: roadmap antes que Engineering Gate.** Cuando la
 siguiente Plataforma Operativa es un RFC grande (varias capacidades
 independientes, no una pieza acotada — el primer caso fue RFC-0006),

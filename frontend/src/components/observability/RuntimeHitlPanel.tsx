@@ -103,7 +103,7 @@ function EscaladaCard({
             value={claimElegido}
             onChange={(e) => setClaimElegido(e.target.value)}
             required
-            className="h-8 rounded border border-slate-200 px-2 text-xs"
+            className="h-8 rounded border border-input bg-background text-foreground px-2 text-xs"
           >
             <option value="">Elegir claim…</option>
             {participantes.map((p) => (
@@ -134,7 +134,7 @@ function HechoDocenteForm({ sessionId }: { sessionId: string }) {
   const hecho = useHechoDocente(sessionId)
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
+    <div className="rounded-lg border border-border bg-card p-3 space-y-2">
       <p className="text-[10px] font-mono text-muted-foreground/70 tracking-widest uppercase">
         Intervención espontánea
       </p>
@@ -153,7 +153,7 @@ function HechoDocenteForm({ sessionId }: { sessionId: string }) {
           value={contenido}
           onChange={(e) => setContenido(e.target.value)}
           rows={3}
-          className="rounded border border-slate-200 p-2 font-mono text-xs"
+          className="rounded border border-input bg-background text-foreground p-2 font-mono text-xs"
           placeholder='{"competencia": "COMP-2", "items_incorrectos": [3]}'
         />
         <Input

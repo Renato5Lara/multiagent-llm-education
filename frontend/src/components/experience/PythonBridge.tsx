@@ -7,11 +7,11 @@
 // el estudiante escribe Python real, ejecutado con Pyodide en el propio
 // navegador (el Runtime nunca ejecuta código, solo recibe la evidencia).
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Code2, Eye, GraduationCap, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { classifyPythonError, parsePythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
+import { CANCELLED_RESULT_ERROR, classifyPythonError, parsePythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef, PythonPracticeMode } from '@/types/moduleExperience'
@@ -56,6 +56,44 @@ function shouldStartBlank(mode: PythonPracticeMode | undefined, profundidad: str
   return profundidad === 'aplicacion' && (mode === undefined || mode === 'escribir_parcial' || mode === 'escribir_completo')
 }
 
+/** Resuelve marcadores `{input1}`, `{input2}`, ... en `expectedOutput`
+ *  contra los valores reales que el estudiante escribió en input() real
+ *  (Commit 6, Épica B — ENGINEERING-GATE-EPICA-B.md §9), en el mismo
+ *  orden en que los escribió. Posicional, no nominal (`{nombre}`): este
+ *  componente nunca parsea el código del estudiante, solo conoce el
+ *  ORDEN en que los valores llegaron por `provideInput()`.
+ *
+ *  Sin marcadores, `template` vuelve exactamente igual — compatibilidad
+ *  total con el mecanismo legado y con cualquier otro laboratorio de la
+ *  plataforma que nunca use esta sintaxis.
+ *
+ *  Un `{inputN}` sin un input() real correspondiente (desajuste entre
+ *  el código de referencia y el propio `expectedOutput` — error de
+ *  autoría del contenido, no del estudiante) NO se reemplaza por ''
+ *  en silencio: eso arriesgaría una coincidencia accidental contra un
+ *  stdout real también vacío ahí, marcando "correcto" contenido mal
+ *  autorado. Devuelve `null` para forzar `correct: false` de forma
+ *  determinista, sin comparar `stdout`, dejando un diagnóstico visible
+ *  (regla explícita del tesista, ENGINEERING-GATE-EPICA-B.md §9). */
+function resolveExpectedOutput(template: string, providedValues: string[]): string | null {
+  let hasUnresolvedMarker = false
+  const resolved = template.replace(/\{input(\d+)\}/g, (_match, n: string) => {
+    const index = Number(n) - 1
+    if (index < 0 || index >= providedValues.length) {
+      hasUnresolvedMarker = true
+      return ''
+    }
+    return providedValues[index]
+  })
+  if (hasUnresolvedMarker) {
+    console.error(
+      `PythonBridge: expectedOutput referencia un {inputN} sin un input() real correspondiente — posible error de autoría de contenido. template="${template}" valoresRecibidos=${JSON.stringify(providedValues)}`,
+    )
+    return null
+  }
+  return resolved
+}
+
 /** Diagnóstico genérico por categoría — verdadero para cualquier ejercicio,
  *  no autorado por contenido (a diferencia de `hintsByCategory`, que sí lo
  *  es). Nunca revela nada del ejercicio concreto, solo nombra lo que Python
@@ -71,7 +109,12 @@ const ERROR_CATEGORY_LABEL: Record<PythonErrorCategory, string> = {
  *  traceback: señala la LÍNEA del código del estudiante, la muestra
  *  resaltada, traduce la excepción a lenguaje de principiante, y deja el
  *  detalle técnico original disponible sin imponerlo. El botón Ejecutar
- *  sigue activo — reintentar es siempre el siguiente paso natural. */
+ *  sigue activo — reintentar es siempre el siguiente paso natural.
+ *
+ *  Sustituye por completo la línea de error plana que mostraba la consola
+ *  (ConsoleOutput solo recibe `output` en este archivo, nunca `error`) —
+ *  mostrar el traceback crudo ahí ADEMÁS de aquí reintroduciría justo lo
+ *  que este sprint eliminó. */
 function PythonErrorCard({ error, code }: { error: string; code: string }) {
   const parsed = parsePythonError(error)
   const codeLines = code.split('\n')
@@ -99,6 +142,120 @@ function PythonErrorCard({ error, code }: { error: string; code: string }) {
         <summary className="cursor-pointer select-none">Ver el mensaje original de Python</summary>
         <pre className="mt-1.5 font-mono text-[11px] whitespace-pre-wrap break-words opacity-80">{error}</pre>
       </details>
+    </div>
+  )
+}
+
+// ── Editor / consola — puramente presentacionales (Sprint 1A) ──────────────
+// Ningún componente de esta sección lee ni decide estado: reciben value/
+// onChange/disabled ya calculados por PythonMicroPractice y solo cambian
+// cómo se ven. Mismo contrato que el <textarea> plano que reemplazan.
+
+/** "Ventana" de editor con gutter de líneas — mismo <textarea> controlado
+ *  de siempre (value/onChange/disabled), solo con chrome visual alrededor.
+ *  `wrap="off"` es la única diferencia de comportamiento del navegador: sin
+ *  eso, una línea larga que envuelve visualmente desalinea el número de
+ *  línea del gutter contra la línea real. No cambia el string que ve
+ *  Pyodide (el wrap "soft" nunca insertaba saltos reales).
+ *
+ *  El gutter numera TODAS las líneas reales (no solo `visibleRows`) y
+ *  sincroniza su scroll vertical con el del `<textarea>` — sin esto, un
+ *  código de más de 12 líneas desalinea los números apenas el estudiante
+ *  se desplaza (encontrado validando manualmente, no en revisión de
+ *  código: el gutter quedaba fijo en 1-12 mientras el textarea ya
+ *  mostraba líneas más abajo). Contenido autorado hoy llega como máximo
+ *  a 6 líneas, pero el editor debe sostenerse igual si eso cambia.
+ *
+ *  La altura del gutter se MIDE del propio DOM (altura real de una de
+ *  sus líneas, que comparte fuente/leading exactos con el `<textarea>`)
+ *  en vez de un valor fijo — así no se desincroniza si cambia la
+ *  tipografía o el `leading` de estas clases más adelante.
+ *
+ *  `minRows`/`maxRows` (Sprint UX-05, laboratorio de tres zonas): el
+ *  laboratorio necesita un editor más alto y cómodo que la tarjeta en
+ *  línea — mismo componente, solo un rango de filas distinto según quién
+ *  lo use; el cálculo de líneas visibles y la sincronización del gutter
+ *  no cambian. */
+function CodeEditorPanel({
+  code,
+  onChange,
+  disabled,
+  minRows = 3,
+  maxRows = 12,
+}: {
+  code: string
+  onChange: (value: string) => void
+  disabled: boolean
+  minRows?: number
+  maxRows?: number
+}) {
+  const gutterRef = useRef<HTMLDivElement>(null)
+  // Estimación previa a medir (13px * leading-relaxed 1.625) — solo evita
+  // un salto de layout en el primer render; useLayoutEffect la reemplaza
+  // por la altura real antes de que el navegador pinte.
+  const [lineHeightPx, setLineHeightPx] = useState(21.125)
+  const lineCount = code.split('\n').length
+  const visibleRows = Math.min(maxRows, Math.max(minRows, lineCount))
+
+  useLayoutEffect(() => {
+    const firstLine = gutterRef.current?.firstElementChild
+    if (firstLine) setLineHeightPx(firstLine.getBoundingClientRect().height)
+  }, [])
+
+  return (
+    <div className="rounded-xl border border-white/[0.1] bg-black/30 overflow-hidden transition-colors focus-within:border-neural-glow/50">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-white/[0.06] bg-white/[0.02]">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-400/30" />
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-400/30" />
+        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/30" />
+        <span className="ml-2 text-[10px] font-mono text-neural-muted/40 tracking-wide">python3</span>
+      </div>
+      <div className="flex">
+        <div
+          ref={gutterRef}
+          aria-hidden
+          style={{ maxHeight: `${visibleRows * lineHeightPx}px` }}
+          className="select-none overflow-hidden py-2 pl-3 pr-2 text-right font-mono text-[13px] leading-relaxed text-neural-muted/25"
+        >
+          {Array.from({ length: lineCount }, (_, i) => (
+            <div key={i}>{i + 1}</div>
+          ))}
+        </div>
+        <textarea
+          value={code}
+          onChange={e => onChange(e.target.value)}
+          onScroll={e => {
+            if (gutterRef.current) gutterRef.current.scrollTop = e.currentTarget.scrollTop
+          }}
+          disabled={disabled}
+          rows={visibleRows}
+          wrap="off"
+          spellCheck={false}
+          className="flex-1 bg-transparent px-3 py-2 font-mono text-[13px] leading-relaxed text-neural-text focus:outline-none disabled:opacity-70 overflow-x-auto"
+        />
+      </div>
+    </div>
+  )
+}
+
+/** Panel de salida tipo consola — solo `output`: el error tiene su propio
+ *  tratamiento (`PythonErrorCard`, Sprint UX-04) con línea señalada y
+ *  traducción, así que esta consola nunca recibe `error` desde
+ *  `PythonMicroPractice` — mostrarlo aquí ADEMÁS reintroduciría el
+ *  traceback crudo en primer plano que UX-04 eliminó a propósito. */
+function ConsoleOutput({ output }: { output: string | null }) {
+  if (output === null) return null
+  return (
+    <div className="rounded-xl border border-white/[0.08] bg-black/40 overflow-hidden">
+      <div className="flex items-center gap-1.5 px-3 py-1 border-b border-white/[0.06] bg-white/[0.02]">
+        <span className="h-1.5 w-1.5 rounded-full bg-neural-glow/50" />
+        <span className="text-[10px] font-mono text-neural-muted/40 tracking-wide">consola</span>
+      </div>
+      <div className="px-3 py-2">
+        <pre className="font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
+          {output || '(sin salida)'}
+        </pre>
+      </div>
     </div>
   )
 }
@@ -237,7 +394,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   initialProfundidad?: string
   layout?: 'inline' | 'lab'
 }) {
-  const { ready, loadError, run } = usePyodide()
+  const { ready, loadError, run, awaitingInput, provideInput, cancelRun } = usePyodide()
   const submitCycleEvidence = useSubmitCycleEvidence()
   // `stage` es la etapa EN CURSO de la progresión (practice.nextStage.
   // nextStage...) — el estudiante nunca ve "Etapa 1 de 3": es la misma
@@ -254,6 +411,16 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   const [solved, setSolved] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
   const [running, setRunning] = useState(false)
+  // Valor que el estudiante está escribiendo para el input() real EN CURSO
+  // (Commit 4, Épica B) — solo tiene sentido mientras `awaitingInput` es
+  // true. Nunca se usa en el mecanismo legado (simulatedInputs), por el
+  // contrato de compatibilidad ENGINEERING-GATE-EPICA-B.md §5.
+  const [inputDraft, setInputDraft] = useState('')
+  // Valores reales que el estudiante escribió en ESTA ejecución, en el orden
+  // en que los escribió (Commit 6) — se resetea al iniciar cada handleRun,
+  // se acumula en cada handleProvideInput. useRef, no useState: no necesita
+  // re-render propio, solo debe estar listo cuando result.stdout llega.
+  const providedValuesRef = useRef<string[]>([])
   // POR QUÉ falló el último intento, no solo CUÁNTAS veces — deriva del error
   // real de Pyodide (o su ausencia), nunca de un conteo. Gobierna qué pista
   // y qué diagnóstico se muestran.
@@ -377,15 +544,38 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     )
   }
 
-  const handleRun = () => {
+  const handleRun = async () => {
     setRunning(true)
-    const result = run(code, stage.simulatedInputs)
+    // Reinicia el registro de valores reales de ESTA ejecución (Commit 6) —
+    // antes de llamar a run(), para que handleProvideInput (que puede
+    // dispararse varias veces mientras run() sigue pendiente) siempre
+    // acumule sobre el array correcto.
+    providedValuesRef.current = []
+    // run() es async desde Épica B/Commit 2 (usePyodide.ts delega en un
+    // Worker vía postMessage) — mismo comportamiento observable, solo
+    // async donde antes era síncrono. Ver ENGINEERING-GATE-EPICA-B.md
+    // §6, excepción de alcance del Commit 2.
+    const result = await run(code, stage.simulatedInputs)
     setRunning(false)
     setOutput(result.stdout)
     setError(result.error)
+    // Cancelación real (Commit 4b, "Cancelar" junto al panel de input()) —
+    // no es un error de Python: no cuenta como intento, no genera evidencia
+    // ni la pista categorizada de classifyPythonError (que le asignaría
+    // 'logica' por defecto y mostraría un diagnóstico engañoso, ya que el
+    // código nunca terminó de correr por sí solo). El mensaje ya quedó
+    // visible arriba (el estudiante lo vio en el panel de input() que
+    // acaba de cerrar al presionar Cancelar).
+    if (result.error === CANCELLED_RESULT_ERROR) return
     const nextAttempts = attempts + 1
     setAttempts(nextAttempts)
-    const correct = !result.error && result.stdout.trim() === stage.expectedOutput.trim()
+    // Commit 6: expectedOutput puede traer {inputN} — se resuelve contra los
+    // valores reales que el estudiante escribió (vacío en el mecanismo
+    // legado, donde expectedOutput nunca usa esta sintaxis). expectedOutput
+    // === null significa un {inputN} mal autorado (§9) — fuerza incorrecto
+    // sin comparar stdout, nunca una coincidencia accidental.
+    const expectedOutput = resolveExpectedOutput(stage.expectedOutput, providedValuesRef.current)
+    const correct = !result.error && expectedOutput !== null && result.stdout.trim() === expectedOutput.trim()
     recordEvidence({
       type: 'practice_attempt',
       moduleId,
@@ -410,6 +600,26 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
       // (Regla 1) — el intento que acaba de acertar no se cuenta.
       onDone?.({ attempts: priorAttempts + Math.max(0, nextAttempts - 1), timeMs: 0, solutionShown: priorSolutionShown })
     }
+  }
+
+  /** Entrega al Worker el valor real que el estudiante escribió para el
+   *  input() en curso — provideInput() ya despierta al worker y limpia
+   *  `awaitingInput` (Commit 3, usePyodide.ts); aquí solo se limpia el
+   *  campo local para el siguiente input() si la etapa pide más de uno. */
+  const handleProvideInput = () => {
+    // Commit 6: registra el valor real ANTES de enviarlo — resolveExpectedOutput
+    // lo necesita cuando llegue 'result' para sustituir {inputN}.
+    providedValuesRef.current.push(inputDraft)
+    provideInput(inputDraft)
+    setInputDraft('')
+  }
+
+  /** Cancela la ejecución en curso mientras Python espera un input() real
+   *  (Commit 4b) — cancelRun() resuelve run() con CANCELLED_RESULT_ERROR,
+   *  que handleRun ya reconoce para no contarlo como intento. */
+  const handleCancel = () => {
+    cancelRun()
+    setInputDraft('')
   }
 
   const handleContinueAfterCorrect = () => {
@@ -457,38 +667,28 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   // valor simulado, se muestra explícitamente — el estudiante ve QUÉ
   // escribe el usuario simulado, nunca un dato que aparece de la nada.
   const simulatedInputsBlock = stage.simulatedInputs && stage.simulatedInputs.length > 0 && (
-    <div className="rounded-lg border border-neural-violet/25 bg-neural-violet/5 px-3 py-2 space-y-1.5">
-      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+    <div className="rounded-xl border border-neural-violet/20 bg-neural-violet/[0.04] px-3 py-2.5 space-y-1">
+      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet/80 mb-1">
         Simularemos que el usuario escribe
       </p>
       {stage.simulatedInputs.map((value, i) => (
         <p key={i} className="font-mono text-[13px] text-neural-text/90">
-          {value}
+          <span className="text-neural-violet/50">{'>'}</span> {value}
         </p>
       ))}
     </div>
   )
 
-  // El editor crece con el código (acotado) para que escribir sea cómodo sin
-  // scroll interno — UX-04 extiende al modo inline lo que el laboratorio ya
-  // hacía: la franja fija de 3 líneas quedaba demasiado pequeña apenas el
-  // ejercicio pasaba de una línea. UX-05: en el laboratorio, el editor
-  // también gana un alto mínimo generoso (no solo "cabe el código") — el
-  // estudiante programa ahí, necesita verlo cómodo incluso con una línea.
-  const editorRows = labMode
-    ? Math.min(20, Math.max(10, code.split('\n').length + 3))
-    : Math.min(12, Math.max(5, code.split('\n').length + 2))
+  // Sprint 1A: editor con gutter de líneas y chrome de terminal — el
+  // laboratorio (UX-05) sigue pidiendo un alto mínimo más generoso que la
+  // tarjeta en línea, mismo componente, solo otro rango de filas.
   const editorBlock = (
-    <textarea
-      value={code}
-      onChange={e => setCode(e.target.value)}
-      disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage}
-      rows={editorRows}
-      spellCheck={false}
-      className={cn(
-        'w-full rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 font-mono text-neural-text focus:outline-none focus:border-neural-glow/50 disabled:opacity-70',
-        labMode ? 'text-[14px] leading-relaxed min-h-[300px]' : 'text-[13px]',
-      )}
+    <CodeEditorPanel
+      code={code}
+      onChange={setCode}
+      disabled={done || showSolution || stage.mode === 'observar' || !!pendingNextStage || awaitingInput}
+      minRows={labMode ? 10 : 3}
+      maxRows={labMode ? 20 : 12}
     />
   )
 
@@ -518,25 +718,55 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
 
   const loadErrorBlock = loadError && <p className="text-sm text-red-400">{loadError}</p>
 
-  const outputVisible = output !== null && !showSolution
-  const outputBlock = outputVisible && (
-    <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3 py-2 font-mono text-[12px] text-neural-text/80 whitespace-pre-wrap">
-      {output || '(sin salida)'}
+  // Panel de input() real EN VIVO (Commit 4, Épica B) — aparece solo
+  // mientras el Worker está bloqueado esperando la respuesta que el propio
+  // estudiante escribe, a diferencia de `simulatedInputsBlock` (arriba),
+  // que muestra un valor ya fijado ANTES de ejecutar.
+  const awaitingInputBlock = awaitingInput && (
+    <div className="rounded-xl border-2 border-neural-glow/40 bg-neural-glow/[0.04] px-3 py-2.5 space-y-2">
+      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-glow">
+        Python está esperando tu respuesta
+      </p>
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={inputDraft}
+          onChange={e => setInputDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') handleProvideInput()
+          }}
+          autoFocus
+          className="flex-1 rounded-lg border border-white/[0.1] bg-black/30 px-3 py-1.5 font-mono text-[13px] text-neural-text focus:outline-none focus:border-neural-glow/50"
+        />
+        <Button size="sm" onClick={handleProvideInput}>
+          Enviar →
+        </Button>
+        <Button size="sm" variant="ghost" onClick={handleCancel}>
+          Cancelar
+        </Button>
+      </div>
     </div>
   )
+
   // Laboratorio: la consola SIEMPRE está visible — antes de ejecutar muestra
   // una invitación, nunca un hueco que aparece y desaparece. UX-05: gana un
   // alto mínimo (antes era una franja de una sola línea) para que se sienta
   // una zona propia de la pantalla, no una nota al pie del editor.
-  const consoleBlock = (
+  //
+  // Nunca recibe `error`: el traceback tiene su propio tratamiento más
+  // abajo (`rawErrorBlock`, PythonErrorCard) — mostrarlo también aquí
+  // duplicaría el mensaje y reintroduciría el crudo en primer plano.
+  const consoleBlock = labMode ? (
     <div className="rounded-lg bg-black/40 border border-white/[0.08] px-3.5 py-3 space-y-1.5 min-h-[92px]">
       <p className="text-[10px] font-mono tracking-[0.15em] uppercase text-neural-muted/70">Consola de salida</p>
-      {outputVisible ? (
+      {output !== null ? (
         <p className="font-mono text-[13px] text-neural-text/80 whitespace-pre-wrap">{output || '(sin salida)'}</p>
       ) : (
         <p className="font-mono text-[12px] text-neural-muted/50 italic">Ejecuta tu código para ver aquí la salida…</p>
       )}
     </div>
+  ) : (
+    !showSolution && <ConsoleOutput output={output} />
   )
 
   // UX-04: nunca solo el traceback — línea señalada y resaltada, explicación
@@ -607,9 +837,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   )
 
   const modeLabelBlock = (
-    <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
+    <span className="inline-flex items-center rounded-full border border-neural-violet/25 bg-neural-violet/5 px-2.5 py-1 text-[11px] font-mono tracking-[0.15em] uppercase text-neural-violet">
       {MODE_LABEL[stage.mode ?? 'escribir_parcial']}
-    </p>
+    </span>
   )
 
   // Entre etapas, la tarjeta espera la decisión REAL del Runtime antes
@@ -644,6 +874,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
               {editorBlock}
               {actionsBlock}
               {loadErrorBlock}
+              {awaitingInputBlock}
               {consoleBlock}
               {rawErrorBlock}
               {solvedBlock}
@@ -675,7 +906,8 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
           {editorBlock}
           {actionsBlock}
           {loadErrorBlock}
-          {outputBlock}
+          {awaitingInputBlock}
+          {consoleBlock}
           {rawErrorBlock}
           {resultExplanationBlock}
           {errorHelpBlock}

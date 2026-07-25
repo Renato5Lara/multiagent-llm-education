@@ -30,6 +30,8 @@ from app.schemas.progress import (
     LearningPathItem,
     MissionProgressUpdate,
     CycleEvidenceSubmit,
+    ConsentResponseSubmit,
+    RecursoReferenciaUpdate,
 )
 from app.schemas.evaluation import EvaluationSubmit, EvaluationResponse
 from app.schemas.auth import MessageResponse, TutorRequest
@@ -474,7 +476,7 @@ def update_module(
             _path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
             _course_id = _path.course_id if _path else None
         except Exception:
-            pass
+            logger.warning("Failed to resolve course_id for path %s", module.path_id, exc_info=True)
 
         # Fase de cierre del producto: el flujo continuo de ciclos nunca abre
         # una misión con snapshot, así que complete_mission() de arriba no
@@ -572,6 +574,52 @@ def submit_cycle_evidence(
             time_ms=data.time_ms,
         )
         runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
+        # Política de Selección de Forma (Adenda A, Arquitectura Pedagógica
+        # v1.0, Documento 5 §4.1): el Boundary traduce modalidad+profundidad
+        # +alternativas_descartadas (ya en `entrega.diseno`) a una forma
+        # concreta del catálogo de PP4 — nunca el frontend. Aditivo: si
+        # `diseno` es None (el walkthrough aún no adaptó), `forma` queda
+        # ausente, mismo comportamiento de siempre para quien no la lea.
+        if entrega.diseno and entrega.diseno.get("modalidad"):
+            from app.services.adaptive_form_selection import seleccionar_forma
+
+            forma, categoria = seleccionar_forma(
+                modalidad=entrega.diseno["modalidad"],
+                profundidad=entrega.diseno.get("profundidad"),
+                alternativas_descartadas=entrega.diseno.get("alternativas_descartadas", ()),
+                formas_ya_mostradas=frozenset(data.formas_ya_mostradas),
+            )
+            runtime_decision["forma"] = {"tipo": forma, "categoria_consentimiento": categoria}
+            # Generación de Recursos Pedagógicos (RFC-0011/2, Parte C —
+            # ROADMAP-RFC-0011.md): traduce la forma ya elegida a un
+            # Recurso Pedagógico Generado (prompt reutilizable), con
+            # reutilización transparente vía el Registro (Parte B). No
+            # decide pedagogía — mismo criterio aditivo que `forma`:
+            # si algo falla, runtime_decision["recurso"] simplemente
+            # queda ausente (capturado por el except de este bloque).
+            # Import local deliberado, no por ciclo (resource_registry_service
+            # no importa nada de app.api.routes): sigue el mismo patrón que
+            # seleccionar_forma() arriba y el resto de este archivo (12+
+            # imports locales por función) — cada handler se mantiene
+            # autocontenido en este router.
+            from app.services.resource_registry_service import obtener_o_generar_recurso
+
+            recurso = obtener_o_generar_recurso(
+                db,
+                forma=forma,
+                modalidad=entrega.diseno["modalidad"],
+                asunto=entrega.asunto,
+                concepto=data.competencia,
+                nivel=entrega.diseno.get("profundidad"),
+                alternativas_descartadas=entrega.diseno.get("alternativas_descartadas", ()),
+            )
+            runtime_decision["recurso"] = {
+                "id": recurso.id,
+                "texto_prompt": recurso.texto_prompt,
+                "version_plantilla": recurso.version_plantilla,
+                "referencia_recurso": recurso.referencia_recurso,
+                "origen": recurso.origen,
+            }
         # Dataset de investigación (RESEARCH_ITERATIONS.md): un registro por
         # ciclo — modalidad diagnosticada vs. modalidad de refuerzo
         # realmente decidida por Adaptar, nunca solo el agregado pre/post
@@ -597,6 +645,65 @@ def submit_cycle_evidence(
     except Exception as e:  # noqa: BLE001
         logger.warning(f"runtime_bridge failed for cycle-evidence ({data.competencia}): {e}")
     return {"ok": True, "runtime_decision": runtime_decision}
+
+
+@router.patch("/recursos-generados/{recurso_id}")
+def actualizar_referencia_recurso_generado(
+    recurso_id: str,
+    data: RecursoReferenciaUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """RFC-0011/3 (ROADMAP-RFC-0011.md, Parte D): asocia la referencia de
+    un recurso generado externamente a un `RegistroRecurso` ya existente.
+    Responsabilidad separada de `POST /cycle-evidence` (que solo genera
+    o reutiliza el prompt) — esta llamada ocurre después, cuando el
+    recurso físico ya existe fuera de la plataforma. Solo escribe
+    `referencia_recurso`; el resto de los campos del registro son
+    inmutables."""
+    from app.services.resource_registry_service import actualizar_referencia_recurso
+
+    recurso = actualizar_referencia_recurso(db, recurso_id, data.referencia_recurso)
+    if recurso is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso no encontrado")
+    return {"id": recurso.id, "referencia_recurso": recurso.referencia_recurso}
+
+
+@router.post("/consent-response")
+def submit_consent_response(
+    data: ConsentResponseSubmit,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_estudiante),
+):
+    """Infraestructura de la Adenda B (Semántica del Rechazo, Documento 5
+    §4.1 — Arquitectura Pedagógica v1.0), Commit 4 de docs/architecture/
+    pedagogical/MIGRATION.md: registra la respuesta del estudiante a una
+    forma "con consentimiento" — solo dataset de investigación, jamás
+    un fact/claim del runtime (NOTA-INTERACCION-CONSENTIMIENTO.md §3).
+
+    Inerte por diseño hoy: ninguna prioridad de adaptive_form_selection.py
+    selecciona todavía una forma con categoria_consentimiento="consentimiento"
+    (verificado en test_adaptive_form_selection.py), así que ningún flujo
+    real del estudiante llama a este endpoint todavía — existe para que,
+    cuando eso cambie, la infraestructura ya esté lista sin tocar varias
+    capas a la vez. No requiere runtime_bridge: gobierna únicamente la
+    oferta proactiva del sistema, nunca la solicitud voluntaria del
+    estudiante (botón Ayuda, NOTA §7), que no pasa por aquí."""
+    try:
+        research_metrics_service.record_metric(
+            db,
+            metric_type=research_metrics_service.CONSENT_RESPONSE,
+            student_id=current_user.id,
+            course_id=data.course_id,
+            payload={
+                "competencia": data.competencia,
+                "forma_tipo": data.forma_tipo,
+                "respuesta": data.respuesta,
+            },
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"research_metrics failed for consent-response ({data.competencia}): {e}")
+    return {"ok": True}
 
 
 @router.get("/course-resource/{course_id}", response_model=ResourceResponse | None)

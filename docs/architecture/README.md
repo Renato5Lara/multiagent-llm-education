@@ -20,6 +20,12 @@ con un grafo de estados compartido como única fuente de verdad.
 El runtime anterior basado en `BaseAgent` queda archivado como **Legacy Runtime**
 (línea base histórica y experimental). No recibe nuevas funcionalidades.
 
+> **Capa pedagógica:** la capa de *qué principios gobiernan el aprendizaje* y *cómo
+> se traducen en experiencia* vive en [pedagogical/](pedagogical/README.md)
+> (PP0–PP8, Pedagogical Architecture v1.0, congelada 2026-07-23) — complementa esta
+> Constitución, no la sustituye. Numeración PP0–PP8 deliberadamente distinta de
+> P1–P17 para no colisionar.
+
 ## Jerarquía normativa
 
 ```

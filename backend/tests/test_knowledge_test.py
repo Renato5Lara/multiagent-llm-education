@@ -162,6 +162,70 @@ def test_post_requires_completed_pre(
     assert resp.json()["detail"]["code"] == "PRETEST_REQUIRED_FIRST"
 
 
+def test_post_requires_completed_learning_path(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    """Ruta con módulos pendientes: el Post-Test debe rechazarse, sin crear intento."""
+    from app.models.knowledge_test import KnowledgeTestAttempt
+    from app.models.student_progress import LearningPath
+
+    pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, pre_start["attempt_id"], pre_start["questions"], db
+    )
+
+    db.add(
+        LearningPath(
+            student_id=estudiante_user.id,
+            course_id=curso_publicado.id,
+            total_modules=4,
+            completed_modules=2,
+            status="active",
+        )
+    )
+    db.commit()
+
+    resp = _start(client, estudiante_token, curso_publicado.id, "post")
+    assert resp.status_code == 409
+    assert resp.json()["detail"]["code"] == "LEARNING_PATH_INCOMPLETE"
+    assert (
+        db.query(KnowledgeTestAttempt)
+        .filter(
+            KnowledgeTestAttempt.student_id == estudiante_user.id,
+            KnowledgeTestAttempt.course_id == curso_publicado.id,
+            KnowledgeTestAttempt.kind == "post",
+        )
+        .first()
+        is None
+    )
+
+
+def test_post_allowed_when_learning_path_complete(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    """Ruta con todos los módulos completados: el Post-Test debe permitirse."""
+    from app.models.student_progress import LearningPath
+
+    pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, pre_start["attempt_id"], pre_start["questions"], db
+    )
+
+    db.add(
+        LearningPath(
+            student_id=estudiante_user.id,
+            course_id=curso_publicado.id,
+            total_modules=2,
+            completed_modules=2,
+            status="active",
+        )
+    )
+    db.commit()
+
+    resp = _start(client, estudiante_token, curso_publicado.id, "post")
+    assert resp.status_code == 200
+
+
 def test_start_without_bank_conflicts(client, estudiante_token, curso_publicado):
     resp = _start(client, estudiante_token, curso_publicado.id, "pre")
     assert resp.status_code == 409
@@ -211,6 +275,21 @@ def test_comparison_materializes_gains(
         headers=auth_header(estudiante_token),
         json={"answers": wrong},
     )
+
+    # El Post-Test exige una Ruta de Aprendizaje completa (recorrido real,
+    # no un atajo): se simula que el estudiante ya terminó sus módulos.
+    from app.models.student_progress import LearningPath
+
+    db.add(
+        LearningPath(
+            student_id=estudiante_user.id,
+            course_id=curso_publicado.id,
+            total_modules=2,
+            completed_modules=2,
+            status="active",
+        )
+    )
+    db.commit()
 
     post = _start(client, estudiante_token, curso_publicado.id, "post").json()
     _submit_all_correct(client, estudiante_token, post["attempt_id"], post["questions"], db)

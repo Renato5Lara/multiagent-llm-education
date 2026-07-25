@@ -96,11 +96,44 @@ export function alternateModality(current: LearningModality): LearningModality {
   return MODALITY_ORDER[(index + 1) % MODALITY_ORDER.length]
 }
 
-/** Motor de selección de refuerzo, prioridad de Etapa 1 (Pilar 1 + Pilar 2
- *  integrados): el tipo de ACTIVIDAD que mejor corresponde a cómo aprende
- *  el estudiante en general, cuando el ciclo no define una receta con su
- *  propia prioridad. Nunca genera nada: si el tipo ideal no está en este
- *  ciclo, cae al siguiente de la lista. */
+/** Adenda A (Documento 5 §4.1, Arquitectura Pedagógica v1.0): quién decide
+ *  la forma es el Boundary (`runtime_decision.forma.tipo`, backend
+ *  `seleccionar_forma()`) — este módulo ya NO decide pedagogía, solo
+ *  traduce entre su catálogo de PP4 y el `ReinforcementKind` del contenido
+ *  ya autorado. Los 3 nombres del catálogo reservados para "con
+ *  consentimiento" (`codigo_guiado`, `narracion_tutor`) y
+ *  `pista_progresiva` no tienen `ReinforcementKind` equivalente hoy —
+ *  ninguna prioridad del Boundary los produce todavía
+ *  (`adaptive_form_selection.py`, `_PRIORIDAD_POR_MODALIDAD`), así que no
+ *  aparecen en el mapeo; si alguna vez llegan, caen al fallback local. */
+const FORMA_BOUNDARY_A_REINFORCEMENT_KIND: Partial<Record<string, ReinforcementKind>> = {
+  ejemplo_adicional: 'ejemplo',
+  animacion: 'animacion',
+  reto_mas_pequeno: 'reto',
+  audio: 'audio',
+}
+
+/** Inversa del mapeo anterior — para reportar Memoria del Ciclo (Documento
+ *  6 §1) al Boundary como `formas_ya_mostradas`, en su propio vocabulario. */
+const REINFORCEMENT_KIND_A_FORMA_BOUNDARY: Record<ReinforcementKind, string> = {
+  ejemplo: 'ejemplo_adicional',
+  animacion: 'animacion',
+  reto: 'reto_mas_pequeno',
+  audio: 'audio',
+}
+
+export function formasBoundaryDeVisitados(visited: Set<ReinforcementKind>): string[] {
+  return Array.from(visited, kind => REINFORCEMENT_KIND_A_FORMA_BOUNDARY[kind])
+}
+
+/** Fallback local, SOLO para cuando el Boundary no recomendó nada
+ *  reconocible o su forma no tiene contenido autorado en este ciclo —
+ *  nunca la ruta primaria (deuda técnica registrada en MIGRATION.md:
+ *  candidato a eliminación cuando el Boundary cubra todo el catálogo de
+ *  PP4 y todo ciclo tenga contenido autorado para cada forma — no antes).
+ *  Prioridad de Etapa 1 (Pilar 1 + Pilar 2): el
+ *  tipo de ACTIVIDAD que mejor corresponde a cómo aprende el estudiante en
+ *  general, cuando el ciclo no define una receta con su propia prioridad. */
 const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> = {
   visual: ['animacion', 'ejemplo', 'reto', 'audio'],
   reading: ['ejemplo', 'animacion', 'reto', 'audio'],
@@ -108,8 +141,8 @@ const REINFORCEMENT_BY_MODALITY: Record<LearningModality, ReinforcementKind[]> =
   kinesthetic: ['reto', 'ejemplo', 'animacion', 'audio'],
 }
 
-/** Prioridad de refuerzo: la de la receta si el ciclo la define para esta
- *  modalidad, si no la global de Etapa 1. */
+/** Prioridad de refuerzo del fallback local: la de la receta si el ciclo
+ *  la define para esta modalidad, si no la global de Etapa 1. */
 export function resolveReinforcementPriority(cycle: LearningCycle, modality: LearningModality): ReinforcementKind[] {
   return resolveRecipe(cycle, modality)?.reinforcementPriority ?? REINFORCEMENT_BY_MODALITY[modality]
 }
@@ -122,10 +155,27 @@ export function selectReinforcement(
   /** Prioridad a usar en vez de la global — resolveReinforcementPriority()
    *  cuando el llamador ya tiene el ciclo a mano. `reto` siempre encabeza
    *  cuando `preferChallenge` (Orientar/"aplicacion"): un desafío es
-   *  interactivo por naturaleza, no depende de la modalidad de consumo. */
+   *  interactivo por naturaleza, no depende de la modalidad de consumo.
+   *  Solo se usa dentro del fallback local. */
   priorityOverride?: ReinforcementKind[],
+  /** `runtime_decision.forma.tipo` (Adenda A) — la decisión real. Si
+   *  mapea a un ReinforcementKind con contenido autorado en este ciclo,
+   *  gana sin consultar ninguna prioridad local. */
+  formaDelBoundary?: string,
 ): Reinforcement | undefined {
   if (!reinforcements?.length) return undefined
+
+  const kindRecomendado = formaDelBoundary
+    ? FORMA_BOUNDARY_A_REINFORCEMENT_KIND[formaDelBoundary]
+    : undefined
+  if (kindRecomendado) {
+    const match = reinforcements.find(r => r.kind === kindRecomendado)
+    if (match) return match
+    // El Boundary decidió, pero este ciclo no tiene contenido autorado
+    // para esa forma — cae al orden local, nunca inventa contenido ni
+    // vuelve a decidir pedagogía por su cuenta.
+  }
+
   const basePriority = priorityOverride ?? REINFORCEMENT_BY_MODALITY[modality]
   const priority = preferChallenge
     ? (['reto', ...basePriority.filter(k => k !== 'reto')] as ReinforcementKind[])

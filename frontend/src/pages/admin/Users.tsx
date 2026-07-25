@@ -138,7 +138,7 @@ export default function UsersPage() {
             </div>
 
             {/* Table */}
-            <div className="border rounded-lg bg-white">
+            <div className="border rounded-lg bg-card">
                 <Table>
                     <TableHeader>
                         <TableRow>

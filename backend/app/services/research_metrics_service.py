@@ -27,6 +27,13 @@ MODULE_PROGRESS = "module_progress"
 PRETEST_COMPLETED = "pretest_completed"
 POSTTEST_COMPLETED = "posttest_completed"
 CYCLE_EVIDENCE = "cycle_evidence"
+#: Adenda B (Semántica del Rechazo, Documento 5 — Arquitectura Pedagógica
+#: v1.0): respuesta del estudiante a una forma "con consentimiento"
+#: (aceptar/rechazar). Solo registro de investigación — nunca produce un
+#: fact/claim del runtime (ver NOTA-INTERACCION-CONSENTIMIENTO.md §3, punto
+#: 2 de Adenda B). Inerte hoy: ninguna prioridad de
+#: adaptive_form_selection.py selecciona todavía una forma "consentimiento".
+CONSENT_RESPONSE = "consent_response"
 
 
 def record_metric(

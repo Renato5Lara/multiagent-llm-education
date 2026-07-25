@@ -143,3 +143,6 @@ outputs/pptx-audit/
 
 # ===== REPORTES AUTOGENERADOS DE LA DEMO SWARM (regenerables, no versionar) =====
 backend/docs/bug_reports/
+
+# ===== RESPALDOS DE SCRIPTS DE SANEAMIENTO (datos, no versionar) =====
+backend/backups/
