@@ -39,12 +39,12 @@ function getGreeting() {
 
 function Greeting({ name }: { name: string }) {
   return (
-    <div className="mb-6">
-      <p className="text-neural-muted text-sm font-mono tracking-wider uppercase mb-1">
+    <div className="mb-8">
+      <p className="text-neural-muted text-sm font-mono tracking-wider uppercase mb-1.5">
         {getGreeting()}
       </p>
-      <h1 className="text-2xl font-bold text-neural-text">{name}</h1>
-      <p className="text-neural-muted text-sm mt-0.5">Tu tutor IA está listo para adaptarse a ti</p>
+      <h1 className="text-3xl font-bold gradient-text-brand leading-tight pb-1">{name}</h1>
+      <p className="text-neural-muted text-sm mt-1">Tu tutor IA está listo para adaptarse a ti</p>
     </div>
   )
 }
@@ -91,6 +91,12 @@ function DifficultyLevelCard({ courseId }: { courseId: string }) {
   )
 }
 
+// Épica D — regla híbrida: esta tarjeta es el CTA "empieza lo próximo" del
+// dashboard (marca/hero), no un estado en vivo — por eso usa neural-brand
+// (violeta-índigo), a diferencia de Ejecutar/Continuar DENTRO de una
+// práctica activa (PythonBridge, OrderingPractice), que siguen en cian.
+const CTA_BRAND_BTN = 'gap-2 self-start bg-neural-brand text-white hover:bg-neural-brand/90'
+
 function NextMissionCard({
   course, currentMission, posttestPending, navigate,
 }: {
@@ -101,9 +107,9 @@ function NextMissionCard({
 }) {
   return (
     <div className="glass-panel rounded-2xl p-5 relative overflow-hidden h-full flex flex-col">
-      <div className="absolute top-0 right-0 w-48 h-48 bg-neural-glow/6 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-neural-brand/10 blur-3xl pointer-events-none" />
       <div className="relative z-10 flex flex-col flex-1">
-        <span className="text-[10px] font-mono text-neural-glow tracking-[0.15em] uppercase bg-neural-glow/10 border border-neural-glow/20 rounded px-2 py-0.5 self-start mb-3">
+        <span className="text-[10px] font-mono text-neural-brand-bright tracking-[0.15em] uppercase bg-neural-brand/10 border border-neural-brand/25 rounded px-2 py-0.5 self-start mb-3">
           Siguiente paso recomendado
         </span>
 
@@ -114,7 +120,7 @@ function NextMissionCard({
               El sistema multiagente necesita conocerte para construir tu ruta personalizada.
             </p>
             <Button
-              className="gap-2 self-start"
+              className={CTA_BRAND_BTN}
               onClick={() => {
                 debugDiagLog('click:comenzar-diagnostico', { courseId: course.course_id })
                 navigate(`/estudiante/diagnostic/${course.course_id}`)
@@ -129,7 +135,7 @@ function NextMissionCard({
             <p className="text-xs text-neural-muted/70 mb-4 flex-1">
               Completaste todas tus misiones. Cierra el recorrido midiendo cuánto avanzaste.
             </p>
-            <Button className="gap-2 self-start" onClick={() => navigate(`/estudiante/post-test/${course.course_id}`)}>
+            <Button className={CTA_BRAND_BTN} onClick={() => navigate(`/estudiante/post-test/${course.course_id}`)}>
               <CheckCircle className="h-4 w-4" /> Rendir Post-Test
             </Button>
           </>
@@ -140,7 +146,7 @@ function NextMissionCard({
               Continúa exactamente donde lo dejaste — tu ruta se adapta a tu progreso real.
             </p>
             <Button
-              className="gap-2 self-start"
+              className={CTA_BRAND_BTN}
               onClick={() => navigate(
                 `/estudiante/module/${currentMission.id}?courseId=${course.course_id}&title=${encodeURIComponent(currentMission.title)}`
               )}
@@ -154,7 +160,7 @@ function NextMissionCard({
             <p className="text-xs text-neural-muted/70 mb-4 flex-1">
               Tu ruta personalizada ya está lista para empezar.
             </p>
-            <Button className="gap-2 self-start" onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
+            <Button className={CTA_BRAND_BTN} onClick={() => navigate(`/estudiante/path/${course.course_id}`)}>
               <Zap className="h-4 w-4" /> Ver ruta adaptativa
             </Button>
           </>

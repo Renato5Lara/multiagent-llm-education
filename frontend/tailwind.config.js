@@ -80,9 +80,14 @@ export default {
           glow:     "#00dbe7",   // primary cyan accent
           "glow-bright": "#74f5ff", // lighter cyan (text on dark)
           pulse:    "#00fb83",   // green status / active
-          violet:   "#ce5dff",   // secondary accent
+          violet:   "#ce5dff",   // secondary accent (dominance ring, tutor accents)
           muted:    "#b9cacb",   // muted text
           text:     "#e1e2eb",   // primary text on dark
+          // Épica D — regla híbrida: violeta/índigo para marca/hero/CTA
+          // principal, cian se mantiene para todo lo "en vivo" (activo,
+          // progreso, ejecución, streaming) — ver QA_EPICA_D.md.
+          brand:        "#7c3aed",  // indigo-violeta — hero, CTA principal, marca
+          "brand-bright": "#a78bfa", // texto/glow claro sobre fondo oscuro
         },
       },
       borderRadius: {

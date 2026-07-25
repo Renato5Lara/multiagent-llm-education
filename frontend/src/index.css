@@ -184,6 +184,26 @@
   .glow-emerald { box-shadow: 0 0 15px rgba(0, 251, 131, 0.22); }
   .glow-violet  { box-shadow: 0 0 15px rgba(206, 93, 255, 0.22); }
 
+  /* Épica D — marca/hero (indigo-violeta #7c3aed), distinto del
+     .glow-violet existente (#ce5dff, ring de dominio/acentos del tutor) —
+     ver regla híbrida en tailwind.config.js. */
+  .glow-brand    { box-shadow: 0 0 20px rgba(124, 58, 237, 0.28); }
+  .glow-brand-lg {
+    box-shadow:
+      0 0 30px rgba(124, 58, 237, 0.30),
+      0 0 60px rgba(124, 58, 237, 0.12);
+  }
+
+  /* Texto con degradado de marca — solo para titulares hero, nunca para
+     texto de cuerpo ni etiquetas pequeñas (pierde legibilidad en tamaños
+     chicos). */
+  .gradient-text-brand {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 55%, #ce5dff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   /* Gradient border via background-clip */
   .neural-border {
     border: 1px solid transparent;
