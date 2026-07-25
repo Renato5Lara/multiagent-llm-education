@@ -147,23 +147,26 @@ export const CICLO_3_INPUT: LearningCycle = {
       solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)',
       nextStage: {
         mode: 'manipular',
-        prompt: 'Ahora tú: cambia SOLO la palabra de saludo para que el robot diga Bienvenido en vez de Hola',
+        prompt: 'Ahora tú: cambia SOLO la palabra de saludo para que el robot diga Bienvenido en vez de Hola — desde aquí input() ya es real: la respuesta la escribes tú, no un valor ya fijado.',
         starterCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Hola,", nombre)\n',
-        expectedOutput: '¿Cómo te llamas? Bienvenido, Ana',
-        simulatedInputs: ['Ana'],
+        // Épica C, Commit 1: sin simulatedInputs, input() real —
+        // {input1} se sustituye por lo que el estudiante escriba
+        // (ENGINEERING-GATE-EPICA-C.md, mismo modelo del Commit 6 de
+        // Épica B).
+        expectedOutput: '¿Cómo te llamas? Bienvenido, {input1}',
         hint: 'Solo cambia la palabra "Hola" por "Bienvenido" — la coma y el resto de la línea no necesitan tocarse: print("Bienvenido,", nombre)',
         hintsByCategory: {
           sintaxis: 'Revisa que las comillas alrededor de "Bienvenido," sigan completas.',
           variables: 'No necesitas ninguna variable nueva — nombre ya guarda la respuesta.',
           logica: 'Solo cambia el texto fijo antes de la coma; nombre no cambia.',
-          salida: 'Revisa que diga exactamente "Bienvenido, Ana", con mayúscula inicial.',
+          salida: 'Revisa que tu saludo diga exactamente "Bienvenido, " seguido de lo que escribiste cuando Python te lo pidió, con mayúscula inicial en "Bienvenido".',
         },
         workedExample: {
           code: 'ciudad = input("¿En qué ciudad vives? ")\nprint("Vives en", ciudad)',
           output: '¿En qué ciudad vives? Vives en Trujillo',
           explanation: 'Cambiar el saludo es escribir un texto distinto antes de la coma — print() no cambia, solo lo que le pasas. Fíjate en el patrón: el tuyo debe decir "Bienvenido,".',
         },
-        resultExplanation: 'Cambiaste solo el texto fijo antes de la coma — nombre siguió guardando lo mismo (Ana), y print() combinó tu nuevo saludo con ese valor: "Bienvenido, Ana".',
+        resultExplanation: 'Cambiaste solo el texto fijo antes de la coma — nombre siguió guardando lo que escribiste, y print() combinó tu nuevo saludo con ese valor.',
         solutionCode: 'nombre = input("¿Cómo te llamas? ")\nprint("Bienvenido,", nombre)',
         nextStage: {
           mode: 'completar',
