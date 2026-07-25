@@ -456,6 +456,21 @@ sin ambigüedad sobre si son equivalentes.
 local (reseteado al iniciar cada `handleRun`, con push en cada
 `handleProvideInput`) es suficiente. No se toca el hook ni el Worker.
 
+**Marcador sin valor correspondiente (regla añadida por el tesista,
+antes de codear):** si `expectedOutput` referencia `{inputN}` para un
+`N` que no tuvo un `input()` real correspondiente (desajuste entre el
+código de referencia y el propio `expectedOutput` — error de autoría
+del contenido, no del estudiante), la sustitución NO reemplaza por
+`''` en silencio. Reemplazar por vacío arriesgaría una coincidencia
+accidental contra un `stdout` real que también esté vacío ahí,
+marcando "correcto" algo que en realidad refleja contenido mal
+autorado. En su lugar: la resolución del template devuelve un
+resultado nulo/distinguible, `correct` se fuerza a `false` de forma
+determinista sin comparar `stdout`, y se deja un diagnóstico en
+consola (`console.error`, con el template y los valores recibidos)
+para que el problema sea visible durante la autoría/QA del contenido,
+no un fallo silencioso que solo se nota por casualidad.
+
 ### 3. ¿Cómo se mantiene compatibilidad con laboratorios antiguos?
 
 Automática, por diseño: cualquier `expectedOutput` sin `{inputN}` no
@@ -525,6 +540,9 @@ parcial`) siguen con `simulatedInputs`, sin tocar.
   igual que antes — el cambio es solo en cómo se calcula `correct`.
 - Recorrido completo de un estudiante real por las 6 etapas, en
   navegador real, sin intervención del desarrollador (Regla de Cierre).
+- Un `{inputN}` mal autorado (sin `input()` correspondiente) fuerza
+  `correct: false` de forma determinista y deja diagnóstico en
+  consola — nunca se resuelve como cadena vacía en silencio.
 
 ## 10. Criterios de salida (Épica B completa)
 
