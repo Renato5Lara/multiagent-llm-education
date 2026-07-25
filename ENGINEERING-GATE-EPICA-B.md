@@ -298,6 +298,27 @@ activo.
 - Sin regresión del mecanismo legado ni del flujo interactivo sin
   cancelar (Commits 3/4 siguen funcionando igual).
 
+### Commit 4b — CERRADO
+
+**QA Evidence:**
+- **Quién validó:** el tesista, en navegador real (Chrome, checkout
+  Windows), siguiendo los 6 pasos entregados tras el push de
+  `b20b5a2` — no el agente (bloqueo de entorno documentado en el
+  mensaje de ese commit: implementación y validación ocurrieron en
+  checkouts distintos; la extensión Claude in Chrome de esta sesión no
+  pudo reconectar a tiempo para repetirla directamente).
+- **Qué se verificó:** dos `input()` reales consecutivos con
+  `awaitingInput`; cancelar durante el segundo detiene la ejecución de
+  inmediato; mensaje "Ejecución cancelada por el estudiante." visible;
+  editor vuelve a estar habilitado; "Ejecutar" vuelve a funcionar tras
+  recrear el Worker automáticamente (sin acción manual); sin
+  regresiones observadas en el flujo legado (`simulatedInputs`) ni en
+  el flujo interactivo sin cancelar (Commits 3/4).
+- **Confirmación explícita del tesista** (chat, tras pedírsele
+  distinguir validación real de inferencia): "Sí, corrí los 6 pasos y
+  funcionó todo."
+- Commits: `b20b5a2` (feat), Gate en `7561123`+`9476ac1` (docs).
+
 ## 8. Criterios de salida (Épica B completa)
 
 El Gate se considera cerrado (la épica, completa) solo si:
