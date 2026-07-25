@@ -283,6 +283,48 @@ curl -s http://localhost:8000/api/observability/metrics.json | python -m json.to
 
 ---
 
+## [15] Diagnóstico inicial del estudiante se queda en "Cargando..." indefinidamente
+
+### Síntoma
+```
+Estudiante hace clic en "Comenzar diagnóstico" y la pantalla se queda
+cargando sin avanzar ni mostrar error.
+```
+
+### Causa
+Bug intermitente conocido (commit `95d8a53`), ~7-8% de cuentas nuevas
+en pruebas aisladas. `submitDiagnostic` es una llamada real de swarm/LLM
+que puede tardar 55-60s en responder; en un subconjunto de casos no se
+ha logrado capturar el stack trace exacto pese a instrumentación
+temporal (`[DEBUG-DIAG-LOOP]` en consola del navegador, activa en
+`DiagnosticTest.tsx`, `AcademicGuard.tsx`, `Dashboard.tsx`,
+`EstudianteLayout.tsx`, `useStudent.ts`). No es específico de ninguna
+cuenta — reproducible en aislamiento con distintas cuentas nuevas.
+
+### Recovery inmediato
+- **No esperes más de ~90 segundos.** Si no avanzó, no se va a
+  recuperar solo — pasa a la mitigación de abajo.
+- **Mitigación recomendada para la demo:** usar una cuenta que YA
+  completó el diagnóstico (p. ej. `qa.luis.auditivo@upao.edu.pe` o
+  cualquier cuenta sembrada con historial) para la parte de la demo
+  que requiere mostrar la ruta adaptativa ya generada, en vez de crear
+  una cuenta nueva en vivo frente al jurado.
+- Si de todos modos se necesita mostrar el diagnóstico desde cero en
+  vivo: recarga la página (`F5`) y reintenta con la misma cuenta —
+  cuando el bug ocurrió durante la instrumentación, un segundo intento
+  con la misma cuenta normalmente sí completó.
+
+### Si no se recupera
+- **Salta el diagnóstico en vivo** y usa una cuenta con diagnóstico ya
+  completado para continuar la demo.
+- **Di:** _"El diagnóstico dispara una deliberación real del swarm
+  multiagente contra el LLM, no un mock — por eso puede tardar más que
+  una carga de página normal. Tenemos cuentas con el diagnóstico ya
+  completado para no depender de ese tiempo de respuesta durante la
+  demo."_
+
+---
+
 ## [Cierre] Benchmark tarda mucho
 
 ### Síntoma
