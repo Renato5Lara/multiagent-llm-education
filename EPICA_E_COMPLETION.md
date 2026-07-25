@@ -82,20 +82,47 @@ alcance sin necesidad.
 
 ## Riesgos conocidos
 
-- **Verificación de EP-01 sin captura de pantalla en vivo**: se
-  intentó reproducir un post-test fresco en una cuenta QA borrando su
-  intento existente — la base de datos rechazó el borrado por la
-  restricción de llave foránea hacia `experiment_results` (dato de
-  experimento real, protegido correctamente). En su lugar se verificó
-  contra la API real (valores reales de una estudiante con post-test
-  ya completado) y se trazó el cálculo a mano contra el código. El
-  build confirma que los 6 campos nuevos están correctamente
-  tipados de punta a punta. Si se quiere una captura visual en vivo,
-  hace falta un estudiante nuevo que complete pre-test → todas las
-  misiones → post-test desde cero — no se hizo en esta sesión por el
-  tiempo que exige recorrer un curso completo.
+- Ninguno pendiente sobre EP-01: la captura en vivo (ver Validación)
+  reemplaza la verificación previa contra la API real, que quedó como
+  evidencia complementaria, no como sustituto.
 - El resto de "Tutor" (Widget/InsightsPanel/Presence) ya usaba
   correctamente el Design System — no requirió cambios.
+
+## Verificación en vivo con estudiante nuevo (post-cierre inicial)
+
+El cierre original de esta épica se apoyó solo en verificación contra
+la API real (ver commit `fcce163` / `ENGINEERING-GATE-EPICA-E.md`)
+porque reproducir un post-test fresco en la cuenta QA existente
+(`qa.luis.auditivo`) fue bloqueado correctamente por la restricción de
+llave foránea de `experiment_results` — no se forzó ese borrado (dato
+de experimento real). En su lugar se creó una cuenta QA nueva y
+desechable (`qa.epicae.postest@upao.edu.pe`) y se recorrió el curso
+completo de punta a punta con Selenium real: diagnóstico → pretest →
+generación de ruta adaptativa → Módulo 1 y Módulo 2 completos → post-test.
+
+**Hallazgo del recorrido (no un bug de producto):** el diagnóstico
+dispara una llamada real de swarm/LLM (`submitDiagnostic`) que tarda
+~55-60s en responder — el script de QA inicial no le daba suficiente
+margen y lo reportaba como "colgado" cuando en realidad el backend
+completaba correctamente y redirigía (confirmado con el log del
+navegador vía el propio `[DEBUG-DIAG-LOOP]` que ya existía en el
+código para otro bug intermitente no relacionado, commit `95d8a53`).
+Ajustado el script de QA, no el producto.
+
+**Evidencia capturada** (`docs/qa/epica-e-design-system/`):
+- `posttest_resultado_enriquecido_top.png` — encabezado del resultado
+  (67%, Nivel Intermedio, temas dominados/por reforzar) + fila de
+  comparación Pre/Post con Nivel, Tiempo invertido y ganancia
+  normalizada `g`.
+- `posttest_resultado_enriquecido_tutor_ia.png` — panel "Tutor IA
+  Multiagente — Cierre de tu aprendizaje" con redacción real generada
+  por `describePostTestClosing()`: *"Avanzaste 0 puntos desde tu
+  diagnóstico inicial. Dominas todos los temas evaluados, especialmente
+  condicionales. Completaste el recorrido completo de Fundamentos de la
+  Programación."* — nunca la redacción de pre-test ("tu ruta empezará
+  por…"), incluso en este caso límite de incremento cero
+  (`g = 0.00`, sin módulos críticos), que es exactamente el escenario
+  que la verificación contra la API real no había cubierto.
 
 ## Validación (Release Gate)
 
@@ -104,7 +131,8 @@ alcance sin necesidad.
 | Build (`tsc -b && vite build`) | ✅ Limpio en ambos commits |
 | EP-02 — Admin (dropdown) | ✅ Verificado en navegador real |
 | EP-02 — Docente (Tabs) | ✅ Verificado en navegador real (`/docente/panel-pedagogico`) |
-| EP-01 — datos y lógica | ✅ Verificado contra API real + trazado a mano (sin captura en vivo, ver Riesgos) |
+| EP-01 — datos y lógica | ✅ Verificado contra API real + trazado a mano |
+| EP-01 — captura en vivo (estudiante nuevo, recorrido completo) | ✅ `docs/qa/epica-e-design-system/posttest_resultado_enriquecido_*.png` |
 | Integridad de datos de experimento | ✅ La FK de `experiment_results` protegió el dato real cuando se intentó un borrado de prueba — ninguna mutación indebida ocurrió |
 | `ENGINEERING-GATE-EPICA-E.md` | ✅ Completo |
 | `EPICA_E_AUDIT.md` | ✅ Preserva el razonamiento previo a escribir código |
@@ -126,5 +154,6 @@ D, dado que el checkout local de `runtime/architecture` en esta
 máquina Windows sigue bloqueado por los nombres de archivo ilegales
 ya documentados (`project_git_illegal_filename_windows`).
 
-**Épica E — CERRADA**, pendiente del merge/push final y de un nuevo
-tag (`epica-e-complete`, sugerido) si el tesista lo confirma.
+**Épica E — CERRADA**, con verificación en vivo completa. Pendiente
+únicamente del merge/push final y del tag (`epica-e-complete`,
+sugerido) si el tesista lo confirma.
