@@ -199,6 +199,73 @@ activo violeta en ambas rutas del menú, recorrido completo del ciclo
 (curiosidad → concepto → práctica → Python) con "Continuar" violeta
 consistente en cada paso. Capturas en `docs/qa/epica-d-navigation/`.
 
+### Animaciones (`Commit 4`) — ✅ cuarto commit
+
+**Hallazgo principal, no en el plan original:** las clases
+`animate-in`/`fade-in`/`slide-in-from-*` ya usadas en 99 lugares de
+54 archivos de toda la plataforma (no solo en las superficies de esta
+épica) **nunca generaban CSS** — el plugin `tailwindcss-animate` (del
+que dependen esas clases, estándar en proyectos shadcn/ui) nunca se
+instaló. Confirmado programáticamente: `document.styleSheets` no
+contenía ninguna regla `.animate-in`/`.fade-in` antes de este commit.
+No eran animaciones sutiles — eran clases sin efecto alguno, en
+producción, desde que se escribieron. Instalar y registrar el plugin
+(`npm install -D tailwindcss-animate` + `plugins: [tailwindcssAnimate]`
+en `tailwind.config.js`) reactiva las 99 de un solo cambio aditivo,
+sin tocar un solo componente.
+
+**Sistema semántico de movimiento** (mismo espíritu que la tabla de
+color — mapeado a los valores reales que Tailwind puede generar sin
+config nueva, no a milisegundos exactos inalcanzables):
+
+| Tier | Clase Tailwind | Uso |
+|---|---|---|
+| Feedback inmediato (hover/focus) | `duration-150` | Hover de botones, estado activo del Sidebar |
+| Aparición/desaparición de elemento | `duration-200`–`duration-300` | Tarjetas, paneles, notas del tutor |
+| Transición entre pantallas | `duration-300` (techo) | Curiosidad→Concepto→Práctica, entrada de cada fase |
+
+**Excepción documentada, no un descuido:** las barras/anillos que
+rellenan un VALOR real (`DifficultyLevelCard` en Dashboard.tsx,
+barras de progreso en `ModuleExperienceView.tsx`) se dejaron en
+`duration-500`/`duration-700` a propósito — no son una transición de
+aparición/pantalla, son una animación de "llenado" de dato, donde
+más duración se percibe como más precisión, no como lentitud. Igualar
+esta categoría a la regla de 300ms haría que el porcentaje "saltara"
+en vez de rellenarse.
+
+**Cambios concretos** (solo en los archivos ya trabajados en Fases
+1–3 de esta épica — ver alcance abajo):
+- Recorte de `duration-500`/`duration-700` → `duration-300` en 14
+  entradas de pantalla/tarjeta (`PythonBridge.tsx`,
+  `ModuleExperienceView.tsx`, `CuriosityOpening.tsx`,
+  `CuriosityFactCard.tsx`, `ConceptStep.tsx`, `ConceptPrimerCard.tsx`).
+- Recorte de `duration-200` → `duration-150` en el hover/activo del
+  Sidebar (es feedback inmediato, no aparición).
+- Hover con elevación sutil + resplandor de marca
+  (`hover:-translate-y-0.5 hover:shadow-lg hover:shadow-neural-brand/25`,
+  150ms) en los 3 constantes de botón de marca ya introducidos
+  (`CONTINUE_BRAND_BTN` ×2, `CTA_BRAND_BTN`) — **no** en el `Button`
+  compartido por defecto (afectaría cientos de usos fuera de esta
+  épica).
+
+**Deliberadamente fuera de alcance:** `components/module/`,
+`components/learningJourney/`, `components/engage/`,
+`components/gamification/` — verificado que es el sistema de
+fallback que atiende los 7 módulos del currículo sin
+`ModuleExperienceDefinition` autorada todavía (solo Módulo 1 y 2 la
+tienen). No es código muerto, pero es una superficie distinta a la
+que ha cubierto esta épica (Dashboard, Lab, Navegación); sus ~80
+usos de `duration-*` no se tocaron. El plugin recién instalado los
+beneficia igual de forma pasiva (sus propias clases `animate-in` ya
+escritas también empiezan a funcionar), sin que haya hecho falta
+tocar ningún archivo de esas carpetas.
+
+Build limpio. Validado: la regla CSS de `tailwindcss-animate` existe
+realmente en el navegador (antes: 0 reglas; después: reglas reales
+para `.animate-in`/`.fade-in`); el `transform` de elevación se aplica
+en hover (`matrix(1,0,0,1,0,-2)`, confirmado vía
+`getComputedStyle`).
+
 ## Próximos pasos (no en este commit)
 
 - `feature/epica-d-dashboard` (continuación): resto de tarjetas de

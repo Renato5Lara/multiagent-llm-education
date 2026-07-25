@@ -34,7 +34,7 @@ export function ConceptPrimerCard({ primer, inline = false, onContinue }: Props)
   const dwellReady = useMinDwell(PRIMER_MIN_DWELL_MS)
   return (
     <div className={cn(
-      'rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] animate-in fade-in duration-500',
+      'rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] animate-in fade-in duration-300',
       inline ? 'p-4 space-y-2.5' : 'p-5 space-y-4',
     )}>
       <div className="flex items-center gap-2.5">

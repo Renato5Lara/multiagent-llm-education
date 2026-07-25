@@ -25,7 +25,7 @@ const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
 // Button). Distinguirlos por color reduce ambigüedad real: antes ambos
 // eran del mismo cian y "avanzar" se confundía visualmente con "ejecutar
 // de nuevo".
-const CONTINUE_BRAND_BTN = 'gap-2 bg-neural-brand text-white hover:bg-neural-brand/90'
+const CONTINUE_BRAND_BTN = 'gap-2 bg-neural-brand text-white hover:bg-neural-brand/90 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-neural-brand/25'
 
 /** Progresión gradual para fluidez sostenida (ExperienceCursor.
  *  fluencyStreak en ModuleExperienceView, "un solo slice, sin Runtime, sin
@@ -337,7 +337,7 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
     // cómoda de leer (260-320px), pero deja de competir con el editor por
     // el espacio disponible.
     return (
-      <div className="grid gap-5 items-start lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="grid gap-5 items-start lg:grid-cols-[minmax(260px,320px)_minmax(0,1fr)] animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="space-y-5 lg:sticky lg:top-4">
           {explanationCard}
           {aside}
@@ -356,7 +356,7 @@ export function PythonBridge({ bridge, moduleId = '', conceptId = '', courseId, 
   }
 
   return (
-    <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="rounded-2xl border border-neural-glow/25 bg-neural-glow/[0.04] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex items-center gap-2 px-5 py-3 border-b border-neural-glow/15">
         <Code2 className="h-4 w-4 text-neural-glow shrink-0" />
         <span className="text-[11px] font-mono tracking-[0.15em] uppercase text-neural-glow">

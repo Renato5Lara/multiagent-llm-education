@@ -105,7 +105,7 @@ export default function Sidebar({
                   onClick={() => setIsOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+                      'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                       'border-l-2',
                       // Épica D: "dónde estás parado" es navegación/marca
                       // (neural-brand), no un estado en vivo del sistema —
@@ -120,7 +120,7 @@ export default function Sidebar({
                     <>
                       <item.icon
                         className={cn(
-                          'h-4 w-4 flex-shrink-0 transition-colors duration-200',
+                          'h-4 w-4 flex-shrink-0 transition-colors duration-150',
                           isActive ? 'text-neural-brand-bright' : 'text-neural-muted group-hover:text-neural-text',
                         )}
                       />

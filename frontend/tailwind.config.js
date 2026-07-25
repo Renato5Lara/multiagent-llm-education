@@ -1,3 +1,5 @@
+import tailwindcssAnimate from "tailwindcss-animate"
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -136,5 +138,10 @@ export default {
       },
     },
   },
-  plugins: [],
+  // Épica D — registra el plugin que las clases `animate-in`/`fade-in`/
+  // `slide-in-from-*` ya usadas en ~99 lugares del código siempre asumieron
+  // disponible (ver ENGINEERING-GATE-EPICA-D.md, Commit 4): sin él, Tailwind
+  // nunca generaba CSS para esas clases — no eran animaciones sutiles, eran
+  // clases sin efecto alguno.
+  plugins: [tailwindcssAnimate],
 }

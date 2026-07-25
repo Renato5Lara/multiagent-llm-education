@@ -95,7 +95,7 @@ function DifficultyLevelCard({ courseId }: { courseId: string }) {
 // dashboard (marca/hero), no un estado en vivo — por eso usa neural-brand
 // (violeta-índigo), a diferencia de Ejecutar/Continuar DENTRO de una
 // práctica activa (PythonBridge, OrderingPractice), que siguen en cian.
-const CTA_BRAND_BTN = 'gap-2 self-start bg-neural-brand text-white hover:bg-neural-brand/90'
+const CTA_BRAND_BTN = 'gap-2 self-start bg-neural-brand text-white hover:bg-neural-brand/90 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-neural-brand/25'
 
 function NextMissionCard({
   course, currentMission, posttestPending, navigate,

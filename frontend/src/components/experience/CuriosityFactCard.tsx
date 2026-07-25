@@ -26,7 +26,7 @@ const CURIOSITY_MIN_DWELL_MS = 2500
 export function CuriosityFactCard({ fact, onContinue }: Props) {
   const dwellReady = useMinDwell(CURIOSITY_MIN_DWELL_MS)
   return (
-    <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-5 space-y-3 animate-in fade-in duration-500">
+    <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.04] p-5 space-y-3 animate-in fade-in duration-300">
       <div className="flex items-center gap-2.5">
         <Lightbulb className="h-4 w-4 text-amber-300 shrink-0" />
         <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-amber-300">

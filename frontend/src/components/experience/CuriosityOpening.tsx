@@ -17,7 +17,7 @@ export function CuriosityOpening({ opening, onAnswer }: Props) {
   const [freeText, setFreeText] = useState('')
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-700">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-300">
       <div className="max-w-xl w-full space-y-8">
 
         <div className="space-y-3 text-center">

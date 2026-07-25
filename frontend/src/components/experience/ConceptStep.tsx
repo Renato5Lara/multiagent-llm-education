@@ -128,7 +128,7 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
   const audioFirst = modality === 'audio' && !!variant.narrationText
 
   return (
-    <div className={cn('mx-auto space-y-5 animate-in fade-in duration-500', hasAside ? 'max-w-[1060px]' : 'max-w-2xl')}>
+    <div className={cn('mx-auto space-y-5 animate-in fade-in duration-300', hasAside ? 'max-w-[1060px]' : 'max-w-2xl')}>
 
       <h2 className="text-xl md:text-2xl font-bold text-neural-text leading-snug">
         {concept.title}

@@ -64,7 +64,7 @@ const MASTERY_SEED_FUNDAMENTOS = 0.15
 // Épica D — regla híbrida (ENGINEERING-GATE-EPICA-D.md): todo CTA que avanza
 // al estudiante a lo siguiente (nunca una acción de ejecución/streaming en
 // curso) usa neural-brand — mismo patrón que Dashboard y PythonBridge.tsx.
-const CONTINUE_BRAND_BTN = 'gap-2 bg-neural-brand text-white hover:bg-neural-brand/90'
+const CONTINUE_BRAND_BTN = 'gap-2 bg-neural-brand text-white hover:bg-neural-brand/90 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-neural-brand/25'
 
 // Último respaldo, tipo-seguro, para fallbackSolutionOf (Nivel 3 de la
 // escalera): en la práctica nunca se renderiza — todo ciclo con escalera
@@ -1017,7 +1017,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
 
   if (phase === 'reveal') {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-700">
+      <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 animate-in fade-in duration-300">
         <div className="glass-panel rounded-2xl p-8 md:p-10 max-w-xl w-full text-center space-y-6">
           <p className="text-sm md:text-base text-neural-text/90 leading-relaxed">
             {definition.opening.revealHook}
@@ -1073,7 +1073,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             // (nunca coexisten: decirle "sigo eligiendo" mientras ya se sabe
             // qué sigue sería contradictorio). Última parada antes de que la
             // transición programada (ADAPTATION_MESSAGE_MS) cambie de fase.
-            <p className="text-base text-neural-text leading-relaxed animate-in fade-in duration-500">
+            <p className="text-base text-neural-text leading-relaxed animate-in fade-in duration-300">
               {adaptationMessage}
             </p>
           ) : (
@@ -1141,7 +1141,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
     // cambia, solo su posición.
     const hasRightColumn = evaluatorVerdict || (totalMissions > 0 && coursePct !== null)
     return (
-      <div className="max-w-4xl mx-auto py-8 space-y-6 animate-in fade-in duration-500">
+      <div className="max-w-4xl mx-auto py-8 space-y-6 animate-in fade-in duration-300">
         <div className="glass-panel rounded-2xl p-8 space-y-8">
           <div className={cn('grid gap-8 items-start', hasRightColumn && 'lg:grid-cols-2')}>
 
@@ -1530,7 +1530,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       )}
 
       {welcomeBackMessage && (
-        <div className="rounded-xl border border-neural-glow/25 bg-neural-glow/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-500">
+        <div className="rounded-xl border border-neural-glow/25 bg-neural-glow/5 px-4 py-3 flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-300">
           <span className="relative flex h-2 w-2 shrink-0 mt-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-neural-glow opacity-60" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-neural-glow" />
@@ -1666,7 +1666,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
       {phase === 'reinforcement' && activeReinforcement && (
         <div
           className={cn(
-            'animate-in fade-in duration-500',
+            'animate-in fade-in duration-300',
             activeReinforcement.practice
               ? 'grid gap-5 items-start lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)]'
               : 'space-y-5',
@@ -1852,7 +1852,7 @@ function RemediationStepView({
   // izquierda (por qué estás aquí + concepto re-explicado + ilustración,
   // sticky), actividad a la derecha — dos zonas, la actividad es el foco.
   return (
-    <div className="space-y-5 animate-in fade-in duration-500">
+    <div className="space-y-5 animate-in fade-in duration-300">
       <div className="flex items-center gap-2.5">
         <LifeBuoy className="h-4 w-4 text-neural-violet shrink-0" />
         <p className="text-[11px] font-mono tracking-[0.2em] uppercase text-neural-violet">
