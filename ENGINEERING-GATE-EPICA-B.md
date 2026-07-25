@@ -411,7 +411,122 @@ cabeceras), pero desplegarla es una acción sobre infraestructura
 compartida real que requiere autorización explícita aparte — no se
 ejecuta como parte de cerrar este Gate.
 
-## 9. Criterios de salida (Épica B completa)
+## 9. Commit 6 — Validación de `expectedOutput` dinámico + integración real
+
+> Gate propio (mismo criterio que 4b y 5), abierto tras un hallazgo
+> real durante la planificación, no anticipado en §6: `ciclo3-input.ts`
+> valida por comparación EXACTA de string contra `expectedOutput`, que
+> hoy incluye el valor simulado horneado adentro (p. ej.
+> `'¿Cómo te llamas? Mucho gusto, Camila'`). Con `input()` real, el
+> valor que escribe el estudiante es impredecible — esa comparación
+> fallaría casi siempre aunque el código esté perfecto. Ya señalado
+> como riesgo en `AUDITORIA-EPICA-B.md` §5 ("la validación por
+> comparación exacta está fuertemente acoplada al contenido ya
+> autorado"), ahora materializado. Es un cambio de **semántica
+> pedagógica** (qué significa "correcto"), no solo de wiring — por eso
+> Gate propio, no una sub-decisión dentro de un commit de integración.
+
+### 1. ¿Cuál es el modelo de validación para valores dinámicos?
+
+`expectedOutput` sigue siendo un `string` (sin cambio de tipo) que
+opcionalmente contiene marcadores de posición `{input1}`, `{input2}`,
+... — se sustituyen por los valores reales que el estudiante escribió,
+en el mismo orden en que los escribió, ANTES de comparar contra
+`result.stdout`. Sin marcadores, el comportamiento es IDÉNTICO al
+actual (comparación exacta de la constante autorada) — compatibilidad
+total con todo el contenido existente, en `ciclo3-input.ts` y en
+cualquier otro laboratorio de la plataforma.
+
+### 2. ¿Cómo se representan uno o varios `input()`?
+
+**Posicional (`{input1}`, `{input2}`, ...), nunca nominal
+(`{nombre}`).** Motivo: el runtime nunca parsea el código Python del
+estudiante — solo conoce el ORDEN en que los valores llegaron por
+`provideInput()`, nunca el nombre de la variable donde el estudiante
+los guardó (ni siquiera sabe si los guardó en una variable). Un
+formato nominal exigiría inventar de dónde sale ese nombre (¿del
+código del estudiante? ¿de un campo nuevo autorado por etapa?) — una
+capacidad nueva no justificada por este commit. Un solo `input()` usa
+`{input1}` (nunca un `{input}` bien pelado aparte) — un solo formato,
+sin ambigüedad sobre si son equivalentes.
+
+**Dónde se acumulan los valores:** en `PythonBridge.tsx`
+(`PythonMicroPractice`), no en `usePyodide.ts` — es quien ya llama
+`provideInput(inputDraft)` y quien ya calcula `correct`; un array
+local (reseteado al iniciar cada `handleRun`, con push en cada
+`handleProvideInput`) es suficiente. No se toca el hook ni el Worker.
+
+### 3. ¿Cómo se mantiene compatibilidad con laboratorios antiguos?
+
+Automática, por diseño: cualquier `expectedOutput` sin `{inputN}` no
+sufre ninguna sustitución (el reemplazo es un `.replace()` que no
+encuentra coincidencias) — el flujo de comparación exacta actual sigue
+byte-idéntico para las 5 etapas legadas de `ciclo3-input.ts` y para
+absolutamente todo el resto del contenido de la plataforma (Módulo 2,
+etc.), que nunca usa esta sintaxis.
+
+### 4. ¿Cómo se escriben nuevos laboratorios (o se migra uno existente)?
+
+Para una etapa que use `input()` real: quitar `simulatedInputs` (activa
+el mecanismo interactivo, contrato §5) y escribir `expectedOutput` con
+`{inputN}` en el lugar donde antes iba el valor simulado hardcodeado.
+Ejemplo real (`escribir_completo`, propuesta de migración abajo):
+`'¿Cómo te llamas? Mucho gusto, Camila'` → `'¿Cómo te llamas? Mucho
+gusto, {input1}'`.
+
+### 5. ¿Cómo se documenta para futuros autores de contenido?
+
+En el JSDoc del campo `expectedOutput` en
+`frontend/src/types/moduleExperience.ts` (mismo lugar donde ya se
+documenta extensamente `simulatedInputs`) — única fuente de verdad
+para quien autore contenido nuevo, sin un documento aparte.
+
+### Propuesta de migración (a confirmar, es contenido pedagógico)
+
+**Qué etapa migra:** solo la ÚLTIMA etapa de `ciclo3-input.ts`
+(`escribir_completo`, "Ahora profundiza") — no las 5 anteriores, no
+otros laboratorios. Razones:
+- Es la etapa de mayor andamiaje retirado (el estudiante escribe desde
+  cero) — coherente pedagógicamente con "ahora es de verdad".
+- Es el final de la cadena (`nextStage` no existe) — el estudiante no
+  vuelve a una etapa simulada después de haber vivido la real.
+- Su `expectedOutput` de hoy usa un solo `input()` — el caso de
+  migración más simple posible para validar el mecanismo completo de
+  punta a punta antes de considerar otras etapas u otros laboratorios.
+
+**Qué NO cambia:** las 5 etapas anteriores (`observar` → `escribir_
+parcial`) siguen con `simulatedInputs`, sin tocar.
+
+### Alcance
+
+**Entra:**
+- `PythonBridge.tsx`: acumulación de valores reales provistos +
+  sustitución de `{inputN}` en `expectedOutput` antes de comparar.
+- `frontend/src/types/moduleExperience.ts`: JSDoc de `expectedOutput`
+  documentando la sintaxis `{inputN}`.
+- `ciclo3-input.ts`: quitar `simulatedInputs` de `escribir_completo` +
+  actualizar su `expectedOutput` al patrón `{input1}`.
+- Recorrido E2E real en navegador: estudiante completa las 6 etapas,
+  las 5 primeras con el mecanismo legado (sin regresión), la última
+  con `input()` real y el marcador funcionando.
+
+**No entra:**
+- Migrar otras etapas de `ciclo3-input.ts` u otros laboratorios —
+  mini-épica futura, una vez validado este primer caso real.
+- Retirar `simulatedInputs` — sigue vigente por la decisión §5.
+- Formato nominal de marcadores (`{nombre}`) — no justificado hoy.
+
+### Criterios de salida
+- `{inputN}` sin coincidencias no rompe ningún `expectedOutput`
+  existente (regresión cero, verificado en las 5 etapas legadas).
+- La etapa migrada valida correctamente el código de la solución real
+  del estudiante contra el patrón con `{input1}` sustituido.
+- Evidencia (`recordEvidence`, `cycle-evidence`) sigue registrándose
+  igual que antes — el cambio es solo en cómo se calcula `correct`.
+- Recorrido completo de un estudiante real por las 6 etapas, en
+  navegador real, sin intervención del desarrollador (Regla de Cierre).
+
+## 10. Criterios de salida (Épica B completa)
 
 El Gate se considera cerrado (la épica, completa) solo si:
 - `ciclo3-input.ts` funciona con `input()` real en navegador real, no
