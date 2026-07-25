@@ -319,7 +319,75 @@ activo.
   funcionó todo."
 - Commits: `b20b5a2` (feat), Gate en `7561123`+`9476ac1` (docs).
 
-## 8. Criterios de salida (Épica B completa)
+## 8. Commit 5 — COOP/COEP permanentes + auditoría de compatibilidad
+
+> Gate propio (mismo criterio que 4b). Pregunta arquitectónica
+> respondida ANTES de escribir código, con evidencia real, no
+> supuesta: **¿COOP/COEP es solo de desarrollo o también de
+> producción?**
+
+**Respuesta:** ambos. El hosting real de producción del frontend es
+**Vercel** (`frontend/vercel.json`, `outputDirectory: dist`) — no
+Render (Render solo aloja el backend, `render.yaml`; la mención de
+"Render.com" en `CLAUDE.md` bajo DevOps está incompleta/desactualizada
+para el frontend, no se corrige aquí por estar fuera de alcance de
+Épica B). El objetivo final de esta épica es que un estudiante real
+use `input()` interactivo — eso solo puede pasar en producción, no
+solo en `localhost`. Configurar solo dev y posponer producción
+significaría repetir esta misma auditoría más adelante, con más
+superficie ya construida encima. Como la auditoría (abajo) no
+encontró ningún recurso incompatible, no hay razón real para diferir
+producción.
+
+### Auditoría de recursos cross-origin (hecha con evidencia, no supuesta)
+
+Búsqueda exhaustiva de URLs externas cargadas por el frontend
+(`grep -rEoh 'https?://...'` sobre `src/` + `index.html`), con cada
+resultado clasificado:
+
+| Recurso | Tipo | ¿Sujeto a COEP? | Estado |
+|---|---|---|---|
+| `fonts.googleapis.com/css2?...` | `<link rel="stylesheet">`, cross-origin | Sí | ✅ `Cross-Origin-Resource-Policy: cross-origin` (verificado con `curl -I`) |
+| `fonts.gstatic.com/s/outfit/...ttf` | Fuente referenciada por el CSS anterior | Sí | ✅ `Cross-Origin-Resource-Policy: cross-origin` (verificado con `curl -I`) |
+| `cdn.jsdelivr.net/pyodide/...` | Worker: script + WASM | Sí | ✅ Ya confirmado en `SPIKE-B1-PYODIDE-WORKER-STDIN.md` |
+| `chat.openai.com`, `gemini.google.com`, `claude.ai` | `<a href>` en `MediaPromptCard.tsx` — el estudiante los abre en pestaña nueva | No | Enlaces de navegación, nunca cargados como subrecurso — COEP no aplica |
+| `w3.org/2000/svg` | `xmlns` de SVG inline (`AnalogyCard.tsx`, `index.css`) | No | Namespace XML, no es una petición de red |
+| `127.0.0.1:8000` | Fallback de `VITE_API_URL` en dev | No | Llamada `fetch`/XHR al backend (CORS, no CORP) — COEP no bloquea fetch same-mode con CORS válido |
+
+**Resultado: cero recursos incompatibles encontrados.** Ningún
+`<iframe>`, ningún flujo de OAuth por popup que dependa de
+`window.opener` (los dos `window.open()` del proyecto ya usan
+`noopener` o son descargas directas) — `COOP: same-origin` tampoco
+tiene nada que romper.
+
+### Alcance
+
+**Entra:**
+- `frontend/vite.config.ts`: cabeceras COOP/COEP permanentes en
+  `server.headers` (ya no `TEMPORAL`, se retira ese comentario).
+- `frontend/vercel.json`: nueva clave `"headers"` con las mismas dos
+  cabeceras para producción (Vercel las soporta de forma nativa, sin
+  plugin adicional).
+- Verificación de `self.crossOriginIsolated === true` en dev (ya
+  reproducido varias veces durante Commits 3/4/4b) y, si el tesista
+  autoriza un deploy real, en producción.
+
+**No entra:**
+- Corregir la mención desactualizada de "Render.com" para el frontend
+  en `CLAUDE.md` (fuera de alcance de Épica B).
+- Deploy a producción en sí — modifica infraestructura compartida real
+  (Vercel), requiere autorización explícita del tesista antes de
+  ejecutarse, no se asume incluida en "abrir el Gate".
+
+### Criterio de salida adicional (entorno, no solo funcional)
+
+> El frontend arranca normalmente con COOP/COEP habilitados y no
+> aparecen errores de recursos bloqueados (`COEP`, `CORP` o
+> `crossOriginIsolated`) en la consola del navegador durante la carga
+> inicial — verificado en dev; en producción, solo si el tesista
+> autoriza el deploy de verificación.
+
+## 9. Criterios de salida (Épica B completa)
 
 El Gate se considera cerrado (la épica, completa) solo si:
 - `ciclo3-input.ts` funciona con `input()` real en navegador real, no
