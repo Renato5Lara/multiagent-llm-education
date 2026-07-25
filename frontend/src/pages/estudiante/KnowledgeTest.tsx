@@ -5,10 +5,13 @@ import {
   ArrowLeft,
   ArrowRight,
   Award,
+  Bot,
   BookOpen,
   CheckCircle2,
+  Clock,
   ClipboardList,
   Loader2,
+  Sparkles,
   TrendingUp,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -54,6 +57,49 @@ const LEVEL_STYLES: Record<string, { label: string; badge: string; bar: string }
     badge: 'bg-neural-pulse/10 text-neural-pulse border-neural-pulse/30',
     bar: 'bg-neural-pulse',
   },
+}
+
+// Épica E — EP-01: el backend ya calculaba estos 3 valores
+// (ExperimentComparisonOut) pero la pantalla de resultado solo mostraba
+// pre_percentage/post_percentage/absolute_gain — ver EPICA_E_AUDIT.md.
+function formatMinutes(seconds: number | null): string {
+  if (seconds === null) return '—'
+  const minutes = Math.round(seconds / 60)
+  return minutes < 1 ? '<1 min' : `${minutes} min`
+}
+
+// Convención estándar de investigación educativa (Hake, 1998) para la
+// ganancia normalizada g = (post-pre)/(100-pre) — el mismo valor que ya
+// se le muestra al docente en Panel Pedagógico ("ganancia normalizada
+// g = 0.64"); aquí se traduce a una etiqueta cualitativa para el
+// estudiante, no se inventa una escala nueva.
+function normalizedGainLabel(g: number | null): { label: string; className: string } | null {
+  if (g === null) return null
+  if (g >= 0.7) return { label: 'Alta efectividad', className: 'text-neural-pulse' }
+  if (g >= 0.3) return { label: 'Efectividad media', className: 'text-neural-glow' }
+  return { label: 'Efectividad baja', className: 'text-amber-300' }
+}
+
+// Cierre del Tutor IA específico para el Post-Test — nunca reutiliza el
+// texto de `competency_profile.recommendation` (redactado para el
+// PRE-test: "tu ruta empezará por X"), porque después del post-test ya
+// no hay una ruta por empezar. Compone los mismos datos que la pantalla
+// ya tenía por separado (fortalezas, temas a reforzar, incremento) —
+// mismo criterio que TutorInsightsPanel.actionableRecommendation.
+function describePostTestClosing(strengths: string[], weaknesses: string[], gain: number): string {
+  const gainPhrase = gain >= 15
+    ? `Mejoraste ${gain.toFixed(0)} puntos desde tu diagnóstico inicial — un avance real y medible.`
+    : gain >= 0
+      ? `Avanzaste ${gain.toFixed(0)} puntos desde tu diagnóstico inicial.`
+      : 'Tu resultado bajó frente al diagnóstico inicial — puede pasar si el post-test tocó temas menos practicados; no invalida el progreso real que hiciste en el camino.'
+
+  if (weaknesses.length === 0) {
+    return `${gainPhrase} Dominas todos los temas evaluados${strengths.length ? `, especialmente ${strengths[0].toLowerCase()}` : ''}. Completaste el recorrido completo de Fundamentos de la Programación.`
+  }
+  const focus = weaknesses.length === 1
+    ? weaknesses[0]
+    : `${weaknesses.slice(0, -1).join(', ')} y ${weaknesses[weaknesses.length - 1]}`
+  return `${gainPhrase} ${strengths.length ? `Tu punto más fuerte fue ${strengths[0].toLowerCase()}. ` : ''}Si quieres seguir profundizando por tu cuenta, ${focus.toLowerCase()} ${weaknesses.length === 1 ? 'sigue siendo' : 'siguen siendo'} el área con más margen de mejora.`
 }
 
 // Etiqueta amable de la competencia (dimensión cognitiva del ítem) — evita
@@ -694,8 +740,64 @@ function ResultScreen({
                 <TrendingUp className="h-5 w-5" />
                 {comparison.data.absolute_gain >= 0 ? '+' : ''}{comparison.data.absolute_gain.toFixed(1)}
               </p>
-              <p className="text-[11px] text-neural-muted mt-1">Incremento (pts)</p>
+              <p className="text-[11px] text-neural-muted mt-1">
+                Incremento (pts)
+                {comparison.data.percent_gain !== null && (
+                  <> · {comparison.data.percent_gain >= 0 ? '+' : ''}{comparison.data.percent_gain.toFixed(0)}% relativo</>
+                )}
+              </p>
             </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 text-center mt-5 pt-5 border-t border-white/[0.06]">
+            <div>
+              <p className="text-sm font-semibold text-neural-text">
+                {LEVEL_STYLES[comparison.data.pre_level]?.label ?? comparison.data.pre_level}
+                <ArrowRight className="inline h-3 w-3 mx-1 text-neural-muted" />
+                {LEVEL_STYLES[comparison.data.post_level]?.label ?? comparison.data.post_level}
+              </p>
+              <p className="text-[11px] text-neural-muted mt-1">Nivel</p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-neural-text flex items-center justify-center gap-1">
+                <Clock className="h-3.5 w-3.5 text-neural-muted" />
+                {formatMinutes(comparison.data.pre_duration_seconds)} → {formatMinutes(comparison.data.post_duration_seconds)}
+              </p>
+              <p className="text-[11px] text-neural-muted mt-1">Tiempo invertido</p>
+            </div>
+            <div>
+              {(() => {
+                const g = normalizedGainLabel(comparison.data.normalized_gain)
+                return (
+                  <>
+                    <p className={`text-sm font-semibold ${g?.className ?? 'text-neural-text'}`}>
+                      {comparison.data.normalized_gain !== null ? `g = ${comparison.data.normalized_gain.toFixed(2)}` : '—'}
+                    </p>
+                    <p className="text-[11px] text-neural-muted mt-1">{g?.label ?? 'Ganancia normalizada'}</p>
+                  </>
+                )
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isPre && comparison.data && (
+        <div className="glass-panel rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="h-8 w-8 rounded-xl bg-neural-violet/15 border border-neural-violet/30 flex items-center justify-center flex-shrink-0">
+              <Bot className="h-4 w-4 text-neural-violet" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neural-text">Tutor IA Multiagente</h3>
+              <p className="text-[10px] text-neural-muted/60 font-mono uppercase tracking-wider">Cierre de tu aprendizaje</p>
+            </div>
+          </div>
+          <div className="flex gap-2.5 bg-neural-violet/10 border border-neural-violet/25 rounded-xl px-3 py-2.5">
+            <Sparkles className="h-3.5 w-3.5 text-neural-violet flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-neural-text leading-relaxed">
+              {describePostTestClosing(strengths, weaknesses, comparison.data.absolute_gain)}
+            </p>
           </div>
         </div>
       )}

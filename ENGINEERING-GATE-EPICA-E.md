@@ -71,5 +71,76 @@ npm run build   → tsc -b && vite build   ✔ limpio
 
 ## EP-01 — Cierre del ciclo de aprendizaje (Post-Test Experience)
 
-_Pendiente — siguiente commit de esta rama/otra rama según se
-decida._
+Sin backend nuevo — los 6 campos que faltaban ya estaban en
+`ExperimentComparisonOut`/`KnowledgeTestResultOut` (ver
+`EPICA_E_AUDIT.md`). Todo el trabajo es de `KnowledgeTest.tsx`
+(pantalla de resultado), en `frontend/src/pages/estudiante/`.
+
+### Cambios
+
+1. **Segunda fila de la tarjeta de comparación** (además de Pre/Post/
+   Incremento, ya existente): Nivel (`pre_level → post_level`, con
+   las mismas etiquetas de `LEVEL_STYLES` ya usadas en el resto de la
+   pantalla), Tiempo invertido (`pre_duration_seconds`/
+   `post_duration_seconds`, formateados a minutos), y ganancia
+   normalizada `g` (con etiqueta cualitativa Alta/Media/Baja
+   efectividad — convención de Hake, 1998, el mismo valor que ya se
+   le muestra al docente en Panel Pedagógico). `percent_gain` se
+   agregó como texto secundario junto al incremento absoluto, sin
+   quitarle protagonismo visual a la métrica principal.
+2. **`group_label` deliberadamente NO se muestra al estudiante** —
+   es la etiqueta de cohorte del experimento (Experimental/Control);
+   revelar el grupo asignado a un participante es una práctica de
+   diseño experimental a evitar (podría sesgar su comportamiento).
+   Campo reservado para vistas de investigador, no para el estudiante.
+3. **Nuevo panel "Tutor IA Multiagente — Cierre de tu aprendizaje"**,
+   mismo lenguaje visual que `TutorInsightsPanel.tsx` del Dashboard
+   (ícono `Bot` en círculo violeta, nota con `Sparkles`). Usa
+   `describePostTestClosing()` — una función nueva, puramente de
+   frontend, que compone `mastered_modules`/`critical_modules`
+   (ya presentes en el resultado, sin cambios de backend) + el
+   incremento, con redacción propia de CIERRE ("mejoraste X puntos…
+   si quieres seguir profundizando…"), nunca la de
+   `competency_profile.recommendation` (que dice "tu ruta empezará
+   por X" — verificado con datos reales que sigue devolviendo esa
+   redacción también para intentos `post`, confirmando el hallazgo
+   de la auditoría).
+
+### Validación (sin modificar datos de producción/experimento)
+
+Se intentó reproducir un post-test fresco borrando el intento
+existente de una cuenta QA (`qa.luis.auditivo@upao.edu.pe`) para
+volver a rendirlo — **la base de datos rechazó el borrado por la
+restricción de llave foránea `experiment_results_post_attempt_id_fkey`**:
+el dato de comparación ya materializado protege la integridad del
+intento que lo originó. Correcto — no se fuerza el borrado (dato de
+experimento real, aunque la cuenta sea de QA). Se verificó en su
+lugar contra la API real, sin mutar nada:
+
+```
+GET /api/students/knowledge-test/{course}/comparison  (qa.luis.auditivo)
+→ pre=25.0% post=58.33% absolute_gain=33.33 percent_gain=133.32
+  normalized_gain=0.4444 pre_level=basico post_level=intermedio
+
+GET /api/students/knowledge-test/{course}/result?kind=post
+→ mastered_modules=[1] critical_modules=[4]
+  competency_profile.recommendation = "Tu fortaleza es Comprensión
+  del problema (100%)... tu ruta comenzará por ahí." ← confirma que
+  el backend sigue redactando en clave de PRE-test también para post,
+  exactamente como anticipó la auditoría.
+```
+
+Trazado a mano contra el código: `normalizedGainLabel(0.4444)` →
+"Efectividad media" (0.3 ≤ g < 0.7, correcto); `LEVEL_STYLES['basico'/
+'intermedio']` → "Básico"/"Intermedio" (claves coinciden con
+`classify_level()` del backend, verificado); `describePostTestClosing(
+['Introducción a la Programación'], ['Condicionales'], 33.33)` →
+"Mejoraste 33 puntos desde tu diagnóstico inicial — un avance real y
+medible. Tu punto más fuerte fue introducción a la programación. Si
+quieres seguir profundizando por tu cuenta, condicionales sigue
+siendo el área con más margen de mejora." — coherente, nunca dice
+"tu ruta empezará".
+
+Build limpio (`tsc -b` confirma que los 6 campos nuevos están
+correctamente tipados desde `ExperimentComparison`/`KnowledgeTestResult`,
+sin `any`).
