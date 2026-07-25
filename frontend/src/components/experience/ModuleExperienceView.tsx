@@ -61,6 +61,11 @@ const AUTONOMY_LOW = 0.4
 const MASTERY_SEED_APLICACION = 0.7
 const MASTERY_SEED_FUNDAMENTOS = 0.15
 
+// Épica D — regla híbrida (ENGINEERING-GATE-EPICA-D.md): todo CTA que avanza
+// al estudiante a lo siguiente (nunca una acción de ejecución/streaming en
+// curso) usa neural-brand — mismo patrón que Dashboard y PythonBridge.tsx.
+const CONTINUE_BRAND_BTN = 'gap-2 bg-neural-brand text-white hover:bg-neural-brand/90'
+
 // Último respaldo, tipo-seguro, para fallbackSolutionOf (Nivel 3 de la
 // escalera): en la práctica nunca se renderiza — todo ciclo con escalera
 // define practice en su peldaño de Nivel 2 — pero TypeScript exige un valor
@@ -1047,7 +1052,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             </div>
           )}
 
-          <Button className="w-full gap-2" onClick={() => setPhase(firstPhaseFor(cycle))}>
+          <Button className={cn("w-full", CONTINUE_BRAND_BTN)} onClick={() => setPhase(firstPhaseFor(cycle))}>
             Comenzar →
           </Button>
         </div>
@@ -1309,7 +1314,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
             <p className="text-xs text-neural-muted text-center leading-relaxed">
               {continuityMessage}
             </p>
-            <Button className="w-full" onClick={handleFinish}>
+            <Button className={cn('w-full', CONTINUE_BRAND_BTN)} onClick={handleFinish}>
               {/* "misión", nunca "módulo" — el resto de la experiencia ya evita esa
                   palabra (missionTitle, routeTitle); este era el único lugar que
                   todavía la usaba, rompiendo la sensación de aprendizaje continuo. */}
@@ -1627,7 +1632,7 @@ export function ModuleExperienceView({ definition, moduleId, modality, courseId,
           )}
           {practiceOutcome && (!cycle.pythonBridge?.practice || pythonPracticeDone) && (
             <div className="flex justify-end animate-in fade-in duration-300">
-              <Button onClick={handlePracticeContinue} className="gap-2">
+              <Button onClick={handlePracticeContinue} className={CONTINUE_BRAND_BTN}>
                 Continuar →
               </Button>
             </div>
@@ -1736,7 +1741,7 @@ function ReinforcementContinueGate({ onContinue }: { onContinue: () => void }) {
   const dwellReady = useMinDwell(REINFORCEMENT_MIN_DWELL_MS)
   return (
     <div className="flex justify-end">
-      <Button onClick={onContinue} disabled={!dwellReady} className="gap-2">
+      <Button onClick={onContinue} disabled={!dwellReady} className={CONTINUE_BRAND_BTN}>
         Continuar →
       </Button>
     </div>
@@ -1809,7 +1814,7 @@ function ReinforcementPractice({
       )}
       {outcome && (
         <div className="flex justify-end animate-in fade-in duration-300">
-          <Button onClick={onDone} className="gap-2">
+          <Button onClick={onDone} className={CONTINUE_BRAND_BTN}>
             Continuar →
           </Button>
         </div>
@@ -1938,7 +1943,7 @@ function RemediationStepView({
             ))}
           </div>
           <div className="flex justify-end">
-            <Button onClick={onContinue} className="gap-2">Continuar →</Button>
+            <Button onClick={onContinue} className={CONTINUE_BRAND_BTN}>Continuar →</Button>
           </div>
         </>
       )}
@@ -1999,7 +2004,7 @@ function StepPractice({
       />
       {outcome && (
         <div className="flex justify-end animate-in fade-in duration-300">
-          <Button onClick={() => onSolved(outcome)} className="gap-2">Continuar →</Button>
+          <Button onClick={() => onSolved(outcome)} className={CONTINUE_BRAND_BTN}>Continuar →</Button>
         </div>
       )}
     </div>

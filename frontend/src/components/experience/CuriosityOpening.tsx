@@ -72,7 +72,9 @@ export function CuriosityOpening({ opening, onAnswer }: Props) {
 
         {selected && (
           <div className="animate-in fade-in duration-300">
-            <Button className="w-full gap-2" onClick={() => onAnswer(selected, freeText.trim())}>
+            {/* Épica D: avanza a la revelación — neural-brand, mismo
+                criterio que el resto de "Continuar" (ENGINEERING-GATE-EPICA-D.md). */}
+            <Button className="w-full gap-2 bg-neural-brand text-white hover:bg-neural-brand/90" onClick={() => onAnswer(selected, freeText.trim())}>
               Ver la respuesta →
             </Button>
           </div>

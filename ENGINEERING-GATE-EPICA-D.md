@@ -160,6 +160,45 @@ mueve al estudiante a lo siguiente, `neural-brand`; si es el sistema
 trabajando/ejecutando ahora mismo, `neural-glow`; el resto ya tiene
 dueño en la tabla de arriba.
 
+### Navegación (`Sidebar.tsx` + CTAs de avance) — ✅ tercer commit
+
+- `Sidebar.tsx`: logo/marca de cabecera y estado activo del link
+  (fondo, borde, ícono, punto indicador) pasan de `neural-glow` a
+  `neural-brand` — "dónde estás parado" es navegación/marca, no un
+  estado en vivo del sistema. Se retiró `glow-active` del punto
+  indicador (esa animación estaba afinada para el cian; no se mezcla
+  con animaciones en este commit, ver alcance del gate).
+- `ModuleExperienceView.tsx`: las 6 instancias de CTA de avance
+  (`Comenzar →`, 5× `Continuar →`) pasan a `neural-brand` vía la
+  constante compartida `CONTINUE_BRAND_BTN`.
+
+**Hallazgo real durante la validación en navegador (no en el plan
+original):** el barrido inicial, acotado a `Sidebar.tsx` +
+`ModuleExperienceView.tsx` como se había acordado, dejó una
+inconsistencia visible de inmediato — el botón "Continuar →" de
+`CuriosityFactCard.tsx` (pantalla "¿Sabías que...?", la primera de
+cada ciclo) seguía en cian, porque vive en un archivo hermano, no en
+`ModuleExperienceView.tsx`. Se amplió el barrido —misma regla ya
+aprobada, ningún criterio nuevo— a los demás CTAs de avance de
+`components/experience/`: `CuriosityFactCard.tsx` ("Continuar →"),
+`CuriosityOpening.tsx` ("Ver la respuesta →"), `ConceptStep.tsx`
+("Ponerlo a prueba →"), `ConceptPrimerCard.tsx` ("Ahora úsalo →"), y
+el CTA de cierre de misión en `ModuleExperienceView.tsx` ("Seguir con
+la siguiente misión →" / "Finalizar misión →"). Verificado con
+`grep` que no queda ningún CTA de avance (`→`) sin el token de marca
+en `components/experience/`.
+
+**Deliberadamente fuera de este commit:** `LearningPath.tsx`
+("Comenzar misión →") — mismo criterio, pero es una página distinta
+(`pages/estudiante/`), no un componente de experiencia; candidato
+natural para el próximo commit de Navegación/Rutas si se decide
+extender la regla a esa capa.
+
+Build limpio. Validado en navegador real: Sidebar con marca/estado
+activo violeta en ambas rutas del menú, recorrido completo del ciclo
+(curiosidad → concepto → práctica → Python) con "Continuar" violeta
+consistente en cada paso. Capturas en `docs/qa/epica-d-navigation/`.
+
 ## Próximos pasos (no en este commit)
 
 - `feature/epica-d-dashboard` (continuación): resto de tarjetas de

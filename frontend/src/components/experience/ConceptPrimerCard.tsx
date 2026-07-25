@@ -59,7 +59,10 @@ export function ConceptPrimerCard({ primer, inline = false, onContinue }: Props)
 
       {!inline && onContinue && (
         <div className="flex justify-end">
-          <Button onClick={onContinue} disabled={!dwellReady} className="gap-2">
+          {/* Épica D: avanza a la siguiente microexplicación/concepto —
+              neural-brand, mismo criterio que el resto de "Continuar"
+              (ENGINEERING-GATE-EPICA-D.md). */}
+          <Button onClick={onContinue} disabled={!dwellReady} className="gap-2 bg-neural-brand text-white hover:bg-neural-brand/90">
             Ahora úsalo →
           </Button>
         </div>

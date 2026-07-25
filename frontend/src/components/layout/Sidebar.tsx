@@ -60,11 +60,13 @@ export default function Sidebar({
         {/* Hex pattern overlay */}
         <div className="absolute inset-0 hex-bg opacity-40 pointer-events-none" />
 
-        {/* Brand header */}
+        {/* Brand header — Épica D: la marca de la plataforma usa neural-brand
+            (violeta), no neural-glow (reservado a estado en vivo/ejecución) —
+            ver tabla semántica en ENGINEERING-GATE-EPICA-D.md. */}
         <div className="relative z-10 h-16 flex items-center px-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-neural-glow/10 border border-neural-glow/30 flex items-center justify-center flex-shrink-0 neural-glow-sm">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-neural-glow fill-current">
+            <div className="w-8 h-8 rounded-lg bg-neural-brand/10 border border-neural-brand/30 flex items-center justify-center flex-shrink-0 glow-brand">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 text-neural-brand-bright fill-current">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
               </svg>
             </div>
@@ -72,7 +74,7 @@ export default function Sidebar({
               <p className="text-neural-text font-semibold text-sm leading-tight tracking-tight truncate">
                 {title}
               </p>
-              <p className="text-neural-glow/60 text-[9px] leading-tight tracking-[0.12em] uppercase font-mono truncate">
+              <p className="text-neural-brand-bright/70 text-[9px] leading-tight tracking-[0.12em] uppercase font-mono truncate">
                 {subtitle}
               </p>
             </div>
@@ -105,8 +107,11 @@ export default function Sidebar({
                     cn(
                       'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                       'border-l-2',
+                      // Épica D: "dónde estás parado" es navegación/marca
+                      // (neural-brand), no un estado en vivo del sistema —
+                      // neural-glow queda reservado a ejecución/streaming.
                       isActive
-                        ? 'bg-neural-glow/[0.08] text-neural-glow border-neural-glow neural-glow-sm'
+                        ? 'bg-neural-brand/[0.1] text-neural-brand-bright border-neural-brand glow-brand'
                         : 'text-neural-muted hover:text-neural-text hover:bg-white/[0.04] border-transparent',
                     )
                   }
@@ -116,12 +121,12 @@ export default function Sidebar({
                       <item.icon
                         className={cn(
                           'h-4 w-4 flex-shrink-0 transition-colors duration-200',
-                          isActive ? 'text-neural-glow' : 'text-neural-muted group-hover:text-neural-text',
+                          isActive ? 'text-neural-brand-bright' : 'text-neural-muted group-hover:text-neural-text',
                         )}
                       />
                       <span className="truncate">{item.label}</span>
                       {isActive && (
-                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-neural-glow flex-shrink-0 glow-active" />
+                        <span className="ml-auto w-1.5 h-1.5 rounded-full bg-neural-brand flex-shrink-0" />
                       )}
                     </>
                   )}

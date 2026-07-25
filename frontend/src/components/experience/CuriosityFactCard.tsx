@@ -44,7 +44,9 @@ export function CuriosityFactCard({ fact, onContinue }: Props) {
       </p>
       {onContinue && (
         <div className="flex justify-end pt-1">
-          <Button onClick={onContinue} disabled={!dwellReady} className="gap-2">
+          {/* Épica D: avanza al contenido principal — neural-brand, mismo
+              criterio que el resto de "Continuar" (ENGINEERING-GATE-EPICA-D.md). */}
+          <Button onClick={onContinue} disabled={!dwellReady} className="gap-2 bg-neural-brand text-white hover:bg-neural-brand/90">
             Continuar →
           </Button>
         </div>

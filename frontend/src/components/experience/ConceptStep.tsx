@@ -412,7 +412,9 @@ export function ConceptStep({ concept, modality, onContinue, earlyReinforcement,
                 : 'Escucha la narración (o abre la transcripción) antes de continuar.'}
           </p>
         )}
-        <Button onClick={() => onContinue(Date.now() - startRef.current)} disabled={!canContinue} className="gap-2">
+        {/* Épica D: avanza a la práctica — neural-brand, mismo criterio que
+            el resto de "Continuar" (ENGINEERING-GATE-EPICA-D.md). */}
+        <Button onClick={() => onContinue(Date.now() - startRef.current)} disabled={!canContinue} className="gap-2 bg-neural-brand text-white hover:bg-neural-brand/90">
           Ponerlo a prueba →
         </Button>
       </div>
