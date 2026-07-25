@@ -11,10 +11,13 @@ export function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
+          // Épica E — EP-02: bg-white/bg-red-50 (tema claro) reemplazados por
+          // el vidrio oscuro del resto de la plataforma — ver
+          // ENGINEERING-GATE-EPICA-E.md.
           className={`rounded-lg border px-4 py-3 shadow-lg text-sm flex items-start gap-3 animate-in slide-in-from-right ${
             t.variant === 'destructive'
-              ? 'bg-red-50 border-red-200 text-red-900'
-              : 'bg-white border-gray-200 text-gray-900'
+              ? 'bg-red-500/10 border-red-500/30 text-red-200'
+              : 'glass-panel-elevated text-neural-text'
           }`}
         >
           <div className="flex-1">

@@ -108,7 +108,10 @@ export const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownMenu
         role="menu"
         tabIndex={-1}
         className={cn(
-          'absolute z-40 mt-1.5 min-w-[14rem] rounded-xl border bg-white p-1.5 shadow-xl',
+          // Épica E — EP-02: bg-white sólido reemplazado por el mismo vidrio
+          // elevado que ya usa el resto de la plataforma (glass-panel-elevated) —
+          // era un menú de tema claro flotando sobre una app 100% oscura.
+          'absolute z-40 mt-1.5 min-w-[14rem] rounded-xl glass-panel-elevated p-1.5 shadow-xl',
           'animate-in fade-in zoom-in-95 origin-top-right',
           align === 'end' ? 'right-0' : 'left-0',
           className
@@ -124,14 +127,14 @@ DropdownMenuContent.displayName = 'DropdownMenuContent'
 
 export const DropdownMenuLabel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('px-2.5 py-2 text-sm font-semibold text-gray-900', className)} {...props} />
+    <div ref={ref} className={cn('px-2.5 py-2 text-sm font-semibold text-neural-text', className)} {...props} />
   )
 )
 DropdownMenuLabel.displayName = 'DropdownMenuLabel'
 
 export const DropdownMenuSeparator = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('-mx-1.5 my-1 h-px bg-gray-100', className)} {...props} />
+    <div ref={ref} className={cn('-mx-1.5 my-1 h-px bg-white/[0.08]', className)} {...props} />
   )
 )
 DropdownMenuSeparator.displayName = 'DropdownMenuSeparator'
@@ -158,7 +161,7 @@ export const DropdownMenuItem = React.forwardRef<HTMLButtonElement, DropdownMenu
           'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30',
           'disabled:pointer-events-none disabled:opacity-50',
-          'hover:bg-gray-100 text-gray-700 hover:text-gray-900',
+          'hover:bg-white/[0.06] text-neural-muted hover:text-neural-text',
           className
         )}
         {...props}

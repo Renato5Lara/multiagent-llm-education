@@ -51,7 +51,11 @@ function TabsList({ className, children, ...props }: React.HTMLAttributes<HTMLDi
   return (
     <div
       role="tablist"
-      className={cn('inline-flex h-9 items-center rounded-lg bg-gray-100 p-1 text-muted-foreground', className)}
+      // Épica E — EP-02: bg-gray-100 (tema claro) reemplazado por un
+      // contenedor de vidrio oscuro consistente con glass-panel; ver
+      // ENGINEERING-GATE-EPICA-E.md para la causa raíz del bug de
+      // invisibilidad que motivó este cambio.
+      className={cn('inline-flex h-9 items-center rounded-lg bg-white/[0.04] p-1 text-neural-muted', className)}
       {...props}
     >
       {children}
@@ -76,7 +80,11 @@ function TabsTrigger({
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium transition-all',
         'focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
-        isActive ? 'bg-white text-foreground shadow-sm' : 'hover:text-foreground',
+        // Épica E — EP-02: bg-white + text-foreground era el bug real
+        // (--foreground vale un color CLARO en modo oscuro — texto casi
+        // invisible sobre fondo blanco). Superficie elevada + texto claro,
+        // mismo lenguaje que .glass-panel-elevated.
+        isActive ? 'bg-white/[0.08] text-neural-text shadow-sm' : 'text-neural-muted hover:text-neural-text',
         className
       )}
       {...props}
