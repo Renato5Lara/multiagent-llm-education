@@ -335,9 +335,16 @@ para el frontend, no se corrige aquí por estar fuera de alcance de
 use `input()` interactivo — eso solo puede pasar en producción, no
 solo en `localhost`. Configurar solo dev y posponer producción
 significaría repetir esta misma auditoría más adelante, con más
-superficie ya construida encima. Como la auditoría (abajo) no
-encontró ningún recurso incompatible, no hay razón real para diferir
-producción.
+superficie ya construida encima.
+
+La auditoría (abajo) no encontró incompatibilidades conocidas con los
+recursos que el frontend usa hoy — eso es evidencia a favor de
+configurar producción ahora, no una garantía. La aplicación real de
+COOP/COEP en producción sigue dependiendo de una validación en el
+entorno de despliegue (Vercel): la configuración efectiva del hosting
+y cualquier recurso externo que se agregue más adelante también forman
+parte del comportamiento final, y ninguno de los dos se puede
+confirmar desde una auditoría estática del código.
 
 ### Auditoría de recursos cross-origin (hecha con evidencia, no supuesta)
 
