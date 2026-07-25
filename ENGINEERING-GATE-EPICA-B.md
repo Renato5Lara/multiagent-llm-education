@@ -548,7 +548,79 @@ parcial`) siguen con `simulatedInputs`, sin tocar.
   `correct: false` de forma determinista y deja diagnóstico en
   consola — nunca se resuelve como cadena vacía en silencio.
 
-## 10. Criterios de salida (Épica B completa)
+### Commit 6 — CERRADO
+
+**QA Evidence:**
+- **Caso nominal** (contenido real, `escribir_completo`, vía
+  `initialSkipStages={5}`): estudiante escribe la solución real desde
+  cero, responde `input()` real con `"Renato"` (deliberadamente
+  distinto del antiguo valor hardcodeado "Camila", para probar que la
+  sustitución es genuinamente dinámica, no una coincidencia con el
+  contenido anterior) — salida `"¿Cómo te llamas? Mucho gusto,
+  Renato"`, marcado correcto, `{input1}` resuelto en vivo.
+- **Caso límite** (bridge sintético, `{input2}` sin segundo `input()`
+  real — desajuste deliberado de autoría): `stdout` sin error de
+  Python, pero `correct: false` de forma determinista; diagnóstico
+  real visible en consola:
+  `PythonBridge: expectedOutput referencia un {inputN} sin un input()
+  real correspondiente... template="valor: recibido: {input2}"
+  valoresRecibidos=["hola"]` — exactamente el contrato de §9, no una
+  cadena vacía en silencio.
+- **Regresión** (contenido real, etapa 1 "Obsérvalo", mecanismo
+  legado): recorrido y salida byte-idénticos a como se veían antes de
+  esta migración.
+- **Precisión sobre el alcance real de la QA** (para no inflar la
+  evidencia): NO se hizo un recorrido lineal continuo de las 6 etapas
+  en una sola sesión de navegador (etapa 1 → Continuar → ... → etapa
+  6) — se validaron por separado el punto que cambió (etapa 6,
+  migrada) y un punto de control del mecanismo legado (etapa 1). Las
+  etapas 2-5 no fueron tocadas por este commit; su riesgo de regresión
+  es bajo pero no se re-verificó explícitamente en esta sesión. Un
+  recorrido lineal completo por un estudiante real queda como
+  verificación opcional del tesista, no bloqueante para este cierre.
+- Commit: `ffffb95`.
+
+## 11. Cierre de la Épica B
+
+Con el Commit 6 cerrado, las 6 unidades de trabajo de
+`ENGINEERING-GATE-EPICA-B.md` §6 quedan completas:
+
+| Commit | Qué hace | Estado |
+|---|---|---|
+| 1 | Worker runtime aislado de Pyodide | ✅ CERRADO (`7060889`) |
+| 2 | `usePyodide.ts` adaptado al Worker | ✅ CERRADO (`e76a89d`) |
+| 3 | Protocolo de stdin real (`Atomics.wait`) | ✅ CERRADO (`c40e1d1`) |
+| 4 | Panel de `input()` real en `PythonBridge.tsx` | ✅ CERRADO (`4656dad`) |
+| 4b | Cancelación de ejecución en curso | ✅ CERRADO (`b20b5a2`) |
+| 5 | COOP/COEP permanentes (dev validado; prod configurado, sin desplegar) | ✅ CERRADO en dev (`7b1d612`) |
+| 6 | Validación dinámica + integración con contenido real | ✅ CERRADO (`ffffb95`) |
+
+**Lo que la épica entrega:** un estudiante real, en la última etapa de
+`ciclo3-input.ts`, escribe su propia respuesta a un `input()` real de
+Python (no un valor precargado por el autor del contenido) y recibe
+evaluación correcta sobre esa respuesta dinámica — la brecha
+pedagógica que motivó `AUDITORIA-EPICA-B.md` (§4: *"el mensaje
+'Simularemos que el usuario escribe...' borra la distinción entre un
+dato fijo y un dato pedido al usuario"*) queda cerrada, al menos para
+este primer caso real.
+
+**Lo que queda deliberadamente fuera de esta épica (no pendientes
+silenciosos — decisiones explícitas, registradas):**
+- Migrar otras etapas de `ciclo3-input.ts` u otros laboratorios de la
+  plataforma al mecanismo interactivo — mini-épica futura, una vez que
+  este primer caso real se valide con más uso.
+- Retirar `simulatedInputs` — decisión §5, coexistencia indefinida
+  hasta que el tesista abra esa mini-épica aparte.
+- Deploy a Vercel para validar COOP/COEP en producción — requiere
+  autorización explícita, no decidida en esta sesión.
+- El endpoint de sandbox Docker sin autenticación
+  (`AUDITORIA-EPICA-B.md` §6) — riesgo de seguridad preexistente,
+  nunca en el alcance de esta épica, registrado aparte.
+- Cancelación general de una ejecución larga sin `input()` (Commit 4b,
+  §7, alcance) — solo se puede cancelar mientras el panel de entrada
+  está visible.
+
+## 12. Criterios de salida (Épica B completa)
 
 El Gate se considera cerrado (la épica, completa) solo si:
 - `ciclo3-input.ts` funciona con `input()` real en navegador real, no
