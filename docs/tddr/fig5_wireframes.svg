@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" font-family="Helvetica, Arial, sans-serif" font-size="9.5">
+  <rect x="0" y="0" width="1200" height="780" fill="#ffffff"/>
+  <text x="20" y="24" font-size="15" font-weight="bold">Figura 5 — Wireframes estructurales de las 5 pantallas clave (verificados contra el componente real)</text>
+  <text x="20" y="42" font-size="10" fill="#555">Esquema de bloques por pantalla — cada sección referencia el hook/componente real que la produce, no un diseño idealizado</text>
+
+  <!-- Panel 1: Dashboard estudiante -->
+  <g transform="translate(20,60)">
+    <rect x="0" y="0" width="220" height="330" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="110" y="-6" text-anchor="middle" font-weight="bold">1. Dashboard (estudiante)</text>
+    <rect x="10" y="10" width="200" height="30" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="110" y="29" text-anchor="middle">Header / navegación</text>
+    <rect x="10" y="50" width="200" height="60" fill="#fff2cc" stroke="#d6b656"/>
+    <text x="110" y="72" text-anchor="middle">Misión actual</text>
+    <text x="110" y="86" text-anchor="middle" font-size="8">useLearningPath(courseId)</text>
+    <rect x="10" y="120" width="200" height="90" fill="#eef4fc" stroke="#6c8ebf"/>
+    <text x="110" y="140" text-anchor="middle">Lista de cursos</text>
+    <text x="110" y="154" text-anchor="middle" font-size="8">useMyCourses()</text>
+    <text x="110" y="168" text-anchor="middle" font-size="8">useStudentProfile()</text>
+    <rect x="10" y="220" width="200" height="30" fill="#f5f5f5" stroke="#666"/>
+    <text x="110" y="239" text-anchor="middle">→ navega a /estudiante/module/{id}</text>
+  </g>
+
+  <!-- Panel 2: ModuleLearningView -->
+  <g transform="translate(260,60)">
+    <rect x="0" y="0" width="220" height="330" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="110" y="-6" text-anchor="middle" font-weight="bold">2. Módulo Adaptativo</text>
+    <rect x="10" y="10" width="200" height="26" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="110" y="27" text-anchor="middle" font-size="8.5">TutorPresence / LearningJourney</text>
+    <rect x="10" y="42" width="200" height="50" fill="#fff2cc" stroke="#d6b656"/>
+    <text x="110" y="58" text-anchor="middle">AgentThoughtStream</text>
+    <text x="110" y="72" text-anchor="middle" font-size="8">AgentDebateBubbles</text>
+    <text x="110" y="84" text-anchor="middle" font-size="8">useModuleOrchestration()</text>
+    <rect x="10" y="98" width="200" height="60" fill="#eef4fc" stroke="#6c8ebf"/>
+    <text x="110" y="118" text-anchor="middle">ModuleExperienceView</text>
+    <text x="110" y="132" text-anchor="middle" font-size="8">contenido generado (ResearchAgent</text>
+    <text x="110" y="144" text-anchor="middle" font-size="8">+ LLMService)</text>
+    <rect x="10" y="164" width="200" height="40" fill="#e1d5e7" stroke="#9673a6"/>
+    <text x="110" y="182" text-anchor="middle" font-size="8.5">TraceExplorer (evidencia agente)</text>
+    <rect x="10" y="210" width="200" height="30" fill="#f5f5f5" stroke="#666"/>
+    <text x="110" y="229" text-anchor="middle" font-size="8.5">EngageGateway / AgentActivityPanel</text>
+  </g>
+
+  <!-- Panel 3: AdaptiveLearnView -->
+  <g transform="translate(500,60)">
+    <rect x="0" y="0" width="220" height="330" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="110" y="-6" text-anchor="middle" font-weight="bold">3. Contenido Adaptativo</text>
+    <rect x="10" y="10" width="200" height="30" fill="#fdf3d6" stroke="#c9a13b"/>
+    <text x="110" y="29" text-anchor="middle" font-size="8.5">Banner "Orden adaptativo"</text>
+    <rect x="10" y="50" width="200" height="120" fill="#dae8fc" stroke="#6c8ebf"/>
+    <text x="110" y="70" text-anchor="middle">AdaptiveContentRenderer</text>
+    <text x="110" y="86" text-anchor="middle" font-size="8">bloques ordenados por</text>
+    <text x="110" y="98" text-anchor="middle" font-size="8">adaptive_decision.content_order</text>
+    <text x="110" y="114" text-anchor="middle" font-size="8">useAdaptiveContent(topicSlug)</text>
+    <text x="110" y="128" text-anchor="middle" font-size="8">useAdaptiveDecision(courseId)</text>
+    <rect x="10" y="180" width="200" height="30" fill="#f5f5f5" stroke="#666"/>
+    <text x="110" y="199" text-anchor="middle" font-size="8.5">CTA "Abrir Code Lab" (bloques placeholder)</text>
+  </g>
+
+  <!-- Panel 4: PedagogicalPanel -->
+  <g transform="translate(740,60)">
+    <rect x="0" y="0" width="220" height="330" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="110" y="-6" text-anchor="middle" font-weight="bold">4. Panel Pedagógico (docente)</text>
+    <rect x="10" y="10" width="200" height="24" fill="#ffe6cc" stroke="#d79b00"/>
+    <text x="110" y="26" text-anchor="middle" font-size="8.5">Tabs: resumen · estudiantes · conceptos</text>
+    <text x="110" y="38" text-anchor="middle" font-size="8.5">adaptación · investigación · observabilidad</text>
+    <rect x="10" y="48" width="200" height="60" fill="#eef4fc" stroke="#6c8ebf"/>
+    <text x="110" y="68" text-anchor="middle" font-size="8.5">Tab "estudiantes" → embebe</text>
+    <text x="110" y="80" text-anchor="middle" font-size="8.5">StudentTrajectoryPage completo</text>
+    <rect x="10" y="112" width="200" height="50" fill="#eef4fc" stroke="#6c8ebf"/>
+    <text x="110" y="132" text-anchor="middle" font-size="8.5">Tab "investigación" → embebe</text>
+    <text x="110" y="144" text-anchor="middle" font-size="8.5">ResearchDashboard completo</text>
+    <rect x="10" y="166" width="200" height="50" fill="#f5f5f5" stroke="#666" stroke-dasharray="4 3"/>
+    <text x="110" y="186" text-anchor="middle" font-size="8.5">Tabs "conceptos"/"adaptación":</text>
+    <text x="110" y="198" text-anchor="middle" font-size="8.5">ComingSoonTab (falta agregación backend)</text>
+  </g>
+
+  <!-- Panel 5: RuntimeConsole -->
+  <g transform="translate(980,60)">
+    <rect x="0" y="0" width="200" height="330" fill="none" stroke="#333" stroke-width="1.5"/>
+    <text x="100" y="-6" text-anchor="middle" font-weight="bold">5. Runtime Console</text>
+    <rect x="10" y="10" width="180" height="24" fill="#d5e8d4" stroke="#82b366"/>
+    <text x="100" y="26" text-anchor="middle" font-size="8">"Modo Evidencia" — sin rol</text>
+    <rect x="10" y="42" width="180" height="50" fill="#f5f5f5" stroke="#82b366"/>
+    <text x="100" y="60" text-anchor="middle" font-size="8.5">RuntimeTraceTimeline</text>
+    <text x="100" y="74" text-anchor="middle" font-size="8">useRuntimeTrace(sessionId)</text>
+    <rect x="10" y="96" width="180" height="50" fill="#f5f5f5" stroke="#82b366"/>
+    <text x="100" y="114" text-anchor="middle" font-size="8.5">RuntimeEstadoView</text>
+    <text x="100" y="128" text-anchor="middle" font-size="8">useRuntimeEstado(sessionId)</text>
+    <rect x="10" y="150" width="180" height="50" fill="#f5f5f5" stroke="#82b366"/>
+    <text x="100" y="168" text-anchor="middle" font-size="8.5">RuntimeReplayScrubber</text>
+    <text x="100" y="182" text-anchor="middle" font-size="8">useRuntimeReplay(sessionId)</text>
+    <rect x="10" y="204" width="180" height="30" fill="#f5f5f5" stroke="#666"/>
+    <text x="100" y="223" text-anchor="middle" font-size="8">RuntimeHitlPanel (RFC-0009)</text>
+  </g>
+
+  <text x="20" y="740" font-size="10" fill="#555">Nota: las pantallas /evidencia y /replay no requieren rol asignado (App.tsx no las envuelve en ProtectedRoute) — ver Sección 3.6.</text>
+</svg>

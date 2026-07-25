@@ -64,6 +64,16 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
 
+    # LangSmith — telemetria OPERATIVA opcional (RFC-0007, alternativa 2:
+    # nunca es la fuente de evidencia de la tesis). `app/telemetry/` lee
+    # estas variables directamente de `os.getenv`, no de `Settings`; se
+    # declaran aqui solo para que Settings no rechace el .env cuando estan
+    # presentes (el mismo patron que ya siguen TAVILY_API_KEY/OPENAI_API_KEY).
+    LANGSMITH_API_KEY: str = ""
+    LANGSMITH_TRACING: str = ""
+    LANGSMITH_PROJECT: str = ""
+    LANGSMITH_ENDPOINT: str = ""
+
     # Logging
     LOG_LEVEL: str = "INFO"
 

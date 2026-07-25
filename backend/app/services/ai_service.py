@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from typing import Optional
 
 from app.services.llm_prompts import (
@@ -8,6 +9,7 @@ from app.services.llm_prompts import (
     TUTOR_SYSTEM_PROMPT,
 )
 from app.core.config import settings
+from app.telemetry.spans_operativos import registrar_operacion_externa
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +121,9 @@ class AIService:
         course_name: str,
         module_title: str,
         contexto: dict,
+        *,
+        student_id: str | None = None,
+        course_id: str | None = None,
     ) -> str:
         """Redacta la respuesta del tutor sobre el contexto que el
         Runtime ya decidió (`runtime_bridge.contexto_pedagogico_tutor`).
@@ -142,7 +147,19 @@ class AIService:
             deuda=", ".join(map(str, memoria.get("deuda_abierta", ()))) or "ninguna",
             message=message,
         )
+        inicio = time.monotonic()
         result = self._call_openai(TUTOR_SYSTEM_PROMPT, prompt, temperature=0.7)
+        registrar_operacion_externa(
+            "tutor.chat",
+            latencia_ms=(time.monotonic() - inicio) * 1000,
+            session_id=student_id,  # no existe session_id de runtime aqui; student_id es el eje de correlacion real
+            metadata={
+                "course_name": course_name,
+                "module_title": module_title,
+                "student_id": student_id,
+                "course_id": course_id,
+            },
+        )
         if result:
             try:
                 data = json.loads(result)

@@ -986,6 +986,8 @@ def tutor_chat(
         course_name=course_name,
         module_title=module_title,
         contexto=contexto_runtime,
+        student_id=str(current_user.id),
+        course_id=str(data.course_id) if data.course_id is not None else None,
     )
     _tutor_ms = round((_time.monotonic() - _tutor_t0) * 1000, 1)
     research_metrics_service.record_metric(

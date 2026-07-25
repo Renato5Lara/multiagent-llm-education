@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from dotenv import load_dotenv
 from openai import (
@@ -41,6 +41,23 @@ _TRANSITORIAS: tuple[type[Exception], ...] = (
     RateLimitError,
     InternalServerError,
 )
+
+#: Punto de extensión para telemetría OPERATIVA (RFC-0007, alternativa 2 —
+#: latencia/tokens dependen del reloj de pared, excluidos a propósito del
+#: registro científico). `runtime/` nunca importa `app/`: quien quiera
+#: observar estas llamadas se registra aquí desde afuera (`app/telemetry`,
+#: cableado en el arranque de la aplicación). Por defecto no hay ninguno —
+#: no-op total, cero costo, cero import de `langsmith`.
+ObservadorLLM = Callable[[str, LLMResponse | None, BaseException | None, float], None]
+_observador: ObservadorLLM | None = None
+
+
+def establecer_observador_llm(observador: ObservadorLLM | None) -> None:
+    """Registra (o quita) el observador de telemetría operativa. Nunca es
+    consultado por la lógica de dominio; es una notificación unidireccional
+    y fire-and-forget — jamás puede alterar el resultado de `generar()`."""
+    global _observador
+    _observador = observador
 
 
 class OpenAIProvider:
@@ -106,8 +123,32 @@ class OpenAIProvider:
                 finish_reason=eleccion.finish_reason,
             )
 
-        return con_reintentos(
-            _llamar,
-            excepciones_transitorias=_TRANSITORIAS,
-            intentos=self._intentos,
-        )
+        inicio_total = time.monotonic()
+        try:
+            respuesta = con_reintentos(
+                _llamar,
+                excepciones_transitorias=_TRANSITORIAS,
+                intentos=self._intentos,
+            )
+        except Exception as error:
+            self._notificar_observador(None, error, inicio_total)
+            raise
+        self._notificar_observador(respuesta, None, inicio_total)
+        return respuesta
+
+    def _notificar_observador(
+        self,
+        respuesta: LLMResponse | None,
+        error: BaseException | None,
+        inicio_total: float,
+    ) -> None:
+        if _observador is None:
+            return
+        try:
+            _observador(
+                self.modelo, respuesta, error, (time.monotonic() - inicio_total) * 1000
+            )
+        except Exception:
+            # Telemetria operativa: un fallo del observador jamas debe
+            # afectar al runtime (garantia dura, no solo intencion).
+            pass

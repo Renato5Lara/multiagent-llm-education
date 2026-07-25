@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 900" font-family="Helvetica, Arial, sans-serif" font-size="10.5">
+  <defs>
+    <marker id="crow" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10" fill="none" stroke="#444" stroke-width="1.2"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1180" height="900" fill="#ffffff"/>
+  <text x="20" y="24" font-size="15" font-weight="bold" fill="#222222">Figura 3 — Modelo físico de base de datos (12 tablas centrales, PostgreSQL 16)</text>
+  <text x="20" y="42" font-size="10.5" fill="#555555">Línea sólida = FK real declarada · Línea discontinua gris = referencia "suave" (sin FK en BD, por diseño — event-log/memoria)</text>
+
+  <!-- users -->
+  <rect x="40" y="80" width="190" height="120" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="135" y="98" text-anchor="middle" font-weight="bold">users</text>
+  <line x1="40" y1="104" x2="230" y2="104" stroke="#6c8ebf"/>
+  <text x="50" y="120">PK id (uuid)</text>
+  <text x="50" y="134">email (unique)</text>
+  <text x="50" y="148">hashed_password</text>
+  <text x="50" y="162">role (enum)</text>
+  <text x="50" y="176">token_version</text>
+  <text x="50" y="190">+3 más</text>
+
+  <!-- courses -->
+  <rect x="330" y="80" width="190" height="130" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="425" y="98" text-anchor="middle" font-weight="bold">courses</text>
+  <line x1="330" y1="104" x2="520" y2="104" stroke="#d6b656"/>
+  <text x="340" y="120">PK id (uuid)</text>
+  <text x="340" y="134">code, name, status</text>
+  <text x="340" y="148">FK teacher_id → users.id</text>
+  <text x="340" y="162">FK institutional_course_id</text>
+  <text x="340" y="176">→ institutional_courses.id</text>
+  <text x="340" y="190">(nullable)</text>
+
+  <!-- enrollments -->
+  <rect x="620" y="80" width="200" height="130" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="720" y="98" text-anchor="middle" font-weight="bold">enrollments</text>
+  <line x1="620" y1="104" x2="820" y2="104" stroke="#6c8ebf"/>
+  <text x="630" y="120">PK id (uuid)</text>
+  <text x="630" y="134">FK course_id → courses.id</text>
+  <text x="630" y="148">FK student_id → users.id</text>
+  <text x="630" y="162">FK teacher_id → users.id</text>
+  <text x="630" y="176">status (enum), context_key</text>
+  <text x="630" y="190">idx: course/student/teacher</text>
+
+  <!-- student_profiles -->
+  <rect x="40" y="250" width="190" height="80" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="135" y="268" text-anchor="middle" font-weight="bold">student_profiles</text>
+  <line x1="40" y1="274" x2="230" y2="274" stroke="#6c8ebf"/>
+  <text x="50" y="290">PK id (uuid)</text>
+  <text x="50" y="304">FK student_id → users.id (unique, 1:1)</text>
+
+  <!-- diagnostic_results -->
+  <rect x="290" y="250" width="220" height="100" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="400" y="268" text-anchor="middle" font-weight="bold">diagnostic_results</text>
+  <line x1="290" y1="274" x2="510" y2="274" stroke="#d6b656"/>
+  <text x="300" y="290">PK id (uuid)</text>
+  <text x="300" y="304">FK student_id → users.id</text>
+  <text x="300" y="318">FK course_id → courses.id</text>
+  <text x="300" y="332">version (optimistic lock)</text>
+
+  <!-- evaluation_attempts -->
+  <rect x="560" y="250" width="220" height="100" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="670" y="268" text-anchor="middle" font-weight="bold">evaluation_attempts</text>
+  <line x1="560" y1="274" x2="780" y2="274" stroke="#d6b656"/>
+  <text x="570" y="290">PK id (uuid)</text>
+  <text x="570" y="304">FK student_id → users.id</text>
+  <text x="570" y="318">FK course_id → courses.id</text>
+  <text x="570" y="332">FK module_id → path_modules.id</text>
+
+  <!-- learning_sessions -->
+  <rect x="850" y="250" width="230" height="130" fill="#dae8fc" stroke="#6c8ebf"/>
+  <text x="965" y="268" text-anchor="middle" font-weight="bold">learning_sessions</text>
+  <line x1="850" y1="274" x2="1080" y2="274" stroke="#6c8ebf"/>
+  <text x="860" y="290">PK id (hex16 — no uuid, ver nota)</text>
+  <text x="860" y="304">FK student_id → users.id</text>
+  <text x="860" y="318">FK course_id → courses.id</text>
+  <text x="860" y="332">FK enrollment_id → enrollments.id</text>
+  <text x="860" y="346">FK module_id → path_modules.id</text>
+  <text x="860" y="360">status, swarm_activated</text>
+
+  <!-- learning_objectives -->
+  <rect x="40" y="420" width="200" height="90" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="140" y="438" text-anchor="middle" font-weight="bold">learning_objectives</text>
+  <line x1="40" y1="444" x2="240" y2="444" stroke="#d6b656"/>
+  <text x="50" y="460">PK id (uuid)</text>
+  <text x="50" y="474">FK course_id → courses.id</text>
+  <text x="50" y="488">bloom_level (1-6)</text>
+
+  <!-- resources -->
+  <rect x="290" y="420" width="200" height="90" fill="#fff2cc" stroke="#d6b656"/>
+  <text x="390" y="438" text-anchor="middle" font-weight="bold">resources</text>
+  <line x1="290" y1="444" x2="490" y2="444" stroke="#d6b656"/>
+  <text x="300" y="460">PK id (uuid)</text>
+  <text x="300" y="474">FK course_id → courses.id</text>
+  <text x="300" y="488">resource_type (enum)</text>
+
+  <!-- weekly_pedagogical_plans -->
+  <rect x="540" y="420" width="240" height="110" fill="#e1d5e7" stroke="#9673a6"/>
+  <text x="660" y="438" text-anchor="middle" font-weight="bold">weekly_pedagogical_plans</text>
+  <line x1="540" y1="444" x2="780" y2="444" stroke="#9673a6"/>
+  <text x="550" y="460">PK id (uuid)</text>
+  <text x="550" y="474">FK course_id → courses.id</text>
+  <text x="550" y="488">FK teacher_id → users.id</text>
+  <text x="550" y="502">objectives, adaptive_plan (JSON)</text>
+  <text x="550" y="516">consensus_result (JSON)</text>
+
+  <!-- agent_decision_traces -->
+  <rect x="850" y="440" width="250" height="150" fill="#f5f5f5" stroke="#666" stroke-dasharray="4 3"/>
+  <text x="975" y="458" text-anchor="middle" font-weight="bold">agent_decision_traces</text>
+  <line x1="850" y1="464" x2="1100" y2="464" stroke="#666" stroke-dasharray="4 3"/>
+  <text x="860" y="480">PK id (uuid) · trace_id (unique)</text>
+  <text x="860" y="494">student_id — sin FK (soft ref)</text>
+  <text x="860" y="508">course_id — sin FK (soft ref)</text>
+  <text x="860" y="522">session_id — sin FK (soft ref)</text>
+  <text x="860" y="536">correlation_id / causation_id</text>
+  <text x="860" y="550">idx compuestos: (student,agent),</text>
+  <text x="860" y="564">(correlation,sequence)</text>
+  <text x="860" y="578">Sin FK por diseño — event log</text>
+
+  <!-- shared_memory_records -->
+  <rect x="40" y="600" width="260" height="150" fill="#f5f5f5" stroke="#666" stroke-dasharray="4 3"/>
+  <text x="170" y="618" text-anchor="middle" font-weight="bold">shared_memory_records</text>
+  <line x1="40" y1="624" x2="300" y2="624" stroke="#666" stroke-dasharray="4 3"/>
+  <text x="50" y="640">PK id (uuid)</text>
+  <text x="50" y="654">student_id — sin FK (nullable, global)</text>
+  <text x="50" y="668">module_id — sin FK (soft ref)</text>
+  <text x="50" y="682">memory_type, key, value (JSON)</text>
+  <text x="50" y="696">version (optimistic lock)</text>
+  <text x="50" y="710">UNIQUE(voter,student,module,type,key)</text>
+  <text x="50" y="724">Sin FK por diseño — memoria de enjambre</text>
+
+  <!-- Relationships (solid FK) -->
+  <line x1="230" y1="140" x2="330" y2="140" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="520" y1="140" x2="620" y2="140" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="135" y1="200" x2="135" y2="250" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="230" y1="180" x2="290" y2="290" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="425" y1="210" x2="400" y2="250" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="425" y1="210" x2="670" y2="250" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="720" y1="210" x2="900" y2="250" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="230" y1="160" x2="900" y2="270" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="140" y1="380" x2="140" y2="420" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="390" y1="380" x2="390" y2="420" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="425" y1="210" x2="620" y2="420" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+  <line x1="230" y1="180" x2="540" y2="470" marker-end="url(#crow)" stroke="#444" stroke-width="1.2"/>
+
+  <!-- Soft references (dashed) -->
+  <line x1="230" y1="190" x2="850" y2="500" stroke="#999" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="230" y1="150" x2="170" y2="600" stroke="#999" stroke-width="1" stroke-dasharray="3 3"/>
+
+  <text x="20" y="850" font-size="10" fill="#555">Nota verificada: learning_sessions.id usa uuid.hex[:16] (16 caracteres), no UUID completo — inconsistencia de convención respecto a las demás 31 tablas, confirmada en el código (learning_session.py).</text>
+  <text x="20" y="866" font-size="10" fill="#555">Nota verificada: varias tablas (learning_sessions, institutional_courses, educational_contexts) fueron creadas primero por el ORM (create_all) y formalizadas en Alembic después — documentado explícitamente en las propias migraciones de reconciliación.</text>
+</svg>

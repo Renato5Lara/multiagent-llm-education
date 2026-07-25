@@ -24,7 +24,19 @@
       "Bash(gh auth *)",
       "Bash(git config *)",
       "Bash(ssh *)",
-      "Read(//home/rlara/**)"
+      "Read(//home/rlara/**)",
+      "Read(//c/Users/Lara/Downloads/**)",
+      "Bash(pandoc -t markdown \"INFORME DE CAPSTONE PROJECT.docx\" -o \"/tmp/informe_template.md\")",
+      "Bash(pandoc -t markdown \"Project_charter.docx\" -o \"/tmp/project_charter.md\")",
+      "Bash(pandoc -t markdown \"Acta_de_refinamiento.docx\" -o \"/tmp/acta_refinamiento.md\")",
+      "PowerShell(Get-Command pandoc -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command soffice -ErrorAction SilentlyContinue)",
+      "Bash(python3 -c \"import docx\")",
+      "Bash(python -c \"import docx\")",
+      "Bash(pip show *)",
+      "PowerShell(pip install python-docx -q 2>&1)",
+      "Bash(cd tests/runtime/walkthrough && grep -l \"skipif\\\\|OPENAI_API_KEY\\\\|mark\\\\.\" test_M3_PR*.py test_P13_*.py 2>/dev/null | head -30; echo \"---markers in pytest.ini---\"; grep -rn \"markers\" ../../../pytest.ini 2>/dev/null; echo \"---check first PR file header---\"; head -40 test_M3_PR1_openai_provider_real.py)",
+      "Bash(cp \"C:\\\\Users\\\\Lara\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Lara-Documents-Proyectos-Proyect-multiagent-llm-education-multiagent-llm-education\\\\8e9be48a-a70e-4a23-bde7-744cddd11921\\\\scratchpad\\\\fig2_casos_de_uso.svg\" \"C:\\\\Users\\\\Lara\\\\Documents\\\\Proyectos\\\\Proyect-multiagent-llm-education\\\\multiagent-llm-education\\\\docs\\\\tddr\\\\\" *)"
     ]
   }
 }

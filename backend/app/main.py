@@ -110,6 +110,14 @@ async def lifespan(app: FastAPI):
         logger.info("OpenAI LLM generation available")
     # ────────────────────────────────────────────────────────────────
 
+    # ── Telemetría operativa (RFC-0007, alternativa 2 — no es evidencia) ──
+    from app.telemetry.bootstrap import inicializar as inicializar_telemetria
+    from app.telemetry.config import HABILITADO as telemetria_habilitada
+
+    inicializar_telemetria()
+    logger.info("Telemetria operativa LangSmith: %s", "activa" if telemetria_habilitada else "deshabilitada")
+    # ────────────────────────────────────────────────────────────────
+
     # ── Research & Experiment Layer: banco fijo pre/post-test ───────
     # Best-effort: si la migración aún no corrió, se omite sin romper el boot.
     try:

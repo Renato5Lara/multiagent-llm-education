@@ -45,6 +45,7 @@ from app.services.runtime_bridge import (
     bloom_target_desde_entrega,
     consultar_decision_vigente,
 )
+from app.telemetry.spans_operativos import registrar_operacion_externa
 from runtime.boundary import Entrega, normalizar_asunto
 
 logger = logging.getLogger(__name__)
@@ -718,6 +719,7 @@ class ModuleOrchestrationService:
             multimodal_prompts = _aplicar_modalidad_desde_entrega(
                 multimodal_prompts, module, entrega_runtime
             )
+        _inicio_orquestacion = time.monotonic()
         concept_blocks = await self._build_concept_blocks(
             topic=module.title,
             concepts=concepts,
@@ -725,6 +727,18 @@ class ModuleOrchestrationService:
             misconceptions_raw=misconceptions_raw,
             bloom_target=bloom_target,
             orch_id=orch_id,
+        )
+        registrar_operacion_externa(
+            "modulo.orquestacion",
+            latencia_ms=(time.monotonic() - _inicio_orquestacion) * 1000,
+            session_id=orch_id,
+            metadata={
+                "topic": module.title,
+                "bloom_target": bloom_target,
+                "bloom_target_desde_runtime": entrega_runtime is not None,
+                "student_id": str(student.id),
+                "module_id": str(module.id),
+            },
         )
         storyboard = self._generate_storyboard(module.title, pedagogical_stages)
         continuity = self._generate_continuity_notes(module.title, module, course)

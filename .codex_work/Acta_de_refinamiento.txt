@@ -1,0 +1,205 @@
+===== Acta_de_refinamiento.docx =====
+PARAGRAPHS:
+[001] (Normal) UNIVERSIDAD PRIVADA ANTENOR ORREGO
+[002] (Normal) Facultad de Ingeniería — Escuela de Ingeniería de Computación y Sistemas
+[003] (Normal) Taller Integrador I · 2026
+[005] (Normal) ACTUALIZACIÓN Y REFINAMIENTO DEL PROJECT CHARTER
+[007] (Normal) Plataforma Multiagente Pedagógica Observable con Orquestación Adaptativa, Retrieval Contextual y Benchmarking Reproducible
+[009] (Normal) Autor:
+[010] (Normal) Franklin Renato Rodriguez Lara
+[011] (Normal) Asesor:
+[012] (Normal) Mg. Cueva Chávez, Walter Manuel
+[013] (Normal) Trujillo, Perú — 2026
+[015] (Heading 1) Introducción
+[016] (Normal) El presente documento constituye la actualizacion y refinamiento formal del Project Charter original del proyecto de Taller Integrador I, titulado inicialmente "Diseno e Implementacion de una Arquitectura Multiagente Hibrida basada en LLMs para la Generacion Automatizada y Verificada de Contenido Educativo Multimodal en Fundamentos de Programacion". Este proceso de actualizacion responde a la evolucion tecnica y metodologica experimentada durante el desarrollo iterativo del sistema a lo largo de los sprints de implementacion.
+[018] (Normal) El objetivo del presente documento no es reemplazar el charter original, sino aportar una justificación técnica rigurosa de la evolución del proyecto, alinear oficialmente el alcance actual con la implementación real del sistema y documentar las decisiones arquitectónicas tomadas durante el proceso Scrum. Esta práctica es consistente con los principios del desarrollo ágil, donde el alcance y los artefactos de gestión evolucionan en respuesta al aprendizaje continuo obtenido en cada iteración.
+[020] (Normal) La evolución aquí documentada no representa una desviación de los objetivos académicos del proyecto, sino una maduración conceptual y técnica que fortalece la solidez, reproducibilidad y defendibilidad del artefacto de software y del proceso investigativo asociado. Los cambios realizados respetan la coherencia con las hipótesis de investigación, las métricas de evaluación y la alineación con la línea de investigación de Inteligencia Artificial aplicada a EdTech.
+[022] (Heading 1) 2. Justificación del Cambio
+[023] (Heading 2) 2.1 Limitaciones del Alcance Original
+[024] (Normal) El charter original planteaba una arquitectura conceptualmente ambiciosa que integraba generación multimodal directa, consenso multiagente genérico, benchmarking académico simultáneo y validación pedagógica en una sola fase de implementación. Si bien estos componentes eran técnicamente coherentes en el plano conceptual, el proceso de implementación iterativa evidenció que varios de ellos presentaban ambigüedades de operacionalización que dificultaban su implementación, evaluación y defensa académica.
+[026] (Normal) En particular, el concepto de generación multimodal directa —entendida como la producción autónoma de imágenes, audio y video por parte de los agentes— demostró requerir un consumo de tokens y latencia de inferencia incompatibles con las restricciones presupuestarias y temporales del proyecto. Asimismo, el enfoque inicial de consenso multiagente genérico carecía de un protocolo formal de convergencia, lo que introducía variabilidad no controlada en los resultados pedagógicos y comprometía la reproducibilidad del benchmarking.
+[028] (Normal) La generalidad de ciertos objetivos iniciales dificultaba asimismo la definición precisa de métricas de éxito verificables. Terminos como arquitectura multiagente hibrida y generacion multimodal educativa eran suficientemente amplios como para requerir una acotación técnica más rigurosa que permitiera su evaluación experimental bajo un diseño cuasi-experimental con validez interna.
+[030] (Heading 2) 2.2 Aprendizaje Obtenido en el Proceso Iterativo
+[031] (Normal) El proceso Scrum adoptado como metodología de desarrollo permitió identificar, en cada sprint de revisión, las necesidades reales del sistema y los cuellos de botella técnicos que el diseño inicial no anticipaba. La naturaleza empírica del desarrollo ágil posibilitó que las decisiones arquitectónicas evolucionaran desde supuestos teóricos hacia soluciones validadas experimentalmente, reduciendo el riesgo técnico y aumentando la coherencia entre el diseño y la implementación.
+[033] (Normal) Las iteraciones demostraron que la observabilidad del sistema —es decir, la capacidad de registrar, visualizar y explicar las decisiones pedagógicas tomadas por los agentes— constituía un requisito no negociable tanto para la validación académica como para la trazabilidad experimental requerida por el diseño de investigación. Del mismo modo, la necesidad de un modo degradado (degraded mode) con fallback entre modelos emergió como una restricción operativa crítica para garantizar la continuidad del sistema bajo condiciones reales de disponibilidad de APIs.
+[035] (Normal) Estos aprendizajes, acumulados a lo largo de los sprints, justifican plenamente la reorientación del proyecto hacia una arquitectura más acotada, observable y reproducible, que mantiene la coherencia con los objetivos académicos originales al tiempo que supera las limitaciones operativas del diseño inicial.
+[036] (Heading 1) 3. Análisis Técnico de la Evolución del Proyecto
+[038] (Normal) 3.1 Problemas Técnicos Identificados
+[042] (Heading 2) 3.2 Comparación de Enfoque: Original vs. Actualizado
+[044] (Heading 1) 4. Evolución del Proyecto por Sprint
+[045] (Heading 2) 4.1 Sprint 1: Arquitectura Base y Fundamentos del Sistema
+[047] (Normal) El Sprint 1 se orientó al establecimiento de los cimientos técnicos del sistema, abarcando desde la configuración del entorno de desarrollo hasta la implementación de los primeros agentes funcionales y los paneles de monitoreo inicial. Los entregables de este sprint definieron la arquitectura base sobre la que se construiría toda la lógica pedagógica posterior.
+[052] (Heading 2) 4.2 Sprint 2: Inteligencia Pedagógica, Observabilidad y Benchmarking
+[054] (Normal) El Sprint 2 representó la incorporación de los componentes de inteligencia pedagógica avanzada que diferencian al sistema de arquitecturas multiagente genéricas. En este sprint se implementaron el swarm pedagógico, los mecanismos de retrieval contextual, la explainability de decisiones, el replay cognitivo y el sistema de benchmarking reproducible, consolidando la propuesta de valor académica del proyecto.
+[057] (Heading 1) 5. Nuevo Enfoque Consolidado
+[058] (Normal) Como resultado de las dos iteraciones de sprint documentadas, el proyecto se ha consolidado en torno a ocho ejes técnicos y académicos fundamentales que definen su identidad arquitectónica y su propuesta de valor para la investigación en IA aplicada a la educación superior:
+[060] (Normal) 5.1 Adaptación Pedagógica Inteligente
+[061] (Normal) El sistema implementa un ciclo de adaptación continua del contenido educativo basado en el perfil cognitivo del estudiante, inferido por el agente Perfilador a partir de interacciones previas, resultados de evaluaciones y patrones de navegación. Esta adaptación se operacionaliza a través del agente Generador de Rutas, que diseña itinerarios de aprendizaje personalizados ejecutados bajo la supervisión del Coordinador.
+[063] (Normal) 5.2 Observabilidad Multiagente
+[064] (Normal) Todos los procesos internos del sistema —incluyendo las decisiones de adaptación, los eventos de consenso entre agentes y las transiciones de estado cognitivo del estudiante— son registrados en tiempo real mediante Server-Sent Events (SSE) y almacenados en PostgreSQL para su posterior análisis y reproducción. Esta observabilidad constituye un requisito indispensable para la trazabilidad experimental del diseño cuasi-experimental.
+[066] (Normal) 5.3 Explainability Pedagógica
+[067] (Normal) Cada decisión de adaptación adoptada por el sistema es documentada mediante el módulo de explainability, que registra el agente responsable, los criterios de decisión aplicados, el perfil del estudiante en ese momento y el contenido adaptado resultante. Esta información es presentada al docente a través de paneles visuales específicamente diseñados para la interpretación pedagógica.
+[069] (Normal) 5.4 Retrieval Contextual Educativo
+[070] (Normal) El agente Curador integra el módulo de recuperación contextual basado en Tavily Search API, que enriquece el contenido generado con información actualizada y relevante del dominio de Fundamentos de Programación. Este mecanismo garantiza la vigencia del material pedagógico sin incrementar significativamente el consumo de tokens del ciclo agentivo principal.
+[072] (Normal) 5.5 Benchmarking Reproducible
+[073] (Normal) El sistema incorpora un módulo de benchmarking que evalúa el desempeño de la arquitectura multiagente frente a baselines de agente único sobre datasets pedagógicos derivados de HumanEval y MBPP. La reproducibilidad del benchmarking está garantizada por la contenedorización completa del entorno de ejecución mediante Docker y por el registro estructurado de todas las trazas de evaluación.
+[075] (Normal) 5.6 Sandbox Académico Seguro
+[076] (Normal) La ejecución de código educativo se realiza en un entorno Docker Sandbox con políticas de aislamiento formalizadas, time-out configurado y registro completo de tracebacks. Este componente garantiza la seguridad del sistema frente a código potencialmente malicioso y la reproducibilidad de los resultados de ejecución.
+[078] (Normal) 5.7 Memoria Compartida Adaptativa
+[079] (Normal) Los agentes del sistema comparten un espacio de memoria estructurada que mantiene la coherencia narrativa del proceso de aprendizaje del estudiante a lo largo del tiempo. Esta memoria permite a cada agente acceder al contexto histórico relevante sin necesidad de reenviar todo el historial de interacciones en cada solicitud, optimizando el consumo de tokens.
+[081] (Normal) 5.8 Arquitectura Escalable y Defendible
+[082] (Normal) La arquitectura adoptada fue diseñada con criterios de escalabilidad horizontal, separación de responsabilidades entre agentes y documentación completa de interfaces. Estos atributos de calidad arquitectónica son esenciales tanto para la extensibilidad académica del sistema como para su defensa ante comités de evaluación de investigación.
+[083] (Heading 1) 6. Componentes Técnicos Implementados
+[084] (Heading 2) 6.1 Backend
+[087] (Heading 2) 6.2 Frontend
+[090] (Heading 2) 6.3 Capa de Inteligencia Artificial
+[093] (Heading 1) 7. Justificación Académica del Nuevo Enfoque
+[094] (Normal) El enfoque consolidado presenta ventajas académicas sustanciales respecto al diseño original que justifican su adopción como marco definitivo del proyecto. A continuación se detallan las dimensiones en las que el nuevo enfoque fortalece la calidad académica y la defendibilidad de la investigación.
+[096] (Heading 2) 7.1 Mayor Reproducibilidad Experimental
+[097] (Normal) La contenedorización completa del entorno de ejecución mediante Docker, combinada con el registro estructurado de todas las trazas experimentales en formato JSONL, garantiza que los experimentos de benchmarking puedan ser reproducidos de forma exacta por otros investigadores. Esta propiedad es esencial para la validación externa de los resultados y para la publicación en venues académicos que exigen reproducibilidad como criterio de aceptación.
+[099] (Heading 2) 7.2 Fortalecimiento de la Trazabilidad Experimental
+[100] (Normal) El módulo de observabilidad SSE y los dashboards de trazabilidad pedagógica permiten registrar con precisión cada evento relevante del ciclo experimental, desde la solicitud de adaptación del estudiante hasta la decisión tomada por cada agente y el contenido generado como respuesta. Esta trazabilidad granular es indispensable para el diseño cuasi-experimental adoptado (pre-test / post-test con grupos experimental y control, n=60) y para el análisis estadístico posterior mediante ANCOVA.
+[102] (Heading 2) 7.3 Benchmarking Académico Riguroso
+[103] (Normal) La adopción de datasets estándar de la comunidad (HumanEval/MBPP adaptados pedagógicamente) como base del benchmarking, junto con la implementación de un runner de evaluación determinístico, permite comparar el desempeño del sistema con baselines del estado del arte de forma metodológicamente sólida. Las métricas seleccionadas —Precisión de Adaptación del Contenido (PAC), Tiempo de Generación de Rutas (TGR) y Nivel de Satisfacción del Estudiante (NSE/SUS)— son operacionalizables, medibles y comparables con la literatura existente.
+[105] (Heading 2) 7.4 Alineación con Ingeniería de Sistemas e IA Aplicada a Educación
+[106] (Normal) El enfoque consolidado mantiene plena coherencia con las líneas de investigación prioritarias de la Escuela de Ingeniería de Computación y Sistemas de la UPAO, específicamente en las áreas de Arquitecturas de Software, Sistemas Inteligentes e Ingeniería de Software Educativo. La combinación de rigor arquitectónico, validación empírica y aplicación al dominio educativo representa una contribución de Design Knowledge replicable con impacto potencial en otras instituciones del ecosistema universitario peruano.
+[108] (Heading 2) 7.5 Mayor Defendibilidad ante el Jurado
+[109] (Normal) La delimitación precisa del alcance, la formalización de los protocolos de evaluación y la disponibilidad de trazas de ejecución completas proveen al investigador de evidencia empírica sólida para sustentar cada afirmación del proyecto ante el jurado evaluador. La explainability pedagógica, en particular, permite demostrar el funcionamiento interno del sistema de forma comprensible para evaluadores con diferentes niveles de especialización en inteligencia artificial.
+[111] (Heading 1) 8. Actualización de Objetivos, Alcance y Métricas
+[112] (Heading 2) 8.1 Objetivo General Actualizado
+[115] (Heading 2) 8.2 Objetivos Específicos Actualizados
+[118] (Heading 2) 8.3 Alcance Actualizado
+[121] (Heading 2) 8.4 Métricas e Indicadores Actualizados
+[125] (Heading 1) 9. Entregables, Restricciones y Supuestos Actualizados
+[126] (Heading 2) 9.1 Entregables Actualizados
+[128] (List Paragraph) Documento técnico de la arquitectura multiagente pedagógica observable: especificación de agentes, system prompts, protocolos de consenso, memoria compartida y módulos de observabilidad.
+[129] (List Paragraph) Repositorio Git con el código fuente completo de la plataforma (backend FastAPI + frontend React + módulos de IA) desplegable mediante Docker Compose.
+[130] (List Paragraph) Imagen Docker funcional del sandbox de ejecución segura con políticas de aislamiento documentadas.
+[131] (List Paragraph) Dataset de benchmarking: 100 problemas pedagógicos derivados de HumanEval/MBPP en formato JSONL con metadatos pedagógicos y trazas de ejecución.
+[132] (List Paragraph) Reporte estadístico del benchmarking: pruebas no paramétricas, tamaños de efecto y visualizaciones comparativas.
+[133] (List Paragraph) Dashboards de observabilidad y explainability pedagógica funcionalmente integrados en la plataforma.
+[134] (List Paragraph) Instrumento validado NSE/SUS con V de Aiken documentado y resultados de la aplicación experimental.
+[135] (List Paragraph) Documentación final: manual de usuario, guía de despliegue, video demostrativo del prototipo y presentación final del Sprint 2.
+[137] (Heading 2) 9.2 Restricciones Actualizadas
+[139] (List Paragraph) Plazo absoluto de 15 semanas correspondiente al cronograma del Taller Integrador I, sin posibilidad de extensión formal.
+[140] (List Paragraph) Presupuesto total autofinanciado por el investigador: S/ 2,134, incluyendo créditos de APIs de LLMs (OpenAI y Anthropic) y servicios de despliegue (Railway).
+[141] (List Paragraph) Ventana de contexto limitada a 128K tokens por solicitud (Claude 3.5/4 Sonnet y GPT-4o), lo que restringe la longitud de las trazas de contexto compartidas entre agentes.
+[142] (List Paragraph) Restricción de dominio: el artefacto se valida exclusivamente en el curso de Fundamentos de Programación a nivel introductorio de la UPAO.
+[143] (List Paragraph) Disponibilidad limitada del investigador como único ejecutor del proyecto en los roles de Project Manager, desarrollador, analista de datos y redactor académico.
+[144] (List Paragraph) El degraded mode con fallback a GPT-4o asume disponibilidad simultánea de ambas APIs durante la ventana experimental.
+[147] (Heading 1) 10. Conclusiones
+[148] (Normal) La evolución documentada en el presente charter refleja la madurez técnica y metodológica alcanzada por el proyecto a través del proceso iterativo de desarrollo Scrum. Los cambios no representan una desviación de los objetivos académicos originales, sino una reorientación deliberada hacia una arquitectura más acotada, observable, reproducible y académicamente defendible, en coherencia con los principios del desarrollo ágil y con las restricciones reales del entorno de ejecución del proyecto.
+[150] (Normal) El nuevo enfoque consolidado —centrado en la plataforma multiagente pedagógica observable con orquestación adaptativa, retrieval contextual, explainability y benchmarking reproducible— supera las limitaciones del diseño original en cuatro dimensiones críticas: reproducibilidad experimental, trazabilidad pedagógica, rigor del benchmarking y defendibilidad ante el jurado evaluador. Estas mejoras no son meramente cosméticas, sino que transforman el carácter del proyecto de una propuesta conceptualmente ambiciosa a un artefacto de software empíricamente validado con contribución demostrable al campo de la IA aplicada a la educación superior.
+[152] (Normal) La coherencia entre la arquitectura implementada, las métricas actualizadas y los objetivos específicos redefinidos garantiza que el proyecto mantenga su alineación con los estándares académicos de la UPAO y con las expectativas del Taller Integrador I para el ciclo 2026. El presente documento establece un marco de referencia claro, técnicamente sólido y académicamente justificado para la fase final de implementación, validación experimental y defensa del proyecto.
+[154] (Heading 1) 11. Recomendaciones
+[155] (List Paragraph) Mantener el registro completo de todas las trazas de benchmarking en formato JSONL desde el inicio de la fase experimental, incluyendo metadatos de versión de modelo, timestamp y configuración del sistema, para garantizar la reproducibilidad ante revisión académica.
+[156] (List Paragraph) Priorizar la validación del instrumento NSE/SUS con al menos tres expertos en usabilidad educativa antes de su aplicación al grupo experimental, a fin de obtener evidencia de validez de contenido (V de Aiken ≥ 0.80) para la defensa del proyecto.
+[157] (List Paragraph) Documentar formalmente el protocolo de consenso multiagente en un diagrama de secuencia UML actualizado que refleje las reglas de priorización y los criterios de fallback implementados en el Sprint 2, como evidencia técnica para el comité evaluador.
+[158] (List Paragraph) Realizar una prueba piloto del sandbox Docker con un subconjunto de 10 problemas del dataset antes de iniciar la campaña experimental principal, verificando el comportamiento del sistema en condiciones de carga concurrente y registrando los tiempos de respuesta para calibrar el umbral de TGR.
+[159] (List Paragraph) Considerar la preparación de un artículo académico corto derivado del benchmarking comparativo para su envío a una conferencia nacional o regional de IA educativa, aprovechando los datos experimentales generados durante la validación del artefacto.
+[160] (List Paragraph) Mantener actualizado el registro de decisiones arquitectónicas (Architecture Decision Records, ADR) a lo largo de los sprints restantes, documentando el contexto, las alternativas evaluadas y la justificación de cada decisión técnica relevante como respaldo para la defensa oral del proyecto.
+[163] (Heading 1) Firmas y Aprobación
+TABLES:
+-- Table 0 --
+[00] Problemáticas identificadas durante el desarrollo iterativo A continuación se detallan los principales problemas técnicos identificados durante el proceso de implementación:
+-- Table 1 --
+[00] Problema identificado | Descripción técnica y decisión adoptada
+[01] Consumo excesivo de tokens | La generación multimodal directa (imagen + audio + video) a través de LLMs incrementaba el consumo a más de 120,000 tokens por módulo educativo, superando el umbral de viabilidad económica. Se adoptó la generación basada en prompts estructurados como alternativa eficiente y controlable.
+[02] Complejidad de generación multimodal directa | La integración de motores de generación de imagen y audio en el ciclo agentivo introducía dependencias externas no deterministas que comprometían la reproducibilidad del benchmarking. Se priorizó la coherencia narrativa mediante prompts multimodales sobre la generación directa.
+[03] Ausencia de trazabilidad pedagógica | El diseño original no contemplaba mecanismos para registrar y explicar las decisiones pedagógicas tomadas por los agentes durante la adaptación de contenido. Se incorporó el módulo de explainability pedagógica como componente estructural del sistema.
+[04] Variabilidad en el consenso multiagente | El protocolo de consenso original carecía de criterios formales de convergencia, introduciendo variabilidad no controlada. Se redefinió el consenso bajo un esquema de adaptación educativa con reglas explícitas de priorización y fallback.
+[05] Limitaciones de ejecución local | La ejecución de código en entornos locales sin contenedorización presentaba riesgos de seguridad y problemas de reproducibilidad. Se adoptó Docker Sandbox como entorno de ejecución aislado y reproducible.
+[06] Objetivos iniciales sobredimensionados | Varios objetivos del charter original intentaban abordar simultáneamente aspectos de diseño, implementación, validación y benchmarking en plazos incompatibles con un equipo de un único investigador. Se simplificaron y priorizaron los objetivos según valor académico y viabilidad operativa.
+-- Table 2 --
+[00] Enfoque Original | Enfoque Actualizado (Consolidado)
+[01] Arquitectura multiagente híbrida genérica | Plataforma multiagente pedagógica observable con roles especializados
+[02] Generación multimodal directa (imagen, audio, video) | Generación multimodal basada en prompts estructurados y coherencia narrativa
+[03] Consenso multiagente sin protocolo formal | Consenso adaptativo con reglas explícitas de priorización educativa
+[04] Validación técnica puntual | Benchmarking reproducible con trazabilidad experimental completa
+[05] Sin mecanismo de explicabilidad | Explainability pedagógica integrada como componente estructural
+[06] Ejecución de código en entorno local | Sandbox Docker aislado con políticas de seguridad formalizadas
+[07] Benchmarking académico simultáneo | Benchmarking incremental con datasets pedagógicos validados
+[08] Sin modo degradado | Degraded mode con fallback LLM y continuidad de servicio garantizada
+-- Table 3 --
+[00] Sprint 1 — Arquitectura Base y Fundamentos
+[01] ▸ Definición e implementación de la arquitectura backend con FastAPI y Python 3.12
+[02] ▸ Configuración del sistema de autenticación con JWT y gestión de sesiones de estudiante
+[03] ▸ Diseño e implementación de la base de datos PostgreSQL con SQLAlchemy ORM
+[04] ▸ Desarrollo de los dashboards iniciales de monitoreo pedagógico (React 18 + Vite + TypeScript)
+[05] ▸ Implementación de los módulos académicos base: estructura de cursos, lecciones y evaluaciones
+[06] ▸ Flujo de onboarding adaptativo para nuevos estudiantes con perfil de competencias inicial
+[07] ▸ Implementación de los primeros agentes especializados: Perfilador y Curador de contenido
+[08] ▸ Integración del Coordinador como orquestador central de la arquitectura multiagente
+[09] ▸ Configuración del entorno Docker para despliegue reproducible (Railway)
+[10] ▸ Definición del stack tecnológico consolidado y documentación técnica del Sprint
+-- Table 4 --
+[00] Sprint 2 — Inteligencia Pedagógica, Observabilidad y Benchmarking
+[01] ▸ Implementación del Swarm Pedagógico con orquestación adaptativa basada en LangGraph 0.2.x
+[02] ▸ Integración del módulo de Retrieval Contextual Educativo mediante Tavily Search API
+[03] ▸ Desarrollo del módulo de Explainability Pedagógica: registro y visualización de decisiones agentivas
+[04] ▸ Implementación del Replay Cognitivo: reproducción visual del proceso de aprendizaje del estudiante
+[05] ▸ Integración del Sandbox Docker para ejecución segura y aislada de código educativo
+[06] ▸ Sistema de Benchmarking Reproducible con datasets pedagógicos derivados de HumanEval/MBPP
+[07] ▸ Implementación de la Observabilidad SSE (Server-Sent Events) para monitoreo en tiempo real
+[08] ▸ Dashboards de Trazabilidad Pedagógica con métricas de adaptación y progreso cognitivo
+[09] ▸ Memoria Compartida Adaptativa entre agentes para coherencia narrativa de largo plazo
+[10] ▸ Modo Degradado (Degraded Mode) con fallback automático entre Claude Sonnet y GPT-4o
+[11] ▸ Generación Multimodal basada en prompts estructurados con validación de coherencia pedagógica
+[12] ▸ Consenso Multiagente enfocado en adaptación educativa con protocolo formal de convergencia
+-- Table 5 --
+[00] Componente | Descripción técnica
+[01] FastAPI + Python 3.12 | Framework de alto rendimiento para la exposición de endpoints REST y WebSocket, con validación automática de esquemas mediante Pydantic v2.
+[02] LangGraph 0.2.x | Motor de orquestación agentiva basado en grafos dirigidos cíclicos (DAG) que gestiona el flujo de ejecución entre los cuatro agentes especializados del sistema.
+[03] PostgreSQL + SQLAlchemy | Sistema de persistencia relacional para estudiantes, perfiles cognitivos, rutas de aprendizaje, trazas de benchmarking y logs de explainability.
+[04] SSE (Server-Sent Events) | Mecanismo de streaming unidireccional para la observabilidad en tiempo real del estado del sistema y las decisiones pedagógicas de los agentes.
+[05] Tavily Retrieval API | Módulo de recuperación de información contextual para el enriquecimiento del contenido educativo generado por el agente Curador.
+[06] Shared Memory Module | Espacio de memoria compartida entre agentes implementado sobre Redis para garantizar coherencia narrativa y reducción del consumo de tokens por contexto.
+[07] Replay Engine | Módulo de reproducción de sesiones pedagógicas que permite reconstruir cronológicamente el proceso de adaptación experimentado por cada estudiante.
+[08] Explainability Module | Componente de registro y exposición de decisiones pedagógicas, con serialización estructurada en JSON y endpoints dedicados para consumo desde el frontend.
+[09] Benchmark Runner | Motor de evaluación reproducible que ejecuta el protocolo de benchmarking sobre datasets pedagógicos derivados de HumanEval/MBPP con registro completo de métricas.
+[10] Docker Sandbox | Entorno de ejecución aislado para código educativo, con políticas de seguridad (bloqueo de red, sistema de archivos y procesos externos), time-out de 10 segundos y captura de tracebacks.
+-- Table 6 --
+[00] Componente | Descripción técnica
+[01] React 18 + Vite + TypeScript | Stack de desarrollo frontend moderno con tipado estático, bundling optimizado y soporte para renderizado condicional de componentes pedagógicos.
+[02] Tailwind CSS + shadcn/ui | Sistema de diseño utilitario complementado con componentes accesibles y reutilizables para la construcción de interfaces pedagógicas consistentes.
+[03] Dashboards de Observabilidad | Paneles interactivos que visualizan en tiempo real el estado del sistema multiagente, los eventos SSE y las métricas de adaptación pedagógica.
+[04] Replay Visual | Componente de reproducción visual cronológica del proceso de aprendizaje de cada estudiante, integrado con el Replay Engine del backend.
+[05] Explainability Visual | Interfaz de visualización de las decisiones pedagógicas tomadas por los agentes, con filtrado por estudiante, agente, tipo de decisión y período temporal.
+[06] Timeline Cognitivo | Componente de línea de tiempo que representa la progresión cognitiva del estudiante a lo largo de su itinerario de aprendizaje adaptativo.
+[07] Panel de Métricas Pedagógicas | Dashboard de indicadores de rendimiento del sistema: PAC (Precisión de Adaptación del Contenido), TGR (Tiempo de Generación de Rutas) y NSE (Nivel de Satisfacción del Estudiante).
+-- Table 7 --
+[00] Componente | Descripción técnica
+[01] Arquitectura Swarm Pedagógica | Cuatro agentes especializados —Perfilador, Curador, Generador de Rutas y Coordinador— con roles, responsabilidades y system prompts formalizados, orquestados mediante LangGraph.
+[02] Claude 3.5/4 Sonnet (primario) | Modelo LLM principal para tareas de adaptación pedagógica, generación de contenido y evaluación cognitiva, seleccionado por su balance entre capacidad razonadora y costo de inferencia.
+[03] GPT-4o (fallback) | Modelo de respaldo activado en el degraded mode cuando el modelo primario presenta latencia elevada o indisponibilidad temporal, garantizando la continuidad del servicio.
+[04] Consenso Multiagente Adaptativo | Protocolo formal de convergencia entre agentes basado en votación ponderada por confianza, con criterios explícitos de resolución de conflictos pedagógicos.
+[05] Retrieval Pedagógico (RAG) | Pipeline de recuperación aumentada por generación que enriquece los prompts de los agentes con información contextual relevante del dominio de Fundamentos de Programación.
+[06] Prompts Multimodales Estructurados | Sistema de plantillas de prompts que dirigen la generación de contenido textual, código ejecutable y referencias visuales con criterios pedagógicos formalizados y control de coherencia.
+[07] Adaptación Cognitiva | Módulo de inferencia del nivel cognitivo del estudiante basado en la taxonomía de Bloom, utilizado por el agente Generador de Rutas para calibrar la dificultad y modalidad del contenido adaptado.
+[08] Memoria Narrativa | Componente de gestión del contexto histórico pedagógico que mantiene la coherencia del itinerario de aprendizaje a lo largo de múltiples sesiones, implementado sobre Redis con TTL configurable.
+-- Table 8 --
+[00] Objetivo General Diseñar, implementar y validar empíricamente una plataforma multiagente pedagógica observable que integra orquestación adaptativa basada en LangGraph, retrieval contextual educativo, explainability de decisiones pedagógicas y benchmarking reproducible mediante sandbox Docker, con el propósito de demostrar su superioridad sobre enfoques de agente único en la adaptación de contenido educativo multimodal para Fundamentos de Programación en la UPAO, 2026.
+-- Table 9 --
+[00] N° | Objetivo | Métrica de éxito
+[01] OE1 | Diseñar y formalizar la arquitectura multiagente pedagógica con cuatro agentes especializados (Perfilador, Curador, Generador de Rutas, Coordinador), definiendo roles, system prompts, protocolos de consenso y memoria compartida adaptativa. | 100% de agentes con roles documentados; protocolo de consenso formalizado con criterios explícitos de convergencia.
+[02] OE2 | Implementar el módulo de observabilidad multiagente mediante SSE y los dashboards de trazabilidad pedagógica que registren y visualicen en tiempo real las decisiones adaptativas del sistema. | 100% de eventos del ciclo agentivo registrados en SSE; dashboards funcionales con latencia inferior a 500 ms.
+[03] OE3 | Integrar el módulo de explainability pedagógica y el replay cognitivo que permitan documentar y reproducir las decisiones de adaptación tomadas por cada agente durante el proceso de aprendizaje. | 100% de decisiones de adaptación registradas con agente responsable, criterios y contexto; replay funcional para el 100% de las sesiones.
+[04] OE4 | Implementar el sandbox Docker de ejecución segura de código educativo y el sistema de benchmarking reproducible sobre datasets pedagógicos derivados de HumanEval/MBPP, midiendo PAC, TGR y NSE. | Sandbox con aislamiento completo; TSR superior al 90% en el grupo experimental; comparación estadística no paramétrica con p < 0.05.
+-- Table 10 --
+[00] Dimensión | Descripción del alcance
+[01] Dominio de aplicación | Curso de Fundamentos de Programación de la UPAO, edición 2026, con una intervención de seis semanas sobre un grupo experimental (n=30) y un grupo control (n=30).
+[02] Plataforma | Sistema web accesible desde navegador, desplegado en Railway, con autenticación JWT y soporte para sesiones concurrentes de múltiples estudiantes.
+[03] Agentes | Cuatro agentes especializados: Perfilador (diagnóstico cognitivo), Curador (recuperación y curaduría de contenido), Generador de Rutas (diseño de itinerarios adaptados) y Coordinador (orquestación del swarm).
+[04] Benchmarking | Evaluación comparativa de la arquitectura multiagente frente a baselines de agente único sobre 100 problemas pedagógicos derivados de HumanEval/MBPP, con 200 observaciones pareadas.
+[05] Fuera de alcance | Generación directa de audio, video o imágenes por los agentes; integración con sistemas SIS o LMS de la UPAO; extensión a otros cursos o dominios académicos durante la ejecución del Taller.
+-- Table 11 --
+[00] Indicador | Definición operacional y umbral de éxito
+[01] PAC — Precisión de Adaptación del Contenido | Proporción de módulos educativos en los que el contenido generado es coherente con el perfil cognitivo inferido del estudiante. Umbral: PAC ≥ 85% en el grupo experimental.
+[02] TGR — Tiempo de Generación de Rutas | Tiempo promedio en segundos que requiere el sistema para generar un itinerario de aprendizaje personalizado desde la solicitud hasta la respuesta. Umbral: TGR ≤ 10 segundos por ruta.
+[03] NSE — Nivel de Satisfacción del Estudiante | Puntuación SUS (System Usability Scale, 0-100) obtenida al final de la intervención en el grupo experimental. Umbral: NSE ≥ 70 puntos (aceptable según Bangor et al., 2009).
+[04] TSR — Task Success Rate | Tasa de éxito (pass@1) del benchmarking sobre el dataset pedagógico derivado de HumanEval/MBPP. Umbral: TSR ≥ 90% para el sistema multiagente vs. < 85% del baseline single-agent.
+[05] Trajectory Length | Número promedio de turnos conversacionales por tarea de benchmarking. Umbral: ≤ 4 turnos promedio para garantizar viabilidad económica.
+[06] Costo de inferencia | Número total de tokens (prompt + completion) consumidos por tarea de benchmarking. Umbral: ≤ 80,000 tokens por tarea, comparable con AgentCoder 2024 (56.9K tokens).
+-- Table 12 --
+[00] Autor del Proyecto | Asesor del Proyecto
+[01] Franklin Renato Rodriguez Lara Estudiante de Ingeniería de Sistemas UPAO — Taller Integrador I, 2026 | Mg. Walter Manuel Cueva Chávez Asesor — Scrum Master UPAO — Taller Integrador I, 2026

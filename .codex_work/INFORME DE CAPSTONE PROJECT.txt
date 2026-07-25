@@ -1,0 +1,64 @@
+===== INFORME DE CAPSTONE PROJECT.docx =====
+PARAGRAPHS:
+[000] (Title) UNIVERSIDAD PRIVADA ANTENOR ORREGO
+[001] (Title) FACULTAD DE INGENIERÍA
+[002] (Title) PROGRAMA DE ESTUDIO DE INGENIERÍA DE SISTEMAS E INTELIGENCIA ARTIFICIAL
+[004] (Normal) ______________________________________________________________________
+[005] (Heading 4) “TITULO DE PROYECTO INTEGRADOR”
+[006] (Normal) ______________________________________________________________________
+[007] (Heading 4) INFORME FINAL DE PROYECTO INTEGRADOR
+[009] (Heading 4) AUTORES:
+[010] (Heading 4) ALUMNO 1
+[011] (Heading 4) ALUMNO 2
+[012] (Normal) DOCENTE:
+[013] (Normal) Walter Cueva Chavez
+[014] (Heading 4) TRUJILLO – PERÚ
+[016] (Heading 4) 202X
+[021] (Normal) Resumen Ejecutivo (Abstract)
+[022] (Normal) En una página.
+[023] (Normal) Breve descripción del problema, la solución propuesta, tecnologías utilizadas y principales resultados.
+[024] (Normal) Palabras clave.
+[026] (Normal) Índice del documento.
+[028] (Normal) Índice de figuras.
+[030] (Normal) Índice de tablas.
+[032] (Normal) Descripción del proyecto
+[033] (Normal) Datos de la empresa, rubro empresarial o sector económico.
+[034] (Normal) Alcance del proyecto.
+[035] (Normal) Objetivos.
+[036] (Normal) Objetivo general.
+[037] (Normal) Objetivos específicos.
+[038] (Normal) Justificación del proyecto y/o problema a resolver.
+[039] (Normal) Exclusiones del proyecto.
+[040] (Normal) Restricciones del proyecto
+[041] (Normal) Asunciones o supuestos del proyecto.
+[043] (Normal) Metodologías de gestión del producto
+[044] (Normal) Revisión de marcos metodológicos
+[049] (Normal) Selección del marco metodológico
+[050] (Normal) Plan de desarrollo
+[052] (Normal) Estudio de factibilidad y viabilidad
+[053] (Normal) Estudio de factibilidad (consiste en la factibilidad detallada técnica, legal, organizacional, operativa, recursos humanos, ambiental y de riesgos, para determinar si el proyecto puede realizarse con éxito).
+[054] (Normal) Estudio económico (consiste en evaluar cuánto costará y qué beneficios financieros se esperan del proyecto, incluye: Costos iniciales (CAPEX), operativos (OPEX), retorno de inversión (ROI), análisis costo-beneficio, VAN, TIR).
+[056] (Normal) Desarrollo del proyecto
+[057] (Normal) Según la metodología del numeral 2.3
+[059] (Normal) Resultados
+[060] (Normal) Según la metodología del numeral 2.3
+[062] (Normal) Conclusiones
+[063] (Normal) En base a los resultados.
+[065] (Normal) Recomendaciones
+[066] (Normal) En base a los resultados.
+[068] (Normal) Referencias Bibliográficas
+[069] (Normal) Normas APA 7ma edición.
+[071] (Normal) Anexos
+[072] (Normal) Código fuente (usar un repositorio en GitHub y referenciarlo).
+[073] (Normal) Manuales técnicos o de usuario.
+[074] (Normal) Cuestionarios, encuestas, entre otros, resultados detallados de pruebas, datasets.
+[075] (Normal) Diagramas UML completos, planos arquitectónicos (para IoT), etc.
+[077] (Normal) Recomendaciones adicionales
+[078] (Normal) Formato de página: A4 vertical.
+[079] (Normal) Márgenes: 2.5 cm superior, inferior y derecha y 3.0 cm derecha.
+[080] (Normal) Formato de letra: Arial tamaño 11 o Times New Roman tamaño 12
+[081] (Normal) Formato interlineal: 1.5 espacios.
+[082] (Normal) Extensión sugerida: 30–50 páginas (sin contar anexos).
+[083] (Normal) Formato de tablas, figuras y otros: Norma APA 7ma.
+[084] (Normal) Numeración de páginas: lado derecho del pie de página.
+TABLES:

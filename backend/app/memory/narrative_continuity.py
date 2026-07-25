@@ -15,9 +15,11 @@ Keys:
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from app.memory.shared_memory import SharedMemoryStore
+from app.telemetry.spans_operativos import registrar_operacion_externa
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,7 @@ def query_narrative_persona(
     """
     result: dict[str, Any] = {}
     search_ids = [cid for cid in (module_id, course_id) if cid]
+    _inicio = time.monotonic()
 
     for sid in search_ids:
         try:
@@ -65,6 +68,18 @@ def query_narrative_persona(
     if result:
         logger.info("Found narrative continuity: %d keys", len(result))
 
+    registrar_operacion_externa(
+        "memoria.query",
+        latencia_ms=(time.monotonic() - _inicio) * 1000,
+        session_id=student_id,  # mismo eje de correlacion que tutor.chat: no hay session_id de runtime aqui
+        metadata={
+            "subsistema": "swarm_contenido",  # SharedMemoryStore, distinto del consenso RFC-0006
+            "student_id": student_id,
+            "module_id": module_id,
+            "course_id": course_id,
+            "keys_encontradas": len(result),
+        },
+    )
     return result
 
 
@@ -97,6 +112,7 @@ def publish_narrative_persona(
         List of published record IDs.
     """
     ids: list[str] = []
+    _inicio = time.monotonic()
     payloads: dict[str, Any] = {
         "narrative:persona": {"description": persona},
         "narrative:tone": {"tone": tone, "register": "educativo"},
@@ -123,4 +139,15 @@ def publish_narrative_persona(
             logger.warning("publish_narrative_persona: write failed key=%s: %s", key, exc)
 
     logger.info("Published %d narrative continuity records", len(ids))
+    registrar_operacion_externa(
+        "memoria.publish",
+        latencia_ms=(time.monotonic() - _inicio) * 1000,
+        session_id=student_id,  # mismo eje de correlacion que tutor.chat: no hay session_id de runtime aqui
+        metadata={
+            "subsistema": "swarm_contenido",  # SharedMemoryStore, distinto del consenso RFC-0006
+            "student_id": student_id,
+            "module_id": module_id,
+            "registros_publicados": len(ids),
+        },
+    )
     return ids
