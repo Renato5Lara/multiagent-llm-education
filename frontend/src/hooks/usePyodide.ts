@@ -22,6 +22,12 @@ export interface PythonRunResult {
   error: string | null
 }
 
+/** Mensaje exacto que `run()` devuelve cuando `cancelRun()` interrumpe una
+ *  ejecución en curso (Commit 4b) — exportado para que el consumidor
+ *  (PythonBridge.tsx) pueda distinguir una cancelación real de un error de
+ *  Python, sin duplicar el string a mano en dos archivos. */
+export const CANCELLED_RESULT_ERROR = 'Ejecución cancelada por el estudiante.'
+
 /** En qué se equivocó el estudiante — no CUÁNTAS veces, sino DE QUÉ tipo. */
 export type PythonErrorCategory = 'sintaxis' | 'variables' | 'logica' | 'salida'
 
@@ -58,6 +64,18 @@ let signalSabSingleton: SharedArrayBuffer | undefined
 let dataSabSingleton: SharedArrayBuffer | undefined
 
 const MAX_INPUT_BYTES = 1024 // debe coincidir con el tamaño de dataSab
+
+/** Referencia a la ÚNICA ejecución `run()` activa (Commit 4b,
+ *  ENGINEERING-GATE-EPICA-B.md §7) — consistente con el invariante de
+ *  ejecución única ya documentado. No es solo el `resolve` suelto: se
+ *  limpia a `null` de forma atómica (dentro del mismo tick, ANTES de
+ *  llamar a `resolve`) apenas uno de los dos caminos posibles la
+ *  consume — el mensaje `'result'` real del worker, o `cancelRun()`.
+ *  Quien llegue primero gana y resuelve; el que llegue después encuentra
+ *  `pendingRun !== current` (o ya `null`) y no hace nada. Garantiza que
+ *  cada `run()` se resuelve EXACTAMENTE una vez, incluso si ambos
+ *  caminos compiten por cerrar la misma ejecución casi al mismo tiempo. */
+let pendingRun: { resolve: (result: PythonRunResult) => void } | null = null
 
 function getWorker(): { worker: Worker; ready: Promise<void> } {
   if (!workerSingleton || !readySingleton) {
@@ -152,9 +170,16 @@ export function usePyodide() {
       return { stdout: '', error: 'Python todavía no está listo.' }
     }
     return new Promise<PythonRunResult>(resolve => {
+      const current = { resolve }
+      pendingRun = current
       const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
         if (e.data.type === 'result') {
           worker.removeEventListener('message', onMessage)
+          // Carrera cancelar-vs-result (Commit 4b, §7): si cancelRun() ya
+          // resolvió esta misma ejecución, pendingRun ya no es `current` (o
+          // ya es null) — no resolver de nuevo.
+          if (pendingRun !== current) return
+          pendingRun = null
           setAwaitingInput(false)
           resolve({ stdout: e.data.stdout, error: e.data.error })
         } else if (e.data.type === 'need-input') {
@@ -164,6 +189,29 @@ export function usePyodide() {
       worker.addEventListener('message', onMessage)
       worker.postMessage({ type: 'run', code, stdinValues } satisfies WorkerInboundMessage)
     })
+  }
+
+  /** Cancela la ejecución en curso — solo tiene efecto real mientras el
+   *  Worker está bloqueado esperando un `input()` real (`awaitingInput`);
+   *  la UI solo expone el botón que la llama en ese estado
+   *  (ENGINEERING-GATE-EPICA-B.md §7, alcance: no es un "detener"
+   *  general). `worker.terminate()` mata la ejecución de inmediato, sin
+   *  punto seguro — no existe (ni se necesita) uno para un
+   *  `Atomics.wait()` bloqueante. El stdout que el worker ya había
+   *  acumulado internamente se PIERDE (vive en su closure, nunca llegó
+   *  al hilo principal) — límite real, no se finge que se preserva. El
+   *  Worker siguiente se crea perezosamente en el próximo `run()`, no
+   *  aquí (recargar Pyodide toma varios segundos). */
+  const cancelRun = () => {
+    const current = pendingRun
+    pendingRun = null
+    if (workerSingleton) workerSingleton.terminate()
+    workerSingleton = null
+    readySingleton = null
+    signalSabSingleton = undefined
+    dataSabSingleton = undefined
+    setAwaitingInput(false)
+    current?.resolve({ stdout: '', error: CANCELLED_RESULT_ERROR })
   }
 
   /** Entrega al worker el valor real que el estudiante escribió — solo
@@ -186,5 +234,5 @@ export function usePyodide() {
     setAwaitingInput(false)
   }
 
-  return { ready, loadError, run, awaitingInput, provideInput }
+  return { ready, loadError, run, awaitingInput, provideInput, cancelRun }
 }

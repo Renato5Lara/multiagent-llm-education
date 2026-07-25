@@ -10,7 +10,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Code2, Eye, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
+import { CANCELLED_RESULT_ERROR, classifyPythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef, PythonPracticeMode } from '@/types/moduleExperience'
@@ -259,7 +259,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   onDone?: (outcome: PracticeOutcome) => void
   initialProfundidad?: string
 }) {
-  const { ready, loadError, run, awaitingInput, provideInput } = usePyodide()
+  const { ready, loadError, run, awaitingInput, provideInput, cancelRun } = usePyodide()
   const submitCycleEvidence = useSubmitCycleEvidence()
   // `stage` es la etapa EN CURSO de la progresión (practice.nextStage.
   // nextStage...) — el estudiante nunca ve "Etapa 1 de 3": es la misma
@@ -414,6 +414,13 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     setRunning(false)
     setOutput(result.stdout)
     setError(result.error)
+    // Cancelación real (Commit 4b, "Cancelar" junto al panel de input()) —
+    // no es un error de Python: no cuenta como intento, no genera evidencia
+    // ni la pista categorizada de classifyPythonError (que le asignaría
+    // 'logica' por defecto y mostraría un diagnóstico engañoso, ya que el
+    // código nunca terminó de correr por sí solo). El mensaje ya quedó
+    // visible arriba vía ConsoleOutput (setError).
+    if (result.error === CANCELLED_RESULT_ERROR) return
     const nextAttempts = attempts + 1
     setAttempts(nextAttempts)
     const correct = !result.error && result.stdout.trim() === stage.expectedOutput.trim()
@@ -449,6 +456,14 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
    *  campo local para el siguiente input() si la etapa pide más de uno. */
   const handleProvideInput = () => {
     provideInput(inputDraft)
+    setInputDraft('')
+  }
+
+  /** Cancela la ejecución en curso mientras Python espera un input() real
+   *  (Commit 4b) — cancelRun() resuelve run() con CANCELLED_RESULT_ERROR,
+   *  que handleRun ya reconoce para no contarlo como intento. */
+  const handleCancel = () => {
+    cancelRun()
     setInputDraft('')
   }
 
@@ -567,6 +582,9 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
             />
             <Button size="sm" onClick={handleProvideInput}>
               Enviar →
+            </Button>
+            <Button size="sm" variant="ghost" onClick={handleCancel}>
+              Cancelar
             </Button>
           </div>
         </div>
