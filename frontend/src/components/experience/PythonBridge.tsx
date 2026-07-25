@@ -19,6 +19,14 @@ import type { PracticeOutcome } from './OrderingPractice'
 
 const MAX_ATTEMPTS_BEFORE_SOLUTION = 3
 
+// Épica D — regla híbrida (ENGINEERING-GATE-EPICA-D.md): "Continuar" avanza
+// a la SIGUIENTE etapa (marca/hero), a diferencia de Ejecutar/Enviar/
+// Comprobar, que son ejecución EN CURSO — se quedan cian (default del
+// Button). Distinguirlos por color reduce ambigüedad real: antes ambos
+// eran del mismo cian y "avanzar" se confundía visualmente con "ejecutar
+// de nuevo".
+const CONTINUE_BRAND_BTN = 'gap-2 bg-neural-brand text-white hover:bg-neural-brand/90'
+
 /** Progresión gradual para fluidez sostenida (ExperienceCursor.
  *  fluencyStreak en ModuleExperienceView, "un solo slice, sin Runtime, sin
  *  contenido nuevo"): en vez de arrancar siempre en el primer peldaño
@@ -704,12 +712,12 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
         </Button>
       )}
       {pendingContinue && (
-        <Button size="sm" onClick={handleContinueAfterSolution} className="gap-2">
+        <Button size="sm" onClick={handleContinueAfterSolution} className={CONTINUE_BRAND_BTN}>
           Continuar →
         </Button>
       )}
       {pendingNextStage && (
-        <Button size="sm" onClick={handleContinueAfterCorrect} className="gap-2">
+        <Button size="sm" onClick={handleContinueAfterCorrect} className={CONTINUE_BRAND_BTN}>
           Continuar →
         </Button>
       )}

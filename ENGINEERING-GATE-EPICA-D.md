@@ -90,15 +90,39 @@ reinicio, `rgb(124,58,237)` después). Si una futura sesión agrega un
 token de color nuevo y no lo ve reflejado en el navegador, reiniciar
 el dev server antes de asumir un error de implementación.
 
+### Laboratorio de Python (`PythonBridge.tsx`) — ✅ segundo commit
+
+**Hallazgo de jerarquía real** (no solo estético): antes de este
+commit, `Ejecutar →` y `Continuar →` eran ambos del mismo cian
+(`bg-primary` por defecto del `Button`) — dos acciones con
+significado muy distinto (ejecutar de nuevo vs. avanzar de etapa) se
+veían idénticas, generando ambigüedad momentánea real.
+
+- `Continuar →` (las 2 instancias: tras solución revelada y tras
+  acierto) → `neural-brand`, mismo patrón visual que el CTA del
+  Dashboard (`bg-neural-brand text-white hover:bg-neural-brand/90`,
+  constante `CONTINUE_BRAND_BTN`).
+- **Sin tocar** (correctamente cian/ghost, por la regla híbrida):
+  `Ejecutar`/`Cargando Python…`, `Enviar` (panel de `input()` real),
+  `Comprobar`/`Comprobar secuencia`, `Cancelar`, `Ver solución`,
+  el chip `OBSÉRVALO`/modo (ya usa `neural-violet` existente, sin
+  cambios), el encabezado `ESTO YA ES PYTHON` (ya usa `neural-glow`).
+- Alcance deliberadamente acotado a `PythonBridge.tsx` — los botones
+  "Continuar" de `ModuleExperienceView.tsx` (curiosidad, concepto,
+  remediación) NO se tocan en este commit; quedan para la fase de
+  Navegación.
+
+Validado en navegador real (Módulo 2, Ciclo "Decisiones que la
+máquina entiende"): `Ejecutar →` corre el código (cian), tras acierto
+aparece `Continuar →` (violeta) junto a él, distinción visual clara.
+Capturas en `docs/qa/epica-d-lab/`.
+
 ## Próximos pasos (no en este commit)
 
 - `feature/epica-d-dashboard` (continuación): resto de tarjetas de
   logros/accesos rápidos si aportan algo más allá de lo ya aplicado.
-- `feature/epica-d-lab`: laboratorio de Python (`PythonBridge.tsx`,
-  `ModuleExperienceView.tsx` layout `lab`) bajo la misma regla híbrida
-  — `Ejecutar`/`Comprobar` se quedan cian (ejecución en vivo), posible
-  aplicación de `neural-brand` en encabezados de sección o CTAs de
-  cierre de ciclo.
-- `feature/epica-d-navigation`: Sidebar (estado activo del link).
+- `feature/epica-d-navigation`: Sidebar (estado activo del link) +
+  botones "Continuar" de `ModuleExperienceView.tsx` bajo la misma
+  regla híbrida ya validada en el Lab.
 - `feature/epica-d-animations`: detalles premium (microanimaciones,
   skeleton loaders) — última fase, según lo acordado con el tesista.
