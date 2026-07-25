@@ -9,6 +9,11 @@
 
 - **Fecha de inicio:** 2026-07-25
 - **Punto de partida:** tag `epic-c-complete` (`4db318e`).
+- **Objetivo de la Épica D:** elevar la calidad visual y la
+  experiencia de uso sin modificar la lógica de negocio, el runtime
+  multiagente ni los contratos existentes. Ningún commit de esta
+  épica mezcla cambio funcional con cambio visual — si un commit
+  necesita ambos, se divide en dos.
 
 ## Fase 1 — Fundamentos de diseño
 
