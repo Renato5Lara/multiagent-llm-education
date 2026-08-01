@@ -217,6 +217,26 @@ def _competencia_de_asunto(asunto: str) -> str:
     return m.group("competencia") if m else asunto
 
 
+def _asuntos_de_competencias_pretest() -> frozenset[str]:
+    """Los 6 asuntos que produce `knowledge_test_service._evidencia_por_
+    competencia` (dimensión cognitiva del pre-test — COMP_0..COMP_5,
+    `titulo_modulo=COMPETENCY_LABELS[topic]` normalizado), NUNCA temas de
+    curso reales. Diagnosticar interpreta evidencia sobre ambas familias
+    de asunto con el mismo mecanismo (P13: mismo contrato, cualquier
+    asunto) — correcto para que el pre-test alimente modalidad/profundidad
+    como evidencia temprana. Pero `emphasis_topics`/`skip_hint_topics` de
+    `decision_adaptativa` se muestran al estudiante como "temas
+    prioritarios" de Fundamentos de Programación: mostrar aquí una
+    competencia cognitiva ("Comprensión del problema") mezclada con un
+    tema real ("Loops") sugiere que la adaptación ignora el curso y solo
+    mira una taxonomía genérica. Se filtran aquí, no en el pre-test (que
+    sigue alimentando al runtime igual) ni en Diagnosticar (que no debe
+    saber para qué se van a mostrar sus interpretaciones)."""
+    from app.data.knowledge_test_bank import COMPETENCY_LABELS
+
+    return frozenset(normalizar_asunto(label) for label in COMPETENCY_LABELS.values())
+
+
 def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | None:
     """S3, solo lectura — la estrategia de contenido derivada de lo que
     el Runtime ya decidió para este estudiante en este curso (el motor
@@ -269,12 +289,14 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
         and c.vigencia.vigente
         and "dominada" in c.afirmacion
     ]
+    asuntos_pretest = _asuntos_de_competencias_pretest()
     emphasis = sorted(
         {
             _competencia_de_asunto(c.asunto)
             for c in interpretaciones
             if c.afirmacion["dominada"] is False
         }
+        - asuntos_pretest
     )
     dominadas = sorted(
         {
@@ -282,6 +304,7 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
             for c in interpretaciones
             if c.afirmacion["dominada"] is True
         }
+        - asuntos_pretest
     )
 
     def _etiqueta(slug: str) -> str:

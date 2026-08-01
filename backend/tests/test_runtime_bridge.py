@@ -238,6 +238,43 @@ def test_decision_adaptativa_competencia_dominada_va_a_skip_hint():
     assert decision["skip_hint_topics"] == ["variables"]
 
 
+def test_decision_adaptativa_excluye_competencias_del_pretest():
+    """El pre-test (knowledge_test_service._evidencia_por_competencia)
+    registra evidencia con `titulo_modulo=COMPETENCY_LABELS[topic]` — p.
+    ej. "Comprensión del problema", una dimensión cognitiva COMP_0..
+    COMP_5, nunca un tema real de Fundamentos de Programación. Mezclarla
+    con un tema real ("Loops") en `emphasis_topics`/`skip_hint_topics`
+    sugiere al estudiante que el sistema no distingue su propio curso de
+    una taxonomía genérica (hallazgo E2E jul 2026). Diagnosticar sigue
+    interpretando ambas familias de asunto igual — solo la vista que
+    arma `decision_adaptativa` para el estudiante filtra la del pre-test."""
+    from app.data.knowledge_test_bank import COMPETENCY_LABELS
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="karla",
+        course_id="curso-ad3",
+        titulo_modulo=COMPETENCY_LABELS["comp_0_problema"],  # "Comprensión del problema"
+        items_incorrectos=[0],
+        items_totales=2,
+    )
+    registrar_evidencia_evaluacion(
+        student_id="karla",
+        course_id="curso-ad3",
+        titulo_modulo="Loops",
+        items_incorrectos=[0, 1],
+        items_totales=3,
+    )
+    decision = decision_adaptativa(student_id="karla", course_id="curso-ad3")
+    assert decision is not None
+    assert decision["emphasis_topics"] == ["loops"]
+    assert "comprension-del-problema" not in decision["emphasis_topics"]
+    assert "comprension-del-problema" not in decision["skip_hint_topics"]
+
+
 # ── Tutor sobre Runtime ──────────────────────────────────────────────
 
 
