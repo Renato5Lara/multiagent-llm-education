@@ -432,6 +432,83 @@ def test_initial_statuses_differ_by_knowledge_with_same_style():
     assert statuses_low != statuses_high
 
 
+# ── Ruta adaptativa gobernada por el Runtime (DESIGN-orientar-ruta-completa.md, Fase 2) ──
+
+
+def test_con_runtime_sin_avance_reproduce_comportamiento_legacy():
+    """`avance={}` (ningún objetivo de este curso tiene evidencia del
+    Runtime todavía -- primera generación de ruta) debe reproducir
+    exactamente `_initial_module_statuses`, sin cambios."""
+    from app.services.student_service import (
+        _initial_module_statuses,
+        _initial_module_statuses_con_runtime,
+    )
+
+    ids = [f"obj-{i}" for i in range(9)]
+    low = {str(m): {"correct": 0, "total": 4, "pct": 0.0} for m in range(1, 10)}
+
+    assert _initial_module_statuses_con_runtime(ids, low, {}) == _initial_module_statuses(9, low)
+    assert _initial_module_statuses_con_runtime(ids, None, {}) == _initial_module_statuses(9, None)
+
+
+def test_adaptacion_estudiante_remedial():
+    """Estudiante que falla el primer objetivo (Remediar propone
+    "reforzar" en el Runtime): el frente de trabajo es ese objetivo,
+    pase lo que pase en el pre-test -- el Runtime tiene prioridad."""
+    from app.services.student_service import _initial_module_statuses_con_runtime
+
+    ids = ["variables", "condicionales", "ciclos", "funciones"]
+    # El pre-test diría "domina todo" -- el Runtime dice lo contrario y gana.
+    pretest_optimista = {str(m): {"correct": 4, "total": 4, "pct": 100.0} for m in range(1, 5)}
+    avance = {"variables": "reforzar"}
+
+    statuses = _initial_module_statuses_con_runtime(ids, pretest_optimista, avance)
+
+    assert statuses == ["available", "locked", "locked", "locked"]
+
+
+def test_adaptacion_estudiante_avanzado():
+    """Estudiante que domina varios objetivos seguidos (Orientar propone
+    "avanzar" en el Runtime para cada uno): todos quedan disponibles, el
+    frente avanza hasta el primer objetivo sin evidencia."""
+    from app.services.student_service import _initial_module_statuses_con_runtime
+
+    ids = ["variables", "condicionales", "ciclos", "funciones", "recursividad"]
+    avance = {
+        "variables": "avanzar",
+        "condicionales": "avanzar",
+        "ciclos": "avanzar",
+        # "funciones" y "recursividad": sin evidencia del Runtime todavía.
+    }
+    # Sin pre-test: el criterio de respaldo para posiciones sin veredicto
+    # del Runtime es "disponible" (comportamiento histórico del frente).
+    statuses = _initial_module_statuses_con_runtime(ids, None, avance)
+
+    assert statuses == ["available", "available", "available", "available", "locked"]
+
+
+def test_runtime_influye_learning_path():
+    """Dos estudiantes con el MISMO resultado de pre-test reciben rutas
+    distintas si el Runtime LangGraph ya decidió cosas distintas para
+    ellos -- la prueba de que la decisión del enjambre, no solo el
+    pre-test estático, gobierna la ruta."""
+    from app.services.student_service import _initial_module_statuses_con_runtime
+
+    ids = ["variables", "condicionales", "ciclos"]
+    mismo_pretest = {str(m): {"correct": 2, "total": 4, "pct": 50.0} for m in range(1, 4)}
+
+    estudiante_reforzando = _initial_module_statuses_con_runtime(
+        ids, mismo_pretest, {"variables": "reforzar"}
+    )
+    estudiante_avanzando = _initial_module_statuses_con_runtime(
+        ids, mismo_pretest, {"variables": "avanzar", "condicionales": "avanzar"}
+    )
+
+    assert estudiante_reforzando != estudiante_avanzando
+    assert estudiante_reforzando == ["available", "locked", "locked"]
+    assert estudiante_avanzando == ["available", "available", "available"]
+
+
 def _create_style_diagnostic(db, student_id, course_id):
     from app.models.diagnostic_result import DiagnosticResult
 

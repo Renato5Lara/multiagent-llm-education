@@ -48,5 +48,6 @@ def registrar_hecho(
         cerrar_sesion=peticion.cerrar_sesion,
         almacen_memoria=almacen_memoria,
         urgente=peticion.urgente,
+        objetivos=peticion.objetivos,
     )
     return proyectar_entrega(resultado["estado"])

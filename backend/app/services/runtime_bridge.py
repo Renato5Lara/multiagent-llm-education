@@ -33,7 +33,8 @@ from runtime.boundary import (
     normalizar_asunto,
     registrar_hecho,
 )
-from runtime.kernel.state.entries import Capacidad, OrigenProvenance
+from runtime.domain.shared.objetivos import ObjetivoOrdenado, asunto_avance
+from runtime.kernel.state.entries import Capacidad, OrigenProvenance, TipoClaim
 
 
 def _sesion_del_curso(student_id: str, course_id: str) -> str:
@@ -62,10 +63,17 @@ def registrar_evidencia_evaluacion(
     modalidad_estudiante: str | None = None,
     hints_used: int | None = None,
     time_ms: int | None = None,
+    objetivos: tuple[ObjetivoOrdenado, ...] = (),
 ) -> Entrega:
     """El primer hecho real del flujo del estudiante que entra por el
     Boundary. `titulo_modulo` se traduce a `competencia` vía ADR-0010
     (`normalizar_asunto` — nunca un valor de COMP-0..5).
+
+    `objetivos` (DESIGN-orientar-ruta-completa.md, Fase 2): estructura
+    del curso, construida con `construir_objetivos`. Vacío (default):
+    Orientar/Remediar operan sobre el asunto de sesión único, como
+    siempre. No vacío: además producen, si corresponde, una propuesta
+    por objetivo que `avance_por_objetivo` puede leer después.
 
     `items_totales` activa la señal de sesión de Tutorizar (RFC-0002
     R4: fluidez/confusión/frustración) — su productor exige el total
@@ -103,6 +111,7 @@ def registrar_evidencia_evaluacion(
             identidad=identidad,
             contenido=contenido,
             origen=OrigenProvenance.INSTRUMENTO,
+            objetivos=objetivos,
         ),
         almacen,
         almacen_memoria,
@@ -184,6 +193,53 @@ CONTENT_TYPE_LABELS: dict[str, str] = {
     "simulation": "Simulación",
     "exercise": "Ejercicio",
 }
+
+
+def construir_objetivos(
+    objetivos_curso: list[tuple[str, str, int]],
+) -> tuple[ObjetivoOrdenado, ...]:
+    """Traduce objetivos de la plataforma (`LearningObjective`) al
+    parámetro externo que Orientar/Remediar aceptan (DESIGN-orientar-
+    ruta-completa.md) — una sola traducción, mismo criterio que
+    `asunto_de_modalidad`: ningún llamador arma `normalizar_asunto` por
+    su cuenta. `objetivos_curso` es `[(id, title, order), ...]`."""
+    return tuple(
+        ObjetivoOrdenado(id=oid, asunto=normalizar_asunto(title), orden=orden)
+        for oid, title, orden in objetivos_curso
+    )
+
+
+def avance_por_objetivo(
+    student_id: str, course_id: str, objetivos: tuple[ObjetivoOrdenado, ...]
+) -> dict[str, str]:
+    """S3, solo lectura — `{objetivo.id: "avanzar" | "reforzar"}` para los
+    objetivos con propuesta vigente de Orientar/Remediar (DESIGN-
+    orientar-ruta-completa.md). Objetivos ausentes del dict: sin
+    evidencia todavía — el llamador decide su comportamiento por
+    defecto, nunca esta función (mismo contrato que `decision_adaptativa`
+    y `consultar_decision_vigente`). Nunca registra nada (regla 2 de
+    RFC-0010)."""
+    if not objetivos:
+        return {}
+    almacen, almacen_memoria = almacenes()
+    peticion = _peticion(student_id, course_id)
+    estado = consultar_estado(peticion, almacen, almacen_memoria)
+    resultado: dict[str, str] = {}
+    for objetivo in objetivos:
+        asunto = asunto_avance(objetivo.asunto)
+        for claim in estado.claims:
+            if not (
+                claim.tipo is TipoClaim.PROPUESTA
+                and claim.vigencia.vigente
+                and claim.asunto == asunto
+                and claim.autor in (Capacidad.ORIENTAR, Capacidad.REMEDIAR)
+            ):
+                continue
+            accion = claim.afirmacion.get("accion")
+            if accion in ("avanzar", "reforzar"):
+                resultado[objetivo.id] = accion
+            break
+    return resultado
 
 
 def decision_adaptativa_neutra() -> dict[str, Any]:

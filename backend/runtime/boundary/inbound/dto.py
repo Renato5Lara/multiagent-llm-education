@@ -9,6 +9,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any, Mapping
 
+from runtime.domain.shared.objetivos import ObjetivoOrdenado
 from runtime.kernel.state.entries import OrigenProvenance
 from runtime.kernel.state.state import Identidad
 
@@ -53,3 +54,9 @@ class PeticionHechoDelMundo:
     (ROADMAP-RFC-0006 §5/2: jamás derivada de `estado.ejecucion`) —
     con urgencia, un margen < δ se resuelve como decisión provisional
     en vez de aplazarse."""
+    objetivos: tuple[ObjetivoOrdenado, ...] = ()
+    """Estructura de curso (DESIGN-orientar-ruta-completa.md, Fase 2):
+    igual que `urgente`, información externa que el Boundary conoce y
+    reenvía a `ejecutar_walkthrough` sin interpretarla. Vacío (default):
+    comportamiento histórico exacto -- Orientar/Remediar operan sobre el
+    asunto de sesión único."""

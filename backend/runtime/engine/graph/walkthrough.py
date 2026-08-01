@@ -25,6 +25,7 @@ from runtime.domain.modelar import producir as producir_modelado
 from runtime.domain.orientar import producir as producir_orientacion
 from runtime.domain.remediar import producir as producir_remediacion
 from runtime.domain.shared.causal import competencia_de_decision
+from runtime.domain.shared.objetivos import ObjetivoOrdenado, asunto_avance
 from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.domain.tutorizar import producir as producir_tutoria
 from runtime.domain.validar import producir as producir_validacion
@@ -225,13 +226,33 @@ def _evidencia_pendiente_de_diagnosticar(estado: LearningState) -> bool:
     )
 
 
-def _interpretacion_pendiente_de_remediar(estado: LearningState) -> bool:
+def _interpretacion_pendiente_de_remediar(
+    estado: LearningState, objetivos: tuple[ObjetivoOrdenado, ...] = ()
+) -> bool:
     """Guardia segura: mismo criterio de disparo que
     `domain.remediar.producir` — una interpretación vigente con
     `dominada=False` cuando Remediar no tiene palabra en pie
     (`palabra_en_pie`, LA MISMA función que usa el productor — patrón
     PR-2..PR-5). Evita rutear a "remediar" cuando su propio contrato no
-    dispararía, lo que produciría un ciclo aplicar→enrutar sin avance."""
+    dispararía, lo que produciría un ciclo aplicar→enrutar sin avance.
+
+    Con `objetivos` (DESIGN-orientar-ruta-completa.md): mismo criterio,
+    pero por objetivo — MISMOS asuntos que
+    `remediar.productor._producir_por_objetivo` evalúa."""
+    if objetivos:
+        for objetivo in objetivos:
+            if palabra_en_pie(estado, Capacidad.REMEDIAR, asunto_avance(objetivo.asunto)):
+                continue
+            dominio_asunto = f"dominio({objetivo.asunto})"
+            if any(
+                c.tipo is TipoClaim.INTERPRETACION
+                and c.vigencia.vigente
+                and c.asunto == dominio_asunto
+                and c.afirmacion.get("dominada") is False
+                for c in estado.claims
+            ):
+                return True
+        return False
     if palabra_en_pie(estado, Capacidad.REMEDIAR, "siguiente-paso(sesion)"):
         return False
     return any(
@@ -242,12 +263,31 @@ def _interpretacion_pendiente_de_remediar(estado: LearningState) -> bool:
     )
 
 
-def _interpretacion_pendiente_de_orientar(estado: LearningState) -> bool:
+def _interpretacion_pendiente_de_orientar(
+    estado: LearningState, objetivos: tuple[ObjetivoOrdenado, ...] = ()
+) -> bool:
     """Guardia segura: mismo criterio que `domain.orientar.producir` —
     una interpretación de dominio vigente ("dominada" en la afirmación,
     la forma de Diagnosticar; los veredictos de Validar no cuentan),
     cuando Orientar no tiene palabra en pie (misma función que el
-    productor)."""
+    productor).
+
+    Con `objetivos`: mismo criterio, por objetivo — MISMOS asuntos que
+    `orientar.productor._producir_por_objetivo` evalúa."""
+    if objetivos:
+        for objetivo in objetivos:
+            if palabra_en_pie(estado, Capacidad.ORIENTAR, asunto_avance(objetivo.asunto)):
+                continue
+            dominio_asunto = f"dominio({objetivo.asunto})"
+            if any(
+                c.tipo is TipoClaim.INTERPRETACION
+                and c.vigencia.vigente
+                and c.asunto == dominio_asunto
+                and c.afirmacion.get("dominada") is True
+                for c in estado.claims
+            ):
+                return True
+        return False
     if palabra_en_pie(estado, Capacidad.ORIENTAR, "siguiente-paso(sesion)"):
         return False
     return any(
@@ -258,7 +298,11 @@ def _interpretacion_pendiente_de_orientar(estado: LearningState) -> bool:
     )
 
 
-def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
+def enrutar(
+    grafo: EstadoGrafo,
+    politica: Politica,
+    objetivos: tuple[ObjetivoOrdenado, ...] = (),
+) -> str:
     """Función pura de `(estado, politica)` (P12): nadie decide quién
     sigue, salvo el estado mismo. El orden de los chequeos ES el
     programa pedagógico. `politica` llega desde RFC-0006/3 (Parte C,
@@ -295,9 +339,9 @@ def enrutar(grafo: EstadoGrafo, politica: Politica) -> str:
         return "tutorizar"
     if _evidencia_pendiente_de_diagnosticar(estado):
         return "diagnosticar"
-    if _interpretacion_pendiente_de_remediar(estado):
+    if _interpretacion_pendiente_de_remediar(estado, objetivos):
         return "remediar"
-    if _interpretacion_pendiente_de_orientar(estado):
+    if _interpretacion_pendiente_de_orientar(estado, objetivos):
         return "orientar"
     # Guardia segura (mismo patrón que PR-2..PR-5, precedente
     # GraphRecursionError): se llega aquí SOLO después de que tanto
@@ -323,6 +367,7 @@ def _construir(
     productor_tutorizar: Callable = producir_tutoria,
     productor_adaptar: Callable = producir_adaptacion,
     urgente: bool = False,
+    objetivos: tuple[ObjetivoOrdenado, ...] = (),
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
@@ -358,8 +403,14 @@ def _construir(
     grafo = StateGraph(EstadoGrafo)
     grafo.add_node("aplicar", aplicar)
     grafo.add_node("diagnosticar", _nodo_productor(productor_diagnostico))
-    grafo.add_node("remediar", _nodo_productor(productor_remediar))
-    grafo.add_node("orientar", _nodo_productor(productor_orientar))
+    grafo.add_node(
+        "remediar",
+        lambda g: {"intents": productor_remediar(g["estado"], objetivos=objetivos)},
+    )
+    grafo.add_node(
+        "orientar",
+        lambda g: {"intents": productor_orientar(g["estado"], objetivos=objetivos)},
+    )
     grafo.add_node("deliberar", lambda g: _nodo_deliberar(g, politica, urgente))
     grafo.add_node("decidir", lambda g: _nodo_decidir(g, politica))
     grafo.add_node("validar", _nodo_productor(productor_validar))
@@ -373,7 +424,7 @@ def _construir(
         "validar", "modelar", "tutorizar", "adaptar",
     ):
         grafo.add_edge(productor, "aplicar")
-    grafo.add_conditional_edges("aplicar", lambda g: enrutar(g, politica))
+    grafo.add_conditional_edges("aplicar", lambda g: enrutar(g, politica, objetivos))
     return grafo.compile()
 
 
@@ -435,6 +486,7 @@ def ejecutar_walkthrough(
     cerrar_sesion: bool = False,
     almacen_memoria: AlmacenMemoria | None = None,
     urgente: bool = False,
+    objetivos: tuple[ObjetivoOrdenado, ...] = (),
 ) -> EstadoGrafo:
     """Corre el Walkthrough-0001: hechos → tutoría → diagnóstico → tensión
     → deliberación → decisión → adaptación (→ validación → modelado, si ya
@@ -478,6 +530,15 @@ def ejecutar_walkthrough(
     transporte que solo el llamador conoce (ROADMAP-RFC-0006 §5/2) —
     jamás se deriva de `estado.ejecucion`.
 
+    Estructura de curso (DESIGN-orientar-ruta-completa.md, Fase 1):
+    `objetivos` es información del Boundary sobre qué objetivos de
+    aprendizaje existen y en qué orden — igual que `urgente`/`politica`,
+    jamás derivada del estado. Vacío (default): Orientar/Remediar
+    operan sobre el asunto de sesión único, comportamiento histórico
+    exacto. No vacío: proponen por objetivo (`avance(objetivo.asunto)`),
+    sin afectar el asunto de sesión, que sigue existiendo para la
+    adaptación en vivo dentro de la sesión.
+
     Consolidar (M4 PR-5): `cerrar_sesion=True` es la señal explícita de
     cierre que ADR-0008 §2.4 exige — nunca se infiere de que el grafo
     llegue a `END` (una sesión reanudada llega a `END` varias veces sin
@@ -509,6 +570,7 @@ def ejecutar_walkthrough(
         productor_tutorizar,
         productor_adaptar,
         urgente=urgente,
+        objetivos=objetivos,
     ).invoke(inicial)
 
     # T14 — Cierre (M4 PR-2): proyección pura, fuera del grafo (no es un

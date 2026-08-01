@@ -13,6 +13,7 @@ from decimal import Decimal
 from runtime.domain.orientar.productor import ASUNTO_SIGUIENTE_PASO
 from runtime.domain.orientar.provider import FakeLLMProvider, LLMProvider
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
+from runtime.domain.shared.objetivos import ObjetivoOrdenado, asunto_avance
 from runtime.domain.shared.propuestas import palabra_en_pie
 from runtime.kernel.state.entries import (
     Capacidad,
@@ -24,10 +25,13 @@ from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
 
 _PROMPT_ID = "orientacion-siguiente-paso-v1"
+_PROMPT_ID_OBJETIVO = "orientacion-por-objetivo-v1"
 
 
 def producir(
-    estado: LearningState, proveedor: LLMProvider | None = None
+    estado: LearningState,
+    proveedor: LLMProvider | None = None,
+    objetivos: tuple[ObjetivoOrdenado, ...] = (),
 ) -> tuple[TransitionIntent, ...]:
     """Misma guardia que la versión regla (`palabra_en_pie` — ciclo
     adaptativo continuo, 2026-07-13): re-propone solo si su palabra
@@ -36,8 +40,14 @@ def producir(
     una deliberación (anti-churn). Filtra por interpretaciones de
     DOMINIO ("dominada" en la afirmación) — no cualquier INTERPRETACION:
     respaldarse en un veredicto de Validar creó un bucle real
-    (2026-07-13), mismo criterio de forma que Remediar."""
+    (2026-07-13), mismo criterio de forma que Remediar.
+
+    Sin `objetivos`: comportamiento histórico exacto (asunto de sesión).
+    Con `objetivos`: una propuesta por objetivo (DESIGN-orientar-ruta-
+    completa.md), mismo contrato P13 que la versión regla."""
     proveedor = proveedor or FakeLLMProvider()
+    if objetivos:
+        return _producir_por_objetivo(estado, objetivos, proveedor)
     if palabra_en_pie(estado, Capacidad.ORIENTAR, ASUNTO_SIGUIENTE_PASO):
         return ()
     for claim in estado.claims:
@@ -82,6 +92,68 @@ def producir(
                             modelo=proveedor.modelo,
                             version=proveedor.version,
                             prompt_id=_PROMPT_ID,
+                        ),
+                    },
+                    base=estado.transicion,
+                ),
+            )
+    return ()
+
+
+def _producir_por_objetivo(
+    estado: LearningState,
+    objetivos: tuple[ObjetivoOrdenado, ...],
+    proveedor: LLMProvider,
+) -> tuple[TransitionIntent, ...]:
+    """Mismo contrato que `orientar.productor._producir_por_objetivo` --
+    únicamente cambia cómo se justifica la propuesta (P13)."""
+    for objetivo in objetivos:
+        asunto = asunto_avance(objetivo.asunto)
+        if palabra_en_pie(estado, Capacidad.ORIENTAR, asunto):
+            continue
+        dominio_asunto = f"dominio({objetivo.asunto})"
+        for claim in estado.claims:
+            if not (
+                claim.tipo is TipoClaim.INTERPRETACION
+                and claim.vigencia.vigente
+                and claim.asunto == dominio_asunto
+                and claim.afirmacion.get("dominada") is True
+            ):
+                continue
+            prompt = (
+                f"Existe una interpretación vigente de dominio sobre el "
+                f"objetivo {objetivo.id} (claim {claim.id}). La política "
+                f"ruta-v2 propone avanzar a este objetivo como CANDIDATA "
+                f"en la deliberación — no es una decisión final: eso lo "
+                f"resuelve el Kernel comparando esta propuesta contra la "
+                f'de Remediar sobre el mismo objetivo. Responde JSON con '
+                f'esta forma EXACTA y en este ORDEN: primero '
+                f'"razonamiento", luego "accion" (STRING, debe ser '
+                f'exactamente "avanzar"), luego "confianza" (STRING con '
+                f'formato decimal entre "0.00" y "1.00").'
+            )
+            respuesta = ejecutar_roundtrip(
+                proveedor, prompt, campos_requeridos=("accion", "confianza")
+            )
+            return (
+                TransitionIntent(
+                    productor=Capacidad.ORIENTAR,
+                    operacion="registrar_claim",
+                    argumentos={
+                        "autor": Capacidad.ORIENTAR,
+                        "tipo": TipoClaim.PROPUESTA,
+                        "asunto": asunto,
+                        "afirmacion": {
+                            "accion": respuesta["accion"],
+                            "razonamiento": respuesta.get("razonamiento", ""),
+                        },
+                        "respaldo": (claim.id,),
+                        "confianza": Decimal(str(respuesta["confianza"])),
+                        "provenance": Provenance.de(
+                            OrigenProvenance.LLM,
+                            modelo=proveedor.modelo,
+                            version=proveedor.version,
+                            prompt_id=_PROMPT_ID_OBJETIVO,
                         ),
                     },
                     base=estado.transicion,

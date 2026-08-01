@@ -490,6 +490,51 @@ def _initial_module_statuses(n_modules: int, module_breakdown: Optional[dict]) -
     return statuses
 
 
+def _initial_module_statuses_con_runtime(
+    objective_ids: list[str],
+    module_breakdown: Optional[dict],
+    avance: dict[str, str],
+) -> list[str]:
+    """Estados iniciales con el Runtime LangGraph (Orientar/Remediar por
+    objetivo, DESIGN-orientar-ruta-completa.md) como señal preferente
+    sobre el desglose de pre-test -- por objetivo, no todo o nada: si el
+    Runtime todavía no tiene evidencia para un objetivo puntual (nadie
+    ha completado una evaluación de ese módulo todavía), esa posición
+    cae al criterio anterior (best-effort, mismo patrón que toda
+    integración con runtime_bridge). `avance` vacío -- ningún objetivo
+    de este curso tiene evidencia del Runtime todavía -- reproduce
+    `_initial_module_statuses` sin cambios."""
+    n_modules = len(objective_ids)
+    statuses = ["locked"] * n_modules
+    if n_modules == 0:
+        return statuses
+    if not avance:
+        return _initial_module_statuses(n_modules, module_breakdown)
+
+    from app.services.knowledge_test_service import MASTERY_THRESHOLD_PCT
+
+    i = 0
+    while i < n_modules:
+        veredicto = avance.get(objective_ids[i])
+        if veredicto == "avanzar":
+            statuses[i] = "available"
+            i += 1
+            continue
+        if veredicto == "reforzar":
+            statuses[i] = "available"
+            break
+        # Sin veredicto del Runtime para este objetivo: cae al criterio
+        # de pre-test para ESTA posición únicamente.
+        stats = (module_breakdown or {}).get(str(i + 1)) or {}
+        if stats.get("pct", 0.0) >= MASTERY_THRESHOLD_PCT:
+            statuses[i] = "available"
+            i += 1
+            continue
+        statuses[i] = "available"
+        break
+    return statuses
+
+
 def generate_learning_path_adaptive(
     db: Session, student_id: str, course_id: str, diagnostic: DiagnosticResult
 ) -> LearningPath:
@@ -575,7 +620,26 @@ def generate_learning_path_adaptive(
     db.flush()
 
     if objectives:
-        initial_statuses = _initial_module_statuses(len(objectives), knowledge_breakdown)
+        # DESIGN-orientar-ruta-completa.md (Fase 2): consulta al Runtime
+        # LangGraph si ya decidió avanzar/reforzar para alguno de estos
+        # objetivos (evidencia real de evaluaciones de módulo previas en
+        # ESTE curso -- primera generación de ruta: siempre vacío, cae
+        # al criterio de pre-test sin cambios). Best-effort: nunca
+        # bloquea la generación de la ruta.
+        avance: dict = {}
+        try:
+            from app.services.runtime_bridge import avance_por_objetivo, construir_objetivos
+
+            objetivos_runtime = construir_objetivos(
+                [(obj.id, obj.title, obj.order or i) for i, obj in enumerate(objectives)]
+            )
+            avance = avance_por_objetivo(student_id, course_id, objetivos_runtime)
+        except Exception:
+            logger.warning("No se pudo consultar avance_por_objetivo del Runtime", exc_info=True)
+
+        initial_statuses = _initial_module_statuses_con_runtime(
+            [obj.id for obj in objectives], knowledge_breakdown, avance
+        )
         for i, obj in enumerate(objectives):
             status = initial_statuses[i]
             resource = get_best_resource_for_objective(obj)

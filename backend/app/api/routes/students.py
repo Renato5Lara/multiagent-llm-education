@@ -1017,7 +1017,28 @@ def submit_evaluation(
                 if int(q_idx) < len(attempt.questions)
                 and selected != attempt.questions[int(q_idx)].get("correct")
             ]
-            from app.services.runtime_bridge import registrar_evidencia_evaluacion
+            from app.services.runtime_bridge import (
+                construir_objetivos,
+                registrar_evidencia_evaluacion,
+            )
+
+            # DESIGN-orientar-ruta-completa.md (Fase 2): PathModule.title
+            # es LearningObjective.title copiado verbatim al generar la
+            # ruta (student_service.generate_learning_path_adaptive) --
+            # la única evidencia evaluativa cuyo "titulo_modulo" coincide
+            # con la estructura real del curso (el pre-test y el
+            # diagnóstico VARK usan catálogos fijos de competencia,
+            # ortogonales a los objetivos del curso; no se conectan aquí
+            # a propósito).
+            hermanos = (
+                db.query(PathModule)
+                .filter(PathModule.path_id == module.path_id)
+                .order_by(PathModule.order)
+                .all()
+            )
+            objetivos = construir_objetivos(
+                [(m.id, m.title, m.order) for m in hermanos]
+            )
 
             entrega = registrar_evidencia_evaluacion(
                 student_id=current_user.id,
@@ -1028,6 +1049,7 @@ def submit_evaluation(
                 # (fluidez/confusión/frustración) que alimenta al tutor y a
                 # las alternativas por señal de Adaptar (RFC-0002 R4).
                 items_totales=len(attempt.questions),
+                objetivos=objetivos,
             )
             runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
         except Exception as e:  # noqa: BLE001
