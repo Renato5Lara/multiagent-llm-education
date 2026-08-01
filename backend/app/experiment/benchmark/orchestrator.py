@@ -4,14 +4,10 @@ Benchmark Orchestrator — DEPRECATED synthetic runner.
 This class previously generated synthetic scores with hardcoded condition biases.
 That approach was removed to preserve academic validity.
 
-Use SwarmExecutionBenchmarkRunner (real/runner.py) instead:
-
-    from app.experiment.benchmark.real import SwarmExecutionBenchmarkRunner, SwarmExecutionConfig
-    runner = SwarmExecutionBenchmarkRunner(SwarmExecutionConfig(...))
-    results = await runner.run()
-
-Or from the command line:
-    python scripts/run_real_benchmark.py
+The real-pipeline runner it pointed to (SwarmExecutionBenchmarkRunner,
+app/experiment/benchmark/real/) was retired in ADR-0011 along with
+BaseAgent/AgentFactory/SwarmOrchestrator, which it depended on. There is
+no replacement runner as of this ADR — this class remains disabled.
 """
 
 from __future__ import annotations
@@ -43,9 +39,7 @@ class BenchmarkOrchestrator:
 
     def run(self):
         raise RuntimeError(
-            "BenchmarkOrchestrator uses synthetic data and has been disabled.\n"
-            "Use SwarmExecutionBenchmarkRunner for real pipeline execution:\n"
-            "  python scripts/run_real_benchmark.py\n"
-            "or:\n"
-            "  from app.experiment.benchmark.real import SwarmExecutionBenchmarkRunner"
+            "BenchmarkOrchestrator uses synthetic data and has been disabled. "
+            "Its real-pipeline replacement was retired in ADR-0011 along with "
+            "the legacy BaseAgent/SwarmOrchestrator stack it depended on."
         )

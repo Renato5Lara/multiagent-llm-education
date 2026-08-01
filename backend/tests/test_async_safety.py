@@ -2,7 +2,7 @@
 Async safety tests: coroutine leakage, shared memory propagation,
 observability propagation, and SSE propagation consistency.
 
-Ensures every async method in the agent/swarm/consensus path is
+Ensures every async method in the shared-memory/consensus path is
 properly awaited — no silent coroutine discards, no nested event
 loops, no unawaited tasks.
 """
@@ -173,45 +173,6 @@ class TestCoroutineLeakageDetection:
 
 
 # =============================================================================
-# Observability propagation — verify agent publish_observations actually work
-# =============================================================================
-
-
-@pytest.mark.asyncio
-async def test_agent_publish_observation_with_real_db(test_uow):
-    """Verify BaseAgent.publish_observation writes to shared memory (real DB)."""
-    from app.agents.base import BaseAgent
-
-    class _ConcreteAgent(BaseAgent):
-        @property
-        def agent_type(self) -> str:
-            return "test_concrete"
-
-        async def analyze(self, state: dict) -> dict:
-            return {"done": True}
-
-    agent = _ConcreteAgent(
-        agent_name="async_obs_test",
-        uow=test_uow,
-        student_id="stu-agent-test",
-        course_id="course-agent-test",
-        context_key="test:async:obs",
-    )
-
-    record_id = await agent.publish_observation(
-        key="obs:async:safety",
-        value={"from": "async_safety_test"},
-        memory_type="observation",
-        confidence=0.8,
-    )
-
-    assert record_id is not None
-    record = test_uow.db.query(SharedMemoryRecord).filter_by(id=record_id).first()
-    assert record is not None
-    assert record.voter_name == "async_obs_test"
-
-
-# =============================================================================
 # SSE propagation consistency
 # =============================================================================
 
@@ -226,54 +187,6 @@ async def test_sse_push_with_proper_future_handling():
     result = await future
     assert result is None
     mock_push.assert_awaited_once_with("test_event", {"test": True})
-
-
-# =============================================================================
-# Nested event loop detection
-# =============================================================================
-
-
-class TestNestedEventLoopDetection:
-    """Verify no nested event loops in the agent/swarm path."""
-
-    def test_no_asyncio_run_in_agent_path(self):
-        """Verify asyncio.run() does not appear in agent code (safety net)."""
-        import ast
-        import os
-
-        project_root = os.path.join(os.path.dirname(__file__), "..")
-        agent_dir = os.path.join(project_root, "app", "agents")
-
-        for root, _dirs, files in os.walk(agent_dir):
-            for fname in files:
-                if not fname.endswith(".py"):
-                    continue
-                fpath = os.path.join(root, fname)
-                with open(fpath) as fh:
-                    try:
-                        tree = ast.parse(fh.read())
-                        for node in ast.walk(tree):
-                            if isinstance(node, ast.Call):
-                                func = node.func
-                                if (
-                                    isinstance(func, ast.Attribute)
-                                    and func.attr == "run"
-                                ):
-                                    if isinstance(func.value, ast.Name) and func.value.id == "asyncio":
-                                        rel = os.path.relpath(fpath, project_root)
-                                        pytest.fail(
-                                            f"asyncio.run() found in agent file: {rel}"
-                                        )
-                                if isinstance(func, ast.Name) and func.id in (
-                                    "run_until_complete",
-                                    "new_event_loop",
-                                ):
-                                    rel = os.path.relpath(fpath, project_root)
-                                    pytest.fail(
-                                        f"Event loop function found in agent file: {rel} ({func.id})"
-                                    )
-                    except SyntaxError:
-                        pass
 
 
 

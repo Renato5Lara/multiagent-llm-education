@@ -14,7 +14,6 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.middleware.rate_limit import AuthRateLimiter
-from app.services.session_service import start_module_session, end_session
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -109,21 +108,3 @@ def test_rate_limiter_thread_safety():
     # 50 should pass, 50 should be blocked
     assert sum(results) == 50
     assert len(results) == 100
-
-
-# ═══════════════════════════════════════════════════════════════
-# START MODULE SESSION TESTS
-# ═══════════════════════════════════════════════════════════════
-
-
-def test_start_module_session_no_module(db):
-    pytest.skip("DB-002: session_service is async; needs async def test")
-
-
-def test_start_module_session_not_owned(db):
-    pytest.skip("DB-002: session_service is async; needs async def test")
-
-
-def test_end_session_not_found():
-    """Should fail gracefully when session doesn't exist."""
-    pytest.skip("DB-002: session_service is async; needs async def test")

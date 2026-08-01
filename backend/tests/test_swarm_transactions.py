@@ -1,23 +1,21 @@
 """
 BUG-SWARM-002 (nested tx / dual commit) + BUG-SWARM-003 (false active states)
-regression tests.
+regression tests, for the sync activation path
+(activate_enrollment_with_swarm_sync / _activate_enrollment_sync).
+
+The async path (activate_enrollment_with_swarm, SwarmOrchestrator) was
+retired in ADR-0011 — it had no real caller in production. Its tests
+were removed along with it, not migrated.
 
 BUG-SWARM-002 Verifies:
-- activate_enrollment_with_swarm does NOT call db.commit() or db.rollback()
-- Savepoint isolation: swarm failure rolls back savepoint, outer tx unaffected
-- Session lifecycle: session is saved with "failed" status after swarm failure
-- UnitOfWork uses lambda: db pattern (not Session as factory)
-- Orchestrator can commit/rollback via savepoint without aborting outer tx
+- activate_enrollment_with_swarm_sync does NOT call db.commit() or db.rollback()
 
 BUG-SWARM-003 Verifies:
-- ctx.status is set to FAILED on swarm failure (not ACTIVE)
 - ctx.status starts as INITIALIZING (not ACTIVE) before swarm runs
-- _phase_active inside savepoint correctly sets ACTIVE on success
-- No false-positive ACTIVE states in any failure path
 """
 
 import logging
-from unittest.mock import AsyncMock, MagicMock, patch, call, ANY
+from unittest.mock import MagicMock, patch, call, ANY
 
 import pytest
 
@@ -86,136 +84,6 @@ class TestActivateEnrollmentWithSwarm:
             f"got {len(rollback_calls)} calls"
         )
 
-    async def test_uow_uses_lambda_factory(self):
-        """UnitOfWork must use lambda: db, not Session directly."""
-        from app.services.activation_service import activate_enrollment_with_swarm
-
-        db = MagicMock()
-        enrollment = MagicMock(spec=Enrollment)
-        enrollment.id = "enroll-3"
-        course = MagicMock()
-        context = MagicMock(spec=EducationalContext)
-
-        actual_uow = None
-
-        def capture_uow(db_arg, context_arg, uow=None):
-            nonlocal actual_uow
-            actual_uow = uow
-            mock = MagicMock()
-            mock.activate = AsyncMock(return_value={"ok": True})
-            return mock
-
-        with patch(
-            "app.services.activation_service.SwarmOrchestrator",
-            side_effect=capture_uow,
-        ):
-            mock_savepoint_ctx = MagicMock()
-            db.begin_nested.return_value = mock_savepoint_ctx
-            mock_savepoint_ctx.__aenter__ = AsyncMock(return_value=None)
-            mock_savepoint_ctx.__aexit__ = AsyncMock(return_value=None)
-
-            await activate_enrollment_with_swarm(db, enrollment, course, context)
-
-        assert actual_uow is not None, "SwarmOrchestrator was not created with uow"
-        # UnitOfWork._session_factory should be a lambda, not a Session
-        assert callable(actual_uow._session_factory), (
-            "UnitOfWork._session_factory must be callable (lambda: db), "
-            f"got {type(actual_uow._session_factory)}"
-        )
-
-    async def test_savepoint_rollback_on_failure(self):
-        """Verify savepoint is rolled back on swarm failure,
-        and outer db is NOT rolled back."""
-        from app.services.activation_service import activate_enrollment_with_swarm
-
-        db = MagicMock()
-        enrollment = MagicMock(spec=Enrollment)
-        enrollment.id = "enroll-4"
-        course = MagicMock()
-        context = MagicMock(spec=EducationalContext)
-
-        mock_savepoint_ctx = MagicMock()
-        db.begin_nested.return_value = mock_savepoint_ctx
-        mock_savepoint_ctx.__aenter__ = AsyncMock(return_value=None)
-
-        # Simulate savepoint __aexit__ re-raising exception on failure
-        mock_savepoint_ctx.__aexit__ = AsyncMock(side_effect=lambda *a: True)
-
-        swarm_error = RuntimeError("Swarm crashed")
-        with patch(
-            "app.services.activation_service.SwarmOrchestrator"
-        ) as mock_orch_cls:
-            mock_orch = MagicMock()
-            mock_orch.activate = AsyncMock(side_effect=swarm_error)
-            mock_orch_cls.return_value = mock_orch
-
-            result = await activate_enrollment_with_swarm(
-                db, enrollment, course, context
-            )
-
-        # Swarm failure should return graceful error
-        assert result.get("ok") is False, (
-            "Should return graceful error on swarm failure"
-        )
-        assert "error" in result, "Result should contain error message"
-
-        # outer db.rollback() must NOT be called
-        rollback_calls = [
-            c for c in db.mock_calls if c[0] == "rollback"
-        ]
-        assert not rollback_calls, (
-            f"db.rollback() should NOT be called on swarm failure, "
-            f"got {len(rollback_calls)} calls"
-        )
-
-    async def test_savepoint_commit_on_success(self):
-        """Verify savepoint is committed (released) on swarm success."""
-        from app.services.activation_service import activate_enrollment_with_swarm
-
-        db = MagicMock()
-        enrollment = MagicMock(spec=Enrollment)
-        enrollment.id = "enroll-5"
-        course = MagicMock()
-        context = MagicMock(spec=EducationalContext)
-
-        # Use a real async context manager that records state
-        class SavepointTracker:
-            def __init__(self):
-                self.entered = False
-                self.exited = False
-                self.exc = None
-
-            async def __aenter__(self):
-                self.entered = True
-
-            async def __aexit__(self, exc_type, exc_val, exc_tb):
-                self.exited = True
-                self.exc = exc_val
-                return True  # Suppress exception
-
-        tracker = SavepointTracker()
-        db.begin_nested.return_value = tracker
-
-        with patch(
-            "app.services.activation_service.SwarmOrchestrator"
-        ) as mock_orch_cls:
-            mock_orch = MagicMock()
-            mock_orch.activate = AsyncMock(return_value={"ok": True})
-            mock_orch_cls.return_value = mock_orch
-
-            result = await activate_enrollment_with_swarm(
-                db, enrollment, course, context
-            )
-
-        assert result.get("ok") is True, (
-            f"Should return success result, got {result}"
-        )
-        assert tracker.entered, "Savepoint was never entered"
-        assert tracker.exited, "Savepoint was never exited"
-        assert tracker.exc is None, (
-            f"Savepoint should not see an exception on success, got {tracker.exc}"
-        )
-
 
 # ═══════════════════════════════════════════════════════════════
 # BUG-SWARM-003 TESTS: Activation State Correctness
@@ -229,112 +97,6 @@ class TestActivationStateCorrectness:
            PENDING → INITIALIZING → FAILED (failure)
     Never: ACTIVE set before swarm completes or outside savepoint.
     """
-
-    async def test_status_is_failed_after_swarm_failure(self):
-        """CRITICAL: ctx.status must be FAILED (not ACTIVE) after swarm failure."""
-        from app.services.activation_service import activate_enrollment_with_swarm
-
-        db = MagicMock()
-        enrollment = MagicMock(spec=Enrollment)
-        enrollment.id = "enroll-bs3-1"
-        course = MagicMock()
-        context = MagicMock(spec=EducationalContext)
-        context.id = "ctx-bs3-1"
-        context.activation_attempts = 0
-
-        swarm_error = RuntimeError("Swarm exploded")
-        with patch(
-            "app.services.activation_service.SwarmOrchestrator"
-        ) as mock_orch_cls:
-            mock_orch = MagicMock()
-            mock_orch.activate = AsyncMock(side_effect=swarm_error)
-            mock_orch_cls.return_value = mock_orch
-
-            mock_savepoint_ctx = MagicMock()
-            # __aexit__ returns False so the exception escapes around the with block
-            mock_savepoint_ctx.__aexit__ = AsyncMock(side_effect=lambda *a: False)
-            mock_savepoint_ctx.__aenter__ = AsyncMock(return_value=None)
-            db.begin_nested.return_value = mock_savepoint_ctx
-
-            result = await activate_enrollment_with_swarm(
-                db, enrollment, course, context
-            )
-
-        # Result must indicate failure
-        assert result.get("ok") is False, "Result should be failure"
-        assert "error" in result, "Result should have error message"
-
-        # context.status must be FAILED, NOT ACTIVE
-        assert context.status == EducationalContextStatus.FAILED, (
-            f"ctx.status should be FAILED after swarm failure, "
-            f"got {context.status}"
-        )
-        # last_error must be set
-        assert context.last_error is not None, "last_error should be set"
-        assert "Swarm exploded" in str(context.last_error), (
-            "last_error should contain the exception message"
-        )
-        # activation_attempts must be incremented
-        assert context.activation_attempts >= 1, (
-            "activation_attempts should be incremented"
-        )
-
-    async def test_status_is_not_active_on_failure(self):
-        """CRITICAL: ctx.status must NEVER be ACTIVE after swarm failure.
-        This test explicitly checks no ACTIVE attribute was set on context."""
-        from app.services.activation_service import activate_enrollment_with_swarm
-
-        db = MagicMock()
-        enrollment = MagicMock(spec=Enrollment)
-        enrollment.id = "enroll-bs3-2"
-        course = MagicMock()
-        context = MagicMock(spec=EducationalContext)
-        context.id = "ctx-bs3-2"
-        context.activation_attempts = 0
-
-        # Track all attribute sets on context
-        setattr_history = []
-
-        original_setattr = MockSetAttr = type(context).__setattr__
-
-        def tracking_setattr(self, name, value):
-            setattr_history.append((name, value))
-            return original_setattr(self, name, value)
-
-        with patch.object(type(context), "__setattr__", tracking_setattr):
-            with patch(
-                "app.services.activation_service.SwarmOrchestrator"
-            ) as mock_orch_cls:
-                mock_orch = MagicMock()
-                mock_orch.activate = AsyncMock(side_effect=RuntimeError("boom"))
-                mock_orch_cls.return_value = mock_orch
-
-                mock_savepoint_ctx = MagicMock()
-                mock_savepoint_ctx.__aexit__ = AsyncMock(side_effect=lambda *a: False)
-                mock_savepoint_ctx.__aenter__ = AsyncMock(return_value=None)
-                db.begin_nested.return_value = mock_savepoint_ctx
-
-                await activate_enrollment_with_swarm(
-                    db, enrollment, course, context
-                )
-
-        # Check that status was set to FAILED, not ACTIVE
-        status_sets = [
-            v for v in setattr_history
-            if v[0] == "status" and v[1] == EducationalContextStatus.ACTIVE
-        ]
-        assert len(status_sets) == 0, (
-            f"ctx.status was set to ACTIVE {len(status_sets)} time(s) "
-            f"during failed activation! Values: {status_sets}"
-        )
-        # Verify FAILED was set
-        failed_sets = [
-            v for v in setattr_history
-            if v[0] == "status" and v[1] == EducationalContextStatus.FAILED
-        ]
-        assert len(failed_sets) >= 1, (
-            "ctx.status was never set to FAILED during failed activation"
-        )
 
     def test_activate_enrollment_sets_initializing_before_swarm(self):
         """_activate_enrollment should set INITIALIZING, not ACTIVE."""
@@ -405,22 +167,6 @@ class TestActivationStateCorrectness:
         )
 
 
-class TestSwarmTransactionBoundaries:
-    """Verify the outer transaction caller (session_service) integrity."""
-
-    def test_session_saved_with_failed_after_swarm_failure(self):
-        pytest.skip(
-            "DB-002 migration: session_service is now async; "
-            "test needs async def + execute() mocks"
-        )
-
-    def test_activate_enrollment_with_swarm_no_outside_commit(self):
-        pytest.skip(
-            "DB-002 migration: session_service is now async; "
-            "test needs async def + execute() mocks"
-        )
-
-
 class TestUnitOfWorkConstruction:
     """Verify UnitOfWork is never constructed with Session directly."""
 
@@ -441,40 +187,6 @@ class TestUnitOfWorkConstruction:
         assert result is db, "uow.db should return the same session"
 
 
-class TestSwarmOrchestratorUnitOfWork:
-    """Verify SwarmOrchestrator uses proper UnitOfWork construction."""
-
-    def test_orchestrator_uow_fallback_uses_lambda(self):
-        """Orchestrator's fallback uow construction must use lambda."""
-        from app.swarm.orchestrator import SwarmOrchestrator
-
-        db = MagicMock()
-        context = MagicMock()
-        context.student_id = "s1"
-        context.course_id = "c1"
-        context.shared_memory_key = "ctx:s1:c1"
-
-        orch = SwarmOrchestrator(db, context, uow=None)
-        assert orch.uow is not None
-        assert callable(orch.uow._session_factory), (
-            "UnitOfWork._session_factory must be callable"
-        )
-
-    def test_orchestrator_uow_passed_through(self):
-        """Orchestrator should use the passed uow as-is."""
-        from app.swarm.orchestrator import SwarmOrchestrator
-
-        db = MagicMock()
-        context = MagicMock()
-        context.student_id = "s1"
-        context.course_id = "c1"
-        context.shared_memory_key = "ctx:s1:c1"
-
-        uow = UnitOfWork(lambda: db)
-        orch = SwarmOrchestrator(db, context, uow=uow)
-        assert orch.uow is uow, "Orchestrator should use the passed uow"
-
-
 # ═══════════════════════════════════════════════════════════════
 # BASIC SMOKE TESTS
 # ═══════════════════════════════════════════════════════════════
@@ -482,14 +194,7 @@ class TestSwarmOrchestratorUnitOfWork:
 
 def test_imports():
     """All modules import without errors."""
-    from app.services.activation_service import (
-        activate_enrollment_with_swarm,
-        activate_enrollment_with_swarm_sync,
-    )
-    from app.services.session_service import start_module_session, end_session
+    from app.services.activation_service import activate_enrollment_with_swarm_sync
     from app.db.uow import UnitOfWork
-    assert activate_enrollment_with_swarm is not None
     assert activate_enrollment_with_swarm_sync is not None
-    assert start_module_session is not None
-    assert end_session is not None
     assert UnitOfWork is not None
