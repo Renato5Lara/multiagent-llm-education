@@ -19,6 +19,35 @@
   `academic_activation_service.py` o los tests de
   `test_enrollment_lifecycle.py`.
 
+## Documentos relacionados
+
+- `docs/architecture/pedagogical/01-AUDITORIA.md` — **fuente primaria**.
+  Auditoría pedagógica congelada (2026-07-23) que ya documenta, de forma
+  independiente y anterior a este documento, el inventario completo de
+  capacidades vivas (Diagnosticar/Remediar/Orientar/Adaptar/Tutorizar/
+  Validar/Modelar), la muerte confirmada de `BaseAgent` y sus 11
+  subclases, y que `ResearchAgent`/`ReviewerAgent` no heredan de
+  `BaseAgent`. Este documento **no redescubre** esos hechos — los
+  verifica de nuevo, por una ruta de auditoría distinta (trazado de
+  routers de `main.py` y del flujo HTTP del estudiante en vez de
+  inventario de capacidades), y los usa como base para la pregunta que
+  sí es nueva aquí: alcanzabilidad de `SwarmOrchestrator`/`AgentFactory`
+  y su relación con el laboratorio de benchmark.
+- `docs/architecture/pedagogical/ESTADO.md` — estado y regla de
+  evolución de la suite pedagógica (congelada, cambios al Flujo
+  requieren revisar Documentos 5–7).
+- `docs/architecture/RFC-0002-domain-model.md` — define las ocho
+  capacidades como vocabulario normativo cerrado.
+- `docs/architecture/CONCEPT-0001-inteligencia-de-enjambre.md` —
+  define qué cuenta (y qué no) como inteligencia de enjambre en este
+  proyecto; criterio usado en las §§0 y 8 de este documento.
+
+Este documento complementa la auditoría pedagógica congelada y no
+redefine la arquitectura pedagógica ni el modelo educativo — se centra
+exclusivamente en la alcanzabilidad de código (qué se ejecuta desde
+qué endpoint) y en la decisión de retiro físico documentada en
+ADR-0011.
+
 ## 0. Relación con `docs/CLAUDE.md` — esto NO es un hallazgo nuevo
 
 Antes de nada: `docs/CLAUDE.md` § "Actualización 2026-07-12 (segunda)" ya
