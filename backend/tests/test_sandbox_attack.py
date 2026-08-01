@@ -18,6 +18,7 @@ Run with:
 from __future__ import annotations
 
 import asyncio
+import sys
 import pytest
 
 from app.sandbox.ast_policy import ASTSafetyPolicy
@@ -29,6 +30,14 @@ from app.sandbox.exceptions import (
     SandboxImportViolation,
     SandboxTimeout,
     SandboxDockerError,
+)
+
+requires_posix_fallback = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason=(
+        "subprocess fallback sandbox uses preexec_fn (POSIX-only); "
+        "production execution always goes through Dockerfile.sandbox (Linux)"
+    ),
 )
 
 # ── Fixtures ─────────────────────────────────────────────────────────
@@ -260,6 +269,7 @@ def f():
 f()
 """
 
+@requires_posix_fallback
 def test_recursion_bomb_timeout():
     """Infinite recursion must be caught by timeout."""
     result = run(RECURSION_BOMB, timeout=3.0)
@@ -277,6 +287,7 @@ while True:
     pass
 """
 
+@requires_posix_fallback
 def test_infinite_loop_timeout():
     """Infinite loops must be caught by timeout."""
     result = run(INFINITE_LOOP_CODE, timeout=2.0)
@@ -290,6 +301,7 @@ while True:
     x = 1 + 1
 """
 
+@requires_posix_fallback
 def test_busy_wait_timeout():
     """Busy-wait loops must be caught by timeout."""
     result = run(BUSY_WAIT_CODE, timeout=2.0)
@@ -306,6 +318,7 @@ while True:
     data.append('x' * 1000000)
 """
 
+@requires_posix_fallback
 def test_memory_bomb():
     """Memory exhaustion must be stopped (OOM kill or timeout)."""
     result = run(MEMORY_BOMB_CODE, timeout=5.0, memory=64)
@@ -318,6 +331,7 @@ LIST_BOMB_CODE = """
 [[[]] * 1000000 for _ in range(1000000)]
 """
 
+@requires_posix_fallback
 def test_list_memory_bomb():
     """Large list allocations must be stopped."""
     result = run(LIST_BOMB_CODE, timeout=5.0, memory=64)
@@ -516,6 +530,7 @@ if True:
 # 15. CONCURRENT EXECUTION SAFETY
 # ═════════════════════════════════════════════════════════════════════
 
+@requires_posix_fallback
 def test_concurrent_execution():
     """Multiple concurrent executions must not interfere."""
     codes = [
@@ -540,6 +555,7 @@ def test_concurrent_execution():
 # 16. CLEANUP VERIFICATION
 # ═════════════════════════════════════════════════════════════════════
 
+@requires_posix_fallback
 def test_cleanup_after_execution():
     """Executor must clean up after each execution."""
     executor = make_executor()
@@ -578,6 +594,7 @@ def test_security_monitor_tracks_violations():
 # 17. SANITIZE PRINT / STDOUT
 # ═════════════════════════════════════════════════════════════════════
 
+@requires_posix_fallback
 def test_normal_print_works():
     """Normal print statements must work."""
     result = run("print('Hello, World!')")
@@ -585,6 +602,7 @@ def test_normal_print_works():
     assert "Hello, World!" in result.get("stdout", "")
 
 
+@requires_posix_fallback
 def test_stdout_stderr_separation():
     """stdout and stderr must be properly separated."""
     code = """
@@ -601,6 +619,7 @@ print("stdout_line")
 # 18. TIMEOUT MEASUREMENT
 # ═════════════════════════════════════════════════════════════════════
 
+@requires_posix_fallback
 def test_timeout_enforcement():
     """Timeout must be enforced and measured."""
     result = run("while True: pass", timeout=1.0)
@@ -610,6 +629,7 @@ def test_timeout_enforcement():
     assert timeout or error, f"Timeout not enforced: {result}"
 
 
+@requires_posix_fallback
 def test_timeout_duration_tracked():
     """Timeout duration must be tracked in results."""
     result = run("while True: pass", timeout=2.0)
@@ -621,6 +641,7 @@ def test_timeout_duration_tracked():
 # 19. NODE COUNT TRACKING
 # ═════════════════════════════════════════════════════════════════════
 
+@requires_posix_fallback
 def test_ast_node_count_tracked():
     """AST node count must be reported in execution result."""
     result = run("print('hello')")

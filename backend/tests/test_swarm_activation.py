@@ -49,7 +49,7 @@ class _ConcreteAgent(BaseAgent):
     @property
     def agent_type(self) -> str:
         return "test"
-    def analyze(self, state: dict) -> dict:
+    async def analyze(self, state: dict) -> dict:
         return {"result": "ok", "input": state}
 
 
@@ -67,7 +67,7 @@ def test_base_agent_initialization():
     assert agent.metrics_snapshot()["invocations"] == 0
 
 
-def test_base_agent_run(db):
+async def test_base_agent_run(db):
     uow = UnitOfWork(lambda: db)
     agent = _ConcreteAgent(
         agent_name="test_agent",
@@ -76,7 +76,7 @@ def test_base_agent_run(db):
         course_id="course1",
         context_key="ctx:student1:course1",
     )
-    result = agent.run(state={"hello": "world"})
+    result = await agent.run(state={"hello": "world"})
     assert result["result"] == "ok"
     assert result["input"]["hello"] == "world"
     assert "_agent" in result
@@ -88,12 +88,12 @@ def test_base_agent_run(db):
     assert metrics["successes"] == 1
 
 
-def test_base_agent_run_failure():
+async def test_base_agent_run_failure():
     class FailingAgent(BaseAgent):
         @property
         def agent_type(self) -> str:
             return "failing"
-        def analyze(self, state: dict) -> dict:
+        async def analyze(self, state: dict) -> dict:
             raise ValueError("intentional failure")
 
     uow = MagicMock(spec=UnitOfWork)
@@ -105,7 +105,7 @@ def test_base_agent_run_failure():
         context_key="ctx:s1:c1",
     )
     with pytest.raises(ValueError, match="intentional failure"):
-        agent.run(state={})
+        await agent.run(state={})
     assert agent.metrics_snapshot()["failures"] == 1
 
 
@@ -113,7 +113,7 @@ def test_base_agent_run_failure():
 # PEDAGOGICAL AGENT TESTS
 # ═══════════════════════════════════════════════════════════════
 
-def test_pedagogical_agent_non_programming():
+async def test_pedagogical_agent_non_programming():
     uow = MagicMock(spec=UnitOfWork)
     agent = PedagogicalAgent(
         agent_name="pedagogical_agent",
@@ -122,11 +122,11 @@ def test_pedagogical_agent_non_programming():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={"is_programming_course": False})
+    result = await agent.run(state={"is_programming_course": False})
     assert result["cognitive_stage"] == "general"
 
 
-def test_pedagogical_agent_programming_no_db():
+async def test_pedagogical_agent_programming_no_db():
     """Should handle missing DB gracefully."""
     uow = MagicMock(spec=UnitOfWork)
     mock_session = MagicMock()
@@ -141,7 +141,7 @@ def test_pedagogical_agent_programming_no_db():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={"is_programming_course": True})
+    result = await agent.run(state={"is_programming_course": True})
     assert "cognitive_stage" in result
     assert "mastered_concepts" in result
     assert "weak_concepts" in result
@@ -151,7 +151,7 @@ def test_pedagogical_agent_programming_no_db():
 # ADAPTIVE AGENT TESTS
 # ═══════════════════════════════════════════════════════════════
 
-def test_adaptive_agent_non_programming():
+async def test_adaptive_agent_non_programming():
     uow = MagicMock(spec=UnitOfWork)
     agent = AdaptiveAgent(
         agent_name="adaptive_agent",
@@ -160,12 +160,12 @@ def test_adaptive_agent_non_programming():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={"is_programming_course": False})
+    result = await agent.run(state={"is_programming_course": False})
     assert result["pathway"] == "standard"
     assert result["bloom_range"] == [1, 6]
 
 
-def test_adaptive_agent_programming():
+async def test_adaptive_agent_programming():
     uow = MagicMock(spec=UnitOfWork)
     agent = AdaptiveAgent(
         agent_name="adaptive_agent",
@@ -174,7 +174,7 @@ def test_adaptive_agent_programming():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={"is_programming_course": True})
+    result = await agent.run(state={"is_programming_course": True})
     assert result["pathway"] in ("standard", "accelerated", "reinforced", "visual_first")
     assert len(result["concept_sequence"]) > 0
     assert "boolean_logic" in result["concept_sequence"] or "variables" in result["concept_sequence"]
@@ -184,7 +184,7 @@ def test_adaptive_agent_programming():
 # RISK AGENT TESTS
 # ═══════════════════════════════════════════════════════════════
 
-def test_risk_agent_basic():
+async def test_risk_agent_basic():
     uow = MagicMock(spec=UnitOfWork)
     mock_session = MagicMock()
     mock_session.query.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
@@ -198,14 +198,14 @@ def test_risk_agent_basic():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={})
+    result = await agent.run(state={})
     assert "risk_score" in result
     assert "risk_level" in result
     assert "recommendations" in result
     assert result["risk_level"] in ("bajo", "medio", "alto")
 
 
-def test_risk_agent_with_weak_concepts():
+async def test_risk_agent_with_weak_concepts():
     uow = MagicMock(spec=UnitOfWork)
     mock_session = MagicMock()
     from app.models.student_memory import WeaknessRecord
@@ -227,7 +227,7 @@ def test_risk_agent_with_weak_concepts():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={})
+    result = await agent.run(state={})
     assert result["risk_level"] in ("medio", "alto")
 
 
@@ -235,7 +235,7 @@ def test_risk_agent_with_weak_concepts():
 # EVALUATION AGENT TESTS
 # ═══════════════════════════════════════════════════════════════
 
-def test_evaluation_agent_non_programming():
+async def test_evaluation_agent_non_programming():
     uow = MagicMock(spec=UnitOfWork)
     agent = EvaluationAgent(
         agent_name="evaluation_agent",
@@ -244,7 +244,7 @@ def test_evaluation_agent_non_programming():
         course_id="c1",
         context_key="ctx:s1:c1",
     )
-    result = agent.run(state={"is_programming_course": False})
+    result = await agent.run(state={"is_programming_course": False})
     assert result["evaluation_ready"] is False
     assert result["exercises"] == []
 
