@@ -65,9 +65,9 @@ def main() -> int:
 
     # ── 2. Dependencies ──────────────────────────────────────────
     print("\n📚 Dependencies")
-    req_file = backend / "requirements.lock"
+    req_file = backend / "requirements.txt"
     req_exists = req_file.exists()
-    run_check(f"requirements.lock exists at {req_file}", req_exists)
+    run_check(f"requirements.txt exists at {req_file}", req_exists)
     if req_exists and verbose:
         print(f"     File: {req_file}")
 
