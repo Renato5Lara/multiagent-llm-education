@@ -161,6 +161,25 @@ POLITICAS: dict[str, Politica] = {
         asuntos_reservados=frozenset(),
         limite_reconvocatoria=2,
     ),
+    "v2": Politica(
+        # Experimento controlado (Fase 6, Escenario A — auditoría de
+        # consenso): única variable independiente es `delta`, con `theta`
+        # como ajuste conservador de soporte. `pesos_asunto`,
+        # `asuntos_reservados`, `peso_refuerzo/refutacion/decaimiento`
+        # quedan en su valor neutro de "v1" a propósito — introducirlos
+        # mezclaría una segunda variable en el mismo experimento (Escenario
+        # C, no éste). Ningún productor ni `mecanica.py`/`confianza.py`
+        # cambia: la mecánica ya soporta estos valores desde su diseño
+        # original (delta/theta ya validados en __post_init__).
+        peso_refuerzo=Decimal("0"),
+        peso_refutacion=Decimal("0"),
+        peso_decaimiento=Decimal("0"),
+        theta=Decimal("0.5"),
+        delta=Decimal("0.10"),
+        pesos_asunto={},
+        asuntos_reservados=frozenset(),
+        limite_reconvocatoria=2,
+    ),
 }
 
 
