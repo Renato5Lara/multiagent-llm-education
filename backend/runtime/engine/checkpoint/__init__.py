@@ -12,6 +12,7 @@ from runtime.engine.checkpoint.cadena import (
     genesis,
     verificar,
 )
+from runtime.engine.checkpoint.consenso import MetricasConsenso, derivar_consenso
 from runtime.engine.checkpoint.paisaje import (
     Paisaje,
     TransicionPaisaje,
@@ -34,6 +35,7 @@ __all__ = [
     "ESCALA_DECIMAL",
     "AlmacenMemoria",
     "AlmacenTransiciones",
+    "MetricasConsenso",
     "Paisaje",
     "RegistroTransicion",
     "Replay",
@@ -43,6 +45,7 @@ __all__ = [
     "TransicionPaisaje",
     "a_canonico",
     "calcular_paisaje",
+    "derivar_consenso",
     "derivar_paisaje",
     "desde_canonico",
     "encadenar",
