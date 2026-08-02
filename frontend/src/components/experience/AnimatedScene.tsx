@@ -19,6 +19,7 @@ const SCENES: Record<string, ComponentType> = {
   'dos-robots': DosRobotsScene,
   'caja-variable': CajaVariableScene,
   'espera-input': EsperaInputScene,
+  'camino-condicion': CaminoCondicionScene,
 }
 
 // ── Escena: dos robots, misma meta, instrucciones distintas ────────────────────
@@ -209,6 +210,67 @@ function EsperaInputScene() {
         <span className="m1i-waiting text-[11px] text-neural-muted/70 italic">esperando tu respuesta…</span>
         <span className="m1i-typed text-[11px] font-mono text-neural-text">Nico ⏎</span>
         <span className="m1i-okgreet text-[11px] text-emerald-400">Hola, Nico ✓</span>
+      </div>
+    </div>
+  )
+}
+
+// ── Escena: una condición, dos caminos posibles ─────────────────────────────
+// La misma condición (temperatura > 24) se evalúa dos veces con un valor
+// distinto: cuando es verdadera, se enciende el camino del if y termina en
+// su acción; cuando es falsa, se enciende el camino del else y termina en
+// la suya — nunca los dos a la vez. Mismo ejemplo que ya usa la práctica
+// visual de este ciclo (temperatura/24), para no introducir un caso nuevo.
+// Bucle de 6 s. Con prefers-reduced-motion queda el cuadro estático en el
+// primer caso (condición verdadera → camino del if).
+
+function CaminoCondicionScene() {
+  return (
+    <div
+      className="rounded-xl border border-white/[0.08] bg-neural-lowest/60 overflow-hidden"
+      role="img"
+      aria-label="Animación: la condición temperatura mayor a 24 se evalúa dos veces. Cuando es verdadera (temperatura 30), se enciende el camino del if y termina en «enciende el aire acondicionado». Cuando es falsa (temperatura 18), se enciende el camino del else y termina en «temperatura agradable». Nunca los dos caminos a la vez."
+    >
+      <style>{`
+        @keyframes m2c-cond1     { 0%, 45% { opacity: 1; }    50%, 100% { opacity: 0.3; } }
+        @keyframes m2c-cond2     { 0%, 45% { opacity: 0.3; }  50%, 100% { opacity: 1; } }
+        @keyframes m2c-ifpath    { 0%, 45% { opacity: 1; }    50%, 100% { opacity: 0.25; } }
+        @keyframes m2c-elsepath  { 0%, 45% { opacity: 0.25; } 50%, 100% { opacity: 1; } }
+        @keyframes m2c-ifcheck   { 0%, 8%  { opacity: 0; } 14%, 45% { opacity: 1; } 50%, 100% { opacity: 0; } }
+        @keyframes m2c-elsecheck { 0%, 58% { opacity: 0; } 64%, 95% { opacity: 1; } 100% { opacity: 0; } }
+        .m2c-cond1     { animation: m2c-cond1 6s ease-in-out infinite; }
+        .m2c-cond2     { animation: m2c-cond2 6s ease-in-out infinite; }
+        .m2c-ifpath    { animation: m2c-ifpath 6s ease-in-out infinite; }
+        .m2c-elsepath  { animation: m2c-elsepath 6s ease-in-out infinite; }
+        .m2c-ifcheck   { animation: m2c-ifcheck 6s linear infinite; }
+        .m2c-elsecheck { animation: m2c-elsecheck 6s linear infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .m2c-cond1, .m2c-ifpath, .m2c-ifcheck { animation: none; }
+          .m2c-cond2, .m2c-elsepath, .m2c-elsecheck { animation: none; opacity: 0.25; }
+          .m2c-ifcheck { opacity: 1; }
+        }
+      `}</style>
+
+      <div className="px-4 pt-4 pb-3 flex justify-center">
+        <span className="relative inline-block text-[11px] font-mono px-2 py-0.5 rounded-full border border-neural-glow/30 text-neural-glow bg-neural-glow/5 min-w-[15rem] text-center">
+          <span className="m2c-cond1 absolute inset-0 flex items-center justify-center whitespace-nowrap">
+            temperatura = 30 → &gt; 24 ✓
+          </span>
+          <span className="m2c-cond2 whitespace-nowrap">temperatura = 18 → &gt; 24 ✗</span>
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 px-4 pb-4">
+        <div className="m2c-ifpath rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-3 text-center relative">
+          <span className="text-[10px] font-mono text-neural-muted/70 block mb-1">if</span>
+          <span className="text-[11px]">Enciende el aire acondicionado</span>
+          <span className="m2c-ifcheck absolute top-1 right-1 text-emerald-400 text-sm font-bold">✓</span>
+        </div>
+        <div className="m2c-elsepath rounded-lg border border-neural-violet/30 bg-neural-violet/5 px-2 py-3 text-center relative">
+          <span className="text-[10px] font-mono text-neural-muted/70 block mb-1">else</span>
+          <span className="text-[11px]">Temperatura agradable</span>
+          <span className="m2c-elsecheck absolute top-1 right-1 text-emerald-400 text-sm font-bold">✓</span>
+        </div>
       </div>
     </div>
   )

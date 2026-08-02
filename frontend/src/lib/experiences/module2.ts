@@ -464,6 +464,17 @@ export const MODULE_2_EXPERIENCE: ModuleExperienceDefinition = {
             },
           },
           {
+            kind: 'animacion',
+            label: 'Ver una animación',
+            title: 'Un camino distinto según la condición',
+            medium: 'animacion',
+            sceneId: 'camino-condicion',
+            body: [
+              'La misma condición, `temperatura > 24`, se evalúa con dos valores distintos: con 30 es verdadera y Python toma el camino del `if`; con 18 es falsa y toma el camino del `else`.',
+              'Los dos caminos existen en el código a la vez, pero en cada ejecución solo se recorre uno — nunca los dos, y nunca ninguno.',
+            ],
+          },
+          {
             kind: 'ejemplo',
             label: 'Ver un ejemplo más',
             title: 'Ejemplo: el riego automático del jardín',
