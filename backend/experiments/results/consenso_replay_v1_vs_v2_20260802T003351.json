@@ -1,0 +1,118 @@
+{
+  "experimento": "Escenario_A_instrumentado_RFC_0007",
+  "extiende": "ADR-0012 (consenso_politica_v1_vs_v2.py)",
+  "run_id": "20260802T003351",
+  "timestamp": "2026-08-02T00:33:51.895838",
+  "evidencia": {
+    "errores": 2,
+    "competencia": "bucles"
+  },
+  "v1": {
+    "version_politica": "v1",
+    "session_id": "experimento:replay-v1:tension-canonica-1:20260802T003351",
+    "entrega_diseno": {
+      "alternativas_descartadas": [
+        {
+          "modalidad": "textual",
+          "razon": "ya insuficiente en el intento anterior"
+        },
+        {
+          "modalidad": "ejemplo-codigo",
+          "razon": "prematuro sin el concepto consolidado"
+        }
+      ],
+      "andamiaje": "ejemplo",
+      "modalidad": "visual",
+      "profundidad": "fundamentos"
+    },
+    "n_transiciones": 8,
+    "propuestas_rivales": [
+      "orientar:avanzar-con-andamiaje:0.7500",
+      "remediar:reforzar:0.8200"
+    ],
+    "tension_canonica_1": {
+      "resultado": "RESUELTA",
+      "regla": "mayor-confianza-declarada",
+      "confianza": "0.8200"
+    },
+    "paisaje": {
+      "ultimo_paso": {
+        "densidad": {
+          "dominio(bucles)": 1,
+          "siguiente-paso(sesion)": 1,
+          "modalidad(bucles)": 1
+        },
+        "conflicto": {},
+        "entropia": {
+          "dominio(bucles)": 0.0,
+          "siguiente-paso(sesion)": 0.0,
+          "modalidad(bucles)": 0.0
+        }
+      },
+      "estabilidad_maxima": 1,
+      "tiempo_estabilizacion": {
+        "siguiente-paso(sesion)": 1
+      }
+    },
+    "consenso": {
+      "convocatorias": 1,
+      "no_convocatorias": 0,
+      "resueltas": 1,
+      "aplazadas": 0,
+      "escaladas": 0,
+      "margenes_resolucion": [
+        "0.0700"
+      ],
+      "confianza_resolucion": [
+        "0.8200"
+      ],
+      "longitud_cadenas_reconvocacion": []
+    }
+  },
+  "v2": {
+    "version_politica": "v2",
+    "session_id": "experimento:replay-v2:tension-canonica-1:20260802T003351",
+    "entrega_diseno": null,
+    "n_transiciones": 6,
+    "propuestas_rivales": [
+      "orientar:avanzar-con-andamiaje:0.7500",
+      "remediar:reforzar:0.8200"
+    ],
+    "tension_canonica_1": {
+      "resultado": "APLAZADA",
+      "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.07 < delta 0.10"
+    },
+    "paisaje": {
+      "ultimo_paso": {
+        "densidad": {
+          "dominio(bucles)": 1,
+          "siguiente-paso(sesion)": 2
+        },
+        "conflicto": {
+          "siguiente-paso(sesion)": "latente"
+        },
+        "entropia": {
+          "dominio(bucles)": 0.0,
+          "siguiente-paso(sesion)": 0.998565550382876
+        }
+      },
+      "estabilidad_maxima": 1,
+      "tiempo_estabilizacion": {}
+    },
+    "consenso": {
+      "convocatorias": 1,
+      "no_convocatorias": 0,
+      "resueltas": 0,
+      "aplazadas": 1,
+      "escaladas": 0,
+      "margenes_resolucion": [
+        "0.0700"
+      ],
+      "confianza_resolucion": [],
+      "longitud_cadenas_reconvocacion": [
+        1
+      ]
+    }
+  },
+  "hipotesis_confirmada": true
+}

@@ -92,6 +92,38 @@ Hipótesis confirmada: misma evidencia, mismos productores, misma arquitectura
 — únicamente `delta` distingue "una voz gana" de "el sistema declara qué
 evidencia necesita para decidir".
 
+### 3.1. Instrumentación con RFC-0007 — Paisaje y Consenso (adenda, 2026-08-02)
+
+Una vez cerradas las métricas de Paisaje (H8) y Consenso (RFC-0007 §2.2,
+mini-épicas separadas, commits `d0bacde..205afd2`), se repitió el mismo
+Escenario A con `backend/scripts/experimentos/consenso_replay_v1_vs_v2.py`
+— MISMA evidencia, MISMA metodología, MISMO criterio de éxito que §3 — y se
+instrumentó cada réplica real con `derivar_paisaje`/`derivar_consenso` sobre
+su propia historia, bajo su propia política (nunca recalculando una réplica
+con la política de la otra: `calcular_confianza_efectiva` no depende de
+`delta`/`theta`, así que esa recomputación habría sido numéricamente vacía
+— ver el docstring del script). No es una ADR nueva: es la misma decisión
+de §2, con más instrumento para observarla.
+
+**Resultado (run_id `20260802T003351`,
+`backend/experiments/results/consenso_replay_v1_vs_v2_20260802T003351.json`):**
+
+| | v1 (delta=0) | v2 (delta=0.10) |
+|---|---|---|
+| Paisaje — `siguiente-paso(sesion)` | densidad 1, conflicto `{}`, entropía **0.0** | densidad 2, conflicto `latente`, entropía **0.9986** |
+| Consenso | 1 convocatoria, 1 resuelta, margen 0.07 | 1 convocatoria, 1 aplazada, margen 0.07, cadena de reconvocatoria [1] |
+
+El margen recalculado (0.07) coincide exactamente entre ambas políticas —
+confirma por evidencia, no solo por argumento, que el margen es una
+propiedad de la evidencia (los `ce` declarados), no de la política que lo
+evalúa; lo que cambia es exclusivamente si `margen >= delta` admite avanzar
+o no. La diferencia observable real está en el paisaje: v1 colapsa a
+certeza (entropía 0, sin conflicto, el claim perdedor queda superseded por
+la cascada hacia Adaptar); v2 preserva la tensión visible (entropía cercana
+a 1 bit — dos rivales casi empatados —, conflicto `latente` con una
+`Aplazada` abierta). Es la primera vez que el "colapso vs. preservación de
+incertidumbre" que motiva H10 queda medido, no solo descrito en prosa.
+
 ## 4. Criterio de aceptación
 
 - `POLITICAS["v2"]` agregada sin modificar `"v1"`, `mecanica.py`,
