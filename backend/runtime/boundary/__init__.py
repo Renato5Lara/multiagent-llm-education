@@ -20,6 +20,7 @@ from runtime.boundary.surfaces import (
     consultar_escaladas_pendientes,
     consultar_estado,
     consultar_memoria,
+    consultar_paisaje,
     consultar_replay,
     consultar_traza,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "consultar_escaladas_pendientes",
     "consultar_estado",
     "consultar_memoria",
+    "consultar_paisaje",
     "consultar_replay",
     "consultar_traza",
     "normalizar_asunto",
