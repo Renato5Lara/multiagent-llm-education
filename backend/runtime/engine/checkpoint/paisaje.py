@@ -24,6 +24,7 @@ from decimal import Decimal
 from math import log2
 from typing import Mapping
 
+from runtime.engine.checkpoint.reconstruccion import Replay
 from runtime.kernel.deliberation.confianza import calcular_confianza_efectiva
 from runtime.kernel.deliberation.politica import Politica
 from runtime.kernel.state.entries import ClaimEntry, DeliberacionEntry, Resuelta, TipoClaim
@@ -141,3 +142,66 @@ def calcular_paisaje(estado: LearningState, politica: Politica) -> Paisaje:
             for asunto, claims in por_asunto.items()
         },
     )
+
+
+@dataclass(frozen=True, slots=True)
+class TransicionPaisaje:
+    """Un eslabón del paisaje reconstruido por transición (RFC-0007 §5:
+    "el visor de replay... define qué expone: estados, eventos, paisaje
+    reconstruido por transición") — mismo molde que `TransicionEstado`/
+    `TransicionEventos` (`engine/checkpoint/reconstruccion.py`)."""
+
+    transicion: int
+    paisaje: Paisaje
+    estabilidad: int
+    """Cantidad de asuntos cuya `densidad` o `conflicto` cambió respecto
+    al paisaje de la transición inmediatamente anterior del mismo
+    replay (RFC-0007 §2.2: "cambio del paisaje entre transiciones"). 0
+    en el primer eslabón (no hay "anterior" dentro de este replay) y
+    siempre que el paisaje quede idéntico al previo."""
+
+
+def _paisaje_distancia(anterior: Paisaje, actual: Paisaje) -> int:
+    asuntos = set(anterior.densidad) | set(actual.densidad)
+    return sum(
+        1
+        for asunto in asuntos
+        if anterior.densidad.get(asunto) != actual.densidad.get(asunto)
+        or anterior.conflicto.get(asunto) != actual.conflicto.get(asunto)
+    )
+
+
+def derivar_paisaje(
+    replay: Replay, politica: Politica
+) -> tuple[tuple[TransicionPaisaje, ...], Mapping[str, int]]:
+    """Recorre un `Replay` ya reconstruido (`reconstruir_con_replay`,
+    RFC-0008 §3) y deriva, sin volver a tocar Postgres ni recorrer el
+    grafo, las dos métricas "de secuencia" de la fila Paisaje (RFC-0007
+    §2.2):
+
+    - `estabilidad` — por transición, dentro de cada `TransicionPaisaje`.
+    - tiempo lógico de estabilización — el segundo elemento retornado:
+      asunto -> cantidad de transiciones que ese asunto pasó con
+      `conflicto` activo (bloqueante o latente) antes de resolverse
+      (dejar de aparecer en `conflicto`) DENTRO de este replay. Un
+      asunto cuyo conflicto sigue abierto en la última transición del
+      replay, o que nunca tuvo conflicto, no aparece — "tiempo lógico"
+      (A4): se cuenta en índices de transición, nunca en reloj de pared."""
+    pasos: list[TransicionPaisaje] = []
+    anterior: Paisaje | None = None
+    apertura: dict[str, int] = {}
+    tiempos: dict[str, int] = {}
+    for paso in replay:
+        paisaje = calcular_paisaje(paso.estado, politica)
+        estabilidad = 0 if anterior is None else _paisaje_distancia(anterior, paisaje)
+        pasos.append(
+            TransicionPaisaje(
+                transicion=paso.transicion, paisaje=paisaje, estabilidad=estabilidad
+            )
+        )
+        for asunto in paisaje.conflicto:
+            apertura.setdefault(asunto, paso.transicion)
+        for asunto in [a for a in apertura if a not in paisaje.conflicto]:
+            tiempos[asunto] = paso.transicion - apertura.pop(asunto)
+        anterior = paisaje
+    return tuple(pasos), tiempos
