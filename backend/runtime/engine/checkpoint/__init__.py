@@ -12,6 +12,7 @@ from runtime.engine.checkpoint.cadena import (
     genesis,
     verificar,
 )
+from runtime.engine.checkpoint.paisaje import Paisaje, calcular_paisaje
 from runtime.engine.checkpoint.reconstruccion import (
     Replay,
     Traza,
@@ -28,12 +29,14 @@ __all__ = [
     "ESCALA_DECIMAL",
     "AlmacenMemoria",
     "AlmacenTransiciones",
+    "Paisaje",
     "RegistroTransicion",
     "Replay",
     "Traza",
     "TransicionEstado",
     "TransicionEventos",
     "a_canonico",
+    "calcular_paisaje",
     "desde_canonico",
     "encadenar",
     "genesis",
