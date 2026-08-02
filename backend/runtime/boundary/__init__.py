@@ -16,6 +16,7 @@ from runtime.boundary.inbound import (
 )
 from runtime.boundary.outbound import Entrega, proyectar_entrega
 from runtime.boundary.surfaces import (
+    consultar_consenso,
     consultar_entrega_vigente,
     consultar_escaladas_pendientes,
     consultar_estado,
@@ -31,6 +32,7 @@ __all__ = [
     "PeticionAbrirSesion",
     "PeticionHechoDelMundo",
     "abrir_sesion",
+    "consultar_consenso",
     "consultar_entrega_vigente",
     "consultar_escaladas_pendientes",
     "consultar_estado",
