@@ -32,6 +32,7 @@ from runtime.boundary import (
     PeticionAbrirSesion,
     PeticionHechoDelMundo,
     abrir_sesion,
+    consultar_consenso,
     consultar_escaladas_pendientes,
     consultar_estado,
     consultar_memoria,
@@ -164,6 +165,17 @@ class PasoPaisajeOut(BaseModel):
 class RespuestaPaisajeOut(BaseModel):
     transiciones: list[PasoPaisajeOut]
     tiempo_estabilizacion: Mapping[str, int]
+
+
+class ConsensoOut(BaseModel):
+    convocatorias: int
+    no_convocatorias: int
+    resueltas: int
+    aplazadas: int
+    escaladas: int
+    margenes_resolucion: list[str]
+    confianza_resolucion: list[str]
+    longitud_cadenas_reconvocacion: list[int]
 
 
 def _estado_out(learning_state: Any) -> EstadoOut:
@@ -389,6 +401,36 @@ def paisaje(
             for paso in pasos
         ],
         tiempo_estabilizacion=tiempo_estabilizacion,
+    )
+
+
+@router.get("/sessions/{session_id}/consenso", response_model=ConsensoOut)
+def consenso(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante_o_docente),
+) -> ConsensoOut:
+    """RFC-0007 §2.2, fila "Consenso (RFC-0006)" — resumen de consenso de
+    la sesión completa (S3, RFC-0010 §2). Distinto de `/paisaje` (una
+    serie por transición): aquí el resultado es un único resumen sobre
+    toda la sesión, porque el consenso no tiene un "instante" — un
+    episodio de deliberación ya ocurrió o no. `Decimal` se stringifica
+    (mismo criterio que `valor_json`, ADR-0001 §4: exactitud decimal)."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
+    metricas = consultar_consenso(
+        _peticion_de(session_id, current_user),
+        almacen,
+        almacen_memoria,
+    )
+    return ConsensoOut(
+        convocatorias=metricas.convocatorias,
+        no_convocatorias=metricas.no_convocatorias,
+        resueltas=metricas.resueltas,
+        aplazadas=metricas.aplazadas,
+        escaladas=metricas.escaladas,
+        margenes_resolucion=[str(m) for m in metricas.margenes_resolucion],
+        confianza_resolucion=[str(c) for c in metricas.confianza_resolucion],
+        longitud_cadenas_reconvocacion=list(metricas.longitud_cadenas_reconvocacion),
     )
 
 

@@ -244,6 +244,7 @@ def test_estado_memoria_y_replay_de_sesion_ajena_son_rechazados(client, autentic
         assert client.get("/api/runtime/sessions/s-http-ajena-2/memoria").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/replay").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/paisaje").status_code == 403
+        assert client.get("/api/runtime/sessions/s-http-ajena-2/consenso").status_code == 403
     finally:
         app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: autenticado
 
@@ -286,6 +287,49 @@ def test_paisaje_expone_un_paso_por_transicion_del_replay_via_http(client, auten
         )
 
 
+def test_consenso_de_sesion_nueva_sin_evidencia_es_vacio_via_http(client, autenticado):
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-consenso-nueva"})
+    resp = client.get("/api/runtime/sessions/s-http-consenso-nueva/consenso")
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {
+        "convocatorias": 0,
+        "no_convocatorias": 0,
+        "resueltas": 0,
+        "aplazadas": 0,
+        "escaladas": 0,
+        "margenes_resolucion": [],
+        "confianza_resolucion": [],
+        "longitud_cadenas_reconvocacion": [],
+    }
+
+
+def test_consenso_es_forma_valida_con_evidencia_real_via_http(client, autenticado):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-consenso"})
+    identidad = abierta.json()
+
+    client.post(
+        "/api/runtime/hechos",
+        json={
+            "identidad": identidad,
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "origen": "instrumento",
+        },
+    )
+
+    resp = client.get("/api/runtime/sessions/s-http-consenso/consenso")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+
+    assert set(body.keys()) == {
+        "convocatorias", "no_convocatorias", "resueltas", "aplazadas",
+        "escaladas", "margenes_resolucion", "confianza_resolucion",
+        "longitud_cadenas_reconvocacion",
+    }
+    assert body["resueltas"] + body["aplazadas"] + body["escaladas"] == body["convocatorias"]
+    assert all(float(c) >= 0 for c in body["confianza_resolucion"])
+    assert all(n > 0 for n in body["longitud_cadenas_reconvocacion"])
+
+
 def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
     abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-ajena"})
     identidad_ajena = dict(abierta.json(), student_id="otro-estudiante-cualquiera")
@@ -312,7 +356,7 @@ def test_docente_puede_leer_estado_de_sesion_ajena(client, autenticado, autentic
     # loop, autoridad, no un participante con ámbito por estudiante.
     client.post("/api/runtime/sessions", json={"session_id": "s-http-docente-lee"})
 
-    for ruta in ("traza", "estado", "memoria", "replay", "paisaje"):
+    for ruta in ("traza", "estado", "memoria", "replay", "paisaje", "consenso"):
         resp = client.get(f"/api/runtime/sessions/s-http-docente-lee/{ruta}")
         assert resp.status_code == 200, f"{ruta}: {resp.text}"
 
