@@ -1,0 +1,174 @@
+{
+  "experimento": "5.1_barrido_delta_H10",
+  "extiende": "ADR-0012 (consenso_replay_v1_vs_v2.py); RESEARCH_ITERATIONS.md 5.1",
+  "run_id": "20260802T005202",
+  "timestamp": "2026-08-02T00:52:02.604460",
+  "evidencia": {
+    "errores": 2,
+    "competencia": "bucles"
+  },
+  "session_id_prefijo": "experimento:barrido-delta:tension-canonica-1:20260802T005202",
+  "propuestas_rivales": [
+    "orientar:avanzar-con-andamiaje:0.7500",
+    "remediar:reforzar:0.8200"
+  ],
+  "ramas": [
+    {
+      "delta": "0.00",
+      "tension_canonica_1": {
+        "resultado": "RESUELTA",
+        "regla": "mayor-confianza-declarada",
+        "confianza": "0.8200"
+      },
+      "paisaje": {
+        "densidad": 1,
+        "conflicto": null,
+        "entropia": 0.0
+      },
+      "consenso": {
+        "resueltas": 1,
+        "aplazadas": 0,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": [
+          "0.8200"
+        ]
+      }
+    },
+    {
+      "delta": "0.05",
+      "tension_canonica_1": {
+        "resultado": "RESUELTA",
+        "regla": "mayor-confianza-declarada",
+        "confianza": "0.8200"
+      },
+      "paisaje": {
+        "densidad": 1,
+        "conflicto": null,
+        "entropia": 0.0
+      },
+      "consenso": {
+        "resueltas": 1,
+        "aplazadas": 0,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": [
+          "0.8200"
+        ]
+      }
+    },
+    {
+      "delta": "0.07",
+      "tension_canonica_1": {
+        "resultado": "RESUELTA",
+        "regla": "mayor-confianza-declarada",
+        "confianza": "0.8200"
+      },
+      "paisaje": {
+        "densidad": 1,
+        "conflicto": null,
+        "entropia": 0.0
+      },
+      "consenso": {
+        "resueltas": 1,
+        "aplazadas": 0,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": [
+          "0.8200"
+        ]
+      }
+    },
+    {
+      "delta": "0.071",
+      "tension_canonica_1": {
+        "resultado": "APLAZADA",
+        "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.0700 < delta 0.071"
+      },
+      "paisaje": {
+        "densidad": 2,
+        "conflicto": "latente",
+        "entropia": 0.998565550382876
+      },
+      "consenso": {
+        "resueltas": 0,
+        "aplazadas": 1,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": []
+      }
+    },
+    {
+      "delta": "0.10",
+      "tension_canonica_1": {
+        "resultado": "APLAZADA",
+        "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.0700 < delta 0.10"
+      },
+      "paisaje": {
+        "densidad": 2,
+        "conflicto": "latente",
+        "entropia": 0.998565550382876
+      },
+      "consenso": {
+        "resueltas": 0,
+        "aplazadas": 1,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": []
+      }
+    },
+    {
+      "delta": "0.15",
+      "tension_canonica_1": {
+        "resultado": "APLAZADA",
+        "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.0700 < delta 0.15"
+      },
+      "paisaje": {
+        "densidad": 2,
+        "conflicto": "latente",
+        "entropia": 0.998565550382876
+      },
+      "consenso": {
+        "resueltas": 0,
+        "aplazadas": 1,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": []
+      }
+    },
+    {
+      "delta": "0.20",
+      "tension_canonica_1": {
+        "resultado": "APLAZADA",
+        "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.0700 < delta 0.20"
+      },
+      "paisaje": {
+        "densidad": 2,
+        "conflicto": "latente",
+        "entropia": 0.998565550382876
+      },
+      "consenso": {
+        "resueltas": 0,
+        "aplazadas": 1,
+        "escaladas": 0,
+        "margenes_resolucion": [
+          "0.0700"
+        ],
+        "confianza_resolucion": []
+      }
+    }
+  ],
+  "coincide_con_pre_registro": true
+}

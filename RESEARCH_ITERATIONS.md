@@ -511,3 +511,148 @@ en verde, baseline preexistente sin regresiones, build frontend limpio,
 endpoints probados contra el stack real). **Pendiente de validación manual
 del tesista** (recorrido completo en navegador: login → diagnóstico →
 pre-test → ruta → misión → post-test → /evidencia/investigacion → exportar).
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.1 — Sensibilidad de la dinámica de consenso ante el umbral de discriminación δ (H10)
+
+## Pregunta de investigación
+
+¿Cómo modifica el umbral de discriminación δ la dinámica observable del
+consenso y el paisaje cognitivo ante una evidencia idéntica?
+
+## Hipótesis parcial
+
+- **H0**: δ no modifica significativamente (resultado, entropía,
+  conflicto) ante evidencia idéntica.
+- **H1**: δ > margen(evidencia) produce una transición observable
+  Resuelta → Aplazada, acompañada de mayor densidad de claims vigentes,
+  mayor entropía, conflicto preservado.
+
+## Diseño experimental
+
+**Antecedente.** Extiende ADR-0012 §3 y su adenda §3.1 (Escenario A,
+`consenso_replay_v1_vs_v2.py`): esa corrida ya mostró, con dos ejecuciones
+reales (v1 delta=0 vs v2 delta=0.10), que la misma evidencia (propuestas
+rivales Remediar 0.82 / Orientar 0.75 sobre `siguiente-paso(sesion)`,
+margen real 0.07) resuelve o aplaza según delta. Esta iteración generaliza
+esa observación puntual (2 valores) a una curva (7 valores) sobre el mismo
+escenario causal.
+
+**Barrido paramétrico, no réplicas.** Bajo los productores de reglas
+deterministas vigentes, el margen de la tensión canónica #1 es una
+constante fija de la evidencia (0.07) — un diseño de "N réplicas" en el
+sentido clásico (repetir la misma condición para estimar varianza) sería
+estadísticamente vacío, porque no hay varianza que estimar: el mismo
+escenario, corrido dos veces bajo la misma política, produce el mismo
+margen exacto. Este es el mismo límite estructural documentado como
+hallazgo D1 en la mini-épica de Consenso (RFC-0007 §2.2) — no se resuelve
+aquí (fuera de alcance, ver Amenazas a la validez), se **diseña
+alrededor** de él: en vez de repetir la condición, se **varía
+sistemáticamente el parámetro** cuyo efecto se quiere caracterizar.
+
+- **Variable independiente**: δ ∈ {0.00, 0.05, 0.07, 0.071, 0.10, 0.15,
+  0.20}.
+- **Variables NO variadas (diseño unifactorial)**: `pesos_asunto`,
+  `asuntos_reservados`, confianza de productores (regla, determinista,
+  sin red — mismo control de ADR-0012 §3 sobre el confusor LLM), y la
+  evidencia inicial (mismo hecho evaluativo: 2 errores en competencia
+  "bucles", mismas dos propuestas rivales). `theta` se mantiene en 0.5
+  (mismo valor que `POLITICAS["v2"]`) para aislar δ como único parámetro
+  en movimiento.
+- **N = 1 escenario causal controlado.** No se pretende estimar varianza
+  poblacional. Se pretende caracterizar la respuesta determinista del
+  sistema ante variación controlada del parámetro δ.
+
+## Resultados esperados (pre-registro, antes de ejecutar)
+
+| δ | Esperado |
+|---|---|
+| 0.00 | Resuelta |
+| 0.05 | Resuelta |
+| 0.07 | Resuelta (igualdad permitida) |
+| 0.071 | Aplazada |
+| 0.10 | Aplazada |
+| 0.15 | Aplazada |
+| 0.20 | Aplazada |
+
+Paisaje esperado sobre `siguiente-paso(sesion)`, antes vs. después del
+umbral de transición:
+
+| | Antes (δ ≤ 0.07) | Después (δ ≥ 0.071) |
+|---|---|---|
+| densidad | 1 | 2 |
+| conflicto | `{}` | `latente` |
+| entropía | → 0 | ≈ 1 bit |
+
+## Amenazas a la validez
+
+- **No generaliza a superioridad de política.** La transición observada
+  identifica sensibilidad al parámetro δ, pero no permite concluir
+  superioridad de v2 sobre v1 en términos educativos o adaptativos sin
+  escenarios adicionales.
+- **Hallazgo D1 (heredado, no resuelto aquí).** El margen es una
+  propiedad de la evidencia declarada por los productores, no de la
+  política — por eso el diseño es un barrido de δ y no una comparación
+  de "réplicas"; ver la sección "Barrido paramétrico, no réplicas" arriba.
+- **Un solo escenario causal.** Los 7 puntos de la curva comparten el
+  mismo par de propuestas rivales (misma evidencia); no cubre otras
+  tensiones D1/D2 del sistema ni otros márgenes posibles.
+
+## Implementación
+
+Script `backend/scripts/experimentos/consenso_barrido_delta.py`. Técnica:
+una sola ejecución real de `ejecutar_walkthrough` (Postgres real,
+productor regla, sin red — misma metodología de
+`consenso_replay_v1_vs_v2.py`) hasta el punto causal exacto donde ambas
+propuestas rivales ya existen y la deliberación aún no se registró
+(reconstruido vía `reconstruir_con_replay`); desde ese único estado real,
+7 ramas contrafactuales in-memory —nunca persistidas—, una por valor de
+δ, cada una invocando `mecanica.convocar(estado, Politica(delta=...),
+urgente=False)` directamente (mismo patrón ya validado en
+`tests/runtime/reconstruction/test_RFC_0007_consenso.py`) y aplicando su
+resultado con el reducer real `registrar_deliberacion`. Cada rama se
+instrumenta con `derivar_paisaje`/`derivar_consenso` (RFC-0007 §2.2) sobre
+el prefijo real + su propio paso sintético. No modifica
+`kernel/deliberation/politica.py` (`POLITICAS` no se toca — cada `Politica`
+del barrido se construye ad-hoc en el script, nunca se registra como
+política de producción ni de experimento con nombre propio), no modifica
+`mecanica.py` ni `confianza.py`, no persiste ninguna de las 7 ramas.
+
+## Resultado
+
+Barrido ejecutado contra Postgres real (`consenso_barrido_delta.py`,
+run_id `20260802T005202`,
+`backend/experiments/results/consenso_barrido_delta_20260802T005202.json`).
+Un solo prefijo real (`ejecutar_walkthrough`, productor regla), 7 ramas
+contrafactuales in-memory sobre `siguiente-paso(sesion)`:
+
+| δ | Resultado | densidad | conflicto | entropía | margen |
+|---|---|---|---|---|---|
+| 0.00 | RESUELTA | 1 | — | 0.0 | 0.0700 |
+| 0.05 | RESUELTA | 1 | — | 0.0 | 0.0700 |
+| 0.07 | RESUELTA | 1 | — | 0.0 | 0.0700 |
+| 0.071 | APLAZADA | 2 | latente | 0.9986 | 0.0700 |
+| 0.10 | APLAZADA | 2 | latente | 0.9986 | 0.0700 |
+| 0.15 | APLAZADA | 2 | latente | 0.9986 | 0.0700 |
+| 0.20 | APLAZADA | 2 | latente | 0.9986 | 0.0700 |
+
+**Coincide exactamente con la tabla pre-registrada** — H1 confirmada: la
+transición Resuelta → Aplazada ocurre exactamente en el punto predicho
+(δ = margen + ε), acompañada del salto de paisaje predicho (densidad
+1→2, conflicto ∅→latente, entropía 0→≈1 bit). El margen recalculado
+(0.0700) es idéntico en las 7 ramas — confirma, ahora sobre una curva
+completa y no solo dos puntos, que el margen es una propiedad de la
+evidencia declarada por los productores, no de la política que la
+evalúa (mismo hallazgo de ADR-0012 §3.1, generalizado). H0 se rechaza:
+δ sí modifica significativamente resultado, entropía y conflicto ante
+evidencia idéntica — pero, consistente con la amenaza a la validez
+declarada arriba, esto caracteriza la sensibilidad del mecanismo al
+parámetro, no una comparación de superioridad pedagógica entre
+políticas.
+
+## Estado
+
+**EJECUTADA — hipótesis H1 confirmada, curva completa coincide con el
+pre-registro.** Pendiente de incorporación al capítulo de Resultados de
+la tesis.
