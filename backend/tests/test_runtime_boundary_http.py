@@ -243,8 +243,47 @@ def test_estado_memoria_y_replay_de_sesion_ajena_son_rechazados(client, autentic
         assert client.get("/api/runtime/sessions/s-http-ajena-2/estado").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/memoria").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/replay").status_code == 403
+        assert client.get("/api/runtime/sessions/s-http-ajena-2/paisaje").status_code == 403
     finally:
         app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: autenticado
+
+
+def test_paisaje_de_sesion_nueva_sin_evidencia_es_vacio_via_http(client, autenticado):
+    client.post("/api/runtime/sessions", json={"session_id": "s-http-paisaje-nueva"})
+    resp = client.get("/api/runtime/sessions/s-http-paisaje-nueva/paisaje")
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == {"transiciones": [], "tiempo_estabilizacion": {}}
+
+
+def test_paisaje_expone_un_paso_por_transicion_del_replay_via_http(client, autenticado):
+    abierta = client.post("/api/runtime/sessions", json={"session_id": "s-http-paisaje"})
+    identidad = abierta.json()
+
+    client.post(
+        "/api/runtime/hechos",
+        json={
+            "identidad": identidad,
+            "contenido": {"competencia": "COMP-2", "items_incorrectos": [3, 4, 8]},
+            "origen": "instrumento",
+        },
+    )
+
+    resp = client.get("/api/runtime/sessions/s-http-paisaje/paisaje")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+
+    replay = client.get("/api/runtime/sessions/s-http-paisaje/replay").json()
+    assert [p["transicion"] for p in body["transiciones"]] == [
+        p["transicion"] for p in replay
+    ]
+    assert "tiempo_estabilizacion" in body
+    for paso in body["transiciones"]:
+        assert set(paso["paisaje"].keys()) == {"densidad", "conflicto", "entropia"}
+        assert paso["estabilidad"] >= 0
+        assert all(v >= 0 for v in paso["paisaje"]["densidad"].values())
+        assert all(
+            v in ("bloqueante", "latente") for v in paso["paisaje"]["conflicto"].values()
+        )
 
 
 def test_identidad_de_otro_estudiante_es_rechazada(client, autenticado):
@@ -273,7 +312,7 @@ def test_docente_puede_leer_estado_de_sesion_ajena(client, autenticado, autentic
     # loop, autoridad, no un participante con ámbito por estudiante.
     client.post("/api/runtime/sessions", json={"session_id": "s-http-docente-lee"})
 
-    for ruta in ("traza", "estado", "memoria", "replay"):
+    for ruta in ("traza", "estado", "memoria", "replay", "paisaje"):
         resp = client.get(f"/api/runtime/sessions/s-http-docente-lee/{ruta}")
         assert resp.status_code == 200, f"{ruta}: {resp.text}"
 

@@ -35,6 +35,7 @@ from runtime.boundary import (
     consultar_escaladas_pendientes,
     consultar_estado,
     consultar_memoria,
+    consultar_paisaje,
     consultar_replay,
     consultar_traza,
     registrar_hecho,
@@ -146,6 +147,23 @@ class MemoriaOut(BaseModel):
 class PasoReplayOut(BaseModel):
     transicion: int
     estado: EstadoOut
+
+
+class PaisajeOut(BaseModel):
+    densidad: Mapping[str, int]
+    conflicto: Mapping[str, str]
+    entropia: Mapping[str, float]
+
+
+class PasoPaisajeOut(BaseModel):
+    transicion: int
+    paisaje: PaisajeOut
+    estabilidad: int
+
+
+class RespuestaPaisajeOut(BaseModel):
+    transiciones: list[PasoPaisajeOut]
+    tiempo_estabilizacion: Mapping[str, int]
 
 
 def _estado_out(learning_state: Any) -> EstadoOut:
@@ -337,6 +355,41 @@ def replay(
         PasoReplayOut(transicion=paso.transicion, estado=_estado_out(paso.estado))
         for paso in pasos
     ]
+
+
+@router.get("/sessions/{session_id}/paisaje", response_model=RespuestaPaisajeOut)
+def paisaje(
+    session_id: str,
+    current_user: User = Depends(aget_current_estudiante_o_docente),
+) -> RespuestaPaisajeOut:
+    """RFC-0007 §2.2, fila "Paisaje (H8)", y §5 — el paisaje cognitivo
+    reconstruido por transición (S3, RFC-0010 §2). Distinto de `/replay`
+    (el `LearningState` completo): aquí cada paso es la proyección de
+    lectura sobre `claims` que RFC-0007/CONCEPT-0001 llaman paisaje —
+    densidad, conflicto y entropía por asunto, más la estabilidad entre
+    transiciones y el tiempo lógico de estabilización por asunto."""
+    almacen, almacen_memoria = almacenes()
+    _verificar_pertenencia(session_id, current_user, almacen)
+    pasos, tiempo_estabilizacion = consultar_paisaje(
+        _peticion_de(session_id, current_user),
+        almacen,
+        almacen_memoria,
+    )
+    return RespuestaPaisajeOut(
+        transiciones=[
+            PasoPaisajeOut(
+                transicion=paso.transicion,
+                paisaje=PaisajeOut(
+                    densidad=paso.paisaje.densidad,
+                    conflicto=paso.paisaje.conflicto,
+                    entropia=paso.paisaje.entropia,
+                ),
+                estabilidad=paso.estabilidad,
+            )
+            for paso in pasos
+        ],
+        tiempo_estabilizacion=tiempo_estabilizacion,
+    )
 
 
 class HechoDocenteIn(BaseModel):
