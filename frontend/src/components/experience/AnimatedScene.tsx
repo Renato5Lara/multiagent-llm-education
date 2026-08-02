@@ -18,6 +18,7 @@ export function AnimatedScene({ sceneId }: SceneProps) {
 const SCENES: Record<string, ComponentType> = {
   'dos-robots': DosRobotsScene,
   'caja-variable': CajaVariableScene,
+  'espera-input': EsperaInputScene,
 }
 
 // ── Escena: dos robots, misma meta, instrucciones distintas ────────────────────
@@ -154,6 +155,60 @@ function CajaVariableScene() {
           <span className="mlv-v1 absolute text-2xl font-bold text-neural-text">20</span>
           <span className="mlv-v2 absolute text-2xl font-bold text-neural-text">21</span>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Escena: el programa que espera, y el que no ─────────────────────────────
+// Carril A (sin input()): muestra la pregunta y sigue de inmediato — saluda
+// a nadie. Carril B (con input()): muestra la misma pregunta, se DETIENE
+// ("esperando tu respuesta..."), y solo cuando "escribes" y confirmas
+// continúa con el saludo correcto. Bucle de 8 s. Con prefers-reduced-motion
+// queda el cuadro estático en el primer fotograma de cada carril.
+
+function EsperaInputScene() {
+  return (
+    <div
+      className="rounded-xl border border-white/[0.08] bg-neural-lowest/60 overflow-hidden"
+      role="img"
+      aria-label="Animación: el primer programa muestra ¿Cómo te llamas? y sigue de inmediato sin esperar respuesta, saludando a nadie. El segundo programa muestra la misma pregunta pero se detiene y espera hasta que el usuario escribe su nombre, y solo entonces saluda correctamente."
+    >
+      <style>{`
+        @keyframes m1i-failgreet { 0%, 12% { opacity: 0; } 18%, 90% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes m1i-waiting   { 0%, 15% { opacity: 0; } 20%, 60% { opacity: 1; } 65%, 100% { opacity: 0; } }
+        @keyframes m1i-typed     { 0%, 62% { opacity: 0; } 66%, 90% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes m1i-okgreet   { 0%, 70% { opacity: 0; } 76%, 90% { opacity: 1; } 100% { opacity: 0; } }
+        .m1i-failgreet { animation: m1i-failgreet 8s linear infinite; }
+        .m1i-waiting   { animation: m1i-waiting 8s linear infinite; }
+        .m1i-typed     { animation: m1i-typed 8s linear infinite; }
+        .m1i-okgreet   { animation: m1i-okgreet 8s linear infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .m1i-waiting, .m1i-typed, .m1i-okgreet { animation: none; opacity: 0; }
+          .m1i-failgreet { animation: none; opacity: 1; }
+        }
+      `}</style>
+
+      <div className="px-4 pt-4 pb-1">
+        <span className="text-[10px] font-mono text-neural-muted/60">sin input()</span>
+      </div>
+      <div className="relative h-12 mx-4 mb-2 border-b border-dashed border-white/[0.08] flex items-center gap-2">
+        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.04]">
+          ¿Cómo te llamas?
+        </span>
+        <span className="m1i-failgreet text-[11px] text-red-400">Hola, ! ✗</span>
+      </div>
+
+      <div className="px-4 pt-1 pb-1">
+        <span className="text-[10px] font-mono text-neural-muted/60">con input()</span>
+      </div>
+      <div className="relative h-12 mx-4 mb-4 flex items-center gap-2">
+        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full border border-neural-glow/30 text-neural-glow bg-neural-glow/5">
+          ¿Cómo te llamas?
+        </span>
+        <span className="m1i-waiting text-[11px] text-neural-muted/70 italic">esperando tu respuesta…</span>
+        <span className="m1i-typed text-[11px] font-mono text-neural-text">Nico ⏎</span>
+        <span className="m1i-okgreet text-[11px] text-emerald-400">Hola, Nico ✓</span>
       </div>
     </div>
   )
