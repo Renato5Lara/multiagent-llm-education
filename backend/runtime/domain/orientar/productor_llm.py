@@ -24,7 +24,7 @@ from runtime.kernel.state.entries import (
 from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
 
-_PROMPT_ID = "orientacion-siguiente-paso-v1"
+_PROMPT_ID = "orientacion-siguiente-paso-v2"
 _PROMPT_ID_OBJETIVO = "orientacion-por-objetivo-v1"
 
 
@@ -56,10 +56,12 @@ def producir(
             and claim.vigencia.vigente
             and "dominada" in claim.afirmacion
         ):
+            errores = claim.afirmacion.get("errores")
             prompt = (
                 f"Existe una interpretación vigente sobre el estudiante "
-                f"(claim {claim.id}). La política ruta-v1 propone avanzar "
-                f"al siguiente objetivo con andamiaje adicional como "
+                f"(claim {claim.id}, {errores} items incorrectos). La "
+                f"política ruta-v1 propone avanzar al siguiente objetivo "
+                f"con andamiaje adicional como "
                 f"CANDIDATA en la deliberación — no es una decisión final "
                 f"ni un juicio tuyo sobre si conviene: eso lo resuelve "
                 f"después el Kernel comparando esta propuesta contra la "

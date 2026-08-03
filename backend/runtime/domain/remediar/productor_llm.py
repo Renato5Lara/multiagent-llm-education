@@ -24,7 +24,7 @@ from runtime.kernel.state.entries import (
 from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
 
-_PROMPT_ID = "remediacion-siguiente-paso-v1"
+_PROMPT_ID = "remediacion-siguiente-paso-v2"
 _PROMPT_ID_OBJETIVO = "remediacion-por-objetivo-v1"
 
 
@@ -52,10 +52,12 @@ def producir(
             and claim.vigencia.vigente
             and claim.afirmacion.get("dominada") is False
         ):
+            errores = claim.afirmacion.get("errores")
             prompt = (
-                f"El estudiante no domina la competencia (claim {claim.id}). "
-                f'La política remediacion-v1 indica reforzar la competencia '
-                f"antes de avanzar de tema. Responde JSON con esta forma "
+                f"El estudiante no domina la competencia (claim {claim.id}, "
+                f"{errores} items incorrectos). La política remediacion-v1 "
+                f"indica reforzar la competencia antes de avanzar de tema. "
+                f"Responde JSON con esta forma "
                 f'EXACTA y en este ORDEN: primero "razonamiento" (por qué '
                 f'reforzar es la acción correcta aquí), luego "accion" '
                 f'(STRING, debe ser exactamente "reforzar"), luego '

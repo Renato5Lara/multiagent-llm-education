@@ -656,3 +656,260 @@ políticas.
 **EJECUTADA — hipótesis H1 confirmada, curva completa coincide con el
 pre-registro.** Pendiente de incorporación al capítulo de Resultados de
 la tesis.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.2 — Sensibilidad del margen de consenso ante evidencia variable bajo productores adaptativos (H10, extensión LLM)
+
+## Pregunta de investigación
+
+¿La severidad de la evidencia diagnóstica modifica el margen de confianza
+que declaran los productores LLM (Remediar, Orientar) sobre la tensión
+canónica #1, y esa variación interactúa con el umbral de discriminación δ
+para desplazar el punto de transición Resuelta→Aplazada — a diferencia de
+los productores de regla (5.1), donde el margen es una constante fija de
+la evidencia (0.07, independiente de su severidad)?
+
+## Hipótesis parcial
+
+- **H0**: bajo productores LLM, el margen entre Remediar-LLM y
+  Orientar-LLM permanece aproximadamente constante entre niveles de
+  severidad de evidencia — el LLM no usa la señal de severidad para
+  modular su confianza declarada, pese a que el prompt ahora se la expone
+  explícitamente (ver "Instrumento" abajo). El punto de transición en δ
+  sería el mismo en las 4 evidencias, igual que bajo regla.
+- **H1**: el margen varía con la severidad de la evidencia — a distinta
+  evidencia, distinto margen —, **sin asumir monotonicidad ni dirección
+  del efecto** (no afirma que más errores impliquen mayor margen, ni que
+  impliquen menor margen — solo que el margen deja de ser constante) — y
+  por tanto el punto de transición Resuelta→Aplazada en δ se desplaza
+  entre niveles de evidencia (a diferencia de 5.1, donde el punto de
+  transición fue idéntico —δ=0.071— para toda la curva porque el margen
+  de la regla es constante).
+
+## Instrumento (ya implementado, previo a este pre-registro)
+
+Los prompts de Remediar-LLM y Orientar-LLM (`producir()`, ruta
+`siguiente-paso(sesion)`) no incluían ninguna señal de severidad —
+referenciaban solo el `claim.id` de la interpretación de Diagnosticar,
+nunca su contenido. Bajo `temperature=0` (default de `OpenAIProvider`,
+fijado en M3 PR-2 por reproducibilidad) y prompt idéntico entre niveles
+de evidencia, el margen no podía variar con Factor A por construcción —
+hallazgo de la auditoría previa a este pre-registro, no una suposición.
+
+Corregido hoy, antes de este pre-registro (P13: cambia la implementación,
+nunca el contrato — mismo tipo de claim, mismo asunto, mismo respaldo):
+ambos prompts ahora interpolan `claim.afirmacion.get("errores")` —
+dato ya disponible en el claim de Diagnosticar, sin plumbing nuevo.
+Versionado explícito para no confundir corridas futuras con el
+instrumento anterior: `_PROMPT_ID` pasa de `remediacion-siguiente-paso-v1`
+a `remediacion-siguiente-paso-v2` (`backend/runtime/domain/remediar/
+productor_llm.py`) y de `orientacion-siguiente-paso-v1` a
+`orientacion-siguiente-paso-v2` (`backend/runtime/domain/orientar/
+productor_llm.py`). No se tocó `_producir_por_objetivo` (ruta multi-
+objetivo, fuera de alcance de esta iteración). Verificado sin regresión
+contra la suite de guardianes P13 (`test_P13_remediar_reglas_vs_llm.py`,
+`test_P13_orientar_reglas_vs_llm.py`, `test_orientar_remediar_por_
+objetivo.py` — 18 passed, 0 failed; ninguno fija el texto del prompt ni
+el `_PROMPT_ID`, solo el contrato). Este instrumento v2 **nunca ha sido
+ejecutado contra un proveedor LLM real** — este pre-registro se escribe
+antes de su primera ejecución real, precisamente para no ajustar la
+hipótesis después de ver el dato.
+
+## Diseño experimental
+
+**Antecedente.** Extiende 5.1 (barrido de δ, productor regla, margen
+constante 0.07) y el hallazgo exploratorio de ADR-0012 §3: una corrida
+real con productores LLM (sin la propagación de severidad de hoy) obtuvo
+confianzas 0.85/0.95 → margen 0.10 — documentada allí como inválida por
+mezclar accidentalmente productor regla/LLM (confusor no controlado, no
+por el valor del margen en sí). Ese margen 0.10 ya demuestra que el LLM
+puede declarar un margen distinto de 0.07 — motiva, pero no prueba, H1.
+
+**Corrección estructural encontrada en esta auditoría (bloqueante si no
+se aplica).** El margen requiere que Remediar Y Orientar propongan ambos
+sobre `siguiente-paso(sesion)`. `remediar/productor_llm.py` solo propone
+cuando `claim.afirmacion.get("dominada") is False`; `orientar/
+productor_llm.py` (ruta `siguiente-paso`) propone siempre que exista la
+clave `"dominada"`, sin importar su valor. Con `_UMBRAL_ERRORES = 2`
+(`diagnosticar/productor.py:22`), un hecho con **1** error clasifica
+`dominada=True` → Remediar no compite, Orientar propone solo, no hay
+tensión que medir. Por eso Factor A **no puede ser 1–4 errores** (como se
+sugirió antes de esta auditoría): debe mantenerse dentro del régimen
+`dominada=False`, es decir, `errores ≥ _UMBRAL_ERRORES`.
+
+- **Factor A — severidad de evidencia** (variable independiente 1):
+  `items_incorrectos` de longitud E1=2, E2=3, E3=4, E4=5, todos sobre la
+  misma competencia que 5.1/ADR-0012 (`COMPETENCIA = "Bucles"`,
+  `consenso_barrido_delta.py:73`) — mismo asunto, misma capacidad
+  evaluativa, solo cambia la cardinalidad de la evidencia incorrecta.
+  Los 4 niveles caen en el régimen `dominada=False` por construcción
+  (todos ≥ 2), preservando la tensión canónica en los 4 casos.
+- **Factor B — política** (variable independiente 2): δ ∈ {0.00, 0.05,
+  0.10, 0.15} — subconjunto de la curva de 5.1 (no hacen falta los 7
+  valores: 5.1 ya localizó el comportamiento frontera bajo regla; aquí
+  el punto de interés es si el margen LLM, y por tanto el punto de
+  transición, se mueve respecto a ese frontera conocido).
+- **Variables dependientes**: resultado de la deliberación
+  (`Resuelta`/`Aplazada`), margen recalculado, y las mismas proyecciones
+  de RFC-0007 §2.2 usadas en 5.1 (`derivar_paisaje`/`derivar_consenso`:
+  densidad, conflicto, entropía).
+- **Variables NO variadas**: `theta = 0.5` (igual que `POLITICAS["v2"]`),
+  `pesos_asunto`/`asuntos_reservados` en su valor neutro v1 (mismo
+  control que ADR-0012 §2), mismo modelo (`gpt-4o-mini`, default de
+  `OpenAIProvider`), `temperature=0` (default), mismo `_PROMPT_ID` v2 en
+  las 4 severidades — el único dato que cambia en el texto del prompt es
+  el número de errores.
+- **N = 4 escenarios de evidencia, cada uno con 1 ejecución real.** Por
+  cada nivel de evidencia: 3 llamadas LLM reales (Diagnosticar → Remediar
+  → Orientar, productores explícitos, nunca la selección automática del
+  Boundary — mismo control que el confusor de ADR-0012 §3), hasta el
+  estado exacto con ambas propuestas rivales vigentes y la deliberación
+  aún no registrada. Desde cada uno de esos 4 estados reales, el eje δ
+  sigue la misma técnica in-memory de 5.1 (ramas contrafactuales vía
+  `mecanica.convocar` + `registrar_deliberacion`, nunca persistidas) — no
+  son réplicas de δ, son el mismo barrido paramétrico ya validado. En este
+  diseño esto implica 12 llamadas LLM reales (4 evidencias × 3
+  capacidades) — cifra ilustrativa del diseño actual, no un criterio de
+  aceptación: si una capacidad auxiliar se agrega más adelante, el número
+  cambia sin que el diseño experimental deje de ser válido.
+
+## Resultados esperados (pre-registro, antes de ejecutar)
+
+| Evidencia | errores | Margen esperado si H0 | Margen esperado si H1 |
+|---|---|---|---|
+| E1 | 2 | ≈ 0.07 (igual a regla) | distinto de 0.07 |
+| E2 | 3 | ≈ 0.07 | distinto de E1 |
+| E3 | 4 | ≈ 0.07 | distinto de E1/E2 |
+| E4 | 5 | ≈ 0.07 | distinto de E1/E2/E3 |
+
+Si H1 se confirma, el punto de transición Resuelta→Aplazada dentro de la
+curva δ ∈ {0.00, 0.05, 0.10, 0.15} debería **diferir entre al menos dos
+niveles de evidencia** (a diferencia de 5.1, donde el punto de transición
+—δ=0.071— fue idéntico en las 7 réplicas paramétricas porque el margen
+regla es una constante). Si H0 se confirma, el punto de transición sería
+el mismo en las 4 evidencias — resultado igual de válido: documentaría
+que el LLM, aun con la señal de severidad expuesta explícitamente en el
+prompt v2, no la usa para modular su confianza declarada.
+
+**Ningún resultado se considera un fracaso experimental.** La
+confirmación de H0 también constituye un resultado científicamente
+válido, pues evidenciaría que la incorporación explícita de la severidad
+al prompt no modifica el comportamiento del productor LLM bajo las
+condiciones evaluadas.
+
+## Amenazas a la validez
+
+- **Instrumento nunca antes ejecutado contra LLM real.** Los prompts v2
+  se crearon el mismo día de este pre-registro — no hay corridas previas
+  que informen si el LLM real efectivamente lee y usa el dato de
+  severidad recién expuesto; ese es precisamente el objeto de prueba.
+- **Confusor regla/LLM (heredado de ADR-0012 §3).** Debe controlarse
+  llamando `ejecutar_walkthrough` con productores LLM explícitos, nunca
+  dependiendo de `productores.py: productor_*_activo()`.
+- **No-determinismo residual del proveedor real.** `temperature=0` reduce
+  pero no garantiza reproducibilidad exacta entre llamadas del SDK de
+  OpenAI; mitigado capturando prompt + respuesta cruda + timestamp por
+  llamada (ver "Reproducibilidad" abajo).
+- **N=1 por celda de evidencia — no estima varianza intra-nivel.** Una
+  sola llamada real por nivel de severidad caracteriza el efecto de la
+  severidad sobre el margen, no la varianza del LLM ante el mismo prompt
+  repetido (eso sería un experimento de réplicas puras, fuera de alcance
+  aquí, igual que 5.1 declaró N=1 para δ).
+- **Rango de evidencia acotado al régimen `dominada=False`.** No cubre el
+  caso `dominada=True` (1 error): ahí Remediar no compite por diseño
+  estructural (no es una limitación de esta iteración, es el
+  comportamiento correcto de la capacidad — ver "Corrección estructural"
+  arriba).
+- **No generaliza a superioridad de política ni de proveedor.** Igual
+  amenaza que 5.1: caracteriza sensibilidad del mecanismo, no superioridad
+  pedagógica de LLM sobre regla.
+
+## Reproducibilidad
+
+Ningún campo nuevo en `Provenance` ni en el Kernel (evitaría RFC nuevo
+sin necesidad — RFC-0003 §3.1 ya cubre `modelo`/`version`/`prompt_id`).
+La captura de prompt completo + respuesta cruda + timestamp por llamada
+se hace **dentro del script del experimento**, envolviendo
+`OpenAIProvider` con un decorador local — mismo patrón ya usado por
+`consenso_barrido_delta.py`/`consenso_replay_v1_vs_v2.py` (scripts
+aislados que no tocan `runtime/` ni la selección global de política).
+Cada corrida exporta su JSON de resultados con esos datos adicionales,
+igual que las corridas de 5.1 y ADR-0012 §3.
+
+## Criterios de aceptación
+
+- Prompts v2 verificados sin regresión de contrato (ya cumplido, ver
+  "Instrumento" arriba).
+- Se ejecutan todas las llamadas LLM necesarias para obtener las cuatro
+  condiciones experimentales definidas, cada una registrada (prompt,
+  respuesta cruda, confianza extraída, timestamp) en el JSON de
+  resultados.
+- Margen recalculado para las 4 evidencias, con
+  `derivar_paisaje`/`derivar_consenso` aplicado a cada rama δ.
+- Tabla de resultados comparada explícitamente contra esta tabla de
+  pre-registro — coincida o no, se reporta como está, sin ajustar H0/H1
+  después de ver el dato.
+- `POLITICAS`, `mecanica.py`, `confianza.py`, `kernel/deliberation/`
+  intactos — verificado por `git diff` y por la suite completa de
+  deliberación, igual criterio que ADR-0012 §4.
+
+## Alcance explícitamente fuera de esta iteración
+
+- Ruta multi-objetivo (`_producir_por_objetivo`) — sigue sin tocarse.
+- Multi-tensión / Parte G — sigue sin tocarse.
+- Hallazgo D1 (margen como propiedad de la evidencia bajo regla) — ya
+  cerrado en 5.1, no se reabre.
+- Cualquier comparación de "calidad" LLM vs. regla — la hipótesis es
+  sobre variabilidad del margen, no sobre superioridad.
+
+## Resultado
+
+Script `backend/scripts/experimentos/consenso_barrido_evidencia_llm.py`
+ejecutado contra Postgres real y OpenAI real (`gpt-4o-mini`,
+`temperature=0`), run_id `20260803T102508`,
+`backend/experiments/results/consenso_barrido_evidencia_llm_20260803T102508.json`.
+4 evidencias reales (2/3/4/5 errores) × 4 ramas δ in-memory cada una:
+
+| Evidencia (errores) | Propuesta Remediar | Propuesta Orientar | Margen |
+|---|---|---|---|
+| 2 | reforzar : 0.9500 | avanzar-con-andamiaje : 0.8500 | 0.1000 |
+| 3 | reforzar : 0.9500 | avanzar-con-andamiaje : 0.8500 | 0.1000 |
+| 4 | reforzar : 0.9500 | avanzar-con-andamiaje : 0.8500 | 0.1000 |
+| 5 | reforzar : 0.9500 | avanzar-con-andamiaje : 0.8500 | 0.1000 |
+
+Las confianzas declaradas por Remediar-LLM y Orientar-LLM son **idénticas
+byte a byte en las 4 evidencias** (0.9500/0.8500, margen 0.1000) — el
+mismo margen que el punto exploratorio de ADR-0012 §3 (0.85/0.95, margen
+0.10), ahora confirmado como estable, no un accidente de una sola
+corrida. La curva δ ∈ {0.00, 0.05, 0.10, 0.15} es también idéntica en
+las 4 evidencias: RESUELTA en δ ≤ 0.10, APLAZADA en δ=0.15, sin
+excepción.
+
+**H0 confirmada, H1 rechazada.** Pese a que el instrumento v2 expone
+explícitamente el número de errores en el prompt de Remediar-LLM y
+Orientar-LLM (`errores` interpolado en el texto), el modelo (bajo
+`temperature=0`) no usa esa señal para modular su confianza declarada
+sobre la propuesta — responde con el mismo par de valores
+independientemente de si la evidencia es "2 items incorrectos" o "5
+items incorrectos". Consistente con la amenaza a la validez declarada en
+el pre-registro (instrumento nunca antes probado contra LLM real) y con
+la cláusula de que ningún resultado es un fracaso experimental: el
+hallazgo es que la severidad, tal como se propagó en el prompt v2 (un
+número aislado sin contexto adicional), no es una señal que el modelo
+trate como relevante para su confianza — a diferencia de Diagnosticar-
+LLM, que sí usa `errores` para decidir el booleano `dominada` (ese uso
+no se puso en duda aquí, solo si Remediar/Orientar lo usan para su
+propia confianza).
+
+## Estado
+
+**EJECUTADA — H0 confirmada (margen y curva δ idénticos en las 4
+evidencias), H1 rechazada bajo las condiciones evaluadas.** Verificado
+sin regresión contra la suite de guardianes P13 (21 passed contra
+Postgres real: `test_P13_remediar_reglas_vs_llm.py`,
+`test_P13_orientar_reglas_vs_llm.py`, `test_orientar_remediar_por_
+objetivo.py`). Pendiente de incorporación al capítulo de Resultados de
+la tesis — hallazgo relevante para la discusión: exponer una señal en el
+prompt no garantiza que el LLM la use, distinción que solo esta
+iteración deja medida.

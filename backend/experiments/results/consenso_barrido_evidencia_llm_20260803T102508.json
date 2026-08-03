@@ -1,0 +1,542 @@
+{
+  "experimento": "5.2_barrido_evidencia_llm_H10",
+  "extiende": "5.1 (consenso_barrido_delta.py); RESEARCH_ITERATIONS.md 5.2; ADR-0012 §3",
+  "run_id": "20260803T102508",
+  "timestamp": "2026-08-03T10:25:08.024085",
+  "competencia": "bucles",
+  "items_totales": 8,
+  "instrumento": {
+    "prompt_id_remediar": "remediacion-siguiente-paso-v2",
+    "prompt_id_orientar": "orientacion-siguiente-paso-v2"
+  },
+  "evidencias": [
+    {
+      "errores": 2,
+      "session_id": "experimento:barrido-evidencia-llm:tension-canonica-1:errores-2:20260803T102508",
+      "propuestas_rivales": [
+        "orientar:avanzar-con-andamiaje:0.8500",
+        "remediar:reforzar:0.9500"
+      ],
+      "margen_declarado": "0.1000",
+      "llamadas_llm": [
+        {
+          "capacidad": "diagnosticar",
+          "timestamp": "2026-08-03T10:25:08.324470",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=bucles items_incorrectos=2. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si la competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 2 items incorrectos. Dado que 2 no es menor que 2, la competencia no cumple con el criterio para ser dominada.\",\n  \"errores\": 2,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "remediar",
+          "timestamp": "2026-08-03T10:25:11.046112",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000003/e1, 2 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita más práctica y comprensión antes de avanzar a temas más complejos. Reforzar la competencia asegurará que el estudiante tenga una base sólida para el aprendizaje futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "orientar",
+          "timestamp": "2026-08-03T10:25:12.855898",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000003/e1, 2 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para desarrollar habilidades y conocimientos de manera progresiva. Este enfoque facilita la comprensión y la asimilación de conceptos complejos, lo que puede resultar en un aprendizaje más efectivo y duradero. Además, al ser una candidata en la deliberación, se abre la posibilidad de evaluar su efectividad en comparación con otras propuestas, como la de Remediar.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ],
+      "ramas": [
+        {
+          "delta": "0.00",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.05",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.10",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.15",
+          "tension_canonica_1": {
+            "resultado": "APLAZADA",
+            "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.1000 < delta 0.15"
+          },
+          "paisaje": {
+            "densidad": 2,
+            "conflicto": "latente",
+            "entropia": 0.997772472089982
+          },
+          "consenso": {
+            "resueltas": 0,
+            "aplazadas": 1,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": []
+          }
+        }
+      ]
+    },
+    {
+      "errores": 3,
+      "session_id": "experimento:barrido-evidencia-llm:tension-canonica-1:errores-3:20260803T102508",
+      "propuestas_rivales": [
+        "orientar:avanzar-con-andamiaje:0.8500",
+        "remediar:reforzar:0.9500"
+      ],
+      "margen_declarado": "0.1000",
+      "llamadas_llm": [
+        {
+          "capacidad": "diagnosticar",
+          "timestamp": "2026-08-03T10:25:15.950741",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=bucles items_incorrectos=3. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si la competencia está dominada, aplicamos la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se reportan 3 items incorrectos. Dado que 3 es mayor que 2, la competencia no cumple con el criterio para ser considerada dominada.\",\n  \"errores\": 3,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "remediar",
+          "timestamp": "2026-08-03T10:25:17.759285",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000003/e1, 3 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita una comprensión más sólida antes de avanzar a temas más complejos. Reforzar la competencia permitirá al estudiante consolidar su aprendizaje y mejorar su rendimiento en el futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "orientar",
+          "timestamp": "2026-08-03T10:25:19.191574",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000003/e1, 3 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para abordar los conceptos más complejos, facilitando su comprensión y aprendizaje. Este enfoque puede ayudar a mitigar las dificultades que enfrentan los estudiantes, asegurando que tengan las herramientas adecuadas para progresar en su educación. Además, al ser una propuesta candidata, se puede evaluar su efectividad en comparación con otras alternativas antes de tomar una decisión final.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ],
+      "ramas": [
+        {
+          "delta": "0.00",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.05",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.10",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.15",
+          "tension_canonica_1": {
+            "resultado": "APLAZADA",
+            "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.1000 < delta 0.15"
+          },
+          "paisaje": {
+            "densidad": 2,
+            "conflicto": "latente",
+            "entropia": 0.997772472089982
+          },
+          "consenso": {
+            "resueltas": 0,
+            "aplazadas": 1,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": []
+          }
+        }
+      ]
+    },
+    {
+      "errores": 4,
+      "session_id": "experimento:barrido-evidencia-llm:tension-canonica-1:errores-4:20260803T102508",
+      "propuestas_rivales": [
+        "orientar:avanzar-con-andamiaje:0.8500",
+        "remediar:reforzar:0.9500"
+      ],
+      "margen_declarado": "0.1000",
+      "llamadas_llm": [
+        {
+          "capacidad": "diagnosticar",
+          "timestamp": "2026-08-03T10:25:22.726661",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=bucles items_incorrectos=4. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se reportan 4 items incorrectos. Dado que 4 es mayor que 2, la competencia no cumple con el criterio de estar dominada.\",\n  \"errores\": 4,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "remediar",
+          "timestamp": "2026-08-03T10:25:24.589589",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000003/e1, 4 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita más práctica y comprensión antes de avanzar a temas más complejos. Reforzar la competencia asegurará que el estudiante tenga una base sólida, lo que facilitará su aprendizaje futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "orientar",
+          "timestamp": "2026-08-03T10:25:26.471275",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000003/e1, 4 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para superar las dificultades que enfrentan en su aprendizaje. Este enfoque facilita la adquisición de habilidades y conocimientos de manera gradual, lo que puede resultar en una mejor comprensión y retención de la información. Además, al ser una propuesta candidata, se abre la posibilidad de evaluar su efectividad en comparación con otras alternativas, como la propuesta de Remediar, lo que asegura que se tome una decisión informada y basada en evidencia.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ],
+      "ramas": [
+        {
+          "delta": "0.00",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.05",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.10",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.15",
+          "tension_canonica_1": {
+            "resultado": "APLAZADA",
+            "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.1000 < delta 0.15"
+          },
+          "paisaje": {
+            "densidad": 2,
+            "conflicto": "latente",
+            "entropia": 0.997772472089982
+          },
+          "consenso": {
+            "resueltas": 0,
+            "aplazadas": 1,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": []
+          }
+        }
+      ]
+    },
+    {
+      "errores": 5,
+      "session_id": "experimento:barrido-evidencia-llm:tension-canonica-1:errores-5:20260803T102508",
+      "propuestas_rivales": [
+        "orientar:avanzar-con-andamiaje:0.8500",
+        "remediar:reforzar:0.9500"
+      ],
+      "margen_declarado": "0.1000",
+      "llamadas_llm": [
+        {
+          "capacidad": "diagnosticar",
+          "timestamp": "2026-08-03T10:25:29.087642",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=bucles items_incorrectos=5. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si la competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se tienen 5 items incorrectos. Dado que 5 es mayor que 2, la competencia no cumple con el criterio de estar dominada.\",\n  \"errores\": 5,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "remediar",
+          "timestamp": "2026-08-03T10:25:30.878996",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000003/e1, 5 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, ya que ha cometido 5 errores en los ítems evaluados. Reforzar la competencia es esencial para asegurar que el estudiante comprenda completamente el tema antes de avanzar, lo que facilitará su aprendizaje futuro y evitará confusiones posteriores.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "capacidad": "orientar",
+          "timestamp": "2026-08-03T10:25:32.723291",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000003/e1, 5 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para superar las dificultades que enfrentan en su aprendizaje. Este enfoque facilita la adquisición de habilidades y conocimientos de manera gradual, lo que puede resultar en una mejor comprensión y retención de la información. Además, al ser una propuesta candidata, se abre la posibilidad de evaluación y ajuste en función de los resultados obtenidos en comparación con otras estrategias, como la de Remediar.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ],
+      "ramas": [
+        {
+          "delta": "0.00",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.05",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.10",
+          "tension_canonica_1": {
+            "resultado": "RESUELTA",
+            "regla": "mayor-confianza-declarada",
+            "confianza": "0.9500"
+          },
+          "paisaje": {
+            "densidad": 1,
+            "conflicto": null,
+            "entropia": 0.0
+          },
+          "consenso": {
+            "resueltas": 1,
+            "aplazadas": 0,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": [
+              "0.9500"
+            ]
+          }
+        },
+        {
+          "delta": "0.15",
+          "tension_canonica_1": {
+            "resultado": "APLAZADA",
+            "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000005/e1: margen 0.1000 < delta 0.15"
+          },
+          "paisaje": {
+            "densidad": 2,
+            "conflicto": "latente",
+            "entropia": 0.997772472089982
+          },
+          "consenso": {
+            "resueltas": 0,
+            "aplazadas": 1,
+            "escaladas": 0,
+            "margenes_resolucion": [
+              "0.1000"
+            ],
+            "confianza_resolucion": []
+          }
+        }
+      ]
+    }
+  ],
+  "margenes_por_evidencia": {
+    "2": "0.1000",
+    "3": "0.1000",
+    "4": "0.1000",
+    "5": "0.1000"
+  },
+  "margenes_idénticos_entre_evidencias": true,
+  "curva_delta_identica_entre_evidencias": true
+}
