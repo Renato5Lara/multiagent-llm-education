@@ -189,9 +189,26 @@ fallos reales, reproducibles, con LLM real** — todos con la misma
 causa raíz:
 
 ```
-app/services/runtime_bridge.py:48  PeticionAbrirSesion(...) nunca pasa `urgente`
-runtime/boundary/inbound/dto.py:50  urgente: bool = False (default silencioso)
+app/services/runtime_bridge.py:109,440  registrar_hecho(PeticionHechoDelMundo(...))
+                                          nunca pasa `urgente` (dos sitios,
+                                          evaluación/diagnóstico y pregunta al tutor)
+runtime/boundary/inbound/dto.py:50       urgente: bool = False (default silencioso)
 ```
+
+**Corrección de precisión (misma sesión, tras leer `ROADMAP-RFC-0006.md
+§8` tal como exige la Regla de continuidad documental — debí
+consultarlo antes de diagnosticar, no después):** la regla de urgencia
+correcta **ya existe, ya está decidida y ya está implementada** —
+`app/api/routes/runtime.py:247` (el Boundary de RFC-0010, no
+`runtime_bridge.py`) fija `urgente=True` con exactamente el
+razonamiento correcto citado en su propio comentario: *"esta llamada es
+síncrona y quien la hace es el propio estudiante esperando su
+entrega — el slot es urgente"* (RFC-0006 §4 Parte E). El hueco no es
+"nadie decidió cuándo es urgente" — es que **`app/services/
+runtime_bridge.py` (el bridge que de verdad sirve `/api/students/*`,
+el tráfico real de producción) nunca migró a ese patrón ya construido
+y probado.** Esto acota `ADR-0016` de forma más precisa: propagar la
+regla ya existente, no diseñarla desde cero.
 
 Con `urgente` fijo en `False` para todo el tráfico real, un margen
 real por debajo de δ=0.10 produce una `Aplazada` genuina (correcta,

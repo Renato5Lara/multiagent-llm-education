@@ -549,3 +549,25 @@ probados en M3 — o una regla de scoring sensible a la evidencia). La
 política v2 se decide cuando esa migración ocurra; hasta entonces
 producción sigue en v1 y la Parte F queda lista y probada, igual que
 quedó la Parte E.
+
+### Estado de la arquitectura deliberativa (2026-08-04)
+
+La migración que la nota anterior esperaba **ya ocurrió**
+(`ADR-0013`, calibración de confianza declarada de Diagnosticar/
+Remediar/Orientar-LLM) y `POLITICAS["v2"]` (`ADR-0012`) se activó de
+verdad en producción — brevemente, con evidencia real, y se revirtió
+el mismo día (`ADR-0015`). Estado actual:
+
+- **v1 en producción, estable.** Sin cambios de comportamiento.
+- **v2 implementada y validada parcialmente**, no en producción: el
+  kernel converge correctamente (430/430 `tests/runtime/`, más una
+  deliberación real con margen=0.1131, el caso límite exacto que δ=0.10
+  existe para discriminar) — pero la integración de producción todavía
+  no propaga `urgente` (RFC-0006 §4 Parte E) desde `app/services/
+  runtime_bridge.py`, el bridge que sirve `/api/students/*`. La regla
+  correcta ya existe en `app/api/routes/runtime.py:247` (Boundary
+  RFC-0010) — falta migrar `runtime_bridge.py` al mismo patrón, no
+  diseñarla.
+- **Activación pendiente de ese contrato**, no de una decisión nueva de
+  política. Ver `ADR-0015 §8` para la secuencia completa y `ADR-0016`
+  (no escrito todavía) para la reactivación.
