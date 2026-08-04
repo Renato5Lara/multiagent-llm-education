@@ -71,6 +71,41 @@ escritura). Añadir un campo a la forma actual del dataclass no altera ni
 un byte de una transición ya encadenada; el campo nuevo solo aparece en
 transiciones nuevas, escritas después de este cambio.
 
+**Corrección encontrada durante la validación funcional E2E (2026-08-04,
+misma rama, después del primer cierre de esta ADR).** El razonamiento
+anterior sobre `cadena.py::verificar()` es correcto pero incompleto:
+cubre la integridad del hash-chain, no la **reconstrucción** (R3,
+`reconstruccion.py::_reconstruir_pasos`), que es un mecanismo distinto —
+no compara contra bytes ya calculados, **re-deriva** `{intent, eventos}`
+desde el intent decodificado y **re-canonicaliza** para comparar bit a
+bit contra `registro.canonico`. `canonical.py::_plano()` serializaba
+*todos* los campos de un dataclass, incluidos los `None`, como `null`
+explícito — así que reconstruir una `Resuelta`/`Aplazada` histórica (sin
+la clave `margen`) producía `margen=None` → `_plano()` la re-emitía como
+`"margen":null` → ya no coincidía con los bytes originales, que nunca
+tuvieron esa clave. Confirmado en producción real: **409 de 734
+sesiones** en Postgres (todas las que contienen al menos una
+`registrar_deliberacion` anterior a este commit) fallaban con `HTTP 500`
+("R3: ... no reconstruye bit a bit") en Traza, Estado Final y Replay —
+solo visible recorriendo `Runtime Console` como docente contra datos
+reales, exactamente el escenario que la Regla de cierre E2E real
+(CLAUDE.md) exige y que la suite automatizada (sesiones frescas,
+escritas bajo el código ya corregido) no podía exponer.
+
+**Fix, sin tocar el modelo de dominio ni `mecanica.py`:** `_plano()`
+omite un campo de dataclass cuando su valor es `None`, en vez de
+serializarlo — mismo principio que `mecanica.py` ya aplica un nivel
+arriba para `enlaza_a` (`if cabeza is not None: argumentos["enlaza_a"]
+= ...`), aquí aplicado dentro del recorrido genérico de campos.
+Auditado explícitamente: `margen` es el **único** campo `X | None` de
+todo el kernel que llega a `a_canonico` dentro de un dataclass crudo
+(`superseded_por`, `enlaza_a` en `DeliberacionEntry` y `salidas` en
+`LearningState` pertenecen a entidades que la Regla de derivación nunca
+serializa directamente) — el cambio es seguro globalmente, no solo para
+este caso, porque no existe otra transición histórica cuyos bytes ya
+tengan un `null` de dataclass horneado que este cambio pudiera romper
+en la dirección contraria.
+
 ## 3. Engineering Gate (CLAUDE.md)
 
 1. **¿Qué decisión implementa?** Cierra el hueco declarado por
@@ -127,6 +162,13 @@ transiciones nuevas, escritas después de este cambio.
 - `POLITICAS["v1"]`/`POLITICAS["v2"]` resuelven exactamente igual que
   antes — este ADR no cambia comportamiento, solo lo hace legible sin
   recalcularlo.
+- **(añadido tras la corrección)** `canonical.py::_plano()` omite
+  campos de dataclass en `None` en vez de serializarlos como `null`.
+- **(añadido tras la corrección)** Reconstrucción exitosa (`reconstruir_
+  con_traza`, sin `HTTP 500`) contra al menos una sesión **real** de
+  Postgres con transiciones de deliberación anteriores a este commit —
+  no una sesión construida por el test, una ya persistida en la base de
+  datos de desarrollo.
 
 ## 6. Alcance NO cubierto (deliberado)
 

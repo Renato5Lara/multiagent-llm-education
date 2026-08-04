@@ -49,9 +49,18 @@ def _plano(valor: Any) -> Any:
     if isinstance(valor, (int, bool)) or valor is None:
         return valor
     if dataclasses.is_dataclass(valor) and not isinstance(valor, type):
+        # ADR-0014: un campo de dataclass en None se omite, no se serializa
+        # como `null` — mismo principio que ya aplica `mecanica.py` para
+        # `enlaza_a` a nivel de dict (`if cabeza is not None: argumentos[...]
+        # = ...`). Sin esto, agregar un campo opcional nuevo a un dataclass
+        # que ya fluye por `a_canonico` (p. ej. `Resuelta.margen`) rompe R3
+        # para toda transición histórica anterior al campo: la reconstrucción
+        # reintroduce la clave como `null` donde el bytes original no la
+        # tenía en absoluto, y la comparación bit a bit falla.
         return {
             campo.name: _plano(getattr(valor, campo.name))
             for campo in dataclasses.fields(valor)
+            if getattr(valor, campo.name) is not None
         }
     if isinstance(valor, Mapping):
         return {
