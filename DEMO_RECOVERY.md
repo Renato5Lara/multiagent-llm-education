@@ -323,6 +323,42 @@ cuenta — reproducible en aislamiento con distintas cuentas nuevas.
   completado para no depender de ese tiempo de respuesta durante la
   demo."_
 
+### Adenda (2026-08-04) — evidencia nueva, alcance más amplio de lo documentado
+
+Reproducido con `[DEBUG-DIAG-LOOP]` todavía activo, en una cuenta **sin
+relación con el diagnóstico** (`estudiante3@upao.edu.pe`, ambos módulos
+ya completados al 100%), navegando `/estudiante/path/:courseId` — no
+"Comenzar diagnóstico". Evidencia capturada:
+
+- **No exclusivo del flujo de diagnóstico.** El mismo patrón de log
+  (`AcademicGuard:render` → `EstudianteLayout:route-change`, en pares,
+  repitiendo) ocurre en una cuenta con recorrido 100% completado, sin
+  tocar `DiagnosticTest.tsx` en absoluto.
+- **Se autorresuelve.** Corrió a ~30-40 ciclos/segundo durante ~90s
+  (medido por timestamp de los logs) y se detuvo solo, sin recarga ni
+  intervención.
+- **No es el resultado de sincronización entre pestañas.** Descartado
+  cerrando una segunda pestaña (docente) abierta en el mismo origen —
+  el loop siguió idéntico con una sola pestaña.
+- **Cero mutaciones reales de DOM** durante una ventana muestreada
+  mientras el loop corría (`MutationObserver` sobre `#root`, 500ms,
+  0 mutaciones) — consistente con que la página siguió funcionando y
+  mostrando datos correctos durante todo el episodio; el único síntoma
+  visible al usuario es el flash del loader raíz de la SPA en algunos
+  clics, no un bloqueo real.
+- **Sin `setInterval`/`refetchInterval` explícito** en
+  `AuthProvider.tsx`, `useStudent.ts`, `PretestGuard.tsx` ni
+  `OfflineBanner.tsx` que lo explique — descartado por lectura directa
+  del código, no por suposición.
+- Causa raíz **todavía no identificada** — intento de capturar stack
+  trace vía interceptor de `console.log` no coincidió con una ventana
+  activa del loop (terminó antes de poder instrumentarlo en vivo),
+  igual que los ~19 intentos de julio.
+
+No bloquea ningún flujo probado (docente completo, estudiante
+dashboard/ruta/misión). Queda como incidente conocido, no como
+bloqueador de cierre funcional.
+
 ---
 
 ## [Cierre] Benchmark tarda mucho
