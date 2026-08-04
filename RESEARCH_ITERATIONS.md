@@ -1929,12 +1929,31 @@ registrada para no perderla. Si se investiga más adelante, esa cadena
 (p. ej. H11) parte de aquí como origen, en vez de aparecer como una
 modificación de H10.
 
+## Decisión del tesista (2026-08-03)
+
+**H10 adopta H1.** La confianza declarada representa el estado actual
+de creencia del sistema — no únicamente la fuerza estadística aislada
+de la última observación. Razón: H0 elimina la protección contra
+oscilación rápida (`domina→no domina→domina→no domina`) ante evidencia
+débil repetida, exactamente el riesgo que la histéresis de H1 existe
+para prevenir; el problema observado en 5.9 no es un defecto de la
+política de calibración, sino la interacción entre H1 (correcta) y un
+instrumento de evaluación pequeño (`n=2` fijo). Separar la causa
+(tamaño del instrumento) de la política que la expone evita corregir
+en el lugar equivocado.
+
+No se modifica código: H1 ya es el comportamiento implementado (416
+tests verdes, validado E2E en Postgres real). La limitación de `n=2`
+queda registrada como origen de la pregunta de investigación derivada
+de la sección anterior — candidata a una futura H11 sobre autoridad
+pedagógica de reevaluaciones breves — sin abrirla todavía como
+iteración con hipótesis propia.
+
 ## Estado
 
-**EJECUTADA — cadena real completa (4 pasos, misma cuenta, Postgres
-real, LLM real) documentada; decisión H0 vs. H1 pendiente del
-tesista.** No se modifica código hasta la decisión. Cadena completa
-H10: 5.1 → 5.2 → 5.3 → 5.4 (refutada) → 5.5 (refutada) → 5.6 (candidato
-encontrado) → 5.7 (ubicación resuelta) → 5.8 (implementada, un bug
-corregido en E2E real) → 5.9 (esta, pregunta semántica abierta
-encontrada en E2E real, sin decidir).
+**CERRADA — H1 adoptada (decisión del tesista, 2026-08-03).** Cadena
+real completa (4 pasos, misma cuenta, Postgres real, LLM real)
+documentada; sin cambios de código. Cadena completa H10: 5.1 → 5.2 →
+5.3 → 5.4 (refutada) → 5.5 (refutada) → 5.6 (candidato encontrado) →
+5.7 (ubicación resuelta) → 5.8 (implementada, un bug corregido en E2E
+real) → 5.9 (esta, CERRADA — H1 adoptada, 2026-08-03).
