@@ -53,6 +53,10 @@ export interface LearningPathItem {
   description?: string
   order: number
   status: string
+  // Distingue, dentro de los ítems 'available', el frente de trabajo real
+  // (a dónde navegar) de los que están disponibles por ya dominados y
+  // saltables. Corrección de adaptación por nivel (auditoría causal, ago. 2026).
+  is_frontier?: boolean
   resource_id?: string
   resource_type?: string
   competencies: string[]

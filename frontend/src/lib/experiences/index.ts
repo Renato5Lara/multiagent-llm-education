@@ -29,6 +29,17 @@ export function getModuleExperience(moduleTitle: string | undefined): ModuleExpe
 // ni alcanzar los módulos legacy (2-4): no aparecen en la ruta, no se anuncian
 // y completar el Módulo 1 no navega hacia ellos. Apagar cuando los demás
 // módulos tengan su experiencia definida.
+//
+// Techo conocido (auditoría causal de adaptación, ago. 2026): con este flag
+// en `true`, ningún estudiante puede llegar más allá del Objetivo 2
+// ("Estructuras de control") aunque el backend desbloquee objetivos
+// posteriores vía evidencia real del Runtime -- el objetivo 3+ nunca
+// aparece en la ruta filtrada. Ampliar esto (Objetivo 3 "Funciones y
+// módulos", Objetivo 4 "POO") requiere autoría de contenido nueva
+// (`module3.ts`/`module4.ts`) y, por separado, que el banco de pre-test
+// cubra esos objetivos (hoy `knowledge_test_bank.py` solo evalúa
+// contenido del Objetivo 1) -- ambas son épicas de contenido aparte, no
+// parte de la corrección de adaptación por nivel.
 export const REFERENCE_MODULE_MODE = true
 
 /** Filtra los ítems de la ruta a los módulos con experiencia definida. */

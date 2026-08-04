@@ -414,22 +414,25 @@ def test_initial_statuses_without_pretest_is_legacy_behavior():
     assert _initial_module_statuses(0, None) == []
 
 
-def test_initial_statuses_differ_by_knowledge_with_same_style():
-    """Dos estudiantes con el mismo estilo pero distinto conocimiento
-    reciben frentes de desbloqueo distintos."""
+def test_initial_statuses_pretest_nunca_desbloquea_mas_alla_del_primero():
+    """El desglose de pre-test (`module_breakdown`) mide sub-temas DENTRO
+    del primer objetivo del curso (ver alcance declarado en
+    `knowledge_test_bank.py`) -- sus claves ("1", "2", "4"...) no son el
+    `order` de los objetivos siguientes, aunque compartan dígitos. Por
+    eso, sin evidencia del Runtime por objetivo, ningún puntaje de
+    pre-test -- ni siquiera 100% en varias claves -- desbloquea más allá
+    del índice 0."""
     from app.services.student_service import _initial_module_statuses
 
     low = {str(m): {"correct": 0, "total": 4, "pct": 0.0} for m in range(1, 10)}
-    high = {str(m): {"correct": 4, "total": 4, "pct": 100.0} for m in range(1, 4)}
-    high.update({str(m): {"correct": 1, "total": 4, "pct": 25.0} for m in range(4, 10)})
+    high = {str(m): {"correct": 4, "total": 4, "pct": 100.0} for m in range(1, 10)}
 
     statuses_low = _initial_module_statuses(9, low)
     statuses_high = _initial_module_statuses(9, high)
 
     assert statuses_low == ["available"] + ["locked"] * 8
-    # módulos 1-3 dominados quedan disponibles; el 4 es el frente de trabajo
-    assert statuses_high == ["available"] * 4 + ["locked"] * 5
-    assert statuses_low != statuses_high
+    assert statuses_high == ["available"] + ["locked"] * 8
+    assert statuses_low == statuses_high
 
 
 # ── Ruta adaptativa gobernada por el Runtime (DESIGN-orientar-ruta-completa.md, Fase 2) ──
@@ -509,6 +512,22 @@ def test_runtime_influye_learning_path():
     assert estudiante_avanzando == ["available", "available", "available"]
 
 
+def test_con_runtime_pretest_no_salta_objetivos_sin_veredicto():
+    """Con `avance` no vacío (ya hay evidencia del Runtime para el
+    objetivo 0), una posición siguiente SIN veredicto no debe saltarse
+    aunque `module_breakdown` reporte 100% en esa clave -- ese puntaje
+    pertenece a un sub-tema del objetivo 0, no evalúa el objetivo 1."""
+    from app.services.student_service import _initial_module_statuses_con_runtime
+
+    ids = ["variables", "condicionales", "ciclos"]
+    avance = {"variables": "avanzar"}
+    pretest_optimista = {str(m): {"correct": 4, "total": 4, "pct": 100.0} for m in range(1, 4)}
+
+    statuses = _initial_module_statuses_con_runtime(ids, pretest_optimista, avance)
+
+    assert statuses == ["available", "available", "locked"]
+
+
 def _create_style_diagnostic(db, student_id, course_id):
     from app.models.diagnostic_result import DiagnosticResult
 
@@ -571,8 +590,54 @@ def test_generate_path_after_pretest_personalizes_and_measures(
         .order_by(PathModule.order)
         .all()
     )
-    # 100% en el pre-test → todos los módulos iniciales dominados → disponibles
-    assert all(m.status == "available" for m in modules)
+    # 100% en el pre-test → el primer objetivo queda dominado-y-saltable,
+    # el SEGUNDO es el nuevo frente de trabajo: el pre-test registra
+    # evidencia real por objetivo hacia el Runtime (Punto B, `objetivos=`
+    # en `registrar_evidencia_evaluacion`), así que `avance_por_objetivo`
+    # ya no está vacío en la primera generación de ruta -- Orientar
+    # propone "avanzar" sobre el objetivo 1 con evidencia real, y
+    # `_initial_module_statuses_con_runtime` avanza el frente al
+    # objetivo 2 (sin evidencia todavía) en vez de quedarse en el 1.
+    # El objetivo 3+ permanece bloqueado: ni el pre-test ni ninguna
+    # evaluación real dijeron nada sobre él todavía.
+    assert modules[0].status == "available"
+    assert modules[1].status == "available"
+    assert all(m.status == "locked" for m in modules[2:])
+    # El frente de trabajo real es explícito, no inferido por orden de
+    # arreglo (corrección de adaptación por nivel, Punto A) -- cae en el
+    # objetivo 2 (el saltable-porque-dominado no es el frente).
+    assert modules[0].is_frontier is False
+    assert modules[1].is_frontier is True
+    assert all(m.is_frontier is False for m in modules[2:])
+
+
+def test_pretest_registra_evidencia_bajo_el_asunto_del_primer_objetivo(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    """El pre-test debe alimentar, además del perfil de competencias
+    cognitivas, la Entrega del Runtime sobre el asunto REAL del primer
+    objetivo del curso -- sin esto, `bloom_target_desde_entrega`/
+    `_aplicar_modalidad_desde_entrega` nunca encuentran una Entrega
+    aplicable a la primera misión, para ningún estudiante (Punto B)."""
+    from app.services.runtime_bridge import asunto_de_modalidad, consultar_decision_vigente
+    from app.models.learning_objective import LearningObjective
+
+    _create_style_diagnostic(db, estudiante_user.id, curso_publicado.id)
+    start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, start["attempt_id"], start["questions"], db
+    )
+
+    primer_objetivo = (
+        db.query(LearningObjective)
+        .filter(LearningObjective.course_id == curso_publicado.id)
+        .order_by(LearningObjective.order)
+        .first()
+    )
+    entrega = consultar_decision_vigente(estudiante_user.id, curso_publicado.id)
+
+    assert entrega.diseno is not None
+    assert entrega.asunto == asunto_de_modalidad(primer_objetivo.title)
 
 
 def test_generate_path_without_bank_keeps_legacy_flow(

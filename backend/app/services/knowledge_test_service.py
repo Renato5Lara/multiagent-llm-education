@@ -232,6 +232,27 @@ def _questions_in_attempt_order(
     return ordered or questions
 
 
+def _evidencia_global(
+    ordered: list[KnowledgeTestQuestion], answers: dict[str, int]
+) -> dict:
+    """Agrega el intento completo (todas las competencias) en una sola
+    celda `items_incorrectos`/`total` -- el banco de pre-test evalúa
+    exclusivamente contenido del primer objetivo del curso (ver alcance
+    declarado en `knowledge_test_bank.py`), así que esta es la evidencia
+    que le corresponde a ESE objetivo como un todo, no a un sub-tema
+    aislado. Mismo criterio de corrección que `_evidencia_por_competencia`
+    (sin respuesta o tipo inválido cuenta como incorrecta), pero con un
+    único índice global en vez de reiniciarlo por competencia."""
+    incorrectos: list[int] = []
+    for index, question in enumerate(ordered):
+        selected = answers.get(question.id)
+        if selected is not None and not isinstance(selected, int):
+            selected = None
+        if selected is None or selected != question.correct_index:
+            incorrectos.append(index)
+    return {"incorrectos": incorrectos, "total": len(ordered)}
+
+
 def _evidencia_por_competencia(
     ordered: list[KnowledgeTestQuestion], answers: dict[str, int]
 ) -> dict[str, dict]:
@@ -344,8 +365,9 @@ def submit_attempt(
         # la primera evaluación de módulo. Best-effort: jamás rompe el
         # submit del estudiante.
         try:
+            from app.models.learning_objective import LearningObjective
             from app.services import student_service
-            from app.services.runtime_bridge import registrar_evidencia_evaluacion
+            from app.services.runtime_bridge import construir_objetivos, registrar_evidencia_evaluacion
 
             # Modelo del estudiante ya diagnosticado, si el Likert (VARK) ya
             # se completó — el flujo real siempre lo exige antes del
@@ -378,6 +400,50 @@ def submit_attempt(
                     items_incorrectos=celda["incorrectos"],
                     items_totales=celda["total"],
                     modalidad_estudiante=modalidad_estudiante,
+                )
+
+            # Además de la evidencia por competencia cognitiva (arriba, que
+            # alimenta el perfil COMP-0..5), registra el mismo intento bajo
+            # el asunto del primer objetivo REAL del curso -- el banco de
+            # pre-test evalúa exclusivamente contenido de ese objetivo (ver
+            # alcance declarado en knowledge_test_bank.py), así que es la
+            # única evidencia de módulo real que el pre-test puede aportar.
+            # Sin esto, `bloom_target_desde_entrega`/`_aplicar_modalidad_
+            # desde_entrega` (runtime_bridge.py) nunca encuentran una
+            # Entrega cuyo asunto coincida con el primer módulo, y el
+            # pre-test no logra adaptar Bloom/modalidad en la primera
+            # misión para ningún estudiante. Mismo patrón que ya usa la
+            # evaluación real de módulo (students.py, submit de evaluación
+            # de módulo) -- ninguna vía nueva, solo un segundo llamador.
+            #
+            # `objetivos=` (no solo `titulo_modulo`) es obligatorio aquí:
+            # sin él, Orientar cae en la rama de asunto de sesión único
+            # ("siguiente-paso(sesion)", orientar/productor.py) -- sticky
+            # por diseño (`palabra_en_pie`) desde la primera competencia
+            # del loop de arriba, así que esta evidencia nunca lograría
+            # proponer nada nuevo. Con `objetivos=`, Orientar/Remediar
+            # usan un asunto POR OBJETIVO (`_producir_por_objetivo`),
+            # igual que ya hace `students.py` para la evaluación real de
+            # módulo -- mismo camino de producción, no uno nuevo.
+            primer_objetivo = (
+                db.query(LearningObjective)
+                .filter(LearningObjective.course_id == attempt.course_id)
+                .order_by(LearningObjective.order)
+                .first()
+            )
+            if primer_objetivo is not None:
+                global_evidencia = _evidencia_global(ordered, answers)
+                objetivos = construir_objetivos(
+                    [(primer_objetivo.id, primer_objetivo.title, primer_objetivo.order or 0)]
+                )
+                registrar_evidencia_evaluacion(
+                    student_id=student_id,
+                    course_id=attempt.course_id,
+                    titulo_modulo=primer_objetivo.title,
+                    items_incorrectos=global_evidencia["incorrectos"],
+                    items_totales=global_evidencia["total"],
+                    modalidad_estudiante=modalidad_estudiante,
+                    objetivos=objetivos,
                 )
         except Exception:
             logger.warning("No se pudo registrar el pre-test en el runtime", exc_info=True)

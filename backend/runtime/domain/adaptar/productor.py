@@ -55,6 +55,24 @@ DISENO_POR_ACCION: Mapping[str, Mapping] = {
             {"modalidad": "solo-texto", "razon": "el andamiaje requiere apoyo visual"},
         ),
     },
+    # Orientar por objetivo (DESIGN-orientar-ruta-completa.md, Fase 2)
+    # produce "avanzar" -- sin andamiaje, a diferencia de "avanzar-con-
+    # andamiaje" -- cuando el objetivo ya está dominado end-to-end
+    # (`orientar/productor.py:_producir_por_objetivo`). Mismo diseño de
+    # contenido que "avanzar-con-andamiaje" (modalidad completa, sin
+    # recorte de Bloom): un estudiante que ya domina el objetivo no
+    # necesita menos apoyo que uno que avanza CON andamiaje, necesita
+    # exactamente el mismo contenido completo, solo que sin haber
+    # requerido refuerzo previo -- la diferencia entre ambos casos es la
+    # trayectoria que los trajo aquí (visible en `alternativas_
+    # descartadas`), no el contenido que reciben.
+    "avanzar": {
+        "modalidad": "mixta",
+        "profundidad": "aplicacion",
+        "alternativas_descartadas": (
+            {"modalidad": "visual", "razon": "el objetivo ya está dominado, recortar a fundamentos sería regresivo"},
+        ),
+    },
 }
 
 # Vocabulario ya existente (diagnostic_results.dominant_modality, frontend

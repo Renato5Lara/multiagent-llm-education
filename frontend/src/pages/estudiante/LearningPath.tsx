@@ -292,7 +292,13 @@ export default function LearningPath() {
     if (!autostart || countdown !== 0 || autoNavigated.current) return
     if (!path?.items?.length || !courseId) return
     autoNavigated.current = true
-    const first = path.items.find(i => i.status === 'available') ?? path.items[0]
+    // Frente real primero (a dónde debe navegar el estudiante); si el
+    // backend todavía no lo marca (curso legacy sin migrar), cae al
+    // primer 'available' de siempre.
+    const first =
+      path.items.find(i => i.is_frontier) ??
+      path.items.find(i => i.status === 'available') ??
+      path.items[0]
     if (first) {
       navigate(
         `/estudiante/module/${first.id}?courseId=${courseId}&title=${encodeURIComponent(first.title)}`,
@@ -350,7 +356,10 @@ export default function LearningPath() {
           <button
             type="button"
             onClick={() => {
-              const first = items.find(i => i.status === 'available') ?? items[0]
+              const first =
+                items.find(i => i.is_frontier) ??
+                items.find(i => i.status === 'available') ??
+                items[0]
               if (first && courseId) {
                 navigate(
                   `/estudiante/module/${first.id}?courseId=${courseId}&title=${encodeURIComponent(first.title)}`,

@@ -458,35 +458,44 @@ def get_student_learning_courses(db: Session, student: User) -> list[CourseProgr
     return results
 
 
-def _initial_module_statuses(n_modules: int, module_breakdown: Optional[dict]) -> list[str]:
-    """Estados iniciales de los módulos de la ruta.
+def _frontier_index(statuses: list[str]) -> Optional[int]:
+    """El frente de trabajo real dentro de `statuses` (salida de
+    `_initial_module_statuses`/`_initial_module_statuses_con_runtime`):
+    ambas funciones producen siempre un prefijo contiguo de `"available"`
+    desde el índice 0 (dominados-y-saltables, si los hay) terminado en
+    exactamente una posición `"available"` más (el frente) antes de caer
+    a `"locked"` -- nunca un `"available"` aislado más adelante. El
+    frente es, por construcción, el ÚLTIMO índice `"available"`. Se
+    deriva aquí en vez de que ambas funciones devuelvan una tupla, para
+    no romper su contrato existente (P13-like: una sola traducción,
+    ningún llamador la repite)."""
+    frontier = None
+    for i, status in enumerate(statuses):
+        if status == "available":
+            frontier = i
+    return frontier
 
-    Sin pre-test (o sin desglose): comportamiento histórico exacto — solo el
-    primer módulo disponible. Con pre-test: los módulos iniciales consecutivos
-    dominados (pct >= MASTERY_THRESHOLD_PCT) quedan disponibles (saltables) y
-    el primer no-dominado marca el frente de trabajo, también disponible.
-    Así dos estudiantes con el mismo estilo pero distinto conocimiento reciben
-    rutas con distinto frente de desbloqueo.
+
+def _initial_module_statuses(n_modules: int, module_breakdown: Optional[dict]) -> list[str]:
+    """Estados iniciales de los módulos de la ruta, sin evidencia del Runtime
+    por objetivo (fallback -- ver `_initial_module_statuses_con_runtime`).
+
+    Solo el primer objetivo del curso queda disponible. `module_breakdown`
+    (desglose del pre-test) nunca desbloquea más allá de ahí: el banco de
+    pre-test evalúa exclusivamente sub-temas DENTRO del primer objetivo del
+    curso (ver alcance declarado en `knowledge_test_bank.py`) -- sus claves
+    ("1", "2", "4"...) no corresponden al `order` de los objetivos
+    siguientes, aunque compartan dígitos. Desbloquear el objetivo 2+ exige
+    evidencia real de ESE objetivo, que solo el Runtime puede dar
+    (`avance_por_objetivo`, tras una evaluación real de ese módulo) -- de
+    ahí que `_initial_module_statuses_con_runtime` sea quien gobierna esas
+    posiciones. `module_breakdown` se conserva como parámetro (usado por el
+    llamador para decidir profundidad dentro del objetivo 1, no aquí) para
+    no romper la firma que ya consumen sus otros llamadores.
     """
     statuses = ["locked"] * n_modules
-    if n_modules == 0:
-        return statuses
-    if not module_breakdown:
+    if n_modules > 0:
         statuses[0] = "available"
-        return statuses
-
-    from app.services.knowledge_test_service import MASTERY_THRESHOLD_PCT
-
-    i = 0
-    while i < n_modules:
-        stats = module_breakdown.get(str(i + 1)) or {}
-        if stats.get("pct", 0.0) >= MASTERY_THRESHOLD_PCT:
-            statuses[i] = "available"
-            i += 1
-        else:
-            break
-    if i < n_modules:
-        statuses[i] = "available"
     return statuses
 
 
@@ -503,7 +512,14 @@ def _initial_module_statuses_con_runtime(
     cae al criterio anterior (best-effort, mismo patrón que toda
     integración con runtime_bridge). `avance` vacío -- ningún objetivo
     de este curso tiene evidencia del Runtime todavía -- reproduce
-    `_initial_module_statuses` sin cambios."""
+    `_initial_module_statuses` sin cambios.
+
+    El criterio de pre-test solo es válido para la posición 0: es el
+    único objetivo cuyo contenido el pre-test evalúa de verdad (ver
+    `_initial_module_statuses`). Para posiciones siguientes sin
+    veredicto del Runtime, el pre-test no aporta señal aplicable -- esa
+    posición queda como frente de trabajo (disponible), nunca saltada
+    por `module_breakdown`."""
     n_modules = len(objective_ids)
     statuses = ["locked"] * n_modules
     if n_modules == 0:
@@ -523,13 +539,14 @@ def _initial_module_statuses_con_runtime(
         if veredicto == "reforzar":
             statuses[i] = "available"
             break
-        # Sin veredicto del Runtime para este objetivo: cae al criterio
-        # de pre-test para ESTA posición únicamente.
-        stats = (module_breakdown or {}).get(str(i + 1)) or {}
-        if stats.get("pct", 0.0) >= MASTERY_THRESHOLD_PCT:
-            statuses[i] = "available"
-            i += 1
-            continue
+        # Sin veredicto del Runtime para este objetivo. Solo en la
+        # posición 0 el pre-test mide contenido real de ese objetivo.
+        if i == 0:
+            stats = (module_breakdown or {}).get("1") or {}
+            if stats.get("pct", 0.0) >= MASTERY_THRESHOLD_PCT:
+                statuses[i] = "available"
+                i += 1
+                continue
         statuses[i] = "available"
         break
     return statuses
@@ -640,6 +657,7 @@ def generate_learning_path_adaptive(
         initial_statuses = _initial_module_statuses_con_runtime(
             [obj.id for obj in objectives], knowledge_breakdown, avance
         )
+        frontier = _frontier_index(initial_statuses)
         for i, obj in enumerate(objectives):
             status = initial_statuses[i]
             resource = get_best_resource_for_objective(obj)
@@ -649,6 +667,7 @@ def generate_learning_path_adaptive(
                 description=obj.description,
                 order=obj.order or i,
                 status=status,
+                is_frontier=(i == frontier),
                 bloom_level=obj.bloom_level,
                 resource_id=resource.id if resource else None,
             )
@@ -660,6 +679,7 @@ def generate_learning_path_adaptive(
             description=f"Contenido adaptado para estilo: {dominant}",
             order=0,
             status="available",
+            is_frontier=True,
             bloom_level=1,
         )
         db.add(module)
@@ -722,6 +742,7 @@ def get_learning_path_detail(
                 description=mod.description,
                 order=mod.order,
                 status=normalized_status,
+                is_frontier=bool(mod.is_frontier),
                 resource_id=mod.resource_id,
                 resource_type=resource_type,
                 competencies=comp_names,

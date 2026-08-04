@@ -48,6 +48,11 @@ class PathModule(Base):
     order = Column(Integer, nullable=False, default=0)
     week_number = Column(Integer, nullable=True, index=True)
     status = Column(String(20), default="locked")
+    # Distingue, dentro de los módulos `status="available"`, cuál es el
+    # frente de trabajo real (a dónde debe navegar el estudiante) de los
+    # que están disponibles por ya estar dominados y ser saltables.
+    # Corrección de adaptación por nivel (auditoría causal, ago. 2026).
+    is_frontier = Column(Boolean, nullable=False, default=False, server_default="false")
     bloom_level = Column(Integer, nullable=True)
     resource_id = Column(String(36), ForeignKey("resources.id"), nullable=True)
     score = Column(Float, nullable=True)

@@ -86,6 +86,11 @@ class LearningPathItem(BaseModel):
     description: Optional[str] = None
     order: int
     status: str
+    # Distingue, dentro de los ítems `status="available"`, cuál es el
+    # frente de trabajo real (a dónde debe navegar el estudiante) de los
+    # que están disponibles por ya estar dominados y ser saltables.
+    # Corrección de adaptación por nivel (auditoría causal, ago. 2026).
+    is_frontier: bool = False
     resource_id: Optional[str] = None
     resource_type: Optional[str] = None
     competencies: list[str] = []
