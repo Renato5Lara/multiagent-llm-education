@@ -113,6 +113,32 @@ Inteligencia Docente → 3 Boundary completo → 4 Observabilidad (RFC-0007)
 simulación → 8 Eliminación física de BaseAgent y código muerto. El orden
 exacto lo fija la auditoría de impacto de cada sesión, no esta lista.
 
+### Actualización 2026-08-01 — Eliminación física de BaseAgent/SwarmOrchestrator/AgentFactory (ADR-0011)
+
+La condición pendiente desde la actualización anterior — *"Su eliminación
+física ocurre cuando el laboratorio decida su propio destino"*
+(`app/agents/__init__.py`) — quedó resuelta: la auditoría de pytest de
+esta fecha (`docs/SWARM_ACTIVATION_AUDIT.md`) confirmó, endpoint por
+endpoint, que ningún flujo real de estudiante depende de `BaseAgent`,
+`SwarmOrchestrator`, `AgentFactory` ni `ConsensusEngine`, y la decisión
+de producto fue que el laboratorio de benchmark "Legacy vs Runtime"
+(`app/experiment/benchmark/real/`) ya cumplió su propósito.
+
+**Eliminados físicamente** (`ADR-0011-retiro-fisico-baseagent-swarm-legacy.md`):
+`app/agents/` completo, `app/swarm/` completo, `app/services/
+pedagogical_orchestration_service.py`, `app/services/session_service.py`,
+`app/experiment/benchmark/real/`, `backend/scripts/run_real_benchmark.py`
+y `backend/scripts/run_academic_benchmark.py`, junto con las funciones
+async huérfanas de `activation_service.py` que dependían de
+`SwarmOrchestrator`. El camino **sync** de `activation_service.py`
+(usado por `curriculum_service.py` vía la ruta real `POST
+/teacher-assignments`) permanece intacto — su relación con
+`academic_activation_service.py` sigue siendo una decisión de producto
+abierta, sin relación con esta eliminación.
+
+`backend/runtime/` (LangGraph) queda como la única arquitectura
+multiagente activa del proyecto.
+
 ### Actualización 2026-07-12 (tercera) — Engineering Gate de épica, Boundary único, cierre E2E real
 
 **Engineering Gate de épica (obligatorio antes de escribir código para

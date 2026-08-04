@@ -48,9 +48,9 @@ exclusivamente en la alcanzabilidad de código (qué se ejecuta desde
 qué endpoint) y en la decisión de retiro físico documentada en
 ADR-0011.
 
-## 0. Relación con `docs/CLAUDE.md` — esto NO es un hallazgo nuevo
+## 0. Relación con `CLAUDE.md` — esto NO es un hallazgo nuevo
 
-Antes de nada: `docs/CLAUDE.md` § "Actualización 2026-07-12 (segunda)" ya
+Antes de nada: `CLAUDE.md` § "Actualización 2026-07-12 (segunda)" ya
 declara formalmente que `backend/app/agents/*` (`BaseAgent` y sus
 subclases — `PedagogicalAgent`, `AdaptiveAgent`, `RiskAgent`,
 `EvaluationAgent`, etc.) está **retirado del flujo operativo en vivo**,
@@ -74,7 +74,7 @@ app/swarm/orchestrator.py :: SwarmOrchestrator
 ```
 
 **Conclusión de esta sección:** lo que sigue no es una crisis nueva ni una
-contradicción con `docs/CLAUDE.md` — es evidencia independiente, obtenida
+contradicción con `CLAUDE.md` — es evidencia independiente, obtenida
 por una ruta de auditoría distinta, que corrobora y extiende la decisión
 de 2026-07-12 al *orquestador* que consume `BaseAgent` (que no había sido
 nombrado explícitamente en esa auditoría), y documenta un bug concreto
@@ -171,18 +171,18 @@ def _get_swarm_config_for_course_sync(db: Session, course: Course) -> dict:
 | Opción | Descripción | A favor | En contra |
 |---|---|---|---|
 | **(a) Duplicar** `detect_programming_course_sync` (~40 líneas, misma lógica de scoring contra `Session` síncrona) | Arregla solo `_get_swarm_config_for_course_sync` | Cambio pequeño y contenido | No arregla nada funcional (§4) — la Ruta B sigue sin ejecutar el swarm. Introduce una segunda copia de la lógica de scoring que hay que mantener sincronizada. Va en contra de la dirección ya declarada del proyecto (BaseAgent retirado). |
-| **(b) Migrar** `curriculum.py::create_teacher_assignment` + las 3 funciones de `curriculum_service.py` a async, apuntando a la Ruta C ya existente | Conecta por primera vez la maquinaria async/`SwarmOrchestrator` a una petición real | Reutiliza código ya escrito y probado (Ruta C); la infraestructura async (`aget_db`, `aget_uow`, `AsyncUnitOfWork`) ya existe | Sería reactivar deliberadamente la familia `BaseAgent`/`SwarmOrchestrator` que `docs/CLAUDE.md` ya declaró legacy y en camino a eliminación física — remar contra la dirección arquitectónica vigente del proyecto (migración a `backend/runtime/` LangGraph) |
+| **(b) Migrar** `curriculum.py::create_teacher_assignment` + las 3 funciones de `curriculum_service.py` a async, apuntando a la Ruta C ya existente | Conecta por primera vez la maquinaria async/`SwarmOrchestrator` a una petición real | Reutiliza código ya escrito y probado (Ruta C); la infraestructura async (`aget_db`, `aget_uow`, `AsyncUnitOfWork`) ya existe | Sería reactivar deliberadamente la familia `BaseAgent`/`SwarmOrchestrator` que `CLAUDE.md` ya declaró legacy y en camino a eliminación física — remar contra la dirección arquitectónica vigente del proyecto (migración a `backend/runtime/` LangGraph) |
 | **(c) No tocar la detección; simplificar la Ruta B** — eliminar el intento de detección de curso de programación en `_get_swarm_config_for_course_sync` y devolver siempre el config por defecto (o eliminar la función y hardcodear un único dict) | Elimina el bug sin duplicar lógica ni reactivar BaseAgent | Mínimo, coherente con "Ruta B es legacy y no ejecuta swarm de todas formas" | El campo `swarm_config` deja de reflejar ninguna detección real — honesto sobre lo que la Ruta B realmente hace hoy, pero renuncia a la distinción 4 vs. 7 agentes por completo |
 | **(d) No hacer nada por ahora** | Dejar el bug como está, documentado | Cero riesgo, cero esfuerzo | El log de warning sigue ensuciando logs de producción en cada activación de docente; el campo `swarm_config` sigue siendo engañoso (sugiere detección real que nunca ocurre) |
 
 ## 6. Recomendación
 
 Dado que la Ruta C (`SwarmOrchestrator` real) depende de la familia
-`BaseAgent` ya declarada legacy en `docs/CLAUDE.md`, la opción **(b)
+`BaseAgent` ya declarada legacy en `CLAUDE.md`, la opción **(b)
 migrar** no parece la dirección correcta — sería invertir esfuerzo en
 reconectar una arquitectura que el propio proyecto ya decidió
 descontinuar, en lugar de avanzar hacia `backend/runtime/` (LangGraph),
-que es donde `docs/CLAUDE.md` dirige explícitamente todo desarrollo
+que es donde `CLAUDE.md` dirige explícitamente todo desarrollo
 nuevo de agentes/orquestación.
 
 Entre (a), (c) y (d): (a) no resuelve nada funcional y añade deuda; (c)
@@ -205,7 +205,7 @@ Pregunta de seguimiento tras la §0: ¿el reemplazo de `BaseAgent` por
 `backend/runtime/` (LangGraph) está completo, o es una migración a
 medias con dos arquitecturas activas simultáneamente? Se auditó router
 por router de `main.py` (22 routers registrados) y se rastreó cada
-import por su ruta exacta, replicando el método que `docs/CLAUDE.md`
+import por su ruta exacta, replicando el método que `CLAUDE.md`
 ya usó el 2026-07-12.
 
 **Hallazgo: no son dos, son tres cosas coexistiendo, y las tres siguen
@@ -213,7 +213,7 @@ vigentes salvo la primera:**
 
 1. **`app.agents.*` / `SwarmOrchestrator` / `AgentFactory`** — confirmado
    inalcanzable (§0, §2). Candidato real a eliminación física, pero solo
-   cuando se cumpla el criterio que `docs/CLAUDE.md` ya fijó
+   cuando se cumpla el criterio que `CLAUDE.md` ya fijó
    explícitamente: *"cuando `backend/runtime/` alcance paridad funcional
    end-to-end"*. Esa es una pregunta de producto (¿qué le falta al
    runtime para cubrir lo que hacía la ruta legacy?), no algo que un
@@ -226,7 +226,7 @@ vigentes salvo la primera:**
    (`app/services/weekly_pedagogy_service.py:434,441`), alcanzada desde
    `POST` en `app/api/routes/pedagogy.py` (router registrado). Esto
    corrobora, con una ruta de auditoría distinta, la nota de
-   `docs/CLAUDE.md`: *"ResearchAgent y ReviewerAgent... no heredan de
+   `CLAUDE.md`: *"ResearchAgent y ReviewerAgent... no heredan de
    BaseAgent"*. Confirma además algo relevante para el ítem pendiente de
    la auditoría anterior de pytest: el `ResearchAgent` real que
    `test_research_agent.py` prueba con una firma obsoleta
@@ -247,7 +247,7 @@ vigentes salvo la primera:**
    `useRuntimeEscaladas`, `useRuntimeHitl`), pero **todos esos usos
    confirmados están en `pages/evidencia/RuntimeConsole.tsx` y
    `components/observability/*`** — es decir, en el "Modo Evidencia" de
-   observación/replay que describe `docs/CLAUDE.md`, no en componentes
+   observación/replay que describe `CLAUDE.md`, no en componentes
    del flujo de estudiante (`DiagnosticTest.tsx`,
    `ModuleExperienceView.tsx`, etc.).
 
@@ -270,7 +270,7 @@ antes del ADR" y entra en el terreno de "Fase 3+" que se pidió no
 ejecutar aún.
 
 **Conclusión de la adenda:** no hay una migración "a medias" en el
-sentido de confusión accidental — `docs/CLAUDE.md` ya documenta esta
+sentido de confusión accidental — `CLAUDE.md` ya documenta esta
 coexistencia como una estrategia deliberada con un criterio de cierre
 explícito. Lo que sí falta, y no se puede responder desde el código
 solo, es si ese criterio ("paridad funcional end-to-end") ya se cumplió.
@@ -320,7 +320,7 @@ real de estudiante aparece `SwarmOrchestrator`, `AgentFactory`,
 
 **Consecuencia para la pregunta de eliminación:** dado que ninguna etapa
 del flujo real de estudiante usa el sistema legacy, la "paridad
-funcional end-to-end" de `docs/CLAUDE.md` — en el sentido de "nada vivo
+funcional end-to-end" de `CLAUDE.md` — en el sentido de "nada vivo
 depende ya de `BaseAgent`/`SwarmOrchestrator`" — **parece cumplida** por
 esta auditoría. Lo que sigue sin resolver (y no es una pregunta de
 código) es si diagnóstico y generación de ruta *deberían* pasar también

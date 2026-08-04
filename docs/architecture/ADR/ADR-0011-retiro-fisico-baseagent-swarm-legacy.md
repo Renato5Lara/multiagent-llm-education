@@ -2,7 +2,7 @@
 
 - **Estado:** Aceptado (2026-08-01)
 - **Fecha:** 2026-08-01
-- **Preserva:** `docs/CLAUDE.md` § "Actualización 2026-07-12 (segunda)" (declaración
+- **Preserva:** `CLAUDE.md` § "Actualización 2026-07-12 (segunda)" (declaración
   original de retiro del flujo en vivo), `app/agents/__init__.py` (docstring
   de cuarentena: *"la eliminación física... ocurre cuando el laboratorio
   decida su propio destino"* — esta ADR es esa decisión), `docs/SWARM_ACTIVATION_AUDIT.md`
@@ -11,7 +11,7 @@
 
 ## 1. Contexto
 
-`docs/CLAUDE.md` declaró el 2026-07-12 que `app/agents/*` (`BaseAgent` y
+`CLAUDE.md` declaró el 2026-07-12 que `app/agents/*` (`BaseAgent` y
 sus subclases) estaba retirado del flujo operativo en vivo, pero dejó su
 eliminación física pendiente de una condición explícita, escrita en el
 propio docstring de cuarentena de `app/agents/__init__.py`: *"Sus únicos
@@ -85,7 +85,7 @@ Se elimina físicamente, en un único cambio:
 
 Se actualizan en el mismo cambio: los tests que ejercitaban
 exclusivamente este código (dejan de tener sentido, no de fallar), y las
-referencias documentales activas (`docs/CLAUDE.md`).
+referencias documentales activas (`CLAUDE.md`).
 
 ## 3. Alternativas rechazadas
 
@@ -98,7 +98,7 @@ referencias documentales activas (`docs/CLAUDE.md`).
   futuras**: rechazada — la decisión de producto es que la comparación
   Legacy-vs-Runtime ya cumplió su propósito; mantener infraestructura
   sin uso activo contradice la regla de disciplina documental/de código
-  de `docs/CLAUDE.md` ("sin deuda técnica, sin código muerto").
+  de `CLAUDE.md` ("sin deuda técnica, sin código muerto").
 - **Tocar también `academic_activation_service.py` / el camino sync de
   `activation_service.py` en este mismo cambio**: rechazada — ese
   conflicto (Ruta A vs Ruta B, `ACTIVO` inmediato vs. `PENDING_ACTIVATION`
@@ -138,6 +138,6 @@ referencias documentales activas (`docs/CLAUDE.md`).
 3. `backend/runtime/`, `runtime.boundary`, `runtime_bridge.py`,
    `SharedMemoryStore`, `ResearchAgent` y `ReviewerAgent` quedan
    bit-a-bit intactos.
-4. `docs/CLAUDE.md` ya no describe `app/agents/*` como código presente
+4. `CLAUDE.md` ya no describe `app/agents/*` como código presente
    en el repositorio a la espera de retiro — refleja que el retiro ya
    ocurrió, con fecha y referencia a esta ADR.

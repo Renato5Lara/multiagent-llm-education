@@ -79,6 +79,15 @@ class Settings(BaseSettings):
     LANGSMITH_PROJECT: str = ""
     LANGSMITH_ENDPOINT: str = ""
 
+    # Hugging Face — fase de producción experimental (CLAUDE.md, HF-0/Exp-1).
+    # `scripts/experimentos/hf0_exp1_*.py` lee `HF_TOKEN` directamente de
+    # `os.environ`, no de `Settings`; se declaran aqui solo para que
+    # Settings no rechace el .env cuando estan presentes (mismo patron que
+    # LANGSMITH_*).
+    OLLAMA_URL: str = ""
+    HF_TOKEN: str = ""
+    HF_EMBEDDING_MODEL: str = ""
+
     # Logging
     LOG_LEVEL: str = "INFO"
 
