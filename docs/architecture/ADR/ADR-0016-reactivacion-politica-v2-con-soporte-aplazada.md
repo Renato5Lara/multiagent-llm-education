@@ -112,13 +112,39 @@ explícitamente fuera de este alcance.
   registrada en memoria de proyecto, ver `bug_items_totales_ausente_
   rompe_clasificacion_reforzar`).
 - `tests/test_aplazada_consumidores_boundary.py`: 3/3 — consumidores
-  tolerantes bajo δ=0.99 sintético y bajo `POLITICAS["v2"]` real.
+  tolerantes bajo δ=0.99 sintético y bajo `POLITICAS["v2"]` real
+  (llamando `runtime_bridge` directamente).
+- `tests/test_e2e_adr0016_v2_produccion.py`: 2/2 — el mismo recorrido,
+  pero por HTTP real (`client.post` → FastAPI → `students.py` →
+  `runtime_bridge`), con `POLITICAS["v2"]` real:
+  - `submit_evaluation` (evaluación de módulo, la ruta más común):
+    confirma `identidad.version_politica=="v2"`, contrato HTTP
+    coherente. Hallazgo real, no anticipado: con `objetivos=` siempre
+    no vacío, Remediar/Orientar por-objetivo nunca compiten entre sí
+    (disparadores mutuamente excluyentes sobre el mismo `dominada`) —
+    esta ruta no alcanza `mecanica.convocar()` con una sola evidencia.
+    En su lugar, bajo `θ=0.5` real (`v1` usa `θ=0`, estructuralmente
+    inalcanzable), la confianza calibrada observada (0.4385) resultó
+    insuficiente — RFC-0006 §3 Parte C, `derivar_decision_directa`
+    devuelve `None`, el walkthrough termina en `END` sin decisión.
+    **Tercer camino hacia `Entrega(None, None)`**, distinto de
+    `Aplazada` (D1/D2) — mismo contrato exacto para los consumidores
+    (`proyectar_entrega` no distingue la causa: sin claim vigente de
+    Adaptar, da igual si fue D1/D2 aplazado, D3 insuficiente, o
+    ninguna evidencia todavía), así que la evidencia de §6 sigue
+    aplicando sin necesidad de una prueba de consumidor aparte.
+  - `submit_cycle_evidence` (evidencia continua, no pasa `objetivos=`,
+    opera sobre `"siguiente-paso(sesion)"`): SÍ alcanza
+    `mecanica.convocar()` (confirmado: Remediar 0.4385 vs Orientar
+    0.0000, tensión D2 real). No fuerza el desenlace; contrato HTTP
+    verificado coherente bajo `Resuelta` y bajo `Aplazada`.
 - Validación E2E con `VERSION_POLITICA="v2"` real: `Aplazada` real
   producida, margen=0.0000, ningún consumidor rompió.
 
 Estos criterios demuestran que la reactivación es **técnicamente
-segura**. No son, por sí solos, criterio de aceptación de esta ADR —
-ver §6.
+segura**, ahora con evidencia a dos niveles (llamada directa y HTTP
+real). No son, por sí solos, criterio de aceptación de esta ADR — ver
+§6 y §9 (falta el recorrido en navegador real).
 
 ## 6. Decisión pendiente (bloquea `Propuesto → Aceptado`)
 
@@ -167,6 +193,18 @@ proporcionan `items_totales`; el escenario roto solo existe en 2
 tests. Investigación de causa raíz diferida, sin relación con
 `urgente` ni con `Aplazada`.
 
+**Mecanismo adicional documentado, no un riesgo (Fase 4, §5):** bajo
+`v2`, `submit_evaluation` puede dejar `runtime_decision.diseno=None`
+por **D3-insuficiencia** (`θ=0.5`, RFC-0006 §3 Parte C) — evidencia
+con confianza calibrada real por debajo de `θ`, sin que exista ninguna
+`Aplazada` ni ninguna tensión D1/D2. Es un tercer camino, ya cubierto
+por la misma evidencia de consumidores de §6 (`proyectar_entrega` no
+distingue la causa de una `Entrega` vacía), pero vale nombrarlo
+explícitamente: bajo `v2` real, un estudiante puede ver
+`runtime_decision=None`-ish más seguido que bajo `v1` **incluso sin
+llegar nunca a una deliberación** — dato relevante para quien lea esta
+ADR preguntándose "¿con qué frecuencia pasa esto en producción?".
+
 ## 8. Estrategia de rollback
 
 Idéntica a `ADR-0015 §7`: revertir `VERSION_POLITICA` a `"v1"` es un
@@ -176,19 +214,26 @@ abiertas bajo `v2` (permanecen `v2` para siempre — INV-1/INV-2).
 ## 9. Próximo paso antes de `Aceptado`
 
 1. Resolver §6 (decisión de producto, no de ingeniería).
-2. Si se decide "no" en §6: un recorrido E2E de producción completo
-   (login real → evaluación real → `submit_evaluation` →
-   `runtime_bridge` → `v2` → `Aplazada`/`Resuelta` → UI del
-   estudiante recibe una respuesta coherente en cualquiera de los dos
-   casos) — el mismo tipo de validación que `ADR-0015 §5` ya exigió,
-   repetida con la propagación de `urgente` ya en su lugar.
-3. Solo entonces: `VERSION_POLITICA = "v2"` en
+2. **Hecho (misma sesión):** recorrido E2E por HTTP real bajo `v2`
+   real, `tests/test_e2e_adr0016_v2_produccion.py` — `submit_evaluation`
+   y `submit_cycle_evidence`, ambos con `identidad.version_politica
+   =="v2"` confirmada y contrato HTTP coherente en todo desenlace
+   observado (`Resuelta`, `Aplazada`, D3-insuficiencia). Evidencia
+   registrada en §5.
+3. **Pendiente:** el mismo recorrido en navegador real (login →
+   evaluación real → UI del estudiante recibe una respuesta coherente,
+   sin estado inconsistente ante `Aplazada`/D3-insuficiencia) — el
+   nivel de validación que `ADR-0015 §5` exigió y que HTTP-vía-
+   `TestClient` no sustituye del todo (Regla de Cierre E2E real,
+   CLAUDE.md).
+4. Solo entonces: `VERSION_POLITICA = "v2"` en
    `runtime_connection.py`, y esta ADR pasa a Aceptado.
 
 ---
 
 *Origen: precondición dejada explícitamente pendiente por
 `ADR-0015 §8`, cerrada con evidencia real (commits `4fd6ed8`,
-`e0a83ff`) en la misma sesión. Rama:
+`e0a83ff`, `fc68456`) en la misma sesión. Rama:
 `feat/confidence-calibration-remediation-orientation`. Permanece
-Propuesto hasta resolver la decisión de producto de §6.*
+Propuesto hasta resolver la decisión de producto de §6 y completar el
+recorrido en navegador real de §9.*
