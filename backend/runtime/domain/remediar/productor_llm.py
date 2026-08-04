@@ -4,6 +4,16 @@ Mismo contrato que la versión regla (`productor.py`): mismo tipo de
 claim, mismo asunto, misma estructura de argumentos hacia
 `registrar_claim` — únicamente cambia CÓMO se justifica la propuesta
 (P13: cambia la implementación, nunca el contrato).
+
+Confianza declarada calibrada (ADR-0013): la confianza que el LLM
+declara no se usa directamente — se reemplaza por `evidence_strength`
+sobre la MISMA evidencia que ya respalda la propuesta (`errores` del
+fact original, vía `claim.respaldo`). Mismo principio que Diagnosticar
+(Iteración 5.8, H10), sin reutilizar `calibrar_confianza_nueva`: esa
+función compara contra un claim vigente del mismo asunto a través del
+tiempo, un concepto que no aplica aquí — Remediar compite una sola vez
+por ronda contra Orientar, y esa comparación ya la resuelve
+`mecanica.convocar()`.
 """
 
 from __future__ import annotations
@@ -12,6 +22,7 @@ from decimal import Decimal
 
 from runtime.domain.remediar.productor import ASUNTO_SIGUIENTE_PASO
 from runtime.domain.remediar.provider import FakeLLMProvider, LLMProvider
+from runtime.domain.shared.calibracion import evidence_strength
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.domain.shared.objetivos import ObjetivoOrdenado, asunto_avance
 from runtime.domain.shared.propuestas import palabra_en_pie
@@ -26,6 +37,17 @@ from runtime.kernel.transitions import TransitionIntent
 
 _PROMPT_ID = "remediacion-siguiente-paso-v2"
 _PROMPT_ID_OBJETIVO = "remediacion-por-objetivo-v1"
+
+
+def _fuerza_reforzar(estado: LearningState, claim, errores: int) -> Decimal:
+    """Fuerza de la evidencia que sostiene "reforzar" — cuánto respalda
+    el fact original (vía `claim.respaldo`) la severidad del fallo
+    (ADR-0013). `claim` es la interpretación de Diagnosticar que esta
+    propuesta respalda; su propio `respaldo` apunta al fact evaluativo."""
+    fact = estado.buscar(claim.respaldo[0]) if claim.respaldo else None
+    total = fact.contenido.get("items_totales") if fact is not None else None
+    total = total or 0
+    return evidence_strength(soporte=errores, total=total)
 
 
 def producir(
@@ -52,7 +74,7 @@ def producir(
             and claim.vigencia.vigente
             and claim.afirmacion.get("dominada") is False
         ):
-            errores = claim.afirmacion.get("errores")
+            errores = claim.afirmacion.get("errores") or 0
             prompt = (
                 f"El estudiante no domina la competencia (claim {claim.id}, "
                 f"{errores} items incorrectos). La política remediacion-v1 "
@@ -80,7 +102,7 @@ def producir(
                             "razonamiento": respuesta.get("razonamiento", ""),
                         },
                         "respaldo": (claim.id,),
-                        "confianza": Decimal(str(respuesta["confianza"])),
+                        "confianza": _fuerza_reforzar(estado, claim, errores),
                         "provenance": Provenance.de(
                             OrigenProvenance.LLM,
                             modelo=proveedor.modelo,
@@ -126,6 +148,7 @@ def _producir_por_objetivo(
             respuesta = ejecutar_roundtrip(
                 proveedor, prompt, campos_requeridos=("accion", "confianza")
             )
+            errores = claim.afirmacion.get("errores") or 0
             return (
                 TransitionIntent(
                     productor=Capacidad.REMEDIAR,
@@ -139,7 +162,7 @@ def _producir_por_objetivo(
                             "razonamiento": respuesta.get("razonamiento", ""),
                         },
                         "respaldo": (claim.id,),
-                        "confianza": Decimal(str(respuesta["confianza"])),
+                        "confianza": _fuerza_reforzar(estado, claim, errores),
                         "provenance": Provenance.de(
                             OrigenProvenance.LLM,
                             modelo=proveedor.modelo,

@@ -4,6 +4,15 @@ Mismo contrato que la versión regla (`productor.py`): mismo tipo de
 claim, mismo asunto, misma estructura de argumentos hacia
 `registrar_claim` — únicamente cambia CÓMO se justifica la propuesta
 (P13: cambia la implementación, nunca el contrato).
+
+Confianza declarada calibrada (ADR-0013): la confianza que el LLM
+declara no se usa directamente — se reemplaza por `evidence_strength`
+sobre la MISMA evidencia que ya respalda la propuesta, midiendo cuánto
+sostiene el DOMINIO (aciertos/total, no errores/total: "avanzar" es
+optimista sobre el dominio, a diferencia de "reforzar" en Remediar).
+Mismo principio que Diagnosticar (Iteración 5.8, H10), sin reutilizar
+`calibrar_confianza_nueva` — ver `remediar/productor_llm.py` para la
+misma nota, aplicable aquí sin cambios.
 """
 
 from __future__ import annotations
@@ -12,6 +21,7 @@ from decimal import Decimal
 
 from runtime.domain.orientar.productor import ASUNTO_SIGUIENTE_PASO
 from runtime.domain.orientar.provider import FakeLLMProvider, LLMProvider
+from runtime.domain.shared.calibracion import evidence_strength
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
 from runtime.domain.shared.objetivos import ObjetivoOrdenado, asunto_avance
 from runtime.domain.shared.propuestas import palabra_en_pie
@@ -26,6 +36,18 @@ from runtime.kernel.transitions import TransitionIntent
 
 _PROMPT_ID = "orientacion-siguiente-paso-v2"
 _PROMPT_ID_OBJETIVO = "orientacion-por-objetivo-v1"
+
+
+def _fuerza_avanzar(estado: LearningState, claim, errores: int) -> Decimal:
+    """Fuerza de la evidencia que sostiene "avanzar" — cuánto respalda
+    el fact original (vía `claim.respaldo`) el dominio (aciertos/total),
+    no el fallo (ADR-0013). `claim` es la interpretación de Diagnosticar
+    que esta propuesta respalda."""
+    fact = estado.buscar(claim.respaldo[0]) if claim.respaldo else None
+    total = fact.contenido.get("items_totales") if fact is not None else None
+    total = total or 0
+    aciertos = max(total - errores, 0)
+    return evidence_strength(soporte=aciertos, total=total)
 
 
 def producir(
@@ -75,6 +97,7 @@ def producir(
             respuesta = ejecutar_roundtrip(
                 proveedor, prompt, campos_requeridos=("accion", "confianza")
             )
+            errores = errores or 0
             return (
                 TransitionIntent(
                     productor=Capacidad.ORIENTAR,
@@ -88,7 +111,7 @@ def producir(
                             "razonamiento": respuesta.get("razonamiento", ""),
                         },
                         "respaldo": (claim.id,),
-                        "confianza": Decimal(str(respuesta["confianza"])),
+                        "confianza": _fuerza_avanzar(estado, claim, errores),
                         "provenance": Provenance.de(
                             OrigenProvenance.LLM,
                             modelo=proveedor.modelo,
@@ -137,6 +160,7 @@ def _producir_por_objetivo(
             respuesta = ejecutar_roundtrip(
                 proveedor, prompt, campos_requeridos=("accion", "confianza")
             )
+            errores = claim.afirmacion.get("errores") or 0
             return (
                 TransitionIntent(
                     productor=Capacidad.ORIENTAR,
@@ -150,7 +174,7 @@ def _producir_por_objetivo(
                             "razonamiento": respuesta.get("razonamiento", ""),
                         },
                         "respaldo": (claim.id,),
-                        "confianza": Decimal(str(respuesta["confianza"])),
+                        "confianza": _fuerza_avanzar(estado, claim, errores),
                         "provenance": Provenance.de(
                             OrigenProvenance.LLM,
                             modelo=proveedor.modelo,
