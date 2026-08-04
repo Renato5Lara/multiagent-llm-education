@@ -17,7 +17,7 @@ from runtime.engine.checkpoint import AlmacenMemoria, AlmacenTransiciones
 #: real entre el cual elegir — inventar un contrato para elegirlo
 #: fabricaría una capacidad inexistente (ADR-0009 §4, límite explícito).
 VERSION_BANCO = "v1"
-VERSION_POLITICA = "v1"
+VERSION_POLITICA = "v2"
 SPEC_VERSION = "foundation-2026-07-10"
 
 @lru_cache(maxsize=1)
