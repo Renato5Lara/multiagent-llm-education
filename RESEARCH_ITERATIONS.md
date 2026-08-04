@@ -1957,3 +1957,134 @@ documentada; sin cambios de código. Cadena completa H10: 5.1 → 5.2 →
 5.3 → 5.4 (refutada) → 5.5 (refutada) → 5.6 (candidato encontrado) →
 5.7 (ubicación resuelta) → 5.8 (implementada, un bug corregido en E2E
 real) → 5.9 (esta, CERRADA — H1 adoptada, 2026-08-03).
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 6.1 — Validez del instrumento experimental frente a la arquitectura final (2026-08-04)
+
+> Abre una nueva serie (6.x): distinta pregunta de la familia 5.x (H10,
+> calibración de confianza de RFC-0006). Ver `ADR-0016` y
+> `ROADMAP-RFC-0006.md §8` para la cadena que motiva esta iteración —
+> cerrada la misma sesión, commits `4fd6ed8`→`82df22b`.
+
+## Puerta de entrada (Regla maestra)
+
+1. **¿Qué pregunta de investigación responde?** Ver más abajo.
+2. **¿Qué parte de la hipótesis fortalece?** La validez del método de
+   medición de la hipótesis central (`THESIS_SCOPE_FREEZE.md`:
+   *"una arquitectura multiagente basada en swarm intelligence puede
+   adaptar contenido educativo... y mejorar la experiencia de
+   aprendizaje"*) — sin esta iteración, cualquier ganancia pre→post
+   medida sería inauditable frente a la pregunta "¿esa ganancia vino
+   del swarm real, o de un componente ya retirado?".
+3. **¿Qué variable afecta?** Ninguna variable pedagógica nueva —
+   valida que las variables YA capturadas por `ExperimentResult`
+   (ganancia pre→post, nivel, tiempo) se originan en la cadena
+   `evidencia → deliberación real (POLITICAS["v2"]) → Entrega →
+   contenido adaptado`, no en un artefacto de un pipeline anterior.
+4. **¿Cómo se observará durante la demo?** Recorrido real en
+   navegador: pre-test → módulo con adaptación visible (modalidad
+   decidida por el swarm, citando su propio razonamiento) → post-test
+   → comparación pre/post → exportación CSV/XLSX desde
+   `/evidencia/investigacion`.
+5. **¿Cómo aparecerá en Resultados y Discusión?** Como la sección que
+   responde "amenazas a la validez de instrumentación" — la ganancia
+   medida en cualquier `ExperimentResult` reportado en la tesis queda
+   trazada hasta una deliberación real bajo `v2`, con `session_id` y
+   margen citables, no solo un número agregado.
+
+## Pregunta de investigación
+
+¿El instrumento experimental construido en julio (`ExperimentResult`,
+pre-test/post-test, `research_export_service`) mide correctamente el
+efecto de una adaptación producida por la arquitectura multiagente
+**tal como existe hoy** — `runtime/` LangGraph, sin `BaseAgent`
+(`ADR-0011`, 2026-08-01), bajo `POLITICAS["v2"]` (`ADR-0012`/
+`ADR-0016`, 2026-08-04) — o mide un pipeline que en el momento de su
+construcción (`RESEARCH_LAYER_TECHNICAL_REPORT.md`, 2026-07-08) corría
+bajo una arquitectura distinta?
+
+## Hipótesis parcial
+
+Si se ejecuta el recorrido completo pre-test → adaptación → post-test
+con una cuenta real, entonces `ExperimentResult` debe poder trazarse,
+sesión por sesión, hasta una `Entrega` producida por una deliberación
+real del kernel bajo `v2` (`identidad.version_politica == "v2"`,
+`estado.deliberaciones`/`decisiones` con contenido verificable) — no
+solo hasta un registro numérico sin origen auditable.
+
+## Por qué esta pregunta, no otra (decisión ya tomada, no reabrir)
+
+Se descartó abrir esta iteración directamente con estadística
+inferencial (ANOVA/Cohen's d, `app/experiment/analysis.py`, ya
+construido pero nunca conectado al dashboard — ítem #2 de "mejoras
+futuras" del informe de julio) precisamente porque esa estadística
+sería sobre datos cuya procedencia arquitectónica todavía no estaba
+confirmada tras `ADR-0011`/`ADR-0016`. Primero validez del
+instrumento, después análisis — no al revés.
+
+## Alcance de esta iteración (deliberado)
+
+- **No agrega infraestructura nueva.** `ExperimentResult`, el banco de
+  preguntas, `research_export_service` y los endpoints de
+  `/api/students/knowledge-test/*` y `/api/research/*` ya existen y
+  están probados (36 tests, `RESEARCH_LAYER_TECHNICAL_REPORT.md §7`).
+- **No conecta la estadística inferencial** — queda para una iteración
+  posterior (candidata a `6.2`), solo si esta se cierra con el
+  instrumento confirmado válido.
+- **No modifica `ExperimentResult` ni ningún reducer del kernel.**
+
+## Implementación
+
+Ninguna todavía — esta iteración es de **validación**, no de
+construcción. El "qué se construye" es la ejecución documentada del
+recorrido real, no código nuevo.
+
+## Evidencia observable
+
+- `estado.identidad.version_politica == "v2"` para la sesión de
+  runtime asociada al estudiante de la corrida.
+- Al menos una deliberación real (`estado.deliberaciones`) o una
+  decisión directa D3 con confianza ≥ θ, citada por `session_id` y
+  transición.
+- `ExperimentResult` de esa misma cuenta con ganancia pre→post
+  materializada.
+- Exportación CSV/XLSX desde `/api/research/export` incluyendo esa
+  fila.
+
+## Variables fortalecidas
+
+- **Independiente:** arquitectura de adaptación (`runtime/` LangGraph
+  + `POLITICAS["v2"]`, ya fijada — no varía dentro de esta iteración).
+- **Dependiente (validada, no medida todavía):** validez de
+  instrumentación de `ExperimentResult` como proxy de la ganancia
+  atribuible a la adaptación real del swarm.
+
+## Amenazas a la validez (lo que esta iteración NO demuestra)
+
+- No demuestra que la adaptación **mejora** el aprendizaje — solo que
+  el instrumento que mediría esa mejora está midiendo el sistema
+  correcto. La pregunta de efecto pedagógico (¿mejora medible?) queda
+  para una iteración posterior, con N suficiente, no con una sola
+  cuenta de validación.
+- Con N=1 (o N pequeño) no hay poder estadístico — el objetivo es
+  trazabilidad del instrumento, no significancia.
+
+## Evidencia que deberá recolectarse
+
+Recorrido E2E real, navegador real, cuenta de estudiante real:
+login → diagnóstico (perfil VARK) → pre-test → al menos un ciclo de
+evidencia real (`cycle-evidence`, dispara deliberación bajo `v2`,
+confirmado alcanzable en `ADR-0016 §5/§9` de esta misma sesión) →
+post-test → `/evidencia/investigacion` (comparación + exportación).
+
+## Resultado
+
+Pendiente de ejecución.
+
+## Estado
+
+**EN PREPARACIÓN.** Puerta de entrada respondida, alcance acotado,
+infraestructura de medición confirmada preexistente
+(`RESEARCH_LAYER_TECHNICAL_REPORT.md`). Pendiente: ejecutar el
+recorrido real y registrar el resultado.
