@@ -1,0 +1,520 @@
+{
+  "experimento": "HF-0_Exp-1_huggingface_vs_openai_diagnosticar",
+  "aprobado_por_tesista": true,
+  "no_abre_P3_adaptar": "registrado como hallazgo separado, no ejecutado aquí",
+  "run_id": "20260803T220319",
+  "timestamp": "2026-08-03T22:03:19.647015",
+  "modelo_hf": "openai/gpt-oss-120b",
+  "umbral_errores_scoring_v1": 2,
+  "barrido_errores": [
+    0,
+    1,
+    2,
+    3,
+    5
+  ],
+  "repeticiones_por_punto": 3,
+  "resumen_por_proveedor": {
+    "fake_regla_v1": {
+      "tasa_json_valido": 1.0,
+      "tasa_acuerdo_scoring_v1": 1.0,
+      "latencia_ms_promedio": null,
+      "tokens_promedio": null,
+      "llamadas": [
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        }
+      ]
+    },
+    "openai": {
+      "tasa_json_valido": 1.0,
+      "tasa_acuerdo_scoring_v1": 1.0,
+      "latencia_ms_promedio": 2031.0078412667888,
+      "tokens_promedio": 246.86666666666667,
+      "llamadas": [
+        {
+          "proveedor": "openai",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 2072.824655995646,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 92,
+            "total_tokens": 237
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1656.1308660020586,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 92,
+            "total_tokens": 237
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1608.9965349965496,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 86,
+            "total_tokens": 231
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1602.082932004123,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 107,
+            "total_tokens": 252
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 2968.288604002737,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 107,
+            "total_tokens": 252
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1733.9703510006075,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 107,
+            "total_tokens": 252
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1831.7181170059484,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 104,
+            "total_tokens": 249
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2131.5838750015246,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 108,
+            "total_tokens": 253
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1934.4702239977778,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 108,
+            "total_tokens": 253
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2029.9731199993403,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 101,
+            "total_tokens": 246
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1637.3318859987194,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 99,
+            "total_tokens": 244
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1736.3250229973346,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 99,
+            "total_tokens": 244
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 3107.6407119981013,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 110,
+            "total_tokens": 255
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1939.7692089987686,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 104,
+            "total_tokens": 249
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2474.011509002594,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 104,
+            "total_tokens": 249
+          },
+          "error": null
+        }
+      ]
+    },
+    "huggingface": {
+      "tasa_json_valido": 0.5333333333333333,
+      "tasa_acuerdo_scoring_v1": 1.0,
+      "latencia_ms_promedio": 3101.5343296239735,
+      "tokens_promedio": 564.75,
+      "llamadas": [
+        {
+          "proveedor": "huggingface",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 3492.425144999288,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 349,
+            "total_tokens": 578
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 3786.4613619967713,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 340,
+            "total_tokens": 569
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 3466.8956019959296,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 349,
+            "total_tokens": 578
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 3122.9100880009355,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 351,
+            "total_tokens": 580
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 2853.730585993617,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 353,
+            "total_tokens": 582
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 2606.593465003243,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 339,
+            "total_tokens": 568
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2158.940537003218,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 202,
+            "total_tokens": 431
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 3324.317851998785,
+          "tokens": {
+            "prompt_tokens": 229,
+            "completion_tokens": 403,
+            "total_tokens": 632
+          },
+          "error": null
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 2,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 3,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 3,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 3,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 5,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 5,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 5,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "APIStatusError: Error code: 402 - {'error': 'You have depleted your monthly included credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get 20x more included usage.'}"
+        }
+      ]
+    }
+  }
+}

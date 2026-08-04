@@ -1,0 +1,488 @@
+{
+  "experimento": "HF-0_Exp-1_huggingface_vs_openai_diagnosticar",
+  "aprobado_por_tesista": true,
+  "no_abre_P3_adaptar": "registrado como hallazgo separado, no ejecutado aquí",
+  "run_id": "20260803T220156",
+  "timestamp": "2026-08-03T22:01:56.790472",
+  "modelo_hf": "Qwen/Qwen2.5-7B-Instruct-1M",
+  "umbral_errores_scoring_v1": 2,
+  "barrido_errores": [
+    0,
+    1,
+    2,
+    3,
+    5
+  ],
+  "repeticiones_por_punto": 3,
+  "resumen_por_proveedor": {
+    "fake_regla_v1": {
+      "tasa_json_valido": 1.0,
+      "tasa_acuerdo_scoring_v1": 1.0,
+      "latencia_ms_promedio": null,
+      "tokens_promedio": null,
+      "llamadas": [
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        },
+        {
+          "proveedor": "fake_regla_v1",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": null
+        }
+      ]
+    },
+    "openai": {
+      "tasa_json_valido": 1.0,
+      "tasa_acuerdo_scoring_v1": 1.0,
+      "latencia_ms_promedio": 2146.3231238657804,
+      "tokens_promedio": 242.0,
+      "llamadas": [
+        {
+          "proveedor": "openai",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 2402.5346339985845,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 90,
+            "total_tokens": 235
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1930.4150419993675,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 92,
+            "total_tokens": 237
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 0,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 2030.4486930035637,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 92,
+            "total_tokens": 237
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1913.461311996798,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 105,
+            "total_tokens": 250
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1703.6450739979045,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 87,
+            "total_tokens": 232
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 1,
+          "ok": true,
+          "dominada": true,
+          "dominada_esperada": true,
+          "acuerdo": true,
+          "latencia_ms": 1719.1251749973162,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 84,
+            "total_tokens": 229
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1995.0929300030111,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 87,
+            "total_tokens": 232
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1962.5671769972541,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 108,
+            "total_tokens": 253
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 2,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 4241.16185100138,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 87,
+            "total_tokens": 232
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1870.6317040050635,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 101,
+            "total_tokens": 246
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2381.797984999139,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 101,
+            "total_tokens": 246
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 3,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1957.1923849944142,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 109,
+            "total_tokens": 254
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2015.0955309945857,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 104,
+            "total_tokens": 249
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 1933.8073330000043,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 104,
+            "total_tokens": 249
+          },
+          "error": null
+        },
+        {
+          "proveedor": "openai",
+          "errores": 5,
+          "ok": true,
+          "dominada": false,
+          "dominada_esperada": false,
+          "acuerdo": true,
+          "latencia_ms": 2137.870031998318,
+          "tokens": {
+            "prompt_tokens": 145,
+            "completion_tokens": 104,
+            "total_tokens": 249
+          },
+          "error": null
+        }
+      ]
+    },
+    "huggingface": {
+      "tasa_json_valido": 0.0,
+      "tasa_acuerdo_scoring_v1": 0.0,
+      "latencia_ms_promedio": null,
+      "tokens_promedio": null,
+      "llamadas": [
+        {
+          "proveedor": "huggingface",
+          "errores": 0,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 0,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 0,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 1,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 1,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 1,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 2,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 2,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 2,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 3,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 3,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 3,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 5,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 5,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        },
+        {
+          "proveedor": "huggingface",
+          "errores": 5,
+          "ok": false,
+          "dominada": null,
+          "dominada_esperada": null,
+          "acuerdo": null,
+          "latencia_ms": null,
+          "tokens": null,
+          "error": "BadRequestError: Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen2.5-7B-Instruct-1M' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+        }
+      ]
+    }
+  }
+}
