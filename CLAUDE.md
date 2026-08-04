@@ -197,6 +197,55 @@ abrir y ningún otro salvo que el propio Gate lo exija — y criterios de
 cierre verificables, no aproximados). No implementar hasta que el
 roadmap y cada ficha estén aprobados.
 
+### Actualización 2026-08-03 — Fase de producción experimental: capacidades IA desacopladas
+
+**No relaja la Regla de Oro.** El PRINCIPIO FUNDAMENTAL de este documento
+("la tesis tiene prioridad absoluta sobre el producto") sigue siendo el
+default para todo trabajo no cubierto por esta sección. Lo que sigue es
+una excepción **acotada y con fecha**, no un cambio de prioridad general:
+se abre porque el tesista dispone ahora de una ventana de producción y
+experimentación (agosto 2026) además del trabajo de tesis, y quiere poder
+explorar capacidades de IA adicionales sin que cada sesión nueva vuelva a
+rechazar la idea desde cero citando la Regla de Oro fuera de contexto.
+
+**Qué se permite.** Evaluar e integrar proveedores/capacidades de IA
+externos (Hugging Face u otros) que mejoren la plataforma, aunque no
+puedan responder las 5 preguntas de la metodología de investigación
+(§METODOLOGÍA DE INVESTIGACIÓN) — es decir, se exime de esa obligación
+específica **solo** a esta línea de trabajo, no al resto del proyecto.
+
+**Restricciones duras de esta fase (ninguna es negociable):**
+
+- `LangGraph Runtime` sigue siendo la única arquitectura multiagente
+  activa. No se reintroduce BaseAgent ni ningún componente legacy.
+- No se modifica el modelo de Knowledge Claims, la deliberación D1/D2/D3,
+  los reducers del kernel, ni ningún RFC/ADR ya aprobado.
+- **No se implementa memoria consultable a mitad de sesión estilo RAG, ni
+  un catálogo de recursos filtrado por embeddings.** Ambos ya fueron
+  evaluados y rechazados formalmente — RFC-0005-memoria.md
+  §"Alternativas rechazadas" #1 (viola P1/INV-2/P12) y ADR-0010 (regla de
+  derivación, sin catálogo cerrado confiable). Si esta idea reaparece,
+  citar ese rechazo y la memoria `auditoria_huggingface_rag_rechazada_
+  2026_08_03` en vez de re-auditar desde cero.
+- El docente mantiene el rol de facilitador/observador/validador — nunca
+  gestor de contenido masivo (sigue vigente §RESTRICCIONES DURAS / NO
+  IMPLEMENTAR NUNCA sin cambios).
+- Toda integración de proveedor pasa por la abstracción **ya existente**
+  `runtime.domain.shared.llm.LLMProvider` (Protocol: `modelo`, `version`,
+  `generar(prompt) -> LLMResponse`, implementada hoy por `OpenAIProvider`
+  en `llm_openai.py` y por un `FakeLLMProvider` propio de cada
+  capacidad). Un `HuggingFaceProvider` que solo genera texto es una
+  implementación nueva de este contrato — cero concepto nuevo, cero RFC.
+  Extender el contrato mismo (`embed()`, `classify()`, multimodal) sí es
+  una modificación de una interfaz compartida entre capacidades del
+  kernel y requiere RFC antes de escribir código, sin excepción.
+- Cada capacidad experimental necesita evidencia concreta de que mejora
+  una decisión real del sistema antes de integrarse de forma permanente;
+  si no la produce, queda descartada o aislada como spike, nunca
+  incorporada "porque ya está hecha".
+- El Engineering Gate (4 preguntas) y las pruebas obligatorias siguen
+  aplicando a cada commit de esta línea, igual que al resto del runtime.
+
 ### Rol
 
 Actúa como **Principal Software Engineer / Implementation Lead**. No eres
