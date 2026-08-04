@@ -1,0 +1,554 @@
+{
+  "experimento": "consenso_remediar_orientar_llm_por_perfil",
+  "extiende": "consenso_estudiante_ambiguo.py (regla, sin LLM); consenso_barrido_evidencia_llm.py / Iteración 5.2 (H10, LLM, solo dominada=False); Iteración 5.8 (H10, calibración de Diagnosticar-LLM)",
+  "run_id": "20260804T011809",
+  "timestamp": "2026-08-04T01:18:09.817544",
+  "competencia": "Bucles",
+  "items_totales": 4,
+  "perfiles": {
+    "fallo_leve": 1,
+    "dominio_marginal": 2,
+    "fallo_severo": 4
+  },
+  "repeticiones_por_perfil": 3,
+  "instrumento": {
+    "prompt_id_diagnosticar": "diagnostico-competencia-v1",
+    "prompt_id_remediar": "remediacion-siguiente-paso-v2",
+    "prompt_id_orientar": "orientacion-siguiente-paso-v2",
+    "modelo": "gpt-4o-mini",
+    "temperature": 0
+  },
+  "celdas": [
+    {
+      "perfil": "fallo_leve",
+      "errores": 1,
+      "run": 0,
+      "dominada_segun_diagnosticar_llm": true,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.3006360524426366",
+      "remediar_compitio": false,
+      "confianza_remediar_llm": null,
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.3006360524426366",
+      "margen_remediar_orientar": null,
+      "desempate_v1_v2": null,
+      "llamadas_llm": [
+        {
+          "etiqueta": "fallo_leve:run0:diagnosticar",
+          "timestamp": "2026-08-04T01:18:09.838027",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=1. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 1 item incorrecto. Dado que 1 es menor que 2, se concluye que la competencia está dominada.\",\n  \"errores\": 1,\n  \"dominada\": true,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_leve:run0:orientar",
+          "timestamp": "2026-08-04T01:18:11.967707",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 1 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para desarrollar habilidades y conocimientos de manera progresiva. Este enfoque facilita la comprensión y asimilación de conceptos complejos, al tiempo que se les brinda la oportunidad de construir sobre lo que ya saben. Además, el andamiaje puede adaptarse a las necesidades individuales de los estudiantes, lo que aumenta la probabilidad de éxito en su aprendizaje.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "fallo_leve",
+      "errores": 1,
+      "run": 1,
+      "dominada_segun_diagnosticar_llm": true,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.3006360524426366",
+      "remediar_compitio": false,
+      "confianza_remediar_llm": null,
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.3006360524426366",
+      "margen_remediar_orientar": null,
+      "desempate_v1_v2": null,
+      "llamadas_llm": [
+        {
+          "etiqueta": "fallo_leve:run1:diagnosticar",
+          "timestamp": "2026-08-04T01:18:14.163809",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=1. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 1 item incorrecto. Dado que 1 es menor que 2, se concluye que la competencia está dominada.\",\n  \"errores\": 1,\n  \"dominada\": true,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_leve:run1:orientar",
+          "timestamp": "2026-08-04T01:18:16.109545",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 1 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para desarrollar habilidades y conocimientos de manera progresiva. Este enfoque facilita la comprensión y asimilación de conceptos complejos, lo que puede resultar en un aprendizaje más efectivo y duradero. Además, al ser una candidata en la deliberación, se abre la posibilidad de evaluar su efectividad en comparación con otras propuestas, como la de Remediar.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "fallo_leve",
+      "errores": 1,
+      "run": 2,
+      "dominada_segun_diagnosticar_llm": true,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.3006360524426366",
+      "remediar_compitio": false,
+      "confianza_remediar_llm": null,
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.3006360524426366",
+      "margen_remediar_orientar": null,
+      "desempate_v1_v2": null,
+      "llamadas_llm": [
+        {
+          "etiqueta": "fallo_leve:run2:diagnosticar",
+          "timestamp": "2026-08-04T01:18:18.867152",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=1. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 1 item incorrecto. Dado que 1 es menor que 2, se concluye que la competencia está dominada.\",\n  \"errores\": 1,\n  \"dominada\": true,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_leve:run2:orientar",
+          "timestamp": "2026-08-04T01:18:20.916786",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 1 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite al estudiante recibir el apoyo necesario para abordar los objetivos de aprendizaje de manera efectiva. Este enfoque facilita la comprensión y la asimilación de conceptos complejos, al tiempo que se fomenta la autonomía del estudiante. Además, el andamiaje puede ser ajustado según las necesidades individuales, lo que maximiza las oportunidades de éxito en el proceso educativo.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "dominio_marginal",
+      "errores": 2,
+      "run": 0,
+      "dominada_segun_diagnosticar_llm": false,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.15003570882017148",
+      "remediar_compitio": true,
+      "confianza_remediar_llm": "0.15003570882017148",
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.15003570882017148",
+      "margen_remediar_orientar": "0E-17",
+      "desempate_v1_v2": [
+        {
+          "politica": "v1",
+          "delta": "0",
+          "theta": "0",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.15003570882017148",
+          "ganador": "orientar",
+          "evidencia_faltante": null
+        },
+        {
+          "politica": "v2",
+          "delta": "0.10",
+          "theta": "0.5",
+          "tension": "Aplazada",
+          "regla": null,
+          "confianza_resolucion": null,
+          "ganador": null,
+          "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000003/e1: margen 0E-17 < delta 0.10"
+        }
+      ],
+      "llamadas_llm": [
+        {
+          "etiqueta": "dominio_marginal:run0:diagnosticar",
+          "timestamp": "2026-08-04T01:18:23.212475",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=2. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 2 items incorrectos. Dado que 2 no es menos que 2, la competencia no cumple con el criterio para ser considerada dominada.\",\n  \"errores\": 2,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "dominio_marginal:run0:remediar",
+          "timestamp": "2026-08-04T01:18:25.364689",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000002/e1, 2 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita una comprensión más sólida antes de avanzar a temas más complejos. Reforzar la competencia permitirá al estudiante consolidar su aprendizaje y mejorar su rendimiento en el futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "dominio_marginal:run0:orientar",
+          "timestamp": "2026-08-04T01:18:27.066146",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 2 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para desarrollar habilidades y conocimientos de manera progresiva. Este enfoque facilita la comprensión y la asimilación de conceptos complejos, lo que puede resultar en un aprendizaje más efectivo y duradero. Además, al ser una candidata en la deliberación, se abre la posibilidad de evaluar su efectividad en comparación con otras propuestas, como la de Remediar.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "dominio_marginal",
+      "errores": 2,
+      "run": 1,
+      "dominada_segun_diagnosticar_llm": false,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.15003570882017148",
+      "remediar_compitio": true,
+      "confianza_remediar_llm": "0.15003570882017148",
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.15003570882017148",
+      "margen_remediar_orientar": "0E-17",
+      "desempate_v1_v2": [
+        {
+          "politica": "v1",
+          "delta": "0",
+          "theta": "0",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.15003570882017148",
+          "ganador": "orientar",
+          "evidencia_faltante": null
+        },
+        {
+          "politica": "v2",
+          "delta": "0.10",
+          "theta": "0.5",
+          "tension": "Aplazada",
+          "regla": null,
+          "confianza_resolucion": null,
+          "ganador": null,
+          "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000003/e1: margen 0E-17 < delta 0.10"
+        }
+      ],
+      "llamadas_llm": [
+        {
+          "etiqueta": "dominio_marginal:run1:diagnosticar",
+          "timestamp": "2026-08-04T01:18:29.688521",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=2. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 2 items incorrectos. Dado que 2 no es menor que 2, la competencia no está dominada.\",\n  \"errores\": 2,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "dominio_marginal:run1:remediar",
+          "timestamp": "2026-08-04T01:18:31.602232",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000002/e1, 2 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita más práctica y comprensión antes de avanzar a temas más complejos. Reforzar la competencia asegurará que el estudiante tenga una base sólida para el aprendizaje futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "dominio_marginal:run1:orientar",
+          "timestamp": "2026-08-04T01:18:33.175302",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 2 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite al estudiante recibir el apoyo necesario para abordar los objetivos de aprendizaje de manera efectiva. Este enfoque facilita la comprensión y la asimilación de conceptos complejos, al tiempo que se fomenta la autonomía del estudiante. Además, al ser una candidata en la deliberación, se abre la posibilidad de evaluar su efectividad en comparación con otras propuestas, como la de Remediar, lo que garantiza un proceso de toma de decisiones más informado y fundamentado.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "dominio_marginal",
+      "errores": 2,
+      "run": 2,
+      "dominada_segun_diagnosticar_llm": false,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.15003570882017148",
+      "remediar_compitio": true,
+      "confianza_remediar_llm": "0.15003570882017148",
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.15003570882017148",
+      "margen_remediar_orientar": "0E-17",
+      "desempate_v1_v2": [
+        {
+          "politica": "v1",
+          "delta": "0",
+          "theta": "0",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.15003570882017148",
+          "ganador": "orientar",
+          "evidencia_faltante": null
+        },
+        {
+          "politica": "v2",
+          "delta": "0.10",
+          "theta": "0.5",
+          "tension": "Aplazada",
+          "regla": null,
+          "confianza_resolucion": null,
+          "ganador": null,
+          "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000004/e1 y T-000003/e1: margen 0E-17 < delta 0.10"
+        }
+      ],
+      "llamadas_llm": [
+        {
+          "etiqueta": "dominio_marginal:run2:diagnosticar",
+          "timestamp": "2026-08-04T01:18:36.784351",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=2. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se indica que hay 2 items incorrectos. Dado que 2 no es menos que 2, la competencia no está dominada.\",\n  \"errores\": 2,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "dominio_marginal:run2:remediar",
+          "timestamp": "2026-08-04T01:18:39.524758",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000002/e1, 2 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita una comprensión más sólida antes de avanzar a temas más complejos. Reforzar la competencia permitirá al estudiante consolidar su aprendizaje y mejorar su rendimiento en el futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "dominio_marginal:run2:orientar",
+          "timestamp": "2026-08-04T01:18:41.087068",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 2 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite al estudiante recibir el apoyo necesario para abordar los objetivos de aprendizaje de manera efectiva. Este enfoque facilita la comprensión y asimilación de conceptos complejos, al tiempo que se fomenta la autonomía del estudiante. Además, al ser una candidata en la deliberación, se abre la posibilidad de evaluar su efectividad en comparación con otras propuestas, como la de Remediar, lo que garantiza un proceso de toma de decisiones más informado y fundamentado.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "fallo_severo",
+      "errores": 4,
+      "run": 0,
+      "dominada_segun_diagnosticar_llm": false,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.5100999795960008",
+      "remediar_compitio": true,
+      "confianza_remediar_llm": "0.5100999795960008",
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.0",
+      "margen_remediar_orientar": "0.5100999795960008",
+      "desempate_v1_v2": [
+        {
+          "politica": "v1",
+          "delta": "0",
+          "theta": "0",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.5100999795960008",
+          "ganador": "remediar",
+          "evidencia_faltante": null
+        },
+        {
+          "politica": "v2",
+          "delta": "0.10",
+          "theta": "0.5",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.5100999795960008",
+          "ganador": "remediar",
+          "evidencia_faltante": null
+        }
+      ],
+      "llamadas_llm": [
+        {
+          "etiqueta": "fallo_severo:run0:diagnosticar",
+          "timestamp": "2026-08-04T01:18:43.449953",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=4. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se reportan 4 items incorrectos. Dado que 4 es mayor que 2, la competencia no cumple con el criterio para ser considerada dominada.\",\n  \"errores\": 4,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_severo:run0:remediar",
+          "timestamp": "2026-08-04T01:18:45.909241",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000002/e1, 4 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita una comprensión más sólida antes de avanzar a temas más complejos. Reforzar la competencia permitirá al estudiante consolidar su aprendizaje y mejorar su rendimiento en el futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_severo:run0:orientar",
+          "timestamp": "2026-08-04T01:18:47.275772",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 4 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para superar las dificultades que enfrentan en su aprendizaje. Este enfoque facilita la adquisición de habilidades y conocimientos de manera gradual, lo que puede resultar en una mejor comprensión y retención de la información. Además, al ser una propuesta de CANDIDATA, se abre la posibilidad de evaluar su efectividad en comparación con otras alternativas, como la propuesta de Remediar, lo que asegura que se tome una decisión informada y basada en evidencia.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "fallo_severo",
+      "errores": 4,
+      "run": 1,
+      "dominada_segun_diagnosticar_llm": false,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.5100999795960008",
+      "remediar_compitio": true,
+      "confianza_remediar_llm": "0.5100999795960008",
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.0",
+      "margen_remediar_orientar": "0.5100999795960008",
+      "desempate_v1_v2": [
+        {
+          "politica": "v1",
+          "delta": "0",
+          "theta": "0",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.5100999795960008",
+          "ganador": "remediar",
+          "evidencia_faltante": null
+        },
+        {
+          "politica": "v2",
+          "delta": "0.10",
+          "theta": "0.5",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.5100999795960008",
+          "ganador": "remediar",
+          "evidencia_faltante": null
+        }
+      ],
+      "llamadas_llm": [
+        {
+          "etiqueta": "fallo_severo:run1:diagnosticar",
+          "timestamp": "2026-08-04T01:18:50.018699",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=4. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se reportan 4 items incorrectos. Dado que 4 es mayor que 2, la competencia no cumple con el criterio para ser considerada dominada.\",\n  \"errores\": 4,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_severo:run1:remediar",
+          "timestamp": "2026-08-04T01:18:53.165436",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000002/e1, 4 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, lo que indica que necesita una comprensión más sólida antes de avanzar a temas más complejos. Reforzar la competencia permitirá al estudiante consolidar su aprendizaje y mejorar su rendimiento en el futuro.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_severo:run1:orientar",
+          "timestamp": "2026-08-04T01:18:54.918891",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 4 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para superar las dificultades que enfrentan en su aprendizaje. Este enfoque facilita la adquisición de habilidades y conocimientos de manera gradual, lo que puede resultar en una mejor comprensión y retención de la información. Además, al ser una propuesta preliminar, permite evaluar su efectividad en comparación con otras alternativas antes de tomar una decisión final.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    },
+    {
+      "perfil": "fallo_severo",
+      "errores": 4,
+      "run": 2,
+      "dominada_segun_diagnosticar_llm": false,
+      "confianza_diagnosticar_llm_cruda_sin_calibrar": "0.95",
+      "confianza_diagnosticar_aplicada_calibrada": "0.5100999795960008",
+      "remediar_compitio": true,
+      "confianza_remediar_llm": "0.5100999795960008",
+      "orientar_compitio": true,
+      "confianza_orientar_llm": "0.0",
+      "margen_remediar_orientar": "0.5100999795960008",
+      "desempate_v1_v2": [
+        {
+          "politica": "v1",
+          "delta": "0",
+          "theta": "0",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.5100999795960008",
+          "ganador": "remediar",
+          "evidencia_faltante": null
+        },
+        {
+          "politica": "v2",
+          "delta": "0.10",
+          "theta": "0.5",
+          "tension": "Resuelta",
+          "regla": "mayor-confianza-declarada",
+          "confianza_resolucion": "0.5100999795960008",
+          "ganador": "remediar",
+          "evidencia_faltante": null
+        }
+      ],
+      "llamadas_llm": [
+        {
+          "etiqueta": "fallo_severo:run2:diagnosticar",
+          "timestamp": "2026-08-04T01:18:57.190974",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Competencia=Bucles items_incorrectos=4. Una competencia se considera DOMINADA cuando tiene menos de 2 items incorrectos (regla scoring-v1). Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (explica el criterio y aplica la regla paso a paso), luego \"errores\" (el número de items incorrectos), luego \"dominada\" (booleano, DEBE ser consistente con la conclusión de tu razonamiento), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.80\", nunca como palabra ni como número).",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Para determinar si una competencia está dominada, se aplica la regla scoring-v1, que establece que una competencia se considera dominada cuando tiene menos de 2 items incorrectos. En este caso, se reportan 4 items incorrectos. Dado que 4 es mayor que 2, la competencia no cumple con el criterio para ser considerada dominada.\",\n  \"errores\": 4,\n  \"dominada\": false,\n  \"confianza\": \"0.95\"\n}"
+        },
+        {
+          "etiqueta": "fallo_severo:run2:remediar",
+          "timestamp": "2026-08-04T01:18:59.218211",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "El estudiante no domina la competencia (claim T-000002/e1, 4 items incorrectos). La política remediacion-v1 indica reforzar la competencia antes de avanzar de tema. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué reforzar es la acción correcta aquí), luego \"accion\" (STRING, debe ser exactamente \"reforzar\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.85\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"El estudiante no ha demostrado un dominio adecuado de la competencia, ya que ha cometido 4 errores en los ítems evaluados. Reforzar la competencia es esencial para asegurar que el estudiante comprenda completamente el tema antes de avanzar, lo que facilitará un aprendizaje más sólido y evitará confusiones futuras.\",\n  \"accion\": \"reforzar\",\n  \"confianza\": \"0.90\"\n}"
+        },
+        {
+          "etiqueta": "fallo_severo:run2:orientar",
+          "timestamp": "2026-08-04T01:19:01.369660",
+          "modelo": "gpt-4o-mini",
+          "version": "openai-chat-v1",
+          "prompt": "Existe una interpretación vigente sobre el estudiante (claim T-000002/e1, 4 items incorrectos). La política ruta-v1 propone avanzar al siguiente objetivo con andamiaje adicional como CANDIDATA en la deliberación — no es una decisión final ni un juicio tuyo sobre si conviene: eso lo resuelve después el Kernel comparando esta propuesta contra la de Remediar. Responde JSON con esta forma EXACTA y en este ORDEN: primero \"razonamiento\" (por qué avanzar-con-andamiaje es una propuesta razonable aquí), luego \"accion\" (STRING, debe ser exactamente \"avanzar-con-andamiaje\"), luego \"confianza\" (STRING con formato decimal entre \"0.00\" y \"1.00\", ejemplo \"0.78\").",
+          "respuesta_cruda": "{\n  \"razonamiento\": \"Avanzar con andamiaje adicional es una propuesta razonable en este contexto porque permite a los estudiantes recibir el apoyo necesario para abordar los conceptos que aún no dominan. Esto puede facilitar su aprendizaje y mejorar su comprensión antes de pasar a objetivos más complejos. Además, el andamiaje puede ayudar a identificar áreas específicas que requieren atención, lo que puede ser beneficioso para el proceso de deliberación posterior.\",\n  \"accion\": \"avanzar-con-andamiaje\",\n  \"confianza\": \"0.85\"\n}"
+        }
+      ]
+    }
+  ],
+  "resumen_variabilidad": {
+    "remediar": {
+      "por_perfil": {
+        "fallo_leve": null,
+        "dominio_marginal": {
+          "n": 3,
+          "media": "0.15",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.15003570882017148",
+          "max": "0.15003570882017148"
+        },
+        "fallo_severo": {
+          "n": 3,
+          "media": "0.5101",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.5100999795960008",
+          "max": "0.5100999795960008"
+        }
+      },
+      "rango_entre_medias_de_perfiles": "0.3601"
+    },
+    "orientar": {
+      "por_perfil": {
+        "fallo_leve": {
+          "n": 3,
+          "media": "0.3006",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.3006360524426366",
+          "max": "0.3006360524426366"
+        },
+        "dominio_marginal": {
+          "n": 3,
+          "media": "0.15",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.15003570882017148",
+          "max": "0.15003570882017148"
+        },
+        "fallo_severo": {
+          "n": 3,
+          "media": "0.0",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.0",
+          "max": "0.0"
+        }
+      },
+      "rango_entre_medias_de_perfiles": "0.3006"
+    },
+    "margen": {
+      "por_perfil": {
+        "fallo_leve": null,
+        "dominio_marginal": {
+          "n": 3,
+          "media": "0.0",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.0",
+          "max": "0.0"
+        },
+        "fallo_severo": {
+          "n": 3,
+          "media": "0.5101",
+          "desviacion_estandar_intra_perfil": "0.0",
+          "min": "0.5100999795960008",
+          "max": "0.5100999795960008"
+        }
+      },
+      "rango_entre_medias_de_perfiles": "0.5101"
+    }
+  },
+  "total_llamadas_llm_reales": 24
+}
