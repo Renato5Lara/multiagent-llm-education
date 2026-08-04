@@ -567,13 +567,18 @@ el mismo día (`ADR-0015`). Estado actual:
   quedaron probados contra una `Aplazada` real bajo `POLITICAS["v2"]`
   real (`tests/test_aplazada_consumidores_boundary.py` — margen=0.0000
   observado, ningún consumidor rompió).
-- **Activación todavía no ejecutada.** `ADR-0016` (`docs/architecture/
-  ADR/ADR-0016-reactivacion-politica-v2-con-soporte-aplazada.md`) está
-  escrita pero en estado **Propuesto**, no Aceptado — queda una
-  decisión de producto pendiente (§6 de esa ADR: si la sugerencia
-  semanal del docente debe distinguir "sin evidencia" de "evidencia
-  aplazada", algo que hoy ninguno de los dos consumidores puede ver
-  porque solo leen S1, nunca S3).
+- **`ADR-0016` Aceptada** (`docs/architecture/ADR/ADR-0016-
+  reactivacion-politica-v2-con-soporte-aplazada.md`, misma sesión) —
+  gate técnico cerrado a tres niveles (llamada directa, HTTP real,
+  navegador real bajo `v2` real) y §6 (¿distinguir "sin evidencia" de
+  "evidencia aplazada/insuficiente"?) resuelta explícitamente como
+  fuera de alcance: la Fase 4 encontró que son en realidad **tres**
+  caminos que colapsan en la misma `Entrega` vacía (sin evidencia,
+  `Aplazada` D1/D2, D3-insuficiencia por `θ`), y modelar esa
+  distinción queda registrado como evolución futura, no como deuda de
+  esta ADR. **Activación permanente todavía no ejecutada** —
+  `VERSION_POLITICA="v2"` en `runtime_connection.py` queda como cambio
+  operativo separado, deliberadamente fuera de esta ADR.
 
 ### Contrato de `urgente` por consumidor — preparación de ADR-0016 (2026-08-04)
 
