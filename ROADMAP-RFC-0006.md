@@ -559,18 +559,21 @@ verdad en producción — brevemente, con evidencia real, y se revirtió
 el mismo día (`ADR-0015`). Estado actual:
 
 - **v1 en producción, estable.** Sin cambios de comportamiento.
-- **v2 implementada y validada parcialmente**, no en producción: el
-  kernel converge correctamente (430/430 `tests/runtime/`, más una
-  deliberación real con margen=0.1131, el caso límite exacto que δ=0.10
-  existe para discriminar) — pero la integración de producción todavía
-  no propaga `urgente` (RFC-0006 §4 Parte E) desde `app/services/
-  runtime_bridge.py`, el bridge que sirve `/api/students/*`. La regla
-  correcta ya existe en `app/api/routes/runtime.py:247` (Boundary
-  RFC-0010) — falta migrar `runtime_bridge.py` al mismo patrón, no
-  diseñarla.
-- **Activación pendiente de ese contrato**, no de una decisión nueva de
-  política. Ver `ADR-0015 §8` para la secuencia completa y `ADR-0016`
-  (no escrito todavía) para la reactivación.
+- **v2 implementada y validada, precondición de `ADR-0015 §8` ya
+  cerrada** (misma sesión, commits `4fd6ed8`/`e0a83ff`): `urgente` ya
+  se propaga desde `app/services/runtime_bridge.py` (tabla de
+  clasificación abajo), y los dos consumidores app-level de `Entrega`
+  (`module_orchestration_service.py`, `pedagogy_runtime_bridge.py`)
+  quedaron probados contra una `Aplazada` real bajo `POLITICAS["v2"]`
+  real (`tests/test_aplazada_consumidores_boundary.py` — margen=0.0000
+  observado, ningún consumidor rompió).
+- **Activación todavía no ejecutada.** `ADR-0016` (`docs/architecture/
+  ADR/ADR-0016-reactivacion-politica-v2-con-soporte-aplazada.md`) está
+  escrita pero en estado **Propuesto**, no Aceptado — queda una
+  decisión de producto pendiente (§6 de esa ADR: si la sugerencia
+  semanal del docente debe distinguir "sin evidencia" de "evidencia
+  aplazada", algo que hoy ninguno de los dos consumidores puede ver
+  porque solo leen S1, nunca S3).
 
 ### Contrato de `urgente` por consumidor — preparación de ADR-0016 (2026-08-04)
 
