@@ -64,6 +64,7 @@ def registrar_evidencia_evaluacion(
     hints_used: int | None = None,
     time_ms: int | None = None,
     objetivos: tuple[ObjetivoOrdenado, ...] = (),
+    urgente: bool = False,
 ) -> Entrega:
     """El primer hecho real del flujo del estudiante que entra por el
     Boundary. `titulo_modulo` se traduce a `competencia` vía ADR-0010
@@ -91,7 +92,15 @@ def registrar_evidencia_evaluacion(
     incorrectos como único proxy de la señal conductual (RFC-0002 R4:
     "detecta señales conductuales... a partir de la sesión") y clasifique
     con la evidencia real de la sesión — mismo vocabulario cerrado de
-    señales, ninguna nueva."""
+    señales, ninguna nueva.
+
+    `urgente` (RFC-0006 §4 Parte E; mismo contrato que
+    `PeticionHechoDelMundo.urgente`, `runtime/boundary/inbound/dto.py`):
+    ¿la `Entrega` de esta llamada forma parte de la respuesta síncrona
+    que desbloquea la siguiente acción del estudiante? Default `False`
+    — el llamador lo declara explícitamente cuando sí lo es (ver
+    ROADMAP-RFC-0006.md §8, tabla de clasificación por consumidor;
+    ADR-0015 §8 documenta el hallazgo que hizo falta esta propagación)."""
     almacen, almacen_memoria = almacenes()
     identidad = abrir_sesion(_peticion(student_id, course_id), almacen, almacen_memoria)
     contenido: dict[str, Any] = {
@@ -112,6 +121,7 @@ def registrar_evidencia_evaluacion(
             contenido=contenido,
             origen=OrigenProvenance.INSTRUMENTO,
             objetivos=objetivos,
+            urgente=urgente,
         ),
         almacen,
         almacen_memoria,

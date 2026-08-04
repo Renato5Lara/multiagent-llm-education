@@ -571,3 +571,57 @@ el mismo día (`ADR-0015`). Estado actual:
 - **Activación pendiente de ese contrato**, no de una decisión nueva de
   política. Ver `ADR-0015 §8` para la secuencia completa y `ADR-0016`
   (no escrito todavía) para la reactivación.
+
+### Contrato de `urgente` por consumidor — preparación de ADR-0016 (2026-08-04)
+
+Auditoría dirigida (Engineering Gate previo a la Fase 2 de `ADR-0016`,
+sin tocar código): de los 4 sitios de producción que construyen
+`PeticionHechoDelMundo` (`runtime.py:237`, `runtime.py:465`,
+`runtime_bridge.py:110`, `runtime_bridge.py:441`), solo uno tiene el
+hueco real que `ADR-0015 §8` encontró —`runtime_bridge.py:110`
+(`registrar_evidencia_evaluacion`). Los otros tres ya son correctos:
+dos por diseño explícito ya documentado en su propio comentario
+(`hecho_docente` — RFC-0009 §3, el docente no es participante de
+consenso; `registrar_pregunta_tutor` — la plataforma redacta la
+respuesta del chat, nunca la `Entrega`) y uno es la referencia
+canónica (`POST /hechos`, `urgente=True` con el razonamiento citado
+en `runtime.py:242-247`).
+
+`registrar_evidencia_evaluacion` no toma `urgente` en absoluto y tiene
+4 llamadores de producción con semánticas distintas. El criterio de
+`runtime.py:243` ("¿hay un estudiante esperando esta entrega en la
+pantalla?") se precisa así, para que sea aplicable sin ambigüedad a
+cualquier consumidor futuro:
+
+> `urgente=True` ⇔ la `Entrega`/decisión deliberativa de esta llamada
+> forma parte de la respuesta síncrona que desbloquea la siguiente
+> acción del usuario — no "se ejecuta durante una interacción del
+> estudiante" (los 4 llamadores lo hacen por igual), sino que su
+> resultado se lee y se usa dentro de esa misma respuesta HTTP.
+
+| Flujo | ¿Entrega dentro de la respuesta síncrona? | `urgente` |
+|---|---|---|
+| `POST /hechos` (`runtime.py:237`) | Sí — RFC-0006 §4 Parte E, ya `True` | ✅ `True` (sin cambio) |
+| `submit_evaluation` (`students.py:989`) | Sí — `runtime_decision` viaja en el JSON de respuesta (líneas 1054/1064) | ✅ `True` (Fase 2) |
+| `submit_cycle_evidence` (`students.py:541`) | Sí — `entrega.diseno` decide `forma` y dispara generación de recurso en la misma respuesta (líneas 566-622) | ✅ `True` (Fase 2) |
+| `_registrar_diagnostico_en_runtime` (`student_service.py:127`) | No — retorno descartado (línea 155) | ❌ `False` (default, sin cambio) |
+| `submit_attempt` (`knowledge_test_service.py:277`) | No — retorno descartado en ambas llamadas (líneas 396, 439); la función devuelve el `attempt` de SQLAlchemy | ❌ `False` (default, sin cambio) |
+| `registrar_pregunta_tutor` (`runtime_bridge.py:441`) | No — ya documentado en su propio docstring | ❌ `False` (sin cambio, ya correcto) |
+| `hecho_docente` (`runtime.py:465`) | No — ya documentado en su propio comentario | ❌ `False` (sin cambio, ya correcto) |
+
+**Decisión explícita — diagnóstico y pre-test permanecen `False`.**
+Ninguna pantalla del estudiante lee la `Entrega` de esas 2 funciones
+(3 llamadas) en la misma respuesta que las dispara — el flujo
+continúa hacia la siguiente pantalla sin mostrarla. Tratarlas como
+urgentes extendería el contrato de "el estudiante espera esta entrega
+en pantalla" a "el estudiante está en medio de cualquier interacción
+evaluativa", una afirmación distinta y más amplia que `runtime.py:243`
+no hace. Si esta decisión cambia en el futuro, se abre por su propio
+RFC/ADR — no se infiere de esta auditoría.
+
+Esto acota el diff mínimo de la Fase 2 de `ADR-0016` a: (1) un
+parámetro `urgente: bool = False` en `registrar_evidencia_evaluacion`
+propagado a su `PeticionHechoDelMundo`; (2) `urgente=True` explícito
+en las dos llamadas de `submit_evaluation` y `submit_cycle_evidence`.
+Cero cambios en `_registrar_diagnostico_en_runtime`, `submit_attempt`,
+`registrar_pregunta_tutor` ni `hecho_docente`.

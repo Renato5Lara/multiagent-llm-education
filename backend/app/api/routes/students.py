@@ -572,6 +572,10 @@ def submit_cycle_evidence(
             modalidad_estudiante=diagnostico.dominant_modality if diagnostico else None,
             hints_used=data.hints_used,
             time_ms=data.time_ms,
+            # RFC-0006 §4 Parte E: `entrega.diseno` decide `forma` y
+            # dispara generación de recurso en esta misma respuesta — el
+            # estudiante la espera en pantalla (ROADMAP-RFC-0006.md §8).
+            urgente=True,
         )
         runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
         # Política de Selección de Forma (Adenda A, Arquitectura Pedagógica
@@ -1050,6 +1054,10 @@ def submit_evaluation(
                 # las alternativas por señal de Adaptar (RFC-0002 R4).
                 items_totales=len(attempt.questions),
                 objetivos=objetivos,
+                # RFC-0006 §4 Parte E: `runtime_decision` viaja en esta
+                # misma respuesta HTTP (más abajo) — el estudiante la está
+                # esperando en pantalla (ROADMAP-RFC-0006.md §8).
+                urgente=True,
             )
             runtime_decision = {"asunto": entrega.asunto, "diseno": entrega.diseno}
         except Exception as e:  # noqa: BLE001
