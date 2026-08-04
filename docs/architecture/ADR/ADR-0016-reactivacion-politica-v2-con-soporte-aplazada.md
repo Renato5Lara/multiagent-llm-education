@@ -213,27 +213,43 @@ abiertas bajo `v2` (permanecen `v2` para siempre — INV-1/INV-2).
 
 ## 9. Próximo paso antes de `Aceptado`
 
-1. Resolver §6 (decisión de producto, no de ingeniería).
+1. **Pendiente — único punto que falta:** Resolver §6 (decisión de
+   producto, no de ingeniería).
 2. **Hecho (misma sesión):** recorrido E2E por HTTP real bajo `v2`
    real, `tests/test_e2e_adr0016_v2_produccion.py` — `submit_evaluation`
    y `submit_cycle_evidence`, ambos con `identidad.version_politica
    =="v2"` confirmada y contrato HTTP coherente en todo desenlace
    observado (`Resuelta`, `Aplazada`, D3-insuficiencia). Evidencia
    registrada en §5.
-3. **Pendiente:** el mismo recorrido en navegador real (login →
-   evaluación real → UI del estudiante recibe una respuesta coherente,
-   sin estado inconsistente ante `Aplazada`/D3-insuficiencia) — el
-   nivel de validación que `ADR-0015 §5` exigió y que HTTP-vía-
-   `TestClient` no sustituye del todo (Regla de Cierre E2E real,
-   CLAUDE.md).
-4. Solo entonces: `VERSION_POLITICA = "v2"` en
+3. **Hecho (misma sesión, Fase 4.4) — navegador real:** flip
+   experimental de `VERSION_POLITICA` a `"v2"` en `runtime_connection.py`
+   (revertido a `"v1"` al terminar, diff de una línea, sin residuo —
+   `ADR-0015 §7`), backend + frontend reales levantados, dos
+   estudiantes reales seedeados y logueados vía `/api/auth/login` real.
+   Recorrido completo: onboarding → diagnóstico VARK (18 preguntas,
+   `_registrar_diagnostico_en_runtime`) → pre-test (`submit_attempt`,
+   12 preguntas) → ruta adaptativa (`decision_adaptativa`) → módulo →
+   ejercicio de práctica → `POST /api/students/cycle-evidence`.
+   **Hallazgo operativo, no arquitectónico:** el primer intento corrió
+   por accidente contra un proceso `uvicorn` obsoleto ya escuchando en
+   el puerto 8000 desde antes de esta sesión (el flip a `"v2"` nunca
+   llegó a ese proceso) — confirmado y corregido matando el proceso
+   viejo y confirmando `estado.identidad.version_politica` real antes
+   de aceptar cualquier corrida como evidencia. La corrida corregida
+   (segundo estudiante) sí confirmó `version_politica=="v2"` en
+   Postgres real, con una deliberación `Resuelta` (margen=0.3393) —
+   cero errores de consola, cero HTTP 500, en todo el recorrido de
+   ambas corridas (10 acciones de estudiante real cada una).
+4. Solo cuando §6 se resuelva: `VERSION_POLITICA = "v2"` en
    `runtime_connection.py`, y esta ADR pasa a Aceptado.
 
 ---
 
 *Origen: precondición dejada explícitamente pendiente por
 `ADR-0015 §8`, cerrada con evidencia real (commits `4fd6ed8`,
-`e0a83ff`, `fc68456`) en la misma sesión. Rama:
+`e0a83ff`, `fc68456`, `edddbb4`) en la misma sesión, incluida
+validación en navegador real (Fase 4.4, §9.3). Rama:
 `feat/confidence-calibration-remediation-orientation`. Permanece
-Propuesto hasta resolver la decisión de producto de §6 y completar el
+Propuesto — el único punto que falta para pasar a Aceptado es la
+decisión de producto de §6, no evidencia técnica adicional. Ver el
 recorrido en navegador real de §9.*
