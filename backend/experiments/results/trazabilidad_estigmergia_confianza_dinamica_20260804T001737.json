@@ -1,0 +1,157 @@
+{
+  "experimento": "trazabilidad_estigmergia_confianza_dinamica",
+  "run_id": "20260804T001737",
+  "timestamp": "2026-08-04T00:17:37.320300",
+  "pregunta_1_trazabilidad": {
+    "pregunta": "P1 -- trazabilidad de la decision persistida",
+    "campos_reales_DeliberacionEntry": [
+      "enlaza_a",
+      "id",
+      "participantes",
+      "resultado"
+    ],
+    "campos_reales_Resuelta": [
+      "aceptados",
+      "confianza",
+      "regla"
+    ],
+    "campos_reales_DecisionEntry": [
+      "asunto",
+      "confianza",
+      "contenido",
+      "estado_validacion",
+      "id",
+      "origen",
+      "vigencia"
+    ],
+    "deliberacion_persistida": {
+      "id": {
+        "transicion": 8,
+        "entrada": 1
+      },
+      "participantes": [
+        {
+          "transicion": 6,
+          "entrada": 1
+        },
+        {
+          "transicion": 7,
+          "entrada": 1
+        }
+      ],
+      "resultado": {
+        "regla": "mayor-confianza-declarada",
+        "aceptados": [
+          {
+            "transicion": 6,
+            "entrada": 1
+          }
+        ],
+        "confianza": "0.82"
+      },
+      "enlaza_a": null
+    },
+    "decision_persistida": {
+      "id": {
+        "transicion": 9,
+        "entrada": 1
+      },
+      "origen": {
+        "transicion": 8,
+        "entrada": 1
+      },
+      "asunto": "siguiente-paso(sesion)",
+      "contenido": "{'accion': 'reforzar'}",
+      "confianza": "0.82",
+      "estado_validacion": "pendiente-de-validacion",
+      "vigencia": {
+        "superseded_por": null
+      }
+    },
+    "participantes_incluye_ambas_propuestas": true,
+    "resuelta_confianza_es_solo_del_ganador": true,
+    "confianza_del_perdedor_dentro_de_Resuelta": false,
+    "margen_persistido_en_algun_campo": false,
+    "razon_texto_persistida_en_algun_campo": false,
+    "reconstruccion_del_formato_pedido_por_el_tesista": {
+      "diagnostico": {
+        "afirmacion": {
+          "dominada": false,
+          "errores": 2
+        },
+        "confianza": "0.78"
+      },
+      "propuesta_ganadora": {
+        "autor": "remediar",
+        "afirmacion": {
+          "accion": "reforzar"
+        },
+        "confianza_declarada": "0.82"
+      },
+      "propuesta_perdedora": {
+        "autor": "orientar",
+        "afirmacion": {
+          "accion": "avanzar-con-andamiaje"
+        },
+        "confianza_declarada": "0.75"
+      },
+      "margen": "0.07 (RECALCULADO por este script -- NO es un campo de Resuelta ni de DeliberacionEntry)",
+      "regla": "mayor-confianza-declarada",
+      "razon_en_texto": null
+    },
+    "brechas_especificas": [
+      "Resuelta.confianza guarda SOLO el ce del ganador (mecanica.py:151-154 'Resuelta.confianza guarda el ce crudo del ganador, no el puntaje ponderado'); la confianza del perdedor NO vive en Resuelta ni en DeliberacionEntry -- solo es recuperable buscando el segundo id de `participantes` con estado.buscar() y leyendo su .confianza declarada.",
+      "El margen (puntaje ganador - puntaje rival) se calcula como variable local `margen` dentro de mecanica.py:convocar() (linea ~210) y NUNCA se asigna a un campo de Resuelta/DeliberacionEntry -- en v1/v2 con margen suficiente se descarta sin dejar rastro; solo sobrevive como texto libre DENTRO de Aplazada.evidencia_faltante cuando la tension SI aplaza (rama distinta, no la de este caso).",
+      "No existe ningun campo de tipo 'razon en texto libre' en DeliberacionEntry, Resuelta ni DecisionEntry -- el unico campo textual es Resuelta.regla, que es un NOMBRE DE REGLA estructurado ('mayor-confianza-declarada'), no una oracion. Para producir 'fallas en ciclos + alta incertidumbre' hay que ir a buscar la interpretacion de Diagnosticar (afirmacion={'dominada': False,...}) y el margen recalculado por fuera -- ninguno de los dos vive junto a la decision.",
+      "evidence_service.py (_leer_series_por_agente, _leer_narrativa_por_concepto) NUNCA itera estado.deliberaciones hoy -- lee estado.claims y estado.decisiones directamente, así que ni siquiera el 'regla' o el segundo participante llegan hoy a la vista de Trayectoria del estudiante, aunque el DeliberacionEntry SI existe en el LearningState."
+    ],
+    "que_SI_permite_reconstruir_sin_ambiguedad": [
+      "Las DOS confianzas declaradas (ganador y perdedor) -- vía deliberacion.participantes + estado.buscar(cada EntryId).confianza.",
+      "Cuál regla se aplicó -- Resuelta.regla, campo estructurado real.",
+      "Cuál ganó -- Resuelta.aceptados[0].",
+      "La confianza EFECTIVA del ganador en el momento de resolver -- Resuelta.confianza.",
+      "La cadena causal completa hacia atrás (decision -> deliberacion -> propuesta -> interpretacion -> fact) vía los campos `origen`/`respaldo`, recorrible con estado.buscar() en cada salto."
+    ]
+  },
+  "pregunta_3_confianza_dinamica": {
+    "baseline_sin_validar": {
+      "confianza_declarada": "0.82",
+      "confianza_efectiva": "0.82",
+      "igual_a_declarada": true
+    },
+    "rama_refuerzo_funciono_true": {
+      "validar_afirmacion": {
+        "competencia": "ciclos-y-bucles",
+        "funciono": true,
+        "items_antes": 2,
+        "items_despues": 0
+      },
+      "confianza_declarada": "0.82",
+      "confianza_efectiva": "0.92",
+      "delta_vs_baseline": "0.10",
+      "esperado_por_A5": "+peso_refuerzo (0.10), edad_logica=0 en el mismo tick"
+    },
+    "rama_refuerzo_mas_3_transiciones_sin_evidencia_nueva": {
+      "confianza_efectiva": "0.86",
+      "delta_vs_refuerzo_inmediato": "-0.06",
+      "esperado_por_A6": "-peso_decaimiento(0.02) * edad_logica(3) = -0.06"
+    },
+    "rama_refutacion_funciono_false": {
+      "validar_afirmacion": {
+        "competencia": "ciclos-y-bucles",
+        "funciono": false,
+        "items_antes": 2,
+        "items_despues": 3
+      },
+      "confianza_declarada": "0.82",
+      "confianza_efectiva": "0.72",
+      "delta_vs_baseline": "-0.10",
+      "esperado_por_A5": "-peso_refutacion (0.10), edad_logica=0 en el mismo tick"
+    },
+    "conclusion": {
+      "el_algebra_reacciona_con_historial_real": true,
+      "bajo_politicas_v1_v2_de_produccion_los_pesos_son_cero": "POLITICAS['v1'] y POLITICAS['v2'] (politica.py:174-182) tienen peso_refuerzo=peso_refutacion=peso_decaimiento=Decimal('0') -- el algebra esta implementada y funciona (ver arriba), pero bajo la politica QUE GOBIERNA HOY EN PRODUCCION esta apagada a propósito (docstring de v1: 'sus pesos son todos cero: la confianza efectiva de v1 es, por diseño, la declarada'). El hallazgo correcto no es 'el mecanismo no existe' ni 'esta roto' -- es 'existe, funciona, y esta deliberadamente apagado en las dos politicas versionadas activas hoy'."
+    }
+  },
+  "nota_pregunta_2": "P2 se responde por lectura textual, no por ejecucion -- ver docs/architecture/FOUNDATIONAL_PRINCIPLES.md 'P3 -- Los agentes no se invocan entre si' y docs/architecture/CONCEPT-0001-inteligencia-de-enjambre.md #1 'Coordinacion estigmergica'. Citado en el reporte de este script, no en este JSON (es texto normativo, no un dato de ejecucion)."
+}

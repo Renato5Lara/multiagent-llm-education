@@ -1,0 +1,93 @@
+{
+  "experimento": "estudiante_ambiguo_A_B",
+  "run_id": "20260804T001406",
+  "timestamp": "2026-08-04T00:14:06.288683",
+  "nota_traduccion": "tiempo de respuesta y tipo de pregunta (teorica/practica) del enunciado original NO son representables en el contrato de FactEntry que leen Diagnosticar/Remediar/Orientar -- solo se codifico 'domina variables (0 errores) / falla ciclos (2 de 4 errores)'.",
+  "diagnosticar_confianza_constante": "0.78 (ver runtime/domain/diagnosticar/productor.py:67, ajena a items_totales/errores)",
+  "propuestas_rivales": [
+    {
+      "id": "T-000005/e1",
+      "autor": "remediar",
+      "asunto": "siguiente-paso(sesion)",
+      "afirmacion": {
+        "accion": "reforzar"
+      },
+      "confianza_declarada": "0.82",
+      "respaldo": [
+        "T-000004/e1"
+      ],
+      "respaldo_afirmacion": [
+        {
+          "dominada": false,
+          "errores": 2
+        }
+      ]
+    },
+    {
+      "id": "T-000006/e1",
+      "autor": "orientar",
+      "asunto": "siguiente-paso(sesion)",
+      "afirmacion": {
+        "accion": "avanzar-con-andamiaje"
+      },
+      "confianza_declarada": "0.75",
+      "respaldo": [
+        "T-000003/e1"
+      ],
+      "respaldo_afirmacion": [
+        {
+          "dominada": true,
+          "errores": 0
+        }
+      ]
+    }
+  ],
+  "control_invariancia_severidad": {
+    "severidad_errores_ciclos": "4/4 (peor que el caso ambiguo, que usa 2/4)",
+    "propuestas": [
+      {
+        "autor": "remediar",
+        "accion": "reforzar",
+        "confianza": "0.82"
+      },
+      {
+        "autor": "orientar",
+        "accion": "avanzar-con-andamiaje",
+        "confianza": "0.75"
+      }
+    ]
+  },
+  "politica_v1": {
+    "politica": "v1",
+    "delta": "0",
+    "theta": "0",
+    "tipo_tension": "D2",
+    "asunto": "siguiente-paso(sesion)",
+    "confianzas_efectivas": {
+      "T-000005/e1": "0.82",
+      "T-000006/e1": "0.75"
+    },
+    "confianzas_declaradas_iguales_a_efectivas": true,
+    "resultado": "RESUELTA",
+    "regla": "mayor-confianza-declarada",
+    "ganador": "T-000005/e1",
+    "ganador_afirmacion": {
+      "accion": "reforzar"
+    },
+    "confianza_ganador": "0.82"
+  },
+  "politica_v2": {
+    "politica": "v2",
+    "delta": "0.10",
+    "theta": "0.5",
+    "tipo_tension": "D2",
+    "asunto": "siguiente-paso(sesion)",
+    "confianzas_efectivas": {
+      "T-000005/e1": "0.82",
+      "T-000006/e1": "0.75"
+    },
+    "confianzas_declaradas_iguales_a_efectivas": true,
+    "resultado": "APLAZADA",
+    "evidencia_faltante": "evidencia sobre 'siguiente-paso(sesion)' que discrimine entre T-000005/e1 y T-000006/e1: margen 0.07 < delta 0.10"
+  }
+}
