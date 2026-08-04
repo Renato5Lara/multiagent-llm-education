@@ -21,34 +21,27 @@ sufijo (mismo patrón que `_UMBRAL_ERRORES` en `productor.py` y los
 `_PROMPT_ID` versionados de las capacidades LLM) — no una constante de
 `Politica` en esta iteración: el alcance aprobado para este commit
 excluye `kernel/deliberation/`.
+
+`evidence_strength` se relocalizó a `runtime/domain/shared/calibracion.py`
+(ADR-0013): es matemática pura, sin nada específico de Diagnosticar, y
+Remediar/Orientar la reutilizan directo. Se re-exporta aquí sin cambio de
+comportamiento — todo importador existente de este módulo sigue
+funcionando igual.
 """
 
 from __future__ import annotations
 
-import math
 from decimal import Decimal
 
-_Z_95 = 1.96
+from runtime.domain.shared.calibracion import evidence_strength
+
+__all__ = ["THETA_MEJORA_V1", "evidence_strength", "calibrar_confianza_nueva"]
 
 THETA_MEJORA_V1 = Decimal("0")
 """Umbral mínimo de fuerza de evidencia para aceptar una mejora
 (`dominada`: False→True) frente al claim vigente — Iteración 5.8:
 matemáticamente suficiente bajo evidencia positiva no nula, decisión
 pedagógica explícita, no necesidad estadística."""
-
-
-def evidence_strength(soporte: int, total: int) -> Decimal:
-    """Límite inferior de Wilson (95%) sobre `soporte/total` — fuerza
-    estadística de UNA observación individual (Iteración 5.5). `total
-    <= 0` devuelve `0` (sin evidencia, sin fuerza)."""
-    if total <= 0:
-        return Decimal("0")
-    p = soporte / total
-    n = total
-    denom = 1 + _Z_95**2 / n
-    centro = (p + _Z_95**2 / (2 * n)) / denom
-    margen = _Z_95 * math.sqrt(p * (1 - p) / n + _Z_95**2 / (4 * n**2)) / denom
-    return Decimal(str(max(0.0, centro - margen)))
 
 
 def calibrar_confianza_nueva(
