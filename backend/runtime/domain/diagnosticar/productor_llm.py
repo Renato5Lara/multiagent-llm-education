@@ -6,15 +6,27 @@ claim, mismo asunto, misma estructura de argumentos hacia
 cambia la implementación, nunca el contrato). El runtime no distingue
 esta capacidad de su versión regla: ambas producen exclusivamente
 `TransitionIntent`s hacia el mismo reducer.
+
+Confianza declarada calibrada (RESEARCH_ITERATIONS.md Iteración 5.8,
+cadena H10): la confianza que el LLM declara no se usa directamente
+como `confianza` del claim — Diagnosticar la reemplaza por la fuerza de
+evidencia calibrada (`calibracion.py`), comparada contra el claim
+vigente del mismo asunto cuando existe. Esto no cambia el contrato
+(P13): mismo tipo de claim, mismo reducer, mismo asunto — solo cómo se
+calcula un valor que el productor ya declaraba.
 """
 
 from __future__ import annotations
 
-from decimal import Decimal
-
+from runtime.domain.diagnosticar.calibracion import (
+    calibrar_confianza_nueva,
+    evidence_strength,
+)
 from runtime.domain.diagnosticar.productor import _UMBRAL_ERRORES
 from runtime.domain.diagnosticar.provider import FakeLLMProvider, LLMProvider
 from runtime.domain.shared.llm_roundtrip import ejecutar_roundtrip
+from runtime.kernel.deliberation.confianza import calcular_confianza_efectiva
+from runtime.kernel.deliberation.politica import resolver_politica
 from runtime.kernel.state.entries import (
     Capacidad,
     OrigenProvenance,
@@ -25,6 +37,22 @@ from runtime.kernel.state.state import LearningState
 from runtime.kernel.transitions import TransitionIntent
 
 _PROMPT_ID = "diagnostico-competencia-v1"
+
+
+def _claim_vigente_de(estado: LearningState, asunto: str):
+    """El claim INTERPRETACION vigente de `asunto`, si existe — a lo
+    sumo uno por construcción (Iteración 5.8): `enrutar()` resuelve
+    `tension_bloqueante` antes de rutear hacia "diagnosticar"
+    (`walkthrough.py`), así que nunca hay una tensión D1 pendiente en el
+    momento en que este productor se ejecuta."""
+    for claim in estado.claims:
+        if (
+            claim.tipo is TipoClaim.INTERPRETACION
+            and claim.asunto == asunto
+            and claim.vigencia.vigente
+        ):
+            return claim
+    return None
 
 
 def producir(
@@ -69,6 +97,30 @@ def producir(
         respuesta = ejecutar_roundtrip(
             proveedor, prompt, campos_requeridos=("dominada", "errores", "confianza")
         )
+        dominada = respuesta["dominada"]
+        asunto = f"dominio({fact.contenido['competencia']})"
+
+        total = fact.contenido.get("items_totales") or 0
+        soporte = (total - errores) if dominada else errores
+        fuerza_nueva = evidence_strength(soporte, total)
+
+        vigente = _claim_vigente_de(estado, asunto)
+        vigente_dominada = vigente.afirmacion.get("dominada") if vigente else None
+        fuerza_vigente = (
+            calcular_confianza_efectiva(
+                vigente, estado, resolver_politica(estado.identidad.version_politica)
+            )
+            if vigente
+            else None
+        )
+
+        confianza_final = calibrar_confianza_nueva(
+            nueva_dominada=dominada,
+            fuerza_nueva=fuerza_nueva,
+            vigente_dominada=vigente_dominada,
+            fuerza_vigente=fuerza_vigente,
+        )
+
         return (
             TransitionIntent(
                 productor=Capacidad.DIAGNOSTICAR,
@@ -76,14 +128,14 @@ def producir(
                 argumentos={
                     "autor": Capacidad.DIAGNOSTICAR,
                     "tipo": TipoClaim.INTERPRETACION,
-                    "asunto": f"dominio({fact.contenido['competencia']})",
+                    "asunto": asunto,
                     "afirmacion": {
-                        "dominada": respuesta["dominada"],
+                        "dominada": dominada,
                         "errores": respuesta["errores"],
                         "razonamiento": respuesta.get("razonamiento", ""),
                     },
                     "respaldo": (fact.id,),
-                    "confianza": Decimal(str(respuesta["confianza"])),
+                    "confianza": confianza_final,
                     "provenance": Provenance.de(
                         OrigenProvenance.LLM,
                         modelo=proveedor.modelo,

@@ -913,3 +913,1028 @@ objetivo.py`). Pendiente de incorporación al capítulo de Resultados de
 la tesis — hallazgo relevante para la discusión: exponer una señal en el
 prompt no garantiza que el LLM la use, distinción que solo esta
 iteración deja medida.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.3 — Calibración de confianza de Diagnosticar (H10, contrato pendiente)
+
+## Origen — auditoría causal de adaptación por nivel (2026-08-03)
+
+Esta iteración no nace de una hipótesis abstracta: nace de una
+verificación de suficiencia con datos reales (misma sesión, mismo día)
+sobre si el ciclo de adaptación continua (`0799840`, "ciclo adaptativo
+continuo", 2026-07-13) sostiene tanto el avance como el retroceso ante
+evidencia nueva.
+
+**Avance — confirmado con evidencia real.** Cuenta `estudiante.novato2`,
+objetivo "Fundamentos de Python": evaluación real 0/2 → `reforzar` →
+evaluación real 2/2 → tensión D1 (`tension_bloqueante`) → deliberación
+(`mayor-confianza-declarada`) → cascada → `avanzar` → Adaptar cambia de
+`visual/fundamentos` a `mixta/aplicacion`. Cadena verificada entrada por
+entrada contra Postgres real (`T-000050…T-000060`, ver detalle en
+memoria `adaptacion_por_nivel_cerrada_2026_08_03.md`).
+
+**Retroceso — el mecanismo se activó pero no revirtió la decisión.**
+Misma cuenta, misma sesión: una tercera evidencia (0/2, mismo objetivo
+ya avanzado) sí produjo una nueva interpretación de Diagnosticar-LLM
+(`dominada=False`) y sí abrió una nueva tensión D1 y una nueva
+deliberación — la maquinaria de consenso funcionó exactamente igual que
+en el avance. Pero la deliberación resolvió a favor de la interpretación
+vieja: `confianza declarada = 1.0000` (dominada=True, evidencia de 2/2
+correctas) venció a `confianza declarada = 0.9500` (dominada=False,
+evidencia de 0/2 correctas). El proveedor confirmado como LLM real (no
+`FakeLLMProvider`, que declara `0.80` fijo — ver
+`runtime/domain/diagnosticar/provider.py:32-37`).
+
+**Por qué esto no es un bug del kernel.** `palabra_en_pie`, la cascada
+(`cascada_supersede`), `registrar_decision` y `calcular_confianza_efectiva`
+hicieron exactamente lo que RFC-0006 A1–A8 exige — comparar confianzas
+efectivas y resolver por margen. El problema está aguas arriba: en qué
+significa y cómo se calcula la `confianza` que Diagnosticar declara al
+crear el claim.
+
+## Pregunta de investigación
+
+¿Cómo debe calcularse la confianza declarada de una interpretación de
+Diagnosticar para que represente la fuerza real de la evidencia del
+estudiante (no solo la seguridad expresada por el LLM), de forma que la
+readaptación continua pueda avanzar y retroceder correctamente ante
+evidencia nueva?
+
+## Auditoría del contrato actual (hecha hoy, sin tocar código)
+
+**¿La confianza viene del LLM o del dominio?** Enteramente del LLM. El
+prompt de `diagnosticar/productor_llm.py:56-67` pasa `competencia` y
+`items_incorrectos` — **nunca `items_totales`**: el LLM no tiene forma
+de distinguir "2 errores de 2 preguntas" de "2 errores de 20 preguntas".
+`ejecutar_roundtrip` (`runtime/domain/shared/llm_roundtrip.py:21-41`) no
+normaliza, escala ni acota el valor devuelto — solo exige que el campo
+exista. El único límite es el de validez genérico de `ClaimEntry.
+__post_init__` (`[0,1]`, ADR-0001 §4), no una regla de calibración.
+
+**¿Existe ponderación por evidencia en la deliberación?** No, para D1.
+`kernel/deliberation/mecanica.py:205`: `peso = pesos_asunto.get(asunto, 1)
+if tipo == "D2" else 1` — el peso de política solo aplica a D2
+(propuestas rivales), nunca a D1 (interpretaciones rivales, el caso de
+Diagnosticar). Confirmado además por 5.2: incluso cuando el prompt SÍ
+expone la severidad explícitamente (Remediar-LLM, Orientar-LLM), el
+modelo declaró confianzas idénticas byte a byte en 4 niveles de
+evidencia distintos — la exposición de la señal no garantiza su uso.
+
+**¿La deliberación considera recencia?** Existe un mecanismo real y
+deliberado (A6/A7, `kernel/deliberation/confianza.py:115-146`), pero
+ancla la "edad lógica" a la **última validación de Validar en la cadena
+causal del claim** — nunca a la recencia cruda de la interpretación.
+Sin un ciclo de Validar de por medio (el caso de las tres evidencias de
+esta auditoría, demasiado próximas entre sí), `edad_logica=0` para
+ambos claims y `ce` se reduce exactamente a la confianza declarada — la
+recencia estructural existe pero no tuvo nada que decaer todavía.
+
+**¿Qué dice la documentación original sobre qué debía representar
+`confianza`?** RFC-0002 §"Registro — hipótesis arquitectónica" (línea
+176-186) — la hipótesis original de Knowledge Claim (2026-07-10, previa
+a RFC-0006) ya daba el ejemplo canónico: *"el estudiante domina COMP-2
+con confianza 0.81 ← respuestas 3, 4 y 8, tiempos, intentos"* — es
+decir, confianza derivada de evidencia concreta, no de la introspección
+libre de un modelo. RFC-0006 A2 ("Anclaje: en el estado en que el claim
+fue aplicado, ce = confianza declarada") acepta la confianza declarada
+como dato de entrada sin prescribir su origen — el álgebra congela qué
+pasa con ella DESPUÉS de declarada, no cómo se calcula. **La brecha
+entre la hipótesis original (evidencia → confianza) y la implementación
+actual (LLM → confianza, sin evidencia estructurada) nunca fue cerrada
+por ningún RFC/ADR — es un vacío normativo real, no una regresión.**
+
+## Alternativas a evaluar (ninguna decidida todavía)
+
+**A — Confianza híbrida dominio + LLM.** `confianza_final = w·evidencia_objetiva + (1-w)·confianza_llm`,
+con `evidencia_objetiva` derivada de `items_incorrectos`/`items_totales`
+(y, si se declara en alcance, dificultad/histórico). Más estable, menos
+dependiente del LLM; reduce el margen interpretativo del agente.
+
+**B — El LLM interpreta, el dominio calibra (postprocesado).** El LLM
+mantiene su rol interpretativo (`dominada`, `razonamiento`); un
+calibrador de dominio, puro y determinista (P13: cambia la
+implementación, nunca el contrato), acota la confianza declarada según
+el tamaño de muestra — p. ej. un techo que crece con `items_totales`
+(2/2 no puede declarar lo mismo que 20/20). Conserva la interpretación
+del agente; evita sobreconfianza estructural.
+
+**C — Ponderación D1 en la política de deliberación.** Extender
+`pesos_asunto`/una función equivalente para que D1 también pese por
+fuerza de evidencia (tamaño de muestra, tipo de instrumento — pretest
+vs. evaluación real), no solo D2. Preserva la arquitectura de
+deliberación tal cual; el riesgo es que una interpretación mal calibrada
+siga entrando al paisaje sin corregirse en el origen, solo se le resta
+peso después.
+
+Ninguna de las tres introduce un concepto nuevo de dominio (todas caen
+dentro de "cómo se calcula `confianza_declarada`" o "cómo pesa `ce`",
+ambos ya nombrados por RFC-0002/RFC-0006) — la decisión entre ellas es
+de diseño pedagógico/experimental, no arquitectónica, y pertenece al
+tesista.
+
+## Alcance explícitamente fuera de esta iteración
+
+- No se toca `kernel/`, `deliberation/`, `palabra_en_pie`, Orientar,
+  Remediar ni Adaptar — la auditoría de hoy ya confirmó que funcionan
+  correctamente dado el `confianza` que reciben.
+- No se elige todavía entre A/B/C.
+- No se modifica ningún prompt ni productor.
+- La ruta multi-objetivo (`_producir_por_objetivo`) fue exactamente
+  donde se hizo la verificación de hoy — no queda fuera de alcance como
+  en 5.1/5.2, es el escenario que motivó esta iteración.
+
+## Estado
+
+**DECIDIDA — alternativa B (LLM interpreta, dominio calibra), refinada a
+"evidencia objetiva × relevancia contextual" tras la comprobación
+aritmética que descartó un techo fijo por instrumento (ver
+[[iteracion 5.4]] a continuación).** No bloquea el cierre de "adaptación
+por nivel" (F0/F1/F3, ver memoria
+`adaptacion_por_nivel_cerrada_2026_08_03.md`) ni el cierre de
+"adaptación continua" arquitectónica (mecanismo verificado y funcional)
+— es una brecha de calidad de señal, con causa raíz ya localizada, no un
+bloqueo estructural.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.4 — Contrato de confianza calibrada de Knowledge Claims (H10, propuesta pre-implementación)
+
+## Pregunta de investigación
+
+¿Qué función de calibración permite que los Knowledge Claims de
+Diagnosticar representen la fuerza real de la evidencia — preservando la
+capacidad del sistema para avanzar y retroceder — sin que instrumentos
+de distinta naturaleza (pretest amplio vs. evaluación real dirigida a un
+objetivo) compitan en una escala incompatible?
+
+## Decisión de alternativa
+
+Se descarta **C** (ponderar D1 en la política de deliberación): corrige
+el síntoma, no la causa — la interpretación mal calibrada seguiría
+entrando al paisaje. Se descarta también la primera forma de **B**
+(techo fijo por tipo de instrumento: "pretest ≤ 0.70, evaluación real ≤
+0.98") — la comprobación de abajo muestra que produce una regla rígida
+falsa ("toda evaluación real vale más que todo pretest", sin importar
+tamaño ni consistencia). Se adopta una forma refinada de B: **evidencia
+objetiva (resultado × tamaño de muestra) ponderada por relevancia
+contextual del instrumento (peso, no techo)**, combinada con la
+confianza que el LLM declara vía `min()` — nunca vía promedio ponderado
+con el LLM, para que una sobreconfianza del LLM nunca pueda superar lo
+que la evidencia misma sostiene.
+
+## Definición de `confidence` (contrato)
+
+`confidence` de un Knowledge Claim de Diagnosticar **no** significa "qué
+tan seguro está el LLM de su propia interpretación". Significa: **la
+fuerza de la evidencia disponible para sostener esa interpretación**,
+determinada por el resultado, el tamaño de la muestra y la relevancia
+pedagógica del instrumento que la produjo — nunca por la introspección
+libre del modelo. Orden de autoridad: **evidencia > contexto > LLM**. El
+LLM puede interpretar (`dominada`, `razonamiento`) y declarar su propia
+certeza, pero no define la fuerza estadística de la evidencia — el
+dominio puede invalidar (recortar) esa declaración; jamás amplificarla.
+
+## Fórmula propuesta
+
+```
+techo_muestra(n)        = 1 - k / n                    (k = 0.40)
+confianza_evidencia_max = techo_muestra(n) × relevancia(tipo_evaluacion)
+confianza_final         = min(confianza_llm, confianza_evidencia_max)
+```
+
+`k = 0.40` es la misma constante que ya validaba el ejemplo original
+(n=2 → techo 0.80; n=20 → techo 0.98) — no se introduce un segundo
+parámetro sin justificación. `relevancia(tipo_evaluacion)` son valores
+representativos dentro de los rangos ya propuestos: `pretest = 0.75`,
+`evaluación_módulo = 0.95` — parámetros de política, no constantes de
+dominio (mismo reparto de responsabilidades que RFC-0006 §1 ya
+establece para `ce`: el álgebra se congela, la política elige pesos).
+`min()`, nunca promedio ponderado: una confianza LLM de 1.0 nunca puede
+superar lo que la evidencia sostiene, pero una confianza LLM baja SÍ
+puede recortar hacia abajo una evidencia fuerte (el LLM solo resta,
+nunca amplifica).
+
+**Variable diferida explícitamente — "consistencia"/historial.**
+Requiere leer los claims previos de Diagnosticar sobre el mismo asunto,
+algo que ningún productor consulta hoy. Queda fuera de esta primera
+versión del contrato como extensión futura documentada, no como
+pendiente silencioso — evita meter una segunda pieza de scope sin datos
+que la justifiquen todavía.
+
+## Restricción cuantitativa derivada (no estaba en la propuesta original)
+
+Para que el Caso A (avance) se preserve frente a un pretest de muestra
+mayor que la evaluación real, se requiere:
+
+```
+relevancia(evaluación_módulo) / relevancia(pretest) > techo_muestra(n_pretest) / techo_muestra(n_evaluación)
+```
+
+Con los tamaños de muestra reales de hoy (pretest n=12, evaluación
+real n=2): el lado derecho es **1.2083**. Los valores representativos
+elegidos (0.95 / 0.75 = **1.2667**) cumplen la restricción con margen
+— pero NO cualquier combinación dentro de los rangos propuestos la
+cumple (p. ej. pretest=0.85 / evaluación=0.90 → 1.06, no cumple). Esta
+restricción es un criterio de aceptación cuantitativo para fijar las
+constantes finales de política, no una sugerencia.
+
+## Verificación contra datos reales ya recolectados (sin código nuevo)
+
+Réplica aritmética de los tres claims reales de la sesión de hoy
+(`T-000050`, `T-000056`, `T-000063`, cuenta `estudiante.novato2`,
+confianzas ya declaradas por el LLM real, `gpt-4o-mini`):
+
+| Claim | Instrumento | n | confianza LLM | confianza_evidencia_max | confianza final |
+|---|---|---|---|---|---|
+| T-000050 | Pretest | 12 | 0.95 | 0.7250 | **0.7250** |
+| T-000056 | Evaluación real (2/2) | 2 | 1.00 | 0.7600 | **0.7600** |
+| T-000063 | Re-evaluación real (0/2) | 2 | 0.95 | 0.7600 | **0.7600** |
+
+- **Caso A (avance) — supera la comprobación:** T-000056 (0.7600) >
+  T-000050 (0.7250) → la evaluación real de 2/2 sigue venciendo al
+  pretest, exactamente como ocurrió hoy con el sistema sin calibrar.
+- **Caso B (retroceso) — supera la comprobación:** T-000063 (0.7600)
+  empata con T-000056 (0.7600) — incluso con evidencia igual de
+  "fuerte" en magnitud, el desempate por recencia que YA EXISTE en el
+  kernel (`sorted(claims, key=lambda c: (puntaje, str(c.id)), reverse=True)`,
+  sin modificar) favorece al claim más nuevo → el retroceso sí ocurriría.
+
+**A diferencia del techo fijo por instrumento (descartado), esta fórmula
+no le da la victoria automática a "toda evaluación real" — se la da
+porque, en este caso concreto, la evaluación real (n=2, dirigida) supera
+al pretest (n=12, amplio) por el margen que la restricción cuantitativa
+exige, no por ser de un tipo distinto.**
+
+## Caso C — ejecutado con datos reales; la fórmula NO lo supera
+
+**Ajuste de alcance frente al banco de preguntas real.** El banco de
+pretest tiene 12 ítems (`banco v3`), no 30 como en el ejemplo
+ilustrativo — se documenta la escala real usada, sin inflar el dato:
+cuenta fresca `estudiante.casoc2`, pretest 11/12 correctas (91.7%, solo
+1 error — dentro del régimen `dominada=True`, `_UMBRAL_ERRORES=2`),
+seguido de una evaluación real del mismo objetivo con 0/2 (ambas
+incorrectas). Vía HTTP real, Postgres real, LLM real (`gpt-4o-mini`).
+
+| Claim | Instrumento | n | correctos | confianza LLM | dominada |
+|---|---|---|---|---|---|
+| T-000024 | Pretest | 12 | 11 | 0.9500 | **True** |
+| T-000058 | Evaluación real | 2 | 0 | 0.9500 | **False** |
+
+**Resultado sin calibrar (sistema actual):** empate en confianza
+declarada (0.9500 ambos) → desempate por recencia → gana la evaluación
+trivial de 2 preguntas → decisión final `reforzar/visual/fundamentos`,
+descartando una evaluación amplia y consistente de 11/12. Exactamente el
+fallo que Caso C buscaba exponer.
+
+**Resultado con la fórmula propuesta (`k=0.40`, relevancia 0.75/0.95):**
+`pretest_final = min(0.95, techo(12)×0.75) = 0.7250`;
+`evaluación_final = min(0.95, techo(2)×0.95) = 0.7600`. **La evaluación
+trivial sigue ganando (0.7600 > 0.7250) — la fórmula NO corrige Caso C.**
+
+**Contradicción matemática con Caso A (no es un problema de constantes,
+es de forma funcional).** Caso A exige
+`relevancia_evaluación / relevancia_pretest > 1.2083` (para que la
+evaluación real de 2/2 venza al pretest débil de 12 con 12 errores).
+Caso C exige exactamente la desigualdad **inversa**,
+`< 1.2083` (para que el pretest fuerte de 11/12 venza a la evaluación
+trivial de 0/2) — **mismos tamaños de muestra (12 y 2) en ambos casos,
+direcciones opuestas.** Ningún par fijo de pesos `relevancia(tipo)`
+satisface las dos restricciones a la vez; el punto de cruce exacto
+(1.2083) tampoco sirve, porque en ambos casos el reclamante más reciente
+es distinto y el desempate por recencia fallaría igual para uno de los
+dos.
+
+**Causa raíz identificada: `confianza_llm` es casi degenerada — no
+codifica la proporción de aciertos.** Tabulando TODAS las confianzas
+reales recolectadas hoy por Diagnosticar-LLM:
+
+| n | correctos | % correcto | confianza LLM |
+|---|---|---|---|
+| 12 | 0 (0%) | 0% | 0.9500 |
+| 12 | 10 (83%) | 83% | 0.9500 |
+| 12 | 11 (92%) | 92% | 0.9500 |
+| 2 | 2 (100%) | 100% | 1.0000 |
+| 2 | 0 (0%) | 0% | 0.9500 |
+| 2 | 0 (0%), otra cuenta | 0% | 0.9500 |
+
+Para n=12, la confianza declarada es **idéntica (0.9500) en las tres
+observaciones**, sin importar si el resultado fue 0%, 83% o 92% de
+aciertos — el mismo patrón que 5.2 ya encontró en Remediar/Orientar-LLM,
+ahora confirmado también en Diagnosticar. La fórmula propuesta usa
+`min(confianza_llm, techo×relevancia)` — pero si `confianza_llm` no
+varía con el resultado, el `min()` casi nunca la deja actuar como señal
+real: el techo termina siendo la única variable que decide, y el techo
+(`techo_muestra(n)×relevancia(tipo)`) nunca incorporó la **proporción de
+aciertos** — solo el tamaño de muestra y el tipo de instrumento. Por
+eso Caso A y Caso C, que difieren únicamente en qué tan bueno fue el
+resultado (no en n ni en tipo), no pueden distinguirse: la fórmula
+actual es ciega precisamente a la variable que los diferencia.
+
+**Implicación para el contrato — pendiente de decisión, no resuelta
+aquí.** La pieza que falta no es ajustar `k` o `relevancia`: es incluir
+una `confianza_evidencia` que dependa explícitamente de
+`items_correctos/items_totales` (proporción), no solo de `n`. Un
+candidato con respaldo estadístico (no arbitrario) es el límite
+inferior de un intervalo de Wilson sobre la proporción observada — crece
+con n y con la proporción de aciertos a la vez, exactamente lo que
+`techo_muestra(n)` no hace hoy. `relevancia(tipo_evaluacion)` seguiría
+existiendo, pero como modificador secundario sobre esa fuerza
+estadística, no como el factor que decide junto a un `n` desnudo. No se
+elige esta vía todavía — es una opción a evaluar, con esta comprobación
+como evidencia de por qué la forma actual es insuficiente.
+
+## Ubicación arquitectónica (si se implementa)
+
+Función pura nueva, local a `runtime/domain/diagnosticar/` (p. ej.
+`calibracion.py`), invocada por `productor_llm.py` **antes** de
+construir el `TransitionIntent` — transforma `confianza_llm` en
+`confianza_final` antes de que el claim exista. No toca `kernel/`, no
+toca `deliberation/`, no añade campos a `Provenance` ni al contrato de
+`ClaimEntry` (P13: mismo tipo de claim, mismo asunto, mismo reducer;
+cambia únicamente cómo se calcula un valor que el productor ya
+declaraba). `relevancia(tipo_evaluacion)` y `k` viven como parámetros de
+una política versionada local a Diagnosticar — mismo patrón de "reparto
+de responsabilidades" que `Politica` ya usa para `delta`/`theta`/
+`pesos_asunto` en la deliberación, sin fusionarse con ella.
+
+## Estado
+
+**PROPUESTA REFUTADA EN SU FORMA ACTUAL — Caso C ejecutado con datos
+reales y la fórmula `min(confianza_llm, techo_muestra(n)×relevancia(tipo))`
+no lo supera.** Caso A y Caso B siguen superando la comprobación (ver
+arriba), pero Caso C demuestra que ningún par fijo de pesos
+`relevancia(tipo)` puede satisfacer las tres condiciones a la vez —
+contradicción matemática derivada, no una cuestión de afinar constantes.
+Causa raíz identificada con datos reales: `confianza_llm` no varía con
+la proporción de aciertos (0.9500 idéntico para n=12 con 0%, 83% y 92%
+de aciertos), así que la fórmula nunca tuvo acceso a la señal que Caso A
+y Caso C necesitan para diferenciarse. **Este es exactamente el tipo de
+hallazgo que justificaba no congelar parámetros todavía — evitó
+implementar una fórmula que habría fallado en producción.**
+
+Pendiente, en orden: (1) decisión del tesista sobre si incorporar una
+`confianza_evidencia` basada en proporción de aciertos (p. ej. límite
+inferior de Wilson u otra función con esa propiedad) en vez de, o además
+de, `relevancia(tipo)`; (2) verificar la fórmula revisada contra los
+mismos tres casos reales ya recolectados (Caso A, B, C — sin necesidad
+de nuevas cuentas, los datos ya existen); (3) pre-registro de hipótesis
+H0/H1 al estilo de 5.1/5.2; (4) recién entonces, implementación. Sin
+código tocado — ni kernel, ni deliberación, ni ningún prompt. Cuentas de
+prueba creadas hoy para esta verificación: `estudiante.novato2`,
+`estudiante.conocedor2`, `estudiante.casoc`, `estudiante.casoc2` — datos
+reales conservados en Postgres para reanalizar sin repetir las
+llamadas LLM.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.5 — Wilson score lower bound sobre los Casos A/B/C (H10, pre-registro ejecutado sobre datos ya recolectados)
+
+## Pregunta de investigación (pre-registrada antes de calcular)
+
+¿El límite inferior de un intervalo de Wilson sobre la proporción de
+aciertos ordena correctamente los tres escenarios reales A/B/C (Caso A:
+avance debe ganar; Caso B: retroceso debe poder ganar; Caso C: pretest
+fuerte debe ganar sobre evaluación trivial), sin necesidad de ninguna
+llamada LLM nueva — reutilizando los claims ya almacenados en Postgres
+de 5.4?
+
+## Hipótesis parcial
+
+- **H0**: Wilson por sí solo NO ordena correctamente los tres casos —
+  al menos uno falla, revelando que hace falta una variable adicional
+  (más allá de fuerza estadística pura).
+- **H1**: Wilson por sí solo ordena correctamente los tres casos — la
+  fuerza estadística de la proporción observada es suficiente como
+  `confianza_evidencia`, sin necesitar ningún término adicional de
+  recencia o relevancia.
+
+## Método
+
+Sin llamadas LLM nuevas — reutiliza los `confianza`/`items_incorrectos`/
+`items_totales` ya persistidos en Postgres de 5.4. Corrección de
+semántica frente al primer intento (importante, documentada porque casi
+produce una conclusión equivocada): el límite de Wilson debe calcularse
+sobre el conteo que **sostiene la afirmación propia de cada claim** —
+`correctos` cuando `dominada=True`, `incorrectos` cuando `dominada=False`
+— no siempre sobre `correctos`. Calcular Wilson sobre `correctos` para
+un claim `dominada=False` mide la fuerza equivocada (la de la hipótesis
+contraria). Fórmula estándar, `z=1.96` (95%):
+
+```
+p = k/n
+centro = (p + z²/2n) / (1 + z²/n)
+margen = z·√(p(1−p)/n + z²/4n²) / (1 + z²/n)
+Wilson_LB = max(0, centro − margen)
+```
+
+## Resultado
+
+| Comparación | Claim A | Wilson_LB | Claim B | Wilson_LB | Gana |
+|---|---|---|---|---|---|
+| Caso A | T-000056 (eval. 2/2, dominada=True) | 0.3424 | T-000050 (pretest 0/12, dominada=False) | 0.7575 | **T-000050 (pretest viejo)** |
+| Caso B | T-000063 (re-eval. 0/2, dominada=False) | 0.3424 | T-000056 (eval. 2/2, dominada=True) | 0.3424 | **empate exacto** |
+| Caso C | T-000024 (pretest 11/12, dominada=True) | 0.6461 | T-000058 (eval. 0/2, dominada=False) | 0.3424 | **T-000024 (pretest)** ✓ |
+
+**H0 confirmada, H1 rechazada.** Wilson ordena correctamente Caso C
+(razón por la que se propuso), pero **falla Caso A**: el pretest viejo
+(0/12, una negativa muy grande y estadísticamente decisiva) vence a la
+evaluación real nueva (2/2, una muestra pequeña) — el avance real que
+el sistema sin calibrar SÍ registra hoy dejaría de registrarse. Caso B
+queda en el mismo empate que sin calibrar — Wilson no lo mejora ni lo
+empeora, sigue dependiendo del desempate por recencia ya existente en
+el kernel.
+
+## Por qué falla — no es un error de fórmula, es un desajuste de modelo
+
+El límite de Wilson responde correctamente a la pregunta *"¿cuánto
+puedo confiar en esta proporción como estimador de un parámetro fijo,
+dado el tamaño de muestra?"* — es exactamente el instrumento correcto
+para inferir un parámetro **estático**. Pero el parámetro que
+Diagnosticar interpreta (el dominio del estudiante sobre un objetivo)
+**no es estático por diseño**: la adaptación continua existe
+precisamente porque se espera que cambie con el aprendizaje. Comparar
+dos observaciones separadas en el tiempo como si fueran dos muestras
+independientes del mismo parámetro fijo — que es lo que Wilson asume —
+penaliza exactamente la señal que el sistema necesita detectar: que el
+estudiante mejoró. 0/12 es, en efecto, evidencia estadística muy fuerte
+de que un estudiante NO domina un objetivo — pero solo si asumimos que
+su dominio no cambió desde entonces. Esa suposición es la que rompe
+Caso A.
+
+## Conclusión — dos ejes ortogonales, ninguno sustituye al otro
+
+Caso C y Caso A/B están señalando **dos variables distintas**, no la
+misma:
+
+1. **Fuerza estadística de una observación individual** (cuántas
+   preguntas, qué proporción) — Wilson la resuelve correctamente (Caso
+   C).
+2. **Peso por recencia/cambio en el tiempo** (una observación más
+   reciente debe poder pesar más que una más antigua y estadísticamente
+   más "fuerte", precisamente porque el parámetro cambia) — Wilson no
+   la captura, y ninguna de las fórmulas probadas hasta ahora
+   (`techo_muestra(n)`, `relevancia(tipo)`, Wilson puro) la incluye
+   como eje independiente.
+
+El kernel ya tiene un mecanismo de recencia (`edad_logica`, A6/A7,
+`calcular_confianza_efectiva`) — pero solo decae un claim después de un
+ciclo de Validar, no en cada nueva interpretación de Diagnosticar; no
+resuelve por sí solo Caso A/B tal como se presentaron hoy (sin Validar
+de por medio entre las evidencias).
+
+**Ninguna fórmula de un solo eje (ni tamaño de muestra, ni tipo de
+instrumento, ni fuerza estadística Wilson) supera los tres casos a la
+vez.** El contrato de confianza calibrada necesita combinar **fuerza
+estadística de la observación × peso por recencia** como dos factores
+independientes — no una sustituyendo a la otra. Definir ese segundo eje
+(qué tan rápido debe decaer la relevancia de una observación anterior
+frente a una nueva) es una decisión de diseño pedagógico nueva, todavía
+sin explorar, y es el bloqueante real para cerrar el contrato.
+
+## Estado
+
+**EJECUTADA — H0 confirmada, H1 rechazada.** Wilson puro no basta: gana
+Caso C, pierde Caso A, empata Caso B. Hallazgo estructural: la
+calibración necesita un eje de recencia/cambio temporal además de un
+eje de fuerza estadística — ninguna fórmula probada hasta ahora (5.4,
+5.5) lo tiene. No se implementa nada. Sin código tocado. Próximo paso
+propuesto (no iniciado): diseñar el eje de recencia antes de intentar
+una nueva fórmula combinada — candidatos a explorar incluyen reutilizar
+`edad_logica` de forma más agresiva (decaer también sin Validar) o un
+peso explícito por antigüedad de la evidencia dentro de la propia
+`confianza_evidencia`, ninguno decidido todavía.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.6 — Modelo de vigencia temporal de Knowledge Claims (H10, eje de recencia)
+
+## Pregunta de investigación
+
+¿Qué modelo permite que evidencia nueva pueda superar evidencia
+histórica estadísticamente más fuerte cuando corresponde (Caso A), sin
+permitir que evidencia nueva trivial derrote evidencia histórica fuerte
+cuando NO corresponde (Caso C) — usando los tres casos reales A/B/C ya
+recolectados, sin llamadas LLM nuevas?
+
+## Por qué `edad_logica` (A6/A7) no se reutiliza directamente
+
+Confirmado por revisión de `kernel/deliberation/confianza.py:122-131`:
+`edad_logica` se ancla a la **última validación de Validar en la cadena
+causal DEL PROPIO claim** — mide "¿este claim sigue recibiendo
+mantenimiento?", no "¿sigue representando el estado actual del
+estudiante?". Un claim puede tener `edad_logica=0` (nunca validado) y
+aun así estar pedagógicamente obsoleto porque aparecieron varias
+interpretaciones rivales nuevas después — ningún evento rival lo toca,
+por diseño (A7, localidad causal: solo la cadena causal PROPIA cuenta).
+Son dos preguntas distintas; extender A6/A7 para responder la segunda
+mezclaría dos conceptos que el RFC-0006 mantiene deliberadamente
+separados.
+
+## Candidato descartado por cálculo — recencia pura (decaimiento simétrico)
+
+Antes de diseñar candidatos nuevos, se prueba si un decaimiento por
+recencia simétrico (`peso = e^(−λ·edad)`, sin distinguir dirección del
+cambio) resuelve los tres casos, reutilizando los mismos `Wilson_LB` de
+5.5:
+
+```
+Caso A necesita: e^(−λ) < Wilson(nuevo)/Wilson(viejo) = 0.3424/0.7575 = 0.4520
+Caso C necesita: e^(−λ) > Wilson(nuevo)/Wilson(viejo) = 0.3424/0.6461 = 0.5299
+```
+
+**Mismo tipo de contradicción que `relevancia(tipo)` en 5.4: un único
+`λ` simétrico no puede satisfacer ambas desigualdades a la vez** — la
+recencia pura, sin importar cómo se calibre, tiene el mismo problema
+estructural. Esto descarta el Candidato A (decaimiento exponencial
+simple) y, por la misma lógica, el Candidato B (ventana de N más
+recientes con corte binario: si solo la última evaluación contara,
+Caso C fallaría exactamente igual que con recencia pura, porque
+"ignorar todo lo anterior" es el caso límite de un decaimiento muy
+agresivo).
+
+## Por qué el problema no es simétrico — la dirección del cambio importa
+
+Caso A y Caso C tienen la misma topología (claim viejo con `n` grande
+vs. claim nuevo con `n` pequeño) pero necesitan ganadores opuestos —
+porque no son la misma situación: Caso A es una interpretación
+**mejora** (`dominada`: False→True) y Caso C es una interpretación
+**retroceso** (`dominada`: True→False). Ningún factor simétrico
+(recencia, tipo de instrumento, tamaño de muestra) puede distinguir
+"mejorar" de "empeorar" porque ninguno de esos factores conoce la
+dirección del cambio — solo la magnitud. La variable que faltaba en
+todos los intentos anteriores (5.4, 5.5, y el candidato de recencia
+pura de arriba) no es una variable adicional del mismo tipo: es una
+**asimetría de política** entre creer una mejora y creer un retroceso.
+
+## Candidato evaluado — regla asimétrica mejora/retroceso (cercana en espíritu al Candidato C, "cambio de estado explícito")
+
+**Regla:** cuando la nueva interpretación de Diagnosticar contradice a
+la vigente sobre el mismo asunto —
+
+- Si la nueva propone **mejora** (`dominada`: False→True): se acepta si
+  `Wilson_LB(nueva)` supera un umbral bajo absoluto (evidencia mínima de
+  que la mejora no es puro ruido — p. ej. `> 0`, dado al menos una
+  observación positiva).
+- Si la nueva propone **retroceso** (`dominada`: True→False): se acepta
+  solo si `Wilson_LB(nueva) ≥ Wilson_LB(vigente)` — debe igualar o
+  superar la fuerza estadística de lo que intenta revertir. El empate
+  se resuelve por el desempate de recencia que YA EXISTE en el kernel
+  (`sorted(..., key=str(id), reverse=True)`), sin tocarlo.
+
+**Verificación contra los tres casos reales (sin código, misma
+aritmética Wilson de 5.5):**
+
+| Caso | Dirección | Regla aplicada | Resultado |
+|---|---|---|---|
+| A | mejora (False→True) | `Wilson(nuevo)=0.3424 > 0`? | ✅ acepta mejora — el avance real se registra |
+| B | retroceso (True→False) | `Wilson(nuevo)=0.3424 ≥ Wilson(viejo)=0.3424`? | ✅ empate entra por `≥`, desempate de recencia (ya existente) resuelve a favor del retroceso |
+| C | retroceso (True→False) | `Wilson(nuevo)=0.3424 ≥ Wilson(viejo)=0.6461`? | ✅ rechaza — el pretest fuerte no cae ante una evaluación trivial |
+
+**Los tres casos reales se satisfacen simultáneamente por primera vez en
+la cadena H10** — ninguna fórmula anterior (confianza LLM cruda,
+`techo_muestra(n)×relevancia(tipo)`, Wilson puro, recencia simétrica
+pura) lo había logrado.
+
+**Por qué es defendible pedagógicamente, no solo aritméticamente.** La
+asimetría no es arbitraria: hipotetizar que un estudiante mejoró y
+avanzar contenido es de bajo costo si resulta incorrecto (el estudiante
+ve contenido algo más avanzado de lo ideal, recuperable); hipotetizar
+que un estudiante retrocedió y remediar contenido ya dominado tiene un
+costo distinto (tiempo del estudiante en contenido que ya domina,
+riesgo de desmotivación) — de ahí que el retroceso exija evidencia al
+menos tan fuerte como lo que revierte, mientras el avance no. Esta
+asimetría de costos de error (falso avance vs. falso retroceso) es
+citable en la tesis como una decisión de diseño pedagógico explícita,
+no un artefacto matemático.
+
+## Alcance explícitamente no decidido aquí
+
+- El umbral exacto para "mejora" (`> 0` es el mínimo defendible —
+  cualquier evidencia positiva no nula — pero podría ajustarse a un
+  valor mayor).
+- Si `Wilson_LB` es la función de fuerza estadística final, o si el
+  tesista prefiere otra (5.5 solo estableció que ALGUNA función
+  sensible a la proporción es necesaria).
+- Casos con más de dos claims rivales simultáneos (fuera del alcance de
+  A/B/C, que son siempre pares).
+- La ubicación exacta de esta regla (¿vive en el calibrador de
+  Diagnosticar, como 5.4 propuso, o necesita tocar la política de
+  deliberación D1? — dado que la regla depende de comparar CONTRA el
+  claim vigente, no es puramente local a Diagnosticar como 5.4 asumía;
+  esto es una diferencia arquitectónica real pendiente de resolver
+  antes de implementar).
+
+## Estado
+
+**EJECUTADA — candidato encontrado que supera los tres casos reales
+simultáneamente por primera vez, pendiente de aprobación del tesista y
+de resolver su ubicación arquitectónica (nota final de "Alcance").** No
+se implementa nada. Sin código tocado. Próximo paso, si se aprueba:
+pre-registro de hipótesis H0/H1 al estilo de 5.1/5.2 sobre esta regla
+específica, luego implementación en un solo commit pequeño (Engineering
+Gate: define su propio Diseño→Boundary→HTTP si aplica, pero esta pieza
+vive enteramente en `runtime/domain/diagnosticar/` y posiblemente
+`kernel/deliberation/`, a confirmar).
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.7 — Ubicación arquitectónica de la política de revisión de Knowledge Claims (H10, Engineering Review dirigida)
+
+## Pregunta de investigación
+
+¿Debe la regla asimétrica de aceptación mejora/retroceso (5.6) vivir en
+el productor Diagnosticar, en la resolución D1 de la deliberación, o en
+un componente de política independiente — sin violar P13, sin
+contaminar el kernel con semántica pedagógica, preservando que
+Diagnosticar solo propone interpretaciones y que la deliberación
+resuelve conflictos?
+
+## Método — auditoría documental, no implementación
+
+Se responde leyendo RFC-0006 y el código del kernel tal como existen
+hoy, no por preferencia de diseño. Esta es una Engineering Review
+dirigida (CLAUDE.md, actualización 2026-07-12): aplica porque aparece
+una posible modificación de un RFC ya aceptado — exactamente el
+disparador que la vuelve obligatoria.
+
+## Opción B (dentro de D1) — descartada, requiere modificar RFC-0006
+
+RFC-0006 §4 ("Resolución por tipo") no deja la regla de D1 como
+parámetro de política — la fija explícitamente:
+
+> **"D1 (interpretativo) — gana la evidencia: se acepta el claim con
+> mayor confianza efectiva si el margen sobre el rival supera el umbral
+> de discriminación δ (política)."**
+
+Nótese el contraste con D2, en la misma sección: *"los pesos son
+configuración versionada"* — esa cláusula de "versionable" existe
+explícitamente para D2 y está **ausente** para D1. D1 es "mayor ce
+gana", punto — una regla simétrica, normativa, sin excepción declarada
+por dirección del cambio. Una regla que trate mejora y retroceso
+distinto **es, por definición, una regla distinta de "mayor ce gana"**
+— cambiarla es enmendar RFC-0006 §4, no elegir una política dentro de
+él.
+
+**Tampoco puede rodearse empujando la asimetría dentro de `ce`
+(`calcular_confianza_efectiva`, que SÍ es explícitamente versionable
+por política, RFC-0006 §1).** A7 ("localidad causal") acota
+exactamente qué puede leer `ce`: *"la cadena causal del claim (su
+respaldo hacia atrás; las decisiones y validaciones derivadas hacia
+adelante) y los facts de su asunto"* — un **claim rival** (el vigente,
+contra el que se compararía para saber si esto es mejora o retroceso)
+no es un fact, no es el propio respaldo, no es una decisión ni
+validación derivada del claim: leerlo violaría A7 tal como está escrito
+hoy. **Opción B queda descartada por dos vías independientes** (regla
+de D1 explícita en RFC-0006 §4; A7 impide que `ce` conozca al rival) —
+no es una preferencia de diseño, es una contradicción documental real.
+Engineering Gate pregunta 4 ("¿requiere modificar un RFC?"): si la
+respuesta fuera Opción B, sí — **DETENERSE**, que es exactamente lo que
+esta entrada hace.
+
+## Opción A (dentro de Diagnosticar), en su forma original — también descartada
+
+La primera lectura de Opción A ("Diagnosticar decide aceptar/rechazar
+el cambio antes de producir el claim") choca con un precedente histórico
+real y ya documentado en el propio código: el commit `504e09d`
+("mapa completo — el Runtime interpreta TODA la evidencia del
+diagnóstico", 2026-07-13) corrigió exactamente el bug de que
+*"la guardia global anterior dejaba 7 de 8 competencias de un
+diagnóstico sin interpretar"* — el contrato vigente de Diagnosticar
+(`runtime/domain/diagnosticar/productor.py:28-35`) es interpretar
+**cada** hecho evaluativo nuevo, siempre, sin excepción condicional. Si
+Diagnosticar decidiera "no producir claim" cuando la evidencia nueva no
+alcanza el umbral asimétrico, estaría regresando exactamente ese bug ya
+cerrado — evidencia real que simplemente deja de interpretarse.
+
+## Opción A refinada — la que sí funciona, sin tocar kernel ni RFC-0006
+
+La distinción que resuelve el conflicto: Diagnosticar **siempre**
+produce un claim (mapa completo intacto) — lo que la regla asimétrica
+decide no es *si* produce el claim, sino **qué `confianza` declara al
+producirlo**. Concretamente:
+
+```
+Diagnosticar, al interpretar un hecho nuevo sobre un asunto que ya
+tiene un claim vigente contradictorio:
+
+  fuerza_nueva = Wilson_LB(soporte de la nueva interpretación)
+  fuerza_vigente = calcular_confianza_efectiva(claim_vigente, estado, politica)
+                   # función YA existente, importada sin modificar
+
+  si la nueva interpretación es MEJORA (False→True):
+      confianza_declarada = fuerza_nueva          # umbral bajo, se declara tal cual
+  si la nueva interpretación es RETROCESO (True→False):
+      confianza_declarada = fuerza_nueva si fuerza_nueva >= fuerza_vigente
+                             si no, un valor que D1 "mayor ce gana" no puede ganar
+                             (p. ej. 0, o la misma fuerza_nueva sin más —
+                             el punto es que la comparación estándar decidirá)
+
+  registrar_claim(..., confianza=confianza_declarada)   # reducer SIN modificar
+```
+
+Esto **no toca `kernel/`, no toca `deliberation/mecanica.py`, no toca
+`confianza.py`, no enmienda RFC-0006 §4** — D1 sigue resolviendo "mayor
+ce gana" exactamente como está escrito; la asimetría vive enteramente
+en qué `confianza` declara Diagnosticar ANTES de que exista el claim
+(A2: "en el estado en que el claim fue aplicado, ce = confianza
+declarada" — ninguna norma restringe qué puede declarar un productor,
+solo cómo evoluciona `ce` después). Diagnosticar SÍ necesita leer el
+claim vigente rival y llamar `calcular_confianza_efectiva` sobre él —
+pero eso ocurre dentro del **productor** (que siempre ha podido leer
+todo `estado.claims` libremente; A7 acota `ce`, no a los productores),
+nunca dentro del kernel.
+
+## Opción C, reconsiderada
+
+Empaquetar esta lógica en un módulo propio (`runtime/domain/
+diagnosticar/calibracion.py`, tal como 5.4 ya proponía) es una decisión
+de organización de código, no una ubicación arquitectónica distinta: el
+único llamador sigue siendo el productor de Diagnosticar, antes de
+`registrar_claim`. Opción C, bien entendida, **es Opción A refinada con
+buen factoring** — no una tercera capa nueva del sistema.
+
+## Respuesta a los 4 criterios del tesista
+
+1. **P13 (mínima modificación del contrato):** cumplido — mismo tipo de
+   claim, mismo asunto, mismo reducer; cambia solo cómo se calcula un
+   valor que el productor ya declaraba.
+2. **No contaminar el kernel con semántica pedagógica:** cumplido —
+   cero cambios en `kernel/`.
+3. **Diagnosticar solo propone interpretaciones:** preservado — sigue
+   proponiendo una interpretación por hecho, siempre: la asimetría
+   ajusta la confianza de la propuesta, no si se hace o no.
+4. **Deliberación resuelve conflictos:** preservado sin cambios — D1
+   sigue siendo "mayor ce gana", tal como RFC-0006 §4 lo fija; la
+   asimetría ya viene resuelta en los números que llegan a competir.
+
+## Estado
+
+**EJECUTADA — Opción B descartada por contradicción documental directa
+(RFC-0006 §4 + A7); Opción A original descartada por precedente
+histórico (`504e09d`, mapa completo); Opción A refinada (calibrar la
+`confianza` declarada por Diagnosticar, comparando contra
+`calcular_confianza_efectiva` del claim vigente, sin tocar kernel ni
+RFC) queda como la única opción que supera los 4 criterios sin requerir
+enmienda de ningún RFC.** Aprobada por el tesista — ver pre-registro
+formal en la Iteración 5.8, a continuación. Sin código tocado.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.8 — Pre-registro H0/H1: política asimétrica de revisión de confianza declarada (H10, previo a implementación)
+
+## Pregunta de investigación
+
+¿Una política de calibración asimétrica de confianza declarada —basada
+en fuerza estadística de la evidencia y comparación contra el claim
+vigente— permite que el sistema de adaptación continua acepte mejoras
+reales y rechace retrocesos espurios, sin modificar la deliberación D1
+ni ningún RFC?
+
+## Hipótesis parcial
+
+**H0 (nula):** la política propuesta no mejora la resolución de
+conflictos entre Knowledge Claims respecto al mecanismo actual
+(confianza declarada por LLM sin calibrar). Se considera confirmada si
+falla al menos uno de los tres patrones:
+
+- Caso A: evidencia nueva positiva NO logra superar evidencia histórica
+  negativa.
+- Caso B: evidencia nueva negativa equivalente NO logra revertir la
+  evidencia vigente.
+- Caso C: evidencia nueva negativa pequeña SÍ derrota evidencia
+  histórica fuerte (falso retroceso).
+
+**H1 (alternativa):** la política resuelve correctamente los tres
+patrones de cambio:
+
+| Patrón | Dirección | Condición | Resultado esperado |
+|---|---|---|---|
+| Mejora | `False→True` | `fuerza_nueva > theta_mejora` | el nuevo claim puede superar al anterior |
+| Retroceso equivalente | `True→False` | `fuerza_nueva ≥ fuerza_vigente` | el nuevo claim puede revertir |
+| Retroceso débil | `True→False` | `fuerza_nueva < fuerza_vigente` | el nuevo claim pierde ante el vigente |
+
+## Variables que se congelan en este pre-registro (antes de escribir código)
+
+**1. `evidence_strength()` como abstracción, no como compromiso con
+Wilson por nombre.** 5.5 solo demostró que hace falta una función
+sensible a la proporción de aciertos — no que Wilson sea la única
+válida. Se congela la interfaz:
+
+```
+evidence_strength(k_soporte: int, n: int) -> Decimal en [0, 1]
+```
+
+con implementación inicial `evidence_strength = Wilson_LB` (z=1.96).
+Cualquier cambio futuro de función es una nueva versión de política,
+igual que `Politica` ya versiona `delta`/`theta`/`pesos_asunto`
+(RFC-0006 §1) — nunca una edición silenciosa de la misma versión.
+
+**2. `theta_mejora` como parámetro de política versionado, no
+constante de dominio.** Valor inicial `theta_mejora = Decimal("0")` —
+matemáticamente suficiente para Caso A (`Wilson_LB(2,2)=0.3424 > 0`),
+pero es una decisión pedagógica (qué tan poco basta para creer una
+mejora), no una necesidad matemática — vive en la política, versionada,
+igual que `theta` de D3 ya vive en `Politica` (RFC-0006 §3).
+
+**3. Definición exacta de "claim vigente".** Es **el claim de
+`TipoClaim.INTERPRETACION` con el mismo asunto y `vigencia.vigente ==
+True`** en el momento en que Diagnosticar procesa el nuevo hecho —
+nunca "el último creado", "el de mayor confianza histórica" ni "todos
+los claims del asunto". **Verificado hoy, sin código nuevo, que esta
+definición es inambigua por construcción:** el orden de `enrutar()`
+(`walkthrough.py:322-344`) comprueba `tension_bloqueante` (línea 336)
+**antes** que `_evidencia_pendiente_de_diagnosticar` (línea 340) — por
+lo tanto, cualquier tensión D1 pendiente sobre CUALQUIER asunto se
+resuelve antes de que el grafo vuelva a rutear hacia "diagnosticar". En
+el momento en que el productor de Diagnosticar se ejecuta, nunca puede
+haber más de un claim `INTERPRETACION` vigente para el mismo asunto —
+la consulta `next(c for c in estado.claims if c.tipo is
+TipoClaim.INTERPRETACION and c.asunto == mi_asunto and
+c.vigencia.vigente)` siempre devuelve 0 o 1 resultado, nunca ambiguo.
+
+## Lo que este pre-registro NO modifica
+
+`ClaimEntry`, `Provenance`, `TransitionIntent`, ningún reducer
+(`registrar_claim` sin cambios), `mecanica.py` (D1 sigue "mayor ce
+gana"), `confianza.py` (A6/A7 intactos), RFC-0006 (ninguna sección
+enmendada). Confirmado por el análisis de 5.7, no reafirmado aquí de
+nuevo salvo esta lista de cierre.
+
+## Diseño experimental (para cuando se implemente)
+
+Reutiliza los tres casos reales ya recolectados en Postgres (5.4/5.5/
+5.6 — cuentas `estudiante.novato2`, `estudiante.casoc2`) como los tres
+escenarios de aceptación — **sin necesidad de nuevas llamadas LLM para
+la verificación aritmética**, pero la implementación real sí debe
+ejecutarse contra el walkthrough completo (Postgres real) para
+confirmar que el resultado observado en producción coincide con la
+réplica aritmética ya hecha, igual criterio que 5.1/5.2 (réplica
+in-memory primero, corrida real después). N=3 (A, B, C) — mismo criterio
+de N=1 por escenario ya declarado como fortaleza metodológica, no
+debilidad, en 5.1.
+
+## Criterios de aceptación
+
+- `evidence_strength()` y `theta_mejora` implementados como funciones/
+  parámetros puros en `runtime/domain/diagnosticar/calibracion.py`
+  (módulo nuevo) — ninguna llamada a LLM, reloj de pared ni azar (mismo
+  criterio que las "transformaciones prohibidas" de RFC-0006 §1,
+  aplicado aquí por analogía aunque esta pieza no sea `ce`).
+- `productor_llm.py` de Diagnosticar importa `calibracion.py` y calcula
+  `confianza` antes de construir el `TransitionIntent` — mismo
+  contrato de `registrar_claim` (P13).
+- Los tres casos (A, B, C) reproducidos contra Postgres real producen
+  el resultado de la tabla de H1 — si alguno falla, se reporta como
+  está, sin ajustar el umbral después de ver el dato (mismo criterio de
+  pre-registro que 5.2).
+- Suite `tests/runtime/` completa sin regresión (mismo umbral que
+  iteraciones anteriores: 0 fallos nuevos).
+- `git diff` confirma que `kernel/`, `deliberation/`, y
+  `docs/architecture/RFC-0006*.md` quedan sin tocar.
+
+## Alcance explícitamente fuera de esta iteración
+
+- Elegir una `evidence_strength()` distinta de Wilson (queda como
+  extensión futura, la abstracción ya lo permite).
+- Ajustar `theta_mejora` a un valor distinto de 0 (decisión pedagógica
+  posterior, informada por más datos).
+- Consistencia/historial más allá del claim vigente inmediato (diferido
+  desde 5.4, sigue diferido).
+- Relación instrumento↔objetivo ("alineación", mencionada por el
+  tesista en la discusión de 5.4) — no forma parte de esta política.
+
+## Estado
+
+**IMPLEMENTADA — con un bug encontrado y corregido en la primera
+validación E2E real, y una pregunta semántica abierta descubierta en la
+segunda (ver Iteración 5.9, a continuación).** `runtime/domain/
+diagnosticar/calibracion.py` (nuevo, puro) + integración mínima en
+`productor_llm.py` + `tests/runtime/domain/diagnosticar/
+test_calibracion.py` (12 tests). Cero cambios en `kernel/`,
+`deliberation/`, reducers, RFC-0006. Suite completa `tests/runtime/`:
+416 passed, 0 failed.
+
+**Bug encontrado y corregido (cuenta real `estudiante.calib1`):** la
+regla de "mejora" original declaraba `fuerza_nueva` tal cual al
+aceptar — pero D1 sigue siendo "mayor ce gana" sin modificar, así que
+una mejora con evidencia pequeña (2/2, Wilson≈0.34) perdía de todos
+modos contra un vigente con `ce` mayor (pretest 0/12, Wilson≈0.76),
+pese a "aceptarse". Corregido: al aceptar, se declara `max(fuerza_nueva,
+fuerza_vigente)` — empata con el vigente y gana por el desempate de
+recencia ya existente en el kernel. Verificado con cuenta fresca
+`estudiante.calib2`: avanza correctamente, tie exacto confirmado en
+Postgres (0.3906 = 0.3906).
+
+**Pregunta semántica abierta (misma cuenta, encadenando A→B en la
+sesión real):** ver Iteración 5.9.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 5.9 — Persistencia de confianza tras una transición aceptada (H10, decisión semántica abierta)
+
+## Pregunta de investigación
+
+¿La confianza declarada de un claim debe representar únicamente la
+fuerza estadística de la observación que lo originó (`evidence_
+strength`), o el estado actual de creencia del sistema — que puede
+heredar resistencia de la transición que superó para llegar a ser
+vigente?
+
+## Cómo apareció — no en la aritmética, en el encadenamiento real
+
+5.6/5.8 verificaron Caso A y Caso B como transiciones **aisladas**,
+cada una partiendo de un estado inicial fresco. Un estudiante real no
+reinicia entre evidencias: la implementación de 5.8, corrida en cadena
+sobre la MISMA cuenta (`estudiante.calib2`, real, Postgres real, LLM
+real), reveló un efecto que ningún caso aislado podía mostrar.
+
+## Ejecución real completa (misma cuenta, en orden, sin reiniciar)
+
+| Paso | Evidencia | n | dominada | confianza declarada | vs. fuerza cruda |
+|---|---|---|---|---|---|
+| 1 | Pretest, 8/12 mal | 12 | False | 0.3906 | = cruda (primera evidencia, sin vigente) |
+| 2 | Evaluación real, 2/2 bien (**mejora**) | 2 | True | **0.3906** | cruda=0.3424, **heredada** del vigente (fix de Caso A) |
+| 3 | Re-evaluación real, 2/2 mal (**retroceso débil**) | 2 | False | **0.0000** | cruda=0.3424 — **rechazado**: 0.3424 < 0.3906 |
+| 4 | Evidencia adicional, 3/3 mal (**retroceso más fuerte**) | 3 | False | **0.4385** | cruda=0.4385 = declarada — **aceptado**: 0.4385 ≥ 0.3906, ahora vigente |
+
+**El sistema se comportó como histéresis real, no como un bug: una
+evidencia débil (paso 3) no logró revertir la mejora; una evidencia más
+fuerte (paso 4) sí lo logró.** El paso 4 fue necesario precisamente
+porque el paso 2 "heredó" 0.3906 en vez de declarar su propia fuerza
+cruda (0.3424) — el comportamiento es internamente consistente, pero es
+una consecuencia real del fix de Caso A que 5.8 no anticipó ni
+pre-registró.
+
+## Hallazgo práctico concreto — no solo teórico
+
+**Todas las evaluaciones reales del producto tienen exactamente `n=2`
+preguntas** (`evaluation_service.py`, `max_score` fijo). El techo
+absoluto de `evidence_strength` para CUALQUIER resultado de una
+evaluación de `n=2` es `Wilson_LB(2,2) ≈ 0.3424` — tanto para un 2/2
+perfecto como para un 0/2 total. **Consecuencia directa: una vez que un
+claim hereda una confianza declarada por encima de 0.3424 (lo que
+ocurre en cualquier "mejora" o "retroceso fuerte" cuyo vigente previo
+tenía más fuerza que eso — exactamente el paso 2 de la tabla), ninguna
+evaluación real futura de 2 preguntas podrá jamás revertirlo,
+sin importar cuántas veces el estudiante falle.** Esto no es hipotético
+— es el estado exacto de `estudiante.calib2` tras el paso 2, antes de
+que el paso 4 (una evidencia simulada de n=3, mayor que lo que el
+producto genera hoy) lo revirtiera.
+
+## Dos hipótesis, ninguna decidida
+
+**H0 — separar `confidence` de `evidence_strength`.** La confianza
+declarada del claim (la que D1 compara) debe representar SOLO la
+evidencia que lo originó — nunca heredar de una transición anterior.
+Requiere persistir la fuerza cruda por separado (¿un campo nuevo en
+`afirmacion` — sin tocar el contrato de `ClaimEntry` — o en
+`Provenance`?) para que la calibración pueda leerla en vez de la
+confianza declarada del vigente. Respeta literalmente el Caso B
+pre-registrado en 5.8. Requiere decidir dónde vive ese dato nuevo.
+
+**H1 — la confianza declarada ES el estado actual de creencia
+(comportamiento ya implementado).** Una transición aceptada gana
+estabilidad proporcional a la resistencia que superó — análogo a la
+fuerza de un prior en actualización bayesiana secuencial. No requiere
+ningún cambio de contrato (ya implementado, ya probado, 416 verdes).
+Protege contra oscilación rápida (`domina→no domina→domina→no domina`)
+con evidencia débil repetida. Su costo es el hallazgo práctico de
+arriba: con instrumentos de evaluación de `n=2` fijos, el candado es
+efectivamente permanente una vez cruzado el umbral.
+
+## Lo que esta iteración NO decide
+
+No elige entre H0 y H1 — es una decisión de diseño pedagógico real,
+con el mismo peso que 5.7 le dio a la ubicación arquitectónica. Si se
+elige H1, el hallazgo práctico (instrumentos de `n=2`) sugiere una
+acción complementaria fuera del alcance de H10: ampliar el tamaño de
+las evaluaciones reales de módulo — no una decisión de esta iteración,
+solo la consecuencia que la deja visible.
+
+## Pregunta de investigación derivada (pendiente)
+
+¿Qué nivel de autoridad pedagógica debe tener una reevaluación breve
+(n=2) para modificar el estado de dominio de una competencia? Esta
+pregunta pertenece al diseño del instrumento de evaluación y es
+conceptualmente independiente de la política de calibración de
+confianza estudiada en H10. Su respuesta puede requerir una
+investigación específica sobre el tamaño del instrumento, la
+acumulación de evidencia o los criterios de reversión, y no debe
+resolverse modificando la calibración sin evidencia adicional.
+
+No es todavía una nueva iteración de investigación — no hay hipótesis
+ni experimento definidos — es una pregunta derivada de 5.9 que se deja
+registrada para no perderla. Si se investiga más adelante, esa cadena
+(p. ej. H11) parte de aquí como origen, en vez de aparecer como una
+modificación de H10.
+
+## Estado
+
+**EJECUTADA — cadena real completa (4 pasos, misma cuenta, Postgres
+real, LLM real) documentada; decisión H0 vs. H1 pendiente del
+tesista.** No se modifica código hasta la decisión. Cadena completa
+H10: 5.1 → 5.2 → 5.3 → 5.4 (refutada) → 5.5 (refutada) → 5.6 (candidato
+encontrado) → 5.7 (ubicación resuelta) → 5.8 (implementada, un bug
+corregido en E2E real) → 5.9 (esta, pregunta semántica abierta
+encontrada en E2E real, sin decidir).
