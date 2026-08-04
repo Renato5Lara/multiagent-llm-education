@@ -142,14 +142,21 @@ def _resultado_deliberacion(datos: Mapping[str, Any]):
     # Union sin discriminador explícito en el canónico — se reconoce por
     # el nombre de campo, único por variante (Resuelta/Aplazada/Escalada
     # no comparten ningún nombre de campo).
+    # ADR-0014: "margen" es opcional — ausente en transiciones históricas
+    # anteriores a esta ADR; presente (posiblemente null) en las nuevas.
+    margen = datos.get("margen")
     if "regla" in datos:
         return Resuelta(
             regla=datos["regla"],
             aceptados=_entry_ids(datos["aceptados"]),
             confianza=Decimal(datos["confianza"]),
+            margen=Decimal(margen) if margen is not None else None,
         )
     if "evidencia_faltante" in datos:
-        return Aplazada(evidencia_faltante=datos["evidencia_faltante"])
+        return Aplazada(
+            evidencia_faltante=datos["evidencia_faltante"],
+            margen=Decimal(margen) if margen is not None else None,
+        )
     if "destinatario" in datos:
         return Escalada(destinatario=datos["destinatario"])
     raise ValueError(f"ADR-0007/RFC-0008: resultado de deliberación irreconocible: {datos!r}")

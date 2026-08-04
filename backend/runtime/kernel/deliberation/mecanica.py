@@ -214,12 +214,14 @@ def convocar(
                 regla=REGLA_POLITICA_V1,
                 aceptados=(ganador.id,),
                 confianza=ces[ganador.id],
+                margen=margen,
             )
         elif urgente:
             resultado = Resuelta(
                 regla=REGLA_PROVISIONAL,
                 aceptados=(ganador.id,),
                 confianza=ces[ganador.id],
+                margen=margen,
             )
         elif (
             _aplazamientos_en_cadena(estado, cabeza)
@@ -232,7 +234,8 @@ def convocar(
                     f"evidencia sobre '{asunto}' que discrimine entre "
                     f"{ganador.id} y {rival.id}: margen {margen} < "
                     f"delta {politica.delta}"
-                )
+                ),
+                margen=margen,
             )
 
     argumentos: dict = {"participantes": participantes, "resultado": resultado}

@@ -88,6 +88,17 @@ class TestD1_MargenSobreCe:
         assert resultado.confianza == Decimal("0.90")
         assert resultado.regla == REGLA_POLITICA_V1
 
+    def test_margen_queda_persistido_en_resuelta_adr_0014(self):
+        """ADR-0014: el margen que `convocar()` ya calculaba para decidir
+        la rama queda persistido en `Resuelta.margen`, no solo usado y
+        descartado."""
+        estado, _ = _estado_con_dos_rivales(
+            TipoClaim.INTERPRETACION, "dominio(COMP-2)", (Decimal("0.40"), Decimal("0.90"))
+        )
+        intent = convocar(estado, _V1)
+        resultado = intent.argumentos["resultado"]
+        assert resultado.margen == Decimal("0.90") - Decimal("0.40")
+
 
 class TestD2_PesoPorAsunto:
     def test_peso_es_por_asunto_no_por_claim_nunca_cambia_el_ganador_local(self):
@@ -147,6 +158,26 @@ class TestD2_PesoPorAsunto:
         intent = convocar(estado, politica_con_peso)
         assert intent is not None
         assert isinstance(intent.argumentos["resultado"], Aplazada)
+
+    def test_margen_escalado_queda_persistido_en_aplazada_adr_0014(self):
+        """El caso anterior aplaza con margen escalado 0.15 (< delta
+        0.20) — ADR-0014 exige que ese margen quede en el campo, no solo
+        en el texto de `evidencia_faltante`."""
+        estado, _ = _estado_con_dos_rivales(
+            TipoClaim.PROPUESTA, "siguiente-paso(sesion)", (Decimal("0.80"), Decimal("0.50"))
+        )
+        politica_con_peso = Politica(
+            peso_refuerzo=Decimal("0"),
+            peso_refutacion=Decimal("0"),
+            peso_decaimiento=Decimal("0"),
+            theta=Decimal("0"),
+            delta=Decimal("0.20"),
+            pesos_asunto={"siguiente-paso(sesion)": Decimal("0.5")},
+        )
+        intent = convocar(estado, politica_con_peso)
+        resultado = intent.argumentos["resultado"]
+        assert isinstance(resultado, Aplazada)
+        assert resultado.margen == Decimal("0.15")
 
     def test_confianza_registrada_es_ce_crudo_no_el_puntaje_ponderado(self):
         """Resuelta.confianza siempre respeta [0,1] (INV-7) sin importar

@@ -183,6 +183,11 @@ class Resuelta:
     regla: str
     aceptados: tuple[EntryId, ...]
     confianza: Decimal
+    margen: Decimal | None = None
+    """Distancia entre el puntaje del ganador y su rival más fuerte
+    (ADR-0014) — ya calculada por `convocar()`, aquí solo persistida
+    para no requerir recomputarla en cada lectura. `None` en
+    transiciones históricas anteriores a ADR-0014."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -190,6 +195,8 @@ class Aplazada:
     """Declaración explícita de la evidencia que falta (INV-7)."""
 
     evidencia_faltante: str
+    margen: Decimal | None = None
+    """Ver `Resuelta.margen` (ADR-0014) — mismo campo, misma razón."""
 
 
 @dataclass(frozen=True, slots=True)
