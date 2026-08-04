@@ -554,31 +554,32 @@ quedó la Parte E.
 
 La migración que la nota anterior esperaba **ya ocurrió**
 (`ADR-0013`, calibración de confianza declarada de Diagnosticar/
-Remediar/Orientar-LLM) y `POLITICAS["v2"]` (`ADR-0012`) se activó de
-verdad en producción — brevemente, con evidencia real, y se revirtió
-el mismo día (`ADR-0015`). Estado actual:
+Remediar/Orientar-LLM). `POLITICAS["v2"]` (`ADR-0012`) se activó una
+primera vez brevemente y se revirtió el mismo día (`ADR-0015`, gap de
+`urgente` real encontrado en esa activación); cerrada la precondición
+que dejó pendiente, se reactivó de forma permanente en esta misma
+sesión (`ADR-0016` + commit `82df22b`). Estado actual:
 
-- **v1 en producción, estable.** Sin cambios de comportamiento.
-- **v2 implementada y validada, precondición de `ADR-0015 §8` ya
-  cerrada** (misma sesión, commits `4fd6ed8`/`e0a83ff`): `urgente` ya
-  se propaga desde `app/services/runtime_bridge.py` (tabla de
-  clasificación abajo), y los dos consumidores app-level de `Entrega`
-  (`module_orchestration_service.py`, `pedagogy_runtime_bridge.py`)
-  quedaron probados contra una `Aplazada` real bajo `POLITICAS["v2"]`
-  real (`tests/test_aplazada_consumidores_boundary.py` — margen=0.0000
-  observado, ningún consumidor rompió).
 - **`ADR-0016` Aceptada** (`docs/architecture/ADR/ADR-0016-
   reactivacion-politica-v2-con-soporte-aplazada.md`, misma sesión) —
   gate técnico cerrado a tres niveles (llamada directa, HTTP real,
   navegador real bajo `v2` real) y §6 (¿distinguir "sin evidencia" de
   "evidencia aplazada/insuficiente"?) resuelta explícitamente como
-  fuera de alcance: la Fase 4 encontró que son en realidad **tres**
-  caminos que colapsan en la misma `Entrega` vacía (sin evidencia,
-  `Aplazada` D1/D2, D3-insuficiencia por `θ`), y modelar esa
-  distinción queda registrado como evolución futura, no como deuda de
-  esta ADR. **Activación permanente todavía no ejecutada** —
-  `VERSION_POLITICA="v2"` en `runtime_connection.py` queda como cambio
-  operativo separado, deliberadamente fuera de esta ADR.
+  fuera de alcance: son en realidad **tres** caminos que colapsan en
+  la misma `Entrega` vacía (sin evidencia, `Aplazada` D1/D2,
+  D3-insuficiencia por `θ`), y modelar esa distinción queda registrado
+  como evolución futura, no como deuda de esta ADR.
+- **`POLITICAS["v2"]` activada operativamente en producción**, commit
+  `82df22b` — cambio separado de la ADR, con su propio smoke test
+  (sesión nueva sin overrides nace bajo `v2`; sesiones ya abiertas
+  bajo `v1` permanecen `v1`, INV-1/INV-2). `urgente` propagado desde
+  `app/services/runtime_bridge.py` (tabla de clasificación abajo) y
+  los dos consumidores app-level de `Entrega`
+  (`module_orchestration_service.py`, `pedagogy_runtime_bridge.py`)
+  probados contra una `Aplazada` real (`tests/test_aplazada_
+  consumidores_boundary.py`). Cadena completa: `ADR-0015` (rollback
+  `v1`) → `4fd6ed8` (gap `urgente`) → `e0a83ff` (consumidores) →
+  `ADR-0016` (Aceptada) → `82df22b` (activación permanente).
 
 ### Contrato de `urgente` por consumidor — preparación de ADR-0016 (2026-08-04)
 
