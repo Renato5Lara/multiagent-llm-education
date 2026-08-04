@@ -1,9 +1,10 @@
 # ADR-0016 — Reactivación de `POLITICAS["v2"]` con consumidores tolerantes a `Aplazada`
 
-- **Estado:** Propuesto — no aceptado todavía (ver §6, "Decisión
-  pendiente"). La precondición técnica que `ADR-0015 §8` dejó abierta
-  ya está cerrada con evidencia real; falta una decisión de producto,
-  no una pieza de ingeniería.
+- **Estado:** Aceptado (2026-08-04, Engineering Review — §6 resuelta:
+  la distinción S1/S3 queda explícitamente fuera de alcance, no
+  diferida por indecisión). La precondición técnica que `ADR-0015 §8`
+  dejó abierta está cerrada con evidencia real a tres niveles (llamada
+  directa, HTTP, navegador real).
 - **Fecha:** 2026-08-04
 - **Preserva:** `runtime/kernel/deliberation/mecanica.py` (sin
   cambios), `runtime/kernel/deliberation/politica.py` (`POLITICAS`,
@@ -69,8 +70,10 @@ constante, un archivo. El mecanismo de selección
 (`Identidad.version_politica` fijada atómicamente al abrir, INV-1/
 INV-2; `resolver_politica()` como único punto de lectura en
 `walkthrough.py`) no cambió desde `ADR-0015` y sigue siendo correcto.
-Esta ADR no ejecuta ese cambio — permanece **Propuesto** hasta
-resolver §6.
+Esta ADR documenta y acepta que el cambio es seguro (§5); no lo
+ejecuta — la activación permanente de `VERSION_POLITICA="v2"` es un
+cambio operativo separado, con su propio commit (§9), posterior a la
+aceptación de esta ADR.
 
 ## 3. Engineering Gate (CLAUDE.md)
 
@@ -142,11 +145,11 @@ explícitamente fuera de este alcance.
   producida, margen=0.0000, ningún consumidor rompió.
 
 Estos criterios demuestran que la reactivación es **técnicamente
-segura**, ahora con evidencia a dos niveles (llamada directa y HTTP
-real). No son, por sí solos, criterio de aceptación de esta ADR — ver
-§6 y §9 (falta el recorrido en navegador real).
+segura**, con evidencia a tres niveles (llamada directa, HTTP real y
+navegador real — §9). Junto con §6 (decisión de producto ya resuelta),
+son el criterio de aceptación completo de esta ADR.
 
-## 6. Decisión pendiente (bloquea `Propuesto → Aceptado`)
+## 6. Decisión: la distinción S1/S3 queda fuera de alcance (resuelta)
 
 `module_orchestration_service.py` y `pedagogy_runtime_bridge.py` leen
 exclusivamente S1 (`Entrega`, la propuesta vigente de Adaptar) y nunca
@@ -160,27 +163,39 @@ exactamente igual para estos consumidores que un estudiante que
 como `estudiantes_con_evidencia=0`.
 
 Bajo `v1` esto era irrelevante (`Aplazada` estructuralmente
-inalcanzable). Bajo `v2` real, con margen=0.0000 observado en la
-primera corrida, es un estado que **va a ocurrir en producción** con
-alguna frecuencia no despreciable.
+inalcanzable). Bajo `v2` real es un estado que **va a ocurrir en
+producción** con alguna frecuencia no despreciable — la Fase 4
+(§5, §9) terminó de mostrar que no es solo `Aplazada`: hay **tres**
+caminos reales que colapsan en la misma `Entrega(None, None)`:
 
-**La pregunta que esta ADR no resuelve:** ¿la capa pedagógica
-(Panel Docente, sugerencia semanal, orquestación de módulo) debe
-distinguir "sin evidencia" de "evidencia con deliberación aplazada"?
+1. **Nunca hubo evidencia** — `estado.deliberaciones = ()`.
+2. **`Aplazada` real** (D1/D2, margen < δ) — confirmado con
+   margen=0.0000 (§5).
+3. **D3-insuficiencia** (confianza < θ, sin tensión ni deliberación
+   siquiera) — confirmado en `submit_evaluation` bajo `θ=0.5` real
+   (§5, §7).
 
-- Si la respuesta es **no** (el docente no necesita esa distinción
-  hoy — una `Aplazada` se resuelve sola en el próximo `urgente=True`
-  o escala vía Parte F): esta ADR pasa a Aceptado tal cual está,
-  documentando la limitación como comportamiento conocido y
-  aceptado, no como deuda.
-- Si la respuesta es **sí**: hace falta que estos consumidores lean
-  S3 además de S1 — una capacidad nueva (RFC-0006 ya expone
-  `estado.deliberaciones`/`derivar_consenso`, así que no es un
-  concepto nuevo del kernel, pero sí un cambio de contrato de estos
-  dos servicios de producto) que requiere su propia mini-ficha antes
-  de escribir código, no una decisión tomada de pasada aquí.
+**Decisión: no se modifican `pedagogy_runtime_bridge.py` ni
+`module_orchestration_service.py` para distinguir estos casos.**
+Motivo — la finalidad de esta ADR es acotada (rollback de `v1` →
+propagar `urgente` → soportar `Aplazada` → reactivar `v2` con
+seguridad), no rediseñar la semántica pedagógica de la UI docente.
+Enseñar a estos dos servicios a leer S3 además de S1 no es un
+hardening de esta reactivación — es una **capacidad de producto
+nueva** ("exponer estado de deliberación al consumidor pedagógico"),
+y con tres caminos reales que colapsan en el mismo estado vacío
+(no solo uno), modelarla bien exige su propio análisis y su propia
+ADR/mini-ficha, no una decisión tomada de pasada aquí. La proyección
+actual de `Entrega` mantiene una semántica estable y suficiente para
+la seguridad técnica de `v2`: un consumidor app-level recibe
+únicamente la decisión pedagógica vigente, sin inventar una tercera
+categoría a medio resolver.
 
-No se decide en esta sesión — se deja explícitamente abierta.
+Queda registrada como evolución futura, no como deuda de esta ADR:
+**"exponer estado de deliberación (S3) al consumidor pedagógico"** —
+candidata a su propia ADR cuando exista una necesidad de producto
+concreta que la justifique (p. ej. el Panel Docente necesitando
+distinguir los tres estados de forma visible).
 
 ## 7. Riesgo residual conocido, no bloqueante
 
@@ -211,22 +226,24 @@ Idéntica a `ADR-0015 §7`: revertir `VERSION_POLITICA` a `"v1"` es un
 cambio de una línea, sin migración, sin efecto sobre sesiones ya
 abiertas bajo `v2` (permanecen `v2` para siempre — INV-1/INV-2).
 
-## 9. Próximo paso antes de `Aceptado`
+## 9. Trabajo realizado para esta aceptación, y lo que queda después
 
-1. **Pendiente — único punto que falta:** Resolver §6 (decisión de
-   producto, no de ingeniería).
-2. **Hecho (misma sesión):** recorrido E2E por HTTP real bajo `v2`
-   real, `tests/test_e2e_adr0016_v2_produccion.py` — `submit_evaluation`
-   y `submit_cycle_evidence`, ambos con `identidad.version_politica
-   =="v2"` confirmada y contrato HTTP coherente en todo desenlace
-   observado (`Resuelta`, `Aplazada`, D3-insuficiencia). Evidencia
-   registrada en §5.
-3. **Hecho (misma sesión, Fase 4.4) — navegador real:** flip
-   experimental de `VERSION_POLITICA` a `"v2"` en `runtime_connection.py`
-   (revertido a `"v1"` al terminar, diff de una línea, sin residuo —
-   `ADR-0015 §7`), backend + frontend reales levantados, dos
-   estudiantes reales seedeados y logueados vía `/api/auth/login` real.
-   Recorrido completo: onboarding → diagnóstico VARK (18 preguntas,
+Todo lo siguiente está **hecho**, en la misma sesión:
+
+1. Resolver §6 (decisión de producto: fuera de alcance, registrada,
+   no diferida por indecisión).
+2. Recorrido E2E por HTTP real bajo `v2` real,
+   `tests/test_e2e_adr0016_v2_produccion.py` — `submit_evaluation` y
+   `submit_cycle_evidence`, ambos con
+   `identidad.version_politica=="v2"` confirmada y contrato HTTP
+   coherente en todo desenlace observado (`Resuelta`, `Aplazada`,
+   D3-insuficiencia). Evidencia registrada en §5.
+3. Navegador real (Fase 4.4): flip experimental de `VERSION_POLITICA`
+   a `"v2"` en `runtime_connection.py` (revertido a `"v1"` al
+   terminar, diff de una línea, sin residuo — `ADR-0015 §7`), backend
+   + frontend reales levantados, dos estudiantes reales seedeados y
+   logueados vía `/api/auth/login` real. Recorrido completo:
+   onboarding → diagnóstico VARK (18 preguntas,
    `_registrar_diagnostico_en_runtime`) → pre-test (`submit_attempt`,
    12 preguntas) → ruta adaptativa (`decision_adaptativa`) → módulo →
    ejercicio de práctica → `POST /api/students/cycle-evidence`.
@@ -240,16 +257,23 @@ abiertas bajo `v2` (permanecen `v2` para siempre — INV-1/INV-2).
    Postgres real, con una deliberación `Resuelta` (margen=0.3393) —
    cero errores de consola, cero HTTP 500, en todo el recorrido de
    ambas corridas (10 acciones de estudiante real cada una).
-4. Solo cuando §6 se resuelva: `VERSION_POLITICA = "v2"` en
-   `runtime_connection.py`, y esta ADR pasa a Aceptado.
+
+**Lo que queda, deliberadamente separado de esta ADR:** la activación
+permanente — `VERSION_POLITICA = "v2"` en `runtime_connection.py` —
+es un **cambio operativo propio, con su propio commit**, no parte de
+la aceptación de esta ADR. Esta ADR certifica que el cambio es seguro
+y deja registrada la evidencia; decidir *cuándo* activarlo en
+producción real (con estudiantes reales, no de prueba) es una
+decisión de despliegue posterior, del mismo tipo que `ADR-0015 §2`
+ya trató como "una constante, un archivo".
 
 ---
 
 *Origen: precondición dejada explícitamente pendiente por
 `ADR-0015 §8`, cerrada con evidencia real (commits `4fd6ed8`,
-`e0a83ff`, `fc68456`, `edddbb4`) en la misma sesión, incluida
-validación en navegador real (Fase 4.4, §9.3). Rama:
-`feat/confidence-calibration-remediation-orientation`. Permanece
-Propuesto — el único punto que falta para pasar a Aceptado es la
-decisión de producto de §6, no evidencia técnica adicional. Ver el
-recorrido en navegador real de §9.*
+`e0a83ff`, `fc68456`, `edddbb4`, más el commit de esta decisión) en la
+misma sesión, incluida validación en navegador real (Fase 4.4, §9).
+Rama: `feat/confidence-calibration-remediation-orientation`.
+**Aceptada** — la activación permanente de `v2` en producción real
+queda como cambio operativo separado (§9), no como condición de esta
+ADR.*
