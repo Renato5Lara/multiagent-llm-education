@@ -2216,3 +2216,152 @@ produce significancia estadística — esa es la pregunta de una
 iteración posterior (candidata `6.2`: conectar `app/experiment/
 analysis.py`, ANOVA/Cohen's d, al dashboard, cuando exista N
 suficiente), no de esta.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 6.2 — Robustez del pipeline de medición a escala (N>1) (2026-08-05)
+
+> Continúa la serie 6.x abierta por la Iteración 6.1. No reabre esa
+> iteración (CERRADA) — construye sobre su resultado: el instrumento ya
+> probó medir la arquitectura final con N=1; esta iteración prueba que
+> el pipeline completo (`ExperimentResult` → exportación → análisis
+> estadístico) sigue siendo correcto cuando N>1, antes de acercarse a
+> la pregunta de significancia real de la hipótesis de tesis.
+
+## Puerta de entrada (Regla maestra)
+
+1. **¿Qué pregunta de investigación responde?** Ver más abajo.
+2. **¿Qué parte de la hipótesis fortalece?** La validez del método de
+   medición a escala — si el pipeline se rompe o pierde datos con más
+   de un estudiante (duplicados, filas perdidas en la exportación,
+   `analysis.py` fallando ante N>1), cualquier resultado agregado que
+   la tesis reporte más adelante sería inauditable, igual que en 6.1
+   con la trazabilidad de una sola cuenta.
+3. **¿Qué variable afecta?** Ninguna variable pedagógica nueva —
+   valida que el pipeline de medición (no la adaptación en sí) es
+   correcto cuando opera sobre varios `ExperimentResult` a la vez.
+4. **¿Cómo se observará durante la demo?** Tabla de `ExperimentResult`
+   con N≥2 filas reales, exportación CSV/XLSX mostrando esas mismas
+   filas 1:1, y una corrida real de `app/experiment/analysis.py`
+   contra ese conjunto con salida visible (sin pretender significancia
+   con N pequeño).
+5. **¿Cómo aparecerá en Resultados y Discusión?** Como la sección que
+   responde "el pipeline de análisis estadístico está construido,
+   probado y listo para producir resultados en cuanto exista N real
+   suficiente" — distinto de reportar los resultados mismos, que
+   dependen de tráfico real todavía no disponible (`ADR-0016`
+   post-cierre: `v1: 790` vs `v2: 6` sesiones, las 6 generadas por
+   validación, no orgánicas).
+
+## Pregunta de investigación
+
+Con N>1 estudiantes reales (no solo la cuenta única de la Iteración
+6.1), ¿el pipeline completo — `ExperimentResult` materializado por
+cada uno, `research_dashboard_service.get_student_result_rows()`,
+exportación CSV/XLSX, y `app/experiment/analysis.py` (ANOVA/Cohen's d,
+construido en julio pero nunca ejercitado contra datos reales) — sigue
+siendo correcto y consistente, o aparecen errores de escala que un
+N=1 no puede revelar (filas duplicadas o perdidas, cálculo estadístico
+que falla o produce valores sin sentido, dashboard leyendo datos
+intermedios en vez de `ExperimentResult`)?
+
+## Hipótesis parcial
+
+Si se generan N>1 `ExperimentResult` reales (múltiples cuentas, mismo
+curso, mismo criterio de evidencia sintética-pero-etiquetada que 6.1 —
+ninguna se presenta como tráfico orgánico), entonces (a) cada fila
+exportada por CSV/XLSX corresponde 1:1 con su fila en Postgres, sin
+pérdida ni duplicación; (b) `app/experiment/analysis.py` puede
+ejecutarse sobre ese conjunto y producir una salida numérica válida
+(aunque sin poder estadístico interpretable, por N pequeño); y (c) el
+dashboard de investigación (`ResearchDashboard.tsx` y las rutas
+`/api/research/*`) consume únicamente `ExperimentResult`, nunca
+`KnowledgeTestAttempt` u otro dato intermedio directamente.
+
+## Por qué esta pregunta, no otra (decisión ya tomada, no reabrir)
+
+Se descartó abrir esta iteración interpretando ya significancia
+estadística de la hipótesis central, por la misma razón que motivó la
+verificación de observabilidad post-`ADR-0016`: no existe todavía
+tráfico real suficiente (6 sesiones `v2`, todas de validación, no
+producción orgánica) — cualquier ANOVA/Cohen's d calculado hoy sería
+sobre datos que no representan estudiantes reales. Primero robustez
+del pipeline a escala pequeña controlada, después significancia con N
+real — no al revés. La pregunta de significancia real queda para una
+iteración posterior (candidata `6.3`), condicionada a que exista
+tráfico orgánico suficiente.
+
+## Alcance de esta iteración (deliberado)
+
+- **No espera tráfico real de producción.** Genera N>1 cuentas de
+  prueba reales (mismo criterio que la cuenta de 6.1: navegador real,
+  Postgres real, etiquetadas como validación, nunca presentadas como
+  evidencia orgánica) — suficientes para ejercitar el pipeline a
+  escala, no para inferencia estadística.
+- **No implementa gráficos ni UI nueva.** El dashboard de investigación
+  ya existe (`ResearchDashboard.tsx`); esta iteración verifica que
+  consume `ExperimentResult` correctamente, no lo rediseña.
+- **No modifica `ExperimentResult` ni ningún reducer del kernel** — ni
+  el contrato de `app/experiment/analysis.py`, que ya existe.
+- **No interpreta significancia estadística** de la hipótesis central
+  — solo que el cálculo se ejecuta correctamente sobre datos reales.
+
+## Implementación
+
+Ninguna todavía — como 6.1, esta iteración empieza en validación, no
+en construcción. Si la ejecución revela que `app/experiment/
+analysis.py` necesita wiring real hacia una ruta HTTP para poder
+ejercitarse desde la demo (hoy es un módulo sin endpoint, según
+`RESEARCH_LAYER_TECHNICAL_REPORT.md`), ese wiring sería la única pieza
+de construcción nueva de esta iteración — acotada, no una capacidad
+adicional.
+
+## Evidencia observable
+
+- N≥2 filas de `ExperimentResult` reales en Postgres, cada una
+  trazable a un recorrido real (mismo nivel de evidencia que 6.1).
+- La exportación CSV/XLSX (`GET /api/research/export`) mostrando esas
+  mismas N filas, verificado 1:1 contra Postgres.
+- Una salida real (no mockeada) de `app/experiment/analysis.py`
+  ejecutada contra ese conjunto.
+- Cita del código del dashboard de investigación mostrando que lee
+  `ExperimentResult`, no `KnowledgeTestAttempt` ni otro intermedio.
+
+## Variables fortalecidas
+
+- **Independiente:** ninguna nueva — la arquitectura de adaptación
+  (`runtime/` LangGraph + `POLITICAS["v2"]`) ya está fijada desde 6.1.
+- **Dependiente (validada, no medida todavía):** robustez del pipeline
+  de medición y análisis a escala — no la ganancia pedagógica en sí,
+  que requiere N real (candidata `6.3`).
+
+## Amenazas a la validez
+
+Lo que esta iteración NO demuestra:
+
+- No demuestra significancia estadística de la hipótesis central — N
+  seguirá siendo pequeño y de prueba, no producción real.
+- No demuestra que la adaptación multimodal mejora el aprendizaje —
+  esa es la pregunta de `6.3`, condicionada a N real.
+- No valida el pipeline bajo carga ni concurrencia — solo corrección
+  funcional con varios registros secuenciales.
+
+## Evidencia que deberá recolectarse
+
+- □ N≥2 recorridos reales completos (pre→ruta→post→`ExperimentResult`).
+- □ Diff fila por fila entre Postgres y la exportación CSV/XLSX.
+- □ Log real de ejecución de `app/experiment/analysis.py` sobre el
+  conjunto, con su salida completa.
+- □ Cita exacta (archivo + línea) del dashboard confirmando que solo
+  consume `ExperimentResult`.
+
+## Resultado
+
+Pendiente — iteración recién abierta.
+
+## Estado
+
+**EN PREPARACIÓN.** Punto de entrada explícito de la próxima sesión de
+investigación sobre esta línea: generar el segundo `ExperimentResult`
+real (N=2) y continuar desde ahí — no repetir la Iteración 6.1 ni
+regenerar la cuenta ya usada (`iteracion.6.1@upao.test`).
