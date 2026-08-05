@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
 import { cn } from '@/lib/utils'
 
 type DropdownMenuContextType = {
@@ -57,16 +58,24 @@ type DropdownMenuTriggerProps = React.ButtonHTMLAttributes<HTMLButtonElement> & 
 }
 
 export const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownMenuTriggerProps>(
-  ({ className, onClick, ...props }, ref) => {
+  ({ className, onClick, asChild = false, ...props }, ref) => {
     const { open, setOpen } = useDropdown()
+    // Auditoría 2026-08-05, Ficha 08: `asChild` estaba declarado en el tipo
+    // pero nunca implementado — este componente siempre renderizaba su
+    // propio <button>, así que <DropdownMenuTrigger asChild><Button/></...>
+    // producía un <button> real anidado dentro de otro, más `asChild`
+    // filtrado como atributo DOM literal (los 3 errores de React de la
+    // Ficha 08). Slot (mismo mecanismo que ya usa components/ui/button.tsx)
+    // fusiona estos props en el único hijo en vez de envolverlo.
+    const Comp = asChild ? Slot : 'button'
 
     return (
-      <button
+      <Comp
         ref={ref}
         type="button"
         aria-haspopup="true"
         aria-expanded={open}
-        onClick={(e) => {
+        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           onClick?.(e)
           setOpen((prev: boolean) => !prev)
         }}
