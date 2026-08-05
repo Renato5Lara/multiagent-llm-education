@@ -20,7 +20,7 @@ from app.models.knowledge_test import (
     KnowledgeTestQuestion,
 )
 from app.models.research import ExperimentResult
-from app.models.student_progress import LearningPath
+from app.models.student_progress import LearningPath, PathModule
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,36 @@ LEVEL_LABELS = {"basico": "Básico", "intermedio": "Intermedio", "avanzado": "Av
 # Umbrales por módulo para el desglose del perfil
 MASTERY_THRESHOLD_PCT = 75.0   # módulo dominado (fortaleza / desbloqueo)
 CRITICAL_THRESHOLD_PCT = 50.0  # módulo crítico (debilidad)
+
+# Bug encontrado en validación E2E real (Iteración 6.1, 2026-08-04), dos
+# causas independientes que se enmascaraban entre sí:
+#
+# 1. El gate del Post-Test comparaba contra `LearningPath.total_modules`,
+#    que cuenta TODOS los `LearningObjective` del curso (hoy 4). Pero
+#    PED-004 (frontend/src/lib/experiences/index.ts:27-52,
+#    `REFERENCE_MODULE_MODE`) oculta y hace inalcanzables los objetivos 3+
+#    desde la Ruta de Aprendizaje real hasta que tengan experiencia de
+#    contenido propia (`module3.ts`/`module4.ts`, todavía sin autorar) — su
+#    propio comentario ya documenta ese techo ("ningún estudiante puede
+#    llegar más allá del Objetivo 2"), pero no mencionaba al Post-Test.
+#
+# 2. El gate leía `LearningPath.completed_modules` (contador cacheado,
+#    escrito solo por `update_module_progress`). `student_service.py`
+#    líneas ~384-405 ya documenta por qué el resto del producto (Ruta,
+#    analítica docente) DEJÓ de confiar en ese contador y deriva en vivo
+#    desde `PathModule.status == "completed"`: el cacheado se desincroniza
+#    (confirmado en Postgres real durante esta misma validación — 2
+#    módulos con `status="completed"` mientras el contador seguía en 1).
+#    Este gate era el último lugar que aún confiaba en el valor cacheado.
+#
+# Juntas, ambas causas dejaban el Post-Test estructuralmente inalcanzable
+# para cualquier estudiante — no solo en esta sesión de validación.
+#
+# El techo de abajo es la mitad acoplada de PED-004, no una capacidad
+# nueva: si el flag `REFERENCE_MODULE_MODE` se apaga (module3.ts/module4.ts
+# autorados), este valor debe subir en el mismo cambio o el gate volverá a
+# ser el de siempre (correcto, sin techo).
+POST_TEST_REFERENCE_MODULE_LIMIT = 2
 
 VALID_KINDS = ("pre", "post")
 
@@ -186,10 +216,29 @@ def start_attempt(
                 )
                 .first()
             )
+            # PED-004: el requisito real es completar los módulos que la
+            # Ruta de Aprendizaje efectivamente muestra (techo de
+            # POST_TEST_REFERENCE_MODULE_LIMIT hoy), no todos los
+            # LearningObjective del curso. Contado en vivo desde
+            # `PathModule.status`, no desde `path.completed_modules`
+            # (contador cacheado, ver comentario de la constante) — mismo
+            # criterio que `student_service.py` ya usa para Ruta/analítica.
+            required_modules = (
+                min(path.total_modules, POST_TEST_REFERENCE_MODULE_LIMIT)
+                if path is not None
+                else 0
+            )
+            completed_modules_live = (
+                db.query(PathModule)
+                .filter(PathModule.path_id == path.id, PathModule.status == "completed")
+                .count()
+                if path is not None
+                else 0
+            )
             if (
                 path is None
-                or path.total_modules == 0
-                or path.completed_modules < path.total_modules
+                or required_modules == 0
+                or completed_modules_live < required_modules
             ):
                 raise KnowledgeTestError(
                     "LEARNING_PATH_INCOMPLETE",

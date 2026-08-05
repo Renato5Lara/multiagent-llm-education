@@ -162,28 +162,53 @@ def test_post_requires_completed_pre(
     assert resp.json()["detail"]["code"] == "PRETEST_REQUIRED_FIRST"
 
 
+def _seed_path_with_modules(db, student_id, course_id, total_modules, statuses):
+    """Crea una LearningPath real + sus PathModule, con `completed_modules`
+    (el contador cacheado) fijado a un valor DISTINTO del real derivable de
+    `statuses` cuando corresponda -- así cada test ejercita exactamente lo
+    que el gate live-derivado lee (`PathModule.status`), no lo que el
+    contador cacheado diría (regresión del bug de Iteración 6.1)."""
+    from app.models.student_progress import LearningPath, PathModule
+
+    path = LearningPath(
+        student_id=student_id,
+        course_id=course_id,
+        total_modules=total_modules,
+        completed_modules=sum(1 for s in statuses if s == "completed"),
+        status="active",
+    )
+    db.add(path)
+    db.flush()
+    for i, s in enumerate(statuses):
+        db.add(
+            PathModule(
+                path_id=path.id,
+                title=f"Módulo {i + 1}",
+                order=i + 1,
+                status=s,
+            )
+        )
+    db.commit()
+    return path
+
+
 def test_post_requires_completed_learning_path(
     client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
 ):
-    """Ruta con módulos pendientes: el Post-Test debe rechazarse, sin crear intento."""
+    """Ruta con módulos de referencia pendientes (PED-004): el Post-Test debe
+    rechazarse, sin crear intento."""
     from app.models.knowledge_test import KnowledgeTestAttempt
-    from app.models.student_progress import LearningPath
 
     pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
     _submit_all_correct(
         client, estudiante_token, pre_start["attempt_id"], pre_start["questions"], db
     )
 
-    db.add(
-        LearningPath(
-            student_id=estudiante_user.id,
-            course_id=curso_publicado.id,
-            total_modules=4,
-            completed_modules=2,
-            status="active",
-        )
+    _seed_path_with_modules(
+        db, estudiante_user.id, curso_publicado.id,
+        total_modules=4,
+        statuses=["completed", "available", "locked", "locked"],
     )
-    db.commit()
 
     resp = _start(client, estudiante_token, curso_publicado.id, "post")
     assert resp.status_code == 409
@@ -200,27 +225,50 @@ def test_post_requires_completed_learning_path(
     )
 
 
-def test_post_allowed_when_learning_path_complete(
+def test_post_allowed_when_reference_modules_complete_despite_more_curriculum(
     client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
 ):
-    """Ruta con todos los módulos completados: el Post-Test debe permitirse."""
-    from app.models.student_progress import LearningPath
+    """Bug real encontrado en validación E2E (Iteración 6.1, 2026-08-04), dos
+    causas independientes: (1) `total_modules` cuenta TODOS los
+    `LearningObjective` del curso (aquí 4), pero PED-004 (frontend/src/lib/
+    experiences/index.ts, REFERENCE_MODULE_MODE) solo hace alcanzables los
+    primeros `POST_TEST_REFERENCE_MODULE_LIMIT` desde la Ruta real; (2) el
+    gate leía `completed_modules` cacheado, que en producción real quedó
+    desincronizado (2 módulos con status='completed' en Postgres mientras
+    el contador seguía en 1). Este test fija el contador cacheado a un
+    valor DISTINTO (0) del real derivable de los PathModule (2 completados)
+    para probar que el gate deriva en vivo, no que confía en el contador."""
+    path = _seed_path_with_modules(
+        db, estudiante_user.id, curso_publicado.id,
+        total_modules=4,
+        statuses=["completed", "completed", "available", "locked"],
+    )
+    path.completed_modules = 0  # contador cacheado deliberadamente stale
+    db.commit()
 
     pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
     _submit_all_correct(
         client, estudiante_token, pre_start["attempt_id"], pre_start["questions"], db
     )
 
-    db.add(
-        LearningPath(
-            student_id=estudiante_user.id,
-            course_id=curso_publicado.id,
-            total_modules=2,
-            completed_modules=2,
-            status="active",
-        )
+    resp = _start(client, estudiante_token, curso_publicado.id, "post")
+    assert resp.status_code == 200
+
+
+def test_post_allowed_when_learning_path_complete(
+    client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
+):
+    """Ruta con todos los módulos completados: el Post-Test debe permitirse."""
+    pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
+    _submit_all_correct(
+        client, estudiante_token, pre_start["attempt_id"], pre_start["questions"], db
     )
-    db.commit()
+
+    _seed_path_with_modules(
+        db, estudiante_user.id, curso_publicado.id,
+        total_modules=2,
+        statuses=["completed", "completed"],
+    )
 
     resp = _start(client, estudiante_token, curso_publicado.id, "post")
     assert resp.status_code == 200
@@ -278,18 +326,11 @@ def test_comparison_materializes_gains(
 
     # El Post-Test exige una Ruta de Aprendizaje completa (recorrido real,
     # no un atajo): se simula que el estudiante ya terminó sus módulos.
-    from app.models.student_progress import LearningPath
-
-    db.add(
-        LearningPath(
-            student_id=estudiante_user.id,
-            course_id=curso_publicado.id,
-            total_modules=2,
-            completed_modules=2,
-            status="active",
-        )
+    _seed_path_with_modules(
+        db, estudiante_user.id, curso_publicado.id,
+        total_modules=2,
+        statuses=["completed", "completed"],
     )
-    db.commit()
 
     post = _start(client, estudiante_token, curso_publicado.id, "post").json()
     _submit_all_correct(client, estudiante_token, post["attempt_id"], post["questions"], db)
