@@ -150,7 +150,12 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
         position: null,
         whyWrong: '«Camina hacia adelante» — ¿cuántos pasos? El robot no adivina: una instrucción sin cantidad es una instrucción ambigua.',
       },
-      { id: 'p1', text: 'Ponte de pie frente a la mesa', position: 1 },
+      {
+        id: 'p1',
+        text: 'Ponte de pie frente a la mesa',
+        position: null,
+        whyWrong: '«Ponte de pie frente a la mesa» — no hay ninguna mesa en el entorno de esta misión: el robot cruza una habitación y abre una puerta, nunca se menciona una mesa.',
+      },
       { id: 'p5', text: 'Extiende la mano y gira la manija', position: 5 },
       { id: 'p2', text: 'Gira 90 grados a la izquierda', position: 2 },
       { id: 'p4', text: 'Detente frente a la puerta', position: 4 },
