@@ -25,7 +25,7 @@ import psycopg2
 import pytest
 
 from app.api.deps import aget_current_docente, aget_current_estudiante
-from app.api.routes.runtime import aget_current_estudiante_o_docente
+from app.api.routes.runtime import aget_authorized_evidence_viewer
 from app.main import app
 
 _URL = os.environ.get(
@@ -66,19 +66,19 @@ def _runtime_env(monkeypatch):
 @pytest.fixture
 def autenticado(client, estudiante_user):
     app.dependency_overrides[aget_current_estudiante] = lambda: estudiante_user
-    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: estudiante_user
+    app.dependency_overrides[aget_authorized_evidence_viewer] = lambda: estudiante_user
     yield estudiante_user
     app.dependency_overrides.pop(aget_current_estudiante, None)
-    app.dependency_overrides.pop(aget_current_estudiante_o_docente, None)
+    app.dependency_overrides.pop(aget_authorized_evidence_viewer, None)
 
 
 @pytest.fixture
 def autenticado_docente(client, docente_user):
     app.dependency_overrides[aget_current_docente] = lambda: docente_user
-    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: docente_user
+    app.dependency_overrides[aget_authorized_evidence_viewer] = lambda: docente_user
     yield docente_user
     app.dependency_overrides.pop(aget_current_docente, None)
-    app.dependency_overrides.pop(aget_current_estudiante_o_docente, None)
+    app.dependency_overrides.pop(aget_authorized_evidence_viewer, None)
 
 
 def test_recorrido_completo_http_hasta_una_entrega_de_adaptar(client, autenticado):
@@ -134,11 +134,11 @@ def test_traza_de_sesion_ajena_es_rechazada(client, autenticado):
         id = "otro-estudiante-cualquiera"
         role = "estudiante"
 
-    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: _OtroUsuario()
+    app.dependency_overrides[aget_authorized_evidence_viewer] = lambda: _OtroUsuario()
     try:
         resp = client.get("/api/runtime/sessions/s-http-traza-ajena/traza")
     finally:
-        app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: autenticado
+        app.dependency_overrides[aget_authorized_evidence_viewer] = lambda: autenticado
 
     assert resp.status_code == 403
 
@@ -238,7 +238,7 @@ def test_estado_memoria_y_replay_de_sesion_ajena_son_rechazados(client, autentic
         id = "otro-estudiante-cualquiera"
         role = "estudiante"
 
-    app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: _OtroUsuario()
+    app.dependency_overrides[aget_authorized_evidence_viewer] = lambda: _OtroUsuario()
     try:
         assert client.get("/api/runtime/sessions/s-http-ajena-2/estado").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/memoria").status_code == 403
@@ -246,7 +246,7 @@ def test_estado_memoria_y_replay_de_sesion_ajena_son_rechazados(client, autentic
         assert client.get("/api/runtime/sessions/s-http-ajena-2/paisaje").status_code == 403
         assert client.get("/api/runtime/sessions/s-http-ajena-2/consenso").status_code == 403
     finally:
-        app.dependency_overrides[aget_current_estudiante_o_docente] = lambda: autenticado
+        app.dependency_overrides[aget_authorized_evidence_viewer] = lambda: autenticado
 
 
 def test_paisaje_de_sesion_nueva_sin_evidencia_es_vacio_via_http(client, autenticado):

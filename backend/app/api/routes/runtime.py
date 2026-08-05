@@ -48,18 +48,27 @@ from runtime.kernel.state.entries import EntryId, OrigenProvenance
 router = APIRouter(prefix="/api/runtime", tags=["runtime"])
 
 
-async def aget_current_estudiante_o_docente(
+async def aget_authorized_evidence_viewer(
     current_user: User = Depends(aget_current_user),
 ) -> User:
-    """Las cuatro surfaces S3 de solo lectura (traza/estado/memoria/replay)
-    también las lee el docente (RFC-0009 §1: es el humano del loop) — no
-    solo el estudiante dueño de la sesión. `_verificar_pertenencia` deja
-    pasar al docente sin exigir que sea el dueño (autoridad, no
-    participante — RFC-0009 §3), igual criterio que ya rige `hecho_docente`."""
-    if current_user.role not in (UserRole.ESTUDIANTE, UserRole.DOCENTE):
+    """Las surfaces S3 de solo lectura (traza/estado/memoria/replay/paisaje/
+    consenso/escaladas) las lee: el estudiante dueño, el docente (RFC-0009
+    §1: es el humano del loop), y Admin/Investigador — Modo Evidencia
+    (CLAUDE.md) es la superficie de observabilidad que aloja Runtime
+    Console, y su backend no puede rechazar al rol que la aloja (auditoría
+    2026-08-05, Ficha 06). `_verificar_pertenencia` deja pasar a los tres
+    roles no-estudiante sin exigir que sean el dueño (autoridad/observador,
+    no participante — RFC-0009 §3), igual criterio que ya rige
+    `hecho_docente`."""
+    if current_user.role not in (
+        UserRole.ESTUDIANTE,
+        UserRole.DOCENTE,
+        UserRole.ADMIN,
+        UserRole.INVESTIGADOR,
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de estudiante o docente",
+            detail="Se requiere rol de estudiante, docente, administrador o investigador",
         )
     return current_user
 
@@ -267,10 +276,12 @@ def _verificar_pertenencia(session_id: str, current_user: User, almacen: Any) ->
     reciben una `identidad` en el cuerpo que contrastar como sí hace
     `hecho()` (es un GET) — `resolver_identidad` tampoco verifica
     pertenencia por sí sola, así que se verifica aquí, explícitamente,
-    contra lo ya persistido. El docente queda exento: es autoridad sobre
-    el loop, no un participante con ámbito por estudiante (RFC-0009 §3) —
-    mismo criterio que ya rige `hecho_docente`."""
-    if current_user.role == UserRole.DOCENTE:
+    contra lo ya persistido. Docente, Admin e Investigador quedan exentos:
+    son autoridad/observadores sobre el loop, no participantes con ámbito
+    por estudiante (RFC-0009 §3) — mismo criterio que ya rige
+    `hecho_docente`, extendido a Modo Evidencia (Ficha 06, auditoría
+    2026-08-05)."""
+    if current_user.role in (UserRole.DOCENTE, UserRole.ADMIN, UserRole.INVESTIGADOR):
         return
     existente = almacen.identidad_existente(session_id)
     if existente is not None and existente.student_id != str(current_user.id):
@@ -283,7 +294,7 @@ def _verificar_pertenencia(session_id: str, current_user: User, almacen: Any) ->
 @router.get("/sessions/{session_id}/traza", response_model=list[PasoTrazaOut])
 def traza(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> list[PasoTrazaOut]:
     """RFC-0007 §2.1 — la traza de eventos de la sesión, derivada de lo
     persistido (S3, RFC-0010 §2). Lee el estudiante dueño o el docente
@@ -307,7 +318,7 @@ def traza(
 @router.get("/sessions/{session_id}/estado", response_model=EstadoOut)
 def estado(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> EstadoOut:
     """RFC-0002 §1 — el LearningState completo de la sesión (S3, RFC-0010
     §2): facts, claims, deliberaciones, decisiones, tal como el kernel
@@ -325,7 +336,7 @@ def estado(
 @router.get("/sessions/{session_id}/memoria", response_model=MemoriaOut | None)
 def memoria(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> MemoriaOut | None:
     """RFC-0005 §2 — la versión de memoria que ESTA sesión tiene fijada
     (S3, RFC-0010 §2), nunca "la más reciente" del estudiante. `None`
@@ -350,7 +361,7 @@ def memoria(
 @router.get("/sessions/{session_id}/replay", response_model=list[PasoReplayOut])
 def replay(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> list[PasoReplayOut]:
     """RFC-0008 §3, modo Reconstrucción — el `LearningState` completo tal
     como quedó después de cada transición (S3, RFC-0010 §2). Distinto de
@@ -372,7 +383,7 @@ def replay(
 @router.get("/sessions/{session_id}/paisaje", response_model=RespuestaPaisajeOut)
 def paisaje(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> RespuestaPaisajeOut:
     """RFC-0007 §2.2, fila "Paisaje (H8)", y §5 — el paisaje cognitivo
     reconstruido por transición (S3, RFC-0010 §2). Distinto de `/replay`
@@ -407,7 +418,7 @@ def paisaje(
 @router.get("/sessions/{session_id}/consenso", response_model=ConsensoOut)
 def consenso(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> ConsensoOut:
     """RFC-0007 §2.2, fila "Consenso (RFC-0006)" — resumen de consenso de
     la sesión completa (S3, RFC-0010 §2). Distinto de `/paisaje` (una
@@ -523,7 +534,7 @@ class EscaladaOut(BaseModel):
 @router.get("/sessions/{session_id}/escaladas", response_model=list[EscaladaOut])
 def escaladas(
     session_id: str,
-    current_user: User = Depends(aget_current_estudiante_o_docente),
+    current_user: User = Depends(aget_authorized_evidence_viewer),
 ) -> list[EscaladaOut]:
     """RFC-0010 §2, S2 — "aviso al docente de que una deliberación espera
     su autoridad, con su contexto navegable": la notificación dedicada,
