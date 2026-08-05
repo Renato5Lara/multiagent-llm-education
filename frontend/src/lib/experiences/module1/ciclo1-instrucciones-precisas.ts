@@ -138,7 +138,7 @@ export const CICLO_1_INSTRUCCIONES_PRECISAS: LearningCycle = {
   practice: {
     kind: 'ordering',
     prompt:
-      'Pon a prueba lo que acabas de leer: el robot debe cruzar la habitación y abrir la puerta sin chocar. Construye la secuencia usando SOLO instrucciones precisas — una de la lista es ambigua y debes descartarla.',
+      'Pon a prueba lo que acabas de leer: el robot debe cruzar la habitación y abrir la puerta sin chocar. Construye la secuencia usando SOLO instrucciones precisas — algunas instrucciones de la lista son ambiguas o innecesarias y debes descartarlas.',
     // Decisión PO (Opción A, jul 2026): "Ve hacia la puerta" se eliminó del
     // banco — admitía leerse como objetivo+detalle junto a "Avanza 4 pasos"
     // y esa ambigüedad interpretativa no es la que el ejercicio enseña.
