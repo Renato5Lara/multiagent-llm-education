@@ -2278,6 +2278,15 @@ dashboard de investigación (`ResearchDashboard.tsx` y las rutas
 `/api/research/*`) consume únicamente `ExperimentResult`, nunca
 `KnowledgeTestAttempt` u otro dato intermedio directamente.
 
+> **Qué significa "N>1" en esta iteración** (precisión del tesista,
+> 2026-08-05): múltiples recorridos experimentales **controlados**
+> (cuentas de validación, navegador real, mismo criterio que la cuenta
+> única de 6.1), no una muestra estadísticamente representativa del
+> curso. El objetivo es validar la robustez del pipeline de medición
+> — que no pierda, duplique ni corrompa datos al operar con más de un
+> registro — no estimar el efecto pedagógico de la intervención. Esa
+> estimación pertenece a `6.3`, con N real de producción.
+
 ## Por qué esta pregunta, no otra (decisión ya tomada, no reabrir)
 
 Se descartó abrir esta iteración interpretando ya significancia
@@ -2349,9 +2358,17 @@ Lo que esta iteración NO demuestra:
 ## Evidencia que deberá recolectarse
 
 - □ N≥2 recorridos reales completos (pre→ruta→post→`ExperimentResult`).
-- □ Diff fila por fila entre Postgres y la exportación CSV/XLSX.
-- □ Log real de ejecución de `app/experiment/analysis.py` sobre el
-  conjunto, con su salida completa.
+- □ Cada `ExperimentResult` corresponde exactamente a un estudiante
+  (`student_id` único por fila, sin ambigüedad de curso/sesión).
+- □ No existen filas duplicadas (mismo `student_id`+`course_id` con
+  más de un `ExperimentResult` vigente).
+- □ No existen filas huérfanas (`pre_attempt_id`/`post_attempt_id` sin
+  su `KnowledgeTestAttempt` correspondiente en Postgres).
+- □ La exportación CSV/XLSX conserva el mismo orden y contenido que
+  Postgres (diff fila por fila, no solo conteo de filas).
+- □ `app/experiment/analysis.py` produce su resultado usando
+  exactamente esas filas — log real de la ejecución, con su salida
+  completa.
 - □ Cita exacta (archivo + línea) del dashboard confirmando que solo
   consume `ExperimentResult`.
 
