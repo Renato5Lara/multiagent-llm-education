@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { UserAuth } from '@/types/auth'
 
 interface AuthState {
@@ -43,6 +43,12 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'upao-auth',
+      // Auditoría 2026-08-05, Ficha 01: sessionStorage aísla la sesión por
+      // pestaña — ninguna pestaña puede volver a leer ni sobreescribir el
+      // token de otra, porque ya no comparten una clave física. Junto con
+      // el guard de identidad de AuthProvider.tsx (commit a63597c), cierra
+      // arquitectónicamente el riesgo de sesión revertida entre pestañas.
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         token: state.token,
         refreshToken: state.refreshToken,
