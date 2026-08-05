@@ -2078,13 +2078,64 @@ evidencia real (`cycle-evidence`, dispara deliberación bajo `v2`,
 confirmado alcanzable en `ADR-0016 §5/§9` de esta misma sesión) →
 post-test → `/evidencia/investigacion` (comparación + exportación).
 
-## Resultado
+## Resultado (Capa 1 — trazabilidad arquitectónica, ejecutada)
 
-Pendiente de ejecución.
+Recorrido real ejecutado en navegador (backend + frontend reales,
+`VERSION_POLITICA="v2"` sin overrides — mismo pre-check que
+`ADR-0016` Fase 4.4, incluida la misma lección aplicada de entrada:
+se encontraron y mataron dos procesos `vite` obsoletos de sesiones
+anteriores antes de levantar los servidores limpios). Estudiante real
+sembrado (`iteracion.6.1@upao.test`), login real, diagnóstico VARK
+(18 preguntas) real, pre-test (12 preguntas) real, ruta generada por
+el swarm ("Estrategia decidida... modalidad visual"), Misión 1 con
+tres ciclos de práctica reales (`cycle-evidence` × 5 llamadas HTTP,
+todas `200`) incluyendo un recurso pedagógico generado citando
+`Origen: decisión pedagógica existente (modalidad(algorithms))`.
+
+**Verificación directa contra Postgres real** (no inferida de la UI —
+mismo criterio que exigió `ADR-0016 §9` tras el hallazgo del proceso
+obsoleto):
+
+```
+session_id:        curso:0fbe4f4c...:estudiante:0cbdbe25...
+version_politica:   v2
+facts:              42       claims: 25
+deliberaciones:     6 — todas Resuelta, márgenes reales:
+                     0.1131, 0.0000×4 (empates D1/D2 reales), 0.2320
+decisión vigente:    siguiente-paso(sesion), confianza=0.2307
+```
+
+**Conclusión de la Capa 1 (la pregunta de investigación central):**
+el instrumento SÍ traza correctamente hasta una deliberación real
+producida por `runtime/` LangGraph bajo `POLITICAS["v2"]` — no hay
+indicio de que esté midiendo un pipeline retirado. La cadena completa
+`evidencia real → deliberación real → decisión real → Entrega →
+contenido adaptado visible en pantalla` quedó verificada de punta a
+punta, con evidencia en Postgres, no solo en la UI.
+
+## Hallazgo real (Capa 2, no anticipado)
+
+El post-test tiene un gate real no documentado en
+`RESEARCH_LAYER_TECHNICAL_REPORT.md`: **exige completar el 100% de la
+Ruta de Aprendizaje (2/2 misiones), no solo el pre-test completado**
+(que es lo único que exige `knowledge_test_service.start_attempt` a
+nivel de servicio — el gate adicional vive en otra capa, confirmado
+por el mensaje real del sistema: *"Debes completar toda la Ruta de
+Aprendizaje antes de rendir el Post-Test"*). Decisión explícita del
+tesista: no forzar el recorrido completo en esta sesión — mezclar el
+cierre de una validación arquitectónica con una recolección
+pedagógica extensa (2 misiones completas) arriesga tanto la calidad
+de la evidencia como el objetivo original de la sesión. Este gate es
+una condición experimental real del instrumento y debe respetarse al
+diseñar la recolección de la Capa 2, no un obstáculo a saltarse.
 
 ## Estado
 
-**EN PREPARACIÓN.** Puerta de entrada respondida, alcance acotado,
-infraestructura de medición confirmada preexistente
-(`RESEARCH_LAYER_TECHNICAL_REPORT.md`). Pendiente: ejecutar el
-recorrido real y registrar el resultado.
+**CONSOLIDADA (Capa 1) — PENDIENTE (Capa 2).** La pregunta de
+investigación central de esta iteración (¿el instrumento mide la
+arquitectura final o un pipeline retirado?) queda respondida con
+evidencia real: **mide la arquitectura final.** El recorrido completo
+pre→post→`ExperimentResult`→exportación queda como el punto de
+entrada explícito de una sesión futura dedicada — con el gate de
+"ruta completa" ya conocido y a favor, no como sorpresa a mitad de
+camino.
