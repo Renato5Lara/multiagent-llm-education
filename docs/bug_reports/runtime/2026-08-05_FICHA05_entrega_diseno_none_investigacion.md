@@ -3,16 +3,23 @@
 ## Metadata
 - **ID:** AUDIT-FICHA-05 (Auditoría-UPAO-MAS-EDU-2026-08-05.docx)
 - **Fecha:** 2026-08-05
-- **Severidad:** 🟠 Importante (auditoría original) — **reevaluada abajo**: uno de
-  los dos mecanismos encontrados tiene alcance estructural, no de caso límite.
+- **Severidad:** 🟠 Importante (auditoría original) — **reevaluada en Fase 2**:
+  medido contra los 29 estudiantes reales con evidencia real, el mecanismo
+  ocurre en 1/29 (3.4%) — caso puntual, no condición estructural del runtime
+  (ver "Fase 2 — Medición de alcance real"). La corrección de esta línea
+  respecto a la primera versión de este documento es intencional: la Fase 1
+  no tenía todavía el dato de incidencia real y no debía calificar severidad
+  sin él.
 - **Categoría:** backend/runtime (kernel de deliberación + productores de dominio)
 - **Tipo:** investigación forense — **NINGÚN código ni test fue modificado**
   para producir este documento. Todas las llamadas fueron de solo lectura
-  (`consultar_estado`, `consultar_entrega_vigente`) o contra esquemas Postgres
-  descartables creados y eliminados en la misma sesión de investigación
-  (`investigacion_ficha05_*`), nunca contra datos de producción.
-- **Estado:** DIAGNÓSTICO COMPLETO. Remediación NO iniciada — pendiente de
-  decisión explícita en una fase separada.
+  (`consultar_estado`, `consultar_entrega_vigente`, `identidad_existente`) o
+  contra esquemas Postgres descartables creados y eliminados en la misma
+  sesión de investigación (`investigacion_ficha05_*`), nunca contra datos de
+  producción — excepto la medición de Fase 2, que sí lee (nunca escribe)
+  contra los 45 estudiantes y 86 matrículas reales de la base de datos.
+- **Estado:** DIAGNÓSTICO COMPLETO (Fase 1 + Fase 2). Remediación NO
+  iniciada — pendiente de decisión explícita en una fase separada.
 - **Relacionado:** [[AUDIT-2026-08-05_REMEDIATION_STATUS]] observación #6
   (hipótesis original, ahora resuelta con evidencia)
 
@@ -284,5 +291,155 @@ por objetivo).
    Mecanismo A es "a veces sí, a veces no" en vez de siempre reproducible
    con el mismo margen exacto.
 
-**No se propone ninguna remediación en este documento** — es exclusivamente
-el diagnóstico pedido antes de decidir la estrategia de corrección.
+---
+
+# Fase 2 — Análisis limitado a evidencia (sin código, sin remediación)
+
+Continuación de la investigación de Fase 1, con 3 preguntas específicas:
+(1) intención arquitectónica del Mecanismo B, (2) alcance real en datos de
+producción, (3) estabilidad del margen como observación secundaria. **Cero
+archivos de código modificados** — todas las consultas de esta fase son de
+solo lectura (`consultar_estado`, `consultar_entrega_vigente`,
+`identidad_existente`, `calcular_confianza_efectiva` invocada directamente
+sobre estado ya persistido) o instrumentación aislada en esquemas Postgres
+descartables ya eliminados al cierre de esta investigación.
+
+## Punto 1 — ¿El contrato exige consenso, o una propuesta única también decide?
+
+**Respuesta, con cita textual de código y RFC, no interpretación:**
+el sistema **no** requiere tensión entre agentes para producir una decisión.
+
+`runtime/kernel/deliberation/mecanica.py:280-310`
+(`derivar_decision_directa`, docstring citado literal):
+
+> *"Propuesta única deriva decisión directa si `ce` alcanza θ (RFC-0006 §3,
+> D3; RFC-0003 INV-6, 'el origen de una decisión es ... el claim-propuesta
+> único'). Corrección de un bug preexistente, no una capacidad nueva desde
+> cero: ... el ejemplo real es 'siguiente-paso(sesion)' cuando
+> `dominada=True` — Orientar propone solo, Remediar nunca compite, y el
+> walkthrough terminaba en END sin decisión ni Adaptar."*
+
+Es decir: el propio kernel ya documenta, como bug corregido, exactamente el
+síntoma del Mecanismo B — una propuesta sin rival que antes terminaba sin
+decisión. La función que lo corrige (`derivar_decision_directa`) es
+**genérica por asunto** (`for asunto in sorted(por_asunto): ...`, línea 335
+— sin ningún `if asunto == "..."` hardcodeado) y está efectivamente cableada
+en el enrutamiento real (`runtime/engine/graph/walkthrough.py:354`,
+`enrutar()`).
+
+**Se reprodujo la comparación exacta `ce` vs `θ` con instrumentación
+directa** (mismo escenario del Mecanismo B, objetivo con evidencia
+`dominada=False`, `urgente=True`):
+
+```
+politica.theta: 0.5
+Capacidad.REMEDIAR | asunto=avance(condicionales) | confianza_declarada=0.2077 |
+  ce_efectiva=0.2077 | theta=0.5 | ce>=theta: False
+derivar_decision_directa() -> None
+```
+
+`enrutar()` alcanza correctamente `derivar_decision_directa`; la función se
+ejecuta; `ce (0.2077) < θ (0.5)` → "insuficiencia (D3)" — el comportamiento
+documentado, no un fallo de enrutamiento. **Se verificó además, contra el
+axioma A2 (Anclaje) del propio módulo** (*"en el instante en que un claim se
+registra ... `ce` es exactamente `claim.confianza`, la declarada"*), que no
+hay ningún descuento oculto del kernel: la confianza declarada YA nació en
+0.2077, no fue reducida desde un valor mayor.
+
+**Por qué 0.2077 y no el `0.82` que aparece hardcodeado en
+`remediar/productor.py`:** ese valor pertenece a la versión-regla
+(`producir`), que **no es la que corre en este entorno**.
+`runtime/boundary/inbound/productores.py:42-45`:
+
+```python
+def productor_remediar_activo() -> Callable:
+    if os.environ.get("OPENAI_API_KEY"):
+        return partial(producir_remediacion_llm, proveedor=OpenAIProvider())
+    return producir_remediacion_regla
+```
+
+Con `OPENAI_API_KEY` configurada (confirmado, backend real de esta sesión),
+la versión LLM está activa — es el LLM quien declaró 0.2077, no el kernel
+quien lo calculó. **El kernel determinista queda descartado como bloqueador**
+para el Mecanismo B: hace exactamente lo que su contrato documenta. El
+origen real del bloqueo está aguas arriba, en la confianza que el productor
+LLM declara — que por tu instrucción explícita, esta fase NO investiga más
+a fondo.
+
+## Punto 2 — Alcance real en datos de producción (solo lectura, 45 estudiantes / 86 matrículas)
+
+Se recorrieron las 86 matrículas reales (`Enrollment`) de los 45 estudiantes
+reales de la base de datos, derivando el `session_id` determinista de cada
+par y consultando (sin escribir) su estado de runtime si existía.
+
+```
+Pares estudiante-curso matriculados:                         86
+Sesiones de runtime que realmente existen (E1 ya ocurrió):    34
+Sesiones con al menos 1 fact (evidencia real registrada):     29
+Sesiones con entrega.diseno = None:                            6
+Sesiones con 0 decisiones:                                     6
+```
+
+**De las 6 con 0 decisiones, 5 nunca recibieron ningún hecho** (`facts=0,
+claims=0` — sesiones abiertas, E1, pero abandonadas antes de cualquier E2;
+`decision_adaptativa_neutra()` es exactamente el comportamiento correcto
+para este caso, no un bug). **Solo 1 de las 29 sesiones con evidencia real
+está genuinamente bloqueada — y es `est.c.mediolector.audit@upao.edu.pe`,
+la propia cuenta de prueba que usó la auditoría original.**
+
+Desglose de las 29 sesiones con evidencia real por exposición a cada
+mecanismo:
+
+```
+Expuestas al Mecanismo A y al B simultáneamente (avance-objetivo presente): 13 → 12 resolvieron OK, 1 bloqueada (EstudianteC)
+Expuestas solo al Mecanismo A (solo siguiente-paso-sesion):                12 → 12 resolvieron OK
+```
+
+**Corrección a la Fase 1:** el análisis original clasificó a EstudianteC
+como expuesta únicamente al Mecanismo A. La medición de Fase 2 encontró que
+también tiene un claim `avance(fundamentos-de-python)` de Remediar sin
+rival — Mecanismo B — generado por
+`knowledge_test_service.py:488` (la evidencia del pre-test sobre el primer
+objetivo real del curso, que **también** pasa `objetivos`, no solo
+`submit_evaluation` como se afirmó en la Fase 1). Está expuesta a ambos
+mecanismos a la vez, no solo a uno.
+
+**Respuesta a la pregunta del punto 2:** con 28 de 29 sesiones reales
+(96.6%) produciendo al menos una decisión — incluyendo 12 de 13 con la
+misma exposición exacta al Mecanismo B que el caso bloqueado — esto es
+**un caso puntual, no una condición estructural del runtime**. Es
+consistente con el propio hallazgo de la auditoría original (§17: 0.5%,
+3 de 660 deliberaciones reales, cayeron en "Aplazada" en todo el sistema).
+El mecanismo es real y está demostrado con trazas — su incidencia medida es
+baja.
+
+## Punto 3 — Estabilidad del margen (observación secundaria, sin abrir investigación de LLM)
+
+Ya registrado en la Fase 1 y confirmado aquí sin profundizar más (por tu
+instrucción explícita): la confianza que declaran Diagnosticar/Remediar/
+Orientar en su versión LLM activa varía entre invocaciones con evidencia de
+forma idéntica (Fase 1: margen 0 y 0.0331 en dos corridas; `ce_efectiva`
+observada en el rango 0.14–0.21 en las corridas de esta fase). El Punto 1
+ya estableció que esta varianza —no el kernel— es la que determina si un
+caso puntual cae por debajo de `θ`/`δ` o no. No se abre investigación
+adicional del LLM en este documento.
+
+## Conclusión de Fase 2
+
+1. El kernel determinista **no** exige consenso para decidir — el contrato
+   (D3, RFC-0006 §3) ya prevé y resuelve la propuesta única, y el código lo
+   implementa correctamente, verificado con trazas reales.
+2. El Mecanismo B **no** es una condición estructural — es un caso puntual
+   (1/29 sesiones reales con evidencia, 3.4%), y coincide con ser la cuenta
+   de prueba de la propia auditoría.
+3. EstudianteC está expuesta a los dos mecanismos simultáneamente, no solo
+   al Mecanismo A como afirmó la Fase 1 — corrección aplicada arriba.
+
+**Sigue sin proponerse ninguna remediación.** La pregunta que planteaste
+como condición para diseñarla —*"si una deliberación aplazada debe terminar
+siempre en una decisión provisional, si una propuesta única debe generar
+decisión, o si el sistema intencionalmente requiere múltiples agentes en
+conflicto"*— ya tiene respuesta documental para el caso de propuesta única
+(sí debe generar decisión, y el kernel ya lo hace cuando `ce ≥ θ`); la
+pregunta sobre el aplazamiento (Mecanismo A) sigue abierta y no se investigó
+en esta fase.
