@@ -6,8 +6,10 @@
 - **Severidad:** CRÍTICO (ambas)
 - **Categoría:** frontend/auth
 - **Tipo:** auth, multi-tab, race condition
-- **Estado:** Ficha 02 FIXED · Ficha 01 PARTIALLY FIXED (ver "Gap residual")
-- **Commit:** `a63597c` (rama `fix/auth-cross-tab-storage-loop`)
+- **Estado:** Ficha 02 FIXED · Ficha 01 FIXED (ver "Resolución final" — el
+  gap residual documentado más abajo quedó cerrado)
+- **Commits:** `a63597c` (fix inicial, rama `fix/auth-cross-tab-storage-loop`)
+  · `66c3f00` (resolución final, rama `fix/session-storage-isolation`)
 - **Relacionado:** [[BUG-002]] (race condition validateSession/meQuery),
   [[BUG-015]] (multi-tab storage event race, forense 2026-05-27)
 
@@ -127,6 +129,59 @@ un Engineering Gate propio** ("Persistencia de autenticación entre
 pestañas"), no incluida en este fix por decisión explícita: mezclar un
 bugfix con un cambio de arquitectura de persistencia dificulta aislar
 regresiones.
+
+## Resolución final (Ficha 01 — commit `66c3f00`)
+
+### Causa raíz del gap residual
+
+El gap descrito arriba ("Gap residual") no era un defecto del guard de
+identidad de `handleStorageChange` — ese guard es correcto para la vía
+**reactiva** (mientras la pestaña sigue montada). El gap vivía un nivel
+más abajo: `localStorage` es una única clave física **compartida entre
+todas las pestañas del mismo origen**, sin importar cuántos guards
+reactivos existan sobre ella. La hidratación inicial de zustand
+(`onRehydrateStorage`) lee esa clave física directamente, sin pasar por
+ningún guard — por diseño, una recarga completa de cualquier pestaña
+adopta lo último que haya en esa clave, sea de quien sea.
+
+### Decisión
+
+`persist.storage` de zustand (`frontend/src/stores/authStore.ts`) pasa
+de `localStorage` a `sessionStorage` vía `createJSONStorage(() =>
+sessionStorage)`. `sessionStorage` está aislado por pestaña por
+especificación del navegador — no hay clave física compartida que leer
+en la hidratación, así que no hay nada que "adoptar" de otra pestaña.
+
+**Alternativas evaluadas y descartadas:** `BroadcastChannel`/
+`SharedWorker` para sincronizar `localStorage` entre pestañas de forma
+explícita y controlada — descartado por mayor complejidad e introducir
+una responsabilidad nueva (un canal de mensajería activo) para resolver
+lo que `sessionStorage` resuelve de forma pasiva y sin superficie
+adicional.
+
+**Trade-off de UX aceptado, no un bug:** una pestaña nueva (`Ctrl+T`, o
+`Ctrl+clic` en un enlace) ya no hereda la sesión activa de otra pestaña
+— debe loguearse. No hay evidencia de que "sesión compartida entre
+pestañas nuevas" fuera un requerimiento real del producto (no aparece en
+ningún RFC/ADR/CLAUDE.md); es un efecto colateral de haber usado
+`localStorage` por defecto, no una decisión de diseño original.
+
+### Validación en vivo (Postgres real, cuenta de prueba Admin)
+
+- `localStorage['upao-auth']` = `null` tras login; `sessionStorage
+  ['upao-auth']` poblado.
+- Pestaña nueva hacia `/admin`: **no** hereda la sesión, redirige a
+  `/login` desde cero — la pestaña original permanece intacta con su
+  propia sesión (aislamiento real, no solo teórico).
+- Recorrido normal de un actor (login → navegación entre `/admin`,
+  `/admin/roles`, `/admin/users`, `/evidencia/runtime` → logout) sin
+  regresiones.
+- `tsc`: 0 errores. `eslint`: 0 issues en el archivo modificado.
+
+### Impacto en la sección "Gap residual" de arriba
+
+Queda resuelto: ya no existe una clave física compartida de la que una
+recarga completa pueda leer la identidad de otra pestaña.
 
 ## Hallazgo aparte, NO corregido aquí (fuera de alcance)
 
