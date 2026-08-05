@@ -160,7 +160,7 @@ listan aquí solo como índice:
 
 | Tema | Estado |
 |---|---|
-| Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC — causa ya diagnosticada por la auditoría como hipótesis: `entrega.diseno`/`asunto` en `None`, nunca confirmada con certeza total; fix nunca implementado) | Pendiente de fix — posible causa raíz compartida con la observación #6 de arriba |
+| Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC) — **diagnóstico forense CERRADO** ([bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md), 2 fases): 2 mecanismos confirmados con trazas reales, `runtime_bridge.py` descartado como causa, incidencia real medida en 1/29 sesiones (3.4%, caso puntual). Remediación **no iniciada a propósito** — requiere primero una decisión de arquitectura del consenso (¿`Aplazada` debe producir una decisión provisional en contexto educativo, o es un estado final válido?), deliberadamente diferida, no evaluada todavía. | Diagnóstico completo, remediación pendiente de decisión arquitectónica (no de investigación adicional) |
 | Ficha 09 (escala Likert de 5 puntos colapsada a binario + redundancia "Base sólida"/"Siguiente reto" con dominio 100%; la auditoría no llegó a re-verificarla en su 2ª pasada) | Pendiente de revisión |
 | UX menores (§06 de la auditoría: indicador de "sistema ocupado", vía de escape en ejercicios) | Pendiente |
 | Rendimiento (§11: latencia de personalización 6-10s, caché de Pyodide) | Pendiente |

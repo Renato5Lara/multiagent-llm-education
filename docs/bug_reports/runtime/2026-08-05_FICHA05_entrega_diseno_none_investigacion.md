@@ -18,10 +18,32 @@
   sesión de investigación (`investigacion_ficha05_*`), nunca contra datos de
   producción — excepto la medición de Fase 2, que sí lee (nunca escribe)
   contra los 45 estudiantes y 86 matrículas reales de la base de datos.
-- **Estado:** DIAGNÓSTICO COMPLETO (Fase 1 + Fase 2). Remediación NO
-  iniciada — pendiente de decisión explícita en una fase separada.
+- **Estado:** DIAGNÓSTICO CERRADO (Fase 1 + Fase 2). Remediación NO
+  iniciada. **La investigación del Mecanismo A (¿debe `Aplazada` producir
+  una decisión provisional en contexto educativo, o es un estado final
+  válido?) se evaluó y se decidió explícitamente NO abrirla en esta
+  ronda** — es una decisión de arquitectura del consenso (semántica del
+  enjambre), no diagnóstico adicional de Ficha 05. Antes de retomarla:
+  revisar RFC-0006 (consenso-enjambre) y CONCEPT-0002 (taxonomía del
+  consenso) para la política esperada de `Aplazada`, ninguno de los dos
+  releído a fondo con esta pregunta específica todavía.
 - **Relacionado:** [[AUDIT-2026-08-05_REMEDIATION_STATUS]] observación #6
   (hipótesis original, ahora resuelta con evidencia)
+
+## Baseline de cierre (Fase 2, congelado — no volver a derivar en sesiones futuras)
+
+- El kernel determinista queda **descartado** como causa raíz del
+  Mecanismo B — `derivar_decision_directa` funciona exactamente según su
+  contrato documentado (D3, RFC-0006 §3 / RFC-0003 INV-6).
+- La incidencia real medida es baja: **1 de 29** sesiones reales con
+  evidencia (3.4%) — caso puntual, no condición estructural.
+- La causa inmediata del caso auditado (EstudianteC) es la cadena
+  **productor LLM activo → confianza declarada baja → `ce < θ`/`margen <
+  δ` → decisión no alcanzada** — no un defecto de enrutamiento ni de
+  cálculo del kernel.
+- La hipótesis original de la auditoría (`runtime_bridge.py` como causa
+  raíz) queda **descartada** — nunca fue la causa en ninguno de los dos
+  mecanismos encontrados.
 
 ## Protocolo seguido (los 4 pasos acordados antes de abrir esta investigación)
 
