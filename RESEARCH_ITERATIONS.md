@@ -2129,13 +2129,90 @@ de la evidencia como el objetivo original de la sesión. Este gate es
 una condición experimental real del instrumento y debe respetarse al
 diseñar la recolección de la Capa 2, no un obstáculo a saltarse.
 
+## Bug real encontrado y corregido durante la validación (fuera de la hipótesis de investigación)
+
+Al retomar la Capa 2 en la sesión siguiente para completar el recorrido
+(Misión 1 + Misión Final → post-test), el gate de "ruta completa" del
+hallazgo anterior resultó ser **estructuralmente inalcanzable para
+cualquier estudiante**, no solo una condición a respetar. Root cause
+verificado directo en Postgres (no en la UI), dos causas
+independientes que se enmascaraban entre sí:
+
+1. `knowledge_test_service.start_attempt` comparaba contra
+   `LearningPath.total_modules`, que cuenta TODOS los
+   `LearningObjective` del curso (4: Fundamentos de Python, Estructuras
+   de control, Funciones y módulos, POO). Pero PED-004
+   (`frontend/src/lib/experiences/index.ts`, `REFERENCE_MODULE_MODE`)
+   ya documentaba — sin mencionar al Post-Test — que ningún estudiante
+   puede alcanzar el Objetivo 3+ desde la Ruta real (`module3.ts`/
+   `module4.ts` sin autorar todavía).
+2. El gate leía `LearningPath.completed_modules`, un contador cacheado
+   que solo escribe `update_module_progress`. Confirmado en Postgres
+   real: tras completar Misión 1 Y Misión Final (2 `PathModule` con
+   `status='completed'`), el contador seguía en 1 — desincronizado.
+   `student_service.py` (~L384-405) ya documenta por qué el resto del
+   producto (Ruta, analítica docente) dejó de confiar en ese contador
+   y deriva en vivo desde `PathModule.status`; este gate era el último
+   lugar que aún confiaba en el valor cacheado.
+
+Verificado contra los 64 `learning_paths` reales de producción: bajo
+la regla anterior, los 64 estaban bloqueados — nadie podía completar
+`completed_modules == total_modules` jamás. Fix aplicado (commit
+`c2aae28`, acotado a `knowledge_test_service.py` + su test): el
+requisito real es `min(total_modules, POST_TEST_REFERENCE_MODULE_LIMIT)`
+módulos, derivados en vivo desde `PathModule`. Cambio puramente
+relajante — de los 64 paths reales, los 4 que ya habían completado sus
+módulos de referencia quedaron correctamente desbloqueados; los 60
+restantes no cambiaron de estado. Backend reiniciado (sin `--reload`,
+lección ya conocida de `ADR-0016` Fase 4.4) para servir el fix antes de
+reintentar. Este bug es un hallazgo de la validación E2E de esta
+iteración, no evidencia de la hipótesis de tesis — registrado aquí por
+disciplina de continuidad documental, con su propio commit y tests de
+regresión, no como parte del resultado experimental.
+
+## Resultado (Capa 2 — ciclo completo pre→post→ExperimentResult, ejecutada)
+
+Con el gate corregido, recorrido real completado hasta el final:
+Misión 1 (3 ciclos, incluidos los pasos de `input()` real — bloqueados
+en este entorno de desarrollo por falta de cabeceras COOP/COEP,
+`crossOriginIsolated=false` confirmado con JS real; resueltos con el
+propio flujo "Ver solución" del producto, diseñado exactamente para
+esta situación, no un atajo del tesista) → Misión Final ("Estructuras
+de control", 1 ciclo) → Ruta 2/2 misiones (100%) → Post-Test real (12
+preguntas, verificado que el intento se creó de verdad en Postgres
+antes de responder) → resultado materializado.
+
+**Verificado directo en Postgres** (tabla `experiment_results`, no
+inferido de la UI):
+
+```
+pre_percentage:     66.67   (pre-test, sesión anterior)
+post_percentage:    100.0
+absolute_gain:       33.33
+normalized_gain:      1.00   (Hake's g — "alta efectividad")
+pre_level → post_level:  intermedio → avanzado
+group_label:         Experimental
+```
+
+Confirmado también que `research_dashboard_service.
+get_student_result_rows()` — la función real detrás de
+`GET /api/research/export` (CSV/XLSX) — incluye esta fila junto a las
+otras 18 del curso: el dato está listo para exportación real, no solo
+materializado en la tabla.
+
 ## Estado
 
-**CONSOLIDADA (Capa 1) — PENDIENTE (Capa 2).** La pregunta de
-investigación central de esta iteración (¿el instrumento mide la
-arquitectura final o un pipeline retirado?) queda respondida con
-evidencia real: **mide la arquitectura final.** El recorrido completo
-pre→post→`ExperimentResult`→exportación queda como el punto de
-entrada explícito de una sesión futura dedicada — con el gate de
-"ruta completa" ya conocido y a favor, no como sorpresa a mitad de
-camino.
+**CERRADA — Capa 1 y Capa 2 ejecutadas con evidencia real.** La
+pregunta de investigación central (¿el instrumento mide la
+arquitectura final o un pipeline retirado?) queda respondida: **mide
+la arquitectura final**, de punta a punta, incluida la materialización
+real de `ExperimentResult` y su disponibilidad para exportación. La
+validación E2E encontró además un bug de producto P0 (gate del
+Post-Test estructuralmente inalcanzable) que los tests unitarios
+existentes no cubrían — corregido con su propio commit y tests de
+regresión, documentado arriba como hallazgo de validación, no como
+parte del resultado de investigación. Con N=1, esta iteración no
+produce significancia estadística — esa es la pregunta de una
+iteración posterior (candidata `6.2`: conectar `app/experiment/
+analysis.py`, ANOVA/Cohen's d, al dashboard, cuando exista N
+suficiente), no de esta.
