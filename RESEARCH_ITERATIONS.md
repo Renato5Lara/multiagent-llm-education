@@ -2374,11 +2374,83 @@ Lo que esta iteración NO demuestra:
 
 ## Resultado
 
-Pendiente — iteración recién abierta.
+Ejecutada con N=3 recorridos reales completos (excede el N=2
+planeado — el tercer registro ya existía en Postgres de una sesión
+previa, `dad74e9a...`, y se incluyó en la verificación por ser real y
+del mismo curso). Cuenta nueva creada para esta iteración
+(`iteracion.6.2@upao.test`, distinta de `iteracion.6.1@upao.test`,
+mismo criterio de evidencia real — navegador real, Postgres real,
+etiquetada como validación) y llevada de punta a punta:
+diagnóstico → pre-test (100%, techo — dato real, no forzado) → Misión
+1 + Misión Final (ambas completadas, incluidos los pasos de `input()`
+real, que en esta sesión sí funcionaron de extremo a extremo —
+a diferencia de la Iteración 6.1, donde el mismo paso estuvo
+bloqueado por falta de cabeceras COOP/COEP; la causa exacta de la
+diferencia entre sesiones no se investigó, por estar fuera del
+alcance de esta iteración) → Ruta 2/2 (100%) → Post-Test real (100%).
+
+**Verificación fila por fila, directa en Postgres** (`experiment_results`,
+tabla completa del curso, N=3):
+
+```
+student            pre%     post%    abs_gain   norm_gain   pre_level    post_level
+dad74e9a...        0.00     33.33    33.33      0.3333      basico       basico
+0cbdbe25... (6.1)  66.67    100.0    33.33      1.0000      intermedio   avanzado
+8bc6e940... (6.2)  100.0    100.0    0.00       None        avanzado    avanzado
+```
+
+- **Un `ExperimentResult` por estudiante**: confirmado, 3 `student_id`
+  distintos, sin ambigüedad de curso/sesión.
+- **Sin duplicados**: consulta `GROUP BY student_id, course_id HAVING
+  COUNT(*) > 1` sobre las 3 filas → vacío.
+- **Sin filas huérfanas**: los 3 `pre_attempt_id`/`post_attempt_id`
+  existen realmente en `knowledge_test_attempts` — verificado con
+  `NOT EXISTS`, vacío.
+- **Exportación = Postgres**: `research_dashboard_service.
+  get_student_result_rows()` (la función real detrás de `GET
+  /api/research/export`) devuelve 20 filas para el curso (todas las
+  cuentas con pre-test completado, no solo las de esta validación);
+  las 3 filas de esta iteración calzan 1:1 contra Postgres
+  (`pre_pct`/`post_pct`/`absolute_gain`) — verificado
+  programáticamente, sin discrepancias.
+- **`app/experiment/analysis.py` ejecutado contra datos reales**
+  (nunca antes ejercitado contra `ExperimentResult` real, según
+  `RESEARCH_LAYER_TECHNICAL_REPORT.md`): `compute_anova({"pre": [...],
+  "post": [...]})` → `F(1,4)=0.3635, p=0.816, ns` — correctamente NO
+  significativo, como corresponde a N=3 de validación, no de
+  producción. `cohens_d(pre, post) = -0.492`. `generate_statistical_
+  report()` produjo un reporte completo (descriptivos, ANOVA,
+  comparaciones pareadas, matriz de significancia) sin errores. El
+  caso `8bc6e940` (`pre=100%`) probó además que el pipeline maneja el
+  efecto techo sin romperse: `normalized_gain=None` en vez de una
+  división por cero.
+
+**Hallazgo real, más preciso que la formulación original de la
+pregunta** — el dashboard/exportación **no** lee "únicamente
+`ExperimentResult`": `research_dashboard_service.
+get_student_result_rows()` (`backend/app/services/
+research_dashboard_service.py:163-260`) toma `pre_pct`/`post_pct`
+en vivo desde `KnowledgeTestAttempt.percentage` (la fuente real,
+evita el mismo tipo de dato-cacheado-obsoleto que causó el bug de
+[[bug_post_test_gate_ped004_stale_counter]] en 6.1) y solo
+`absolute_gain`/`normalized_gain` — el cómputo agregado que requiere
+ambos extremos y un instante de materialización — viene de
+`ExperimentResult`. Esto es arquitectónicamente correcto (Regla de
+derivación del propio `CLAUDE.md`: derivar de la fuente, no copiar
+salvo razón explícita), no un defecto — pero contradice la redacción
+literal de "consume únicamente ExperimentResult" de la Puerta de
+entrada. Se registra como precisión del hallazgo, no como bug.
 
 ## Estado
 
-**EN PREPARACIÓN.** Punto de entrada explícito de la próxima sesión de
-investigación sobre esta línea: generar el segundo `ExperimentResult`
-real (N=2) y continuar desde ahí — no repetir la Iteración 6.1 ni
-regenerar la cuenta ya usada (`iteracion.6.1@upao.test`).
+**CERRADA.** Las cinco verificaciones de la Evidencia que deberá
+recolectarse quedaron satisfechas con evidencia real (N=3, excede el
+N=2 planeado): integridad (sin huérfanas), unicidad (sin duplicados),
+correspondencia exportación↔Postgres, `analysis.py` ejecutado sin
+fallos sobre datos reales (incluido un caso de efecto techo real que
+no rompió el pipeline), y el origen exacto de cada campo del dataset
+exportable quedó documentado con precisión (línea por línea, no solo
+"ExperimentResult"). El pipeline de medición está construido, probado
+contra N>1 real, y listo para producir resultados en cuanto exista
+tráfico orgánico suficiente. La pregunta de significancia real de la
+hipótesis de tesis queda para la candidata `6.3`, todavía sin abrir.
