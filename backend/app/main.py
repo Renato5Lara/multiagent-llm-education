@@ -33,7 +33,6 @@ from app.api.routes import (
     sandbox,
     idempotency,
     replay,
-    traces,
     engagement,
     evidence,
     knowledge_test,
@@ -343,7 +342,6 @@ app.include_router(idempotency.router)
 app.include_router(replay.router)
 app.include_router(evidence.router)
 app.include_router(research.router)
-app.include_router(traces.router)
 app.include_router(engagement.router)
 app.include_router(runtime_boundary_routes.router)
 app.include_router(weekly_learning_router)
