@@ -104,31 +104,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Cross-tab sync is handled below. We no longer re-validate on token change
   // within the same tab — useAuth.meQuery handles that after login.
 
-  // Multi-tab sync: react to storage changes from other tabs
+  // Multi-tab sync: react to storage changes from other tabs.
+  //
+  // Alcance deliberadamente angosto tras la auditoría del 2026-08-05
+  // (Fichas 01 y 02, docs/bug_reports/auth/...): esta rama NUNCA debe volver
+  // a llamar a validateSession()/GET /api/auth/me. Esa llamada persistía el
+  // estado de ESTA pestaña (setUser → zustand persist), lo que reescribía
+  // 'upao-auth' y disparaba el mismo evento 'storage' en la otra pestaña —
+  // un ciclo infinito entre dos pestañas con sesiones de usuarios distintos
+  // (~70 req/s observadas en la auditoría). Mientras el ciclo corría, una
+  // recarga completa de cualquiera de las pestañas rehidrataba desde lo que
+  // sea que 'upao-auth' tuviera en ese instante — la sesión de un usuario
+  // podía aparecer con la identidad del otro, sin login, sin error.
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key !== 'upao-auth') return
 
       if (!e.newValue) {
-        // Auth data cleared in another tab → logout
+        // Sesión cerrada en otra pestaña → cerrar también esta.
+        // Propósito original de este listener (único desde su creación:
+        // ver BUG-015, 2026-05-27_FORENSIC_AUTH_AUDIT.md).
         storeLogout()
         queryClient.clear()
         navigate('/login')
-      } else {
-        // Auth data changed (login in another tab) → re-validate
-        try {
-          const parsed = JSON.parse(e.newValue)
-          if (parsed?.state?.token && parsed?.state?.token !== token) {
-            validateSession()
-          }
-        } catch {
-          // ignore parse errors
+        return
+      }
+
+      try {
+        const parsed = JSON.parse(e.newValue)
+        const incomingToken = parsed?.state?.token
+        const incomingUserId = parsed?.state?.user?.id
+        if (!incomingToken || incomingToken === token) return
+
+        const currentUserId = useAuthStore.getState().user?.id
+        if (currentUserId && incomingUserId && incomingUserId !== currentUserId) {
+          // Otra cuenta escribió sobre el almacenamiento compartido del
+          // navegador: esta pestaña quedó con una identidad obsoleta. Nunca
+          // debe seguir operando como si nada, ni adoptar en silencio la
+          // sesión ajena — se cierra explícitamente.
+          storeLogout()
+          queryClient.clear()
+          navigate('/login')
         }
+        // Mismo usuario con token rotado en otra pestaña: no se re-valida
+        // aquí a propósito. Cada pestaña refresca su propio token de forma
+        // independiente vía el interceptor de axios (lib/api.ts) ante su
+        // primer 401 — ya documentado como intencional en
+        // docs/bug_reports/auth/2026-05-27_BUG-002_validate_session_race_condition.md
+        // ("Riesgos futuros" #2).
+      } catch {
+        // ignore parse errors
       }
     }
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [storeLogout, queryClient, navigate, token, validateSession])
+  }, [storeLogout, queryClient, navigate, token])
 
   return (
     <AuthContext.Provider
