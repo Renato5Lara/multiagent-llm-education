@@ -110,3 +110,73 @@ hizo con Épica B.
 simple para la siguiente acción: ¿se retoma ahora el Commit 5 (recorrido
 E2E + cierre), o se mantiene diferido mientras continúa esta cadena de
 fases de auditoría?
+
+---
+
+## 5. Commit 5 ejecutado — Épica C cerrada (2026-08-05, misma sesión)
+
+Recorrido lineal real de las 6 etapas de `ciclo3-input.ts`, en un solo
+paso de navegador, con Claude in Chrome, contra el stack completo
+(frontend `localhost:5173` + backend `localhost:8000`, ambos ya
+corriendo). **Ninguna mejora ni refactor adicional realizado durante la
+validación** — alcance limitado estrictamente a ejecutar y registrar.
+
+**Cuenta usada:** `ux.nuevo.recorrido@upao.edu.pe` — sesión ya
+autenticada y ya posicionada exactamente en Ciclo 3 de Misión 1 al
+iniciar esta ficha (pestaña de navegador preexistente, no creada por
+esta sesión). No se creó una cuenta nueva: **se evitó deliberadamente
+el camino original (crear un estudiante vía Admin)** tras un hallazgo
+de seguridad no anticipado — ver "Hallazgo colateral" abajo. Se prefirió
+una cuenta de QA ya autenticada y ya en el punto exacto de la
+validación, en vez de arriesgar una segunda credencial equivocada.
+
+### Recorrido, etapa por etapa (las 6, en orden real de la UI)
+
+| Etapa | Mecanismo esperado | Resultado observado |
+|---|---|---|
+| **Observar** | `input()` simulado (decisión pedagógica explícita, NO migrada — Épica C nunca la tocó) | ✅ "SIMULAREMOS QUE EL USUARIO ESCRIBE > Ana" — consola: `¿Cómo te llamas? Hola, Ana`. Confirma que la exclusión deliberada de `observar` sigue vigente. |
+| **Manipular** (Commit 1) | `input()` real | ✅ "PYTHON ESTÁ ESPERANDO TU RESPUESTA" — se escribió "Renato" a mano; consola: `¿Cómo te llamas? Bienvenido, Renato`. Sin nombre hardcodeado. |
+| **Completar** (Commit 2) | `input()` real | ✅ Mismo patrón — "Renato" capturado correctamente tras completar el código con `input(...)`. |
+| **Corregir** (Commit 3) | `input()` real, solo tras arreglar la sintaxis | ✅ Código con comillas faltantes corregido a mano (`input("¿Cómo te llamas? ")`); solo entonces apareció el prompt real. Confirma que el error de sintaxis bloquea antes de llegar a `input()`, como documenta el Gate original. |
+| **Escribir desde cero (saludo "Hola")** | `input()` real, código completo escrito por el validador | ✅ Se escribió `apodo = input("¿Cuál es tu apodo? ")` + `print("Hola,", apodo)` desde un editor vacío; respuesta libre "Rena" capturada correctamente. |
+| **Escribir desde cero (saludo "Mucho gusto")** (Commit 4, `escribir_parcial`/profundización) | `input()` real | ✅ Se escribió el código completo con el patrón exacto pedido ("Mucho gusto, <nombre>"); respuesta libre "Claude" capturada correctamente — "✓ Exacto — eso es Python real haciendo lo que pediste." |
+
+**Las 6 etapas se completaron en una sola sesión continua, sin recargar
+la página ni reiniciar el estado**, tal como exige el criterio de cierre
+del Gate original. Al terminar la última etapa, el sistema avanzó
+limpiamente a "CONSOLIDAR" (generación de práctica personalizada) sin
+ningún error visible ni bloqueo — confirma que el recorrido lineal
+completo no revela ninguna regresión de integración entre etapas.
+
+**Verificación adicional (no solo las 5 pasos del protocolo, ya
+cubiertos arriba):** en las 3 etapas con `input()` real donde se
+escribió una respuesta arbitraria distinta a cualquier valor de ejemplo
+del contenido ("Renato", "Rena", "Claude" — ninguno es "Ana"/"Nico",
+los nombres hardcodeados que Épica B/C corrigieron), el eco en consola
+usó siempre la respuesta real tecleada — confirma en vivo, con datos
+frescos, que la migración de Épica B/C sigue sin regresión de contenido
+hardcodeado.
+
+### Hallazgo colateral (fuera del alcance de Épica C, registrado, no corregido)
+
+Durante el intento de crear una cuenta de estudiante aislada nueva vía
+Admin (`admin@upao.edu.pe`), el login devolvió **"Credenciales
+incorrectas. Intentos restantes: 1"** con la contraseña
+`Admin2026!` documentada en `backend/seed.py:355/677` y confirmada como
+correcta en una validación anterior real (memoria
+`research_implementation_mode.md`, 2026-07-02). No se intentó una
+segunda vez para no arriesgar un bloqueo de cuenta — se abandonó ese
+camino y se usó en su lugar la sesión de estudiante ya autenticada
+descrita arriba. **No se investiga la causa aquí** (¿contraseña rotada
+en otra sesión? ¿bloqueo previo no relacionado con esta sesión?) —
+queda registrado como hallazgo para una fila propia de auditoría futura,
+fuera del alcance de Épica C.
+
+### Cierre formal de Épica C
+
+**Épica C — Generalización/Consolidación del Runtime Interactivo: CERRADA.**
+Commits 1-5/5 completos (`fed03c9`, `d1bf8ef`, `e81a978`, `27f729e` +
+esta validación E2E). Mismo criterio de cierre que Épica B: código +
+validación real en navegador real, sin mocks de dominio. Sin código
+modificado por esta ficha — el cierre es documental, registrando la
+validación ya ejecutada.
