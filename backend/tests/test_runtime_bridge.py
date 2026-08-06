@@ -276,6 +276,31 @@ def test_decision_adaptativa_traduce_slugs_reales_del_diagnostico_inicial():
     assert decision["skip_hint_topic_labels"] == ["Algoritmos"]
 
 
+def test_decision_adaptativa_traduce_conceptos_de_mas_de_una_palabra():
+    """Regresión: `normalizar_asunto()` (runtime/boundary/inbound/asunto.py)
+    convierte "_" en "-" — el slug real que llega a `emphasis_topics` para
+    "input_output" (PRIOR_KNOWLEDGE_TOPIC_MAP) es "input-output", no
+    "input_output" (el valor literal de `ProgrammingConcept.INPUT_OUTPUT`).
+    Encontrado validando visualmente contra el servidor real (Sesión UX/UI
+    2026-08-05, H1) — el test anterior solo cubría slugs de una palabra."""
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="ines",
+        course_id="curso-ad2c",
+        titulo_modulo="input_output",
+        items_incorrectos=[0, 1],
+        items_totales=3,
+    )
+    decision = decision_adaptativa(student_id="ines", course_id="curso-ad2c")
+    assert decision is not None
+    assert decision["emphasis_topics"] == ["input-output"]
+    assert decision["emphasis_topic_labels"] == ["Entrada y salida de datos"]
+
+
 def test_decision_adaptativa_excluye_competencias_del_pretest():
     """El pre-test (knowledge_test_service._evidencia_por_competencia)
     registra evidencia con `titulo_modulo=COMPETENCY_LABELS[topic]` — p.

@@ -385,12 +385,23 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
         # por diseño — vocabulario interno del Runtime) y tienen su propia
         # tabla, `PROGRAMMING_CONCEPT_LABELS` (Sesión UX/UI 2026-08-05, H1).
         # Solo un slug fuera de ambas tablas cae al humanizador genérico.
+        #
+        # `normalizar_asunto()` (runtime/boundary/inbound/asunto.py) convierte
+        # CUALQUIER caracter no alfanumérico —incluido "_"— en "-": el slug
+        # que de verdad llega aquí es "input-output", nunca "input_output"
+        # (el valor literal de `ProgrammingConcept.INPUT_OUTPUT`). Sin esta
+        # normalización, todo concepto de más de una palabra (8 de los 26)
+        # fallaba la búsqueda en `PROGRAMMING_CONCEPT_LABELS` en silencio —
+        # encontrado validando visualmente contra el servidor real, no en
+        # los tests (fixture de un test usaba justo un slug de una palabra).
         from app.data.knowledge_test_bank import COMPETENCY_LABELS
         from app.models.programming_domain import PROGRAMMING_CONCEPT_LABELS
 
+        slug_con_guion_bajo = slug.replace("-", "_")
         return (
             COMPETENCY_LABELS.get(slug)
             or PROGRAMMING_CONCEPT_LABELS.get(slug)
+            or PROGRAMMING_CONCEPT_LABELS.get(slug_con_guion_bajo)
             or slug.replace("-", " ").replace("_", " ").capitalize()
         )
 
