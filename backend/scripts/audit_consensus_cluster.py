@@ -117,15 +117,17 @@ CLUSTER_BACKEND = [
     ("scripts/run_baseline_experiment.py", "scripts"),
 ]
 
-# Extraído (§3.2) — Fase 1 completada: la ruta original ya no existe en
-# disco (movido a app/services/research_statistics.py, fuera de
-# AUDITED_DIRECTORIES). Se mantiene esta entrada, con la ruta vieja, para
-# que completeness_check() siga sin quejarse de un archivo "faltante" en
-# app/experiment/ que en realidad nunca debió estar ahí desde la Fase 1
-# en adelante — auditar la ruta vieja simplemente confirma "ninguno" de
-# forma vacua (no hay nada que grep pueda encontrar de un archivo que no
-# existe). No representa trabajo pendiente.
-EXTRACTED_FILE = ("app/experiment/analysis.py", "experiment_extracted")
+# Extraído (§3.2) — Fase 1 completada (commit b2487c6). Apunta a la
+# ubicación REAL actual, no a la ruta vieja: auditar una ruta que ya no
+# existe en disco solo para que un chequeo no se queje es exactamente el
+# tipo de desajuste entre la herramienta y el árbol real que este script
+# existe para prevenir — señalado por un auditor externo tras la Fase 1,
+# corregido en la misma ronda. Apuntar aquí a la ubicación real hace que
+# el reporte muestre datos genuinos: sus consumidores reales (los 3
+# archivos de app/experiment/ que la Fase 1 repuntó — temporales, se
+# retiran en la Fase 5 junto con el resto) y su cobertura real
+# (tests/test_research_statistics.py) — no "ninguno" de forma vacua.
+EXTRACTED_FILE = ("app/services/research_statistics.py", "experiment_extracted")
 
 EDITED_BACKEND_FILES = [
     "app/llm/__init__.py",
@@ -469,7 +471,7 @@ class FileReport:
     @property
     def action(self) -> str:
         if self.path == EXTRACTED_FILE[0]:
-            return "extraer"
+            return "extraído ✓ (Fase 1 completa)"
         if self.path == PRESERVED_EXCEPTION_FRONTEND:
             return "conservar"
         return "eliminar"
