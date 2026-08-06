@@ -7,17 +7,27 @@
   de la tesis, sin ninguna relación de código con este ADR), ADR-0011 (esta
   ADR extiende su mismo razonamiento a un hermano que quedó fuera de su
   alcance, no lo modifica), ADR-0012 (política del kernel — nombre similar,
-  código distinto, sin relación), `app/api/routes/swarm.py` +
+  código distinto, sin relación), `app/api/routes/{swarm,replay}.py` +
   `app.memory.*` + `app.explainability.*` + el paquete `app.swarm_diagnostics`
   + `app.tracing` (directorio `app/tracing/`, distinto de
   `app/observability/tracing.py` — confirmado sin relación con el clúster
-  que se retira, ver §2), `app/observability/{metrics_exporter,stream}.py`
-  (consumidores reales; pierden solo la sección "consensus" de su
-  exportación — ver §4.3), `app/services/module_orchestration_service.py`
-  (su lógica no cambia; solo deja de arrastrar una carga transitiva no
-  deseada — ver §4), `frontend/src/components/swarm/AgentActivityPanel.tsx`
-  (único archivo vivo dentro de un directorio donde los otros 25 se
-  retiran — usado por 4 páginas reales del estudiante, ver §4.1)
+  que se retira, ver §2), `app/observability/{metrics_exporter,stream,
+  tracing}.py` (consumidores reales; `metrics_exporter.py` pierde solo la
+  sección "consensus" de su exportación — ver §4.3),
+  `app/core/{__init__,config,security}.py` + `app/llm/{config,service,
+  cost_tracker}.py` (infraestructura de toda la app, sin relación),
+  `app/services/module_orchestration_service.py` (su lógica no cambia;
+  solo deja de arrastrar una carga transitiva no deseada — ver §4), los 7
+  archivos vivos de `app/replay/` (`__init__,session_replay,
+  adaptation_replay,reasoning_replay,memory_replay,timeline_builder,
+  replay_exporter.py` — motor real de Replay Cognitivo, RFC-0008 §3,
+  importado por `app/api/routes/replay.py`; 9 de los 16 archivos del
+  mismo directorio SÍ se retiran, ver §9.7 — lista completa en
+  `PRESERVED_BACKEND_FILES` de `backend/scripts/
+  audit_consensus_cluster.py`), `frontend/src/components/swarm/
+  AgentActivityPanel.tsx` (único archivo vivo dentro de un directorio
+  donde los otros 25 se retiran — usado por 4 páginas reales del
+  estudiante, ver §4.1)
 - **Criterio de aceptación:** ver §8
 
 ## 1. Contexto
@@ -31,19 +41,26 @@ del proyecto".
 
 En vez de decidir sobre esa sola afirmación, se abrió una investigación
 dedicada (Ficha C1) que rastreó imports exactos — no coincidencia de texto
-— desde `app/core/consensus.py` hacia afuera, y una revisión posterior
-específica de este ADR (misma metodología, aplicada al propio documento
-antes de aceptarlo) que amplió el rastreo a los `__init__.py` de paquete y
-a cada archivo de test uno por uno. El hallazgo central: **no es un
-archivo aislado, es un clúster de 73 archivos de producción** (44 backend
-+ 29 frontend — suma verificada archivo por archivo de las subcategorías
-de §4.1, incluyendo un directorio completo, `frontend/src/components/
-swarm/`, que la primera pasada de investigación no había examinado) que
-se retiran, 3 archivos que se editan sin borrarse (`app/llm/__init__.py`,
-`app/observability/__init__.py`, `app/observability/metrics_exporter.py`
-— ver §2), y 16 archivos de test (10,171 líneas) de los cuales 9 se
-retiran completos y 7 requieren edición quirúrgica porque mezclan
-cobertura de código vivo con el clúster que se retira (ver §4).
+— desde `app/core/consensus.py` hacia afuera, seguida de tres rondas de
+revisión propia pedidas explícitamente por el tesista, cada una ampliando
+el método: imports estáticos → `__init__.py` de paquete y tests uno por
+uno → imports dinámicos (`importlib`, `React.lazy`, barrel files) → un
+script versionado y determinista
+(`backend/scripts/audit_consensus_cluster.py`) → un chequeo de
+completitud que lista cada archivo que existe de verdad en los
+directorios auditados, en vez de solo verificar una lista escrita a
+mano. Esa última capa encontró 15 archivos más
+(`app/core/consensus_cancellation.py` y `consensus_timeout_metrics.py`,
+4 de `app/demo/`, 9 de `app/replay/`) que las tres rondas anteriores
+nunca habían examinado. El hallazgo central: **no es un archivo aislado,
+es un clúster de 88 archivos de producción** (59 backend + 29 frontend —
+suma verificada archivo por archivo, reproducible con el script de §9)
+que se retiran, 3 archivos que se editan sin borrarse
+(`app/llm/__init__.py`, `app/observability/__init__.py`,
+`app/observability/metrics_exporter.py` — ver §2), y 17 archivos de test
+de los cuales 10 se retiran completos y 7 requieren edición quirúrgica
+porque mezclan cobertura de código vivo con el clúster que se retira
+(ver §4).
 
 Esta ADR extiende — no reabre — el razonamiento que ADR-0011 ya aplicó el
 2026-08-01 a `app/agents/`, `app/swarm/` y `app/experiment/benchmark/real/`:
@@ -147,7 +164,7 @@ real — pero es una edición quirúrgica de código vivo, no una eliminación
 de archivo.
 
 **Test files que mezclan código vivo con el clúster que se retira.**
-7 de los 16 archivos de test bajo `tests/` no pueden borrarse enteros:
+7 de los 17 archivos de test bajo `tests/` no pueden borrarse enteros:
 importan simultáneamente algo del clúster retirable y algo del paquete
 vivo `app.swarm_diagnostics` (o de `app.observability.metrics_exporter`).
 El caso más claro: `test_swarm_diagnostics.py` (780 líneas) tiene una sola
@@ -206,11 +223,16 @@ ninguna dependencia hacia el clúster que se retira.
 
 ## 4. Alcance exacto del retiro (3.1)
 
-**4.1 Archivos que se eliminan (73: 44 backend + 29 frontend)**
+**4.1 Archivos que se eliminan (88: 59 backend + 29 frontend)**
 
 - `app/core/{consensus,circuit_breaker,specialization,trust,weighting,
-  programming_voters,consensus_timeouts,consensus_timeout_middleware}.py`
-  (8 archivos)
+  programming_voters,consensus_timeouts,consensus_timeout_middleware,
+  consensus_cancellation,consensus_timeout_metrics}.py` (10 archivos —
+  los últimos dos añadidos en la cuarta ronda de revisión: usan el único
+  import relativo de todo `app/`, por eso el rastreo de imports
+  absolutos de las rondas anteriores nunca los alcanzó — ver §9.1). **No**
+  se retira `app/core/{__init__,config,security}.py` (config/auth de
+  toda la app, sin relación).
 - `app/llm/voters/{__init__,base,pedagogical,adaptive,evaluation,
   mediator}.py` (6) + `app/llm/prompts/{__init__,adaptive,deliberation,
   evaluation,pedagogical}.py` (5 — su único consumidor confirmado son los
@@ -223,8 +245,23 @@ ninguna dependencia hacia el clúster que se retira.
 - `app/observability/{consensus_metrics,swarm_diagnostics}.py` (2
   archivos — nombre confuso con el paquete vivo `app.swarm_diagnostics`,
   sin relación de código entre ambos, ver §1 "Preserva"; `consensus_metrics.py`
-  requiere primero la edición de §4.3, no un borrado directo)
-- `app/demo/orchestrator.py` + `app/api/routes/swarm_demo.py` (2)
+  requiere primero la edición de §4.3, no un borrado directo). **No** se
+  retira `app/observability/{stream,tracing}.py` (consumidores reales:
+  `app/replay/engine.py` — que a su vez no tiene consumidor propio, ver
+  más abajo — y varios módulos vivos respectivamente).
+- `app/demo/{orchestrator,__init__,events,memory,synthetic}.py` (5 — los
+  4 últimos añadidos en la cuarta ronda; el borrador original solo tenía
+  `orchestrator.py`) + `app/api/routes/swarm_demo.py` (1) = 6 archivos
+- `app/replay/{export,session_store,models,replayer,serializer,
+  timeline,engine,recorder,tracks}.py` (9 de los 16 archivos de
+  `app/replay/` — añadidos en la cuarta ronda. Los otros 7 —
+  `session_replay.py`, `adaptation_replay.py`, `reasoning_replay.py`,
+  `memory_replay.py`, `timeline_builder.py`, `replay_exporter.py`,
+  `__init__.py` — son el motor real de Replay Cognitivo, importados por
+  `app/api/routes/replay.py` (router vivo, RFC-0008 §3) y **no** se
+  tocan. `engine.py`, `recorder.py` y `tracks.py` están huérfanos
+  incluso dentro del propio clúster muerto: ni siquiera `swarm_demo.py`
+  los alcanza — ver §9.7)
 - `app/experiment/{__init__,orchestrator,conditions,dataset,evaluation,
   pipelines,metrics,context,reset,export,report,anomaly,config,
   replay}.py` (14 de los 15 archivos de `app/experiment/` a nivel raíz —
@@ -255,13 +292,17 @@ ninguna dependencia hacia el clúster que se retira.
   La entrada de ruta `/swarm-demo` en `App.tsx` es una edición, no un
   archivo que se borre.
 
-**4.2 Tests — 9 se eliminan completos, 7 requieren edición quirúrgica**
+**4.2 Tests — 10 se eliminan completos, 7 requieren edición quirúrgica**
 
 Eliminación completa (prueban exclusivamente el clúster que se retira):
 `test_adaptive_trust.py`, `test_async_safety.py`,
 `test_collective_inference.py`, `test_consensus.py`,
 `test_experimental_baseline.py`, `test_llm_deliberation.py`,
-`test_llm_integration.py`, `test_llm_phase3.py`, `test_llm_voters.py`.
+`test_llm_integration.py`, `test_llm_phase3.py`, `test_llm_voters.py`,
+`test_cognitive_replay.py` (nuevo en la cuarta ronda — sus tres imports,
+`app.demo.memory`, `app.replay.export`, `app.replay.session_store`, son
+los tres huérfanos vía demo de §9.6/§9.7, ninguno del motor vivo de
+Replay Cognitivo).
 
 Edición quirúrgica (mezclan cobertura del clúster que se retira con
 cobertura de código vivo — se elimina solo la clase/función que depende
@@ -334,8 +375,8 @@ evidencia en §2.
   / `run_baseline_experiment.py` sin revertir esta ADR — ningún resultado
   de esos scripts forma parte hoy de la evidencia de tesis ya exportada
   (verificado: cero referencia desde `RESEARCH_ITERATIONS.md`).
-- De los 16 archivos de test (10,171 líneas) y los 149 tests de la suite
-  de `app/experiment/`, 9 archivos se eliminan enteros junto con el
+- De los 17 archivos de test (10,171+ líneas) y los 149 tests de la suite
+  de `app/experiment/`, 10 archivos se eliminan enteros junto con el
   código que probaban — no se reescriben, porque no queda nada que
   probar (mismo criterio que ADR-0011 §4). Los otros 7, incluidos
   `test_experiment_isolation.py` y `test_experiment_pipeline.py` (parte
@@ -351,13 +392,13 @@ evidencia en §2.
   permanentemente la sección `"consensus"` de su exportación Prometheus
   (siempre en cero hoy, pero deja de existir como posibilidad si el
   motor de consenso volviera a activarse sin revertir esta ADR).
-- 7 de los 16 archivos de test (§4.2) requieren edición quirúrgica en vez
+- 7 de los 17 archivos de test (§4.2) requieren edición quirúrgica en vez
   de borrado directo — más trabajo de revisión que un retiro limpio, pero
   necesario para no perder cobertura de `app.swarm_diagnostics` (vivo).
 - `app/experiment/benchmark/*` (M2, tercer subsistema de benchmark, fuera
   de alcance de este ADR) deja de ser importable ni siquiera de forma
   aislada, porque depende de `app/experiment/__init__.py` por semántica
-  de paquete de Python (§9.6, nota). Sin consecuencia práctica hoy — no
+  de paquete de Python (§9.8, nota). Sin consecuencia práctica hoy — no
   tiene consumidores propios — pero cierra la puerta a revivirlo sin
   antes revertir parte de esta ADR.
 
@@ -382,19 +423,27 @@ preserva).
    (retira la sección `"consensus"` de su snapshot/exportación); confirmar
    que `module_orchestration_service.py`, `app.swarm_diagnostics` y la
    integración Tavily siguen en verde sin cambio de comportamiento.
-3. **Retirar `/api/swarm/demo` completo**: `app/api/routes/swarm_demo.py`,
-   `app/demo/orchestrator.py`, la línea de registro en `main.py`, y los 29
-   archivos frontend de §4.1 (`pages/demo/SwarmDemo.tsx`,
-   `hooks/useDemoSSE.ts`, `types/{swarmDemo,replay}.ts`, los 25 de
-   `components/swarm/` salvo `AgentActivityPanel.tsx`, la entrada
-   `/swarm-demo` de `App.tsx`) — una sola feature, un solo commit;
-   confirmar que `frontend` compila y que las 4 páginas que usan
+3. **Retirar `/api/swarm/demo` completo, incluyendo su almacenamiento de
+   replay muerto**: `app/api/routes/swarm_demo.py`, `app/demo/*` (5
+   archivos), `app/replay/{export,session_store,models,replayer,
+   serializer,timeline,engine,recorder,tracks}.py` (9 archivos — ninguno
+   toca el motor vivo de `app/api/routes/replay.py`, ver §9.7), la línea
+   de registro en `main.py`, `test_cognitive_replay.py` (eliminación
+   completa, §4.2), y los 29 archivos frontend de §4.1
+   (`pages/demo/SwarmDemo.tsx`, `hooks/useDemoSSE.ts`,
+   `types/{swarmDemo,replay}.ts`, los 25 de `components/swarm/` salvo
+   `AgentActivityPanel.tsx`, la entrada `/swarm-demo` de `App.tsx`) — una
+   sola feature, un solo commit; confirmar que `frontend` compila, que
+   `app/api/routes/replay.py` sigue funcionando (7 archivos de
+   `app/replay/` intactos), y que las 4 páginas que usan
    `AgentActivityPanel.tsx` siguen renderizando.
-4. **Retirar `app/core/*`, `app/llm/{voters,prompts,deliberation,
-   grounding,metrics,response_parser,confidence}` y
+4. **Retirar `app/core/*` (10 archivos, incl. `consensus_cancellation.py`
+   y `consensus_timeout_metrics.py`), `app/llm/{voters,prompts,
+   deliberation,grounding,metrics,response_parser,confidence}` y
    `app/observability/*`** (§4.1) junto con los tests que les
-   corresponden: los 9 archivos de eliminación completa de §4.2, y la
-   edición quirúrgica de `test_swarm_diagnostics.py`,
+   corresponden: los 9 archivos de eliminación completa de §4.2
+   (excluyendo `test_cognitive_replay.py`, ya retirado en la Fase 3), y
+   la edición quirúrgica de `test_swarm_diagnostics.py`,
    `test_diagnostics_integration.py`, `test_circuit_breaker.py`,
    `test_observability.py` (retirar solo las clases/funciones que
    dependen del clúster).
@@ -412,15 +461,21 @@ preserva).
    §8.1 sobre `app/` sin resultados fuera de comentarios/documentación
    histórica; confirmar `backend/runtime/`, `runtime.boundary`,
    `runtime_bridge.py`, `module_orchestration_service.py`,
-   `app/api/routes/swarm.py` y sus dependencias (`app.memory.*`,
-   `app.explainability.*`, `app.swarm_diagnostics`, `app.tracing`)
+   `app/api/routes/{swarm,replay}.py` y sus dependencias (`app.memory.*`,
+   `app.explainability.*`, `app.swarm_diagnostics`, `app.tracing`, los 7
+   archivos vivos de `app/replay/`, `app/core/{config,security}.py`)
    bit-a-bit intactos.
 
 ## 8. Criterios de aceptación
 
-1. `git grep -nE "ConsensusEngine|TrustSystem|SpecializationTracker|from app\.core\.consensus|from app\.demo\.orchestrator|from app\.llm\.voters|from app\.llm\.prompts|from app\.experiment\.(orchestrator|conditions|dataset|evaluation|pipelines|metrics|context|reset|export|report|anomaly|config|replay)|swarm_demo"`
-   sobre `app/`, `scripts/` y `frontend/src/` no devuelve resultados fuera
-   de comentarios/documentación histórica.
+1. Tras ejecutar las 6 fases, `python backend/scripts/audit_consensus_cluster.py`
+   ya no encuentra los 88 archivos de §9 (fallan al no existir) y
+   `completeness_check()` sigue pasando sobre lo que queda — es el
+   criterio autoritativo, reemplaza cualquier `git grep` mantenido a
+   mano. Alternativa manual equivalente si el script no puede correr:
+   `git grep -nE "ConsensusEngine|TrustSystem|SpecializationTracker|from app\.core\.(consensus|consensus_cancellation|consensus_timeout_metrics)|from app\.demo\.|from app\.replay\.(export|session_store|models|replayer|serializer|timeline|engine|recorder|tracks)\b|from app\.llm\.voters|from app\.llm\.prompts|from app\.experiment\.(orchestrator|conditions|dataset|evaluation|pipelines|metrics|context|reset|export|report|anomaly|config|replay)|swarm_demo"`
+   sobre `app/`, `scripts/` y `frontend/src/` sin resultados fuera de
+   comentarios/documentación histórica.
 2. `pytest` completo corre sin `ImportError` ni `ModuleNotFoundError`
    causados por este cambio; la suite completa no pierde tests además de
    los retirados deliberadamente en §4.2, y ningún test de
@@ -433,10 +488,13 @@ preserva).
    `swarm_consensus_*`, y su snapshot JSON ya no tiene la clave
    `"consensus"` — sin romper a sus consumidores reales (`app.
    swarm_diagnostics`, `app/integrations/tavily/*`).
-5. `runtime/kernel/deliberation/*`, `app/api/routes/swarm.py`,
+5. `runtime/kernel/deliberation/*`, `app/api/routes/{swarm,replay}.py`,
    `app.memory.*`, `app.explainability.*`, `app.swarm_diagnostics`,
-   `app.tracing` y `module_orchestration_service.py` quedan bit-a-bit
-   intactos salvo los tres archivos editados en §4.3.
+   `app.tracing`, `module_orchestration_service.py`,
+   `app/core/{config,security}.py`, `app/llm/{config,service,
+   cost_tracker}.py`, `app/observability/{stream,tracing}.py`, y los 7
+   archivos vivos de `app/replay/` (§9.7) quedan bit-a-bit intactos salvo
+   los tres archivos editados en §4.3.
 6. `frontend/src/components/swarm/AgentActivityPanel.tsx` queda
    bit-a-bit intacto y `DiagnosticTest.tsx`, `Evaluation.tsx`,
    `KnowledgeTest.tsx`, `ModuleLearningView.tsx` lo siguen importando sin
@@ -491,6 +549,17 @@ madurez que el tesista pidió.
 | `programming_voters.py` | ninguno | ninguno | eliminar |
 | `consensus_timeouts.py` | ninguno | `test_consensus_timeouts.py`* | eliminar |
 | `consensus_timeout_middleware.py` | ninguno | `test_consensus_timeouts.py`* | eliminar |
+| `consensus_cancellation.py` | ninguno | `test_consensus_timeouts.py`* | eliminar |
+| `consensus_timeout_metrics.py` | ninguno | `test_consensus_timeouts.py`* | eliminar |
+
+Los últimos dos, **`consensus_cancellation.py` y `consensus_timeout_metrics.py`,
+no estaban en ninguna versión anterior de este inventario** — se
+encontraron en la cuarta ronda de revisión al añadir `completeness_check()`
+al script (ver §9, intro): ambos usan un import relativo
+(`from .consensus_cancellation import ...`), el único caso de import
+relativo en todo `app/`, y por eso el rastreo de imports absolutos de las
+tres rondas anteriores nunca los alcanzó por accidente — solo aparecieron
+al listar directamente qué archivos existen de verdad en `app/core/`.
 
 **9.2 Backend — `app/llm/voters/*` (categoría: voters LLM)**
 
@@ -523,16 +592,55 @@ madurez que el tesista pidió.
 | `response_parser.py` | `app/llm/__init__.py` (se edita) | `test_llm_integration.py` | eliminar |
 | `confidence.py` | `app/llm/__init__.py` (se edita) + `voters/base.py` (retirable) | ninguno directo | eliminar |
 
-**9.5 Backend — `app/observability/*` y `app/demo/*` (categoría: observabilidad y demo)**
+**9.5 Backend — `app/observability/*` (categoría: observabilidad)**
 
 | Archivo | Consumidor externo | Tests que lo cubren | Acción |
 |---|---|---|---|
 | `consensus_metrics.py` | `metrics_exporter.py` (**vivo** — editar primero, §4.3) + `__init__.py` (se edita) | `test_experiment_isolation.py`*, `test_observability.py`* | eliminar (tras Fase 2) |
 | `swarm_diagnostics.py` | `app/observability/__init__.py` (se edita) | `test_observability.py`* | eliminar |
+
+**9.6 Backend — `app/demo/*` y la ruta `/api/swarm/demo` (categoría: demo HTTP)**
+
+Ampliado en la cuarta ronda de revisión: el borrador anterior solo tenía
+`orchestrator.py`. `completeness_check()` (script) encontró los otros 4
+archivos del directorio.
+
+| Archivo | Consumidor externo | Tests que lo cubren | Acción |
+|---|---|---|---|
 | `demo/orchestrator.py` | ninguno | ninguno | eliminar |
+| `demo/__init__.py` | ninguno | `test_cognitive_replay.py`* | eliminar |
+| `demo/events.py` | ninguno | ninguno | eliminar |
+| `demo/memory.py` | ninguno | `test_cognitive_replay.py`* | eliminar |
+| `demo/synthetic.py` | ninguno | ninguno | eliminar |
 | `api/routes/swarm_demo.py` | `main.py` (se edita, línea de registro) | ninguno | eliminar |
 
-**9.6 Backend — `app/experiment/*` (categoría: benchmark de experimento — distinto de `app/experiment/benchmark/`, M2, fuera de alcance)**
+**9.7 Backend — `app/replay/*` (categoría: réplica cognitiva — 9 de 16 archivos huérfanos, 7 son el motor real y se conservan)**
+
+`app/api/routes/replay.py` (router **vivo**, RFC-0008 §3, mismo prefijo
+que la Épica 4: Replay Cognitivo) importa 6 de los 16 archivos de este
+directorio + `__init__.py` como paquete — esos 7 se conservan
+(`PRESERVED_BACKEND_FILES` en el script: `session_replay.py`,
+`adaptation_replay.py`, `reasoning_replay.py`, `memory_replay.py`,
+`timeline_builder.py`, `replay_exporter.py`, `__init__.py`, este último
+solo un docstring, sin imports que cortar). Los otros 9 se dividen en dos
+grupos: 6 alcanzables solo desde `app/api/routes/swarm_demo.py`
+(directa o indirectamente, vía `serializer.py`/`timeline.py`), y 3
+(`engine.py`, `recorder.py`, `tracks.py`) huérfanos incluso dentro del
+propio clúster muerto — ni el demo los alcanza.
+
+| Archivo | Consumidor externo | Tests que lo cubren | Acción |
+|---|---|---|---|
+| `export.py` | ninguno | `test_cognitive_replay.py`* | eliminar |
+| `session_store.py` | ninguno | `test_cognitive_replay.py`* | eliminar |
+| `models.py` | ninguno | ninguno | eliminar |
+| `replayer.py` | ninguno | ninguno | eliminar |
+| `serializer.py` | `export.py` (retirable) | ninguno | eliminar |
+| `timeline.py` | `session_store.py` (retirable) | ninguno | eliminar |
+| `engine.py` | ninguno (huérfano incluso dentro del clúster) | ninguno | eliminar |
+| `recorder.py` | ninguno (huérfano incluso dentro del clúster) | ninguno | eliminar |
+| `tracks.py` | `engine.py` (retirable) | ninguno | eliminar |
+
+**9.8 Backend — `app/experiment/*` (categoría: benchmark de experimento — distinto de `app/experiment/benchmark/`, M2, fuera de alcance)**
 
 | Archivo | Consumidor externo | Tests que lo cubren | Acción |
 |---|---|---|---|
@@ -573,14 +681,14 @@ tampoco lo tiene; sí lo deja permanentemente no-importable incluso de
 forma aislada, una consecuencia menor que se documenta aquí en vez de
 descartarse con una explicación incorrecta.
 
-**9.7 Backend — scripts**
+**9.9 Backend — scripts**
 
 | Archivo | Consumidor externo | Tests que lo cubren | Acción |
 |---|---|---|---|
 | `scripts/run_experiment.py` | ninguno | n/a (script, no importado) | eliminar |
 | `scripts/run_baseline_experiment.py` | ninguno | n/a (script, no importado) | eliminar |
 
-**9.8 Backend — archivos editados, no eliminados**
+**9.10 Backend — archivos editados, no eliminados**
 
 | Archivo | Por qué sigue vivo | Qué pierde | Acción |
 |---|---|---|---|
@@ -588,7 +696,7 @@ descartarse con una explicación incorrecta.
 | `app/observability/__init__.py` | Importado por `app/replay/engine.py` (vivo, RFC-0008) vía `stream` | Imports de `swarm_diagnostics`, `consensus_metrics` | editar |
 | `app/observability/metrics_exporter.py` | Consumido por `app.swarm_diagnostics` (vivo) y `app/integrations/tavily/*` (vivo) | Sección `"consensus"` de su snapshot/exportación Prometheus | editar |
 
-**9.9 Frontend — `types/*` y archivos raíz del demo**
+**9.11 Frontend — `types/*` y archivos raíz del demo**
 
 | Archivo | Consumidor externo | Acción |
 |---|---|---|
@@ -597,7 +705,7 @@ descartarse con una explicación incorrecta.
 | `types/swarmDemo.ts` | los 24 componentes de 9.10 que lo importan directamente + `useDemoSSE.ts` + `SwarmDemo.tsx` + `types/replay.ts` (todos retirables) | eliminar |
 | `types/replay.ts` | `ReplaySessionViewer.tsx` (retirable) | eliminar |
 
-**9.10 Frontend — `src/components/swarm/*` (26 archivos: 25 se retiran, 1 se conserva)**
+**9.12 Frontend — `src/components/swarm/*` (26 archivos: 25 se retiran, 1 se conserva)**
 
 | Archivo | Consumidor externo | Acción |
 |---|---|---|
@@ -628,11 +736,20 @@ descartarse con una explicación incorrecta.
 | `SourceDiversityPanel.tsx` | `SwarmDemo.tsx` (retirable) | eliminar |
 | `TrustEvolution.tsx` | `SwarmDemo.tsx` (retirable) | eliminar |
 
-**Totales de esta sección** (deben cuadrar con §4.1/§4.2): 44 archivos
-backend a eliminar (9.1–9.7, sin contar `analysis.py` que se extrae) + 3
-editados (9.8) + 29 frontend a eliminar (9.9+9.10, sin contar
-`AgentActivityPanel.tsx` que se conserva) = 73 eliminados, 3 editados, 2
-conservados en su lugar (`analysis.py` se muda, `AgentActivityPanel.tsx`
-se queda). 16 archivos de test según el desglose de §4.2 (marcados con
-`*` en 9.1–9.6 donde requieren edición quirúrgica en vez de eliminación
-completa).
+**Totales de esta sección** (deben cuadrar con §4.1/§4.2, y con la salida
+real de `python scripts/audit_consensus_cluster.py` — "Total 'eliminar'
+en esta corrida"): 59 archivos backend a eliminar (9.1–9.8, sin contar
+`analysis.py` que se extrae) + 3 editados (9.10) + 29 frontend a eliminar
+(9.11+9.12, sin contar `AgentActivityPanel.tsx` que se conserva) = **88
+eliminados**, 3 editados, 2 conservados en su lugar (`analysis.py` se
+muda, `AgentActivityPanel.tsx` se queda), y 15 archivos backend más
+conservados explícitamente donde están (`PRESERVED_BACKEND_FILES` del
+script: `app/core/{__init__,config,security}.py`,
+`app/llm/{config,service,cost_tracker}.py`,
+`app/observability/{stream,tracing}.py`, y los 7 de `app/replay/` de
+§9.7 — `session_replay.py`, `adaptation_replay.py`, `reasoning_replay.py`,
+`memory_replay.py`, `timeline_builder.py`, `replay_exporter.py`,
+`__init__.py`). 17 archivos de test (16 + `test_cognitive_replay.py`,
+nuevo en esta ronda) según el desglose de §4.2, marcados con `*` en
+9.1–9.8 donde requieren edición quirúrgica en vez de eliminación
+completa.

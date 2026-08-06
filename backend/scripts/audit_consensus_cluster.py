@@ -9,11 +9,20 @@ Uso:
     cd backend && python scripts/audit_consensus_cluster.py
     cd backend && python scripts/audit_consensus_cluster.py --format csv
 
-La lista de archivos del clúster (CLUSTER_BACKEND / CLUSTER_FRONTEND /
-EDITED_FILES / PRESERVED_EXCEPTIONS) es la definición congelada de
-ADR-0017 §4 — este script no descubre el clúster, lo verifica. Si se
-amplía el alcance del ADR, esta lista se actualiza primero (con su
-propia justificación en el ADR) y luego se vuelve a correr el script.
+**Chequeo de completitud (AUDITED_DIRECTORIES).** La primera versión de
+este script solo verificaba una lista de archivos escrita a mano
+(CLUSTER_BACKEND) — no podía detectar un archivo que esa lista hubiera
+olvidado. Corriendo esa versión, un auditor externo encontró exactamente
+ese problema: `app/core/consensus_cancellation.py`,
+`app/core/consensus_timeout_metrics.py`, 4 archivos de `app/demo/`, y 9
+de `app/replay/` estaban fuera de la lista aunque pertenecían al mismo
+clúster huérfano. Esta versión añade `completeness_check()`: para cada
+directorio en AUDITED_DIRECTORIES, lista TODOS los `.py` que existen de
+verdad y falla (`exit 1`) si alguno no aparece en CLUSTER_BACKEND,
+EDITED_BACKEND_FILES, EXTRACTED_FILE o PRESERVED_BACKEND_FILES (con su
+razón documentada). El script ya no solo verifica la lista: la lista
+tiene que explicar el 100% de lo que existe en disco, o el script se
+niega a generar la tabla.
 
 Reproducible: solo lee el árbol de archivos actual con grep, sin red, sin
 estado oculto. Correrlo dos veces sobre el mismo commit debe producir
@@ -49,6 +58,8 @@ CLUSTER_BACKEND = [
     ("app/core/programming_voters.py", "core"),
     ("app/core/consensus_timeouts.py", "core"),
     ("app/core/consensus_timeout_middleware.py", "core"),
+    ("app/core/consensus_cancellation.py", "core"),
+    ("app/core/consensus_timeout_metrics.py", "core"),
     ("app/llm/voters/__init__.py", "llm_voters"),
     ("app/llm/voters/base.py", "llm_voters"),
     ("app/llm/voters/pedagogical.py", "llm_voters"),
@@ -68,7 +79,25 @@ CLUSTER_BACKEND = [
     ("app/observability/consensus_metrics.py", "observability"),
     ("app/observability/swarm_diagnostics.py", "observability"),
     ("app/demo/orchestrator.py", "demo"),
+    ("app/demo/__init__.py", "demo"),
+    ("app/demo/events.py", "demo"),
+    ("app/demo/memory.py", "demo"),
+    ("app/demo/synthetic.py", "demo"),
     ("app/api/routes/swarm_demo.py", "demo"),
+    # app/replay/: 7 de 16 archivos son el motor real de Replay Cognitivo
+    # (RFC-0008, app/api/routes/replay.py) — ver PRESERVED_BACKEND_FILES.
+    # Los otros 9 solo los alcanza app/api/routes/swarm_demo.py (6) o
+    # ninguno en absoluto (3, huérfanos incluso dentro del propio clúster
+    # muerto — nunca los llamó ni siquiera el demo).
+    ("app/replay/export.py", "replay_via_demo"),
+    ("app/replay/session_store.py", "replay_via_demo"),
+    ("app/replay/models.py", "replay_via_demo"),
+    ("app/replay/replayer.py", "replay_via_demo"),
+    ("app/replay/serializer.py", "replay_via_demo"),
+    ("app/replay/timeline.py", "replay_via_demo"),
+    ("app/replay/engine.py", "replay_orphan"),
+    ("app/replay/recorder.py", "replay_orphan"),
+    ("app/replay/tracks.py", "replay_orphan"),
     ("app/experiment/__init__.py", "experiment"),
     ("app/experiment/orchestrator.py", "experiment"),
     ("app/experiment/conditions.py", "experiment"),
@@ -96,6 +125,81 @@ EDITED_BACKEND_FILES = [
     "app/observability/__init__.py",
     "app/observability/metrics_exporter.py",
 ]
+
+# Archivos vivos DENTRO de directorios que también contienen el clúster —
+# cada entrada existe para que completeness_check() no los confunda con
+# huérfanos. La razón queda escrita aquí, no solo en el ADR, porque es lo
+# que completeness_check() imprime cuando alguien intente borrar uno.
+PRESERVED_BACKEND_FILES: dict[str, str] = {
+    "app/core/__init__.py": "package init trivial, sin relación",
+    "app/core/config.py": "config de toda la app — main.py, db/session.py, module_orchestration_service.py",
+    "app/core/security.py": "JWT/auth de toda la app — api/deps.py, auth_service.py, user_service.py",
+    "app/llm/config.py": "usado por module_orchestration_service.py (vivo)",
+    "app/llm/service.py": "usado por module_orchestration_service.py (vivo)",
+    "app/llm/cost_tracker.py": "usado por module_orchestration_service.py (vivo)",
+    "app/observability/stream.py": "MetricsStream — consumido por app/replay/engine.py (vivo, RFC-0008)",
+    "app/observability/tracing.py": "compartido: app/core/trust.py, app/memory/shared_memory.py, app/swarm_diagnostics/, app/tracing/",
+    "app/replay/__init__.py": "docstring puro, requerido para importar el paquete vivo de Replay Cognitivo",
+    "app/replay/session_replay.py": "importado por app/api/routes/replay.py (router vivo, RFC-0008)",
+    "app/replay/adaptation_replay.py": "importado por app/api/routes/replay.py (router vivo)",
+    "app/replay/reasoning_replay.py": "importado por app/api/routes/replay.py (router vivo)",
+    "app/replay/memory_replay.py": "importado por app/api/routes/replay.py (router vivo)",
+    "app/replay/timeline_builder.py": "importado por app/api/routes/replay.py (router vivo)",
+    "app/replay/replay_exporter.py": "importado por app/api/routes/replay.py (router vivo)",
+}
+
+# app/experiment/benchmark/ es un tercer subsistema de benchmark (hallazgo
+# M2 de la Auditoría Externa, no C1) — explícitamente fuera del alcance de
+# ADR-0017. No se audita archivo por archivo aquí a propósito.
+UNAUDITED_SUBDIRECTORIES = {"app/experiment/benchmark"}
+
+# Directorios que este script promete cubrir al 100%: cada .py que exista
+# ahí debe aparecer en CLUSTER_BACKEND, EDITED_BACKEND_FILES,
+# EXTRACTED_FILE o PRESERVED_BACKEND_FILES. Si aparece uno nuevo, es
+# candidato al clúster o necesita una entrada explícita en
+# PRESERVED_BACKEND_FILES con su razón — nunca queda en silencio.
+AUDITED_DIRECTORIES = [
+    "app/core",
+    "app/llm",  # incluye voters/ y prompts/, recursivo
+    "app/observability",
+    "app/demo",
+    "app/experiment",  # no recursivo hacia benchmark/, ver arriba
+    "app/replay",
+]
+
+
+def completeness_check() -> None:
+    known = {p for p, _ in CLUSTER_BACKEND}
+    known.add(EXTRACTED_FILE[0])
+    known.update(EDITED_BACKEND_FILES)
+    known.update(PRESERVED_BACKEND_FILES.keys())
+
+    missing: list[str] = []
+    for d in AUDITED_DIRECTORIES:
+        root = BACKEND_ROOT / d
+        for p in root.rglob("*.py"):
+            rel = str(p.relative_to(BACKEND_ROOT))
+            if d == "app/experiment" and any(
+                rel.startswith(u + "/") for u in UNAUDITED_SUBDIRECTORIES
+            ):
+                continue
+            if rel not in known:
+                missing.append(rel)
+
+    if missing:
+        print(
+            "completeness_check(): archivos sin clasificar en directorios "
+            "que este script promete cubrir al 100%:",
+            file=sys.stderr,
+        )
+        for m in sorted(missing):
+            print(f"  - {m}", file=sys.stderr)
+        print(
+            "Añadir cada uno a CLUSTER_BACKEND o a PRESERVED_BACKEND_FILES "
+            "(con razón) antes de confiar en la salida de este script.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 CLUSTER_FRONTEND = [
     "src/pages/demo/SwarmDemo.tsx",
@@ -243,7 +347,15 @@ def render_markdown(reports: list[FileReport], extracted: FileReport, dynamic: d
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--format", choices=["markdown", "csv"], default="markdown")
+    parser.add_argument(
+        "--skip-completeness-check",
+        action="store_true",
+        help="Omite completeness_check() — solo para depurar este script, nunca para generar la tabla del ADR.",
+    )
     args = parser.parse_args()
+
+    if not args.skip_completeness_check:
+        completeness_check()
 
     all_cluster_rel_paths = {p for p, _ in CLUSTER_BACKEND} | {EXTRACTED_FILE[0]}
     reports = [audit_backend_file(p, c, all_cluster_rel_paths) for p, c in CLUSTER_BACKEND]
