@@ -43,7 +43,7 @@ const RuntimeConsole = lazy(() => import('@/pages/evidencia/RuntimeConsole'))
 function RootRedirect() {
     const { isAuthenticated, user } = useAuthStore()
     if (!isAuthenticated || !user) return <Navigate to="/login" replace />
-    // 'investigador' es un rol legado: sus usuarios aterrizan en el Modo Evidencia
+    // 'investigador' aterriza en Modo Evidencia — no tiene una ruta propia bajo /investigador
     const home = user.role === 'investigador' ? '/evidencia' : `/${user.role}`
     return <Navigate to={home} replace />
 }

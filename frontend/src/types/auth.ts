@@ -23,6 +23,6 @@ export interface UserAuth {
     current_cycle?: number
 }
 
-// 'investigador' es un rol legado: retirado como usuario de negocio (ver Modo
-// Evidencia), se conserva por compatibilidad con filas existentes en BD.
+// 'investigador' es el rol observador de Modo Evidencia / Runtime Console
+// (Sesión 5 Frente B, Paso 5) — no administra usuarios ni contenido.
 export type UserRole = 'admin' | 'docente' | 'estudiante' | 'investigador'

@@ -22,7 +22,7 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // 'investigador' es un rol legado: sus usuarios aterrizan en el Modo Evidencia
+    // 'investigador' aterriza en Modo Evidencia — no tiene una ruta propia bajo /investigador
     const roleHome = user.role === 'investigador' ? '/evidencia' : `/${user.role}`
     return <Navigate to={roleHome} replace />
   }
