@@ -470,9 +470,13 @@ preserva).
 
 1. Tras ejecutar las 6 fases, `python backend/scripts/audit_consensus_cluster.py`
    ya no encuentra los 88 archivos de §9 (fallan al no existir) y
-   `completeness_check()` sigue pasando sobre lo que queda — es el
-   criterio autoritativo, reemplaza cualquier `git grep` mantenido a
-   mano. Alternativa manual equivalente si el script no puede correr:
+   `completeness_check()` sigue pasando sobre lo que queda. Además,
+   `reachability_check(simulate_edits=False)` (ya sin necesidad de
+   simular nada, porque las ediciones ya están aplicadas de verdad)
+   confirma 0 archivos del antiguo `CLUSTER_BACKEND` alcanzables desde
+   `app.main` — es el criterio autoritativo, reemplaza cualquier
+   `git grep` mantenido a mano. Alternativa manual equivalente si el
+   script no puede correr:
    `git grep -nE "ConsensusEngine|TrustSystem|SpecializationTracker|from app\.core\.(consensus|consensus_cancellation|consensus_timeout_metrics)|from app\.demo\.|from app\.replay\.(export|session_store|models|replayer|serializer|timeline|engine|recorder|tracks)\b|from app\.llm\.voters|from app\.llm\.prompts|from app\.experiment\.(orchestrator|conditions|dataset|evaluation|pipelines|metrics|context|reset|export|report|anomaly|config|replay)|swarm_demo"`
    sobre `app/`, `scripts/` y `frontend/src/` sin resultados fuera de
    comentarios/documentación histórica.
@@ -579,6 +583,57 @@ suma a `CLUSTER_BACKEND`. **Es la primera ronda de las cinco donde el
 total no cambió — se mantuvo en 88** (verificado con `diff` entre dos
 corridas consecutivas sobre el mismo commit, igual que las rondas
 anteriores).
+
+**Sexta ronda — `reachability_check()`: alcanzabilidad real, no
+aproximada por grep.** Pedido explícito del tesista: un análisis de
+alcanzabilidad desde los puntos de entrada reales (`main.py`), no solo
+"¿alguien importa este archivo?" por texto. En vez de aproximarlo con
+otra expresión regular, el script importa `app.main` de verdad, en un
+subproceso aislado, y lee `sys.modules` después — es la resolución de
+imports real de Python, no una heurística. Primer resultado (estado
+actual del repositorio, sin ediciones): **250 módulos `app.*` alcanzables
+desde `app.main`, de los cuales 32 pertenecen a `CLUSTER_BACKEND`**. Esto
+no contradice la clasificación "eliminar" — es la confirmación exacta,
+con evidencia de más peso, de los dos acoplamientos de arranque que §2 ya
+documentaba: los 15 archivos de `app/llm/*` alcanzables vía el import
+incondicional de `app/llm/__init__.py`, los 2 de
+`app/observability/{consensus_metrics,swarm_diagnostics}.py` vía
+`app/observability/__init__.py`, y los 15 de `app/demo/*` +
+`app/replay/{export,session_store,models,replayer,serializer,timeline}.py`
++ `app/api/routes/swarm_demo.py` vía el registro de `swarm_demo.router`
+en `main.py`.
+
+La pregunta que de verdad importa no es "¿qué es alcanzable hoy?" (ya
+se sabía) sino **"¿qué queda alcanzable después de ejecutar el plan?"**
+— `reachability_check(simulate_edits=True)` aplica, dentro del mismo
+subproceso y con reversión garantizada por `try/finally` (el árbol de
+trabajo real nunca se toca — verificado con `git diff --stat` después de
+cada corrida, sin diferencias), los 4 recortes de import exactos de las
+Fases 2 y 3 (§7: `app/llm/__init__.py`, `app/observability/__init__.py`,
+`app/observability/metrics_exporter.py`, quitar el registro de
+`swarm_demo` en `main.py`), y vuelve a importar `app.main`. Resultado:
+**218 módulos `app.*`, cero de `CLUSTER_BACKEND` alcanzables** — los 32
+archivos que dependían del acoplamiento de arranque quedan, todos,
+inalcanzables tras el plan. `app.main` sigue importando sin error después
+de las 4 ediciones simuladas — el plan no rompe el arranque del backend.
+El script hace fallar la corrida (`exit 1`) si algún archivo de
+`CLUSTER_BACKEND` sigue alcanzable tras la simulación, para que un futuro
+cambio al plan que deje un cabo suelto se note de inmediato, no se
+descubra en producción.
+
+**Lo que esta ronda NO hace, a propósito.** El tesista pidió además una
+"ejecución completa de backend, frontend y pruebas E2E" tras borrar los
+88 archivos de verdad. Eso es un paso legítimo, pero pertenece a la
+*ejecución* del ADR (Fase 6, §7: `pytest` completo tras cada fase; el
+build de frontend en la Fase 3), no a su *aprobación* — ejecutarlo ahora
+significaría borrar código de producción antes de que el ADR pase de
+Propuesto a Aceptado, exactamente lo que este documento existe para
+evitar. `reachability_check()` es la validación más fuerte posible sin
+cruzar esa línea: usa la resolución de imports real de Python (no una
+aproximación), simula el efecto neto de las 4 ediciones sin tocar el
+árbol de trabajo, y dejaría cualquier archivo mal clasificado en
+evidencia con `exit 1` — pero no reemplaza correr la suite completa
+después de que las fases se ejecuten de verdad.
 
 Columna "Consumidor externo" = resultado del método de dos capas de §2
 (estático + dinámico); "ninguno" significa que ninguna de las dos capas

@@ -35,6 +35,7 @@ alcance, correr este script y pegar la salida.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -341,6 +342,117 @@ CLUSTER_FRONTEND = [
 PRESERVED_EXCEPTION_FRONTEND = "src/components/swarm/AgentActivityPanel.tsx"
 
 
+_REACHABILITY_TOUCHED_FILES = (
+    "app/llm/__init__.py",
+    "app/observability/__init__.py",
+    "app/observability/metrics_exporter.py",
+    "app/main.py",
+)
+
+_REACHABILITY_PROBE = r'''
+import json, re, sys
+
+TOUCHED = %r
+SIMULATE = %r
+originals = {p: open(p, "r", encoding="utf-8").read() for p in TOUCHED}
+
+def restore():
+    for p, content in originals.items():
+        open(p, "w", encoding="utf-8").write(content)
+
+try:
+    if SIMULATE:
+        p = "app/llm/__init__.py"
+        t = originals[p]
+        for line in (
+            "from app.llm.confidence import ConfidenceCalibrator\n",
+            "from app.llm.response_parser import LLMResponseParser, ParseError\n",
+            "from app.llm.grounding import HallucinationCheck, HallucinationGuard, HallucinationReport\n",
+        ):
+            t = t.replace(line, "")
+        t = re.sub(r"from app\.llm\.deliberation import \(.*?\)\n", "", t, flags=re.S)
+        t = re.sub(r"from app\.llm\.metrics import SwarmMetrics\n", "", t)
+        t = re.sub(r"from app\.llm\.voters import .*\n", "", t)
+        open(p, "w", encoding="utf-8").write(t)
+
+        p = "app/observability/__init__.py"
+        t = originals[p]
+        t = t.replace("from app.observability.swarm_diagnostics import SwarmDiagnostics, diagnostics\n", "")
+        t = t.replace(
+            "from app.observability.consensus_metrics import ConsensusMetrics, metrics as consensus_metrics\n", "")
+        open(p, "w", encoding="utf-8").write(t)
+
+        p = "app/observability/metrics_exporter.py"
+        t = originals[p]
+        t = t.replace("from app.observability.consensus_metrics import metrics as consensus_metrics\n", "")
+        open(p, "w", encoding="utf-8").write(t)
+
+        p = "app/main.py"
+        t = originals[p]
+        t = t.replace("    swarm_demo,\n", "")
+        t = t.replace("app.include_router(swarm_demo.router)\n", "")
+        open(p, "w", encoding="utf-8").write(t)
+
+    import app.main
+    mods = sorted(m for m in sys.modules if m.startswith("app."))
+    print("REACHABILITY_RESULT:" + json.dumps(mods))
+finally:
+    restore()
+'''
+
+
+def reachability_check(simulate_edits: bool) -> tuple[int, list[str]]:
+    """Verificación de alcanzabilidad real, no aproximada por grep: importa
+    `app.main` en un subproceso aislado (nunca en el proceso de este
+    script) y lee `sys.modules` después — es Python real resolviendo
+    imports reales, incluyendo cualquier ruta que un grep de texto no
+    vería. `simulate_edits=True` aplica los 4 recortes de import de las
+    Fases 2 y 3 antes de importar, para responder la pregunta que importa
+    de verdad: no "¿qué es alcanzable hoy?" (ya se sabe: 32 archivos con
+    acoplamiento de arranque, documentados en §2) sino "¿qué queda
+    alcanzable después del plan?". Las ediciones y su reversión ocurren
+    DENTRO del mismo subproceso, en un `try/finally` — el archivo original
+    se lee en memoria antes de escribir nada, y `restore()` corre incluso
+    si `import app.main` lanza una excepción. El árbol de trabajo real
+    nunca queda modificado más allá de la duración del subproceso.
+    Devuelve (total de módulos app.* cargados, lista de archivos de
+    CLUSTER_BACKEND que siguen alcanzables — vacía es el resultado
+    esperado con simulate_edits=True)."""
+    probe = _REACHABILITY_PROBE % (_REACHABILITY_TOUCHED_FILES, simulate_edits)
+    result = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=BACKEND_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    touched_paths = [BACKEND_ROOT / p for p in _REACHABILITY_TOUCHED_FILES]
+    dirty = subprocess.run(
+        ["git", "diff", "--stat", "--", *[str(p) for p in touched_paths]],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if dirty:
+        print(
+            f"reachability_check(): ¡el árbol de trabajo quedó modificado! "
+            f"Esto NO debería pasar (try/finally). Revisar manualmente:\n{dirty}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if result.returncode != 0:
+        print(f"reachability_check(): el subproceso falló:\n{result.stderr}", file=sys.stderr)
+        sys.exit(1)
+
+    line = next(l for l in result.stdout.splitlines() if l.startswith("REACHABILITY_RESULT:"))
+    mods = set(json.loads(line[len("REACHABILITY_RESULT:"):]))
+
+    def to_mod(relpath: str) -> str:
+        return re.sub(r"/__init__\.py$", "", relpath).replace(".py", "").replace("/", ".")
+
+    still_reachable = [p for p, _ in CLUSTER_BACKEND if to_mod(p) in mods]
+    return len(mods), still_reachable
+
+
 @dataclass
 class FileReport:
     path: str
@@ -455,11 +567,39 @@ def main() -> None:
         action="store_true",
         help="Omite completeness_check() y directory_sanity_check() — solo para depurar este script, nunca para generar la tabla del ADR.",
     )
+    parser.add_argument(
+        "--skip-reachability-check",
+        action="store_true",
+        help="Omite reachability_check() (importa app.main dos veces, en subprocesos) — solo para depurar, nunca para generar la tabla del ADR.",
+    )
     args = parser.parse_args()
 
     if not args.skip_completeness_check:
         completeness_check()
         directory_sanity_check()
+
+    if not args.skip_reachability_check:
+        n_before, reachable_before = reachability_check(simulate_edits=False)
+        n_after, reachable_after = reachability_check(simulate_edits=True)
+        print(
+            f"reachability_check(): {n_before} módulos app.* alcanzables desde "
+            f"app.main hoy, de los cuales {len(reachable_before)} pertenecen a "
+            f"CLUSTER_BACKEND (acoplamiento de arranque ya documentado en §2). "
+            f"Tras simular las ediciones de las Fases 2-3: {n_after} módulos, "
+            f"{len(reachable_after)} de CLUSTER_BACKEND siguen alcanzables "
+            f"(esperado: 0).",
+            file=sys.stderr,
+        )
+        if reachable_after:
+            print(
+                "reachability_check(): archivos de CLUSTER_BACKEND que SIGUEN "
+                "alcanzables después de simular el plan — el plan no basta, "
+                "revisar antes de confiar en esta tabla:",
+                file=sys.stderr,
+            )
+            for p in reachable_after:
+                print(f"  - {p}", file=sys.stderr)
+            sys.exit(1)
 
     all_cluster_rel_paths = {p for p, _ in CLUSTER_BACKEND} | {EXTRACTED_FILE[0]}
     reports = [audit_backend_file(p, c, all_cluster_rel_paths) for p, c in CLUSTER_BACKEND]
