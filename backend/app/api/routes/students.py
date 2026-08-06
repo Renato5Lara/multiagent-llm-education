@@ -400,16 +400,15 @@ def generate_learning_path(
             detail="Debes completar el diagnóstico primero",
         )
 
-    # Gate del pre-test de conocimiento (fail-open): bloquea solo si el banco
-    # está seedeado, no hay pre completado y el estudiante no tiene ruta previa
+    # Gate del pre-test de conocimiento: bloquea solo si el banco está
+    # seedeado, no hay pre completado y el estudiante no tiene ruta previa
     # (los estudiantes legacy con ruta nunca quedan bloqueados retroactivamente).
-    try:
-        from app.services import knowledge_test_service
+    # "Banco no sembrado" ya resuelve a pretest_required=False dentro de
+    # get_test_status (bank_available=False) — no es un caso de excepción.
+    from app.services import knowledge_test_service
 
-        kt_status = knowledge_test_service.get_test_status(db, current_user.id, course_id)
-        pretest_required = kt_status["pretest_required"]
-    except Exception:
-        pretest_required = False
+    kt_status = knowledge_test_service.get_test_status(db, current_user.id, course_id)
+    pretest_required = kt_status["pretest_required"]
     if pretest_required:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
