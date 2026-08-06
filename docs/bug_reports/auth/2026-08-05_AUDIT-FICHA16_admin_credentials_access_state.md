@@ -1,0 +1,144 @@
+# Ficha 16 — Estado de acceso de `admin@upao.edu.pe` (credencial documentada no coincide)
+
+## Metadata
+
+- **Fecha:** 2026-08-05 (hallazgo generado 2026-08-06 ~04:33 UTC,
+  durante la validación E2E de Ficha 15)
+- **Rama:** `feat/confidence-calibration-remediation-orientation`
+- **Protocolo pedido:** (1) confirmar que el usuario existe en
+  PostgreSQL; (2) comparar el hash bcrypt contra el valor documentado en
+  `seed.py`; (3) revisar si hay lockout; (4) revisar logs de auth; (5)
+  confirmar si afecta solo a Admin o a todos los roles. **Ningún archivo
+  de código modificado. Ninguna contraseña reseteada ni reintentada.**
+  Todas las consultas son de solo lectura contra Postgres real
+  (`users`, `login_attempts`, `audit_logs`).
+- **Origen:** durante Ficha 15 (Épica C), el login a
+  `admin@upao.edu.pe` con la contraseña documentada
+  (`backend/seed.py:355/677`, `CLAUDE.md`/memoria
+  `research_implementation_mode.md`) devolvió "Credenciales
+  incorrectas. Intentos restantes: 1" — se abandonó ese camino sin
+  reintentar, y se registró como hallazgo separado.
+
+---
+
+## 1. ¿Existe el usuario en PostgreSQL?
+
+**Sí, confirmado por consulta directa, no supuesto:**
+
+```
+id=fe6af4bf-2a7b-4f94-8246-dc7e9515fd02
+email=admin@upao.edu.pe
+role=UserRole.ADMIN
+is_active=True
+created_at=2026-06-21 21:40:32 UTC   (fecha original del seed)
+updated_at=2026-08-05 21:00:21 UTC   (¡hoy, reciente!)
+```
+
+## 2. ¿Coincide el hash con la contraseña documentada?
+
+**No.** `verify_password("Admin2026!", hash_actual)` → **`False`**.
+
+Verificado contra las otras dos cuentas de referencia documentadas en la
+misma fuente (memoria `research_implementation_mode.md`), como control:
+
+| Cuenta | Contraseña documentada | `verify_password()` | `updated_at` |
+|---|---|---|---|
+| `docente@upao.edu.pe` | `Docente2026!` | ✅ `True` | 2026-06-21 (sin tocar desde el seed) |
+| `estudiante3@upao.edu.pe` | `Student2026!` | ✅ `True` | 2026-06-21 (sin tocar desde el seed) |
+| `admin@upao.edu.pe` | `Admin2026!` | ❌ `False` | **2026-08-05 21:00:21 (hoy)** |
+
+**Solo el hash de `admin` fue modificado desde el seed original** — el
+único de los tres cuya contraseña ya no coincide con la documentada, y
+el único cuyo `updated_at` se movió.
+
+## 3. ¿Hay lockout?
+
+**Sí, y funcionó exactamente como está documentado —no es un bug del
+mecanismo de lockout:**
+
+`app/api/routes/auth.py:41`: *"Bloquea la cuenta tras 3 intentos
+fallidos en 5 minutos."* `LOCKOUT_DURATION_MINUTES` en
+`auth_service.py`. Mis 2 intentos fallidos (04:33:26 y 04:33:44 UTC)
+dejaron correctamente "1 intento restante" antes del bloqueo de 3 — el
+mensaje que vi durante Ficha 15 es el comportamiento diseñado, no un
+error de UI ni de conteo.
+
+## 4. Logs de autenticación — la contraseña SÍ funcionó hoy, hasta 5 horas antes de mi intento
+
+`login_attempts` para `admin@upao.edu.pe` (más reciente primero):
+
+```
+2026-08-06 04:33:44 success=False   ← mi 2do intento
+2026-08-06 04:33:26 success=False   ← mi 1er intento
+2026-08-05 23:22:14 success=True    ← última sesión real exitosa, ~5h antes
+2026-08-05 21:56:29 success=True
+2026-08-05 21:47:56 success=True
+2026-08-05 21:23:38 success=True
+2026-08-05 21:23:35 success=True
+2026-08-05 21:13:06 success=True
+2026-08-05 21:12:26 success=True
+2026-08-05 21:08:50 success=True
+2026-08-05 21:05:10 success=True
+2026-08-05 21:01:48 success=True    ← primer éxito tras el cambio de hash (21:00:21)
+```
+
+**Los 10 logins exitosos entre 21:01:48 y 23:22:14 ocurrieron TODOS
+después de que el hash cambiara (21:00:21)** — confirma que existe una
+contraseña real, distinta de `Admin2026!`, que se usó correctamente
+muchas veces hoy mismo, incluida la sesión de creación de usuarios de
+`ux.nuevo.recorrido@upao.edu.pe` y otras cuentas (`audit_logs`, acción
+`crear_usuario`, mismo `admin_id`, 23:23:32 — inmediatamente después
+del último login exitoso).
+
+**`audit_logs` no registra ningún evento de cambio de contraseña cerca
+de las 21:00:21** (revisadas las acciones distintas que existen en la
+tabla: `actualizar_usuario`, `cambiar_rol`, `crear_usuario`,
+`desactivar_usuario`, `reactivar_usuario`, `login`, entre otras — cero
+entradas de ese tipo para el `admin_id` en esa ventana). El cambio de
+hash **no pasó por el flujo auditado de la aplicación** (no hay
+`actualizar_usuario` correspondiente) — ocurrió por una vía que la
+aplicación no registra: probablemente una acción directa contra la base
+de datos o un script fuera del API, no un endpoint de "cambiar
+contraseña" de la plataforma.
+
+## 5. ¿Afecta solo a Admin o a todos los roles?
+
+**Solo a Admin, confirmado, no solo no observado.** `docente@upao.edu.pe`
+y `estudiante3@upao.edu.pe` mantienen su contraseña documentada
+funcionando y su `updated_at` intacto desde el seed original — ningún
+indicio de que el mecanismo de lockout, autenticación o hash haya
+cambiado de comportamiento general. Es un evento aislado a una sola
+cuenta.
+
+---
+
+## Clasificación
+
+**No es un defecto del sistema.** El lockout funcionó según su
+contrato; el hash de `docente`/`estudiante` sigue siendo válido; no hay
+ninguna señal de que la autenticación en general esté rota. Es una
+**divergencia de documentación**: en algún momento de hoy
+(2026-08-05, ~21:00 UTC), la contraseña real de `admin@upao.edu.pe`
+cambió a un valor que **no** es `Admin2026!` — y que alguien (una
+sesión real, no necesariamente esta) conoce y usó exitosamente 10 veces
+después del cambio — sin que `seed.py`, `CLAUDE.md` ni la memoria del
+proyecto se actualizaran para reflejarlo, y sin que el cambio quedara
+registrado en `audit_logs` por la vía auditada de la aplicación.
+
+**No se intentó identificar la contraseña actual** (no se prueban más
+valores más allá de los ya descartados en la investigación previa) —
+hacerlo sin conocer el valor real seguiría siendo adivinar, con el
+mismo riesgo de bloqueo que motivó abrir esta ficha en primer lugar.
+**No se resetea la contraseña ni se modifica ningún dato** — esta ficha
+es diagnóstico puro.
+
+## Pregunta abierta para el tesista (no técnica, no se decide aquí)
+
+¿Esta sesión (u otra, en otro momento de hoy) cambió deliberadamente la
+contraseña de `admin@upao.edu.pe`, por ejemplo directamente contra
+Postgres o vía un script fuera del API? Si es así, la corrección es
+solo documental: actualizar `seed.py`/`CLAUDE.md`/memoria con el valor
+real. Si **no** fue una acción intencional conocida, el hallazgo merece
+más atención — un cambio de contraseña de administrador que no pasó por
+el flujo auditado de la aplicación, en un entorno de desarrollo local,
+sin que nadie lo haya solicitado conscientemente.
