@@ -170,20 +170,25 @@ Paso 2** — ya resuelto.
 | 7 | 2 TODOs reales backend + 1 frontend | Localizados, sin ficha propia previa | **Nuevo** (barrido de este documento) |
 | 8 | Rutas huérfanas `sessions.py`/`orchestration.py`/`observability.py` | Confirmado ya no existen | Conocido (`CLAUDE.md`) — cerrado |
 
-**4 candidatos activos para Paso 2** (2, 3, 4, 5) — con evidencia
-suficiente para pasar directo a clasificación sin más investigación de
-causa (a diferencia de Rendimiento, aquí la causa ya es obvia por
-inspección: código sin importadores, tabla sin filas, dependencia sin
-uso, condición de render asimétrica). **1 candidato requiere más
-trabajo antes de clasificar** (6). **3 quedan cerrados sin acción**
-(1, 7 parcialmente — quedan registrados pero sin ficha, 8).
+**4 candidatos identificados para Paso 2** (2, 3, 4, 5). La inspección
+inicial proporciona una hipótesis fuerte sobre su causa en cada caso,
+que deberá confirmarse mediante el mismo proceso de verificación
+aplicado en las sesiones anteriores (¿es API pública? ¿lo referencia
+documentación? ¿lo cargan tests dinámicamente? ¿hay imports indirectos?
+¿existe un feature flag o migración pendiente detrás?) antes de
+clasificar cualquiera de ellos como defecto o código muerto — "cero
+importadores hoy" o "cero filas hoy" todavía no demuestra "muerto",
+solo "no usado en este momento". **1 candidato requiere más trabajo
+antes de clasificar** (6). **3 quedan cerrados sin acción** (1, 7
+parcialmente — quedan registrados pero sin ficha, 8).
 
 ## Estado al cierre de este Paso 1
 
-Ningún archivo de código modificado. A diferencia de Rendimiento, este
-frente no necesita un Paso 2 de "causa arquitectónica" tan extenso —
-la causa de cada candidato activo ya es evidente por inspección directa
-(código sin importadores, dependencia sin uso). El siguiente paso
-natural es Paso 2/3 combinado: clasificar cada uno de los 4 candidatos
-activos (defecto real / deuda aceptada deliberadamente / mejora
-opcional) antes de decidir cuáles retirar.
+Ningún archivo de código modificado. El siguiente paso natural es
+Paso 2: verificar cada uno de los 4 candidatos con el mismo rigor que
+Ficha 05/09/Rendimiento — no asumir "código muerto" a partir de una
+sola señal (ausencia de importadores, tabla vacía) sin descartar antes
+las explicaciones alternativas (feature flag, carga dinámica,
+observabilidad futura, referencia externa). Recién con eso clasificar
+cada uno como defecto / deuda aceptada deliberadamente / mejora
+opcional, antes de decidir cuáles retirar.
