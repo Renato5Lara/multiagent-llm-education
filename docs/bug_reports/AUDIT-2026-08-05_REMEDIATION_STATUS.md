@@ -6,7 +6,32 @@ report detallado cuando existe uno. Ninguna rama está pusheada — todas
 viven localmente, apiladas en cadena (`fix/auth-cross-tab-storage-loop`
 → ... → `fix/dropdown-trigger-aschild-slot`, HEAD actual).
 
-## Cierre de fase — resumen final
+## Cierre de la auditoría completa (2026-08-05)
+
+**La auditoría técnica queda completamente cerrada.** Todos los
+defectos confirmados (Fichas 01-08, Sesión UX/UI H1/H2, Sesión 5
+Frente A y B) fueron implementados y validados contra el sistema real
+— nunca solo "compila" o "los tests pasan". El único punto que queda
+abierto no corresponde a un error de implementación, sino a una
+decisión de arquitectura sobre la vigencia del rol "Investigador", por
+lo que fue separado deliberadamente del proceso de remediación (ver
+"Pendiente arquitectónico independiente" más abajo) — nunca mezclado
+con los hallazgos técnicos ya resueltos.
+
+Cadena completa de líneas de trabajo, todas cerradas salvo la excepción
+señalada:
+
+| Línea | Estado | Cierre |
+|---|---|---|
+| Fichas 01, 02, 03, 04, 06, 07, 08 | ✅ Resueltas y validadas en vivo | Ver "Tabla de estado" abajo |
+| Ficha 05 | ✅ Diagnóstico forense cerrado — remediación diferida a decisión de arquitectura del consenso (no técnica) | [bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md) |
+| Ficha 09 | ✅ Diagnóstico forense cerrado — remediación diferida a decisión de producto/metodología (no técnica) | [bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md) |
+| Sesión UX/UI (Pasos 1-5) | ✅ Cerrada — H1/H2 implementados y validados E2E, H3 en backlog por decisión, H5/H6 cerrados sin código | [Paso 5](ux/2026-08-05_SESION_UXUI_PASO5_implementacion.md) |
+| Sesión 5 — Frente A (Rendimiento) | ✅ Cerrado — sin defecto encontrado, latencia es coste esperado de arquitectura + proveedor LLM | [Paso 3](performance/2026-08-05_SESION5_PASO3_clasificacion_latencia.md) |
+| Sesión 5 — Frente B (deuda técnica) | ✅ Cerrado — 4/5 candidatos implementados y validados (incl. comparación contra worktree baseline, cero regresiones) | [Paso 3](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO3_clasificacion.md) |
+| Rol "Investigador" | ⏸️ **Pendiente arquitectónico independiente, deliberadamente fuera de esta auditoría** | Ver sección dedicada abajo |
+
+## Cierre de fase — resumen final (histórico, Fichas 01-09)
 
 **Fase cerrada.** Las 7 fichas críticas/importantes con fix implementado
 quedan resueltas y validadas en vivo (ver "Tabla de estado" abajo). Ficha
@@ -32,9 +57,9 @@ técnico interno, microcopy del recurso pedagógico generado), 1 en
 backlog por decisión explícita (no por omisión), 2 hallazgos cerrados
 sin código.
 
-**Sin iniciar (no diagnosticadas todavía):** Rendimiento y la Sesión 5
-del plan original (código muerto adicional, deuda técnica) — ver
-"Pendientes" al final.
+**Sesión 5 (Rendimiento + deuda técnica) — CERRADA.** Ver "Cierre de la
+auditoría completa" arriba y la sección "Pendiente arquitectónico
+independiente" al final — nada queda "sin diagnosticar" de esta fase.
 
 **Riesgos aceptados** (trade-offs conscientes tomados durante esta
 remediación, no defectos):
@@ -42,16 +67,22 @@ remediación, no defectos):
   sesión activa de otra pestaña — debe loguearse. Decisión de
   aislamiento deliberada (commit `66c3f00`), sin evidencia de que la
   herencia automática fuera un requerimiento real del producto.
-- **Ficha 04:** la tabla `agent_decision_traces` (0 filas) y
-  `app/schemas/decision_trace.py` (huérfano) no se eliminaron —
-  mismo criterio que ADR-0011, que tampoco hizo `DROP TABLE` al retirar
-  BaseAgent/SwarmOrchestrator (commit `ab3860b`, observaciones #2 y #3).
-- **Fichas 07/08:** el fix se acotó estrictamente a los archivos
-  pedidos, dejando conscientemente sin tocar `UserForm.tsx` (mismo gap
-  de enum que Ficha 07, observación #1) y sin migrar
-  `dropdown-menu.tsx` a `@radix-ui/react-dropdown-menu` real, ya
-  instalado como dependencia pero no usado (observación #5) — ambos
-  habrían ampliado el alcance más allá de lo pedido.
+- **Ficha 04 (superado):** en su momento (commit `ab3860b`), la tabla
+  `agent_decision_traces` (0 filas) y `app/schemas/decision_trace.py`
+  (huérfano) no se eliminaron, mismo criterio que ADR-0011. Esa
+  decisión quedó superada por Sesión 5, Frente B: ambos se retiraron
+  físicamente tras una investigación dedicada (commits `5f02876`,
+  `ba10d50`) que confirmó, con las 4 salvedades posibles descartadas
+  una por una, que no había ninguna razón activa para conservarlos.
+- **Fichas 07/08 (superado en parte):** el fix original se acotó
+  estrictamente a los archivos pedidos. La migración de
+  `dropdown-menu.tsx` a `@radix-ui/react-dropdown-menu` real seguía
+  fuera de alcance — pero Sesión 5, Frente B sí retiró la dependencia
+  de Radix nunca usada (commit `058f46e`), sin tocar el componente
+  custom (que tiene consumidores reales). El gap de `UserForm.tsx`
+  (observación #1) **no se tocó** — dejó de ser un simple "gap" al
+  investigarse a fondo: es una contradicción arquitectónica deliberada
+  frente a `Roles.tsx`, ver "Pendiente arquitectónico independiente".
 
 **Hallazgos preexistentes, no introducidos por esta remediación**
 (distintos de "riesgos aceptados": son defectos reales, no decisiones
@@ -144,23 +175,46 @@ arquitectura nueva del runtime.
 Cada una vive documentada en el commit o bug report que la originó — se
 listan aquí solo como índice:
 
-1. **`UserForm.tsx`** tiene el mismo enum limitado que motivó la Ficha 07
-   — "Investigador" solo aparece como opción si el usuario ya tiene ese
-   rol, nunca seleccionable al crear/reasignar (commit `dd2b166`).
-2. **`app/schemas/decision_trace.py`** quedó huérfano tras eliminar
-   `traces.py` (Ficha 04) — candidato a un futuro retiro (commit `ab3860b`).
-3. **Tabla `agent_decision_traces`** (0 filas) sigue en Postgres — mismo
-   criterio que ADR-0011, que tampoco incluyó `DROP TABLE` (commit `ab3860b`).
+1. **`UserForm.tsx`/`Roles.tsx` — contradicción sobre "Investigador"**
+   (originalmente descrito como "enum limitado", commit `dd2b166`).
+   Investigado a fondo en Sesión 5, Frente B (Pasos 2-3): no es un gap
+   de implementación — `UserForm.tsx` y `models/user.py` documentan
+   deliberadamente que Investigador es un rol legado que no debe
+   ofrecerse para asignación nueva; `Roles.tsx` (la propia Ficha 07) lo
+   contradice sin condición. **No resuelto a propósito** — ver
+   "Pendiente arquitectónico independiente" al final.
+2. **`app/schemas/decision_trace.py`** — ✅ **RESUELTO.** Quedó huérfano
+   tras eliminar `traces.py` (Ficha 04, commit `ab3860b`); retirado
+   físicamente en Sesión 5, Frente B tras confirmar las 4 salvedades
+   posibles (API pública, documentación, tests dinámicos, imports
+   indirectos) — commit `5f02876`.
+3. **Tabla `agent_decision_traces`** — ✅ **RESUELTO.** Retirada
+   físicamente vía migración Alembic reversible (`upgrade`/`downgrade`
+   verificados contra Postgres real) tras confirmar ausencia de feature
+   flag, migración pendiente, o reserva de RFC-0007 — commit `ba10d50`.
 4. **Propagación de logout entre pestañas del mismo usuario** (rama
    `!e.newValue` de `AuthProvider.tsx`) no funciona en la práctica —
    `logout()` nunca llama `localStorage.removeItem`. Preexistente,
    no introducido por esta remediación (bug report Fichas 01/02).
-5. **`components/ui/dropdown-menu.tsx`** es una reimplementación propia
-   del menú desplegable, mientras `@radix-ui/react-dropdown-menu` ya está
-   instalado como dependencia y no se usa — encontrado al investigar la
-   Ficha 08, no corregido (migrar a la librería real sería un cambio de
-   mayor alcance que el pedido).
-6. **5 tests preexistentes fallan contra OpenAI real**
+   Sigue sin resolver — fuera del alcance de cualquier sesión de esta
+   auditoría.
+5. **`components/ui/dropdown-menu.tsx` / `@radix-ui/react-dropdown-menu`**
+   — ✅ **RESUELTO (parcial, correctamente acotado).** La dependencia de
+   Radix nunca usada se retiró de `package.json` en Sesión 5, Frente B
+   (commit `058f46e`). El componente custom `dropdown-menu.tsx` **no se
+   tocó** — tiene 2 consumidores reales (`UserDropdown.tsx`,
+   `Users.tsx`), es código vivo.
+6. **`TraceExplorer`/`AgentThoughtStream` en `ModuleLearningView.tsx`**
+   (hallazgo nuevo, Sesión 5 Frente B, validación de Paso 4) — llaman a
+   `useTrace()` → `GET /api/trace/session/{id}`, endpoint ya eliminado
+   por Ficha 04. Se degradan en silencio a una vista de respaldo en vez
+   de romperse visiblemente — por eso nunca se detectó durante el
+   recorrido visual de la Sesión UX/UI. **No investigado a fondo, no
+   tocado** — candidato a su propia investigación futura (mismo
+   protocolo que Ficha 05/09), con más impacto potencial que cualquiera
+   de los ítems ya resueltos porque es una superficie del estudiante
+   real, no infraestructura huérfana sin consumidores.
+7. **5 tests preexistentes fallan contra OpenAI real**
    (`test_pedagogy_runtime_bridge.py`,
    `test_students_evaluation_runtime_wiring.py` ×2,
    `test_runtime_bridge.py` ×2) — `entrega.asunto`/`diseno` llegan en
@@ -172,6 +226,20 @@ listan aquí solo como índice:
    de tests del runtime_bridge (posible relación con Ficha 05 de la
    auditoría — "Cómo aprenderás mejor" mostrando fallback genérico
    cuando `entrega.diseno`/`asunto` son `None`, mismo síntoma).
+8. **71 tests + 7 errores preexistentes, descubiertos al validar Paso 4
+   de Sesión 5 Frente B con la suite completa** (2536 tests
+   recolectados: `test_consensus.py`, `test_enrollment_lifecycle.py`,
+   `test_research_agent.py`, `test_adaptive_trust.py`,
+   `test_collective_inference.py`, entre otros — ninguno relacionado
+   con los cambios de Frente B). Confirmado preexistente con la misma
+   técnica de worktree aislado ya usada en esta auditoría: el
+   subconjunto más representativo (5 archivos, 15 failed/125 passed/7
+   errors) reproduce idéntico en el commit previo a Paso 4 (`5c7d33c`)
+   y en HEAD. No investigado a fondo — huele a un problema de
+   aislamiento/orden de ejecución al correr la suite completa junta
+   (módulos tan dispares fallando a la vez sugiere estado compartido
+   entre tests, no un defecto de cada módulo por separado), pero eso no
+   está demostrado — fuera del alcance de esta auditoría.
 
 ## Pendientes (no iniciados en esta fase)
 
@@ -179,13 +247,73 @@ listan aquí solo como índice:
 |---|---|
 | Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC) — **diagnóstico forense CERRADO** ([bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md), 2 fases): 2 mecanismos confirmados con trazas reales, `runtime_bridge.py` descartado como causa, incidencia real medida en 1/29 sesiones (3.4%, caso puntual). Remediación **no iniciada a propósito** — requiere primero una decisión de arquitectura del consenso (¿`Aplazada` debe producir una decisión provisional en contexto educativo, o es un estado final válido?), deliberadamente diferida, no evaluada todavía. | Diagnóstico completo, remediación pendiente de decisión arquitectónica (no de investigación adicional) |
 | Ficha 09 (escala Likert de 5 puntos colapsada a binario + redundancia "Base sólida"/"Siguiente reto" con dominio 100%; la auditoría la marcó "NO REPRODUCIDO EN ESTA PASADA") — **diagnóstico forense CERRADO** ([bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md)): 2 hallazgos distintos confirmados con código real. Hallazgo A (Likert→binario en `compute_prior_knowledge`): dato crudo preservado íntegro en `DiagnosticResult.answers`, solo el campo derivado `known_topics`/`prior_level` pierde resolución — 13/40 registros reales afectados (32.5%). Hallazgo B (redundancia a dominio 100% en `compute_competency_profile`): mecanismo de desempate degenerado, confirmado 10/10 exacto contra los casos de 100% uniforme — 10/28 intentos reales (35.7%). A diferencia de Ficha 05 (3.4%, caso puntual), **ambos hallazgos son frecuentes, no marginales**. Remediación **no iniciada a propósito** — requiere decisión de producto/metodología (¿el perfil debe preservar 4 vs. 5 para la adaptación pedagógica?, ¿"Base sólida"/"Siguiente reto" son conceptos distintos o dos vistas del mismo ranking?), no más investigación. | Diagnóstico completo, remediación pendiente de decisión de producto/metodología (no de investigación adicional) |
-| Rendimiento (§11: latencia de personalización 6-10s, caché de Pyodide) | Pendiente |
-| 🟡 Sesión 5 (código muerto adicional, deuda técnica, rendimiento) | No iniciada |
+| Rol "Investigador" (`UserForm.tsx`/`models/user.py` vs. `Roles.tsx`) — contradicción arquitectónica confirmada, **no una deuda técnica** | Ver "Pendiente arquitectónico independiente" abajo — **no se mezcla con hallazgos técnicos** |
 
-**Sesión UX/UI (§06 de la auditoría y más allá) — ya no pendiente,
-CERRADA.** Ver [Paso 5](ux/2026-08-05_SESION_UXUI_PASO5_implementacion.md):
-H1 (vocabulario técnico interno sin traducir) y H2 (panel de recurso
+**Nada más queda pendiente de esta auditoría.** Rendimiento (§11) y
+Sesión 5 completa (código muerto, deuda técnica) están **cerradas** —
+ver "Cierre de la auditoría completa" al inicio de este documento.
+
+**Sesión UX/UI (§06 de la auditoría y más allá) — CERRADA.** Ver
+[Paso 5](ux/2026-08-05_SESION_UXUI_PASO5_implementacion.md): H1
+(vocabulario técnico interno sin traducir) y H2 (panel de recurso
 pedagógico sin contexto) implementados y validados E2E; H3 (estados de
 espera) queda en backlog por decisión explícita, no por falta de
 diagnóstico; H4 documentado como patrón de referencia; H5/H6 cerrados
 sin código.
+
+**Sesión 5 — Frente A (Rendimiento) — CERRADO.** Ver
+[Paso 3](performance/2026-08-05_SESION5_PASO3_clasificacion_latencia.md):
+~98% de la latencia medida es tiempo del proveedor LLM, ~2% overhead
+propio del sistema; la secuencia diagnosticar→remediar/orientar es
+coste arquitectónico deliberado (RFC-0002 + RFC-0006 §5), no
+paralelizable sin violar el contrato de capacidades. Sin defecto
+encontrado — declarado explícitamente como resultado válido de
+investigación, no como fracaso.
+
+**Sesión 5 — Frente B (deuda técnica) — CERRADO.** Ver
+[Paso 3](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO3_clasificacion.md)
+y Paso 4 (commits `5f02876`, `ba10d50`, `058f46e`, `ceb2fb6`): 4/5
+candidatos implementados y validados (código muerto, infraestructura
+huérfana, dependencia sin uso, documentación de tesis desactualizada).
+El quinto (rol Investigador) se separó deliberadamente — ver siguiente
+sección.
+
+## Pendiente arquitectónico independiente — rol "Investigador"
+
+**No es deuda técnica ni un bug — es una decisión de arquitectura/
+producto sin responder**, y se registra aparte a propósito para no
+mezclarla con los hallazgos técnicos ya resueltos de esta auditoría.
+
+**Pregunta que debe responderse antes de tocar cualquier código:**
+
+> ¿El rol "Investigador" sigue siendo un actor oficial del sistema, o
+> fue retirado definitivamente como rol de negocio?
+
+**Evidencia de la contradicción actual** (investigada a fondo en
+Sesión 5, Frente B, Paso 2 — [detalle
+completo](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO2_verificacion.md)):
+
+- `frontend/src/pages/admin/UserForm.tsx` (comentario textual) +
+  `backend/app/models/user.py` (`UserRole.INVESTIGADOR`, docstring
+  "Legado: retirado como usuario de negocio... se conserva por
+  compatibilidad con filas existentes") → Investigador **no** debería
+  ofrecerse para asignación nueva.
+- `frontend/src/pages/admin/Roles.tsx` (Ficha 07, commit `dd2b166`) →
+  Investigador **sí** se ofrece, sin ninguna condición, para cualquier
+  reasignación.
+
+**Las dos remediaciones posibles son válidas y significan cosas
+distintas — ninguna se implementa hasta que se responda la pregunta:**
+
+- **Si Investigador fue retirado oficialmente:** corresponde una
+  pequeña remediación de consistencia — restringir `Roles.tsx` para
+  que coincida con `UserForm.tsx`/`models/user.py`.
+- **Si Investigador sigue vigente:** correspondería revertir la lógica
+  de "rol legado" — actualizar el comentario de `UserForm.tsx`, el
+  docstring de `models/user.py`, y volver incondicional el
+  `SelectItem` de `UserForm.tsx` para igualarlo a `Roles.tsx`.
+
+**Recomendación de proceso:** esta decisión se formaliza mejor como un
+ADR o RFC corto antes de tocar código, no como un commit de
+remediación directo — es exactamente el tipo de decisión que ese
+mecanismo existe para capturar.
