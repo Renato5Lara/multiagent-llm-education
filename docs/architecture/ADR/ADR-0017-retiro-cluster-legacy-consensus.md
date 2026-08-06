@@ -549,6 +549,36 @@ archivo quede fuera de vista sin que el script lo señale.
   trust_alias`) — ambas detectadas correctamente. `deps.py` verificado
   byte a byte idéntico al original después de revertir (`diff` vacío) en
   los tres casos.
+- **"Único import relativo de todo `app/`" — con la evidencia cruda, no
+  solo la conclusión** (pedido explícito): `grep -rnE "^\s*from\s+\.+\w*\s+import" app --include="*.py"`
+  devuelve exactamente una línea:
+  `app/core/consensus_timeout_metrics.py:21:from .consensus_cancellation import CancellationReason`.
+
+**Quinta ronda — `directory_sanity_check()`: ¿está completo
+`AUDITED_DIRECTORIES` mismo?** Objeción del tesista, válida: `completeness_check()`
+garantiza que todo archivo *dentro* de los directorios auditados esté
+clasificado, pero esa lista de directorios sigue siendo manual — no
+detectaría un directorio hermano completo si nadie lo agrega. Se añadió
+`directory_sanity_check()`: lista los 26 directorios de primer nivel de
+`app/`, y para cada uno de los 20 fuera de `AUDITED_DIRECTORIES`
+comprueba (a) si algún archivo del clúster lo importa, y (b) si su
+nombre sugiere relación (`consensus`, `swarm`, `legacy`, `voter`, `demo`,
+`replay`). Correrlo por primera vez encontró **dos directorios reales
+nunca examinados en ninguna ronda anterior**: `app/benchmark` (8
+archivos — un tercer subsistema de benchmark completamente aislado, cero
+imports de/hacia el clúster, único consumidor `tests/test_benchmark.py`;
+análogo a `app/experiment/benchmark/`, M2 — fuera de alcance de este ADR
+igual que M2, no se añade) y `app/events` (11 archivos — infraestructura
+de outbox/idempotencia usada por `main.py`, `curriculum_service.py`,
+`course_service.py` y más; sin ninguna relación con consenso). También
+confirmó que `app/agents/` y `app/swarm/` (los directorios que ADR-0011
+declaró retirados el 2026-08-01) solo contienen `.pyc` de `__pycache__`
+— cero archivos `.py` reales, la aserción de ADR-0011 se sostiene. El
+resultado no amplía el alcance de este ADR: ningún directorio nuevo se
+suma a `CLUSTER_BACKEND`. **Es la primera ronda de las cinco donde el
+total no cambió — se mantuvo en 88** (verificado con `diff` entre dos
+corridas consecutivas sobre el mismo commit, igual que las rondas
+anteriores).
 
 Columna "Consumidor externo" = resultado del método de dos capas de §2
 (estático + dinámico); "ninguno" significa que ninguna de las dos capas

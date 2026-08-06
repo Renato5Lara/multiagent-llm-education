@@ -201,6 +201,109 @@ def completeness_check() -> None:
         )
         sys.exit(1)
 
+
+# Nombres cuyo hallazgo dentro de un directorio NO auditado justificaría
+# ampliar AUDITED_DIRECTORIES, aunque el import sea limpio.
+_SUSPICIOUS_NAME_HINTS = ("consensus", "swarm", "legacy", "voter", "demo", "replay")
+
+# Infraestructura genuinamente compartida por TODA la app (BD, modelos,
+# servicios de negocio, sandbox de ejecución, tracing) — que el clúster
+# la importe no es señal de nada: cualquier código de aplicación normal
+# la importa. Ya verificados como vivos y ajenos al clúster en rondas
+# anteriores de este ADR (§2, header "Preserva"). Sin esta lista, el
+# chequeo sería ruido puro (todo módulo usa BD/modelos) en vez de señal.
+_KNOWN_SHARED_INFRASTRUCTURE = {
+    "db", "models", "memory", "services", "explainability", "sandbox",
+    "tracing", "api", "schemas",
+}
+
+# Directorios con nombre sugerente que SÍ se investigaron y tienen razón
+# documentada para quedar fuera de AUDITED_DIRECTORIES — a diferencia de
+# _KNOWN_SHARED_INFRASTRUCTURE (evita ruido de imports), esto suprime el
+# disparador por NOMBRE, así que cada entrada exige evidencia real, no
+# solo "no importa nada del clúster".
+_VERIFIED_UNRELATED_DIRECTORIES = {
+    "swarm": "ADR-0011 (2026-08-01) ya lo retiró físicamente — solo quedan .pyc de __pycache__, cero archivos .py reales.",
+    "swarm_diagnostics": "paquete vivo con consumidores amplios (replay.py, pedagogy.py, students.py, weekly_pedagogy_service.py, module_orchestration_service.py) — ver header 'Preserva' de este ADR.",
+}
+
+
+def directory_sanity_check() -> None:
+    """completeness_check() garantiza que todo archivo DENTRO de
+    AUDITED_DIRECTORIES esté clasificado — pero esa lista de directorios
+    es, en sí misma, escrita a mano. Esta función responde la pregunta
+    que un auditor externo hizo explícitamente sobre esta limitación:
+    ¿existe algún directorio hermano, fuera de AUDITED_DIRECTORIES, que
+    (a) algún archivo del clúster importe, o (b) tenga un nombre que
+    sugiera relación con el clúster? No prueba que AUDITED_DIRECTORIES
+    sea eterno correcto — un directorio futuro sin relación de import ni
+    nombre sugerente seguiría siendo invisible — pero es la verificación
+    repetible que sí se puede automatizar."""
+    known = {p for p, _ in CLUSTER_BACKEND}
+    known.add(EXTRACTED_FILE[0])
+    known.update(EDITED_BACKEND_FILES)
+    known.update(PRESERVED_BACKEND_FILES.keys())
+    audited = set(AUDITED_DIRECTORIES)
+
+    all_top_level = sorted(
+        p.name for p in (BACKEND_ROOT / "app").iterdir()
+        if p.is_dir() and p.name != "__pycache__"
+    )
+    unaudited = [d for d in all_top_level if f"app/{d}" not in audited]
+
+    imported_dirs: set[str] = set()
+    for relpath in known:
+        if not relpath.endswith(".py"):
+            continue
+        full = BACKEND_ROOT / relpath
+        if not full.exists():
+            continue
+        for line in full.read_text().splitlines():
+            m = re.match(r"^\s*(?:from|import)\s+app\.(\w+)", line)
+            if m:
+                imported_dirs.add(m.group(1))
+
+    problems = []
+    shared_but_imported = []
+    for d in unaudited:
+        if d in _VERIFIED_UNRELATED_DIRECTORIES:
+            continue
+        reasons = []
+        if d in imported_dirs and d not in _KNOWN_SHARED_INFRASTRUCTURE:
+            reasons.append("un archivo del clúster lo importa y no es infraestructura ya verificada")
+        if any(h in d.lower() for h in _SUSPICIOUS_NAME_HINTS):
+            reasons.append("nombre sugiere relación con el clúster")
+        if reasons:
+            problems.append(f"app/{d}: {', '.join(reasons)}")
+        elif d in imported_dirs:
+            shared_but_imported.append(d)
+
+    if shared_but_imported:
+        print(
+            "Infraestructura compartida importada por el clúster, sin acción "
+            f"(ya verificada viva en rondas anteriores): "
+            f"{', '.join('app/' + d for d in shared_but_imported)}",
+            file=sys.stderr,
+        )
+
+    print(
+        f"directory_sanity_check(): {len(all_top_level)} directorios de primer "
+        f"nivel en app/, {len(unaudited)} fuera de AUDITED_DIRECTORIES "
+        f"({', '.join('app/' + d for d in unaudited)}).",
+        file=sys.stderr,
+    )
+    if problems:
+        print("Directorios no auditados con señal de relación real:", file=sys.stderr)
+        for p in problems:
+            print(f"  - {p}", file=sys.stderr)
+        sys.exit(1)
+    print(
+        "Ninguno de los directorios no auditados es importado por el clúster "
+        "ni tiene un nombre sugerente — sin evidencia de que falte alguno.",
+        file=sys.stderr,
+    )
+
+
 CLUSTER_FRONTEND = [
     "src/pages/demo/SwarmDemo.tsx",
     "src/hooks/useDemoSSE.ts",
@@ -350,12 +453,13 @@ def main() -> None:
     parser.add_argument(
         "--skip-completeness-check",
         action="store_true",
-        help="Omite completeness_check() — solo para depurar este script, nunca para generar la tabla del ADR.",
+        help="Omite completeness_check() y directory_sanity_check() — solo para depurar este script, nunca para generar la tabla del ADR.",
     )
     args = parser.parse_args()
 
     if not args.skip_completeness_check:
         completeness_check()
+        directory_sanity_check()
 
     all_cluster_rel_paths = {p for p, _ in CLUSTER_BACKEND} | {EXTRACTED_FILE[0]}
     reports = [audit_backend_file(p, c, all_cluster_rel_paths) for p, c in CLUSTER_BACKEND]
