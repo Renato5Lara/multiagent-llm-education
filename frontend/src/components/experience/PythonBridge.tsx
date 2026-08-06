@@ -159,6 +159,25 @@ function PythonErrorCard({ error, code }: { error: string; code: string }) {
 // onChange/disabled ya calculados por PythonMicroPractice y solo cambian
 // cómo se ven. Mismo contrato que el <textarea> plano que reemplazan.
 
+/** Hueco de un ejercicio "completar" (ciclo1-instrucciones-precisas.ts,
+ *  ciclo2-variables.ts, ciclo3-input.ts, module2.ts): una corrida de 3+
+ *  guiones bajos consecutivos, p. ej. `_____("Explorador listo")`. Un clic
+ *  dentro o junto a esa corrida selecciona el hueco completo en vez de
+ *  dejar el cursor a mitad, para que escribir reemplace el hueco en lugar
+ *  de insertarse dentro de él (Bug reportado, Auditoría Externa
+ *  2026-08-06: `print` tecleado dentro del hueco producía `_print____(...)`
+ *  en vez de reemplazarlo). 3+ evita interferir con snake_case normal
+ *  (`mi_variable`), que nunca usa corridas de guiones bajos. */
+function selectBlankAtClick(el: HTMLTextAreaElement) {
+  const value = el.value
+  const pos = el.selectionStart
+  let start = pos
+  while (start > 0 && value[start - 1] === '_') start--
+  let end = pos
+  while (end < value.length && value[end] === '_') end++
+  if (end - start >= 3) el.setSelectionRange(start, end)
+}
+
 /** "Ventana" de editor con gutter de líneas — mismo <textarea> controlado
  *  de siempre (value/onChange/disabled), solo con chrome visual alrededor.
  *  `wrap="off"` es la única diferencia de comportamiento del navegador: sin
@@ -232,6 +251,7 @@ function CodeEditorPanel({
         <textarea
           value={code}
           onChange={e => onChange(e.target.value)}
+          onClick={e => selectBlankAtClick(e.currentTarget)}
           onScroll={e => {
             if (gutterRef.current) gutterRef.current.scrollTop = e.currentTarget.scrollTop
           }}
