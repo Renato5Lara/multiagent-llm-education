@@ -603,19 +603,62 @@ incondicional de `app/llm/__init__.py`, los 2 de
 + `app/api/routes/swarm_demo.py` vía el registro de `swarm_demo.router`
 en `main.py`.
 
+**Alcance exacto de esta técnica — precisión pedida explícitamente.**
+`sys.modules` tras `import app.main` prueba "alcanzable durante el
+arranque del backend", no "alcanzable en cualquier punto de la
+aplicación": un import diferido dentro de un cuerpo de función (bajo
+demanda, solo si esa ruta de código llega a ejecutarse — p. ej. dentro
+de un handler HTTP) no aparecería en `sys.modules` a menos que esa
+función se llegue a invocar. Esta técnica sola no cubriría ese caso. Por
+eso complementa, no reemplaza, el rastreo estático de §9 (columna
+"Consumidor externo", generado por `audit_backend_file`): ese patrón
+(`^\s*(from|import)\s+MODULO\b`) matchea la línea de import sin importar
+su indentación, así que SÍ captura imports diferidos dentro de una
+función, aunque esa función nunca se ejecute durante el arranque
+(verificado: `grep -nE "^\s*(from|import)\s+app\.core\.consensus\b"`
+sobre un archivo de prueba con el import indentado dentro de un `def`
+lo encuentra igual). Los 88 archivos de §9 pasaron ambas verificaciones,
+no solo esta.
+
 La pregunta que de verdad importa no es "¿qué es alcanzable hoy?" (ya
-se sabía) sino **"¿qué queda alcanzable después de ejecutar el plan?"**
-— `reachability_check(simulate_edits=True)` aplica, dentro del mismo
-subproceso y con reversión garantizada por `try/finally` (el árbol de
-trabajo real nunca se toca — verificado con `git diff --stat` después de
-cada corrida, sin diferencias), los 4 recortes de import exactos de las
-Fases 2 y 3 (§7: `app/llm/__init__.py`, `app/observability/__init__.py`,
+se sabía) sino **"¿qué queda alcanzable después de ejecutar el
+plan — SIMULADO, no ejecutado?"** `reachability_check(simulate_edits=True)`
+**es una simulación dentro de un subproceso descartable, no la
+ejecución real del ADR** — distinción que vale la pena remarcar aquí
+porque es fácil de pasar por alto en una lectura rápida: el subproceso
+aplica, con reversión garantizada por `try/finally` (el árbol de trabajo
+real nunca se toca — verificado con `git diff --stat` después de cada
+corrida, sin diferencias), los 4 recortes de import exactos de las Fases
+2 y 3 (§7: `app/llm/__init__.py`, `app/observability/__init__.py`,
 `app/observability/metrics_exporter.py`, quitar el registro de
-`swarm_demo` en `main.py`), y vuelve a importar `app.main`. Resultado:
-**218 módulos `app.*`, cero de `CLUSTER_BACKEND` alcanzables** — los 32
-archivos que dependían del acoplamiento de arranque quedan, todos,
-inalcanzables tras el plan. `app.main` sigue importando sin error después
-de las 4 ediciones simuladas — el plan no rompe el arranque del backend.
+`swarm_demo` en `main.py`), y vuelve a importar `app.main`. El dato que
+importa del resultado es uno solo: **cero archivos de `CLUSTER_BACKEND`
+siguen alcanzables** — el conteo total de módulos (218, antes 250) es
+una consecuencia derivada, no una cifra a la que darle peso propio.
+`app.main` sigue importando sin error después de las 4 ediciones
+simuladas — el plan no rompe el arranque del backend, **según esta
+simulación**. El criterio de aceptación real (§8.1) exige repetir esta
+misma verificación con `simulate_edits=False` **después** de que las 4
+ediciones estén aplicadas de verdad en el árbol de trabajo — la
+simulación de esta ronda respalda la solidez del plan antes de
+aprobarlo, no sustituye esa verificación posterior a la ejecución.
+
+**Por qué la simulación edita texto y no un AST.** Las cuatro ediciones
+de `_REACHABILITY_PROBE` usan `str.replace()`/`re.sub()` sobre el
+contenido de los archivos, no una herramienta de refactorización
+estructural — si el formato de un import cambiara (agrupado en
+paréntesis multilínea, con continuación de línea `\`), el patrón
+correspondiente podría dejar de coincidir. Es una limitación real de
+mantenibilidad si este script sobrevive más allá de esta ADR. La
+mitigación no es que no pueda pasar, es que el modo de fallo es seguro,
+no silencioso: si un patrón deja de coincidir, la edición simulada no
+elimina ese import, el módulo correspondiente sigue apareciendo en
+`sys.modules` tras la simulación, `reachable_after` deja de estar vacío,
+y el script termina con `exit(1)` señalando exactamente qué archivo
+sigue alcanzable — nunca reporta éxito con una simulación que en
+realidad no removió nada. Verificado: los cuatro patrones coinciden hoy
+contra el contenido real de los cuatro archivos (`reachable_after == []`
+en la corrida más reciente).
 El script hace fallar la corrida (`exit 1`) si algún archivo de
 `CLUSTER_BACKEND` sigue alcanzable tras la simulación, para que un futuro
 cambio al plan que deje un cabo suelto se note de inmediato, no se
