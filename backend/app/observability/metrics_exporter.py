@@ -3,7 +3,6 @@ Metrics Exporter — central registry that wraps all in-process counters
 and exposes them in Prometheus text format and JSON snapshots.
 
 Sources integrated:
-    - ConsensusMetrics (observability/consensus_metrics.py)
     - SwarmActivationMetrics (swarm/activation_metrics.py)
     - SwarmMetricsCollector (swarm_diagnostics/pipeline/metrics.py)
     - EventLineageTracker (swarm_diagnostics/pipeline/lineage.py)
@@ -26,9 +25,6 @@ import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Any
-
-from app.observability.consensus_metrics import metrics as consensus_metrics
-
 
 class MetricsExporter:
     """Thread-safe registry that aggregates all in-process metrics
@@ -268,8 +264,6 @@ class MetricsExporter:
 
     def json_snapshot(self) -> dict[str, Any]:
         with self._lock:
-            consensus = consensus_metrics.get_snapshot()
-
             active_activations = list(self._activations.values())
             active_sessions = list(self._sessions.values())
 
@@ -297,7 +291,6 @@ class MetricsExporter:
             return {
                 "uptime_seconds": round(uptime, 1),
                 "timestamp": time.time(),
-                "consensus": consensus,
                 "counters": dict(self._custom_counters),
                 "gauges": dict(self._custom_gauges),
                 "histograms": hist_summary,
@@ -355,22 +348,6 @@ class MetricsExporter:
             '# HELP swarm_uptime_seconds System uptime',
             '# TYPE swarm_uptime_seconds gauge',
             f'swarm_uptime_seconds {data["uptime_seconds"]}',
-            '',
-            '# HELP swarm_consensus_total Total consensus runs',
-            '# TYPE swarm_consensus_total counter',
-            f'swarm_consensus_total {data["consensus"]["total_runs"]}',
-            f'swarm_consensus_approvals_total {data["consensus"]["approvals"]}',
-            f'swarm_consensus_rejections_total {data["consensus"]["rejections"]}',
-            f'swarm_consensus_abstentions_total {data["consensus"]["abstentions"]}',
-            f'swarm_consensus_disagreements_total {data["consensus"]["disagreements"]}',
-            f'swarm_consensus_errors_total {data["consensus"]["errors"]}',
-            f'swarm_consensus_rollbacks_total {data["consensus"]["rollbacks"]}',
-            '',
-            '# HELP swarm_consensus_latency_ms Consensus latency',
-            '# TYPE swarm_consensus_latency_ms gauge',
-            f'swarm_consensus_avg_latency_ms {data["consensus"]["avg_latency_ms"]}',
-            f'swarm_consensus_min_latency_ms {data["consensus"]["min_latency_ms"]}',
-            f'swarm_consensus_max_latency_ms {data["consensus"]["max_latency_ms"]}',
             '',
             '# HELP swarm_activations_active Current active activations',
             '# TYPE swarm_activations_active gauge',
@@ -442,10 +419,6 @@ class MetricsExporter:
             docker = sandbox.get("docker", {})
             lines.append(f'sandbox_docker_available {int(docker.get("available", False))}')
             lines.append(f'sandbox_docker_active_containers {docker.get("active_containers", 0)}')
-        for vname, vstats in data["consensus"].get("voter_stats", {}).items():
-            safe_v = vname.replace(" ", "_")
-            lines.append(f'voter_votes_total{{voter="{safe_v}"}} {vstats["votes"]}')
-            lines.append(f'voter_avg_latency_ms{{voter="{safe_v}"}} {vstats["avg_latency_ms"]}')
         lines.append("")
         return "\n".join(lines)
 

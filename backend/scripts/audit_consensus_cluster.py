@@ -426,6 +426,18 @@ def reachability_check(simulate_edits: bool) -> tuple[int, list[str]]:
     Devuelve (total de módulos app.* cargados, lista de archivos de
     CLUSTER_BACKEND que siguen alcanzables — vacía es el resultado
     esperado con simulate_edits=True)."""
+    touched_paths = [BACKEND_ROOT / p for p in _REACHABILITY_TOUCHED_FILES]
+    # Comparar contra el contenido real ANTES de esta corrida — no contra
+    # `git HEAD` — porque los archivos tocados pueden tener cambios reales
+    # sin commitear todavía (p. ej. una fase del ADR ya aplicada pero no
+    # commiteada aún) que `git diff` contra HEAD marcaría como "sucio" sin
+    # que el subproceso haya hecho nada malo. Lo único que importa es: el
+    # contenido después de la corrida ¿es idéntico al de antes de la
+    # corrida? Verificado explícitamente: al introducir este chequeo se
+    # comparó primero por hash antes de fiarse del resultado (ver
+    # ADR-0017 §9, ronda de la Fase 2) — la alarma por `git diff` contra
+    # HEAD era un falso positivo, el `try/finally` sí restauraba bien.
+    before = {p: p.read_text(encoding="utf-8") for p in touched_paths}
     probe = _REACHABILITY_PROBE % (_REACHABILITY_TOUCHED_FILES, simulate_edits)
     result = subprocess.run(
         [sys.executable, "-c", probe],
@@ -433,17 +445,14 @@ def reachability_check(simulate_edits: bool) -> tuple[int, list[str]]:
         capture_output=True,
         text=True,
     )
-    touched_paths = [BACKEND_ROOT / p for p in _REACHABILITY_TOUCHED_FILES]
-    dirty = subprocess.run(
-        ["git", "diff", "--stat", "--", *[str(p) for p in touched_paths]],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-    ).stdout.strip()
-    if dirty:
+    after = {p: p.read_text(encoding="utf-8") for p in touched_paths}
+    changed = [p for p in touched_paths if before[p] != after[p]]
+    if changed:
         print(
-            f"reachability_check(): ¡el árbol de trabajo quedó modificado! "
-            f"Esto NO debería pasar (try/finally). Revisar manualmente:\n{dirty}",
+            f"reachability_check(): ¡el árbol de trabajo quedó modificado por "
+            f"esta corrida! Esto NO debería pasar (try/finally). Archivos "
+            f"distintos de antes de la corrida a después:\n" +
+            "\n".join(f"  - {p}" for p in changed),
             file=sys.stderr,
         )
         sys.exit(1)

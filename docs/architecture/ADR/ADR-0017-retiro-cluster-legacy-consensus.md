@@ -302,17 +302,25 @@ ninguna dependencia hacia el clúster que se retira.
   La entrada de ruta `/swarm-demo` en `App.tsx` es una edición, no un
   archivo que se borre.
 
-**4.2 Tests — 10 se eliminan completos, 7 requieren edición quirúrgica**
+**4.2 Tests — 10 se eliminan completos (7 en Fase 4, 3 adelantados a la
+Fase 2), 7 requieren edición quirúrgica**
 
 Eliminación completa (prueban exclusivamente el clúster que se retira):
 `test_adaptive_trust.py`, `test_async_safety.py`,
 `test_collective_inference.py`, `test_consensus.py`,
-`test_experimental_baseline.py`, `test_llm_deliberation.py`,
-`test_llm_integration.py`, `test_llm_phase3.py`, `test_llm_voters.py`,
+`test_experimental_baseline.py`, `test_llm_phase3.py`,
 `test_cognitive_replay.py` (nuevo en la cuarta ronda — sus tres imports,
 `app.demo.memory`, `app.replay.export`, `app.replay.session_store`, son
 los tres huérfanos vía demo de §9.6/§9.7, ninguno del motor vivo de
-Replay Cognitivo).
+Replay Cognitivo) — estos 7 se retiran en la Fase 4/3 según corresponda.
+**`test_llm_deliberation.py`, `test_llm_integration.py`,
+`test_llm_voters.py` se adelantaron a la Fase 2** (ejecución real, no
+en el plan original): usaban `from app.llm import (...)` — el re-export
+de paquete que la Fase 2 elimina — y al correr la suite completa tras
+esa edición, los 3 dejaban de poder *colectarse* (`ImportError` en el
+propio módulo de test), lo que interrumpía toda la corrida de `pytest`
+en vez de solo esos 3 archivos. Verificados como contenido puro del
+clúster antes de borrarlos (mismo criterio que los otros 7) — ver §9.2.
 
 Edición quirúrgica (mezclan cobertura del clúster que se retira con
 cobertura de código vivo — se elimina solo la clase/función que depende
@@ -424,7 +432,7 @@ preserva).
 1. **Extraer `app/experiment/analysis.py`** a su ubicación final;
    verificar con `grep` que ningún import restante del clúster lo
    referencia; correr sus tests propios en el nuevo lugar.
-2. **Cortar los dos acoplamientos de arranque**: editar
+2. **Cortar los dos acoplamientos de arranque** — EJECUTADA. Editar
    `app/llm/__init__.py` (deja de importar `ConfidenceCalibrator`,
    `LLMResponseParser`, `HallucinationGuard`,
    `SwarmDeliberationOrchestrator`, `SwarmMetrics` y los 5 `Voter`),
@@ -433,6 +441,18 @@ preserva).
    (retira la sección `"consensus"` de su snapshot/exportación); confirmar
    que `module_orchestration_service.py`, `app.swarm_diagnostics` y la
    integración Tavily siguen en verde sin cambio de comportamiento.
+   **Encontrado ejecutando, no previsto en el plan**: cortar el import
+   rompía la *colección* (no solo la ejecución) de 3 tests que usaban el
+   re-export de paquete (`from app.llm import (...)`) —
+   `test_llm_deliberation.py`, `test_llm_integration.py`,
+   `test_llm_voters.py` — e interrumpía toda la corrida de `pytest`, no
+   solo esos 3 archivos. Se adelantaron a esta fase (eran 3 de los 9
+   "eliminación completa" ya previstos para la Fase 4, contenido puro
+   del clúster, verificado antes de borrar — §4.2, §9.2). Validado con
+   el mismo método que la Fase 1: suite completa (2,439 tests tras el
+   ajuste) comparada contra `HEAD` (worktree aislado) — único cambio: un
+   test de integración con Tavily real, flaky por red, sin relación con
+   este cambio.
 3. **Retirar `/api/swarm/demo` completo, incluyendo su almacenamiento de
    replay muerto**: `app/api/routes/swarm_demo.py`, `app/demo/*` (5
    archivos), `app/replay/{export,session_store,models,replayer,
@@ -451,8 +471,10 @@ preserva).
    y `consensus_timeout_metrics.py`), `app/llm/{voters,prompts,
    deliberation,grounding,metrics,response_parser,confidence}` y
    `app/observability/*`** (§4.1) junto con los tests que les
-   corresponden: los 9 archivos de eliminación completa de §4.2
-   (excluyendo `test_cognitive_replay.py`, ya retirado en la Fase 3), y
+   corresponden: los 6 archivos de eliminación completa de §4.2 que
+   quedan (excluyendo `test_cognitive_replay.py`, retirado en la Fase 3,
+   y `test_llm_deliberation.py`/`test_llm_integration.py`/
+   `test_llm_voters.py`, adelantados a la Fase 2), y
    la edición quirúrgica de `test_swarm_diagnostics.py`,
    `test_diagnostics_integration.py`, `test_circuit_breaker.py`,
    `test_observability.py` (retirar solo las clases/funciones que
@@ -722,34 +744,55 @@ al listar directamente qué archivos existen de verdad en `app/core/`.
 
 **9.2 Backend — `app/llm/voters/*` (categoría: voters LLM)**
 
+Tabla regenerada tras la Fase 2 real (no simulada). Los datos de
+"Consumidor externo"/"Tests" de las rondas anteriores mostraban
+`app/llm/__init__.py` como consumidor porque ese archivo todavía
+importaba estos módulos — ya no, la Fase 2 lo cortó de verdad
+(commit siguiente a Fase 1). Las columnas de test cambiaron también:
+`test_llm_deliberation.py`, `test_llm_integration.py` y
+`test_llm_voters.py` usaban `from app.llm import (...)` (el re-export de
+paquete que la Fase 2 elimina), no `from app.llm.voters import ...` —
+al correr la suite completa tras la Fase 2, los 3 archivos dejaron de
+poder **colectarse** (`ImportError` en la importación del módulo de
+test, no solo un test fallido), y `pytest` abortaba toda la corrida en
+vez de solo esos 3 archivos. Se adelantaron a la Fase 2 (eran 3 de los 9
+"eliminación completa" ya previstos para la Fase 4 — contenido
+exclusivamente del clúster, sin mezcla de código vivo, verificado antes
+de borrar) — ver §4.2 y §7 actualizados.
+
 | Archivo | Consumidor externo | Tests que lo cubren | Acción |
 |---|---|---|---|
-| `voters/__init__.py` | `app/llm/__init__.py` (se edita, §4.3) | `test_llm_deliberation.py`, `test_llm_voters.py` | eliminar |
-| `voters/base.py` | `voters/__init__.py` (retirable) | ninguno directo | eliminar |
-| `voters/pedagogical.py` | `voters/__init__.py` (retirable) | ninguno directo | eliminar |
-| `voters/adaptive.py` | `voters/__init__.py` (retirable) | ninguno directo | eliminar |
-| `voters/evaluation.py` | `voters/__init__.py` (retirable) | ninguno directo | eliminar |
-| `voters/mediator.py` | `voters/__init__.py` (retirable) | ninguno directo | eliminar |
+| `voters/__init__.py` | ninguno | ninguno | eliminar |
+| `voters/base.py` | ninguno | ninguno | eliminar |
+| `voters/pedagogical.py` | ninguno | ninguno | eliminar |
+| `voters/adaptive.py` | ninguno | ninguno | eliminar |
+| `voters/evaluation.py` | ninguno | ninguno | eliminar |
+| `voters/mediator.py` | ninguno | ninguno | eliminar |
 
 **9.3 Backend — `app/llm/prompts/*` (categoría: prompts LLM)**
 
 | Archivo | Consumidor externo | Tests que lo cubren | Acción |
 |---|---|---|---|
-| `prompts/__init__.py` | `voters/{pedagogical,adaptive,evaluation,mediator}.py` (retirables) | `test_llm_integration.py` | eliminar |
-| `prompts/adaptive.py` | igual | `test_llm_integration.py` | eliminar |
-| `prompts/deliberation.py` | igual | `test_llm_integration.py` | eliminar |
-| `prompts/evaluation.py` | igual | `test_llm_integration.py` | eliminar |
-| `prompts/pedagogical.py` | igual | `test_llm_integration.py` | eliminar |
+| `prompts/__init__.py` | ninguno | ninguno | eliminar |
+| `prompts/adaptive.py` | ninguno | ninguno | eliminar |
+| `prompts/deliberation.py` | ninguno | ninguno | eliminar |
+| `prompts/evaluation.py` | ninguno | ninguno | eliminar |
+| `prompts/pedagogical.py` | ninguno | ninguno | eliminar |
 
 **9.4 Backend — `app/llm/{deliberation,grounding,metrics,response_parser,confidence}.py` (categoría: soporte LLM)**
 
 | Archivo | Consumidor externo | Tests que lo cubren | Acción |
 |---|---|---|---|
-| `deliberation.py` | `app/llm/__init__.py` (se edita) | `test_llm_phase3.py`, `test_llm_deliberation.py` | eliminar |
-| `grounding.py` | `app/llm/__init__.py` (se edita) | `test_llm_integration.py` | eliminar |
-| `metrics.py` | `app/llm/__init__.py` (se edita) | `test_llm_phase3.py` | eliminar |
-| `response_parser.py` | `app/llm/__init__.py` (se edita) | `test_llm_integration.py` | eliminar |
-| `confidence.py` | `app/llm/__init__.py` (se edita) + `voters/base.py` (retirable) | ninguno directo | eliminar |
+| `deliberation.py` | ninguno | `test_llm_phase3.py` | eliminar |
+| `grounding.py` | ninguno | ninguno | eliminar |
+| `metrics.py` | ninguno | `test_llm_phase3.py` | eliminar |
+| `response_parser.py` | ninguno | ninguno | eliminar |
+| `confidence.py` | ninguno | ninguno | eliminar |
+
+`test_llm_phase3.py` sobrevivió a la Fase 2 (importa
+`app.llm.deliberation`/`app.llm.metrics` directamente, no vía el
+re-export de paquete) — sigue en la lista de eliminación completa de la
+Fase 4, sin cambios.
 
 **9.5 Backend — `app/observability/*` (categoría: observabilidad)**
 
