@@ -18,8 +18,10 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
     DOCENTE = "docente"
     ESTUDIANTE = "estudiante"
-    # Legado: retirado como usuario de negocio (las herramientas viven en el
-    # Modo Evidencia). Se conserva por compatibilidad con filas existentes.
+    # Vigente (Sesión 5 Frente B, Paso 5, docs/bug_reports/tech_debt/
+    # 2026-08-05_SESION5_FRENTE_B_PASO5_decision_investigador.md): rol de
+    # observador de Modo Evidencia / Runtime Console (aget_authorized_
+    # evidence_viewer, runtime.py) — no administra usuarios ni contenido.
     INVESTIGADOR = "investigador"
 
 
