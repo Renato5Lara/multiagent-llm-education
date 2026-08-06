@@ -6,6 +6,49 @@ report detallado cuando existe uno. Ninguna rama está pusheada — todas
 viven localmente, apiladas en cadena (`fix/auth-cross-tab-storage-loop`
 → ... → `fix/dropdown-trigger-aschild-slot`, HEAD actual).
 
+## Segunda ronda — líneas de trabajo pendientes de otras sesiones (Fichas 10-16)
+
+Tras la "Cierre de la auditoría completa" original (abajo), se investigó
+si otras líneas abiertas en el proyecto (no parte del `.docx` original)
+tenían acciones pendientes: `TraceExplorer`, la suite completa de tests,
+"Adaptar dormido" (hallazgo de HF-0/Exp-1), la semántica de `Aplazada`
+(pregunta que Ficha 05 dejó explícitamente diferida), la clasificación
+final de Ficha 09, y Épica C (deuda histórica del 2026-07-25). Cada una
+se investigó con el mismo rigor observar→medir→verificar→clasificar
+→decidir→implementar, sin implementar hasta tener diagnóstico completo.
+
+| Ficha | Línea | Resultado |
+|---|---|---|
+| [Ficha 10](frontend/2026-08-05_AUDIT-FICHA10_trace_endpoint_legacy_consumption.md) | `/api/trace/*` eliminado, consumido por `useTrace()` | Contrato frontend obsoleto con fallback silencioso deliberado cuyo disparador (404) cambió de significado; 2 opciones de remediación candidatas, sin decidir |
+| [Ficha 11](backend/2026-08-05_AUDIT-FICHA11_suite_completa_clasificacion.md) | 71 tests + 7 errores fallidos | ~11 clústeres de causa raíz clasificados; verificado contra worktree baseline (`7f0a892`) — todos preexistentes, cero regresiones de esta sesión |
+| [Ficha 12](runtime/2026-08-05_AUDIT-FICHA12_adaptar_dormido_diagnostico.md) | "Adaptar dormido" (hallazgo HF-0/Exp-1) | `producir_llm` de Adaptar validado por ADR-0007 pero nunca conectado al Boundary — deuda experimental intencional, decisión de cierre ya registrada por el tesista, pendiente de Engineering Gate propio |
+| [Ficha 13](runtime/2026-08-05_AUDIT-FICHA13_semantica_aplazada.md) | Semántica de `Aplazada` (pregunta diferida por Ficha 05) | Cierra la pregunta: `Aplazada` es estado válido y diseñado (RFC-0006 §4/CONCEPT-0002 §4), condicionado por `urgente`; los 3 call sites de VARK/pre-test con `urgente=False` quedan como candidato de decisión de producto, no defecto confirmado |
+| [Ficha 14](backend/2026-08-05_AUDIT-FICHA14_clasificacion_likert_y_redundancia.md) | Clasificación final de Ficha 09 | Ninguno de los 2 hallazgos (Likert binarizado, redundancia 100%) es defecto funcional ni afecta a Adaptar/Runtime — metodológico y de producto/UX respectivamente |
+| [Ficha 15](frontend/2026-08-05_AUDIT-FICHA15_epica_c_estado_vigente.md) | Épica C (Commit 5 pendiente desde 2026-07-25) | Confirmada vigente, sin drift, no superada por la migración a LangGraph Runtime (subsistemas sin punto de contacto) — Commit 5 ejecutado (recorrido E2E real de las 6 etapas de `ciclo3-input.ts`) y Épica C **CERRADA**, Commits 1-5/5 completos |
+| [Ficha 16](auth/2026-08-05_AUDIT-FICHA16_admin_credentials_access_state.md) | Hallazgo colateral de Ficha 15: `admin@upao.edu.pe`/`Admin2026!` no coincide con el hash real | Diagnóstico completo: lockout, autenticación y otras cuentas (docente/estudiante) funcionan correctamente; solo el hash de admin cambió hoy (`updated_at` 2026-08-05 21:00:21 UTC), sin pasar por `/recover` (mock, descartado por código), ningún script del repo, ni `seed.py` (idempotente, hardcodea el valor documentado). **Cambio de credencial administrativa detectado fuera del flujo auditado; origen no determinado.** No se intentó adivinar la contraseña real, no se modificó ningún dato |
+
+**Decisión operativa explícita, no técnica, pendiente del tesista sobre
+Ficha 16:** ¿la contraseña real actual de `admin@upao.edu.pe` es la que
+debe quedar como oficial (actualizar `seed.py`/`CLAUDE.md`/memoria), o
+`Admin2026!` debe restaurarse como contraseña oficial (cambio
+controlado, documentado, con verificación de login)? Ninguna opción se
+ejecuta desde esta auditoría — no se toca `seed.py`, no se resetea
+ninguna contraseña, no se modifica `CLAUDE.md` hasta que esa decisión
+se tome explícitamente.
+
+**Recomendación registrada, no implementada:** el que un cambio de
+credencial de una cuenta ADMIN no genere ningún `audit_logs` es una
+observación de gobierno de cambios privilegiados, no un bug confirmado
+— depende de si el diseño del sistema pretende trazabilidad completa de
+operaciones administrativas (password/rol/estado activo), garantía que
+no está declarada en ningún RFC/ADR revisado. Candidata a mejora de
+observabilidad futura, no a corrección inmediata.
+
+Con esta ronda, **Iteración 6.3 de la metodología de investigación
+queda como el único punto explícitamente diferido** — requiere
+población experimental real, no cuentas sintéticas; no se abre hasta
+que exista ese dato.
+
 ## Cierre de la auditoría completa (2026-08-05)
 
 **La auditoría técnica queda completamente cerrada, sin ningún punto
@@ -250,8 +293,8 @@ listan aquí solo como índice:
 
 | Tema | Estado |
 |---|---|
-| Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC) — **diagnóstico forense CERRADO** ([bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md), 2 fases): 2 mecanismos confirmados con trazas reales, `runtime_bridge.py` descartado como causa, incidencia real medida en 1/29 sesiones (3.4%, caso puntual). Remediación **no iniciada a propósito** — requiere primero una decisión de arquitectura del consenso (¿`Aplazada` debe producir una decisión provisional en contexto educativo, o es un estado final válido?), deliberadamente diferida, no evaluada todavía. | Diagnóstico completo, remediación pendiente de decisión arquitectónica (no de investigación adicional) |
-| Ficha 09 (escala Likert de 5 puntos colapsada a binario + redundancia "Base sólida"/"Siguiente reto" con dominio 100%; la auditoría la marcó "NO REPRODUCIDO EN ESTA PASADA") — **diagnóstico forense CERRADO** ([bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md)): 2 hallazgos distintos confirmados con código real. Hallazgo A (Likert→binario en `compute_prior_knowledge`): dato crudo preservado íntegro en `DiagnosticResult.answers`, solo el campo derivado `known_topics`/`prior_level` pierde resolución — 13/40 registros reales afectados (32.5%). Hallazgo B (redundancia a dominio 100% en `compute_competency_profile`): mecanismo de desempate degenerado, confirmado 10/10 exacto contra los casos de 100% uniforme — 10/28 intentos reales (35.7%). A diferencia de Ficha 05 (3.4%, caso puntual), **ambos hallazgos son frecuentes, no marginales**. Remediación **no iniciada a propósito** — requiere decisión de producto/metodología (¿el perfil debe preservar 4 vs. 5 para la adaptación pedagógica?, ¿"Base sólida"/"Siguiente reto" son conceptos distintos o dos vistas del mismo ranking?), no más investigación. | Diagnóstico completo, remediación pendiente de decisión de producto/metodología (no de investigación adicional) |
+| Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC) — **diagnóstico forense CERRADO** ([bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md), 2 fases): 2 mecanismos confirmados con trazas reales, `runtime_bridge.py` descartado como causa, incidencia real medida en 1/29 sesiones (3.4%, caso puntual). La pregunta arquitectónica que dejó explícitamente diferida (¿`Aplazada` debe producir una decisión provisional en contexto educativo, o es un estado final válido?) **quedó respondida en [Ficha 13](runtime/2026-08-05_AUDIT-FICHA13_semantica_aplazada.md)**: es estado válido, condicionado por `urgente` (RFC-0006 §4/CONCEPT-0002 §4) — no una decisión de arquitectura sin resolver. Queda solo la decisión de producto puntual sobre los 3 call sites con `urgente=False`. | Diagnóstico + semántica arquitectónica cerrados (Ficha 13); remediación pendiente de decisión de producto puntual |
+| Ficha 09 (escala Likert de 5 puntos colapsada a binario + redundancia "Base sólida"/"Siguiente reto" con dominio 100%; la auditoría la marcó "NO REPRODUCIDO EN ESTA PASADA") — **diagnóstico forense CERRADO** ([bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md)): 2 hallazgos distintos confirmados con código real. Hallazgo A (Likert→binario en `compute_prior_knowledge`): dato crudo preservado íntegro en `DiagnosticResult.answers`, solo el campo derivado `known_topics`/`prior_level` pierde resolución — 13/40 registros reales afectados (32.5%). Hallazgo B (redundancia a dominio 100% en `compute_competency_profile`): mecanismo de desempate degenerado, confirmado 10/10 exacto contra los casos de 100% uniforme — 10/28 intentos reales (35.7%). A diferencia de Ficha 05 (3.4%, caso puntual), **ambos hallazgos son frecuentes, no marginales**. **Clasificación final cerrada en [Ficha 14](backend/2026-08-05_AUDIT-FICHA14_clasificacion_likert_y_redundancia.md)**: ninguno de los dos es defecto funcional ni afecta a Adaptar/Runtime — metodológico (A) y producto/UX (B). Remediación sigue sin iniciar, pendiente de decisión de producto/metodología, no de investigación adicional. | Diagnóstico + clasificación cerrados (Ficha 14); remediación pendiente de decisión de producto/metodología |
 **El rol "Investigador" ya no está en esta tabla — resuelto.** Ver
 "Rol Investigador — resuelto" abajo para el detalle completo de la
 decisión e implementación.
