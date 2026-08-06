@@ -1,7 +1,17 @@
 # ADR-0017 — Retiro del clúster Legacy Consensus y preservación de `app/experiment/analysis.py`
 
-- **Estado:** Propuesto (2026-08-06) — pendiente de aprobación explícita del
-  tesista antes de ejecutar cualquier fase de §7.
+- **Estado:** Aceptado (2026-08-06) — aprobado explícitamente por el
+  tesista tras ocho rondas de revisión (26→46→73→88 archivos, estable en
+  88 desde la sexta ronda; `completeness_check()`, `directory_sanity_check()`
+  y `reachability_check()` con Python real, no aproximaciones). Deuda
+  técnica reconocida y aceptada como no bloqueante: `reachability_check()`
+  muta temporalmente archivos del árbol de trabajo dentro de un
+  subproceso aislado con reversión garantizada (`try/finally` +
+  verificación `git diff --stat`) — una migración futura a copias en un
+  directorio temporal o un import hook evitaría la mutación por completo,
+  pero no es requisito para esta aceptación. Ejecución: fase por fase,
+  con la validación de cada fase (§7) antes de continuar a la siguiente
+  — no las 6 fases de una vez.
 - **Fecha:** 2026-08-06
 - **Preserva:** `runtime/kernel/deliberation/*` (el motor de consenso vigente
   de la tesis, sin ninguna relación de código con este ADR), ADR-0011 (esta
