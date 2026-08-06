@@ -507,27 +507,48 @@ preserva).
 ## 9. Inventario verificado (una fila por archivo)
 
 Generado por `backend/scripts/audit_consensus_cluster.py` (no transcrito
-a mano) en la tercera ronda de revisión de este ADR, pedido
-explícitamente por el tesista: "cuando esa tabla ya no cambie entre
-revisiones, recién el ADR está maduro". Para regenerar esta sección tras
-cualquier cambio en el código o en el alcance:
+a mano), pedido explícitamente por el tesista en la tercera ronda de
+revisión de este ADR: "cuando esa tabla ya no cambie entre revisiones,
+recién el ADR está maduro". Para regenerar esta sección tras cualquier
+cambio en el código o en el alcance:
 
 ```
 cd backend && python scripts/audit_consensus_cluster.py
 ```
 
-La lista de archivos auditados (qué cuenta como "el clúster") está
-codificada al inicio del script (`CLUSTER_BACKEND`, `CLUSTER_FRONTEND`,
-`EDITED_BACKEND_FILES`, `EXTRACTED_FILE`,
-`PRESERVED_EXCEPTION_FRONTEND`) — el script verifica ese alcance, no lo
-descubre; ampliarlo requiere editar esas listas primero, con su propia
-justificación en este documento. Verificado en esta ronda: dos corridas
-consecutivas sobre el mismo commit producen exactamente la misma salida
-(`diff` vacío); dos versiones del patrón de detección de imports
-frontend produjeron falsos positivos reales antes de esta versión
-(coincidencia de substring con nombres comunes como "replay", y
-coincidencia con literales de ruta de React Router como `"/replay"`) —
-ambos corregidos y verificados de nuevo antes de aceptar la salida.
+**Cuarta ronda — el script deja de solo verificar, empieza a exigir
+completitud.** La versión anterior verificaba una lista escrita a mano
+(`CLUSTER_BACKEND`); no podía detectar un archivo que esa lista hubiera
+olvidado — limitación que el propio tesista señaló explícitamente antes
+de que se materializara. `completeness_check()` la cierra: lista TODO lo
+que existe de verdad en cada directorio de `AUDITED_DIRECTORIES` y
+detiene el script (`exit 1`) si algo no está en `CLUSTER_BACKEND`,
+`EDITED_BACKEND_FILES`, `EXTRACTED_FILE` o `PRESERVED_BACKEND_FILES` (con
+su razón). Corriéndolo por primera vez encontró 15 archivos que las tres
+rondas anteriores nunca habían examinado — el total pasó de 73 a 88 (ver
+§1). La lista sigue sin "descubrir" el clúster desde cero (sigue siendo
+una lista con intención humana detrás), pero ahora es imposible que un
+archivo quede fuera de vista sin que el script lo señale.
+
+**Verificaciones de esta ronda, pedidas explícitamente:**
+- Dos corridas consecutivas sobre el mismo commit producen exactamente
+  la misma salida (`diff` vacío) — repetido después de cada cambio al
+  script.
+- Dos versiones del patrón de detección de imports frontend produjeron
+  falsos positivos reales antes de esta versión (coincidencia de
+  substring con nombres comunes como "replay", y coincidencia con
+  literales de ruta de React Router como `"/replay"`) — ambos corregidos
+  y verificados de nuevo antes de aceptar la salida.
+- **Prueba de mutación** (inyectar un import real, confirmar detección,
+  revertir): se añadió temporalmente `from app.core.consensus import
+  ConsensusEngine` a `app/api/deps.py` (archivo vivo) — el script lo
+  detectó correctamente como consumidor externo
+  (`app/api/deps.py:248`); revertido, volvió a `ninguno`. Repetido con
+  una variante multilínea (`from app.core.consensus import (\n
+  ConsensusEngine,\n)`) y una con alias (`import app.core.trust as
+  trust_alias`) — ambas detectadas correctamente. `deps.py` verificado
+  byte a byte idéntico al original después de revertir (`diff` vacío) en
+  los tres casos.
 
 Columna "Consumidor externo" = resultado del método de dos capas de §2
 (estático + dinámico); "ninguno" significa que ninguna de las dos capas
