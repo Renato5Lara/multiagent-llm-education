@@ -8,7 +8,8 @@ fuente única de verdad (sin simulaciones, sin pipelines paralelos).
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_evidence_viewer, get_db
+from app.models.user import User
 from app.services import evidence_service
 
 router = APIRouter(prefix="/api/evidence", tags=["Evidencia"])
@@ -19,6 +20,7 @@ def get_student_trajectory(
     student_id: str,
     course_id: str | None = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     trajectory = evidence_service.get_student_trajectory(db, student_id, course_id)
     if trajectory is None:

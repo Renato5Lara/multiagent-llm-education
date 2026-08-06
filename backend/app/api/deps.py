@@ -120,6 +120,27 @@ def get_current_admin_or_docente(
     return current_user
 
 
+def get_current_evidence_viewer(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Sync equivalent of `aget_authorized_evidence_viewer` (app/api/routes/
+    runtime.py) — mismo conjunto de roles autorizados a leer superficies de
+    Modo Evidencia (estudiante dueño, docente, admin, investigador; RFC-0009
+    §1/§3). Usado por endpoints síncronos como /api/evidence/*, que hasta
+    ahora no exigían ningún rol (Hallazgo I10, Auditoría Externa 2026-08-06)."""
+    if current_user.role not in (
+        UserRole.ESTUDIANTE,
+        UserRole.DOCENTE,
+        UserRole.ADMIN,
+        UserRole.INVESTIGADOR,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol de estudiante, docente, administrador o investigador",
+        )
+    return current_user
+
+
 # ═════════════════════════════════════════════════════════════════
 # Async deps (FastAPI runtime — non-blocking)
 # ═════════════════════════════════════════════════════════════════
