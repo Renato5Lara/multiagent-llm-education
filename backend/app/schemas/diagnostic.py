@@ -25,6 +25,7 @@ class AdaptiveDecisionResponse(BaseModel):
     content_order: list[str]
     content_type_labels: dict[str, str]
     skip_hint_topics: list[str]
+    skip_hint_topic_labels: list[str]
     emphasis_topics: list[str]
     emphasis_topic_labels: list[str]
     strategy_description: str

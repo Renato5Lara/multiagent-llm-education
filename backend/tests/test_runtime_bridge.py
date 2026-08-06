@@ -236,6 +236,44 @@ def test_decision_adaptativa_competencia_dominada_va_a_skip_hint():
     decision = decision_adaptativa(student_id="rocio", course_id="curso-ad2")
     assert decision is not None
     assert decision["skip_hint_topics"] == ["variables"]
+    # Aditivo (Sesión UX/UI 2026-08-05, H1): `skip_hint_topics` se
+    # mantiene crudo (lo usa Dashboard.tsx para deduplicar contra
+    # `competencies`), `skip_hint_topic_labels` es la vista traducida.
+    assert decision["skip_hint_topic_labels"] == ["Variables"]
+
+
+def test_decision_adaptativa_traduce_slugs_reales_del_diagnostico_inicial():
+    """`PRIOR_KNOWLEDGE_TOPIC_MAP` (student_service.py) es la fuente real
+    de `titulo_modulo` para el diagnóstico inicial — la única evidencia
+    que TODO estudiante real genera. Sus slugs en inglés ("arrays",
+    "algorithms") deben traducirse igual que los de `ProgrammingConcept`
+    (Sesión UX/UI 2026-08-05, H1) — sin esto, "Arrays"/"Algorithms"
+    aparecían crudos en el dashboard y la ruta adaptativa."""
+    from app.services.runtime_bridge import (
+        decision_adaptativa,
+        registrar_evidencia_evaluacion,
+    )
+
+    registrar_evidencia_evaluacion(
+        student_id="camila",
+        course_id="curso-ad2b",
+        titulo_modulo="arrays",
+        items_incorrectos=[0, 1, 2],
+        items_totales=3,
+    )
+    registrar_evidencia_evaluacion(
+        student_id="camila",
+        course_id="curso-ad2b",
+        titulo_modulo="algorithms",
+        items_incorrectos=[],
+        items_totales=3,
+    )
+    decision = decision_adaptativa(student_id="camila", course_id="curso-ad2b")
+    assert decision is not None
+    assert decision["emphasis_topics"] == ["arrays"]
+    assert decision["emphasis_topic_labels"] == ["Arreglos"]
+    assert decision["skip_hint_topics"] == ["algorithms"]
+    assert decision["skip_hint_topic_labels"] == ["Algoritmos"]
 
 
 def test_decision_adaptativa_excluye_competencias_del_pretest():

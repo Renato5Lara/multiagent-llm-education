@@ -53,6 +53,54 @@ class ProgrammingConcept(str, enum.Enum):
     COMPUTATIONAL_THINKING = "computational_thinking"
 
 
+# Sesión UX/UI 2026-08-05 (H1, docs/bug_reports/ux/..._PASO4_decisiones.md):
+# `ProgrammingConcept.value` es vocabulario interno en inglés — correcto
+# para el Runtime/claims, pero sin traducir llegaba tal cual a superficies
+# donde el estudiante es la audiencia (`runtime_bridge.decision_adaptativa`).
+# Misma función que `COMPETENCY_LABELS` (app/data/knowledge_test_bank.py)
+# cumple para las 6 competencias del pre-test — nunca se usa dentro del
+# Runtime ni de sus reducers, solo en la traducción de presentación del
+# Boundary (`runtime_bridge._etiqueta`).
+#
+# Incluye además "algorithms" y "operators": no son valores de
+# `ProgrammingConcept`, pero SÍ son los slugs reales que
+# `PRIOR_KNOWLEDGE_TOPIC_MAP` (app/services/student_service.py) usa como
+# `titulo_modulo` del diagnóstico inicial — la única evidencia que TODO
+# estudiante real genera. Los otros 6 valores de ese mapa (variables,
+# input_output, conditionals, loops, arrays, functions) ya coinciden
+# byte a byte con `ProgrammingConcept`, así que no se repiten aquí.
+PROGRAMMING_CONCEPT_LABELS: dict[str, str] = {
+    "algorithms": "Algoritmos",
+    "operators": "Operadores",
+    ProgrammingConcept.VARIABLES: "Variables",
+    ProgrammingConcept.DATA_TYPES: "Tipos de datos",
+    ProgrammingConcept.EXPRESSIONS: "Expresiones",
+    ProgrammingConcept.INPUT_OUTPUT: "Entrada y salida de datos",
+    ProgrammingConcept.CONDITIONALS: "Condicionales",
+    ProgrammingConcept.BOOLEAN_LOGIC: "Lógica booleana",
+    ProgrammingConcept.NESTED_CONDITIONALS: "Condicionales anidados",
+    ProgrammingConcept.LOOPS: "Bucles",
+    ProgrammingConcept.NESTED_LOOPS: "Bucles anidados",
+    ProgrammingConcept.LOOP_PATTERNS: "Patrones de iteración",
+    ProgrammingConcept.ARRAYS: "Arreglos",
+    ProgrammingConcept.STRINGS: "Cadenas de texto",
+    ProgrammingConcept.DICTIONARIES: "Diccionarios",
+    ProgrammingConcept.MATRICES: "Matrices",
+    ProgrammingConcept.FUNCTIONS: "Funciones",
+    ProgrammingConcept.PARAMETERS: "Parámetros",
+    ProgrammingConcept.RETURN_VALUES: "Valores de retorno",
+    ProgrammingConcept.SCOPE: "Ámbito de variables",
+    ProgrammingConcept.RECURSION: "Recursividad",
+    ProgrammingConcept.ALGORITHM_DESIGN: "Diseño de algoritmos",
+    ProgrammingConcept.SEARCHING: "Búsqueda",
+    ProgrammingConcept.SORTING: "Ordenamiento",
+    ProgrammingConcept.COMPLEXITY: "Complejidad algorítmica",
+    ProgrammingConcept.DEBUGGING: "Depuración",
+    ProgrammingConcept.ERROR_HANDLING: "Manejo de errores",
+    ProgrammingConcept.COMPUTATIONAL_THINKING: "Pensamiento computacional",
+}
+
+
 class ProgrammingStage(str, enum.Enum):
     """Etapas del progreso cognitivo en programación."""
     PRE_ALGORITHMIC = "pre_algorithmic"

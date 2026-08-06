@@ -114,6 +114,7 @@ export interface AdaptiveDecision {
   content_order: string[]
   content_type_labels: Record<string, string>
   skip_hint_topics: string[]
+  skip_hint_topic_labels: string[]
   emphasis_topics: string[]
   emphasis_topic_labels: string[]
   strategy_description: string

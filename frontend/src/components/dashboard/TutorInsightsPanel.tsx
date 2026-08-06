@@ -3,10 +3,6 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAdaptiveDecision } from '@/hooks/useStudent'
 
-function humanize(slug: string) {
-  return slug.replace(/[-_]/g, ' ').replace(/^\w/, c => c.toUpperCase())
-}
-
 // Tope visual: un diagnóstico inicial puede marcar muchas competencias como
 // no dominadas todavía (normal al empezar) — mostrar las 30 no cabe en una
 // tarjeta, así que se resume el resto en vez de desbordar el layout.
@@ -17,6 +13,10 @@ const MAX_VISIBLE_TAGS = 5
  * estudiante (useAdaptiveDecision, derivado de Diagnosticar en el Runtime),
  * no una explicación genérica. skip_hint_topics = competencias dominadas
  * (fortalezas); emphasis_topics = no dominadas (debilidades detectadas).
+ * Ambas listas traen su versión cruda (slug interno en inglés, usada
+ * también para deduplicar en Dashboard.tsx) y su versión traducida
+ * (`*_topic_labels`, Sesión UX/UI 2026-08-05 H1) — este panel siempre
+ * muestra la traducida, nunca el slug crudo.
  */
 export default function TutorInsightsPanel({
   courseId, nextMissionTitle,
@@ -75,9 +75,9 @@ export default function TutorInsightsPanel({
                 <ThumbsUp className="h-3 w-3" /> Fortalezas
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {data.skip_hint_topics.slice(0, MAX_VISIBLE_TAGS).map(t => (
+                {data.skip_hint_topics.slice(0, MAX_VISIBLE_TAGS).map((t, i) => (
                   <span key={t} className="text-[11px] px-2 py-0.5 rounded-full border border-neural-pulse/30 bg-neural-pulse/10 text-neural-pulse">
-                    {humanize(t)}
+                    {data.skip_hint_topic_labels[i] ?? t}
                   </span>
                 ))}
                 {data.skip_hint_topics.length > MAX_VISIBLE_TAGS && (

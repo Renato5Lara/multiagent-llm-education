@@ -261,6 +261,7 @@ def decision_adaptativa_neutra() -> dict[str, Any]:
         "content_order": list(ORDEN_CONTENIDO_POR_MODALIDAD["mixta"]),
         "content_type_labels": CONTENT_TYPE_LABELS,
         "skip_hint_topics": [],
+        "skip_hint_topic_labels": [],
         "emphasis_topics": [],
         "emphasis_topic_labels": [],
         "strategy_description": (
@@ -378,12 +379,20 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
         # índice ("comp_0_problema") — el humanizador genérico los mostraba
         # tal cual ("Comp 0 problema"), un identificador interno filtrado a
         # la UI del estudiante. `COMPETENCY_LABELS` (app/data/knowledge_test_
-        # bank.py) ya es la fuente de verdad para su nombre pedagógico; los
-        # slugs de temas de curso (p. ej. "loops", "variables") no están ahí
-        # y siguen el humanizador genérico de siempre.
+        # bank.py) ya es la fuente de verdad para su nombre pedagógico. Los
+        # slugs de temas de curso reales (p. ej. "loops", "arrays") vienen
+        # de `ProgrammingConcept` (app/models/programming_domain.py, inglés
+        # por diseño — vocabulario interno del Runtime) y tienen su propia
+        # tabla, `PROGRAMMING_CONCEPT_LABELS` (Sesión UX/UI 2026-08-05, H1).
+        # Solo un slug fuera de ambas tablas cae al humanizador genérico.
         from app.data.knowledge_test_bank import COMPETENCY_LABELS
+        from app.models.programming_domain import PROGRAMMING_CONCEPT_LABELS
 
-        return COMPETENCY_LABELS.get(slug, slug.replace("-", " ").replace("_", " ").capitalize())
+        return (
+            COMPETENCY_LABELS.get(slug)
+            or PROGRAMMING_CONCEPT_LABELS.get(slug)
+            or slug.replace("-", " ").replace("_", " ").capitalize()
+        )
 
     return {
         "content_order": orden,
@@ -391,6 +400,12 @@ def decision_adaptativa(student_id: str, course_id: str) -> dict[str, Any] | Non
         "skip_hint_topics": dominadas,
         "emphasis_topics": emphasis,
         "emphasis_topic_labels": [_etiqueta(t) for t in emphasis],
+        # `skip_hint_topics` (arriba) se mantiene crudo a propósito: el
+        # frontend lo usa también para deduplicar contra `competencies`
+        # (slugs crudos de misión, `Dashboard.tsx`) — traducirlo ahí
+        # rompería esa comparación. `skip_hint_topic_labels` es aditivo,
+        # solo para mostrar (mismo patrón que `emphasis_topic_labels`).
+        "skip_hint_topic_labels": [_etiqueta(t) for t in dominadas],
         "strategy_description": (
             f"Estrategia decidida por el sistema multiagente a partir de tu "
             f"evidencia real: modalidad {modalidad}."
