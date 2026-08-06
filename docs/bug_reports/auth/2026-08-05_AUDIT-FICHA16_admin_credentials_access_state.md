@@ -142,3 +142,47 @@ real. Si **no** fue una acción intencional conocida, el hallazgo merece
 más atención — un cambio de contraseña de administrador que no pasó por
 el flujo auditado de la aplicación, en un entorno de desarrollo local,
 sin que nadie lo haya solicitado conscientemente.
+
+---
+
+## 6. Búsqueda del origen (solo lectura, sin modificar nada)
+
+A pedido explícito, se investigaron los mecanismos disponibles en el
+código actual que podrían explicar el cambio, antes de declarar "origen
+no determinado":
+
+- **`POST /api/auth/recover`** (`auth.py:143-155`) — descartado por
+  código, no por suposición: su propio docstring dice *"Actualmente en
+  modo mock: registra en logs"*, y `auth_service.recover_password()`
+  (líneas 141-149) solo hace `logger.info(...)` y retorna `bool` — nunca
+  toca `hashed_password`. No pudo ser el mecanismo.
+- **Cualquier script propio del repo** — `grep -rn "hashed_password\s*="
+  app/ scripts/` (excluyendo `models/user.py`, la definición de la
+  columna) → **cero resultados**. Ningún script versionado en el
+  repositorio escribe ese campo fuera de `seed.py`.
+- **`seed.py`** — descartado por dos razones: (a) hardcodea
+  `"Admin2026!"` literal (`seed.py:348`), no lee ningún valor de
+  entorno — volver a ejecutarlo no podría producir una contraseña
+  distinta; (b) es idempotente (`if not admin: ...` — si el usuario ya
+  existe, no lo toca). `git log --since=2026-08-04 -- backend/seed.py`
+  → sin commits, tampoco fue editado temporalmente.
+- **Correlación temporal con el trabajo de auth de hoy** — el cambio
+  de hash (16:00:21 hora local, `America/Lima`) cae dentro de la misma
+  ventana de 20 minutos que el trabajo real sobre sesión/autenticación
+  documentado en `2026-08-05_AUDIT-FICHA01-02_cross_tab_storage_
+  revalidation_loop.md` (commits `a63597c`/`66c3f00`, 16:00-16:16) — se
+  revisó ese documento específicamente por mención de contraseñas,
+  `admin@upao.edu.pe`, hashes o `seed`: **cero coincidencias**. La
+  correlación temporal no tiene respaldo causal en la documentación
+  existente — es coincidencia de horario, no evidencia de mecanismo.
+
+**Conclusión de esta búsqueda:** se agotaron las vías de bajo riesgo
+disponibles sin escribir ni ejecutar nada nuevo contra producción/DB
+más allá de las consultas ya hechas. Ningún mecanismo del código actual
+explica el cambio, y no quedó rastro en la documentación de la sesión
+cuyo horario coincide. **Cambio de credencial administrativa detectado
+fuera del flujo auditado; origen no determinado.** La explicación más
+probable, sin evidencia que la confirme, es un script ad-hoc de una
+sesión anterior (mismo patrón que las consultas de solo lectura de esta
+propia ficha, pero en modo escritura) que no se commiteó — no hay forma
+de confirmarlo sin preguntarle directamente al tesista.
