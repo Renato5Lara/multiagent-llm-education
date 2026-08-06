@@ -211,7 +211,7 @@ La arquitectura presentada establece la organización estructural del sistema y 
 
 | ID | Fuente | Justificación técnica | Evidencia de implementación | Estado |
 |---|---|---|---|---|
-| RF-08 | RFC-0007 + `THESIS_SCOPE_FREEZE.md` | La hipótesis exige trazabilidad de la decisión, no solo el resultado | Modelo `AgentDecisionTraceRecord` (con índices compuestos por correlación causal), router `evidence` | Implementación parcial — la persistencia de la traza está implementada; las técnicas específicas de explicabilidad (SHAP/LIME) no forman parte de esta versión |
+| RF-08 | RFC-0007 + `THESIS_SCOPE_FREEZE.md` | La hipótesis exige trazabilidad de la decisión, no solo el resultado | Runtime Console (RFC-0007): `GET /runtime/sessions/{id}/traza`, respaldado por `RegistroTransicion` (`runtime_transitions`, cadena de hash ADR-0001), router `evidence` | Implementación parcial — la persistencia y consulta de la traza está implementada (Runtime Console); las técnicas específicas de explicabilidad (SHAP/LIME) no forman parte de esta versión |
 | RF-09 | RFC-0007 + `THESIS_SCOPE_FREEZE.md` | Ninguna solución revisada en la Sección 2 ofrece esta capacidad de forma nativa | Router `replay`, router `swarm`/`swarm_demo`, `event_outbox.py` | Implementado — **con una limitación de seguridad pendiente: ninguno de los endpoints de `replay` declara autenticación (ver 3.6)** |
 | RF-10 | `THESIS_SCOPE_FREEZE.md` + Objetivo específico 4 (1.4) | Valida el objetivo específico 4 | Modelo `ExperimentResult`, router `research`, módulo `backend/app/benchmark/` | Implementación parcial (infraestructura existente y validada end-to-end; el modo de evaluación actual usa un evaluador determinista con semilla, no llamadas reales a LLM — ver Sección 5) |
 
@@ -226,7 +226,7 @@ La arquitectura presentada establece la organización estructural del sistema y 
 | Seguridad | Autenticación y autorización por rol | JWT (`python-jose`, HS256) + `UserRole` + `LoginAttempt` (bloqueo tras 3 intentos/5 min) | Ningún endpoint protegido acepta solicitudes sin un token JWT válido — **excepción pendiente de corrección: el router `replay` no aplica esta regla (ver 3.6)** |
 | Privacidad | Tratamiento de datos personales del estudiante | Sin cifrado en reposo; solo hashing de contraseña (bcrypt) | Sin criterio definido todavía — se resuelve en 3.6 |
 | Mantenibilidad | Separación estricta de capas con reglas de import | Reglas de frontera declaradas en `BLUEPRINT.md` como contrato entre capas (sin verificación automática en CI — ver 4.4) | Ninguna capa de `backend/runtime/` importa de una capa no permitida por su contrato |
-| Auditabilidad | Registro verificable de acciones y decisiones | `AuditLog`, `AgentDecisionTraceRecord`, cadena de hash (ADR-0001) | Una entrada de auditoría alterada rompe la cadena de hash y es detectable |
+| Auditabilidad | Registro verificable de acciones y decisiones | `AuditLog`, `RegistroTransicion` (`runtime_transitions`), cadena de hash (ADR-0001) | Una entrada de auditoría alterada rompe la cadena de hash y es detectable |
 | Reproducibilidad | Idempotencia de operaciones mutantes | `IdempotencyKey` + router `idempotency` | Una misma petición repetida con la misma clave de idempotencia produce un único efecto, nunca duplicado |
 
 ### 3.3 Modelado del sistema (según tipo de solución)
