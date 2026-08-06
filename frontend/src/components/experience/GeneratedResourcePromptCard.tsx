@@ -12,6 +12,14 @@ import { useActualizarReferenciaRecurso, type RecursoGenerado } from '@/hooks/us
 // pedagógica fabricada: `origen` se muestra tal cual llegó del
 // Boundary, la explicación real se recorre desde ahí, no se redacta
 // aquí (ROADMAP-RFC-0011.md §2, punto 6).
+//
+// Sesión UX/UI 2026-08-05 (H2, decisión de producto del tesista en
+// docs/bug_reports/ux/2026-08-05_SESION_UXUI_PASO4_decisiones.md):
+// modelo colaborativo — se mantiene la funcionalidad, se mejora
+// únicamente el copy/contexto. El estudiante no es un receptor pasivo;
+// participa en la construcción de su propio recurso. Este componente
+// solo cambia texto y jerarquía visual — cero cambio de flujo, permisos
+// o del contrato de RFC-0011.
 interface Props {
   recurso: RecursoGenerado
 }
@@ -48,15 +56,23 @@ export function GeneratedResourcePromptCard({ recurso }: Props) {
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm text-neural-text/80 flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-neural-glow shrink-0" />
-          Recurso pedagógico generado
+          Tu recurso de práctica personalizado
         </p>
         <span className="text-xs text-neural-text/50 rounded-full border border-neural-glow/20 px-2 py-0.5">
           plantilla {recurso.version_plantilla}
         </span>
       </div>
 
-      <p className="text-xs text-neural-text/50">
-        Origen: decisión pedagógica existente ({recurso.origen.asunto})
+      <p className="text-xs text-neural-text/70 leading-relaxed">
+        El sistema detectó que te sirve practicar con un reto distinto al
+        que ya resolviste y preparó la descripción de abajo para crearlo.
+        Puedes copiarla en una herramienta de IA generativa (ChatGPT,
+        Gemini u otra) para obtener el recurso, y dejar aquí su enlace
+        cuando lo tengas.
+      </p>
+
+      <p className="text-[11px] text-neural-text/40">
+        Basado en la decisión pedagógica del sistema para: {recurso.origen.asunto}
       </p>
 
       <div className="rounded-lg border border-neural-glow/10 bg-white/[0.03] p-3">
@@ -71,12 +87,12 @@ export function GeneratedResourcePromptCard({ recurso }: Props) {
         onClick={copiarPrompt}
         className="gap-1.5 text-xs"
       >
-        {copied ? <><Check className="h-3.5 w-3.5" /> Copiado</> : <><Copy className="h-3.5 w-3.5" /> Copiar prompt</>}
+        {copied ? <><Check className="h-3.5 w-3.5" /> Copiado</> : <><Copy className="h-3.5 w-3.5" /> Paso 1 — Copiar la descripción</>}
       </Button>
 
       <div className="border-t border-neural-glow/10 pt-3 space-y-2">
         <p className="text-xs text-neural-text/50">
-          ¿Ya generaste el recurso en una herramienta externa? Pega aquí su referencia.
+          Paso 2 — ¿ya generaste el recurso en esa herramienta? Pega aquí su enlace.
         </p>
         <div className="flex gap-2">
           <input
