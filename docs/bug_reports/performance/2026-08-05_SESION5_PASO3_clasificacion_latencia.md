@@ -83,21 +83,30 @@ esta sesión de rendimiento tal como se abrió.
 
 ## 4. Declaración explícita de cierre
 
-> **La investigación concluye que la latencia observada (2-10 s por
-> petición de `cycle-evidence`, según el número de llamadas LLM
-> disparadas) es una consecuencia esperada de la arquitectura del
-> Runtime y del proveedor LLM, no un defecto.** La secuencia
-> diagnosticar → remediar/orientar está exigida por el contrato de
-> lectura de capacidades de RFC-0002 y por el orden de ruteo
-> documentado en RFC-0006 §5 — paralelizarla violaría ambos. El tiempo
-> restante (~98% del total medido) es tiempo de red e inferencia de la
-> API de OpenAI, fuera del control de la arquitectura del proyecto. No
-> se encontró ninguna llamada redundante, duplicada, ni ningún
-> reintento/timeout inflando las mediciones. Los dos únicos candidatos
-> de optimización que no requerirían tocar RFC-0002/RFC-0006 (modelo
-> LLM, tamaño de prompt) son decisiones de costo/calidad de producto,
-> no correcciones de un defecto — ninguno se investigó a profundidad
-> suficiente para proponerse como remediación en esta sesión.
+> **La latencia observada no constituye un defecto del Runtime. La
+> mayor parte del tiempo de respuesta proviene del proveedor LLM y de
+> la secuencia deliberada definida por la arquitectura (RFC-0002 y
+> RFC-0006). Cualquier optimización futura deberá evaluarse como una
+> decisión de costo, calidad o experiencia de usuario, no como una
+> corrección de un error de implementación.** (Redacción del tesista,
+> 2026-08-05 — matiza la versión anterior de este párrafo para no dar a
+> entender que la latencia es inmejorable: sí podría reducirse —modelo
+> más rápido, prompts más pequeños, caché, otro proveedor— pero
+> cualquiera de esas rutas es una decisión de producto a evaluar
+> después, no una corrección de bug.)
+>
+> Detalle de soporte: la secuencia diagnosticar → remediar/orientar
+> está exigida por el contrato de lectura de capacidades de RFC-0002 y
+> por el orden de ruteo documentado en RFC-0006 §5 — paralelizarla
+> violaría ambos. El tiempo restante (~98% del total medido) es tiempo
+> de red e inferencia de la API de OpenAI, fuera del control de la
+> arquitectura del proyecto. No se encontró ninguna llamada redundante,
+> duplicada, ni ningún reintento/timeout inflando las mediciones. Los
+> dos únicos candidatos de optimización que no requerirían tocar
+> RFC-0002/RFC-0006 (modelo LLM, tamaño de prompt) son decisiones de
+> costo/calidad de producto, no correcciones de un defecto — ninguno se
+> investigó a profundidad suficiente para proponerse como remediación
+> en esta sesión.
 
 **No se implementa ninguna optimización.**
 
