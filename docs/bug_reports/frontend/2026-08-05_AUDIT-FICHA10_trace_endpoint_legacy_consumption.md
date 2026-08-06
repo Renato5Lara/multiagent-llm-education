@@ -185,13 +185,22 @@ esta auditoría.
 
 ## Candidatos de remediación (sin decidir, para un futuro Paso 3/4)
 
-1. Reconectar `/api/trace/session/{id}` a datos reales del Runtime
-   (probablemente reutilizando `runtime_transitions`/`/traza` en vez de
-   revivir el router eliminado) — cambio de mayor alcance.
-2. O, más acotado: hacer que `SyntheticTimeline`/`AgentThoughtStream`
-   se autoetiqueten como estimados (igual que `AgentDebateBubbles` ya
-   hace), para que la superficie silenciosa deje de serlo — no arregla
-   el endpoint, pero cierra la inconsistencia de honestidad entre
-   ambas superficies con un cambio de bajo riesgo.
+**Opción A — Mejorar el copy del fallback** (p. ej. "Datos sintéticos
+de demostración — no existe traza real disponible" en
+`AgentThoughtStream`, igualándolo a la etiqueta `(estimado)` que
+`AgentDebateBubbles` ya usa). Cero impacto de arquitectura, evita el
+engaño silencioso, riesgo muy bajo — candidata más simple de las dos.
+
+**Opción B — Cambiar la fuente de datos** de `AgentThoughtStream`/
+`TraceExplorer` para que consuman la trazabilidad real ya vigente
+(`runtime_transitions`/`/runtime/sessions/{id}/traza`, la misma que
+respalda Modo Evidencia) en vez de intentar reconectar el router
+eliminado `/api/trace/*`. Coherente con hacia dónde ya migró la
+arquitectura (LangGraph Runtime + Runtime Console) — pero es una
+decisión de producto/arquitectura de mayor alcance, no una corrección
+rápida: **no** sería "reactivar el endpoint viejo automáticamente".
+
+Ninguna de las dos se decide ni se implementa aquí — ambas quedan
+como candidatas explícitas para cuando se abra su propio Paso 3/4.
 
 Ninguno de los dos se decide ni se implementa aquí.
