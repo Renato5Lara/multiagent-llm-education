@@ -23,8 +23,18 @@ en la tabla de abajo.
 05 (decisión de arquitectura del consenso) y 09 (decisión de producto/
 metodología del instrumento) — ver "Pendientes" al final.
 
-**Sin iniciar (no diagnosticadas todavía):** UX/rendimiento y las
-Sesiones 3/4/5 del plan original — ver "Pendientes" al final.
+**Sesión UX/UI — CERRADA** (Pasos 1-5 completos: observar → mapear →
+clasificar → decidir → implementar, 9 commits en `investigacion/sesion-
+ux-ui`; ver [Paso 5](ux/2026-08-05_SESION_UXUI_PASO5_implementacion.md)
+para el cierre completo y el enlace a los 4 documentos previos). 2
+remediaciones implementadas y validadas E2E (traducción de vocabulario
+técnico interno, microcopy del recurso pedagógico generado), 1 en
+backlog por decisión explícita (no por omisión), 2 hallazgos cerrados
+sin código.
+
+**Sin iniciar (no diagnosticadas todavía):** Rendimiento y la Sesión 5
+del plan original (código muerto adicional, deuda técnica) — ver
+"Pendientes" al final.
 
 **Riesgos aceptados** (trade-offs conscientes tomados durante esta
 remediación, no defectos):
@@ -169,7 +179,13 @@ listan aquí solo como índice:
 |---|---|
 | Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC) — **diagnóstico forense CERRADO** ([bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md), 2 fases): 2 mecanismos confirmados con trazas reales, `runtime_bridge.py` descartado como causa, incidencia real medida en 1/29 sesiones (3.4%, caso puntual). Remediación **no iniciada a propósito** — requiere primero una decisión de arquitectura del consenso (¿`Aplazada` debe producir una decisión provisional en contexto educativo, o es un estado final válido?), deliberadamente diferida, no evaluada todavía. | Diagnóstico completo, remediación pendiente de decisión arquitectónica (no de investigación adicional) |
 | Ficha 09 (escala Likert de 5 puntos colapsada a binario + redundancia "Base sólida"/"Siguiente reto" con dominio 100%; la auditoría la marcó "NO REPRODUCIDO EN ESTA PASADA") — **diagnóstico forense CERRADO** ([bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md)): 2 hallazgos distintos confirmados con código real. Hallazgo A (Likert→binario en `compute_prior_knowledge`): dato crudo preservado íntegro en `DiagnosticResult.answers`, solo el campo derivado `known_topics`/`prior_level` pierde resolución — 13/40 registros reales afectados (32.5%). Hallazgo B (redundancia a dominio 100% en `compute_competency_profile`): mecanismo de desempate degenerado, confirmado 10/10 exacto contra los casos de 100% uniforme — 10/28 intentos reales (35.7%). A diferencia de Ficha 05 (3.4%, caso puntual), **ambos hallazgos son frecuentes, no marginales**. Remediación **no iniciada a propósito** — requiere decisión de producto/metodología (¿el perfil debe preservar 4 vs. 5 para la adaptación pedagógica?, ¿"Base sólida"/"Siguiente reto" son conceptos distintos o dos vistas del mismo ranking?), no más investigación. | Diagnóstico completo, remediación pendiente de decisión de producto/metodología (no de investigación adicional) |
-| UX menores (§06 de la auditoría: indicador de "sistema ocupado", vía de escape en ejercicios) | Pendiente |
 | Rendimiento (§11: latencia de personalización 6-10s, caché de Pyodide) | Pendiente |
-| 🟠 Sesión 3/4 (UX/UI general, editor de código/Pyodide) del plan original | No iniciada |
 | 🟡 Sesión 5 (código muerto adicional, deuda técnica, rendimiento) | No iniciada |
+
+**Sesión UX/UI (§06 de la auditoría y más allá) — ya no pendiente,
+CERRADA.** Ver [Paso 5](ux/2026-08-05_SESION_UXUI_PASO5_implementacion.md):
+H1 (vocabulario técnico interno sin traducir) y H2 (panel de recurso
+pedagógico sin contexto) implementados y validados E2E; H3 (estados de
+espera) queda en backlog por decisión explícita, no por falta de
+diagnóstico; H4 documentado como patrón de referencia; H5/H6 cerrados
+sin código.
