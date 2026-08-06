@@ -58,7 +58,7 @@ from app.experiment.metrics import (
     extract_metrics,
     aggregate_metrics,
 )
-from app.experiment.analysis import (
+from app.services.research_statistics import (
     compute_anova,
     pairwise_bonferroni,
     pairwise_holm,

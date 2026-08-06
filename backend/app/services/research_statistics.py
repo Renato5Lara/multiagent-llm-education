@@ -16,6 +16,13 @@ Note on scipy:
     This module implements approximate versions of t-test, ANOVA, and
     power analysis using only the standard library.  For publication-grade
     p-values, install scipy and use the functions in `analysis_scipy.py`.
+
+Extraído de app/experiment/analysis.py (ADR-0017, Fase 1) — único
+componente de app/experiment/ con uso de investigación activo (Iteración
+6.2, 2026-08-05); el resto de app/experiment/ se retira por completo en
+las fases siguientes de la misma ADR. Destino elegido para quedar junto
+a research_dashboard_service.py, su consumidor planeado
+(RESEARCH_LAYER_TECHNICAL_REPORT.md §9.2).
 """
 
 from __future__ import annotations

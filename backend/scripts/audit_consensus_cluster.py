@@ -117,8 +117,14 @@ CLUSTER_BACKEND = [
     ("scripts/run_baseline_experiment.py", "scripts"),
 ]
 
-# Extraído (§3.2), no eliminado — se audita igual para confirmar que no
-# depende del resto del clúster.
+# Extraído (§3.2) — Fase 1 completada: la ruta original ya no existe en
+# disco (movido a app/services/research_statistics.py, fuera de
+# AUDITED_DIRECTORIES). Se mantiene esta entrada, con la ruta vieja, para
+# que completeness_check() siga sin quejarse de un archivo "faltante" en
+# app/experiment/ que en realidad nunca debió estar ahí desde la Fase 1
+# en adelante — auditar la ruta vieja simplemente confirma "ninguno" de
+# forma vacua (no hay nada que grep pueda encontrar de un archivo que no
+# existe). No representa trabajo pendiente.
 EXTRACTED_FILE = ("app/experiment/analysis.py", "experiment_extracted")
 
 EDITED_BACKEND_FILES = [

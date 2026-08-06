@@ -127,7 +127,7 @@ def export_latex_table(
     """
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
-    from app.experiment.analysis import cohens_d
+    from app.services.research_statistics import cohens_d
     import statistics
 
     conditions = result.conditions

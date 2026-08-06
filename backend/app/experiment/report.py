@@ -12,7 +12,7 @@ import os
 import statistics
 from typing import Any
 
-from app.experiment.analysis import (
+from app.services.research_statistics import (
     compute_anova,
     cohens_d,
     generate_statistical_report,
