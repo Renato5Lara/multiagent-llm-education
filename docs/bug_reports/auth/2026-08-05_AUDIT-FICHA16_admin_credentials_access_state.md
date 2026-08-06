@@ -186,3 +186,52 @@ probable, sin evidencia que la confirme, es un script ad-hoc de una
 sesión anterior (mismo patrón que las consultas de solo lectura de esta
 propia ficha, pero en modo escritura) que no se commiteó — no hay forma
 de confirmarlo sin preguntarle directamente al tesista.
+
+---
+
+## 7. Resolución (2026-08-06, decisión explícita del tesista: Opción A)
+
+El tesista, con las dos opciones planteadas (A: restaurar `Admin2026!`
+y actualizar todo; B: mantener la contraseña real desconocida y
+actualizar solo documentación), **eligió explícitamente la Opción A**
+vía `AskUserQuestion` — permiso claro para modificar la credencial,
+según la categoría "Explicit permission required" del harness
+(cambio de configuración de cuenta).
+
+**Reseteo controlado, no adivinado:**
+
+```python
+admin.hashed_password = get_password_hash("Admin2026!")  # misma función que seed.py:348
+db.commit()
+```
+
+Ejecutado vía script de una sola vez contra `SessionLocal`/`User` (mismo
+patrón que las consultas de solo lectura de esta ficha, ahora en modo
+escritura, explícitamente autorizado) — no se recreó al usuario, no se
+tocó `is_active`, `role` ni ningún otro campo; **solo `hashed_password`**.
+
+**Verificación en dos capas, no solo `verify_password()`:**
+
+1. `verify_password("Admin2026!", hash_nuevo)` → `True` (capa de
+   librería, ya usada en el diagnóstico original).
+2. **`POST /api/auth/login` real** contra el backend en ejecución
+   (`localhost:8000`) con `{"identifier": "admin@upao.edu.pe",
+   "password": "Admin2026!"}` → **HTTP 200**, `access_token` y
+   `refresh_token` emitidos, `user.role: "admin"` — el mismo endpoint
+   que falló durante Ficha 15 ahora acepta la contraseña documentada.
+   Se verificó lockout previo (`is_account_locked()` → `False`) antes
+   de intentar, para no repetir el riesgo que motivó esta ficha.
+
+**`admin@upao.edu.pe` / `Admin2026!` vuelve a ser la contraseña real y
+verificada del sistema — coincide otra vez con `seed.py:355/677`,
+`CLAUDE.md` y la memoria del proyecto.** No fue necesario modificar
+ningún documento adicional: la divergencia se cerró alineando la DB con
+la documentación ya existente, no al revés.
+
+**Lo que sigue sin resolverse, deliberadamente:** el origen del cambio
+original (§6) sigue sin determinarse — restaurar la contraseña no
+explica por qué cambió. Si vuelve a divergir, esta ficha ya documenta
+el método de diagnóstico completo para repetirlo. La recomendación de
+gobierno de cambios privilegiados (audit_log obligatorio para
+password/rol/estado de cuentas ADMIN) sigue en pie como mejora futura,
+sin implementar.

@@ -25,16 +25,18 @@ se investigó con el mismo rigor observar→medir→verificar→clasificar
 | [Ficha 13](runtime/2026-08-05_AUDIT-FICHA13_semantica_aplazada.md) | Semántica de `Aplazada` (pregunta diferida por Ficha 05) | Cierra la pregunta: `Aplazada` es estado válido y diseñado (RFC-0006 §4/CONCEPT-0002 §4), condicionado por `urgente`; los 3 call sites de VARK/pre-test con `urgente=False` quedan como candidato de decisión de producto, no defecto confirmado |
 | [Ficha 14](backend/2026-08-05_AUDIT-FICHA14_clasificacion_likert_y_redundancia.md) | Clasificación final de Ficha 09 | Ninguno de los 2 hallazgos (Likert binarizado, redundancia 100%) es defecto funcional ni afecta a Adaptar/Runtime — metodológico y de producto/UX respectivamente |
 | [Ficha 15](frontend/2026-08-05_AUDIT-FICHA15_epica_c_estado_vigente.md) | Épica C (Commit 5 pendiente desde 2026-07-25) | Confirmada vigente, sin drift, no superada por la migración a LangGraph Runtime (subsistemas sin punto de contacto) — Commit 5 ejecutado (recorrido E2E real de las 6 etapas de `ciclo3-input.ts`) y Épica C **CERRADA**, Commits 1-5/5 completos |
-| [Ficha 16](auth/2026-08-05_AUDIT-FICHA16_admin_credentials_access_state.md) | Hallazgo colateral de Ficha 15: `admin@upao.edu.pe`/`Admin2026!` no coincide con el hash real | Diagnóstico completo: lockout, autenticación y otras cuentas (docente/estudiante) funcionan correctamente; solo el hash de admin cambió hoy (`updated_at` 2026-08-05 21:00:21 UTC), sin pasar por `/recover` (mock, descartado por código), ningún script del repo, ni `seed.py` (idempotente, hardcodea el valor documentado). **Cambio de credencial administrativa detectado fuera del flujo auditado; origen no determinado.** No se intentó adivinar la contraseña real, no se modificó ningún dato |
+| [Ficha 16](auth/2026-08-05_AUDIT-FICHA16_admin_credentials_access_state.md) | Hallazgo colateral de Ficha 15: `admin@upao.edu.pe`/`Admin2026!` no coincide con el hash real | Diagnóstico completo: lockout, autenticación y otras cuentas (docente/estudiante) funcionan correctamente; solo el hash de admin cambió (`updated_at` 2026-08-05 21:00:21 UTC), sin pasar por `/recover` (mock, descartado por código), ningún script del repo, ni `seed.py` (idempotente, hardcodea el valor documentado). Origen del cambio original no determinado. **Resuelto 2026-08-06 (Opción A, decisión explícita del tesista): contraseña restaurada a `Admin2026!` mediante reseteo controlado, verificado con login real (`POST /api/auth/login` → HTTP 200)** — ver §7 del bug report |
 
-**Decisión operativa explícita, no técnica, pendiente del tesista sobre
-Ficha 16:** ¿la contraseña real actual de `admin@upao.edu.pe` es la que
-debe quedar como oficial (actualizar `seed.py`/`CLAUDE.md`/memoria), o
-`Admin2026!` debe restaurarse como contraseña oficial (cambio
-controlado, documentado, con verificación de login)? Ninguna opción se
-ejecuta desde esta auditoría — no se toca `seed.py`, no se resetea
-ninguna contraseña, no se modifica `CLAUDE.md` hasta que esa decisión
-se tome explícitamente.
+**Decisión operativa sobre Ficha 16 — RESUELTA (2026-08-06).** El
+tesista eligió explícitamente la Opción A: `admin@upao.edu.pe` /
+`Admin2026!` fue restaurada mediante un reseteo controlado
+(`get_password_hash`, la misma función de `seed.py`), verificada en dos
+capas (`verify_password()` y un login HTTP real contra el backend en
+ejecución, HTTP 200 con tokens emitidos). `seed.py`/`CLAUDE.md`/memoria
+vuelven a coincidir con el estado real de la base de datos — no fue
+necesario modificar ningún documento, la DB se alineó a la
+documentación ya existente. El origen del cambio original sigue sin
+determinarse (ver Ficha 16 §6) — no bloquea el cierre de esta línea.
 
 **Recomendación registrada, no implementada:** el que un cambio de
 credencial de una cuenta ADMIN no genere ningún `audit_logs` es una
