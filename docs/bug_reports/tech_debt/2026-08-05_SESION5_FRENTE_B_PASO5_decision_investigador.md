@@ -152,4 +152,41 @@ actor en la tesis? ¿es coherente con los "tres actores" que CLAUDE.md
 declara — Estudiante, Docente, Administrador?) le corresponde al
 tesista, no a esta investigación.
 
-**No se implementa nada en este documento.**
+## Resolución final (tesista, 2026-08-05)
+
+**Opción A — Mantenerlo vigente.** Decisión registrada textualmente:
+
+> La evidencia de auditoría confirma que Investigador no es un rol
+> legado: tiene presencia en autorización, JWT, endpoints protegidos y
+> flujos reales (Runtime Console / Modo Evidencia). Proceder con la
+> alineación de frontend y documentación: actualizar `Roles.tsx` y
+> `UserForm.tsx` para reflejarlo como rol vigente; eliminar referencias
+> "(legado)" y comentarios obsoletos en modelos, tipos y rutas
+> protegidas; mantener los permisos actuales sin ampliar alcance.
+
+**Alcance explícitamente acotado por el tesista** (cumplido, no
+excedido): *"No aproveches para cambiar permisos ni refactorizar
+roles ahora. Solo sincroniza la documentación y UI con la realidad
+existente"* — "corregir documentación falsa y divergencias de
+interfaz", no "rediseñar el sistema de roles".
+
+**Implementado** (2 commits, cero cambio de permisos ni de
+comportamiento de autorización):
+
+- `bcd651a` — `backend/app/models/user.py`: corrige el docstring de
+  `UserRole.INVESTIGADOR` ("legado, retirado" → referencia a su rol
+  real de observador de Modo Evidencia/Runtime Console).
+- `ef59c91` — frontend: `UserForm.tsx` (el `SelectItem` de
+  "Investigador" deja de ser condicional — ahora siempre visible,
+  igual que en `Roles.tsx`, cerrando la contradicción que originó esta
+  investigación; quita la etiqueta "(legado)"); `types/auth.ts`,
+  `ProtectedRoute.tsx`, `App.tsx` (corrige 3 comentarios que seguían
+  describiendo el rol como retirado — el routing a `/evidencia` en sí
+  no cambió, ya era correcto).
+
+Validado: backend importa limpio, `tsc --noEmit` y `npm run build`
+(frontend) sin errores. `backend/app/api/routes/runtime.py`
+(autorización real) no se tocó — el alcance de permisos de
+Investigador queda exactamente igual que antes de esta decisión.
+
+**Sesión 5, Frente B: los 5 candidatos quedan cerrados.**

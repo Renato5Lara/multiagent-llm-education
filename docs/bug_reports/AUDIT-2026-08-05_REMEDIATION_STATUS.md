@@ -8,18 +8,17 @@ viven localmente, apiladas en cadena (`fix/auth-cross-tab-storage-loop`
 
 ## Cierre de la auditoría completa (2026-08-05)
 
-**La auditoría técnica queda completamente cerrada.** Todos los
-defectos confirmados (Fichas 01-08, Sesión UX/UI H1/H2, Sesión 5
-Frente A y B) fueron implementados y validados contra el sistema real
-— nunca solo "compila" o "los tests pasan". El único punto que queda
-abierto no corresponde a un error de implementación, sino a una
-decisión de arquitectura sobre la vigencia del rol "Investigador", por
-lo que fue separado deliberadamente del proceso de remediación (ver
-"Pendiente arquitectónico independiente" más abajo) — nunca mezclado
-con los hallazgos técnicos ya resueltos.
+**La auditoría técnica queda completamente cerrada, sin ningún punto
+abierto.** Todos los defectos confirmados (Fichas 01-08, Sesión UX/UI
+H1/H2, Sesión 5 Frente A y B, incluido el rol "Investigador") fueron
+implementados y validados contra el sistema real — nunca solo "compila"
+o "los tests pasan". El rol "Investigador" se trató deliberadamente
+como una decisión de arquitectura separada del proceso de remediación
+técnica (ver "Rol Investigador — resuelto" más abajo) — nunca mezclado
+con los hallazgos técnicos, pero sí resuelto
+en la misma sesión tras obtener la decisión del tesista.
 
-Cadena completa de líneas de trabajo, todas cerradas salvo la excepción
-señalada:
+Cadena completa de líneas de trabajo, todas cerradas:
 
 | Línea | Estado | Cierre |
 |---|---|---|
@@ -28,8 +27,8 @@ señalada:
 | Ficha 09 | ✅ Diagnóstico forense cerrado — remediación diferida a decisión de producto/metodología (no técnica) | [bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md) |
 | Sesión UX/UI (Pasos 1-5) | ✅ Cerrada — H1/H2 implementados y validados E2E, H3 en backlog por decisión, H5/H6 cerrados sin código | [Paso 5](ux/2026-08-05_SESION_UXUI_PASO5_implementacion.md) |
 | Sesión 5 — Frente A (Rendimiento) | ✅ Cerrado — sin defecto encontrado, latencia es coste esperado de arquitectura + proveedor LLM | [Paso 3](performance/2026-08-05_SESION5_PASO3_clasificacion_latencia.md) |
-| Sesión 5 — Frente B (deuda técnica) | ✅ Cerrado — 4/5 candidatos implementados y validados (incl. comparación contra worktree baseline, cero regresiones) | [Paso 3](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO3_clasificacion.md) |
-| Rol "Investigador" | ⏸️ **Pendiente arquitectónico independiente, deliberadamente fuera de esta auditoría** | Ver sección dedicada abajo |
+| Sesión 5 — Frente B (deuda técnica) | ✅ Cerrado — 5/5 candidatos implementados y validados (incl. comparación contra worktree baseline, cero regresiones) | [Paso 5](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO5_decision_investigador.md) |
+| Rol "Investigador" | ✅ **Resuelto — Opción A (mantener vigente), decisión del tesista implementada y validada** | Ver sección dedicada abajo |
 
 ## Cierre de fase — resumen final (histórico, Fichas 01-09)
 
@@ -57,9 +56,10 @@ técnico interno, microcopy del recurso pedagógico generado), 1 en
 backlog por decisión explícita (no por omisión), 2 hallazgos cerrados
 sin código.
 
-**Sesión 5 (Rendimiento + deuda técnica) — CERRADA.** Ver "Cierre de la
-auditoría completa" arriba y la sección "Pendiente arquitectónico
-independiente" al final — nada queda "sin diagnosticar" de esta fase.
+**Sesión 5 (Rendimiento + deuda técnica) — CERRADA, 5/5, incluido el
+rol Investigador.** Ver "Cierre de la auditoría completa" arriba y la
+sección "Rol Investigador — resuelto" al final — nada queda "sin
+diagnosticar" ni "sin decidir" de esta fase.
 
 **Riesgos aceptados** (trade-offs conscientes tomados durante esta
 remediación, no defectos):
@@ -74,15 +74,17 @@ remediación, no defectos):
   físicamente tras una investigación dedicada (commits `5f02876`,
   `ba10d50`) que confirmó, con las 4 salvedades posibles descartadas
   una por una, que no había ninguna razón activa para conservarlos.
-- **Fichas 07/08 (superado en parte):** el fix original se acotó
-  estrictamente a los archivos pedidos. La migración de
-  `dropdown-menu.tsx` a `@radix-ui/react-dropdown-menu` real seguía
-  fuera de alcance — pero Sesión 5, Frente B sí retiró la dependencia
-  de Radix nunca usada (commit `058f46e`), sin tocar el componente
-  custom (que tiene consumidores reales). El gap de `UserForm.tsx`
-  (observación #1) **no se tocó** — dejó de ser un simple "gap" al
-  investigarse a fondo: es una contradicción arquitectónica deliberada
-  frente a `Roles.tsx`, ver "Pendiente arquitectónico independiente".
+- **Fichas 07/08 (superado):** el fix original se acotó estrictamente
+  a los archivos pedidos. La migración de `dropdown-menu.tsx` a
+  `@radix-ui/react-dropdown-menu` real seguía fuera de alcance — pero
+  Sesión 5, Frente B sí retiró la dependencia de Radix nunca usada
+  (commit `058f46e`), sin tocar el componente custom (que tiene
+  consumidores reales). El gap de `UserForm.tsx` (observación #1)
+  dejó de ser un simple "gap" al investigarse a fondo: era una
+  contradicción arquitectónica deliberada frente a `Roles.tsx` — el
+  tesista decidió Opción A (rol vigente) y quedó implementada y
+  validada (commits `bcd651a`, `ef59c91`, ver "Rol Investigador —
+  resuelto" para el detalle completo).
 
 **Hallazgos preexistentes, no introducidos por esta remediación**
 (distintos de "riesgos aceptados": son defectos reales, no decisiones
@@ -176,13 +178,16 @@ Cada una vive documentada en el commit o bug report que la originó — se
 listan aquí solo como índice:
 
 1. **`UserForm.tsx`/`Roles.tsx` — contradicción sobre "Investigador"**
-   (originalmente descrito como "enum limitado", commit `dd2b166`).
-   Investigado a fondo en Sesión 5, Frente B (Pasos 2-3): no es un gap
-   de implementación — `UserForm.tsx` y `models/user.py` documentan
-   deliberadamente que Investigador es un rol legado que no debe
-   ofrecerse para asignación nueva; `Roles.tsx` (la propia Ficha 07) lo
-   contradice sin condición. **No resuelto a propósito** — ver
-   "Pendiente arquitectónico independiente" al final.
+   (originalmente descrito como "enum limitado", commit `dd2b166`) —
+   ✅ **RESUELTO.** Investigado a fondo en Sesión 5, Frente B
+   (Pasos 2-3): no era un gap de implementación — `UserForm.tsx` y
+   `models/user.py` documentaban que Investigador era un rol legado
+   que no debía ofrecerse para asignación nueva, mientras `Roles.tsx`
+   (la propia Ficha 07) lo contradecía sin condición. Resuelto por
+   decisión del tesista (Paso 5, Opción A — mantener vigente) tras
+   confirmar acceso real a Runtime Console, permisos, JWT y un usuario
+   real con historial de uso — commits `bcd651a`, `ef59c91`, ver "Rol
+   Investigador — resuelto" al final.
 2. **`app/schemas/decision_trace.py`** — ✅ **RESUELTO.** Quedó huérfano
    tras eliminar `traces.py` (Ficha 04, commit `ab3860b`); retirado
    físicamente en Sesión 5, Frente B tras confirmar las 4 salvedades
@@ -247,7 +252,9 @@ listan aquí solo como índice:
 |---|---|
 | Ficha 05 ("Cómo aprenderás mejor" muestra fallback genérico con perfil mixto, EstudianteC) — **diagnóstico forense CERRADO** ([bug report](runtime/2026-08-05_FICHA05_entrega_diseno_none_investigacion.md), 2 fases): 2 mecanismos confirmados con trazas reales, `runtime_bridge.py` descartado como causa, incidencia real medida en 1/29 sesiones (3.4%, caso puntual). Remediación **no iniciada a propósito** — requiere primero una decisión de arquitectura del consenso (¿`Aplazada` debe producir una decisión provisional en contexto educativo, o es un estado final válido?), deliberadamente diferida, no evaluada todavía. | Diagnóstico completo, remediación pendiente de decisión arquitectónica (no de investigación adicional) |
 | Ficha 09 (escala Likert de 5 puntos colapsada a binario + redundancia "Base sólida"/"Siguiente reto" con dominio 100%; la auditoría la marcó "NO REPRODUCIDO EN ESTA PASADA") — **diagnóstico forense CERRADO** ([bug report](backend/2026-08-05_FICHA09_likert_binario_y_redundancia_100pct_investigacion.md)): 2 hallazgos distintos confirmados con código real. Hallazgo A (Likert→binario en `compute_prior_knowledge`): dato crudo preservado íntegro en `DiagnosticResult.answers`, solo el campo derivado `known_topics`/`prior_level` pierde resolución — 13/40 registros reales afectados (32.5%). Hallazgo B (redundancia a dominio 100% en `compute_competency_profile`): mecanismo de desempate degenerado, confirmado 10/10 exacto contra los casos de 100% uniforme — 10/28 intentos reales (35.7%). A diferencia de Ficha 05 (3.4%, caso puntual), **ambos hallazgos son frecuentes, no marginales**. Remediación **no iniciada a propósito** — requiere decisión de producto/metodología (¿el perfil debe preservar 4 vs. 5 para la adaptación pedagógica?, ¿"Base sólida"/"Siguiente reto" son conceptos distintos o dos vistas del mismo ranking?), no más investigación. | Diagnóstico completo, remediación pendiente de decisión de producto/metodología (no de investigación adicional) |
-| Rol "Investigador" (`UserForm.tsx`/`models/user.py` vs. `Roles.tsx`) — contradicción arquitectónica confirmada, **no una deuda técnica** | Ver "Pendiente arquitectónico independiente" abajo — **no se mezcla con hallazgos técnicos** |
+**El rol "Investigador" ya no está en esta tabla — resuelto.** Ver
+"Rol Investigador — resuelto" abajo para el detalle completo de la
+decisión e implementación.
 
 **Nada más queda pendiente de esta auditoría.** Rendimiento (§11) y
 Sesión 5 completa (código muerto, deuda técnica) están **cerradas** —
@@ -270,50 +277,32 @@ paralelizable sin violar el contrato de capacidades. Sin defecto
 encontrado — declarado explícitamente como resultado válido de
 investigación, no como fracaso.
 
-**Sesión 5 — Frente B (deuda técnica) — CERRADO.** Ver
-[Paso 3](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO3_clasificacion.md)
-y Paso 4 (commits `5f02876`, `ba10d50`, `058f46e`, `ceb2fb6`): 4/5
-candidatos implementados y validados (código muerto, infraestructura
-huérfana, dependencia sin uso, documentación de tesis desactualizada).
-El quinto (rol Investigador) se separó deliberadamente — ver siguiente
-sección.
+**Sesión 5 — Frente B (deuda técnica) — CERRADO, 5/5.** Ver
+[Paso 5](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO5_decision_investigador.md)
+para el cierre completo. Commits: `5f02876`, `ba10d50`, `058f46e`,
+`ceb2fb6` (los 4 candidatos técnicos: código muerto, infraestructura
+huérfana, dependencia sin uso, documentación de tesis desactualizada)
++ `bcd651a`, `ef59c91` (rol Investigador, tras la decisión del
+tesista — ver siguiente sección).
 
-## Pendiente arquitectónico independiente — rol "Investigador"
+## Rol "Investigador" — resuelto (Opción A: mantener vigente)
 
-**No es deuda técnica ni un bug — es una decisión de arquitectura/
-producto sin responder**, y se registra aparte a propósito para no
-mezclarla con los hallazgos técnicos ya resueltos de esta auditoría.
+**No era deuda técnica ni un bug — era una decisión de arquitectura/
+producto**, tratada aparte a propósito para no mezclarla con los
+hallazgos técnicos de esta auditoría. Investigada con 5 preguntas
+concretas antes de decidir, y resuelta en la misma sesión — ver
+[Paso 5](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO5_decision_investigador.md)
+para el detalle completo (evidencia, las dos opciones consideradas, y
+la "Resolución final" con la decisión textual del tesista).
 
-**Pregunta que debe responderse antes de tocar cualquier código:**
-
-> ¿El rol "Investigador" sigue siendo un actor oficial del sistema, o
-> fue retirado definitivamente como rol de negocio?
-
-**Evidencia de la contradicción actual** (investigada a fondo en
-Sesión 5, Frente B, Paso 2 — [detalle
-completo](tech_debt/2026-08-05_SESION5_FRENTE_B_PASO2_verificacion.md)):
-
-- `frontend/src/pages/admin/UserForm.tsx` (comentario textual) +
-  `backend/app/models/user.py` (`UserRole.INVESTIGADOR`, docstring
-  "Legado: retirado como usuario de negocio... se conserva por
-  compatibilidad con filas existentes") → Investigador **no** debería
-  ofrecerse para asignación nueva.
-- `frontend/src/pages/admin/Roles.tsx` (Ficha 07, commit `dd2b166`) →
-  Investigador **sí** se ofrece, sin ninguna condición, para cualquier
-  reasignación.
-
-**Las dos remediaciones posibles son válidas y significan cosas
-distintas — ninguna se implementa hasta que se responda la pregunta:**
-
-- **Si Investigador fue retirado oficialmente:** corresponde una
-  pequeña remediación de consistencia — restringir `Roles.tsx` para
-  que coincida con `UserForm.tsx`/`models/user.py`.
-- **Si Investigador sigue vigente:** correspondería revertir la lógica
-  de "rol legado" — actualizar el comentario de `UserForm.tsx`, el
-  docstring de `models/user.py`, y volver incondicional el
-  `SelectItem` de `UserForm.tsx` para igualarlo a `Roles.tsx`.
-
-**Recomendación de proceso:** esta decisión se formaliza mejor como un
-ADR o RFC corto antes de tocar código, no como un commit de
-remediación directo — es exactamente el tipo de decisión que ese
-mecanismo existe para capturar.
+**Resumen:** la evidencia (acceso real a Runtime Console reforzado por
+Ficha 06, permisos acotados reales, presencia en JWT, 7 endpoints
+protegidos, 1 usuario real con intentos de login recurrentes, routing
+frontend dedicado y funcional) confirmó que Investigador **no** es un
+rol legado — el problema estaba en 6 comentarios/docstrings
+desactualizados, no en el comportamiento real del sistema. El tesista
+decidió Opción A (mantener vigente) con alcance explícitamente acotado
+a sincronizar documentación y UI, sin ampliar permisos ni rediseñar el
+sistema de roles. Implementado en 2 commits (`bcd651a` backend,
+`ef59c91` frontend), validado (`tsc`, `npm run build`, import limpio),
+cero cambio de autorización real.
