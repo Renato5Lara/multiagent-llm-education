@@ -621,8 +621,11 @@ primero (nada se retira antes de confirmar qué se preserva).
    corrida de cierre de la Fase 4+5 (68 failed/14 errors): **conteo de
    fallos idéntico**, única diferencia el mismo ruido de log con UUID
    aleatorio del test preexistente ya documentado (`test_generar_ruta_
-   dos_veces`). `backend/runtime/`, `runtime.boundary`,
-   `module_orchestration_service.py`, `app/api/routes/{swarm,replay}.py`
+   dos_veces`). `backend/runtime/`, `backend/runtime/boundary/`
+   (import Python: `runtime.boundary`, usado tal cual en
+   `app/api/routes/runtime.py`, `app/services/{runtime_bridge,
+   weekly_pedagogy_service}.py`), `module_orchestration_service.py`,
+   `app/api/routes/{swarm,replay}.py`
    y el resto de la infraestructura preservada (§Preserva) confirmados
    intactos por el mismo barrido — cero coincidencias de import real.
 
