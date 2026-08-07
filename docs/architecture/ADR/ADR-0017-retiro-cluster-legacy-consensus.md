@@ -11,7 +11,11 @@
   directorio temporal o un import hook evitaría la mutación por completo,
   pero no es requisito para esta aceptación. Ejecución: fase por fase,
   con la validación de cada fase (§7) antes de continuar a la siguiente
-  — no las 6 fases de una vez.
+  — no las 6 fases de una vez. Excepción única: Fases 4 y 5 fusionadas
+  en un solo commit tras evidencia objetiva de `pytest --collect-only`
+  de que no existe estado intermedio estable entre ambas a nivel del
+  grafo real de imports (ver §7, punto 4+5) — decisión tomada junto al
+  tesista, no unilateral.
 - **Fecha:** 2026-08-06
 - **Preserva:** `runtime/kernel/deliberation/*` (el motor de consenso vigente
   de la tesis, sin ninguna relación de código con este ADR), ADR-0011 (esta
@@ -422,12 +426,14 @@ evidencia en §2.
 
 ## 7. Plan de ejecución
 
-Seis fases, cada una su propio commit. A diferencia del borrador
-original de este ADR, **el código y los tests que lo cubren se retiran
-en la misma fase** (mismo criterio que ADR-0011 §2) — así ninguna fase
-deja `pytest` en rojo entre commits; solo la Fase 1 debe ir
-obligatoriamente primero (nada se retira antes de confirmar qué se
-preserva).
+Seis fases planeadas, cinco commits ejecutados — las Fases 4 y 5 se
+fusionaron en uno solo (ver el punto 4+5 más abajo para la causa exacta,
+encontrada por el gate de `pytest --collect-only` pedido explícitamente
+antes de ejecutarlas). A diferencia del borrador original de este ADR,
+**el código y los tests que lo cubren se retiran en la misma fase**
+(mismo criterio que ADR-0011 §2) — así ningún commit deja `pytest` en
+rojo respecto al anterior; solo la Fase 1 debe ir obligatoriamente
+primero (nada se retira antes de confirmar qué se preserva).
 
 1. **Extraer `app/experiment/analysis.py`** a su ubicación final;
    verificar con `grep` que ningún import restante del clúster lo
@@ -483,22 +489,99 @@ preserva).
    ahora comprueba existencia real y devuelve `"eliminado ✓"` en vez de
    `"eliminar"` para lo que ya se borró — ver nota de vigencia al inicio
    de §9.
-4. **Retirar `app/core/*` (10 archivos, incl. `consensus_cancellation.py`
-   y `consensus_timeout_metrics.py`), `app/llm/{voters,prompts,
-   deliberation,grounding,metrics,response_parser,confidence}` y
-   `app/observability/*`** (§4.1) junto con los tests que les
-   corresponden: los 6 archivos de eliminación completa de §4.2 que
-   quedan (excluyendo `test_cognitive_replay.py`, retirado en la Fase 3,
-   y `test_llm_deliberation.py`/`test_llm_integration.py`/
-   `test_llm_voters.py`, adelantados a la Fase 2), y
-   la edición quirúrgica de `test_swarm_diagnostics.py`,
-   `test_diagnostics_integration.py`, `test_circuit_breaker.py`,
-   `test_observability.py` (retirar solo las clases/funciones que
-   dependen del clúster).
-5. **Retirar `app/experiment/*` (14 archivos) y `scripts/run_experiment.py`
-   + `run_baseline_experiment.py`**, junto con la edición quirúrgica de
-   `test_consensus_timeouts.py`, `test_experiment_isolation.py` y
-   `test_experiment_pipeline.py`.
+4+5. **Retirar `app/core/*`, `app/llm/{voters,prompts,deliberation,
+   grounding,metrics,response_parser,confidence}`, `app/observability/*`,
+   `app/experiment/*` (14 archivos) y `scripts/{run_experiment,
+   run_baseline_experiment}.py`** — EJECUTADA. **Fases 4 y 5 fusionadas
+   en un mismo commit, desviación explícita del plan de 6 fases
+   original**, decidida junto al tesista tras evidencia objetiva, no por
+   conveniencia:
+
+   **Causa (encontrada por el gate previo pedido por el tesista antes de
+   tocar archivos: `pytest --collect-only` + grafo de imports +
+   búsqueda de `importlib`/registros dinámicos — exactamente el
+   procedimiento que él mismo especificó).** `pytest --collect-only`
+   sobre el árbol ya con la Fase 4 aplicada (solo `app/core/*`,
+   `app/llm/*`, `app/observability/*` borrados) reveló que 8 de los 13
+   archivos que el plan original reservaba para la Fase 5
+   (`metrics.py`, `orchestrator.py`, `reset.py`, `conditions.py`,
+   `pipelines.py`, `dataset.py`, `context.py`, `evaluation.py`)
+   importan directamente módulos que la Fase 4 retira
+   (`app.core.consensus`, `app.core.trust`, `app.core.specialization`,
+   `app.llm.deliberation`, `app.llm.metrics`,
+   `app.observability.consensus_metrics`), igual que
+   `scripts/run_baseline_experiment.py` y 3 archivos de test. Ninguno
+   de esos 8 archivos tiene consumidor fuera del propio paquete
+   `app/experiment/` (ya establecido en el inventario de §9 — categoría
+   `experiment`, sin excepción). Es decir: **no existe un estado
+   intermedio en el que la Fase 4 pueda aterrizar sola dejando
+   `pytest --collect-only` en verde** — la frontera de fases del plan
+   original no correspondía al grafo real de imports. Aterrizar la
+   Fase 4 sola habría dejado la Fase 5 completa con `ImportError` en
+   tiempo de colección hasta el siguiente commit, violando la regla de
+   "ninguna fase deja `pytest` en rojo entre commits" declarada al
+   inicio de esta sección.
+
+   **Alcance ejecutado** (idéntico a la suma de lo que los puntos 4 y 5
+   originales ya listaban — cero archivos adicionales fuera de ese
+   alcance): los 28 archivos backend de §4.1 correspondientes a las
+   categorías `core`, `llm_voters`, `llm_prompts`, `llm_support`,
+   `observability`; los 14 de la categoría `experiment`; los 2 scripts;
+   los 6 archivos de eliminación completa de §4.2 que quedaban
+   (excluyendo `test_cognitive_replay.py`, retirado en la Fase 3, y
+   `test_llm_deliberation.py`/`test_llm_integration.py`/
+   `test_llm_voters.py`, adelantados a la Fase 2); la edición
+   quirúrgica de `test_swarm_diagnostics.py`, `test_diagnostics_
+   integration.py`, `test_circuit_breaker.py`, `test_observability.py`
+   (retirar solo las clases/funciones que dependen del clúster).
+
+   **Hallazgo adicional durante la ejecución, no previsto en §4.2**:
+   `test_consensus_timeouts.py` (1865 líneas), catalogado originalmente
+   como "edición quirúrgica" de la Fase 5, resultó ser contenido 100%
+   del clúster (todos sus imports son `app.core.consensus*`, sin una
+   sola referencia a código vivo) — se ejecutó como eliminación
+   completa, no como edición. `test_experiment_pipeline.py` (703
+   líneas), mismo caso: 100% clúster (`app.experiment.{dataset,
+   evaluation,config,anomaly,export,replay}` + `VoteDecision` como tipo
+   de parámetro, sin cobertura de código vivo) — eliminación completa.
+   Solo `test_experiment_isolation.py` tenía cobertura genuina de
+   código vivo (`MetricsExporter`, preservado): se redujo por edición
+   quirúrgica a la única clase que no dependía de `ExperimentContext`/
+   `ExperimentState`/`TrustSystem` (`TestMetricsExporterReset`, 11
+   tests) — el resto de sus 7 clases dependían todas de
+   `app.experiment.context.ExperimentState`, retirado en este mismo
+   commit.
+
+   **`app/experiment/benchmark/` (fuera del alcance de esta ADR,
+   `UNAUDITED_SUBDIRECTORIES`) verificado intacto**: al retirar
+   `app/experiment/__init__.py`, `app.experiment` pasa a resolver como
+   paquete de espacio de nombres implícito (Python ≥3.3, sin
+   `__init__.py` propio) — confirmado con una importación real
+   (`import app.experiment.benchmark.conditions`) antes y después del
+   borrado; `app/experiment/benchmark/` conserva su propio
+   `__init__.py` y sigue funcionando sin cambios.
+
+   **Validación** (mismo rigor que las fases anteriores): `pytest
+   --collect-only` limpio antes (2,437 tests, gate pedido por el
+   tesista) y después (1,923 tests, cero errores de colección) del
+   borrado; `python scripts/audit_consensus_cluster.py` — 88/88
+   archivos del alcance fijo de §4.1 en estado `"eliminado ✓"` (0
+   pendientes), `completeness_check()`/`directory_sanity_check()`
+   limpios, `reachability_check()` 218 módulos alcanzables desde
+   `app.main`, 0 pertenecientes a `CLUSTER_BACKEND`; determinismo
+   confirmado corriendo el script dos veces y comparando byte a byte
+   (idéntico). Suite completa (1,923 tests, sin `--collect-only`)
+   comparada contra `HEAD` (`f37a740`, worktree aislado): baseline 78
+   failed/14 errors, actual 68 failed/14 errors — las 10 diferencias en
+   `FAILED` trazan una a una a archivos retirados deliberadamente en
+   este commit (`test_adaptive_trust.py`, `test_collective_inference.py`
+   ×2, `test_consensus.py` ×2, `test_consensus_timeouts.py`,
+   `test_llm_phase3.py` ×4); la única línea `ERROR` asimétrica entre
+   ambas corridas es ruido de log con UUID aleatorio del mismo test
+   preexistente y ya fallido en ambas corridas
+   (`test_students.py::TestLearningPathFlow::test_generar_ruta_dos_veces`,
+   sin relación con este cambio). Cero regresiones atribuibles a esta
+   fase fusionada.
 6. **Documentación y validación final**: anotar `docs/
    experimental_design.md` (Experimento D/SH4 → superseded, con cita a
    esta ADR) y `RESEARCH_LAYER_TECHNICAL_REPORT.md` §9.2 (actualizar

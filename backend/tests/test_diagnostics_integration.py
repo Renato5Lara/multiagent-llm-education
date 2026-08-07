@@ -1,23 +1,17 @@
 """End-to-end integration tests: event emission → detection → metrics.
 
 Validates the full diagnostics pipeline:
-  1. Circuit breaker state transitions emit DiagnosticEvents
-  2. Advisory lock acquisitions emit DiagnosticEvents
-  3. Detectors receive and process those events
-  4. Anomalies surface in the REST API
-  5. Metrics exporter reflects all activity
+  1. Advisory lock acquisitions emit DiagnosticEvents
+  2. Detectors receive and process those events
+  3. Anomalies surface in the REST API
+  4. Metrics exporter reflects all activity
 """
 
 import threading
-import time
 from unittest.mock import PropertyMock, patch
 
 import pytest
 
-from app.core.circuit_breaker import (
-    CircuitBreakerConfig,
-    SwarmCircuitBreaker,
-)
 from app.db.locks import advisory_lock, try_advisory_lock, _emit_lock_event
 from app.swarm_diagnostics import diagnostics_engine
 from app.swarm_diagnostics.core import Severity
@@ -27,79 +21,6 @@ from app.swarm_diagnostics.detectors import (
 )
 from app.swarm_diagnostics.pipeline.metrics import SwarmMetricsCollector
 from app.swarm_diagnostics.models.diagnostic_event import DiagnosticEvent
-
-
-# =============================================================================
-# 1. Circuit breaker → DiagnosticEvent pipeline
-# =============================================================================
-
-
-class TestCircuitBreakerDiagnostics:
-    """Every circuit breaker state transition must emit a DiagnosticEvent."""
-
-    def setup_method(self):
-        self.breaker = SwarmCircuitBreaker(
-            agent_name="test_agent",
-            config=CircuitBreakerConfig(
-                failure_threshold=2,
-                recovery_timeout_ms=10_000.0,
-                half_open_max_calls=2,
-                consecutive_successes_to_close=1,
-                max_isolation_strikes=2,
-                isolation_timeout_ms=10_000.0,
-            ),
-        )
-
-    def _flush_anomalies(self):
-        diagnostics_engine._anomalies.clear()
-
-    def test_closed_to_open_emits_event(self):
-        self._flush_anomalies()
-        self.breaker.record_failure()
-        self.breaker.record_failure()
-        events = [e for e in diagnostics_engine._events if e.event_type == "circuit_breaker:open"]
-        assert len(events) >= 1
-        assert events[-1].payload.get("agent") == "test_agent"
-
-    def test_half_open_to_closed_emits_event(self):
-        self._flush_anomalies()
-        # force into HALF_OPEN
-        self.breaker._state = type(self.breaker._state).HALF_OPEN
-        self.breaker._state_change_time_ms = time.monotonic_ns() / 1_000_000 - 100
-        self.breaker.record_success()
-        events = [e for e in diagnostics_engine._events if e.event_type == "circuit_breaker:close"]
-        assert len(events) >= 1
-
-    def test_half_open_to_open_emits_event(self):
-        self._flush_anomalies()
-        self.breaker._state = type(self.breaker._state).HALF_OPEN
-        self.breaker.record_failure()
-        events = [e for e in diagnostics_engine._events if e.event_type == "circuit_breaker:reopen"]
-        assert len(events) >= 1
-
-    def test_open_to_isolated_emits_event(self):
-        self._flush_anomalies()
-        self.breaker._state = type(self.breaker._state).OPEN
-        self.breaker._total_open_count = 2
-        self.breaker.record_failure()
-        events = [e for e in diagnostics_engine._events if e.event_type == "circuit_breaker:isolate"]
-        assert len(events) >= 1
-
-    def test_open_to_half_open_emits_event(self):
-        self._flush_anomalies()
-        self.breaker._state = type(self.breaker._state).OPEN
-        self.breaker._state_change_time_ms = time.monotonic_ns() / 1_000_000 - 100_000
-        self.breaker.allow_request()
-        events = [e for e in diagnostics_engine._events if e.event_type == "circuit_breaker:half_open"]
-        assert len(events) >= 1
-
-    def test_isolated_to_open_emits_event(self):
-        self._flush_anomalies()
-        self.breaker._state = type(self.breaker._state).ISOLATED
-        self.breaker._state_change_time_ms = time.monotonic_ns() / 1_000_000 - 100_000
-        self.breaker.allow_request()
-        events = [e for e in diagnostics_engine._events if e.event_type == "circuit_breaker:auto_recover"]
-        assert len(events) >= 1
 
 
 # =============================================================================
