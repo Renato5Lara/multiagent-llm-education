@@ -167,10 +167,17 @@ POLITICAS: dict[str, Politica] = {
         # como ajuste conservador de soporte. `pesos_asunto`,
         # `asuntos_reservados`, `peso_refuerzo/refutacion/decaimiento`
         # quedan en su valor neutro de "v1" a propósito — introducirlos
-        # mezclaría una segunda variable en el mismo experimento (Escenario
-        # C, no éste). Ningún productor ni `mecanica.py`/`confianza.py`
-        # cambia: la mecánica ya soporta estos valores desde su diseño
-        # original (delta/theta ya validados en __post_init__).
+        # mezclaría una segunda variable en el mismo experimento. Nota
+        # (2026-08-07, hallazgo de C6/RESEARCH_ITERATIONS.md): esto NO
+        # corresponde al "Escenario C" de ADR-0012 §5 (esa sección trata
+        # autoridad de propuesta de nuevas capacidades, sin relación con
+        # estos pesos) — corregido tras confirmar que ningún ADR reserva
+        # peso_refuerzo/refutacion/decaimiento a un escenario futuro
+        # nombrado. Es territorio sin diseñar, ahora bajo investigación
+        # en la Iteración 6.4 de RESEARCH_ITERATIONS.md. Ningún productor
+        # ni `mecanica.py`/`confianza.py` cambia: la mecánica ya soporta
+        # estos valores desde su diseño original (delta/theta ya
+        # validados en __post_init__).
         peso_refuerzo=Decimal("0"),
         peso_refutacion=Decimal("0"),
         peso_decaimiento=Decimal("0"),
