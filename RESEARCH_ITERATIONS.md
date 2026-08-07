@@ -2745,3 +2745,53 @@ Tres decisiones independientes, en tres momentos distintos:
 
 Sin código de producción tocado (aparte de la corrección independiente
 de `politica.py`, commit `5faf2c7`, no parte de esta iteración).
+
+## Cierre — decisión explícita del tesista, no inferida
+
+**`"v2"` se mantiene como política de producción. C6 se cierra como
+evidencia experimental — no se abre ADR de adopción.** El resultado
+positivo del experimento mecánico (H1 confirmada) no se convierte
+automáticamente en una migración de producción: son dos fases
+distintas y mezclarlas perdería trazabilidad, igual criterio que ya
+protegió la separación Fase 4/5 de ADR-0017.
+
+**Conclusión citable para la tesis** (redactada explícitamente para el
+capítulo de Resultados/Discusión):
+
+> La política v3 demuestra capacidad mecánica superior bajo escenarios
+> donde existe evidencia colectiva acumulada; sin embargo, la política
+> v2 permanece como baseline productivo debido a que el dataset real
+> disponible aún no ejercita el ciclo completo requerido para validar
+> el impacto ecológico.
+
+**Lo que C6 sí demostró** (fortalece la narrativa de arquitectura
+multiagente): `"v2"` en producción equivale, en la práctica, a usar
+únicamente `confianza_declarada` — v3a/v3c introducen comportamiento
+emergente medible en cuanto existen señales colectivas, sin tocar
+reducers ni kernel (la arquitectura ya soportaba esta extensión, RFC-
+0006 §1 la declaró versionable desde el diseño original). Hay evidencia
+causal directa de que los pesos tienen efecto, incluyendo un cambio de
+decisión D2 real.
+
+**Lo que falta para activar v3 — condiciones explícitas, no un "tal vez
+después" vago:**
+1. Que las señales (refuerzos/refutaciones/edad_logica > 0) aparezcan
+   en uso real — depende de tráfico orgánico que complete
+   decidir→adaptar→evaluar→validar (mismo bloqueo que Iteración 6.2/6.3).
+2. Evidencia de que no degradan decisiones, no generan sobreconfianza,
+   ni producen aplazamientos/escaladas excesivos (el riesgo de
+   saturación de `peso_decaimiento` ya observado en el escenario
+   sintético debe volver a medirse contra datos reales antes de
+   confiar en cualquier magnitud).
+3. Mejora medible en métricas pedagógicas reales, no solo en `ce`.
+4. Un ADR de adopción independiente, con sus propios criterios de
+   aceptación y validación de regresión — mismo patrón que
+   ADR-0015/0016 con `"v2"` misma.
+
+**Para la discusión de tesis, específicamente:** el hallazgo de que
+`peso_refuerzo/refutacion/decaimiento` son estructuralmente inertes
+para D1 (`INTERPRETACION`, INV-6) y solo alcanzan D2/D3 (`PROPUESTA`)
+delimita con precisión matemática **dónde** existe "inteligencia de
+enjambre" en la arquitectura actual — en la capa prescriptiva, no en la
+interpretativa. Esa delimitación es en sí misma un resultado de la
+investigación, no un efecto secundario a omitir.
