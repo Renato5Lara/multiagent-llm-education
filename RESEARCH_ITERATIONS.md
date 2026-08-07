@@ -2454,3 +2454,165 @@ exportable quedó documentado con precisión (línea por línea, no solo
 contra N>1 real, y listo para producir resultados en cuanto exista
 tráfico orgánico suficiente. La pregunta de significancia real de la
 hipótesis de tesis queda para la candidata `6.3`, todavía sin abrir.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 6.4 — Pre-registro: pesos de refuerzo/refutación/decaimiento en la confianza efectiva (C6, previo a calibración empírica)
+
+## Pregunta de investigación
+
+¿Los pesos de refuerzo/refutación/decaimiento en cero de la política
+`"v2"` vigente (`runtime/kernel/deliberation/politica.py`) suprimen por
+completo cualquier efecto de evidencia colectiva acumulada y de
+vigencia temporal sobre la confianza efectiva (`ce`), y si se activan
+pesos no-cero calibrados, cambian de forma medible las decisiones
+D1/D3 del kernel de deliberación respecto a las mismas sesiones bajo
+`"v2"`?
+
+**Origen:** hallazgo C1 de la Auditoría Externa 2026-08-06 — el auditor
+señaló `peso_refuerzo = peso_decaimiento = 0` en producción como una
+posible debilidad de la narrativa de "inteligencia de enjambre" de la
+tesis. El tesista eligió "investigar antes de decidir" en vez de
+activar pesos no-cero directamente o descartar el hallazgo.
+
+## Hipótesis parcial
+
+**H0 (nula):** activar `peso_refuerzo`/`peso_refutacion`/`peso_decaimiento`
+no-cero no produce ningún cambio medible en las decisiones D1/D3
+respecto a `"v2"` sobre el mismo conjunto de sesiones — el efecto es
+indistinguible de ruido, o las magnitudes elegidas caen fuera del rango
+real de `refuerzos`/`refutaciones`/`edad_logica` que ocurre en
+producción.
+
+**H1 (alternativa):** al menos uno de los candidatos `v3` produce una
+divergencia medible y atribuible entre `ce` y `confianza_declarada`
+(matemáticamente imposible bajo `"v2"` por A2 + pesos=0 —
+`calcular_confianza_efectiva` se reduce exactamente a la identidad), y
+esa divergencia cambia el resultado de al menos una decisión D1/D3 en
+el conjunto de sesiones comparado.
+
+## Candidatos de política (configuraciones experimentales — ninguna es la `"v3"` de producción todavía)
+
+| Candidato | `peso_refuerzo` | `peso_refutacion` | `peso_decaimiento` | Aísla |
+|---|---|---|---|---|
+| **v3a** | 0.10 | 0.10 | 0.0 | eje de evidencia (positiva/negativa) |
+| **v3b** | 0.0 | 0.0 | 0.02 | eje temporal (vigencia/olvido) |
+| **v3c** | 0.10 | 0.10 | 0.02 | combinado — ancla ya validada en código |
+
+Ninguno inventado desde cero: `0.10`/`0.10`/`0.02` es precedente de
+código ya revisado y comprometido
+(`tests/runtime/deliberation/test_A1_A7_confianza_efectiva.py`), ya
+ejercido contra `range(20)` refuerzos sin desbordar el clamp de A1.
+v3a/v3b descomponen ese mismo ancla en sus dos ejes por separado —
+mismo criterio de una-sola-variable que ya usó `"v1"→"v2"` (Escenario
+A: solo `delta`/`theta`, `peso_refuerzo/refutacion/decaimiento` sin
+tocar).
+
+**Razonamiento mecánico de por qué `peso_decaimiento` usa un orden de
+magnitud menos** (`confianza.py:64-146`): `refuerzos`/`refutaciones` son
+conteos enteros pequeños y acotados por cuántas veces `Validar` referencia
+decisiones de este claim (típicamente unas pocas por sesión);
+`edad_logica` es un conteo entero de transiciones desde la última
+validación en la cadena causal del claim, sin cota superior dentro de
+una sesión. Un `peso_decaimiento` de la misma magnitud que
+`peso_refuerzo` haría que el término de decaimiento domine casi
+cualquier claim poco visitado. No hay riesgo de conflicto de signo
+entre refuerzo y decaimiento en el mismo tick, sea cual sea la
+magnitud: `politica.py` documenta que la edad lógica se ancla a la
+última validación dentro de la cadena causal (A7), así que un refuerzo
+recién aplicado tiene edad lógica exactamente 0 en el instante en que
+se cuenta.
+
+## Variables que se congelan en este pre-registro (antes de calibrar con datos reales)
+
+- Los tres candidatos v3a/v3b/v3c quedan fijos como configuraciones a
+  probar — no se ajustan "a ojo" después de ver los primeros
+  resultados (mismo criterio de pre-registro que 5.2/5.8).
+- Ningún candidato se activa como `POLITICAS["v3"]` de producción en
+  esta iteración — eso, si corresponde, es una decisión posterior con
+  su propio ADR (mismo patrón que ADR-0015/0016 con `"v2"`).
+- Ningún cambio a `confianza.py`, `mecanica.py`, ni a ningún reducer —
+  una política nueva es únicamente una entrada más en `POLITICAS`,
+  mismo patrón que `"v1"→"v2"`.
+
+## Lo que este pre-registro NO modifica
+
+`kernel/`, `deliberation/mecanica.py`, `confianza.py`, RFC-0006, ningún
+reducer, ninguna política de producción existente (`"v1"`/`"v2"`
+intactas).
+
+## Diseño experimental (para cuando se ejecute)
+
+**Primer paso de ejecución (fuera del alcance de este pre-registro):**
+levantar Postgres real y, vía
+`runtime/engine/checkpoint/reconstruccion.py::reconstruir_con_traza`
+(ya usado por `app/replay/session_replay.py`, RFC-0008), reconstruir un
+conjunto fijo de sesiones reales y observar la distribución real de
+`refuerzos`/`refutaciones`/`edad_logica` bajo `"v2"` — estos conteos ya
+se calculan hoy en cada llamada a `calcular_confianza_efectiva`, solo
+su contribución a `ce` está multiplicada por 0, así que no hace falta
+ningún cambio de política para observarlos. Esto valida o corrige las
+magnitudes de v3a/v3b/v3c **antes** de ejecutar la comparación, nunca
+después de ver el resultado.
+
+**Segundo paso:** sobre el mismo conjunto de sesiones, recalcular `ce`
+bajo cada candidato y comparar contra `"v2"`: (a) divergencia `ce` vs
+`confianza_declarada`, (b) cambios en el resultado de decisiones
+D1/D3, (c) aplazamientos/escaladas nuevos que `"v2"` no puede producir
+por construcción matemática.
+
+**Orden de ejecución recomendado:** v3a y v3b primero, aislados, un eje
+cada uno. v3c solo si alguno de los dos muestra efecto individual que
+valga la pena combinar — no como candidato de igual peso desde el
+arranque (mismo criterio que llevó a fusionar ADR-0017 Fases 4+5 solo
+tras evidencia, nunca por conveniencia).
+
+## Amenazas a la validez
+
+- Sesiones reales disponibles pueden ser pocas o no representativas del
+  rango completo de `edad_logica` — mitigado parcialmente por poder
+  complementar con escenarios sintéticos, mismo recurso que 5.1/5.2.
+- Elegir los pesos manualmente introduce riesgo de ajuste arbitrario de
+  hiperparámetros — mitigado por anclar a precedente de código ya
+  revisado en vez de valores inventados, y por descomponer en ejes
+  aislados antes de combinar.
+- v3c mezcla dos mecanismos (evidencia + tiempo) — dificulta atribuir
+  causalidad si se ejecuta antes que v3a/v3b por separado; el orden de
+  ejecución recomendado lo pospone por este motivo exacto.
+
+## Criterios de aceptación (de este pre-registro, no de una política v3 final)
+
+- La calibración empírica (Postgres real) confirma o corrige los rangos
+  plausibles de `refuerzos`/`refutaciones`/`edad_logica` antes de correr
+  la comparación — si los datos reales sugieren que 0.10/0.02 saturan o
+  son indetectables, se documenta y se ajustan los candidatos ANTES de
+  comparar contra `"v2"`, nunca después de ver el resultado.
+- v3a y v3b se comparan contra `"v2"` por separado, sobre el mismo
+  conjunto de sesiones, antes de correr v3c.
+- Ningún cambio de código fuera de una nueva entrada en `POLITICAS`
+  (ningún reducer, `kernel/`, ni RFC-0006 tocados).
+- El resultado (H0 confirmada o refutada) se reporta tal como sale, sin
+  ajustar los pesos después de ver el dato — mismo criterio de
+  pre-registro que 5.2/5.8.
+
+## Alcance explícitamente fuera de esta iteración
+
+- Activar cualquier candidato como política de producción
+  (`POLITICAS["v3"]` real) — decisión posterior, con su propio ADR si
+  corresponde.
+- Elegir pesos distintos a los tres candidatos ya congelados aquí.
+- DOC-001/DOC-002 (Experimentos B/C, `agent_health_monitoring.md`) —
+  fuera de alcance, tareas independientes sin relación con C6.
+- Levantar Postgres real y ejecutar la calibración — ese es el primer
+  paso de EJECUCIÓN, no de este pre-registro de diseño.
+
+## Estado
+
+**DISEÑADA — gate metodológico completo (las 5 preguntas obligatorias
+de `CLAUDE.md` respondidas), candidatos v3a/v3b/v3c congelados como
+configuraciones experimentales, ninguno aprobado como política de
+producción. Sin ejecutar. Sin código tocado** (la corrección del
+comentario de `politica.py` sobre la cita incorrecta a ADR-0012,
+commit `5faf2c7`, es un cambio independiente, no parte de esta
+iteración). Primer paso de ejecución pendiente de aprobación explícita
+del tesista: levantar Postgres real y calibrar contra datos reales.
