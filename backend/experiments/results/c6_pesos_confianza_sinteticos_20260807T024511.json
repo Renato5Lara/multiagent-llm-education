@@ -1,0 +1,165 @@
+{
+  "generado_en": "2026-08-07T02:45:11.108876+00:00",
+  "etiqueta": "VALIDACIÓN MECÁNICA/EXPERIMENTAL — escenarios sintéticos, no datos de producción",
+  "candidatos": {
+    "v2": {
+      "peso_refuerzo": "0",
+      "peso_refutacion": "0",
+      "peso_decaimiento": "0"
+    },
+    "v3a_solo_evidencia": {
+      "peso_refuerzo": "0.10",
+      "peso_refutacion": "0.10",
+      "peso_decaimiento": "0"
+    },
+    "v3b_solo_tiempo": {
+      "peso_refuerzo": "0",
+      "peso_refutacion": "0",
+      "peso_decaimiento": "0.02"
+    },
+    "v3c_combinado": {
+      "peso_refuerzo": "0.10",
+      "peso_refutacion": "0.10",
+      "peso_decaimiento": "0.02"
+    }
+  },
+  "escenarios_eje_unico": [
+    {
+      "escenario": "refuerzo_x3",
+      "confianza_declarada": "0.70",
+      "politicas": {
+        "v2": {
+          "ce": "0.70",
+          "delta": "0.00"
+        },
+        "v3a_solo_evidencia": {
+          "ce": "1",
+          "delta": "0.30"
+        },
+        "v3b_solo_tiempo": {
+          "ce": "0.70",
+          "delta": "0.00"
+        },
+        "v3c_combinado": {
+          "ce": "1",
+          "delta": "0.30"
+        }
+      }
+    },
+    {
+      "escenario": "refutacion_x3",
+      "confianza_declarada": "0.70",
+      "politicas": {
+        "v2": {
+          "ce": "0.70",
+          "delta": "0.00"
+        },
+        "v3a_solo_evidencia": {
+          "ce": "0.40",
+          "delta": "-0.30"
+        },
+        "v3b_solo_tiempo": {
+          "ce": "0.70",
+          "delta": "0.00"
+        },
+        "v3c_combinado": {
+          "ce": "0.40",
+          "delta": "-0.30"
+        }
+      }
+    },
+    {
+      "escenario": "decaimiento_25_transiciones",
+      "confianza_declarada": "0.70",
+      "politicas": {
+        "v2": {
+          "ce": "0.70",
+          "delta": "0.00"
+        },
+        "v3a_solo_evidencia": {
+          "ce": "0.80",
+          "delta": "0.10"
+        },
+        "v3b_solo_tiempo": {
+          "ce": "0",
+          "delta": "-0.70"
+        },
+        "v3c_combinado": {
+          "ce": "0",
+          "delta": "-0.70"
+        }
+      }
+    },
+    {
+      "escenario": "combinado_2refuerzos_15transiciones",
+      "confianza_declarada": "0.70",
+      "politicas": {
+        "v2": {
+          "ce": "0.70",
+          "delta": "0.00"
+        },
+        "v3a_solo_evidencia": {
+          "ce": "0.90",
+          "delta": "0.20"
+        },
+        "v3b_solo_tiempo": {
+          "ce": "0.10",
+          "delta": "-0.60"
+        },
+        "v3c_combinado": {
+          "ce": "0.30",
+          "delta": "-0.40"
+        }
+      }
+    }
+  ],
+  "escenario_d2_tension": {
+    "claim_a_confianza_declarada": "0.55",
+    "claim_b_confianza_declarada": "0.65",
+    "claim_a_refuerzos": 3,
+    "politicas": {
+      "v2": {
+        "ce_a": "0.55",
+        "ce_b": "0.65",
+        "ganador_por_ce": "B",
+        "convocar_intent": "TransitionIntent(productor='kernel', operacion='registrar_deliberacion', argumentos={'participantes': (EntryId(transicion=2, entrada=1), EntryId(transicion=3, entrada=1)), 'resultado': Resuelta(regla='mayor-confianza-declarada', aceptados=(EntryId(transicion=3, entrada=1),), confianza=Decimal('0.65'"
+      },
+      "v3a_solo_evidencia": {
+        "ce_a": "0.85",
+        "ce_b": "0.65",
+        "ganador_por_ce": "A",
+        "convocar_intent": "TransitionIntent(productor='kernel', operacion='registrar_deliberacion', argumentos={'participantes': (EntryId(transicion=2, entrada=1), EntryId(transicion=3, entrada=1)), 'resultado': Resuelta(regla='mayor-confianza-declarada', aceptados=(EntryId(transicion=2, entrada=1),), confianza=Decimal('0.85'"
+      },
+      "v3b_solo_tiempo": {
+        "ce_a": "0.55",
+        "ce_b": "0.65",
+        "ganador_por_ce": "B",
+        "convocar_intent": "TransitionIntent(productor='kernel', operacion='registrar_deliberacion', argumentos={'participantes': (EntryId(transicion=2, entrada=1), EntryId(transicion=3, entrada=1)), 'resultado': Resuelta(regla='mayor-confianza-declarada', aceptados=(EntryId(transicion=3, entrada=1),), confianza=Decimal('0.65'"
+      },
+      "v3c_combinado": {
+        "ce_a": "0.85",
+        "ce_b": "0.65",
+        "ganador_por_ce": "A",
+        "convocar_intent": "TransitionIntent(productor='kernel', operacion='registrar_deliberacion', argumentos={'participantes': (EntryId(transicion=2, entrada=1), EntryId(transicion=3, entrada=1)), 'resultado': Resuelta(regla='mayor-confianza-declarada', aceptados=(EntryId(transicion=2, entrada=1),), confianza=Decimal('0.85'"
+      }
+    }
+  },
+  "resumen": {
+    "diverge_de_v2": [
+      "refuerzo_x3 / v3a_solo_evidencia",
+      "refuerzo_x3 / v3c_combinado",
+      "refutacion_x3 / v3a_solo_evidencia",
+      "refutacion_x3 / v3c_combinado",
+      "decaimiento_25_transiciones / v3a_solo_evidencia",
+      "decaimiento_25_transiciones / v3b_solo_tiempo",
+      "decaimiento_25_transiciones / v3c_combinado",
+      "combinado_2refuerzos_15transiciones / v3a_solo_evidencia",
+      "combinado_2refuerzos_15transiciones / v3b_solo_tiempo",
+      "combinado_2refuerzos_15transiciones / v3c_combinado"
+    ],
+    "igual_a_v2": [
+      "refuerzo_x3 / v3b_solo_tiempo",
+      "refutacion_x3 / v3b_solo_tiempo"
+    ]
+  }
+}

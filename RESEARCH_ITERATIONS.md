@@ -2606,13 +2606,142 @@ tras evidencia, nunca por conveniencia).
 - Levantar Postgres real y ejecutar la calibración — ese es el primer
   paso de EJECUCIÓN, no de este pre-registro de diseño.
 
+## Calibración empírica (primer paso de ejecución, separado del experimento)
+
+Ejecutada tras aprobación explícita del tesista. Script `backend/
+scripts/calibracion_pesos_confianza.py` — 100% lectura (`AlmacenTransiciones
+.identidad_existente()`/`.leer()`, ambos `SELECT`), reconstruye cada
+sesión real vía `reconstruir()` (mismo camino que usa el Boundary en
+`traza_sesion.py` para S3) y observa los conteos que `calcular_confianza
+_efectiva` ya calcula hoy — su contribución a `ce` está multiplicada por
+0 bajo `"v1"`/`"v2"`, pero los conteos mismos no dependen de la política.
+
+**Resultado — 902/966 sesiones reales reconstruidas (64 vacías, 0
+errores), 6638 claims vigentes evaluados, políticas vistas `v1`=740/
+`v2`=162:**
+
+| Variable | min | max | media | mediana | P90 | P95 |
+|---|---|---|---|---|---|---|
+| `refuerzos` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `refutaciones` | 0 | 0 | 0 | 0 | 0 | 0 |
+| `edad_logica` | 0 | 0 | 0 | 0 | 0 | 0 |
+
+Decisiones: 610 directas (sin tensión), 514 resueltas por deliberación.
+
+**Hallazgo crítico, verificado por dos vías independientes antes de
+reportarlo (no es un artefacto del script de calibración):**
+
+1. Cero ocurrencias de "validar" en los 19,412 `payload` de
+   `runtime_transitions` — `Capacidad.VALIDAR` nunca produjo un claim en
+   ninguna de las 902 sesiones reales de esta base.
+2. `Validar` **sí está viva y enrutada** (`walkthrough.py:416`, nodo
+   real del grafo, no código muerto). Su guardia de disparo
+   (`_decision_lista_para_validar`, línea 135) exige que una decisión ya
+   aplicada tenga evidencia posterior de Evaluar antes de rutear a
+   "validar" — un ciclo completo *decidir→adaptar→evaluar→validar*. Las
+   902 sesiones reales disponibles, aparentemente, nunca lo completan.
+
+**Consecuencia directa:** con `refuerzos=refutaciones=edad_logica=0` en
+el 100% de los datos disponibles, v3a/v3b/v3c producirían resultados
+matemáticamente idénticos a `"v2"` si se compararan contra estas
+sesiones reales ahora mismo — no por pesos mal calibrados, sino porque
+el mecanismo que esos pesos multiplican nunca se activa en este
+dataset. Exactamente el escenario que este paso de calibración estaba
+diseñado para atrapar antes de comparar, no después.
+
+## Experimento C6 — validación MECÁNICA/EXPERIMENTAL con escenarios sintéticos
+
+**Etiqueta metodológica explícita, a pedido del tesista: esto es
+validación mecánica, NO evidencia de comportamiento real de
+estudiantes.** Responde la pregunta causal "cuando SÍ existe evidencia
+colectiva acumulada y/o envejecimiento temporal de claims, ¿los pesos
+no-cero modifican `ce` y las decisiones derivadas respecto a `"v2"`?" —
+no mide impacto poblacional real. La validación ecológica con datos
+reales queda pendiente de tráfico orgánico suficiente (mismo criterio
+que Iteración 6.2/6.3).
+
+Script `backend/scripts/experimentos/c6_pesos_confianza_sinteticos.py`
+— mismo patrón que `test_A1_A7_confianza_efectiva.py` (`LearningState`
+a mano, reducers puros, sin Postgres) y que `consenso_barrido_delta.py`
+(ramas in-memory nunca persistidas, `POLITICAS` no se toca). Pesos de
+v3a/v3b/v3c exactamente los congelados arriba — sin ajustar.
+
+**Hallazgo arquitectónico encontrado al construir el escenario de
+tensión, no previsto en el diseño original:** un primer intento usó dos
+claims `INTERPRETACION` rivales (D1) y falló — `registrar_decision`
+rechaza por INV-6 ("las decisiones derivan de propuestas") cualquier
+origen que no sea `TipoClaim.PROPUESTA`, y `derivar_decision`
+(`mecanica.py`) lo confirma en su propio docstring: *"Una resolución D1
+(interpretaciones en tensión) refina el paisaje, JAMÁS deriva
+decisión"*. **Consecuencia estructural, no una limitación del script:
+ningún claim `INTERPRETACION` puede tener nunca refuerzos, refutaciones
+ni decaimiento — su `ce` es, por construcción del sistema, siempre
+exactamente su confianza declarada, sea cual sea la política.**
+`peso_refuerzo`/`refutacion`/`decaimiento` solo pueden alcanzar claims
+`PROPUESTA` (D2/D3) — nunca D1. El escenario de tensión se rehízo con
+dos `PROPUESTA` rivales.
+
+**Resultado — divergencia `ce` vs `confianza_declarada` (4 escenarios de un solo eje):**
+
+| Escenario | v2 | v3a (solo evidencia) | v3b (solo tiempo) | v3c (combinado) |
+|---|---|---|---|---|
+| refuerzo×3 | 0.70 (Δ0) | 1.00 (Δ+0.30) | 0.70 (Δ0) | 1.00 (Δ+0.30) |
+| refutación×3 | 0.70 (Δ0) | 0.40 (Δ−0.30) | 0.70 (Δ0) | 0.40 (Δ−0.30) |
+| decaimiento (1 refuerzo-ancla + 50 transiciones ajenas) | 0.70 (Δ0) | 0.80 (Δ+0.10) | 0.00 (Δ−0.70, saturado por A1) | 0.00 (Δ−0.70, saturado) |
+| combinado (2 refuerzos + 30 transiciones ajenas) | 0.70 (Δ0) | 0.90 (Δ+0.20) | 0.10 (Δ−0.60) | 0.30 (Δ−0.40) |
+
+El escenario de decaimiento satura `ce` a 0 (clamp de A1) bajo v3b/v3c
+— confirma en código real la "amenaza a la validez" ya anticipada en el
+pre-registro (`peso_decaimiento` sin cota superior de `edad_logica`
+puede colapsar un claim genuinamente bien fundado).
+
+**Resultado — escenario de tensión D2 (dos `PROPUESTA` rivales, A con
+confianza declarada menor pero 3 refuerzos, B con confianza mayor y sin
+refuerzos):**
+
+| Política | ce(A) | ce(B) | Ganador |
+|---|---|---|---|
+| v2 | 0.55 | 0.65 | **B** |
+| v3a (solo evidencia) | 0.85 | 0.65 | **A** |
+| v3b (solo tiempo) | 0.55 | 0.65 | **B** |
+| v3c (combinado) | 0.85 | 0.65 | **A** |
+
+**El ganador de la tensión cambia (B→A) bajo v3a/v3c** — evidencia
+mecánica directa de que activar `peso_refuerzo` no solo mueve `ce` en
+el margen: puede voltear una decisión D2 real cuando hay evidencia
+colectiva acumulada suficiente. v3b (solo decaimiento, sin refuerzo) no
+cambia el ganador en este escenario porque la tensión se evalúa antes
+de que transcurra tiempo sin validar — consistente con la mecánica
+(edad lógica congelada en 0 hasta la primera validación).
+
+**H1 confirmada, H0 rechazada** (pre-registro): al menos un candidato
+(de hecho v3a y v3c) produce divergencia `ce` medible y atribuible, y
+esa divergencia cambia el resultado de al menos una decisión (la
+tensión D2 sintética). Resultado completo en JSON:
+`backend/experiments/results/c6_pesos_confianza_sinteticos_20260807T024511.json`.
+
 ## Estado
 
-**DISEÑADA — gate metodológico completo (las 5 preguntas obligatorias
-de `CLAUDE.md` respondidas), candidatos v3a/v3b/v3c congelados como
-configuraciones experimentales, ninguno aprobado como política de
-producción. Sin ejecutar. Sin código tocado** (la corrección del
-comentario de `politica.py` sobre la cita incorrecta a ADR-0012,
-commit `5faf2c7`, es un cambio independiente, no parte de esta
-iteración). Primer paso de ejecución pendiente de aprobación explícita
-del tesista: levantar Postgres real y calibrar contra datos reales.
+**CALIBRACIÓN Y EXPERIMENTO MECÁNICO EJECUTADOS. Ninguna decisión de
+adopción tomada — deliberadamente separada, como pidió el tesista.**
+Tres decisiones independientes, en tres momentos distintos:
+
+1. **Calibración** (¿son plausibles los pesos?) — ejecutada. Datos
+   reales actuales no ejercitan el mecanismo (refuerzos/refutaciones/
+   edad_logica ≡ 0) — limitación de datos, no de los candidatos.
+2. **Experimento C6** (¿los pesos modifican algo, mecánicamente?) —
+   ejecutado sobre escenarios sintéticos. Sí: divergencia `ce` medible
+   en los 4 escenarios de un solo eje, y un cambio real de ganador en
+   la tensión D2 sintética. Hallazgo adicional: `peso_refuerzo/
+   refutacion/decaimiento` son estructuralmente inertes para claims D1
+   (`INTERPRETACION`) — solo alcanzan D2/D3 (`PROPUESTA`).
+3. **ADR de adopción** (¿algún candidato reemplaza `"v2"` en
+   producción?) — **NO iniciado, fuera de esta iteración.** Ningún
+   candidato se registró en `POLITICAS`, ningún código de producción
+   cambió. Si corresponde, es una decisión posterior con su propio ADR
+   (mismo patrón que ADR-0015/0016), condicionada además a la
+   validación ecológica pendiente (tráfico orgánico real que sí
+   ejercite Validar).
+
+Sin código de producción tocado (aparte de la corrección independiente
+de `politica.py`, commit `5faf2c7`, no parte de esta iteración).
