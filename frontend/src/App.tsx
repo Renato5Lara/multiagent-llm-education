@@ -53,8 +53,7 @@ export default function App() {
         <Suspense fallback={<LoadingScreen />}>
             <Routes>
                 <Route path="/login" element={<Login />} />
-                {/* Demo antigua desvinculada del recorrido: una URL suelta va a la vista real de Evidencia. Componente conservado en pages/demo/SwarmDemo. */}
-                <Route path="/swarm-demo" element={<Navigate to="/evidencia" replace />} />
+                {/* /swarm-demo (URL antigua, ADR-0017): sin ruta ni componente propio ya — cualquier tráfico residual cae en el catch-all de más abajo hacia /404. */}
                 <Route path="/replay" element={<StudentTrajectory />} />
                 <Route path="/" element={<RootRedirect />} />
 

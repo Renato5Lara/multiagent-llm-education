@@ -29,7 +29,6 @@ from app.api.routes import (
     curriculum,
     pedagogy,
     swarm,
-    swarm_demo,
     sandbox,
     idempotency,
     replay,
@@ -336,7 +335,6 @@ app.include_router(curriculum.router)
 app.include_router(pedagogy.router)
 app.include_router(analytics.router)
 app.include_router(swarm.router)
-app.include_router(swarm_demo.router)
 app.include_router(sandbox.router)
 app.include_router(idempotency.router)
 app.include_router(replay.router)

@@ -476,6 +476,7 @@ class FileReport:
     category: str
     external_hits: list[str] = field(default_factory=list)
     test_hits: list[str] = field(default_factory=list)
+    root: Path = BACKEND_ROOT
 
     @property
     def action(self) -> str:
@@ -483,6 +484,13 @@ class FileReport:
             return "extraído ✓ (Fase 1 completa)"
         if self.path == PRESERVED_EXCEPTION_FRONTEND:
             return "conservar"
+        # Refleja el estado real del disco, no solo la intención del plan —
+        # el mismo principio que motivó corregir EXTRACTED_FILE tras la
+        # Fase 1: una fila que dice "eliminar" sobre un archivo que ya no
+        # existe describe el pasado, no el presente. Se generaliza aquí en
+        # vez de repetir el parche manual en cada fase futura.
+        if not (self.root / self.path).exists():
+            return "eliminado ✓"
         return "eliminar"
 
 
@@ -542,7 +550,7 @@ def audit_frontend_file(rel_path: str) -> FileReport:
     pattern = rf"from\s+['\"][^'\"]*/{re.escape(base)}['\"]"
     exclude = set(CLUSTER_FRONTEND) | {rel_path}
     hits = run_grep(pattern, FRONTEND_ROOT / "src", ["*.tsx", "*.ts"], {p.replace("src/", "", 1) for p in exclude})
-    return FileReport(rel_path, "frontend", hits, [])
+    return FileReport(rel_path, "frontend", hits, [], root=FRONTEND_ROOT)
 
 
 def dynamic_import_sweep() -> dict[str, list[str]]:
@@ -639,10 +647,16 @@ def main() -> None:
             ])
     else:
         print(render_markdown(reports + [preserved], extracted, dynamic))
-        n_eliminar = sum(1 for r in reports if r.action == "eliminar") + (
-            1 if preserved.action == "eliminar" else 0
+        n_total = len(reports)  # 88 archivos en el alcance original de ADR-0017 §4.1
+        n_pendiente = sum(1 for r in reports if r.action == "eliminar")
+        n_hecho = n_total - n_pendiente
+        print(
+            f"\n**{n_hecho}/{n_total} ya eliminados (\"eliminado ✓\"), "
+            f"{n_pendiente} aún pendientes (\"eliminar\") — el total de {n_total} "
+            f"es el alcance fijo de ADR-0017 §4.1, no cambia entre fases; lo que "
+            f"cambia es cuántos de esos 88 siguen en disco.**",
+            file=sys.stderr,
         )
-        print(f"\n**Total 'eliminar' en esta corrida: {n_eliminar}**", file=sys.stderr)
 
 
 if __name__ == "__main__":

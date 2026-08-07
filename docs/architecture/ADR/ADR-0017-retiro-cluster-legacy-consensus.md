@@ -454,19 +454,35 @@ preserva).
    test de integración con Tavily real, flaky por red, sin relación con
    este cambio.
 3. **Retirar `/api/swarm/demo` completo, incluyendo su almacenamiento de
-   replay muerto**: `app/api/routes/swarm_demo.py`, `app/demo/*` (5
-   archivos), `app/replay/{export,session_store,models,replayer,
-   serializer,timeline,engine,recorder,tracks}.py` (9 archivos — ninguno
-   toca el motor vivo de `app/api/routes/replay.py`, ver §9.7), la línea
-   de registro en `main.py`, `test_cognitive_replay.py` (eliminación
-   completa, §4.2), y los 29 archivos frontend de §4.1
+   replay muerto** — EJECUTADA. `app/api/routes/swarm_demo.py`,
+   `app/demo/*` (5 archivos), `app/replay/{export,session_store,models,
+   replayer,serializer,timeline,engine,recorder,tracks}.py` (9 archivos
+   — ninguno tocaba el motor vivo de `app/api/routes/replay.py`, ver
+   §9.7), la línea de registro en `main.py`, `test_cognitive_replay.py`
+   (eliminación completa, §4.2), y los 29 archivos frontend de §4.1
    (`pages/demo/SwarmDemo.tsx`, `hooks/useDemoSSE.ts`,
    `types/{swarmDemo,replay}.ts`, los 25 de `components/swarm/` salvo
    `AgentActivityPanel.tsx`, la entrada `/swarm-demo` de `App.tsx`) — una
-   sola feature, un solo commit; confirmar que `frontend` compila, que
-   `app/api/routes/replay.py` sigue funcionando (7 archivos de
-   `app/replay/` intactos), y que las 4 páginas que usan
-   `AgentActivityPanel.tsx` siguen renderizando.
+   sola feature, un solo commit.
+   **Validado antes de commitear, no solo después**: pre-chequeo
+   explícito de consumidores/imports/rutas FastAPI/referencias
+   frontend/fixtures de `pytest` sobre el estado real (pedido por el
+   tesista, mismo rigor que encontró los hallazgos de la Fase 2) — cero
+   consumidores externos nuevos encontrados. Tras borrar: `rtk tsc
+   --noEmit` limpio, `npm run build` (Vite real, no el `next build`
+   genérico que se probó primero por error) limpio —
+   `AgentActivityPanel-*.js` sigue apareciendo como chunk propio del
+   bundle, confirmando que sí quedó preservado. `reachability_check()`:
+   218 módulos, 0 de `CLUSTER_BACKEND` alcanzables — coincide exactamente
+   con lo que la simulación de la Fase 2 ya había predicho. Suite
+   completa (2,437 tests) comparada contra `HEAD` (worktree aislado):
+   único cambio, el mismo test de Tavily real flaky por red de las fases
+   anteriores. Cero regresiones atribuibles a la Fase 3. De paso, se
+   generalizó en el script el mismo criterio de `EXTRACTED_FILE`
+   (reflejar el disco real, no el plan) a *todos* los archivos: `action`
+   ahora comprueba existencia real y devuelve `"eliminado ✓"` en vez de
+   `"eliminar"` para lo que ya se borró — ver nota de vigencia al inicio
+   de §9.
 4. **Retirar `app/core/*` (10 archivos, incl. `consensus_cancellation.py`
    y `consensus_timeout_metrics.py`), `app/llm/{voters,prompts,
    deliberation,grounding,metrics,response_parser,confidence}` y
@@ -541,6 +557,23 @@ preserva).
    ocurrió, con fecha y referencia a esta ADR.
 
 ## 9. Inventario verificado (una fila por archivo)
+
+**Nota de vigencia — a partir de la ejecución de la Fase 3.** La tabla
+de abajo es una fotografía tomada durante la aprobación del ADR (antes
+de ejecutar ninguna fase); la columna "Acción" de cada fila todavía dice
+"eliminar" para archivos que, a esta altura de la ejecución, ya fueron
+eliminados de verdad (Fases 1–3). Desde la Fase 3, `FileReport.action`
+del script comprueba el disco real y devuelve `"eliminado ✓"` en vez de
+`"eliminar"` para lo que ya no existe — la fuente de verdad sobre qué
+sigue pendiente HOY es correr el script, no releer esta tabla congelada.
+Se decidió no re-transcribir las ~98 filas a mano en cada fase: cada
+transcripción manual de este documento (el propio `EXTRACTED_FILE`, las
+tablas de `app/llm/voters`/`prompts`/`support` tras la Fase 2) introdujo
+al menos un desajuste real entre la prosa y el disco — regenerar por
+script es la única vía que no repite ese patrón. §7 sí se mantiene
+actualizado fase por fase (estado "EJECUTADA" con su validación), y el
+resumen de `n_hecho/n_total` que imprime el script en cada corrida es el
+número que hay que creer.
 
 Generado por `backend/scripts/audit_consensus_cluster.py` (no transcrito
 a mano), pedido explícitamente por el tesista en la tercera ronda de
