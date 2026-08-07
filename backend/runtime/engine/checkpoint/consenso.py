@@ -10,9 +10,10 @@ del `LearningState` — una proyección de lectura sobre `deliberaciones` y
 `decisiones` (ambas append-only, RFC-0003 §2), no un almacén paralelo.
 
 Nombre deliberado: `MetricasConsenso`, nunca `ConsensusEngine` — ese
-nombre ya existe en `app/core/consensus.py` (el sistema de votación
-legacy, retirado del flujo en vivo por ADR-0011) y reutilizarlo aquí
-confundiría dos mecanismos que no tienen relación."""
+nombre perteneció al sistema de votación legacy en `app/core/consensus.py`
+(retirado del flujo en vivo por ADR-0011, retirado físicamente por
+ADR-0017) y reutilizarlo aquí confundiría dos mecanismos que no
+tuvieron relación."""
 
 from __future__ import annotations
 

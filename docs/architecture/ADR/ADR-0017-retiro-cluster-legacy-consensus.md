@@ -483,7 +483,9 @@ primero (nada se retira antes de confirmar qué se preserva).
    con lo que la simulación de la Fase 2 ya había predicho. Suite
    completa (2,437 tests) comparada contra `HEAD` (worktree aislado):
    único cambio, el mismo test de Tavily real flaky por red de las fases
-   anteriores. Cero regresiones atribuibles a la Fase 3. De paso, se
+   anteriores. No se introdujeron regresiones nuevas respecto al
+   baseline existente (la suite ya tenía fallos preexistentes ajenos a
+   esta ADR antes de esta fase; ninguno nuevo apareció). De paso, se
    generalizó en el script el mismo criterio de `EXTRACTED_FILE`
    (reflejar el disco real, no el plan) a *todos* los archivos: `action`
    ahora comprueba existencia real y devuelve `"eliminado ✓"` en vez de
@@ -580,8 +582,14 @@ primero (nada se retira antes de confirmar qué se preserva).
    ambas corridas es ruido de log con UUID aleatorio del mismo test
    preexistente y ya fallido en ambas corridas
    (`test_students.py::TestLearningPathFlow::test_generar_ruta_dos_veces`,
-   sin relación con este cambio). Cero regresiones atribuibles a esta
-   fase fusionada.
+   sin relación con este cambio). **No se introdujeron regresiones
+   nuevas respecto al baseline existente** — precisión deliberada: el
+   baseline en `f37a740` ya tenía 78 failed/14 errors antes de esta
+   fase (deuda técnica preexistente, no atribuible a ADR-0017), la
+   suite no estaba en verde y esta fase no la puso en verde; lo que
+   confirma la comparación es que el número de fallos no aumentó y que
+   cada fallo que desapareció corresponde a un archivo retirado
+   deliberadamente, no a una regresión oculta.
 6. **Documentación y validación final**: anotar `docs/
    experimental_design.md` (Experimento D/SH4 → superseded, con cita a
    esta ADR) y `RESEARCH_LAYER_TECHNICAL_REPORT.md` §9.2 (actualizar
