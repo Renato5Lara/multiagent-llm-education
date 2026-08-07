@@ -10,6 +10,7 @@
 4. [Experimento B — Coordinación Colectiva entre Agentes](#4-experimento-b--coordinación-colectiva-entre-agentes)
 5. [Experimento C — Resiliencia del Enjambre ante Fallos](#5-experimento-c--resiliencia-del-enjambre-ante-fallos)
 6. [Experimento D — Precisión del Consenso Multiagente](#6-experimento-d--precisión-del-consenso-multiagente)
+   ⚠ Superseded por ADR-0017
 7. [Experimento E — Efecto del Aprendizaje Adaptativo (Longitudinal)](#7-experimento-e--efecto-del-aprendizaje-adaptativo-longitudinal)
 8. [Experimento F — Propagación Cognitiva en la Cadena de Agentes](#8-experimento-f--propagación-cognitiva-en-la-cadena-de-agentes)
 9. [Experimento G — Efectividad de la Memoria Compartida](#9-experimento-g--efectividad-de-la-memoria-compartida)
@@ -342,6 +343,22 @@ Para cada uno de los 20 perfiles de estudiante (subconjunto representativo de lo
 ---
 
 ## 6. Experimento D — Precisión del Consenso Multiagente
+
+> **⚠ SUPERSEDED (2026-08-06, ADR-0017).** El instrumento que este
+> experimento describe (`ConsensusEngine`, `CodeMasteryVoter`,
+> `ProgressionVoter`, `MasteryVoter`, `PrereqVoter`, `SequenceVoter`,
+> `TimeVoter`, todos en `app/core/consensus.py` y `app/core/
+> programming_voters.py`) fue retirado físicamente del repositorio por
+> [ADR-0017](../architecture/ADR/ADR-0017-retiro-cluster-legacy-consensus.md)
+> tras confirmarse, mediante auditoría exhaustiva y reachability_check()
+> con Python real, que no tenía ningún consumidor vivo — SH4 nunca llegó
+> a ejecutarse contra la arquitectura vigente del sistema. El mecanismo
+> de consenso
+> vigente en la tesis es la deliberación D1/D2/D3 del kernel de
+> `backend/runtime/` (RFC-0006), un modelo distinto sin relación de
+> código con el descrito aquí. Esta sección se conserva como registro
+> histórico del diseño experimental original, no como protocolo
+> ejecutable.
 
 ### Objetivo
 Demostrar que la decisión combinada del `ConsensusEngine` (con `CodeMasteryVoter`, `ProgressionVoter`, `MasteryVoter`, `PrereqVoter`, `SequenceVoter`, `TimeVoter`) es más precisa y robusta que la decisión de cualquier votante individual.

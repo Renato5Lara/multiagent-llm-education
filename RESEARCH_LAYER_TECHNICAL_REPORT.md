@@ -127,9 +127,11 @@ autorizado), `Dashboard.tsx` (CTA Rendir Post-Test), `LearningPath.tsx`
 
 1. Formas paralelas del instrumento (pre ≠ post equivalentes) si el asesor
    lo exige — el modelo ya versiona el banco.
-2. Conectar `app/experiment/analysis.py` (ANOVA, Cohen's d, potencia) al
-   dataset de `experiment_results` para estadística inferencial en el
-   dashboard.
+2. Conectar `app/services/research_statistics.py` (ANOVA, Cohen's d,
+   potencia — ruta actualizada: extraído de `app/experiment/analysis.py`
+   por ADR-0017 Fase 1 antes de que el resto de `app/experiment/*` se
+   retirara físicamente en las Fases 4+5) al dataset de
+   `experiment_results` para estadística inferencial en el dashboard.
 3. Tiempo por pregunta (`time_spent_seconds` ya existe en
    `knowledge_test_answers`; falta capturarlo en la UI).
 4. Export adicional en formato `.sav` (SPSS nativo) vía pyreadstat.

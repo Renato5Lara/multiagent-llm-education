@@ -15,7 +15,8 @@
   en un solo commit tras evidencia objetiva de `pytest --collect-only`
   de que no existe estado intermedio estable entre ambas a nivel del
   grafo real de imports (ver §7, punto 4+5) — decisión tomada junto al
-  tesista, no unilateral.
+  tesista, no unilateral. **Ejecución completa (§7, 6/6 puntos EJECUTADA;
+  criterios de aceptación §8 verificados) al cierre del 2026-08-06.**
 - **Fecha:** 2026-08-06
 - **Preserva:** `runtime/kernel/deliberation/*` (el motor de consenso vigente
   de la tesis, sin ninguna relación de código con este ADR), ADR-0011 (esta
@@ -590,20 +591,65 @@ primero (nada se retira antes de confirmar qué se preserva).
    confirma la comparación es que el número de fallos no aumentó y que
    cada fallo que desapareció corresponde a un archivo retirado
    deliberadamente, no a una regresión oculta.
-6. **Documentación y validación final**: anotar `docs/
-   experimental_design.md` (Experimento D/SH4 → superseded, con cita a
-   esta ADR) y `RESEARCH_LAYER_TECHNICAL_REPORT.md` §9.2 (actualizar
-   destino de `analysis.py`); actualizar `CLAUDE.md` si describe el
-   clúster como presente; correr `pytest` completo (sin `ImportError`/
-   `ModuleNotFoundError` causados por este cambio, sin pérdida de tests
-   fuera de los retirados deliberadamente); `git grep` de los patrones de
-   §8.1 sobre `app/` sin resultados fuera de comentarios/documentación
-   histórica; confirmar `backend/runtime/`, `runtime.boundary`,
-   `runtime_bridge.py`, `module_orchestration_service.py`,
-   `app/api/routes/{swarm,replay}.py` y sus dependencias (`app.memory.*`,
-   `app.explainability.*`, `app.swarm_diagnostics`, `app.tracing`, los 7
-   archivos vivos de `app/replay/`, `app/core/{config,security}.py`)
-   bit-a-bit intactos.
+6. **Documentación y validación final** — EJECUTADA.
+   `docs/experimental_design.md` §6 (Experimento D/SH4): banner
+   "⚠ SUPERSEDED (2026-08-06, ADR-0017)" con cita a esta ADR, entrada de
+   índice actualizada; `RESEARCH_LAYER_TECHNICAL_REPORT.md` §9.2:
+   referencia a `app/experiment/analysis.py` corregida a su ubicación
+   real (`app/services/research_statistics.py`, extraído en la Fase 1).
+   `CLAUDE.md`: verificado — nunca mencionó ADR-0017 ni "Legacy
+   Consensus", así que el criterio §8.7 se cumple trivialmente (no había
+   nada que corregir).
+
+   **Barrido documental adicional** (pedido por el tesista, más allá del
+   alcance original de este punto): `grep` de `ConsensusEngine`/
+   `BaseAgent`/`SwarmOrchestrator`/`app.core.consensus`/`app.experiment`
+   sobre todo `docs/` — encontró 2 referencias fuera del alcance de esta
+   ADR, documentadas en §7.1 y deliberadamente no corregidas aquí.
+
+   **Validación de cierre**: `git grep` de los patrones de §8.1 sobre
+   `app/`, `scripts/` (backend) y `src/` (frontend) — sin resultados
+   fuera de comentarios/docstrings/el propio script de auditoría (el
+   único hallazgo real, un comentario desactualizado en
+   `runtime/engine/checkpoint/consenso.py` que citaba `app/core/
+   consensus.py` como si aún existiera, se corrigió en el commit
+   `280f0ce`, junto con un test de regresión permanente para
+   `app/experiment/benchmark/` — ver más abajo). `pytest --collect-only`
+   limpio (1,925 tests, +2 respecto a la Fase 4+5 por el nuevo test de
+   `280f0ce`). Suite completa (1,925 tests): 68 failed/1,656 passed/186
+   skipped/1 xfailed/14 errors — comparada línea por línea contra la
+   corrida de cierre de la Fase 4+5 (68 failed/14 errors): **conteo de
+   fallos idéntico**, única diferencia el mismo ruido de log con UUID
+   aleatorio del test preexistente ya documentado (`test_generar_ruta_
+   dos_veces`). `backend/runtime/`, `runtime.boundary`,
+   `module_orchestration_service.py`, `app/api/routes/{swarm,replay}.py`
+   y el resto de la infraestructura preservada (§Preserva) confirmados
+   intactos por el mismo barrido — cero coincidencias de import real.
+
+### 7.1 Hallazgos relacionados fuera de alcance (no forman parte de este ADR)
+
+El barrido documental de la Fase 6 (`git grep` de `ConsensusEngine`,
+`BaseAgent`, `SwarmOrchestrator`, `app.core.consensus`, `app.experiment`
+sobre `docs/`, pedido por el tesista) encontró dos referencias que no
+son responsabilidad de ADR-0017 — se registran aquí explícitamente para
+que quede constancia de que se vieron y se decidió no tocarlas, en vez
+de dejarlas como un silencio ambiguo:
+
+- **`docs/experimental_design.md` — Experimentos B y C** (Coordinación
+  Colectiva, Resiliencia del Enjambre) todavía describen su protocolo
+  como `SwarmOrchestrator.activate()` sobre agentes de la familia
+  `BaseAgent` (`PedagogicalAgent`, `AdaptiveAgent`, `RiskAgent`,
+  `EvaluationAgent`). Esa arquitectura fue retirada físicamente por
+  **ADR-0011** (2026-08-01), no por ADR-0017 — mezclar la corrección
+  aquí habría atribuido a esta ADR una decisión que no le pertenece.
+- **`docs/agent_health_monitoring.md`** — documento de diseño para un
+  `AgentHealthMonitor` que nunca se implementó como código (`grep class
+  AgentHealthMonitor backend/` sin resultados). No es deuda de ningún
+  ADR de retiro — es una propuesta de diseño sin construir, sin relación
+  causal con el clúster que retira ADR-0017.
+
+Ambos quedan pendientes de revisión documental independiente, fuera del
+alcance y del criterio de cierre de esta ADR.
 
 ## 8. Criterios de aceptación
 
