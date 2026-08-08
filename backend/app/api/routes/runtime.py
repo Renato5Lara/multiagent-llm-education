@@ -18,7 +18,12 @@ from typing import Any, Mapping
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.deps import aget_current_docente, aget_current_estudiante, aget_current_user
+from app.api.deps import (
+    aget_current_docente,
+    aget_current_estudiante,
+    aget_current_user,
+    verificar_pertenencia_estudiante,
+)
 from app.models.user import User, UserRole
 from app.services.runtime_connection import (
     SPEC_VERSION,
@@ -280,15 +285,13 @@ def _verificar_pertenencia(session_id: str, current_user: User, almacen: Any) ->
     son autoridad/observadores sobre el loop, no participantes con ámbito
     por estudiante (RFC-0009 §3) — mismo criterio que ya rige
     `hecho_docente`, extendido a Modo Evidencia (Ficha 06, auditoría
-    2026-08-05)."""
-    if current_user.role in (UserRole.DOCENTE, UserRole.ADMIN, UserRole.INVESTIGADOR):
-        return
+    2026-08-05). La regla de ownership en sí vive en
+    `verificar_pertenencia_estudiante` (app/api/deps.py) — reutilizada
+    también por replay.py/swarm.py/evidence.py (Hallazgo I10 reabierto,
+    Auditoría 2026-08-08)."""
     existente = almacen.identidad_existente(session_id)
-    if existente is not None and existente.student_id != str(current_user.id):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="La sesión no pertenece al usuario autenticado",
-        )
+    if existente is not None:
+        verificar_pertenencia_estudiante(current_user, str(existente.student_id))
 
 
 @router.get("/sessions/{session_id}/traza", response_model=list[PasoTrazaOut])

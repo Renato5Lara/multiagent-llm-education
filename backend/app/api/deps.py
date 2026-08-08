@@ -141,6 +141,29 @@ def get_current_evidence_viewer(
     return current_user
 
 
+def verificar_pertenencia_estudiante(current_user: User, student_id: str | None) -> None:
+    """Capa 2 de Modo Evidencia — ownership sobre `student_id`, extraída de
+    `_verificar_pertenencia` (app/api/routes/runtime.py) para reutilizarse
+    en cualquier endpoint que resuelva un `student_id` directamente (a
+    diferencia de runtime.py, que lo resuelve indirecto vía `session_id`).
+    Misma regla, sin redefinirla: el estudiante solo accede a su propio
+    `student_id`; docente/admin/investigador quedan exentos — autoridad/
+    observadores del loop, no participantes con ámbito por estudiante
+    (RFC-0009 §3). `get_current_evidence_viewer`/`aget_authorized_
+    evidence_viewer` (Capa 1) solo verifica rol — nunca ownership; llamar
+    esta función es obligatorio en cualquier handler de superficie S3/
+    Modo Evidencia que exponga o mute datos de un estudiante específico
+    (Hallazgo I10 reabierto, Auditoría 2026-08-08: cerrar el acceso
+    anónimo no cerraba el horizontal estudiante→estudiante)."""
+    if current_user.role in (UserRole.DOCENTE, UserRole.ADMIN, UserRole.INVESTIGADOR):
+        return
+    if student_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permiso para acceder a los datos de este estudiante",
+        )
+
+
 # ═════════════════════════════════════════════════════════════════
 # Async deps (FastAPI runtime — non-blocking)
 # ═════════════════════════════════════════════════════════════════
