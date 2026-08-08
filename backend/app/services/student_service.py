@@ -770,9 +770,14 @@ def get_learning_path(db: Session, student_id: str, course_id: str) -> Optional[
 
 
 def update_module_progress(
-    db: Session, module_id: str, status: str, score: Optional[float] = None
+    db: Session, module_id: str, status: str, student_id: str, score: Optional[float] = None
 ) -> Optional[PathModule]:
-    module = db.query(PathModule).filter(PathModule.id == module_id).first()
+    module = (
+        db.query(PathModule)
+        .join(LearningPath, LearningPath.id == PathModule.path_id)
+        .filter(PathModule.id == module_id, LearningPath.student_id == student_id)
+        .first()
+    )
     if not module:
         return None
 

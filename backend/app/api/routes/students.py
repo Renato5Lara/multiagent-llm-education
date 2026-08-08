@@ -457,7 +457,7 @@ def update_module(
     current_user: User = Depends(get_current_estudiante),
 ):
     module = student_service.update_module_progress(
-        db, module_id=module_id, status=data.status, score=data.score
+        db, module_id=module_id, status=data.status, student_id=current_user.id, score=data.score
     )
     if not module:
         raise HTTPException(
@@ -996,7 +996,7 @@ def submit_evaluation(
     current_user: User = Depends(get_current_estudiante),
 ):
     attempt = evaluation_service.submit_evaluation(
-        db, attempt_id=attempt_id, answers=data.answers,
+        db, attempt_id=attempt_id, student_id=current_user.id, answers=data.answers,
     )
     if not attempt:
         raise HTTPException(

@@ -280,9 +280,13 @@ def create_evaluation(
 
 
 def submit_evaluation(
-    db: Session, attempt_id: str, answers: dict
+    db: Session, attempt_id: str, student_id: str, answers: dict
 ) -> Optional[EvaluationAttempt]:
-    attempt = db.query(EvaluationAttempt).filter(EvaluationAttempt.id == attempt_id).first()
+    attempt = (
+        db.query(EvaluationAttempt)
+        .filter(EvaluationAttempt.id == attempt_id, EvaluationAttempt.student_id == student_id)
+        .first()
+    )
     if not attempt:
         return None
 
@@ -306,7 +310,7 @@ def submit_evaluation(
         from app.services.student_service import update_module_progress
         update_module_progress(
             db, module_id=attempt.module_id,
-            status="completed", score=float(correct),
+            status="completed", student_id=attempt.student_id, score=float(correct),
         )
 
     return attempt
