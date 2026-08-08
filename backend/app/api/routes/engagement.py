@@ -82,7 +82,7 @@ async def record_interaction(
         "engagement.interact: student=%s session=%s type=%s",
         current_user.id[:8], req.session_id[:8], req.interaction_type,
     )
-    return svc.interact(req)
+    return svc.interact(req, current_user)
 
 
 @router.post(
@@ -104,4 +104,4 @@ async def complete_engagement(
         "engagement.complete: student=%s session=%s skipped=%s",
         current_user.id[:8], req.session_id[:8], req.skipped,
     )
-    return svc.complete(req)
+    return svc.complete(req, current_user)

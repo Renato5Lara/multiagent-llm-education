@@ -298,11 +298,14 @@ class EngagementService:
 
     # ── interact ──────────────────────────────────────────────────────────────
 
-    def interact(self, req: InteractRequest) -> InteractResponse:
+    def interact(self, req: InteractRequest, student: User) -> InteractResponse:
         db = self._db
         from app.models.engagement import _uuid
 
-        session = db.query(EngagementSession).filter(EngagementSession.id == req.session_id).first()
+        session = db.query(EngagementSession).filter(
+            EngagementSession.id == req.session_id,
+            EngagementSession.student_id == student.id,
+        ).first()
         resource = db.query(EngagementResource).filter(EngagementResource.id == req.resource_id).first()
 
         if not session or not resource:
@@ -381,11 +384,14 @@ class EngagementService:
 
     # ── complete ──────────────────────────────────────────────────────────────
 
-    def complete(self, req: CompleteRequest) -> CompleteResponse:
+    def complete(self, req: CompleteRequest, student: User) -> CompleteResponse:
         db = self._db
         from app.models.engagement import _uuid
 
-        session = db.query(EngagementSession).filter(EngagementSession.id == req.session_id).first()
+        session = db.query(EngagementSession).filter(
+            EngagementSession.id == req.session_id,
+            EngagementSession.student_id == student.id,
+        ).first()
         if not session:
             from fastapi import HTTPException, status
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesión no encontrada")
