@@ -10,11 +10,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_evidence_viewer, get_db
 from app.db.session import SessionLocal
 from app.memory.shared_memory import SharedMemoryStore, memory_store_from_session
 from app.memory.pedagogical_memory import PedagogicalMemoryService
 from app.explainability.adaptive_reasoning import adaptive_reasoning
+from app.models.user import User
 from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
 from app.swarm_diagnostics import diagnostics_engine
 
@@ -31,6 +32,7 @@ def query_memory(
     key: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Query shared memory records by scope and type."""
     store = memory_store_from_session(db)
@@ -68,6 +70,7 @@ async def stream_memory(
     module_id: Optional[str] = Query(None),
     memory_type: Optional[str] = Query(None),
     poll_interval: float = Query(2.0, ge=0.5, le=30.0),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """SSE stream that polls shared memory for new records at a fixed interval.
 
@@ -130,6 +133,7 @@ async def stream_memory(
 async def stream_memory_influence(
     student_id: str = Query(..., description="Student to track"),
     poll_interval: float = Query(3.0, ge=1.0, le=30.0),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """SSE stream of pedagogical adaptation metrics for a given student.
 
@@ -183,7 +187,11 @@ async def stream_memory_influence(
 
 
 @router.get("/memory/profile/{student_id}")
-def get_student_profile(student_id: str, db: Session = Depends(get_db)):
+def get_student_profile(
+    student_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
+):
     """Get the aggregated pedagogical student profile from shared memory."""
     store = memory_store_from_session(db)
     svc = PedagogicalMemoryService(store)
@@ -198,7 +206,11 @@ def get_student_profile(student_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/memory/profile/{student_id}/history")
-def get_student_profile_history(student_id: str, db: Session = Depends(get_db)):
+def get_student_profile_history(
+    student_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
+):
     """Get the raw pedagogical memory records for a student."""
     store = memory_store_from_session(db)
     records = store.query(student_id=student_id, memory_type="pedagogical_profile", limit=50, include_stale=False)
@@ -224,6 +236,7 @@ def get_adaptation_explanation(
     student_id: str,
     week_number: int = Query(..., ge=1),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Generate an explainability report for a student's week plan.
 
@@ -269,6 +282,7 @@ def get_adaptation_explanation(
 async def stream_explain(
     student_id: str = Query(..., description="Student to explain"),
     poll_interval: float = Query(3.0, ge=1.0, le=30.0),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """SSE stream of adaptation explanations for a student.
 
@@ -346,7 +360,7 @@ async def stream_explain(
 
 
 @router.get("/health")
-def swarm_health():
+def swarm_health(current_user: User = Depends(get_current_evidence_viewer)):
     scope = "global"
     snapshot = diagnostics_engine.health_report(scope=scope)
     data = snapshot.to_dict()
@@ -358,6 +372,7 @@ def swarm_health():
 def list_tracing_spans(
     limit: Optional[int] = Query(50, ge=1, le=500),
     event_type: Optional[str] = Query(None, description="Filter by event type prefix"),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     prefix = event_type or "tracing:span"
     events = diagnostics_engine.get_recent_events(

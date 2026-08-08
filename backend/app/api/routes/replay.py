@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_evidence_viewer, get_db
 from app.memory.shared_memory import memory_store_from_session
 from app.memory.pedagogical_memory import PedagogicalMemoryService
 from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
@@ -148,6 +148,7 @@ async def _replay_event_stream(student_id: str, db: Session) -> AsyncIterator[st
 def list_sessions(
     db: Session = Depends(get_db),
     limit: int = Query(50, ge=1, le=200),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """List all students with replayable sessions (weekly plans)."""
     rows = (
@@ -187,6 +188,7 @@ def list_sessions(
 def get_session(
     session_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Get full replay session for a student_id (= teacher_id in plans)."""
     replay = session_replay.replay(db, student_id=session_id, course_id="")
@@ -197,6 +199,7 @@ def get_session(
 def get_student_replay(
     student_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Full student replay with all steps."""
     store = memory_store_from_session(db)
@@ -208,6 +211,7 @@ def get_student_replay(
 def get_student_timeline(
     student_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Longitudinal timeline only (bloom, confidence, memory growth)."""
     store = memory_store_from_session(db)
@@ -223,6 +227,7 @@ def get_student_timeline(
 def get_student_adaptation(
     student_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Adaptation decisions per week."""
     plans = (
@@ -241,6 +246,7 @@ def get_student_adaptation(
 def get_student_reasoning(
     student_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Reasoning explanations per week."""
     store = memory_store_from_session(db)
@@ -262,6 +268,7 @@ def get_student_reasoning(
 def get_student_memory(
     student_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Memory snapshots per week."""
     store = memory_store_from_session(db)
@@ -297,6 +304,7 @@ def get_student_export(
     student_id: str,
     db: Session = Depends(get_db),
     fmt: str = Query("json", description="Export format: json, csv, markdown, latex"),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Export full replay in academic format."""
     store = memory_store_from_session(db)
@@ -344,6 +352,7 @@ def get_student_export(
 async def stream_replay(
     student_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_evidence_viewer),
 ):
     """SSE stream that emits full replay events for the interactive dashboard.
 
