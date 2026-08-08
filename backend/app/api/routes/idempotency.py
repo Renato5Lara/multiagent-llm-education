@@ -8,15 +8,17 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import func
 
+from app.api.deps import get_current_admin
 from app.db.session import SessionLocal
 from app.events.idempotency import idempotency_service
 from app.events.distributed import distributed_dedup
 from app.events.replay import event_replay_service
 from app.events.risk_detectors import risk_analysis
 from app.models.idempotency_key import IdempotencyKey
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ router = APIRouter(prefix="/api/idempotency", tags=["Idempotencia"])
 
 
 @router.get("/status")
-def idempotency_status():
+def idempotency_status(current_user: User = Depends(get_current_admin)):
     """Idempotency system health and metrics."""
     db = SessionLocal()
     try:
@@ -63,7 +65,7 @@ def idempotency_status():
 
 
 @router.get("/keys/{key}")
-def get_idempotency_key(key: str):
+def get_idempotency_key(key: str, current_user: User = Depends(get_current_admin)):
     """Look up an idempotency key and its status."""
     db = SessionLocal()
     try:
@@ -92,7 +94,7 @@ def get_idempotency_key(key: str):
 
 
 @router.post("/purge")
-def purge_expired_keys(batch_size: int = 500):
+def purge_expired_keys(batch_size: int = 500, current_user: User = Depends(get_current_admin)):
     """Purge expired idempotency keys."""
     db = SessionLocal()
     try:
@@ -110,6 +112,7 @@ def purge_expired_keys(batch_size: int = 500):
 @router.get("/risks")
 def get_idempotency_risks(
     window_hours: Optional[int] = Query(24, ge=1, le=168),
+    current_user: User = Depends(get_current_admin),
 ):
     """Run idempotency risk analysis."""
     db = SessionLocal()
@@ -126,7 +129,10 @@ def get_idempotency_risks(
 
 
 @router.get("/replay/stats")
-def replay_stats(window_hours: Optional[int] = Query(24, ge=1, le=168)):
+def replay_stats(
+    window_hours: Optional[int] = Query(24, ge=1, le=168),
+    current_user: User = Depends(get_current_admin),
+):
     """Get replay statistics."""
     db = SessionLocal()
     try:
