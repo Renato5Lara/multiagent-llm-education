@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_evidence_viewer, get_db
+from app.api.deps import get_current_evidence_viewer, get_db, verificar_pertenencia_estudiante
 from app.db.session import SessionLocal
 from app.memory.shared_memory import SharedMemoryStore, memory_store_from_session
 from app.memory.pedagogical_memory import PedagogicalMemoryService
@@ -35,6 +35,7 @@ def query_memory(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Query shared memory records by scope and type."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     records = store.query(
         student_id=student_id,
@@ -77,6 +78,7 @@ async def stream_memory(
     Provides a real-time dashboard view of memory being published by the
     pedagogical swarm agents during orchestration.
     """
+    verificar_pertenencia_estudiante(current_user, student_id)
     last_count = 0
 
     async def event_stream():
@@ -140,6 +142,7 @@ async def stream_memory_influence(
     Emits ``adaptation.metrics`` events containing real-time
     ``AdaptationMetrics`` dicts computed from shared memory.
     """
+    verificar_pertenencia_estudiante(current_user, student_id)
     last_metrics: dict[str, Any] = {}
 
     async def event_stream():
@@ -193,6 +196,7 @@ def get_student_profile(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Get the aggregated pedagogical student profile from shared memory."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     svc = PedagogicalMemoryService(store)
     profile = svc.build_student_profile(student_id=student_id)
@@ -212,6 +216,7 @@ def get_student_profile_history(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Get the raw pedagogical memory records for a student."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     records = store.query(student_id=student_id, memory_type="pedagogical_profile", limit=50, include_stale=False)
     return {
@@ -243,6 +248,7 @@ def get_adaptation_explanation(
     Returns per-dimension explanations (bloom, cognitive_load, prompt,
     modality, pacing, scaffolding), a decision graph, and reasoning metrics.
     """
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     ped = PedagogicalMemoryService(store)
     profile = ped.build_student_profile(student_id=student_id)
@@ -290,6 +296,7 @@ async def stream_explain(
     ``modality:adapted``, ``overload:detected``, and ``misconception:persistent``
     events as profile signals change.
     """
+    verificar_pertenencia_estudiante(current_user, student_id)
     last_explanations: dict[str, Any] = {}
 
     async def event_stream():

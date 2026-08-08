@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_evidence_viewer, get_db
+from app.api.deps import get_current_evidence_viewer, get_db, verificar_pertenencia_estudiante
 from app.memory.shared_memory import memory_store_from_session
 from app.memory.pedagogical_memory import PedagogicalMemoryService
 from app.models.weekly_pedagogical_plan import WeeklyPedagogicalPlan
@@ -191,6 +191,7 @@ def get_session(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Get full replay session for a student_id (= teacher_id in plans)."""
+    verificar_pertenencia_estudiante(current_user, session_id)
     replay = session_replay.replay(db, student_id=session_id, course_id="")
     return replay
 
@@ -202,6 +203,7 @@ def get_student_replay(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Full student replay with all steps."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     replay = session_replay.replay(db, student_id=student_id, course_id="", memory_store=store)
     return replay
@@ -214,6 +216,7 @@ def get_student_timeline(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Longitudinal timeline only (bloom, confidence, memory growth)."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     replay = session_replay.replay(db, student_id=student_id, course_id="", memory_store=store)
     return {
@@ -230,6 +233,7 @@ def get_student_adaptation(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Adaptation decisions per week."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     plans = (
         db.query(WeeklyPedagogicalPlan)
         .filter(WeeklyPedagogicalPlan.teacher_id == student_id)
@@ -249,6 +253,7 @@ def get_student_reasoning(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Reasoning explanations per week."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     ped = PedagogicalMemoryService(store)
     plans = (
@@ -271,6 +276,7 @@ def get_student_memory(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Memory snapshots per week."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     plans = (
         db.query(WeeklyPedagogicalPlan)
@@ -307,6 +313,7 @@ def get_student_export(
     current_user: User = Depends(get_current_evidence_viewer),
 ):
     """Export full replay in academic format."""
+    verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
     replay = session_replay.replay(db, student_id=student_id, course_id="", memory_store=store)
 
@@ -360,6 +367,7 @@ async def stream_replay(
             replay:reasoning, replay:bloom, replay:misconception,
             replay:consensus, replay:complete
     """
+    verificar_pertenencia_estudiante(current_user, student_id)
     return StreamingResponse(
         _replay_event_stream(student_id, db),
         media_type="text/event-stream; charset=utf-8",

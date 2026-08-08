@@ -8,7 +8,7 @@ fuente única de verdad (sin simulaciones, sin pipelines paralelos).
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_evidence_viewer, get_db
+from app.api.deps import get_current_evidence_viewer, get_db, verificar_pertenencia_estudiante
 from app.models.user import User
 from app.services import evidence_service
 
@@ -22,6 +22,7 @@ def get_student_trajectory(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_evidence_viewer),
 ):
+    verificar_pertenencia_estudiante(current_user, student_id)
     trajectory = evidence_service.get_student_trajectory(db, student_id, course_id)
     if trajectory is None:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
