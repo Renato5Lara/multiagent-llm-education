@@ -3,9 +3,18 @@
 Puro-de-estado, a diferencia de Evaluar: no necesita ningún parámetro
 externo. Recorre la cadena causal (P6, «la explicación se recorre») —
 decisión → propuesta → interpretación → fact original — para hallar la
-competencia en juego, y busca en el propio estado el fact posterior de
-Evaluar que la mide de nuevo. Si esa evidencia todavía no existe, la
-capacidad simplemente no dispara (RFC-0004 §4: la secuencia emerge).
+competencia en juego, y busca en el propio estado el fact posterior que
+la mide de nuevo. Si esa evidencia todavía no existe, la capacidad
+simplemente no dispara (RFC-0004 §4: la secuencia emerge).
+
+`evidencia_de_validacion` dispara por FORMA del contenido (`competencia`
++ `items_incorrectos`), no por autor — mismo patrón ya aplicado en
+Tutorizar y Diagnosticar (commit `4b8c577`): desde RFC-0010 (Grieta A) la
+evidencia real la autora el Boundary, no `Capacidad.EVALUAR` (esa
+capacidad no está wireada a ningún nodo del grafo — RFC-0010/Grieta A);
+exigir `autor is EVALUAR` dejaba a Validar estructuralmente muda en el
+flujo real (0 veredictos en producción, verificado contra 19,412
+transiciones reales).
 """
 
 from __future__ import annotations
@@ -28,11 +37,15 @@ __all__ = ["competencia_de_decision", "evidencia_de_validacion", "producir"]
 
 def evidencia_de_validacion(estado: LearningState, decision: DecisionEntry, competencia: str):
     """El fact original (antes) y el primer fact posterior (después) de
-    Evaluar para esa competencia — ninguno se adivina, ambos se leen."""
+    evidencia evaluativa para esa competencia — ninguno se adivina, ambos
+    se leen. Por forma (`competencia` + `items_incorrectos`), no por
+    autor — ver docstring del módulo."""
     de_evaluar = [
         f
         for f in estado.facts
-        if f.autor is Capacidad.EVALUAR and f.contenido.get("competencia") == competencia
+        if "competencia" in f.contenido
+        and f.contenido.get("competencia") == competencia
+        and "items_incorrectos" in f.contenido
     ]
     anteriores = [f for f in de_evaluar if f.id.transicion < decision.id.transicion]
     posteriores = [f for f in de_evaluar if f.id.transicion > decision.id.transicion]

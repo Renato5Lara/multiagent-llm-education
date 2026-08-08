@@ -134,9 +134,11 @@ def _decision_sin_adaptar(estado: LearningState) -> bool:
 
 def _decision_lista_para_validar(estado: LearningState) -> bool:
     """Guardia segura (PR-2): mismo criterio de disparo que
-    `domain.validar.producir` — evita rutear a "validar" cuando su propio
-    contrato todavía no dispararía (falta el fact posterior de Evaluar),
-    lo que produciría un ciclo aplicar→enrutar sin avance."""
+    `domain.validar.producir` (misma función `evidencia_de_validacion`,
+    importada, no duplicada) — evita rutear a "validar" cuando su propio
+    contrato todavía no dispararía (falta el fact posterior de evidencia
+    evaluativa, por forma — RFC-0010/Grieta A), lo que produciría un
+    ciclo aplicar→enrutar sin avance."""
     for decision in estado.decisiones:
         if decision.estado_validacion is not EstadoValidacion.PENDIENTE_DE_VALIDACION:
             continue
