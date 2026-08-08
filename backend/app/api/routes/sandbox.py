@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
+from app.api.deps import get_current_user
+from app.models.user import User
 from app.sandbox import SandboxRequest, SandboxRunner
 
 
@@ -14,14 +16,20 @@ runner = SandboxRunner()
 
 
 @router.post("/execute")
-async def execute_sandbox(request: SandboxRequest):
+async def execute_sandbox(
+    request: SandboxRequest,
+    current_user: User = Depends(get_current_user),
+):
     """Execute educational Python code in the isolated Docker sandbox."""
     result = await runner.run(request)
     return result.model_dump(mode="json")
 
 
 @router.post("/execute/stream")
-async def stream_sandbox_execution(request: SandboxRequest):
+async def stream_sandbox_execution(
+    request: SandboxRequest,
+    current_user: User = Depends(get_current_user),
+):
     """SSE observable execution for live sandbox verification traces."""
 
     async def events():

@@ -11,6 +11,7 @@ from app.services.programmer_agent import ProgrammerAgent
 from app.services.reviewer_agent import ReviewerAgent
 from app.sandbox import SandboxLimits, SandboxRequest, SandboxResult, SandboxRunner, SandboxStatus
 from app.sandbox.policy import SandboxPolicy
+from tests.conftest import auth_header
 
 
 class FakeProcess:
@@ -201,7 +202,7 @@ class TestSandboxRunner:
 
 
 class TestSandboxApi:
-    def test_stream_endpoint_emits_observable_lifecycle(self, client, monkeypatch):
+    def test_stream_endpoint_emits_observable_lifecycle(self, client, monkeypatch, estudiante_token):
         async def fake_run(request):
             return SandboxResult(
                 status=SandboxStatus.SUCCESS,
@@ -218,6 +219,7 @@ class TestSandboxApi:
             "POST",
             "/api/sandbox/execute/stream",
             json={"code": "print('ok')", "metadata": {"trace_id": "t-sandbox"}},
+            headers=auth_header(estudiante_token),
         ) as response:
             body = response.read().decode("utf-8")
 
