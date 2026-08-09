@@ -216,6 +216,12 @@ from app.events.middleware import make_idempotency_middleware
 app.middleware("http")(make_idempotency_middleware())
 
 
+# Auth rate limiting — IP-based sliding window on /api/auth/login and
+# /api/auth/refresh, only counting failed attempts.
+from app.middleware.rate_limit import make_auth_rate_limit_middleware
+app.middleware("http")(make_auth_rate_limit_middleware(app))
+
+
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
     request_id = str(uuid.uuid4())
