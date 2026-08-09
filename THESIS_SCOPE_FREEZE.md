@@ -295,6 +295,51 @@ Todo lo demás es secundario.
 
 ---
 
+# REMEDIACIÓN — C5 (2026-08-08)
+
+La auditoría forense consolidada de 2026-08-08 confirmó que este alcance
+venía siendo violado en la práctica, no solo en riesgo teórico (hallazgo
+C5, ya señalado por la auditoría externa de 2026-08-06 como "18 catálogos
+de cursos fuera de alcance").
+
+**Lo que existía:** `backend/seed.py` sembraba por defecto una malla
+curricular institucional completa de Ingeniería de Sistemas e IA — 44
+`Course` (10 ciclos) + 50 `InstitutionalCourse` (10 ciclos, con su propia
+tabla de prerrequisitos) — más un curso de demostración `SWA101` ajeno al
+alcance. Esto no era solo dato inerte: `/docente/courses` tenía una
+pestaña real **"Malla Curricular"** donde el docente podía autoasignarse
+("Asignarme") cualquiera de los 50 cursos institucionales de cualquier
+ciclo/carrera y crear un `Course` nuevo desde ahí, respaldado por 4
+endpoints en vivo (`GET/POST /api/curriculum/cycles`, `/courses`,
+`/teacher-assignments`). Es decir: una funcionalidad completa de gestión
+curricular institucional, exactamente lo que la sección "Expansión de
+LMS" de este documento prohíbe.
+
+**Lo que se hizo:**
+- Se retiró la pestaña "Malla Curricular" y el tab "De la malla" de
+  `CourseForm`, junto con los 4 endpoints `/api/curriculum/*` que solo
+  esa UI consumía y los hooks/tipos frontend asociados
+  (`useCurriculumCycles`, `useCurriculumCourses`, `useTeacherAssignments`,
+  `useAssignTeacherCourse`). `GET /api/curriculum/academic-audit` se
+  conservó — no depende del catálogo de 50 cursos y no tiene UI que lo
+  consuma.
+- `curriculum_service.py` se redujo a las funciones de las que sí depende
+  un flujo real del producto (auto-inscripción → activación →
+  `EducationalContext`, cubierto por
+  `tests/test_enrollment_lifecycle.py`) — no se re-expone ningún endpoint
+  sobre ellas.
+- `backend/seed.py` siembra por defecto **únicamente** IS301 (Fundamentos
+  de la Programación) — la malla institucional completa (`Course` +
+  `InstitutionalCourse`) y `SWA101` quedan disponibles solo con
+  `SEED_FULL_MESH=1`, para desarrollo/pruebas explícitas, sin borrar el
+  dato ni el código que los siembra.
+- Verificado sin regresiones: mismo conjunto exacto de fallos
+  pre-existentes en `test_enrollment_lifecycle.py`/`test_query_counts.py`
+  antes y después (comparado byte a byte contra `git stash`), `tsc
+  --noEmit` limpio, cero referencias colgantes en todo el repo.
+
+---
+
 # DECLARACIÓN FINAL
 
 Este proyecto es:

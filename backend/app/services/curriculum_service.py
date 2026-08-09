@@ -1,3 +1,18 @@
+"""
+Helpers para crear un Course docente a partir de un InstitutionalCourse y
+activar las inscripciones pendientes que dependían de esa asignación.
+
+El catálogo completo de la malla institucional (listar ciclos, listar
+cursos institucionales, auto-asignación de docente) fue retirado como
+superficie funcional — contradecía THESIS_SCOPE_FREEZE.md/CLAUDE.md
+("NO IMPLEMENTAR NUNCA: Gestión curricular institucional"), tenía UI y
+endpoints en vivo (/api/curriculum/cycles, /courses, /teacher-assignments)
+en /docente/courses. Lo que queda aquí es la parte de la que sí dependen
+flujos reales del producto (auto-inscripción → activación → contexto
+educativo, ver tests/test_enrollment_lifecycle.py) y no tiene endpoint
+propio expuesto.
+"""
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -7,9 +22,7 @@ from app.models.institutional_course import InstitutionalCourse, InstitutionalCo
 from app.models.teacher_assignment import TeacherAssignment
 from app.models.user import User
 from app.models.course import Course, CourseStatus
-from app.models.enrollment import Enrollment, EnrollmentStatus
 from app.services.course_service import resolve_or_create_course
-from app.events.types import emit_event, EventType
 
 
 def get_prerequisite_codes(db: Session, course_id: str) -> list[str]:
@@ -44,39 +57,8 @@ def course_to_dict(db: Session, c: InstitutionalCourse) -> dict:
     }
 
 
-def get_institutional_courses(db: Session, cycle: Optional[int] = None) -> list[InstitutionalCourse]:
-    query = db.query(InstitutionalCourse)
-    if cycle is not None:
-        query = query.filter(InstitutionalCourse.cycle == cycle)
-    return query.order_by(InstitutionalCourse.cycle, InstitutionalCourse.code).all()
-
-
 def get_institutional_course_by_id(db: Session, course_id: str) -> Optional[InstitutionalCourse]:
     return db.query(InstitutionalCourse).filter(InstitutionalCourse.id == course_id).first()
-
-
-def get_cycle_courses_with_prereqs(db: Session, cycle: int) -> list[dict]:
-    courses = get_institutional_courses(db, cycle=cycle)
-    return [course_to_dict(db, c) for c in courses]
-
-
-def get_all_cycles_summary(db: Session) -> list[dict]:
-    from sqlalchemy import func
-    rows = (
-        db.query(InstitutionalCourse.cycle, func.count(InstitutionalCourse.id))
-        .group_by(InstitutionalCourse.cycle)
-        .order_by(InstitutionalCourse.cycle)
-        .all()
-    )
-    cycles = []
-    for cycle, count in rows:
-        courses = get_cycle_courses_with_prereqs(db, cycle)
-        cycles.append({
-            "cycle": cycle,
-            "total_courses": count,
-            "courses": courses,
-        })
-    return cycles
 
 
 def assign_teacher_to_course(
@@ -101,14 +83,6 @@ def assign_teacher_to_course(
     db.commit()
     db.refresh(assignment)
     return assignment
-
-
-def get_teacher_assignments(db: Session, teacher_id: str) -> list[TeacherAssignment]:
-    return (
-        db.query(TeacherAssignment)
-        .filter(TeacherAssignment.teacher_id == teacher_id)
-        .all()
-    )
 
 
 def create_course_from_institutional(

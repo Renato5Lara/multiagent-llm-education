@@ -22,6 +22,16 @@ from app.models import (
 )
 from app.core.security import get_password_hash
 
+# C5 (auditoría forense 2026-08-08): la malla curricular institucional
+# completa (44 Course en MALLA_CURRICULAR + 50 InstitutionalCourse en
+# ISIA_2025_CYCLES, más el escenario SWA101) contradice
+# THESIS_SCOPE_FREEZE.md — el único curso operativo de la tesis es IS301
+# (Fundamentos de Programación, ciclo 3). El seed por defecto siembra
+# solo eso; la malla completa queda disponible para desarrollo/pruebas
+# explícitas vía SEED_FULL_MESH=1, sin borrar el dato.
+SEED_FULL_MESH = os.getenv("SEED_FULL_MESH", "").strip().lower() in ("1", "true", "yes")
+THESIS_COURSE_CODE = "IS301"
+
 MALLA_CURRICULAR = {
     1: [
         {"code": "MAT101", "name": "Matemática Básica", "objectives": [
@@ -338,7 +348,8 @@ def seed():
     db = SessionLocal()
     try:
         # ===== CURRÍCULUM INSTITUCIONAL (MALLA ISIA 2025) =====
-        seed_institutional_courses(db)
+        if SEED_FULL_MESH:
+            seed_institutional_courses(db)
 
         # ===== USUARIOS =====
         admin = db.query(User).filter(User.email == "admin@upao.edu.pe").first()
@@ -584,6 +595,9 @@ def seed():
         course_map = {}
         for cycle, courses_data in MALLA_CURRICULAR.items():
             for cd in courses_data:
+                if not SEED_FULL_MESH and cd["code"] != THESIS_COURSE_CODE:
+                    continue
+
                 existing = db.query(Course).filter(Course.code == cd["code"]).first()
                 if existing:
                     course_map[cd["code"]] = existing
@@ -685,7 +699,8 @@ def seed():
                 print(f"  Ciclo {cycle}: {count} cursos")
 
         # ===== ESCENARIO DE DEMOSTRACIÓN SWARM =====
-        seed_demo_swarm(db)
+        if SEED_FULL_MESH:
+            seed_demo_swarm(db)
 
     except Exception as e:
         db.rollback()
