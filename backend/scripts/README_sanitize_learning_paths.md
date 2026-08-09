@@ -85,8 +85,8 @@ El script no ofrece un `--restore` automático — el respaldo es la fuente de
 verdad para reconstruir manualmente si hiciera falta. Cada
 `learning_path_sanitization_<timestamp>.json` en `backend/backups/` trae,
 por cada `LearningPath` borrado: `learning_path_id`, `student_id`,
-`course_id`, `total_modules`, `completed_modules`, `generated_at` y la
-lista de `module_ids` que tenía. Para restaurar una fila, recrear el
+`course_id`, `total_modules`, `generated_at` y la lista de `module_ids`
+que tenía. Para restaurar una fila, recrear el
 `LearningPath` con esos mismos valores (nunca tenían `knowledge_level` ni
 módulos con contenido real — eran huérfanos vacíos, así que no hay datos de
 usuario que reconstruir más allá de esos campos).

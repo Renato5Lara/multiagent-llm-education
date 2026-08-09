@@ -22,7 +22,17 @@ class LearningPath(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     total_modules = Column(Integer, default=0)
-    completed_modules = Column(Integer, default=0)
+    # completed_modules eliminado (2026-08-09, auditoría de concurrencia): era
+    # un contador cacheado, escrito solo por update_module_progress() vía un
+    # COUNT() recalculado sin lock — race condition confirmada con HTTP real
+    # (3/3 reproducciones, lost update silencioso) y 15/73 learning_paths
+    # reales ya desincronizados en producción. Todo el resto del producto
+    # (evidence_service, course_service, learning_experience_service,
+    # knowledge_test_service — este último por el mismo bug, Iteración 6.1)
+    # ya derivaba en vivo desde PathModule.status en vez de confiar en este
+    # valor. Regla de derivación (CLAUDE.md): un atributo reconstruible
+    # determinísticamente no debe persistirse. Ver migración
+    # 20260809_drop_completed_modules.
     status = Column(String(20), default="active")
     knowledge_level = Column(String(20), nullable=True)
     generation_duration_ms = Column(Integer, nullable=True)

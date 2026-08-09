@@ -787,15 +787,6 @@ def update_module_progress(
         module.completed_at = datetime.now(timezone.utc)
 
         path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
-        if path:
-            path.completed_modules = (
-                db.query(PathModule)
-                .filter(
-                    PathModule.path_id == path.id,
-                    PathModule.status == "completed",
-                )
-                .count()
-            )
 
         if module.resource_id:
             progress = (
@@ -967,9 +958,21 @@ def get_academic_summary(db: Session, student: User) -> dict:
             )
             .all()
         )
+        path_ids = [p.id for p in paths]
         for p in paths:
             total_modules += p.total_modules or 0
-            completed_modules += p.completed_modules or 0
+        # Derivado en vivo desde PathModule.status (2026-08-09) — mismo
+        # patrón ya usado en evidence_service.py/course_service.py/
+        # learning_experience_service.py/knowledge_test_service.py.
+        # LearningPath.completed_modules (contador cacheado) se eliminó por
+        # una race condition confirmada: ver modelo student_progress.py.
+        completed_modules = (
+            db.query(PathModule)
+            .filter(PathModule.path_id.in_(path_ids), PathModule.status == "completed")
+            .count()
+            if path_ids
+            else 0
+        )
 
     profile = get_student_profile(db, student.id)
     dominant_style = profile.dominant_style if profile else None

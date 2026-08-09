@@ -118,7 +118,6 @@ def find_candidates(db, cutoff: datetime) -> tuple[list[dict], list[dict]]:
             "course_code": course.code,
             "generated_at": path.generated_at.isoformat(),
             "total_modules": path.total_modules,
-            "completed_modules": path.completed_modules,
             "module_ids": [m.id for m in modules],
             "reason_excluded": None,
         }

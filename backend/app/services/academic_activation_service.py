@@ -222,7 +222,6 @@ class WeeklyPathGenerator:
                 student_id=student.id,
                 course_id=course.id,
                 total_modules=0,
-                completed_modules=0,
                 status="active",
             )
             db.add(path)

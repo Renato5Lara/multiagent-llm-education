@@ -43,7 +43,6 @@ def _complete_pre_and_post(client, token, course_id, db, student_id, pre_correct
             student_id=student_id,
             course_id=course_id,
             total_modules=2,
-            completed_modules=2,
             status="active",
         )
     )

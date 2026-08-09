@@ -42,7 +42,6 @@ export interface LearningPath {
   student_id: string
   course_id: string
   total_modules: number
-  completed_modules: number
   status: string
   modules: PathModule[]
 }

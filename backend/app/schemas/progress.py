@@ -26,7 +26,6 @@ class LearningPathResponse(BaseModel):
     student_id: str
     course_id: str
     total_modules: int
-    completed_modules: int
     status: str
     modules: list[PathModuleResponse]
 

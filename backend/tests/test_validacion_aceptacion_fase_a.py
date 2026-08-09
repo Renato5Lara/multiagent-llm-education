@@ -91,7 +91,7 @@ def test_escenario_7_transicion_entre_modulos_es_snapshot_no_dinamica(
     Boundary ni del runtime."""
     path = LearningPath(
         student_id=estudiante_user.id, course_id=curso_publicado.id,
-        total_modules=2, completed_modules=0, status="active",
+        total_modules=2, status="active",
     )
     db.add(path)
     db.flush()

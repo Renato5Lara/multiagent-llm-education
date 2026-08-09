@@ -261,7 +261,7 @@ Credenciales seed: docente@upao.edu.pe / Docente2026!
 
 - **F5** (del Recorrido 1): la carga de candidatos ahora muestra error visible en vez de spinner infinito.
 - **F8 (Medio→corregida):** títulos de página (`PageHeader`) invisibles en todo el panel docente/admin — `text-gray-900` sobre fondo oscuro (resto de tema claro). Ahora `text-neural-text`.
-- Contador `learning_paths.completed_modules` desincronizado (Maria: 1 vs 2 reales; anomalía histórica de un code path antiguo, los writers actuales sí recomputan) — dato corregido en BD; la analítica ya no depende del contador (cuenta en vivo).
+- Contador `learning_paths.completed_modules` desincronizado (Maria: 1 vs 2 reales) — dato corregido en BD; la analítica ya no depende del contador (cuenta en vivo). **Corrección (auditoría de concurrencia, 2026-08-09):** la causa NO era una anomalía histórica de un code path antiguo — era una race condition activa en el único writer (`update_module_progress`, un `COUNT()` recalculado sin lock), reproducida con HTTP real concurrente (3/3, lost update silencioso) y confirmada en 15/73 `learning_paths` reales desincronizados en producción al momento de esa auditoría, no solo el caso de Maria. `learning_paths.completed_modules` se eliminó (migración `b4c5d6e7f8a9`); ver `RESEARCH_ITERATIONS.md` (Iteración 6.1) para el hallazgo relacionado en el gate del Post-Test.
 - Concordancia "1 estudiantes en riesgo" → singular/plural en `analytics_service`.
 
 ### Fricciones abiertas

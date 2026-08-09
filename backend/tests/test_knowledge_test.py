@@ -163,18 +163,18 @@ def test_post_requires_completed_pre(
 
 
 def _seed_path_with_modules(db, student_id, course_id, total_modules, statuses):
-    """Crea una LearningPath real + sus PathModule, con `completed_modules`
-    (el contador cacheado) fijado a un valor DISTINTO del real derivable de
-    `statuses` cuando corresponda -- así cada test ejercita exactamente lo
-    que el gate live-derivado lee (`PathModule.status`), no lo que el
-    contador cacheado diría (regresión del bug de Iteración 6.1)."""
+    """Crea una LearningPath real + sus PathModule. Hasta el 2026-08-09
+    fijaba además `completed_modules` (contador cacheado) para ejercitar
+    que el gate lee `PathModule.status` en vivo, no el valor cacheado
+    (regresión del bug de Iteración 6.1) — la columna se eliminó (auditoría
+    de concurrencia: race condition confirmada + 15/73 learning_paths
+    reales desincronizados), así que ya no hay nada que fijar."""
     from app.models.student_progress import LearningPath, PathModule
 
     path = LearningPath(
         student_id=student_id,
         course_id=course_id,
         total_modules=total_modules,
-        completed_modules=sum(1 for s in statuses if s == "completed"),
         status="active",
     )
     db.add(path)
@@ -235,16 +235,17 @@ def test_post_allowed_when_reference_modules_complete_despite_more_curriculum(
     primeros `POST_TEST_REFERENCE_MODULE_LIMIT` desde la Ruta real; (2) el
     gate leía `completed_modules` cacheado, que en producción real quedó
     desincronizado (2 módulos con status='completed' en Postgres mientras
-    el contador seguía en 1). Este test fija el contador cacheado a un
-    valor DISTINTO (0) del real derivable de los PathModule (2 completados)
-    para probar que el gate deriva en vivo, no que confía en el contador."""
+    el contador seguía en 1) — root cause confirmado más tarde (auditoría
+    de concurrencia, 2026-08-09): una race condition en el único writer del
+    contador, reproducida con HTTP real y encontrada en 15/73 learning_paths
+    de producción; la columna se eliminó. Este test sigue confirmando el
+    comportamiento correcto del gate — deriva en vivo desde `PathModule`,
+    nunca de un contador persistido, porque ese contador ya no existe."""
     path = _seed_path_with_modules(
         db, estudiante_user.id, curso_publicado.id,
         total_modules=4,
         statuses=["completed", "completed", "available", "locked"],
     )
-    path.completed_modules = 0  # contador cacheado deliberadamente stale
-    db.commit()
 
     pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
     _submit_all_correct(
