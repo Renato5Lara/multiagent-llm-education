@@ -39,10 +39,15 @@ export const CANCELLED_RESULT_ERROR = 'Ejecución cancelada por el estudiante.'
  *  en el mismo harness — porque la terminación es a nivel de motor/SO,
  *  no cooperativa. La causa no era arquitectónica (Pyodide/WASM/Worker):
  *  era que ese mecanismo, ya correcto en `cancelRun()`, nunca se disparaba
- *  fuera de la espera de `input()`. 10s es generoso para cualquier
- *  ejercicio legítimo de Fundamentos de la Programación (bucles,
- *  recursión, arreglos a la escala de un ejercicio introductorio) —
- *  ajustable si aparece un caso real que lo necesite. */
+ *  fuera de la espera de `input()`.
+ *
+ *  PARÁMETRO TÉCNICO PROVISIONAL (2026-08-08): 10s es una hipótesis de
+ *  ingeniería razonable para Fundamentos de la Programación (bucles,
+ *  recursión, arreglos a la escala de un ejercicio introductorio), NO una
+ *  conclusión experimental ni un requisito metodológico — no está
+ *  validado todavía contra ejercicios educativos reales. Ajustar aquí sin
+ *  necesidad de otro cambio si la validación con contenido real muestra
+ *  que es insuficiente o innecesariamente corto. */
 const RUN_TIMEOUT_MS = 10_000
 
 export const TIMEOUT_RESULT_ERROR =
