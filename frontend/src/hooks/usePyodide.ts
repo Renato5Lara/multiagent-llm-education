@@ -28,6 +28,26 @@ export interface PythonRunResult {
  *  Python, sin duplicar el string a mano en dos archivos. */
 export const CANCELLED_RESULT_ERROR = 'Ejecución cancelada por el estudiante.'
 
+/** `run()` que nunca resuelve — reproducido y medido en el navegador
+ *  (2026-08-08, harness standalone con Playwright): un `while True: pass`
+ *  sin `input()` dentro del Worker deja `run()` colgado para siempre — el
+ *  hilo principal SÍ sigue respondiendo (Worker aislado, confirmado con un
+ *  heartbeat corriendo en paralelo), pero el widget del editor queda
+ *  inservible (spinner permanente, sin botón para salir) hasta recargar
+ *  toda la página. `worker.terminate()` SÍ interrumpe un Worker atascado
+ *  en un loop síncrono sin ningún punto de cesión — confirmado en <1ms
+ *  en el mismo harness — porque la terminación es a nivel de motor/SO,
+ *  no cooperativa. La causa no era arquitectónica (Pyodide/WASM/Worker):
+ *  era que ese mecanismo, ya correcto en `cancelRun()`, nunca se disparaba
+ *  fuera de la espera de `input()`. 10s es generoso para cualquier
+ *  ejercicio legítimo de Fundamentos de la Programación (bucles,
+ *  recursión, arreglos a la escala de un ejercicio introductorio) —
+ *  ajustable si aparece un caso real que lo necesite. */
+const RUN_TIMEOUT_MS = 10_000
+
+export const TIMEOUT_RESULT_ERROR =
+  'La ejecución tardó demasiado (probable bucle infinito) y se detuvo automáticamente.'
+
 /** En qué se equivocó el estudiante — no CUÁNTAS veces, sino DE QUÉ tipo. */
 export type PythonErrorCategory = 'sintaxis' | 'variables' | 'logica' | 'salida'
 
@@ -127,6 +147,20 @@ const MAX_INPUT_BYTES = 1024 // debe coincidir con el tamaño de dataSab
  *  caminos compiten por cerrar la misma ejecución casi al mismo tiempo. */
 let pendingRun: { resolve: (result: PythonRunResult) => void } | null = null
 
+/** Mata el Worker atascado y limpia el singleton — mismo primitivo que ya
+ *  usaba `cancelRun()` (worker.terminate(), sin punto seguro porque no
+ *  existe uno para un loop síncrono ni para Atomics.wait()), ahora
+ *  compartido con el timeout automático de `run()`. El stdout que el
+ *  worker ya había acumulado internamente se pierde igual que antes — no
+ *  es una regresión de este cambio. */
+function terminarWorkerAtascado(): void {
+  if (workerSingleton) workerSingleton.terminate()
+  workerSingleton = null
+  readySingleton = null
+  signalSabSingleton = undefined
+  dataSabSingleton = undefined
+}
+
 function getWorker(): { worker: Worker; ready: Promise<void> } {
   if (!workerSingleton || !readySingleton) {
     const worker = new Worker(new URL('../workers/pyodideWorker.ts', import.meta.url), { type: 'module' })
@@ -222,17 +256,38 @@ export function usePyodide() {
     return new Promise<PythonRunResult>(resolve => {
       const current = { resolve }
       pendingRun = current
+      // Timeout automático (2026-08-08, reproducido con evidencia — ver
+      // TIMEOUT_RESULT_ERROR arriba): protege contra un `while True: pass`
+      // sin `input()`, que de otro modo deja `run()` colgado para siempre.
+      // Se cancela solo si llega 'result' o si el worker pide 'need-input'
+      // — un estudiante escribiendo su respuesta no debe competir contra
+      // este reloj, ya tiene su propio botón "Cancelar" en ese estado.
+      let timeoutId: number | null = window.setTimeout(() => {
+        timeoutId = null
+        if (pendingRun !== current) return
+        pendingRun = null
+        worker.removeEventListener('message', onMessage)
+        terminarWorkerAtascado()
+        setAwaitingInput(false)
+        resolve({ stdout: '', error: TIMEOUT_RESULT_ERROR })
+      }, RUN_TIMEOUT_MS)
       const onMessage = (e: MessageEvent<WorkerOutboundMessage>) => {
         if (e.data.type === 'result') {
+          if (timeoutId !== null) window.clearTimeout(timeoutId)
           worker.removeEventListener('message', onMessage)
-          // Carrera cancelar-vs-result (Commit 4b, §7): si cancelRun() ya
-          // resolvió esta misma ejecución, pendingRun ya no es `current` (o
-          // ya es null) — no resolver de nuevo.
+          // Carrera cancelar/timeout-vs-result (Commit 4b, §7): si
+          // cancelRun() o el timeout ya resolvieron esta misma ejecución,
+          // pendingRun ya no es `current` (o ya es null) — no resolver de
+          // nuevo.
           if (pendingRun !== current) return
           pendingRun = null
           setAwaitingInput(false)
           resolve({ stdout: e.data.stdout, error: e.data.error })
         } else if (e.data.type === 'need-input') {
+          if (timeoutId !== null) {
+            window.clearTimeout(timeoutId)
+            timeoutId = null
+          }
           setAwaitingInput(true)
         }
       }
@@ -241,25 +296,24 @@ export function usePyodide() {
     })
   }
 
-  /** Cancela la ejecución en curso — solo tiene efecto real mientras el
-   *  Worker está bloqueado esperando un `input()` real (`awaitingInput`);
-   *  la UI solo expone el botón que la llama en ese estado
-   *  (ENGINEERING-GATE-EPICA-B.md §7, alcance: no es un "detener"
-   *  general). `worker.terminate()` mata la ejecución de inmediato, sin
-   *  punto seguro — no existe (ni se necesita) uno para un
-   *  `Atomics.wait()` bloqueante. El stdout que el worker ya había
-   *  acumulado internamente se PIERDE (vive en su closure, nunca llegó
-   *  al hilo principal) — límite real, no se finge que se preserva. El
-   *  Worker siguiente se crea perezosamente en el próximo `run()`, no
-   *  aquí (recargar Pyodide toma varios segundos). */
+  /** Cancela la ejecución en curso. Originalmente (ENGINEERING-GATE-EPICA-B.md
+   *  §7) solo tenía UI para el caso `awaitingInput` — la reproducción del
+   *  2026-08-08 (ver TIMEOUT_RESULT_ERROR) mostró que el mismo primitivo
+   *  ya funcionaba también para un Worker atascado en un loop síncrono sin
+   *  ningún punto de cesión, así que ahora PythonBridge.tsx también expone
+   *  un botón "Detener" mientras `running` es true, no solo durante
+   *  `awaitingInput`. `worker.terminate()` mata la ejecución de inmediato,
+   *  sin punto seguro — no existe (ni se necesita) uno para un loop
+   *  síncrono ni para `Atomics.wait()` bloqueante (confirmado empíricamente,
+   *  <1ms). El stdout que el worker ya había acumulado internamente se
+   *  PIERDE (vive en su closure, nunca llegó al hilo principal) — límite
+   *  real, no se finge que se preserva. El Worker siguiente se crea
+   *  perezosamente en el próximo `run()`, no aquí (recargar Pyodide toma
+   *  varios segundos). */
   const cancelRun = () => {
     const current = pendingRun
     pendingRun = null
-    if (workerSingleton) workerSingleton.terminate()
-    workerSingleton = null
-    readySingleton = null
-    signalSabSingleton = undefined
-    dataSabSingleton = undefined
+    terminarWorkerAtascado()
     setAwaitingInput(false)
     current?.resolve({ stdout: '', error: CANCELLED_RESULT_ERROR })
   }

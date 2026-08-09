@@ -11,7 +11,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'reac
 import { Code2, Eye, GraduationCap, LifeBuoy, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { CANCELLED_RESULT_ERROR, classifyPythonError, parsePythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
+import { CANCELLED_RESULT_ERROR, TIMEOUT_RESULT_ERROR, classifyPythonError, parsePythonError, usePyodide, type PythonErrorCategory } from '@/hooks/usePyodide'
 import { recordEvidence } from '@/lib/experiences/evidence'
 import { useSubmitCycleEvidence } from '@/hooks/useStudent'
 import type { PythonBridge as PythonBridgeDef, PythonMicroPracticeDef, PythonPracticeMode } from '@/types/moduleExperience'
@@ -439,6 +439,11 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   const [solved, setSolved] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
   const [running, setRunning] = useState(false)
+  // true cuando la última ejecución fue detenida por el timeout automático
+  // de usePyodide.ts (probable bucle infinito) — distinto de `error`:
+  // tiene su propio bloque (`timeoutBlock`) en vez de pasar por
+  // PythonErrorCard, que asume un traceback real de Python.
+  const [timedOut, setTimedOut] = useState(false)
   // Valor que el estudiante está escribiendo para el input() real EN CURSO
   // (Commit 4, Épica B) — solo tiene sentido mientras `awaitingInput` es
   // true. Nunca se usa en el mecanismo legado (simulatedInputs), por el
@@ -574,6 +579,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
 
   const handleRun = async () => {
     setRunning(true)
+    setTimedOut(false)
     // Reinicia el registro de valores reales de ESTA ejecución (Commit 6) —
     // antes de llamar a run(), para que handleProvideInput (que puede
     // dispararse varias veces mientras run() sigue pendiente) siempre
@@ -585,6 +591,18 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
     // §6, excepción de alcance del Commit 2.
     const result = await run(code, stage.simulatedInputs)
     setRunning(false)
+    // Timeout automático (2026-08-08, ver TIMEOUT_RESULT_ERROR en
+    // usePyodide.ts): no es un traceback de Python — se muestra con su
+    // propio bloque (timeoutBlock) en vez de PythonErrorCard, y no cuenta
+    // como intento ni dispara classifyPythonError (le asignaría 'logica'
+    // por defecto, un diagnóstico engañoso para un código que nunca llegó
+    // a terminar).
+    if (result.error === TIMEOUT_RESULT_ERROR) {
+      setOutput(result.stdout)
+      setError(null)
+      setTimedOut(true)
+      return
+    }
     setOutput(result.stdout)
     setError(result.error)
     // Cancelación real (Commit 4b, "Cancelar" junto al panel de input()) —
@@ -726,6 +744,15 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
         {running && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         {ready ? 'Ejecutar →' : 'Cargando Python…'}
       </Button>
+      {running && !awaitingInput && (
+        // "Detener" durante ejecución normal (2026-08-08) — antes solo existía
+        // Cancelar dentro de awaitingInputBlock (esperando input()). Mismo
+        // cancelRun(): un estudiante que reconoce su bucle infinito no necesita
+        // esperar los 10s del timeout automático de usePyodide.ts para salir.
+        <Button size="sm" variant="ghost" onClick={handleCancel}>
+          Detener
+        </Button>
+      )}
       {!done && !showSolution && !pendingNextStage && exhausted && (
         <Button size="sm" variant="ghost" onClick={handleShowSolution}>
           Ver solución
@@ -745,6 +772,24 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
   )
 
   const loadErrorBlock = loadError && <p className="text-sm text-red-400">{loadError}</p>
+
+  // Timeout automático (2026-08-08) — bloque dedicado en vez de
+  // PythonErrorCard/parsePythonError: ese componente asume un traceback
+  // real de CPython ("NombreError: mensaje") y cae a un texto genérico
+  // ("Python no pudo ejecutar el código") para cualquier string que no
+  // calce ese formato — insuficiente para explicar POR QUÉ se detuvo.
+  const timeoutBlock = timedOut && (
+    <div className="rounded-xl border-2 border-amber-500/40 bg-amber-500/[0.06] px-3 py-2.5 space-y-1.5">
+      <p className="text-[11px] font-mono tracking-[0.15em] uppercase text-amber-400">
+        Tu código tardó demasiado y se detuvo automáticamente
+      </p>
+      <p className="text-sm text-neural-text/90 leading-relaxed">
+        Probablemente hay un bucle que nunca termina — por ejemplo, una condición de{' '}
+        <code className="rounded bg-black/30 px-1 py-0.5 font-mono text-[12px]">while</code> que nunca se vuelve falsa.
+        Revisa tu código y vuelve a presionar Ejecutar.
+      </p>
+    </div>
+  )
 
   // Panel de input() real EN VIVO (Commit 4, Épica B) — aparece solo
   // mientras el Worker está bloqueado esperando la respuesta que el propio
@@ -903,6 +948,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
               {actionsBlock}
               {loadErrorBlock}
               {awaitingInputBlock}
+              {timeoutBlock}
               {consoleBlock}
               {rawErrorBlock}
               {solvedBlock}
@@ -935,6 +981,7 @@ function PythonMicroPractice({ practice, moduleId, conceptId, courseId, onDone, 
           {actionsBlock}
           {loadErrorBlock}
           {awaitingInputBlock}
+          {timeoutBlock}
           {consoleBlock}
           {rawErrorBlock}
           {resultExplanationBlock}
