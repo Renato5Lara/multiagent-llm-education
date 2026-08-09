@@ -4,11 +4,13 @@ Lee variables de entorno desde .env usando pydantic-settings.
 Soporta entornos development, production y testing.
 """
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
 _API_KEY_MASK_LEN = 8
+_DEFAULT_SECRET_KEY = "cambia-esto-en-produccion-genera-uno-aleatorio-de-32-bytes"
+_MIN_SECRET_KEY_LEN = 32
 
 
 def _mask_key(key: str) -> str:
@@ -56,10 +58,24 @@ class Settings(BaseSettings):
     BACKEND_URL: str = "http://localhost:8000"
 
     # JWT
-    SECRET_KEY: str = "cambia-esto-en-produccion-genera-uno-aleatorio-de-32-bytes"
+    SECRET_KEY: str = _DEFAULT_SECRET_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    @model_validator(mode="after")
+    def _guard_production_secret_key(self) -> "Settings":
+        """Refuse to boot in production with an insecure SECRET_KEY."""
+        if self.is_production and (
+            self.SECRET_KEY == _DEFAULT_SECRET_KEY
+            or len(self.SECRET_KEY) < _MIN_SECRET_KEY_LEN
+        ):
+            raise RuntimeError(
+                "SECRET_KEY inseguro para ENV=production: define una variable de "
+                f"entorno SECRET_KEY distinta del valor por defecto y de al menos "
+                f"{_MIN_SECRET_KEY_LEN} caracteres."
+            )
+        return self
 
     # Uploads
     UPLOAD_DIR: str = "./uploads"
