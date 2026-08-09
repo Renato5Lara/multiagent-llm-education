@@ -13,6 +13,7 @@ import signal
 import subprocess
 import sys
 import textwrap
+import threading
 import time
 
 import psycopg2
@@ -155,6 +156,53 @@ _SCRIPT_VICTIMA = textwrap.dedent(
     time.sleep(60)  # aquí llega el SIGKILL
     """
 )
+
+
+class TestP2ConcurrenciaColisionDePK:
+    """P2 (auditoría de concurrencia, 2026-08-09): dos escritores concurrentes
+    intentando persistir la MISMA transición de la MISMA sesión. Verificado
+    ya seguro por diseño — la PK compuesta (session_id, transicion) hace que
+    exactamente uno gane y el otro falle ruidoso (UniqueViolation), sin que
+    la cadena de hashes quede nunca corrupta ni a medio escribir. No hizo
+    falta ningún fix; este test fija ese contrato para que una migración
+    futura que debilite la PK lo rompa aquí, no en producción."""
+
+    def test_dos_escritores_misma_transicion_uno_gana_uno_falla_limpio(self, almacen):
+        identidad = _identidad("s-p2-concurrencia")
+        base = _persistir_cadena(almacen, identidad, n=1)
+
+        # Dos candidatos a la transición 2, mismo prev_hash, payload distinto
+        # — el mismo escenario que dos requests concurrentes procesando el
+        # mismo turno de la misma sesión.
+        candidato_a = encadenar(identidad, base, {"n": 2, "tipo": "fact", "origen": "a"})
+        candidato_b = encadenar(identidad, base, {"n": 2, "tipo": "fact", "origen": "b"})
+
+        resultados: dict[str, str] = {}
+        barrera = threading.Barrier(2)
+
+        def escribir(nombre: str, registro) -> None:
+            barrera.wait()
+            try:
+                almacen.persistir(registro)
+                resultados[nombre] = "ok"
+            except psycopg2.IntegrityError:
+                resultados[nombre] = "rechazado"
+
+        t1 = threading.Thread(target=escribir, args=("a", candidato_a))
+        t2 = threading.Thread(target=escribir, args=("b", candidato_b))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        assert sorted(resultados.values()) == ["ok", "rechazado"], (
+            f"Se esperaba exactamente un ganador y un rechazo limpio por la PK "
+            f"compuesta, se obtuvo {resultados}"
+        )
+
+        leidos = almacen.leer("s-p2-concurrencia")
+        assert len(leidos) == 2, "La colisión no debe dejar 0, ni 3, transiciones persistidas"
+        assert verificar(identidad, leidos) is None, "La cadena debe seguir verificando íntegra tras la colisión"
 
 
 class TestKillTest:
