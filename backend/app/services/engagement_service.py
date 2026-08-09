@@ -300,87 +300,97 @@ class EngagementService:
 
     def interact(self, req: InteractRequest, student: User) -> InteractResponse:
         db = self._db
+        from app.db.locks import advisory_lock
         from app.models.engagement import _uuid
 
-        session = db.query(EngagementSession).filter(
-            EngagementSession.id == req.session_id,
-            EngagementSession.student_id == student.id,
-        ).first()
-        resource = db.query(EngagementResource).filter(EngagementResource.id == req.resource_id).first()
+        # Caso A (auditoría de concurrencia, 2026-08-09): xp_earned/
+        # resources_shown/resources_interacted son read-modify-write sin
+        # ninguna protección — lost update confirmado con HTTP real bajo
+        # workers concurrentes reales. advisory_lock serializa por sesión
+        # (mismo patrón que save_diagnostic en student_service.py) — la
+        # sesión se lee DENTRO del lock para garantizar que cada request
+        # parte del último estado ya comiteado, nunca de uno stale leído
+        # antes de adquirirlo.
+        with advisory_lock(db, f"engagement-session:{req.session_id}"):
+            session = db.query(EngagementSession).filter(
+                EngagementSession.id == req.session_id,
+                EngagementSession.student_id == student.id,
+            ).first()
+            resource = db.query(EngagementResource).filter(EngagementResource.id == req.resource_id).first()
 
-        if not session or not resource:
-            from fastapi import HTTPException, status
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesión o recurso no encontrado")
+            if not session or not resource:
+                from fastapi import HTTPException, status
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesión o recurso no encontrado")
 
-        is_correct: bool | None = None
-        xp_delta = 0
-        event_type = "resource_completed"
-        new_badge: BadgeOut | None = None
-
-        if req.interaction_type == "view":
-            xp_delta   = XP_TABLE["resource_viewed"]
-            event_type = "resource_viewed"
-            session.resources_shown = (session.resources_shown or 0) + 1
-
-        elif req.interaction_type == "answer" and resource.resource_type == "mini_quiz":
-            meta          = resource.resource_metadata or {}
-            correct_index = meta.get("correct_index")
-            given_index   = req.response_data.get("selected_index")
-            is_correct    = (correct_index is not None and given_index == correct_index)
-            xp_delta      = XP_TABLE["quiz_correct"] if is_correct else XP_TABLE["quiz_wrong"]
-            event_type    = "quiz_answered"
-            session.resources_interacted = (session.resources_interacted or 0) + 1
-
-            if is_correct:
-                new_badge = self._maybe_award_badge(session, "quiz_master")
-
-        elif req.interaction_type == "submit" and resource.resource_type == "short_challenge":
-            xp_delta   = XP_TABLE["challenge_submitted"]
-            event_type = "challenge_submitted"
-            session.resources_interacted = (session.resources_interacted or 0) + 1
-
-        elif req.interaction_type == "skip":
-            xp_delta   = 0
+            is_correct: bool | None = None
+            xp_delta = 0
             event_type = "resource_completed"
+            new_badge: BadgeOut | None = None
 
-        else:
-            xp_delta   = XP_TABLE["resource_completed"]
-            event_type = "resource_completed"
-            session.resources_interacted = (session.resources_interacted or 0) + 1
+            if req.interaction_type == "view":
+                xp_delta   = XP_TABLE["resource_viewed"]
+                event_type = "resource_viewed"
+                session.resources_shown = (session.resources_shown or 0) + 1
 
-            # Si vio todos los recursos → insignia Curioso
-            if session.resources_interacted >= (session.resources_shown or 1):
-                new_badge = new_badge or self._maybe_award_badge(session, "curioso")
+            elif req.interaction_type == "answer" and resource.resource_type == "mini_quiz":
+                meta          = resource.resource_metadata or {}
+                correct_index = meta.get("correct_index")
+                given_index   = req.response_data.get("selected_index")
+                is_correct    = (correct_index is not None and given_index == correct_index)
+                xp_delta      = XP_TABLE["quiz_correct"] if is_correct else XP_TABLE["quiz_wrong"]
+                event_type    = "quiz_answered"
+                session.resources_interacted = (session.resources_interacted or 0) + 1
 
-        session.xp_earned = (session.xp_earned or 0) + xp_delta
+                if is_correct:
+                    new_badge = self._maybe_award_badge(session, "quiz_master")
 
-        db.add(EngagementEvent(
-            id=_uuid(),
-            session_id=session.id,
-            resource_id=resource.id,
-            event_type=event_type,
-            xp_delta=xp_delta,
-            payload=req.response_data,
-        ))
-        db.add(EngagementInteraction(
-            id=_uuid(),
-            session_id=session.id,
-            resource_id=resource.id,
-            interaction_type=req.interaction_type,
-            time_spent_seconds=req.time_spent_seconds,
-            is_correct=is_correct,
-            response_data=req.response_data,
-        ))
+            elif req.interaction_type == "submit" and resource.resource_type == "short_challenge":
+                xp_delta   = XP_TABLE["challenge_submitted"]
+                event_type = "challenge_submitted"
+                session.resources_interacted = (session.resources_interacted or 0) + 1
 
-        db.commit()
+            elif req.interaction_type == "skip":
+                xp_delta   = 0
+                event_type = "resource_completed"
 
-        return InteractResponse(
-            ok=True,
-            xp_delta=xp_delta,
-            xp_total=session.xp_earned,
-            is_correct=is_correct,
-            badge=new_badge,
-        )
+            else:
+                xp_delta   = XP_TABLE["resource_completed"]
+                event_type = "resource_completed"
+                session.resources_interacted = (session.resources_interacted or 0) + 1
+
+                # Si vio todos los recursos → insignia Curioso
+                if session.resources_interacted >= (session.resources_shown or 1):
+                    new_badge = new_badge or self._maybe_award_badge(session, "curioso")
+
+            session.xp_earned = (session.xp_earned or 0) + xp_delta
+
+            db.add(EngagementEvent(
+                id=_uuid(),
+                session_id=session.id,
+                resource_id=resource.id,
+                event_type=event_type,
+                xp_delta=xp_delta,
+                payload=req.response_data,
+            ))
+            db.add(EngagementInteraction(
+                id=_uuid(),
+                session_id=session.id,
+                resource_id=resource.id,
+                interaction_type=req.interaction_type,
+                time_spent_seconds=req.time_spent_seconds,
+                is_correct=is_correct,
+                response_data=req.response_data,
+            ))
+
+            db.commit()
+
+            return InteractResponse(
+                ok=True,
+                xp_delta=xp_delta,
+                xp_total=session.xp_earned,
+                is_correct=is_correct,
+                badge=new_badge,
+            )
 
     # ── complete ──────────────────────────────────────────────────────────────
 
