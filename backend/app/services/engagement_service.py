@@ -386,58 +386,95 @@ class EngagementService:
 
     def complete(self, req: CompleteRequest, student: User) -> CompleteResponse:
         db = self._db
+        from app.db.locks import advisory_lock
         from app.models.engagement import _uuid
 
-        session = db.query(EngagementSession).filter(
-            EngagementSession.id == req.session_id,
-            EngagementSession.student_id == student.id,
-        ).first()
-        if not session:
-            from fastapi import HTTPException, status
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesión no encontrada")
+        # Caso B (auditoría de concurrencia, 2026-08-09): complete() no
+        # verificaba session.status antes de aplicar el bonus — dos
+        # llamadas, incluso puramente SECUENCIALES (sin concurrencia),
+        # duplicaban el bonus de completitud y el EngagementEvent. El
+        # guard de idempotencia es el fix real (no un lock por sí solo);
+        # el lock aquí solo garantiza que el guard vea el último estado
+        # comiteado bajo concurrencia real, mismo advisory_lock que
+        # protege interact() para la misma sesión.
+        with advisory_lock(db, f"engagement-session:{req.session_id}"):
+            session = db.query(EngagementSession).filter(
+                EngagementSession.id == req.session_id,
+                EngagementSession.student_id == student.id,
+            ).first()
+            if not session:
+                from fastapi import HTTPException, status
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesión no encontrada")
 
-        bonus_key   = "session_skipped" if req.skipped else "session_completed"
-        bonus       = XP_TABLE[bonus_key]
-        base_earned = session.xp_earned or 0
+            # Idempotencia: solo la transición activo→completed/skipped
+            # aplica el bonus y crea el evento. Una sesión ya terminal
+            # devuelve el estado ya persistido, sin re-otorgar nada — el
+            # "primer cierre gana", las llamadas siguientes son un no-op
+            # observable, no un error (mismo endpoint, mismo contrato).
+            if session.status in ("completed", "skipped"):
+                earned_slugs: list[str] = session.earned_badges or []
+                badges_out = [b for slug in earned_slugs if (b := _badge_out(slug))]
+                bonus_key = "session_skipped" if session.status == "skipped" else "session_completed"
+                bonus = XP_TABLE[bonus_key]
+                interactions_xp = (session.xp_earned or 0) - XP_TABLE["session_started"] - bonus
+                return CompleteResponse(
+                    xp_earned=session.xp_earned or 0,
+                    xp_breakdown={
+                        "inicio_sesion":     XP_TABLE["session_started"],
+                        "interacciones":     max(0, interactions_xp),
+                        "bonus_completitud": bonus,
+                    },
+                    badges=badges_out,
+                    next_step="module_content",
+                    message=(
+                        "¡Fase Engage completada! Tu curiosidad está activada."
+                        if session.status == "completed"
+                        else "Continuando al contenido del módulo..."
+                    ),
+                )
 
-        session.xp_earned    = base_earned + bonus
-        session.status       = "skipped" if req.skipped else "completed"
-        session.completed_at = datetime.now(timezone.utc)
+            bonus_key   = "session_skipped" if req.skipped else "session_completed"
+            bonus       = XP_TABLE[bonus_key]
+            base_earned = session.xp_earned or 0
 
-        # Insignia Explorador al completar sin saltar
-        completion_badge: BadgeOut | None = None
-        if not req.skipped:
-            completion_badge = self._maybe_award_badge(session, "explorador")
+            session.xp_earned    = base_earned + bonus
+            session.status       = "skipped" if req.skipped else "completed"
+            session.completed_at = datetime.now(timezone.utc)
 
-        db.add(EngagementEvent(
-            id=_uuid(),
-            session_id=session.id,
-            event_type=bonus_key,
-            xp_delta=bonus,
-        ))
+            # Insignia Explorador al completar sin saltar
+            completion_badge: BadgeOut | None = None
+            if not req.skipped:
+                completion_badge = self._maybe_award_badge(session, "explorador")
 
-        db.commit()
+            db.add(EngagementEvent(
+                id=_uuid(),
+                session_id=session.id,
+                event_type=bonus_key,
+                xp_delta=bonus,
+            ))
 
-        earned_slugs: list[str] = session.earned_badges or []
-        badges_out = [b for slug in earned_slugs if (b := _badge_out(slug))]
+            db.commit()
 
-        interactions_xp = base_earned - XP_TABLE["session_started"]
+            earned_slugs = session.earned_badges or []
+            badges_out = [b for slug in earned_slugs if (b := _badge_out(slug))]
 
-        return CompleteResponse(
-            xp_earned=session.xp_earned,
-            xp_breakdown={
-                "inicio_sesion":    XP_TABLE["session_started"],
-                "interacciones":    max(0, interactions_xp),
-                "bonus_completitud": bonus,
-            },
-            badges=badges_out,
-            next_step="module_content",
-            message=(
-                "¡Fase Engage completada! Tu curiosidad está activada."
-                if not req.skipped
-                else "Continuando al contenido del módulo..."
-            ),
-        )
+            interactions_xp = base_earned - XP_TABLE["session_started"]
+
+            return CompleteResponse(
+                xp_earned=session.xp_earned,
+                xp_breakdown={
+                    "inicio_sesion":    XP_TABLE["session_started"],
+                    "interacciones":    max(0, interactions_xp),
+                    "bonus_completitud": bonus,
+                },
+                badges=badges_out,
+                next_step="module_content",
+                message=(
+                    "¡Fase Engage completada! Tu curiosidad está activada."
+                    if not req.skipped
+                    else "Continuando al contenido del módulo..."
+                ),
+            )
 
     # ── helpers ───────────────────────────────────────────────────────────────
 
