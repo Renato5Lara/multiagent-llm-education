@@ -124,8 +124,102 @@ def compute_prior_knowledge(answers: dict) -> tuple[str, list[str]]:
     return level, known
 
 
+def _registrar_evidencia_diagnostico_reconciliable(
+    db: Session,
+    *,
+    idempotency_key: str,
+    student_id: str,
+    course_id: str,
+    titulo_modulo: str,
+    items_incorrectos: list[int],
+    items_totales: int,
+    modalidad_estudiante: str | None,
+) -> None:
+    """Registra una evidencia de diagnóstico en el runtime protegida por
+    idempotencia (P0 legacy→runtime,
+    `gate_p0_legacy_runtime_bridge_2026_08_09` /
+    `diseno_reconciliacion_p0_legacy_runtime_2026_08_09`, memoria del
+    proyecto). La clave incluye `version` del `DiagnosticResult`
+    (columna `version_id_col`, se auto-incrementa en cada retake) —
+    NUNCA solo `(student_id, course_id, competencia)`: sin `version`,
+    un segundo intento del mismo estudiante en la misma competencia
+    encontraría la key ya `completed` y `acquire` la devolvería sin
+    volver a ejecutar el registro — supresión silenciosa del retake,
+    peor que el bug original. Mismo patrón que
+    `knowledge_test_service._registrar_evidencia_reconciliable` (no
+    unificado en un módulo compartido a propósito: cada servicio queda
+    dueño de su propia integración con `IdempotencyService`)."""
+    import json
+
+    from app.events.idempotency import IdempotencyConflict, idempotency_service
+    from app.services.runtime_bridge import (
+        clasificar_fallo_reconciliable,
+        registrar_evidencia_evaluacion,
+    )
+
+    try:
+        record = idempotency_service.acquire(
+            db,
+            idempotency_key,
+            event_type="runtime_evidencia_registrada",
+            aggregate_id=f"{student_id}:{course_id}",
+        )
+    except IdempotencyConflict:
+        # Otra ejecución concurrente ya está procesando esta MISMA
+        # evidencia -- no debe abortar el resto del loop de
+        # _registrar_diagnostico_en_runtime (revisión final de
+        # implementación, cierre_p0_legacy_runtime_2026_08_09).
+        logger.warning(
+            "Evidencia runtime ya en proceso por otra ejecución (key=%s), "
+            "se omite en este lote.",
+            idempotency_key,
+        )
+        return
+    if record.status == "completed":
+        return
+
+    try:
+        registrar_evidencia_evaluacion(
+            student_id=student_id,
+            course_id=course_id,
+            titulo_modulo=titulo_modulo,
+            items_incorrectos=items_incorrectos,
+            items_totales=items_totales,
+            modalidad_estudiante=modalidad_estudiante,
+        )
+    except Exception as exc:
+        snapshot = {
+            "items_incorrectos": items_incorrectos,
+            "items_totales": items_totales,
+            "modalidad_estudiante": modalidad_estudiante,
+            "clasificacion": clasificar_fallo_reconciliable(exc),
+        }
+        try:
+            idempotency_service.fail(db, idempotency_key, reason=json.dumps(snapshot))
+        except Exception:  # noqa: BLE001
+            # Fallo doble (registro + bookkeeping) -- ver
+            # cierre_p0_legacy_runtime_2026_08_09 punto 1. No debe
+            # abortar el resto del loop de _registrar_diagnostico_en_runtime.
+            logger.error(
+                "Fallo doble: no se pudo registrar evidencia runtime NI marcar "
+                "la key como fallida (key=%s). Puede quedar in_progress huérfana.",
+                idempotency_key,
+                exc_info=True,
+            )
+        logger.warning(
+            "No se pudo registrar evidencia runtime (key=%s): %s", idempotency_key, exc
+        )
+    else:
+        idempotency_service.complete(db, idempotency_key)
+
+
 def _registrar_diagnostico_en_runtime(
-    student_id: str, course_id: str, answers: dict, modalidad_estudiante: str | None = None
+    db: Session,
+    student_id: str,
+    course_id: str,
+    answers: dict,
+    version: int,
+    modalidad_estudiante: str | None = None,
 ) -> None:
     """El diagnóstico inicial entra al Runtime como evidencia — la
     primera decisión adaptativa la toma el Runtime, no una tabla local.
@@ -141,9 +235,12 @@ def _registrar_diagnostico_en_runtime(
     de la sesión suele derivarse del primer tema de conocimiento previo
     (RFC-0002 §3, Adaptar debe leer el modelo del estudiante) — sin
     esto, esa primera adaptación quedaba fija en el valor por defecto
-    para toda la sesión, sin importar el perfil VARK real."""
-    from app.services.runtime_bridge import registrar_evidencia_evaluacion
+    para toda la sesión, sin importar el perfil VARK real.
 
+    `version` (columna `version_id_col` de `DiagnosticResult`, ya
+    incrementada por el upsert de `save_diagnostic` antes de esta
+    llamada) distingue cada retake del diagnóstico en la clave de
+    idempotencia — ver `_registrar_evidencia_diagnostico_reconciliable`."""
     for q_id_str, value in sorted(answers.items(), key=lambda kv: str(kv[0])):
         try:
             topic = PRIOR_KNOWLEDGE_TOPIC_MAP.get(int(q_id_str))
@@ -152,7 +249,9 @@ def _registrar_diagnostico_en_runtime(
             continue
         if topic is None:
             continue
-        registrar_evidencia_evaluacion(
+        _registrar_evidencia_diagnostico_reconciliable(
+            db,
+            idempotency_key=f"runtime-evidencia-vark:{student_id}:{course_id}:{version}:{topic}",
             student_id=student_id,
             course_id=course_id,
             titulo_modulo=topic,
@@ -247,7 +346,9 @@ def save_diagnostic(
                 db.refresh(existing)
                 result = existing
     try:
-        _registrar_diagnostico_en_runtime(student_id, course_id, answers, modalidad_estudiante=dominant)
+        _registrar_diagnostico_en_runtime(
+            db, student_id, course_id, answers, result.version, modalidad_estudiante=dominant
+        )
     except Exception:  # noqa: BLE001
         logger.warning("No se pudo registrar el diagnóstico en el runtime", exc_info=True)
     return result

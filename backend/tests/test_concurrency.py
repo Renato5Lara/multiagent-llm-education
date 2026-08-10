@@ -214,6 +214,56 @@ class TestSaveDiagnosticConcurrency:
         assert len(results) == 1
         assert results[0].dominant_modality == result2.dominant_modality
 
+    def test_diagnostic_retake_no_pierde_evidencia_runtime(
+        self, db, estudiante_user, curso_publicado, monkeypatch
+    ):
+        """P0 legacy→runtime (gate_p0_legacy_runtime_bridge_2026_08_09 /
+        diseno_reconciliacion_p0_legacy_runtime_2026_08_09, memoria del
+        proyecto): un retake del diagnóstico VARK debe producir una key
+        de idempotencia DISTINTA por cada `version` de `DiagnosticResult`
+        -- sin esto, `acquire()` encontraría la key del primer intento ya
+        `completed` y suprimiría en silencio el registro runtime del
+        segundo intento. Este es el defecto real que el Gate técnico
+        encontró y corrigió antes de implementar, no una preocupación
+        teórica -- este test lo protege de regresión futura."""
+        import app.services.runtime_bridge as runtime_bridge
+        from app.models.idempotency_key import IdempotencyKey
+        from app.services.student_service import save_diagnostic
+
+        llamadas: list[dict] = []
+
+        def _fake_registrar_evidencia_evaluacion(**kwargs):
+            llamadas.append(kwargs)
+
+        monkeypatch.setattr(
+            runtime_bridge, "registrar_evidencia_evaluacion", _fake_registrar_evidencia_evaluacion
+        )
+
+        answers1 = {"1": 3}  # topic "algorithms", primer intento
+        result1 = save_diagnostic(db, estudiante_user.id, curso_publicado.id, answers1)
+        version1 = result1.version  # capturado ANTES del retake: `result1` es la
+        # misma fila mutada in-place por el upsert (misma identity map de
+        # SQLAlchemy) -- comparar el atributo después del segundo save
+        # compararía la fila consigo misma, no la versión real del primer intento.
+
+        answers2 = {"1": 5}  # mismo topic, retake real
+        result2 = save_diagnostic(db, estudiante_user.id, curso_publicado.id, answers2)
+
+        assert version1 != result2.version
+
+        # Ninguno de los dos intentos fue suprimido -- ambos llamaron al
+        # registro runtime real, incluido el segundo (la regresión que
+        # se estaba evitando).
+        assert len(llamadas) == 2
+
+        keys = (
+            db.query(IdempotencyKey)
+            .filter(IdempotencyKey.event_type == "runtime_evidencia_registrada")
+            .all()
+        )
+        assert len({k.key for k in keys}) == 2
+        assert all(k.status == "completed" for k in keys)
+
 
 # =============================================================================
 # 6. Unit of Work + Advisory Lock Integration Tests
