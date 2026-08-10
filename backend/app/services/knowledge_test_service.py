@@ -323,6 +323,105 @@ def _evidencia_por_competencia(
     return resultado
 
 
+def _registrar_evidencia_reconciliable(
+    db: Session,
+    *,
+    idempotency_key: str,
+    student_id: str,
+    course_id: str,
+    titulo_modulo: str,
+    items_incorrectos: list[int],
+    items_totales: int,
+    modalidad_estudiante: str | None,
+    objetivos: tuple = (),
+    objetivo_snapshot: dict | None = None,
+) -> None:
+    """Registra una evidencia en el runtime protegida por idempotencia
+    (P0 legacy→runtime, `gate_p0_legacy_runtime_bridge_2026_08_09` /
+    `diseno_reconciliacion_p0_legacy_runtime_2026_08_09`, memoria del
+    proyecto). Si `acquire` encuentra la key ya `completed`, no repite
+    la escritura runtime (evita duplicar evidencia en un retry). Si la
+    escritura falla, guarda en `response_body` el snapshot mínimo
+    necesario para que `reconciliar_legacy_runtime.py` pueda reintentar
+    exactamente esta llamada más tarde, sin depender de que los datos
+    legacy de origen sigan disponibles sin cambios.
+
+    `objetivo_snapshot` (solo la llamada de "primer objetivo"):
+    `{"objetivo_titulo": ..., "objetivo_order": ...}` tal como estaban
+    AL MOMENTO del fallo -- sin esto, una reconciliación posterior
+    tendría que re-consultar `LearningObjective` por su estado ACTUAL,
+    que puede haber cambiado de título/orden o haber sido eliminado
+    entre el fallo original y la reconciliación (hallazgo de la
+    auditoría de implementación, `cierre_p0_legacy_runtime_2026_08_09`
+    punto 3)."""
+    import json
+
+    from app.events.idempotency import IdempotencyConflict, idempotency_service
+    from app.services.runtime_bridge import (
+        clasificar_fallo_reconciliable,
+        registrar_evidencia_evaluacion,
+    )
+
+    try:
+        record = idempotency_service.acquire(
+            db,
+            idempotency_key,
+            event_type="runtime_evidencia_registrada",
+            aggregate_id=f"{student_id}:{course_id}",
+        )
+    except IdempotencyConflict:
+        # Otra ejecución concurrente ya está procesando esta MISMA
+        # evidencia -- no es un fallo de esta escritura, es que ya está
+        # en manos de otro proceso. No debe abortar el resto del lote
+        # (revisión final de implementación, cierre_p0_legacy_runtime_2026_08_09).
+        logger.warning(
+            "Evidencia runtime ya en proceso por otra ejecución (key=%s), "
+            "se omite en este lote.",
+            idempotency_key,
+        )
+        return
+    if record.status == "completed":
+        return
+
+    try:
+        registrar_evidencia_evaluacion(
+            student_id=student_id,
+            course_id=course_id,
+            titulo_modulo=titulo_modulo,
+            items_incorrectos=items_incorrectos,
+            items_totales=items_totales,
+            modalidad_estudiante=modalidad_estudiante,
+            objetivos=objetivos,
+        )
+    except Exception as exc:
+        snapshot = {
+            "items_incorrectos": items_incorrectos,
+            "items_totales": items_totales,
+            "modalidad_estudiante": modalidad_estudiante,
+            "clasificacion": clasificar_fallo_reconciliable(exc),
+        }
+        if objetivo_snapshot:
+            snapshot.update(objetivo_snapshot)
+        try:
+            idempotency_service.fail(db, idempotency_key, reason=json.dumps(snapshot))
+        except Exception:  # noqa: BLE001
+            # El propio bookkeeping de idempotencia falló (p.ej. la
+            # conexión legacy cayó en este instante) -- la key queda sin
+            # resolver, pero NO debe abortar el resto del lote (best-
+            # effort, ver `cierre_p0_legacy_runtime_2026_08_09` punto 1).
+            logger.error(
+                "Fallo doble: no se pudo registrar evidencia runtime NI marcar "
+                "la key como fallida (key=%s). Puede quedar in_progress huérfana.",
+                idempotency_key,
+                exc_info=True,
+            )
+        logger.warning(
+            "No se pudo registrar evidencia runtime (key=%s): %s", idempotency_key, exc
+        )
+    else:
+        idempotency_service.complete(db, idempotency_key)
+
+
 def submit_attempt(
     db: Session, student_id: str, attempt_id: str, answers: dict[str, int]
 ) -> KnowledgeTestAttempt:
@@ -416,7 +515,7 @@ def submit_attempt(
         try:
             from app.models.learning_objective import LearningObjective
             from app.services import student_service
-            from app.services.runtime_bridge import construir_objetivos, registrar_evidencia_evaluacion
+            from app.services.runtime_bridge import construir_objetivos
 
             # Modelo del estudiante ya diagnosticado, si el Likert (VARK) ya
             # se completó — el flujo real siempre lo exige antes del
@@ -442,7 +541,12 @@ def submit_attempt(
             # produce normalizar_asunto es legible por sí mismo incluso sin
             # traducción (mismo criterio que el resto de temas del curso).
             for topic, celda in sorted(_evidencia_por_competencia(ordered, answers).items()):
-                registrar_evidencia_evaluacion(
+                _registrar_evidencia_reconciliable(
+                    db,
+                    idempotency_key=(
+                        f"runtime-evidencia-pretest:{student_id}:{attempt.course_id}:"
+                        f"{attempt.id}:{topic}"
+                    ),
                     student_id=student_id,
                     course_id=attempt.course_id,
                     titulo_modulo=COMPETENCY_LABELS.get(topic, topic),
@@ -485,7 +589,12 @@ def submit_attempt(
                 objetivos = construir_objetivos(
                     [(primer_objetivo.id, primer_objetivo.title, primer_objetivo.order or 0)]
                 )
-                registrar_evidencia_evaluacion(
+                _registrar_evidencia_reconciliable(
+                    db,
+                    idempotency_key=(
+                        f"runtime-evidencia-pretest-objetivo:{student_id}:{attempt.course_id}:"
+                        f"{attempt.id}:{primer_objetivo.id}"
+                    ),
                     student_id=student_id,
                     course_id=attempt.course_id,
                     titulo_modulo=primer_objetivo.title,
@@ -493,6 +602,10 @@ def submit_attempt(
                     items_totales=global_evidencia["total"],
                     modalidad_estudiante=modalidad_estudiante,
                     objetivos=objetivos,
+                    objetivo_snapshot={
+                        "objetivo_titulo": primer_objetivo.title,
+                        "objetivo_order": primer_objetivo.order or 0,
+                    },
                 )
         except Exception:
             logger.warning("No se pudo registrar el pre-test en el runtime", exc_info=True)

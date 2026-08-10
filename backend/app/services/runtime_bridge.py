@@ -16,6 +16,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from psycopg2 import InterfaceError as PgInterfaceError
+from psycopg2 import OperationalError as PgOperationalError
+
 from app.services.runtime_connection import (
     SPEC_VERSION,
     VERSION_BANCO,
@@ -33,8 +36,31 @@ from runtime.boundary import (
     normalizar_asunto,
     registrar_hecho,
 )
+from runtime.domain.shared.llm_openai import _TRANSITORIAS as _LLM_TRANSITORIAS
 from runtime.domain.shared.objetivos import ObjetivoOrdenado, asunto_avance
 from runtime.kernel.state.entries import Capacidad, OrigenProvenance, TipoClaim
+
+
+# P0 legacy->runtime (gate_p0_legacy_runtime_bridge_2026_08_09, memoria
+# del proyecto): mismo criterio de clasificación E-3/E-1 que ADR-0004
+# (runtime/domain/shared/llm_provider.py) -- reutiliza el MISMO tuple de
+# excepciones transitorias ya declarado para OpenAI
+# (`llm_openai._TRANSITORIAS`, no una redeclaración -- si ese tuple
+# cambia, esta clasificación cambia con él, sin duplicación) y agrega
+# las de conexión de psycopg2 (AlmacenTransiciones, storage.py) para el
+# caso de infraestructura de Postgres. Cualquier excepción fuera de
+# este tuple se trata como E-1 (dominio, permanente) por defecto -- el
+# mismo criterio conservador que ya usa `con_reintentos`: nunca
+# reintentar indefinidamente lo que no se reconoce como transitorio.
+EXCEPCIONES_TRANSITORIAS_RECONCILIABLES: tuple[type[Exception], ...] = (
+    PgOperationalError,
+    PgInterfaceError,
+) + _LLM_TRANSITORIAS
+
+
+def clasificar_fallo_reconciliable(exc: Exception) -> str:
+    """"E-3" (transitorio, reintentable) o "E-1" (dominio, permanente)."""
+    return "E-3" if isinstance(exc, EXCEPCIONES_TRANSITORIAS_RECONCILIABLES) else "E-1"
 
 
 def _sesion_del_curso(student_id: str, course_id: str) -> str:
