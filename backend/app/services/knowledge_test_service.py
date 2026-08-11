@@ -367,7 +367,13 @@ def _registrar_evidencia_reconciliable(
             db,
             idempotency_key,
             event_type="runtime_evidencia_registrada",
-            aggregate_id=f"{student_id}:{course_id}",
+            # aggregate_id = la entidad que originó el evento (contrato de
+            # IdempotencyKey.aggregate_id, String(36), un solo UUID) — el
+            # estudiante, no una clave compuesta con course_id. La
+            # deduplicación real ya la garantiza `idempotency_key`
+            # (String(255), único), que incluye student_id+course_id+
+            # attempt_id+topic completos.
+            aggregate_id=student_id,
         )
     except IdempotencyConflict:
         # Otra ejecución concurrente ya está procesando esta MISMA

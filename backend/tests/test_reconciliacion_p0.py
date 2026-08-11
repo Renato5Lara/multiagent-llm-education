@@ -405,3 +405,170 @@ class TestConcurrenciaReal:
             db_check.commit()
         finally:
             db_check.close()
+
+
+@pytest.mark.skipif(
+    not _pg_disponible(), reason="PostgreSQL no disponible (ADR-0005 §3 exige BD real)"
+)
+class TestAggregateIdRespetaContratoReal:
+    """`aggregate_id` es la entidad que originó el evento -- contrato de
+    `IdempotencyKey.aggregate_id` (`String(36)`, un solo UUID;
+    `app/models/idempotency_key.py`), el mismo que `EventOutbox.aggregate_id`
+    (`app/models/event_outbox.py`). `student_service.py`,
+    `knowledge_test_service.py` y `scripts/reconciliar_legacy_runtime.py`
+    lo violaban componiendo `f"{student_id}:{course_id}"` (73 caracteres) --
+    SQLite (tests/conftest.py) no lo detectaba por no exigir el límite de
+    longitud con el mismo rigor que PostgreSQL, que lo rechazaba con
+    `StringDataRightTruncation` (hallazgo real, recorrido HTTP de la
+    Iteración 6.5, 2026-08-11). La deduplicación real nunca dependió de
+    `aggregate_id`: la garantiza `idempotency_key` (único, ya incluye
+    student_id+course_id+version/attempt_id+topic completos) -- por eso
+    la corrección es reducir `aggregate_id` a `student_id`, no ensanchar
+    la columna."""
+
+    def _engine(self):
+        import os
+
+        from sqlalchemy import create_engine
+
+        url = os.environ.get(
+            "RUNTIME_TEST_DATABASE_URL",
+            "postgresql://upao_user:upao_pass@localhost:5432/upao_mas_edu",
+        )
+        return create_engine(url)
+
+    def test_diagnostico_vark_persiste_aggregate_id_sin_truncar(self, monkeypatch):
+        import uuid
+
+        from sqlalchemy.orm import sessionmaker
+
+        import app.services.runtime_bridge as runtime_bridge
+        from app.services.student_service import (
+            _registrar_evidencia_diagnostico_reconciliable,
+        )
+
+        monkeypatch.setattr(runtime_bridge, "registrar_evidencia_evaluacion", lambda **kw: None)
+
+        Session = sessionmaker(bind=self._engine())
+        session = Session()
+        student_id, course_id = str(uuid.uuid4()), str(uuid.uuid4())
+        try:
+            _registrar_evidencia_diagnostico_reconciliable(
+                session,
+                idempotency_key=f"runtime-evidencia-vark:{student_id}:{course_id}:1:algorithms",
+                student_id=student_id,
+                course_id=course_id,
+                titulo_modulo="algorithms",
+                items_incorrectos=[0, 1],
+                items_totales=5,
+                modalidad_estudiante="visual",
+            )
+            row = (
+                session.query(IdempotencyKey)
+                .filter(IdempotencyKey.aggregate_id == student_id)
+                .one()
+            )
+            assert row.aggregate_id == student_id
+            assert len(row.aggregate_id) == 36
+            assert row.status == "completed"
+        finally:
+            session.query(IdempotencyKey).filter(
+                IdempotencyKey.aggregate_id == student_id
+            ).delete(synchronize_session=False)
+            session.commit()
+            session.close()
+
+    def test_pretest_knowledge_test_service_persiste_aggregate_id_sin_truncar(self, monkeypatch):
+        import uuid
+
+        from sqlalchemy.orm import sessionmaker
+
+        import app.services.runtime_bridge as runtime_bridge
+        from app.services.knowledge_test_service import _registrar_evidencia_reconciliable
+
+        monkeypatch.setattr(runtime_bridge, "registrar_evidencia_evaluacion", lambda **kw: None)
+
+        Session = sessionmaker(bind=self._engine())
+        session = Session()
+        student_id, course_id = str(uuid.uuid4()), str(uuid.uuid4())
+        try:
+            _registrar_evidencia_reconciliable(
+                session,
+                idempotency_key=(
+                    f"runtime-evidencia-pretest:{student_id}:{course_id}:"
+                    f"{uuid.uuid4()}:variables"
+                ),
+                student_id=student_id,
+                course_id=course_id,
+                titulo_modulo="Variables",
+                items_incorrectos=[0],
+                items_totales=4,
+                modalidad_estudiante="reading",
+            )
+            row = (
+                session.query(IdempotencyKey)
+                .filter(IdempotencyKey.aggregate_id == student_id)
+                .one()
+            )
+            assert row.aggregate_id == student_id
+            assert len(row.aggregate_id) == 36
+            assert row.status == "completed"
+        finally:
+            session.query(IdempotencyKey).filter(
+                IdempotencyKey.aggregate_id == student_id
+            ).delete(synchronize_session=False)
+            session.commit()
+            session.close()
+
+    def test_reconciliador_legacy_persiste_aggregate_id_sin_truncar(self, monkeypatch):
+        import json
+        import uuid
+
+        from sqlalchemy.orm import sessionmaker
+
+        import app.services.runtime_bridge as runtime_bridge
+        from scripts.reconciliar_legacy_runtime import EVENT_TYPE
+
+        monkeypatch.setattr(runtime_bridge, "registrar_evidencia_evaluacion", lambda **kw: None)
+
+        Session = sessionmaker(bind=self._engine())
+        session = Session()
+        student_id, course_id = str(uuid.uuid4()), str(uuid.uuid4())
+        key = f"runtime-evidencia-vark:{student_id}:{course_id}:1:algorithms"
+        try:
+            # `fail()` exige que la key ya exista (`idempotency.py:272-276`)
+            # -- primero `acquire()` la crea `in_progress`, igual que haría
+            # el primer intento real antes de fallar. `aggregate_id` solo
+            # se fija en la creación (`idempotency.py:208-222`); el retry
+            # de `reconciliar()` nunca lo vuelve a escribir -- por eso el
+            # setup debe pasarlo aquí, igual que el primer intento real.
+            idempotency_service.acquire(
+                session, key, event_type=EVENT_TYPE, aggregate_id=student_id
+            )
+            idempotency_service.fail(
+                session,
+                key,
+                reason=json.dumps(
+                    {
+                        "items_incorrectos": [0, 1],
+                        "items_totales": 5,
+                        "modalidad_estudiante": "visual",
+                        "clasificacion": "E-3",
+                    }
+                ),
+            )
+            reporte = reconciliar(session, apply=True)
+            assert key in reporte["convergidos"]
+
+            row = (
+                session.query(IdempotencyKey)
+                .filter(IdempotencyKey.key == key)
+                .one()
+            )
+            assert row.aggregate_id == student_id
+            assert len(row.aggregate_id) == 36
+            assert row.status == "completed"
+        finally:
+            session.query(IdempotencyKey).filter(IdempotencyKey.key == key).delete()
+            session.commit()
+            session.close()

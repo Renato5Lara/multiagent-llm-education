@@ -201,7 +201,11 @@ def reconciliar(db, *, apply: bool) -> dict:
                 db,
                 k.key,
                 event_type=EVENT_TYPE,
-                aggregate_id=f"{info['student_id']}:{info['course_id']}",
+                # aggregate_id = la entidad que originó el evento (contrato
+                # de IdempotencyKey.aggregate_id, String(36), un solo UUID)
+                # — el estudiante, no una clave compuesta con course_id. La
+                # deduplicación real ya la garantiza `k.key` (único).
+                aggregate_id=info["student_id"],
             )
         except IdempotencyConflict:
             reporte["ya_en_proceso_por_otra_ejecucion"].append(k.key)
