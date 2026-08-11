@@ -3101,6 +3101,261 @@ metodológicamente incorrecto — no se hizo.
 > iteraciones posteriores.
 
 **Código de producción:** cambios de la opción C (`aggregate_id`)
-implementados y verificados, **sin commitear todavía** — pendiente de
-decisión explícita del tesista sobre el commit (fuera del alcance de
-esta iteración, que es de investigación, no de cierre de repositorio).
+implementados, verificados y **commiteados** en dos commits separados
+(`3ce8808` fix + tests, `0dcac7c` documentación de esta iteración) —
+sin push. Checkpoint final read-only ejecutado directamente contra
+PostgreSQL (transiciones 52/55, facts T-48/T-54, estado de
+`LearningPath`/`PathModule`/`knowledge_test_attempts`/
+`evaluation_attempts`, cero `idempotency_keys` pendientes) — coincide
+exactamente con lo documentado arriba. Backend y PostgreSQL locales
+detenidos al cierre de la iteración; el volumen `pgdata` permanece
+intacto.
+
+## Adenda (2026-08-11) — B1/B2: por qué los objetivos 2-4 no se cierran, y decisión de no intervención
+
+Investigación de seguimiento inmediato, **solo lectura de código, sin
+ejecutar tráfico ni tocar PostgreSQL/infraestructura**, para responder
+la pregunta que la propia iteración dejó abierta ("no demuestra
+generalización a los demás objetivos"): ¿existe un camino legítimo,
+sin inyección de facts ni cambios ad hoc, para que `Validar` cierre el
+ciclo también para los objetivos 2-4?
+
+**B1 — mapeo de evidencia por objetivo.** El curso real seedeado
+(`seed.py:101-106`, IS301 "Fundamentos de Programación") tiene **4
+`LearningObjective`, no 9** (la lista de 9 módulos de `CLAUDE.md` es
+una referencia de diseño más granular, nunca implementada así en el
+curriculum operativo). Para cada objetivo, la evaluación real de
+módulo (`students.py:1046-1060`) siempre registra un fact correcto por
+atribución (`PathModule.title = LearningObjective.title` verbatim,
+`normalizar_asunto` funciona igual para los 4) — ese fact dispara una
+decisión igual que en el objetivo 1. El bloqueo no es de datos ni de
+atribución: **ningún evento del flujo real vuelve a tocar la misma
+competencia una segunda vez** para los objetivos 2-4, porque (a) los
+módulos, una vez evaluados, quedan `completed` permanentemente (sin
+reevaluación), y (b) el pre-test solo ancla evidencia al primer
+objetivo por diseño explícito
+(`knowledge_test_service.py:560-563`).
+
+**B2 — ¿post-test → Runtime resolvería esto?** Se investigó extender
+simétricamente el registro de evidencia (hoy exclusivo del branch
+`kind=="pre"` de `submit_attempt`) al branch `kind=="post"`
+(`knowledge_test_service.py:498-503`, hoy solo llama a
+`compute_experiment_result`, sin tocar el runtime). **Hallazgo que
+corrige la premisa de B1:** el banco de preguntas está deliberadamente
+acotado, por diseño psicométrico del instrumento — no por
+casualidad —, a contenido del **Módulo 1 únicamente**
+(`knowledge_test_bank.py:1-14`: *"Alcance: Módulo 1 de Fundamentos...
+SIN bucles: el aprendizaje de bucles se evidencia en las actividades
+adaptativas, no en el instrumento"*). El campo `module_number` del
+banco (valores 1/2/4) es un eje de cobertura **interno al Módulo 1**
+("intro/algoritmo", "variables/tipos/E-S", "condicional simple"), no
+un índice de `LearningObjective.order` — la coincidencia numérica con
+los objetivos 2 y 4 del curso es casual, no una correspondencia real
+de contenido.
+
+**Consecuencia:** registrar evidencia de post-test bajo el título de
+los objetivos 2-4 sería **atribuir contenido que el instrumento nunca
+evaluó** — fabricar evidencia, exactamente lo que 6.5 evitó
+deliberadamente. La única extensión legítima cubriría el objetivo
+1 (ya resuelto por 6.5) — y ahí el beneficio es marginal, porque en el
+flujo real esa decisión típicamente ya está `VALIDADA` antes del
+post-test (`POST_TEST_REFERENCE_MODULE_LIMIT=2`, requiere 2 módulos
+completados primero). Separación de datos verificada: `research_
+dashboard_service.get_student_result_rows()` y `compute_experiment_
+result` leen `KnowledgeTestAttempt` directamente, nunca el runtime —
+conectar el post-test al runtime no afectaría el análisis estadístico
+pre/post de la tesis. Pero sí introduciría un riesgo metodológico
+distinto: convertiría el post-test de **medición terminal pasiva** a
+**evento potencialmente funcional** (capaz de disparar Adaptar), lo
+cual es una forma de contaminación del protocolo experimental
+(reactividad), aunque no de los datos ya materializados.
+
+**Decisión — NO INTERVENCIÓN, no implementar:**
+
+| Elemento | Decisión |
+|---|---|
+| Post-test → Runtime | ❌ No implementar |
+| Objetivos 2-4 sin `validar_decision` | ⚠️ Límite deliberado del instrumento, no un bug — decisión académica pendiente si se quiere resolver |
+| Instrumento pre/post-test | ✅ Se mantiene sin cambios |
+| Runtime / Validar | ✅ Sin cambios |
+| Código | ✅ Sin modificaciones |
+
+**Nota para lectura futura, explícita a propósito:** si en una
+auditoría posterior se observa "objetivos 2-4 sin `validar_decision`
+en ninguna sesión real", **no es un hallazgo nuevo ni un defecto** —
+es esta decisión de no intervención, ya investigada y documentada
+aquí. Resolverlo requeriría una decisión académica/de producto
+(ampliar el instrumento más allá del Módulo 1, diseñar reevaluación de
+módulos completados, o cambiar qué evidencia exige `Validar`), no un
+fix de código.
+
+## Adenda (2026-08-11, continuación) — B0: `shared_memory.py`, defecto latente sin impacto funcional
+
+Investigación de seguimiento a los hallazgos que 6.5 dejó registrados
+fuera de alcance. **Solo lectura de código, sin PostgreSQL, sin
+cambios.** Pregunta: ¿el `aggregate_id=f"{voter_name}:{key}"` de
+`app/memory/shared_memory.py:135` (mismo defecto de contrato que el
+corregido en `3ce8808`) puede estar degradando en silencio una
+garantía de deduplicación real, dado que su excepción se absorbe con
+`except Exception: pass`?
+
+**Resultado: el defecto existe textualmente pero es inalcanzable en
+producción y, aunque se alcanzara, no perdería ninguna garantía
+funcional.**
+
+- `SharedMemoryStore.publish_observation` solo construye ese
+  `aggregate_id` dentro de `if self._dedup_engine is not None:`
+  (línea 87). `memory_store_from_session()` (línea 41) construye el
+  store con `dedup_engine=None` por defecto — se rastrearon los **17
+  call sites reales** en `app/` (`pedagogy.py`, `students.py`,
+  `replay.py`, `swarm.py`, `weekly_learning/routes.py`,
+  `swarm_activation_service.py`) y **ninguno pasa `dedup_engine=`**.
+- Aunque se alcanzara, el registro (`SharedMemoryRecord`) se persiste
+  igual — el `except: pass` solo salta una verificación *anticipada*,
+  no bloquea nada aguas abajo (verificado leyendo el resto de la
+  función, líneas 190-247).
+- La garantía real de idempotencia es un `UniqueConstraint` a nivel de
+  base de datos (`voter_name, student_id, module_id, memory_type,
+  key`, `app/models/shared_memory_record.py:29-33`), siempre activo,
+  independiente del `dedup_engine`. Su violación (`IntegrityError`) ya
+  se maneja explícitamente (rollback de savepoint + búsqueda del
+  registro existente + devolución de su ID) — sin pérdida ni fallo
+  silencioso.
+- Los 2 tests que fallan en `tests/test_idempotency.py`
+  (`TestIdempotentSharedMemory::test_publish_observation_dedup`/
+  `test_publish_observation_force_bypass`) **no tienen relación con
+  este hallazgo**: prueban `IdempotentSharedMemory`
+  (`app/events/integration.py:34`), una clase que nunca se instancia
+  en `app/` y cuyo `acquire()` no pasa `aggregate_id` en absoluto. Su
+  fallo real es un bug del propio test (llaman a un método `async` sin
+  `await` desde una función síncrona) — confirmado como preexistente y
+  no relacionado, mismo hallazgo ya reportado en 6.5 con `git stash`.
+
+**Decisión: NO INTERVENIR.** Documentado explícitamente para que una
+auditoría futura no lo trate como hallazgo nuevo: **volvería a ser
+relevante únicamente si algún caller empezara a pasar `dedup_engine=`
+a `SharedMemoryStore`** — condición que hoy no existe en ningún punto
+del código.
+
+## Adenda (2026-08-11, continuación) — B1: idempotencia de la evidencia posterior de evaluación de módulo
+
+Tercera investigación de seguimiento. **Solo lectura de código, sin
+PostgreSQL, sin cambios.** Pregunta: `students.py:1046-1060` (evidencia
+"posterior" de la evaluación real de módulo, la misma que cerró
+`Validar` en 6.5) nunca pasó por `idempotency_key` — a diferencia del
+diagnóstico y el pre-test. ¿Puede un reintento producir duplicación de
+decisiones/veredictos?
+
+**Resultado: no.** `evaluation_service.submit_evaluation` no bloquea
+un reenvío del mismo `attempt_id` (sin chequeo de `completed_at`), así
+que un reintento sí vuelve a registrar un fact. Pero se rastreó la
+cadena completa capa por capa:
+
+- **Diagnosticar** (`diagnosticar/productor.py:42-52`) interpreta cada
+  fact **una vez por `fact.id`**, no por contenido — un fact duplicado
+  (id distinto) sí produce una interpretación redundante.
+- **Orientar** (`orientar/productor.py:39,85`, guardia
+  `palabra_en_pie`) no vuelve a proponer mientras su propuesta siga
+  vigente — la interpretación redundante queda inerte, sin generar una
+  segunda decisión.
+- **Validar** — protección más fuerte que cualquier `idempotency_key`:
+  el reducer `runtime/kernel/reducers/validacion.py:54` rechaza duro
+  cualquier intento de validar una decisión cuyo `estado_validacion`
+  ya no sea `PENDIENTE_DE_VALIDACION`, y un rechazo del reducer aborta
+  ruidosamente (`walkthrough.py`), nunca se esconde. Un
+  `validar_decision` duplicado es **estructuralmente imposible**, no
+  solo improbable.
+
+**Decisión: NO INTERVENIR.** Clasificación: defecto de robustez/
+eficiencia (bloat de evidencia inerte ante un reintento), sin impacto
+funcional demostrado — no amerita agregar `idempotency_key` a esta
+ruta.
+
+**Hallazgo colateral, más relevante que la pregunta original —
+abre línea C1, no se investiga aquí:** al verificar si dos requests
+concurrentes podían colisionar, se confirmó que **ningún módulo de
+`runtime/` usa `advisory_lock`** (cero resultados en todo el árbol).
+`encadenar()` calcula el siguiente número de transición en memoria a
+partir de una lectura previa del historial, y `AlmacenTransiciones.
+persistir` es un `INSERT` directo sin manejo de conflicto —
+`PRIMARY KEY (session_id, transicion)`. Dos requests verdaderamente
+concurrentes sobre el mismo `session_id` podrían calcular el mismo
+número de transición y colisionar. Como el caller de evaluación de
+módulo ya envuelve la llamada en `try/except Exception: logger.
+warning(...)` (best-effort), el resultado de esa colisión sería
+**pérdida silenciosa de un fact** — no duplicación, y sin HTTP 500
+visible para el estudiante. **Hipótesis causal, no confirmada
+experimentalmente todavía** — ver línea C1 más abajo.
+
+## Adenda (2026-08-11, continuación) — C1: reproducción controlada, hipótesis de concurrencia CONFIRMADA
+
+Cuarta investigación de seguimiento. **Reproducción HTTP real y
+controlada, sin implementar ningún fix, sin tocar el estudiante de
+6.5.** Pregunta: ¿pueden dos operaciones HTTP verdaderamente
+concurrentes sobre el mismo `session_id` colisionar al calcular el
+número de transición, y esa colisión queda absorbida en silencio?
+
+**Diseño:** estudiante experimental nuevo e independiente
+(`iteracion.c1@upao.test`, `student_id=60104a58-a83a-4772-9137-
+d37b1f66975b`), diagnóstico VARK completado (29 transiciones, cadena
+íntegra — estado inicial capturado por `AlmacenTransiciones.leer` +
+`cadena.verificar`, ambos de solo lectura). Endpoint elegido para
+evitar ruido de latencia LLM: `POST /api/students/cycle-evidence`
+(`students.py:539-578`) — mismo camino real (`registrar_hecho` →
+`ejecutar_walkthrough` → `AlmacenTransiciones.persistir`) que la
+evidencia de evaluación de módulo, sin depender de un intento de
+evaluación previo. Disparo de N=2 requests con arranque simultáneo
+real (`asyncio.Barrier`, no una secuencia rápida) vía `httpx.
+AsyncClient`, cada una con `competencia` distinguible
+(`c1-race-0`/`c1-race-1`) para identificar el resultado por contenido,
+sin necesidad de inferir qué transición calculó cada request
+internamente (instrumentación deliberadamente evitada).
+
+**Resultado — reproducido en el primer intento, N=2, sin necesidad de
+escalar a 5/10:**
+
+```
+idx=0 → HTTP 200, runtime_decision con diseño+recurso completo
+idx=1 → HTTP 200, runtime_decision: null
+```
+
+Transiciones: 29 → 32 (fact+señal de Tutorizar+interpretación de
+Diagnosticar, todas de `idx=0`). El fact de `idx=1`
+(`competencia="c1-race-1"`) **nunca existe** en `runtime_transitions`.
+Log del backend, constraint exacta confirmada por evidencia directa,
+no asumida: `runtime_bridge failed for cycle-evidence (c1-race-1):
+duplicate key value violates unique constraint
+"runtime_transitions_pkey"` — la `PRIMARY KEY (session_id,
+transicion)`. Cadena hash tras la colisión: **íntegra** (`verificar()`
+→ `None`, 32 registros) — el `INSERT` fallido hizo rollback limpio, sin
+fila parcial ni corrupción. No es duplicación ni corrupción: es
+**pérdida completa y silenciosa de un evento**, con HTTP 200 en ambas
+respuestas.
+
+**Corrección explícita a la adenda B1:** la causa raíz **no es la
+ausencia de `idempotency_key`** en la evidencia posterior (B1 ya había
+descartado eso — el kernel protege `Validar` contra duplicados de
+forma estructural). La causa raíz confirmada es la **ausencia total de
+serialización de escrituras sobre un mismo `session_id`** en todo
+`runtime/` (cero `advisory_lock`). Un `idempotency_key` habría evitado
+un reintento explícito del mismo request, pero no dos operaciones
+*distintas* y legítimas que llegan al mismo tiempo — ese es un defecto
+de concurrencia, no de idempotencia. Una auditoría futura no debe
+"arreglar" esto agregando `idempotency_key` a `students.py:1046-1060`
+— sería un fix para el problema equivocado.
+
+**Amenaza a la validez, explícita:** N=2 en PostgreSQL local confirma
+que la condición de carrera **existe y es reproducible**, no que su
+frecuencia o impacto a escala de 350 estudiantes concurrentes sea la
+misma que en Render/producción — esa extrapolación pertenece a la
+línea A (capacidad), deliberadamente no mezclada aquí.
+
+**Estado: C1 CERRADA — hipótesis confirmada.** Sin fix implementado.
+Estudiante `iteracion.c1` preservado intacto (32 transiciones, sin
+limpieza) como evidencia, igual que el de 6.5. Candidata siguiente,
+**no abierta todavía**: C2 — determinar si el mismo mecanismo puede
+perder evidencia pedagógica real (evaluación de módulo, no solo
+`cycle-evidence` sintético) bajo la misma condición de carrera. El
+diseño de un fix (candidatos: `advisory_lock` por `session_id`,
+transacción serializable, u otro) queda para una fase posterior,
+separada y con su propia autorización.
