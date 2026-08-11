@@ -3359,3 +3359,89 @@ perder evidencia pedagógica real (evaluación de módulo, no solo
 diseño de un fix (candidatos: `advisory_lock` por `session_id`,
 transacción serializable, u otro) queda para una fase posterior,
 separada y con su propia autorización.
+
+## Adenda (2026-08-11, continuación) — C2a: doble envío real de evaluación, hipótesis NO confirmada, hallazgo distinto
+
+Quinta investigación de seguimiento, tercer estudiante experimental e
+independiente (`iteracion.c2@upao.test`, `student_id=3a555e55-431f-
+4264-978e-3d2a6f844c5a` — 6.5 y C1 preservados sin tocar). Pregunta
+acotada: ¿el doble envío concurrente del **mismo `attempt_id`** de
+evaluación de módulo (escenario realista: doble clic/reintento de red)
+convierte la carrera de C1 en pérdida silenciosa de evidencia
+pedagógica real?
+
+**Diseño:** un solo `start_evaluation` secuencial (obtiene el
+`attempt_id` real del módulo 1), luego 2 envíos concurrentes con
+arranque simultáneo real (`asyncio.Barrier`) al mismo `attempt_id`,
+mismas respuestas (no se fabrican dos competencias distintas — es un
+doble envío real, no dos eventos distintos). Estado inicial capturado
+por solo lectura antes de disparar (51 transiciones, cadena íntegra,
+`evaluation_attempts.completed_at=NULL`).
+
+**Resultado:**
+
+```
+idx=0 → HTTP 500: StaleDataError — "UPDATE statement on table
+        'path_modules' expected to update 1 row(s); 0 were matched."
+idx=1 → HTTP 200: score 2/2, passed, runtime_decision completo
+```
+
+Capa de aplicación final: `evaluation_attempts` 1 fila consistente
+(score=2, passed=1); `path_modules[Fundamentos de Python]`
+`status=completed`, `version=2` (avanzó de 1→2 una sola vez); módulo 2
+correctamente desbloqueado. Capa runtime final: 51→56 transiciones,
+**exactamente 1** fact posterior con `competencia="fundamentos-de-
+python"` (ni 0 ni 2 duplicados) — cadena hash íntegra (`verificar()` →
+`None`, 56 registros).
+
+### Tres conclusiones separadas, sin mezclarlas
+
+**1. Hipótesis principal de C2a: NO CONFIRMADA.** El doble envío real
+del mismo `attempt_id` no produjo pérdida silenciosa de evidencia
+runtime. C1 no se generaliza automáticamente a `submit_evaluation`.
+
+**2. Diferencia causal demostrada (no solo observada):**
+`PathModule` (`app/models/student_progress.py:72`) tiene
+`version_id_col` — optimistic locking real de SQLAlchemy. La
+colisión concurrente ocurre **dentro de `evaluation_service.
+submit_evaluation`** (línea 309-314, `update_module_progress`), **una
+capa antes** de que la ruta llegue al bloque `try/except` del
+runtime_bridge (`students.py:1015+`). La request perdedora nunca
+intenta tocar el runtime — no hay una segunda escritura que pudiera
+colisionar en `runtime_transitions_pkey` como en C1. `cycle-evidence`
+no tiene ningún `UPDATE` con `version_id_col` en su camino previo al
+runtime; por eso ahí sí llega a competir directamente por el mismo
+número de transición. La protección que evitó la pérdida en C2a existe
+**por casualidad estructural** (el optimistic locking de una tabla no
+relacionada con el runtime), no por diseño consciente de proteger
+`runtime_transitions`.
+
+**3. Hallazgo nuevo, no anticipado por el diseño de C2, registrado sin
+convertirlo en trabajo de reparación:** el `StaleDataError` no está
+capturado en ningún punto de `evaluation_service.submit_evaluation` ni
+de la ruta — se propaga tal cual, y el mensaje interno de SQLAlchemy
+llega crudo al cliente HTTP (`{"detail":"UPDATE statement on table
+'path_modules' expected to update 1 row(s); 0 were matched.",...}`).
+Es un defecto real de manejo de errores bajo concurrencia,
+**independiente** del hallazgo de C1 — no debe confundirse con él ni
+"arreglarse" como si fuera el mismo problema.
+
+**Estado: C2 CERRADA.** No se buscó artificialmente otra secuencia
+para forzar la pérdida silenciosa (habría cambiado la pregunta después
+de ver el resultado — mismo criterio de honestidad experimental que
+todo lo anterior). Estudiante `iteracion.c2` preservado intacto (56
+transiciones) como evidencia, junto a `iteracion.6.5` (6.5) e
+`iteracion.c1` (C1). Sin fix implementado en ninguno de los dos
+hallazgos (C1: pérdida silenciosa en `cycle-evidence`; C2: 500 sin
+manejar en `submit_evaluation`).
+
+**Línea C experimental cerrada por ahora.** Mapa acumulado:
+
+```
+C1  → carrera en runtime/ (cycle-evidence)      → pérdida silenciosa CONFIRMADA
+C2a → doble submit real (submit_evaluation)      → HTTP 500 visible, sin pérdida ni duplicación
+```
+
+Próximo paso, no decidido todavía: priorizar entre corregir C1/el 500
+de C2 frente a retomar la línea A (capacidad/QueuePool N=80-90) —
+decisión de priorización separada del diseño de cualquier fix.
