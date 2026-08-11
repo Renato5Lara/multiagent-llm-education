@@ -2649,6 +2649,48 @@ el mecanismo que esos pesos multiplican nunca se activa en este
 dataset. Exactamente el escenario que este paso de calibración estaba
 diseñado para atrapar antes de comparar, no después.
 
+### Corrección posterior (2026-08-11) — causa raíz de "cero validar" identificada y corregida
+
+Este hallazgo describe correctamente el dataset de 902 sesiones
+reconstruidas arriba, pero **no describe una limitación permanente de
+la arquitectura**. Investigación dirigida posterior (`/home/rlara/
+Documentos/Auditoria/auditoria_correccion_hallazgo1_validar_2026_08_11.md`)
+encontró la causa raíz exacta de por qué `Capacidad.VALIDAR` nunca
+producía un claim: `validar/productor.py::evidencia_de_validacion`
+filtraba evidencia evaluativa por `autor is Capacidad.EVALUAR`, una
+capacidad que nunca estuvo conectada a ningún nodo del grafo
+(`walkthrough.py::_construir` no la importa). Desde RFC-0010 §1, la
+evidencia evaluativa real la autora el Boundary (`autor="boundary"`),
+no `Capacidad.EVALUAR` — el mismo patrón que ya se había corregido en
+Tutorizar/Diagnosticar el 2026-07-13 (`4b8c577`); Validar quedó fuera
+de ese arreglo.
+
+**Fix aplicado en commit `77515a5` (2026-08-07 19:23)** — cambia el
+disparo de Validar a por FORMA del contenido (`competencia` +
+`items_incorrectos`), no por autor. Documentado en
+`docs/bug_reports/runtime/2026-08-07_FASE1_remediacion_validar_dataset_experimental.md`,
+5/5 tests nuevos, suite completa 435/435 sin regresiones.
+
+**Verificación dinámica post-fix, sobre 59 sesiones reales con al menos
+una competencia re-evaluada: 0/59 → 24/59 sesiones con veredicto de
+Validar.** El 35/59 restante no dispara por razón correcta del
+contrato (la competencia de la decisión pendiente no coincide con la
+que se re-evaluó), no por defecto.
+
+**Por qué las 902 sesiones de arriba siguen mostrando 0 pese al fix:**
+`reconstruir()` (ADR-0007) nunca reejecuta productores — solo repite
+`TransitionIntent` ya persistidos. Las 902 sesiones son historia
+congelada de *antes* del fix; el resultado de la tabla arriba sigue
+siendo válido como registro de ese dataset, pero deja de ser
+representativo del comportamiento actual del sistema.
+
+**Lo que queda genuinamente abierto no es de código:** que un
+estudiante real vuelva a ser evaluado en la misma competencia después
+de una decisión/adaptación es un evento que el flujo del estudiante no
+garantiza hoy. Generar y observar ese tráfico real es el candidato a
+Iteración 6.5, propuesto en el informe de remediación §12 y todavía no
+abierto.
+
 ## Experimento C6 — validación MECÁNICA/EXPERIMENTAL con escenarios sintéticos
 
 **Etiqueta metodológica explícita, a pedido del tesista: esto es
@@ -2778,6 +2820,11 @@ después" vago:**
 1. Que las señales (refuerzos/refutaciones/edad_logica > 0) aparezcan
    en uso real — depende de tráfico orgánico que complete
    decidir→adaptar→evaluar→validar (mismo bloqueo que Iteración 6.2/6.3).
+   El bloqueo de wiring que impedía a Validar disparar en absoluto ya
+   se corrigió (`77515a5`, 2026-08-07 — ver "Corrección posterior
+   2026-08-11" arriba); lo que queda pendiente es solo de tráfico
+   orgánico (que un estudiante real sea re-evaluado en la misma
+   competencia tras una adaptación), no de código.
 2. Evidencia de que no degradan decisiones, no generan sobreconfianza,
    ni producen aplazamientos/escaladas excesivos (el riesgo de
    saturación de `peso_decaimiento` ya observado en el escenario
@@ -2795,3 +2842,265 @@ delimita con precisión matemática **dónde** existe "inteligencia de
 enjambre" en la arquitectura actual — en la capa prescriptiva, no en la
 interpretativa. Esa delimitación es en sí misma un resultado de la
 investigación, no un efecto secundario a omitir.
+
+---
+
+# ITERACIÓN DE INVESTIGACIÓN 6.5 — Primer `validar_decision` real vía flujo HTTP (2026-08-11)
+
+> Continúa directamente el candidato propuesto en el informe de
+> remediación de Validar (§12, 2026-08-07) y en la corrección de
+> auditoría del hallazgo #1 (2026-08-11, ver `docs/bug_reports/runtime/
+> 2026-08-07_FASE1_remediacion_validar_dataset_experimental.md` §6 y su
+> "Corrección posterior"). Aquella investigación dejó abierto
+> exactamente esto: que un estudiante vuelva a ser evaluado en la misma
+> competencia después de una decisión/adaptación, por el flujo real de
+> la aplicación — no por reconstrucción en memoria ni por inyección de
+> facts.
+
+## Puerta de entrada (Regla maestra)
+
+1. **¿Qué pregunta responde?** Ver más abajo.
+2. **¿Qué parte de la hipótesis fortalece?** Que el ciclo completo de
+   adaptación (P6/RFC-0002 — decidir→adaptar→evaluar→validar) no es
+   solo mecánicamente posible (ya demostrado en 6.4 con escenarios
+   sintéticos) sino que ocurre a través del flujo HTTP real de la
+   aplicación, contra PostgreSQL real.
+3. **¿Qué variable afecta?** Ninguna nueva — observa si `Validar`
+   produce veredicto real para la competencia del primer
+   `LearningObjective`, la única donde el mecanismo actual lo permite
+   (ver límite de namespace de competencia, documentado en el diseño
+   original de esta iteración).
+4. **¿Cómo se observó en la demo?** Un `validar_decision` real en
+   `runtime_transitions`, trazable transición por transición a un
+   recorrido HTTP completo: registro → login → diagnóstico → pre-test →
+   ruta → evaluación de módulo 1.
+5. **¿Cómo aparece en Resultados y Discusión?** Como el primer caso
+   documentado de cierre completo del ciclo con tráfico HTTP real de
+   una cuenta de validación — y como la delimitación exacta de dónde
+   ese cierre es posible hoy (objetivo 1) y dónde no (objetivos 2-9).
+
+## Pregunta de investigación
+
+¿Un recorrido HTTP real de una cuenta experimental (pre-test →
+generación de ruta → evaluación del módulo 1, con una decisión de por
+medio) produce un `validar_decision` real y trazable, y la evidencia
+"anterior" que lo hace posible proviene efectivamente del primer
+`LearningObjective` del curso, tal como predice el código de
+`knowledge_test_service.py:581-609`?
+
+## Hipótesis parcial
+
+Si se ejecuta un recorrido HTTP real hasta completar la evaluación del
+módulo 1, entonces aparecerá un `TransitionIntent` de
+`Capacidad.VALIDAR` (`operacion="validar_decision"`) para la
+competencia del primer objetivo — y si se completaran además los
+módulos 2+, no aparecería veredicto para esas competencias (namespace
+de competencia sin fact "anterior" natural, límite ya identificado en
+el diseño de esta iteración, no ejecutado en esta ejecución).
+
+## 1. Objetivo de la iteración
+
+Obtener el primer `validar_decision` producido por el flujo HTTP real
+de la aplicación (no por reconstrucción en memoria, no por inyección
+directa de facts) y verificar la cadena causal completa que lo produce,
+usando una cuenta experimental de validación — no tráfico orgánico.
+
+## 2. Estado inicial
+
+El Paso 0 de esta iteración (lectura pura de PostgreSQL **local** —
+Render quedó fuera de alcance por decisión explícita del tesista)
+encontró que **la base con 902/966 sesiones citada en iteraciones
+previas nunca estuvo en Render: es el volumen local `pgdata`**, y que
+ya existían **35 `validar_decision` persistidos**, ninguno válido como
+evidencia del flujo real: 33/35 con la firma exacta de un harness
+automatizado (misma transición 16/27, mismos slugs `algorithms`/
+`variables`, `student_id` sin fila en `users`), y 2/35
+(`exp-a1`/`exp-a2@upao.edu.pe`) de cuentas experimentales reales pero
+con evidencia inyectada directo al runtime, sin ningún `PathModule`
+generado — nunca pasaron por el flujo HTTP real.
+
+## 3. Bug `aggregate_id` descubierto (bloqueante, fuera del alcance original de Validar)
+
+Al ejecutar el diseño original (estudiante `iteracion.6.5@upao.test`,
+creado vía flujo HTTP real, `POST /api/users` con rol admin +
+`POST /api/courses/{id}/enroll` con rol docente), el primer paso
+(`POST /api/students/diagnostic/{course_id}`) falló con `500`:
+`psycopg.errors.StringDataRightTruncation: value too long for type
+character varying(36)`. Causa raíz: `student_service.py:165` y
+`knowledge_test_service.py:370` (ambos del linaje P0 legacy→runtime,
+commits `5e1d458`/`5919adf`, 2026-08-09) construían
+`aggregate_id=f"{student_id}:{course_id}"` (73 caracteres) contra
+`IdempotencyKey.aggregate_id`, `String(36)` — contrato deliberado de
+"un solo UUID, la entidad que originó el evento", compartido con
+`EventOutbox.aggregate_id` y nunca antes ejercitado contra PostgreSQL
+real (la suite que cubre esta ruta usa SQLite,
+`tests/conftest.py`, sin el mismo rigor de longitud). Afectaba también
+al pre-test/post-test (`knowledge_test_service.py`) y al reconciliador
+legacy (`scripts/reconciliar_legacy_runtime.py:204`) — bloqueaba el
+diseño completo de 6.5, no solo el diagnóstico.
+
+## 4. Corrección (opción C) y evidencia de regresión
+
+Se investigaron tres opciones (ensanchar la columna / corregir los
+callers con un UUID determinista / corregir los callers con
+`student_id` solo) y se adoptó la tercera, la más simple: `aggregate_id
+= student_id` en los tres callers (`student_service.py`,
+`knowledge_test_service.py`, `scripts/reconciliar_legacy_runtime.py`)
+— restaura el contrato original en vez de ensancharlo. Verificado que
+ningún consumidor real de `aggregate_id` (`risk_detectors.py:373-381`,
+el único filtro/agrupación existente) necesita distinguir `course_id`,
+y que la deduplicación real siempre dependió de `idempotency_key`
+(único, ya compuesto), nunca de `aggregate_id`.
+
+Regresión: 3 tests nuevos contra PostgreSQL real
+(`tests/test_reconciliacion_p0.py::TestAggregateIdRespetaContratoReal`,
+mismo patrón que `TestConcurrenciaReal` ya existente en el archivo) —
+**3/3 passed**. Archivo completo: **10/10**. `tests/test_idempotency.py`
++ `tests/test_idempotency_distributed.py` + `tests/test_runtime_bridge.py`:
+162 passed, los mismos 4 fallos preexistentes reproducidos con `git
+stash` (no relacionados, en `shared_memory.py`, fuera de alcance).
+Verificación end-to-end: el mismo `POST /api/students/diagnostic/
+{course_id}` que falló con 500 devolvió 200 tras el fix, con las 8
+filas de `idempotency_keys` en `completed` y `aggregate_id` de 36
+caracteres exactos.
+
+Sin migraciones, sin tocar `IdempotencyKey`, `EventOutbox`,
+`middleware.py` ni `shared_memory.py`.
+
+## 5-6. Recorrido completo y cadena causal `pre-test → decisión → módulo 1 → evaluación → Validar`
+
+Con el bug corregido, se retomó el mismo estudiante experimental (sin
+recrearlo) y se completó, vía HTTP real:
+
+```
+POST /knowledge-test/{course}/start (kind=pre)  → 200, 12 preguntas reales
+POST /knowledge-test/attempt/{id}/submit        → 200, 12/12 (100%)
+  → evidencia "anterior" registrada bajo primer_objetivo.title
+    (knowledge_test_service.py:581-609)
+runtime: transición 52, registrar_decision
+  → cita explícitamente "objetivo f71448b7-...", = learning_objectives
+    orden 1 ("Fundamentos de Python") — anclaje verificado por dato,
+    no por inferencia
+  → decisión: avanzar
+POST /learning-path/{course}                    → 200, módulo 1 =
+  "Fundamentos de Python" (mismo título, PathModule.title = Learning
+  Objective.title verbatim), status=available
+POST /evaluation/{course}/start                 → 200, módulo 1
+POST /evaluation/{attempt}/submit                → 200, score 2/2
+  → evidencia "posterior" registrada bajo module.title (students.py:
+    1046-1060), mismo slug que la anterior
+runtime: transición 55, registrar_validar_decision
+  → decision_id = T-000052/e1 (la misma decisión de la transición 52)
+  → competencia = "fundamentos-de-python"
+  → afirmación: {"funciono": false, "items_antes": 0, "items_despues": 0}
+```
+
+Cadena causal completa y verificada por dato en cada eslabón — no
+asumida.
+
+## 7. Resultado `funciono=false` y su interpretación
+
+`items_antes=0, items_despues=0`: el estudiante ya dominaba el objetivo
+antes de la intervención (pre-test 100%) y lo siguió dominando después
+(evaluación de módulo 2/2) — no hubo ganancia medible que atribuir a la
+decisión "avanzar". `funciono=false` es la respuesta semánticamente
+correcta de la métrica, no un defecto del mecanismo ni de la ejecución.
+Forzar un resultado distinto (p. ej. respondiendo mal a propósito la
+evaluación del módulo para conseguir `funciono=true`) habría sido
+metodológicamente incorrecto — no se hizo.
+
+## 8. Límites de la evidencia (amenazas a la validez)
+
+- **No es tráfico ecológico.** Es una cuenta experimental de validación
+  (`iteracion.6.5@upao.test`), conducida por el investigador — mismo
+  criterio de honestidad terminológica que 6.1/6.2.
+- **N=1, un solo objetivo.** Valida el primer `LearningObjective`
+  (módulo 1) exclusivamente. Los módulos 2-9 no tienen, en el diseño
+  actual del producto, un fact "anterior" natural bajo el mismo
+  namespace de competencia (solo el pre-test registra evidencia bajo
+  `primer_objetivo.title`) — no fueron evaluados en esta ejecución ni
+  el límite fue removido.
+- **No demuestra eficacia pedagógica.** Demuestra funcionamiento
+  técnico/causal del mecanismo Validar, no que la adaptación mejore el
+  aprendizaje.
+- **No se introdujeron facts artificiales** en ningún punto del
+  recorrido — toda la evidencia entró por las mismas rutas HTTP que
+  usaría un estudiante real.
+
+## 9. Hallazgos fuera de alcance (registrados, no resueltos aquí)
+
+- **`app/events/middleware.py:78`** (`aggregate_id=path`) — mismo
+  patrón de contrato violado (una ruta HTTP con UUID puede superar 36
+  caracteres), pero **dormido**: nada en el repo escribe
+  `request.state.body`, así que el middleware global de idempotencia
+  solo se activa si un cliente manda el header `Idempotency-Key`
+  explícito, cosa que hoy no ocurre. Requiere su propia decisión de
+  diseño (no es una entidad, es una ruta) — no se mezcló con la opción
+  C.
+- **`app/memory/shared_memory.py:135`** (`aggregate_id=f"{voter_name}:
+  {key}"`) — mismo defecto, ya silencioso hoy (`except Exception:
+  pass`). Puede estar degradando garantías de dedup en memoria
+  compartida sin que nadie lo haya visto. Pendiente de investigación
+  propia.
+- **Observación de arquitectura/instrumentación:** la evidencia
+  "posterior" de la evaluación real de módulo (`students.py:1046-1060`)
+  se registra **sin `idempotency_key` propio** — a diferencia de las
+  rutas del linaje P0 (diagnóstico, pre-test), que sí están protegidas.
+  No es un bug (preexistente, no causado por el fix de `aggregate_id`),
+  pero queda registrado para la futura auditoría de robustez de las
+  rutas de evidencia: decidir si toda evidencia que participa del
+  mecanismo reconciliable debe tener la misma protección.
+
+## Evidencia observable
+
+- Recorrido HTTP real completo, sin inyección de facts, contra
+  PostgreSQL local real.
+- `validar_decision` real en `runtime_transitions` (transición 55),
+  citando la decisión exacta que lo originó.
+- 3 tests de regresión nuevos contra Postgres real + 0 regresiones en
+  la suite existente.
+
+## Variables fortalecidas
+
+- Independiente: ninguna nueva.
+- Dependiente: cierre del ciclo `decidir→adaptar→evaluar→validar` por
+  primera vez a través del flujo HTTP real (no sintético, no en
+  memoria) — complementa, no reemplaza, la validación mecánica de 6.4.
+
+## Estado
+
+**CERRADA, con alcance estrictamente delimitado — no generalizar.**
+
+| Elemento | Resultado |
+|---|---|
+| Diagnóstico VARK | ✅ |
+| Perfil persistido | ✅ |
+| Pre-test HTTP real | ✅ |
+| Evidencia anterior | ✅ |
+| Anclaje al objetivo 1 | ✅ |
+| Deliberación | ✅ |
+| Decisión | ✅ |
+| LearningPath | ✅ |
+| Evaluación módulo 1 | ✅ |
+| Evidencia posterior | ✅ |
+| Validar | ✅ |
+| `validar_decision` | ✅ |
+| PostgreSQL real | ✅ |
+| Inyección artificial de facts | ❌ ninguna |
+| Módulos 2-9 | ⚪ no evaluados |
+| Evidencia ecológica | ⚪ no corresponde |
+| Eficacia pedagógica | ⚪ no demostrada |
+
+**Conclusión citable para la tesis:**
+
+> La Iteración 6.5 valida experimentalmente el recorrido HTTP real
+> completo para el primer objetivo del curso, desde el pre-test hasta
+> la persistencia de `validar_decision`, usando PostgreSQL real y sin
+> inyección de facts. No demuestra generalización a los demás objetivos
+> del curso ni eficacia pedagógica — ambas quedan como preguntas de
+> iteraciones posteriores.
+
+**Código de producción:** cambios de la opción C (`aggregate_id`)
+implementados y verificados, **sin commitear todavía** — pendiente de
+decisión explícita del tesista sobre el commit (fuera del alcance de
+esta iteración, que es de investigación, no de cierre de repositorio).
