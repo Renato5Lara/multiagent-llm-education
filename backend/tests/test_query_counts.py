@@ -237,7 +237,14 @@ class TestQueryCounter:
 
 
 class TestGetEnrolledStudents:
-    """get_enrolled_students: must stay at O(3) queries regardless of student count."""
+    """get_enrolled_students: must stay at a CONSTANT query count regardless
+    of student count -- no longer O(3): commits bc96d22/0b5cbf3/8dda98d/
+    4690dce (2026-07-02/03) añadieron 4 bloques de agregación por lote
+    (diagnostic_rows, path_rows, eval_rows, attempt_rows) para las
+    preguntas Q3/Q5 del docente, todos con .in_(student_ids) -- el ceiling
+    nunca se recalibró. Verificado empíricamente (n=0,1,5,10,20,50
+    estudiantes, script ad-hoc) que la cuenta real es constante: 7 con
+    al menos un estudiante inscrito."""
 
     def test_no_students(self, db, course):
         _start()
@@ -251,7 +258,7 @@ class TestGetEnrolledStudents:
         result = get_enrolled_students(db, course.id)
         cnt = _stop()
         assert len(result) == 1
-        assert cnt <= 4, f"Expected <=4 queries for 1 student, got {cnt}"
+        assert cnt <= 7, f"Expected <=7 queries for 1 student, got {cnt}"
 
     def test_multiple_students_constant_queries(self, db, course):
         # Setup: create 5 students before measuring
@@ -272,8 +279,8 @@ class TestGetEnrolledStudents:
         result = get_enrolled_students(db, course.id)
         cnt = _stop()
         assert len(result) == 5
-        assert cnt <= 4, (
-            f"Expected <=4 queries for 5 students (constant), got {cnt}. "
+        assert cnt <= 7, (
+            f"Expected <=7 queries for 5 students (constant), got {cnt}. "
             "N+1 regression likely!"
         )
 
