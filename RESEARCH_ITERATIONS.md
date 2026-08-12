@@ -3445,3 +3445,127 @@ C2a → doble submit real (submit_evaluation)      → HTTP 500 visible, sin pé
 Próximo paso, no decidido todavía: priorizar entre corregir C1/el 500
 de C2 frente a retomar la línea A (capacidad/QueuePool N=80-90) —
 decisión de priorización separada del diseño de cualquier fix.
+
+## Adenda (2026-08-11, continuación) — C3/C4: diseño y corrección de C1, cerrada
+
+Sexta y séptima investigación de seguimiento. Tras cerrar la línea C
+experimental, se decidió priorizar corregir C1 (pérdida silenciosa con
+HTTP 200) por sobre A (capacidad, condicionada a una decisión de
+infraestructura fuera de alcance) y sobre C2a (defecto visible, sin
+pérdida de evidencia demostrada).
+
+### C3 — estudio de diseño (solo análisis, sin código)
+
+Rastreo completo del camino real de escritura
+(`registrar_evidencia_evaluacion` → `registrar_hecho` →
+`ejecutar_walkthrough` → `materializar_sesion`/`aplicar`) hasta
+`AlmacenTransiciones` (`runtime/engine/checkpoint/storage.py`).
+Hallazgo que condicionó todo el diseño: `AlmacenTransiciones` no usa
+SQLAlchemy — usa `psycopg2` directo, y **cada método
+(`abrir_sesion`, `leer`, `persistir`) abría su propia conexión nueva**
+— no existía ninguna transacción que abarcara "leer historial →
+calcular → persistir la cascada completa". Mapa de callers reales:
+`.persistir()` y `.abrir_sesion()` tenían **un único caller productivo
+cada uno** (ambos en `walkthrough.py`) — confinó el radio de cambio a
+dos archivos.
+
+Comparación de candidatos (`pg_advisory_lock` de sesión,
+`pg_advisory_xact_lock`, `SERIALIZABLE`, `SELECT...FOR UPDATE` sobre
+`runtime_sessions`): se descartó `SERIALIZABLE` explícitamente por el
+riesgo de que un retry ante `SerializationFailure` reinvocara un
+productor LLM ya ejecutado — conflicto directo con ADR-0007. Se eligió
+`pg_advisory_xact_lock` por `session_id`: liberación automática con
+`COMMIT`/`ROLLBACK` (sin riesgo de lock huérfano), sin retry, sin
+cambios de esquema, compatible con el runtime síncrono sobre
+threadpool de AnyIO.
+
+### C4 — implementación mínima, con Gate de pre-commit dirigido
+
+**Mecanismo:** `AlmacenTransiciones.transaccion_bloqueada(session_id)`
+— una conexión, `pg_advisory_xact_lock` adquirido **antes de
+`leer()`** (no dentro de `persistir()`, que habría sido tarde), `leer`/
+`abrir_sesion`/`persistir` reciben `conexion: Any | None = None`
+opcional y backward-compatible — ningún caller existente cambia su
+firma. `ejecutar_walkthrough` envuelve `materializar_sesion` + la
+invocación del grafo en la transacción bloqueada; `almacen_memoria.
+consolidar()` queda explícitamente fuera (protección propia, ADR-0008
+§5). Clave del lock: `hashlib.sha256(f"runtime-session:{session_id}")`
+truncado a 63 bits — prefijo textual distinto del que usa
+`app/db/locks.py`, para evitar colisión accidental de namespace.
+
+**Archivos modificados (commit `67a3769`, `fix(runtime): serialize
+walkthrough writes per session`):**
+```
+backend/runtime/engine/checkpoint/storage.py
+backend/runtime/engine/graph/walkthrough.py
+backend/tests/runtime/reconstruction/test_C4_transaccion_bloqueada.py (nuevo)
+```
+
+**Gate de pre-commit dirigido, seis puntos verificados antes de
+commitear (no asumidos):**
+1. `git diff` completo revisado, sin sorpresas.
+2. Test explícito de rollback — no existía al primer reporte de
+   evidencia, se escribió y corre: 4 tests nuevos contra Postgres real
+   (serialización con hilos reales reproduciendo la carrera exacta de
+   C1; confirmación de que el segundo hilo *espera*, no solo que "no
+   falla"; rollback completo de una cascada de 3+ transiciones;
+   comportamiento de `runtime_sessions` ante fallo antes del commit).
+3. Compatibilidad con INV-1 (RFC-0003: "identidad completa... se fija
+   atómicamente al abrir") y R5 (RFC-0008: *"recuperación =
+   reanudación... lo único perdible es trabajo en vuelo, y perderlo no
+   viola nada"*) verificada citando el texto exacto de ambos — el
+   cambio no los viola, extiende qué abarca "atómicamente".
+4. Grep exhaustivo: exactamente un `.persistir()` y un
+   `.leer()`/`.abrir_sesion()` en el camino de escritura de todo
+   `runtime/`, ambos con `conexion=conexion`.
+5. El lock se mantiene hasta `COMMIT` — sin `unlock` manual, confirmado
+   por diseño y por test.
+6. Retención de conexión durante productores LLM — confirmada real
+   (visible en los tiempos de las corridas de reproducción, 1.8-3.6s),
+   **aceptada explícitamente como trade-off del mecanismo elegido, no
+   resuelta aquí** — trasladada a la futura línea A (capacidad), donde
+   su impacto bajo carga real debe evaluarse, no en C4.
+
+### Evidencia de cierre
+
+```
+tests/runtime/ completa       → 440/440 (436 preexistentes + 4 nuevos), 0 regresiones
+Tests específicos C4          → 4/4
+Reproducción C1 post-fix      → 2/2 corridas independientes, estudiante nuevo (iteracion.c4)
+  · HTTP 200/200 en ambas corridas
+  · runtime_decision presente en ambas requests (antes: null en la perdedora)
+  · c1-race-0 y c1-race-1 presentes por competencia, en ambas corridas
+  · 0 duplicate key en logs
+  · cadena hash íntegra (verificar() → None)
+```
+
+**Atomicidad como efecto colateral, no objetivo:** una cascada completa
+de una invocación pasa a ser todo-o-nada (antes, cada `persistir()`
+comiteaba independientemente) — verificado por test, no solo asumido.
+
+**C2a explícitamente sin modificar** — ningún archivo de
+`evaluation_service.py`/`students.py` tocado; el `StaleDataError` de
+C2a sigue sin corrección, por decisión deliberada (fuera del alcance
+de C4).
+
+### Estado
+
+**C1/C4 CERRADA.** Commit de implementación `67a3769` (3 archivos,
+sin push); este commit documental cierra la investigación por separado
+(mismo patrón que 6.5/B0/B1/C1/C2). No se abre C5. Estudiantes
+`iteracion.6.5`, `iteracion.c1`, `iteracion.c2`, `iteracion.c4`
+preservados intactos como evidencia acumulada.
+
+**Mapa final de la línea C/investigación de concurrencia:**
+
+```
+C1  → carrera runtime/session_id (cycle-evidence) → CONFIRMADA → CORREGIDA (C4)
+C2a → doble submit real (submit_evaluation)        → CONFIRMADO → SIN FIX (fuera de alcance)
+A   → capacidad/QueuePool N=80-90                  → PENDIENTE, condicionada a infraestructura,
+                                                       ahora además hereda la pregunta de retención
+                                                       de conexión durante LLM del fix de C1
+```
+
+Próximo paso, no decidido todavía: priorizar entre A (capacidad) y el
+tratamiento posterior de C2a (StaleDataError sin manejar) — decisión
+de priorización, no un fix automático.
