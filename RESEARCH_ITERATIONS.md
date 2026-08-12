@@ -3523,8 +3523,12 @@ commitear (no asumidos):**
 6. Retención de conexión durante productores LLM — confirmada real
    (visible en los tiempos de las corridas de reproducción, 1.8-3.6s),
    **aceptada explícitamente como trade-off del mecanismo elegido, no
-   resuelta aquí** — trasladada a la futura línea A (capacidad), donde
-   su impacto bajo carga real debe evaluarse, no en C4.
+   resuelta aquí** — trasladada a la futura línea A (capacidad) como
+   **pregunta de investigación, no como conclusión causal**: los
+   tiempos de 1.8-3.6s son evidencia de retención en esas dos corridas
+   puntuales (N=2, sin carga), no evidencia de agotamiento de
+   `QueuePool` bajo N=80-90 — esa medición, si se hace, le corresponde
+   a A, con su propio diseño experimental, no se infiere aquí.
 
 ### Evidencia de cierre
 
