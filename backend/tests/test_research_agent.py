@@ -1,161 +1,70 @@
-"""Tests for ResearchAgent with Tavily integration: pipeline, fallback, shared memory publishing."""
+"""Tests for ResearchAgent contra el contrato vigente (sin BaseAgent).
+
+C2 (F2/F4, Gates C2-D/C2-E, 2026-08-12): los 7 tests originales de este
+archivo asumían una versión de ResearchAgent(BaseAgent) — constructor
+agent_name/uow/context_key, fallback heurístico vía LLM cuando Tavily
+fallaba — retirada antes del 2026-07-13 sin que el test se actualizara.
+
+De los 7:
+  - test_publishes_to_shared_memory, test_degraded_flag_when_tavily_fails,
+    test_with_tavily_results: retirados, cobertura equivalente ya
+    demostrada en test_pedagogical_research_pipeline.py
+    (test_research_agent_publishes_memory_and_consensus_payload,
+    test_tavily_unavailable_degrades_without_hallucinated_sources).
+  - test_fallback_when_llm_fails, test_examples_from_llm_findings:
+    retirados -- protegían el fallback heurístico vía LLM, retirado
+    formalmente por ADR-0018 (sin fuentes verificables, riesgo de
+    contenido no fundamentado; ningún caller real depende de él).
+  - test_analyze_returns_expected_keys, test_confidence_default_when_no_tavily:
+    reescritos abajo contra el contrato vigente (mismo patrón que
+    test_pedagogical_research_pipeline.py).
+"""
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from app.integrations.tavily.retrieval import PedagogicalRetrievalStrategy
 from app.services.research_agent import ResearchAgent
-from app.db.uow import UnitOfWork
-from app.integrations.tavily.schemas import AggregatedResearch
 
 
-@pytest.fixture
-def mock_uow():
-    return MagicMock(spec=UnitOfWork)
+@pytest.mark.asyncio
+async def test_analyze_returns_expected_keys():
+    """analyze() siempre devuelve las 5 claves de nivel superior del
+    contrato vigente, incluso cuando Tavily no está disponible."""
+    client = MagicMock()
+    client.search = AsyncMock(side_effect=RuntimeError("Tavily unavailable"))
+    strategy = PedagogicalRetrievalStrategy(client=client, cache=None, timeout_seconds=1)
+    agent = ResearchAgent(retrieval_strategy=strategy)
+
+    state = await agent.analyze({
+        "topic": "Binary Search Trees",
+        "objectives": ["Understand BST"],
+    })
+
+    assert "research" in state
+    assert "research_metrics" in state
+    assert "consistency_validation" in state
+    assert "memory_ids" in state
+    assert "consensus_payload" in state
+    assert state["research"]["topic"] == "Binary Search Trees"
+    assert state["research"]["degraded"] is True
 
 
-@pytest.fixture
-def agent(mock_uow):
-    return ResearchAgent(
-        agent_name="research_test",
-        uow=mock_uow,
-        student_id="test_student",
-        course_id="test_course",
-        context_key="test",
-    )
+@pytest.mark.asyncio
+async def test_confidence_default_when_no_tavily():
+    """Sin Tavily disponible, la confianza degrada a 0.0 -- no a un
+    valor por defecto no nulo (el diseño anterior usaba 0.5; el vigente
+    trata la ausencia total de evidencia como confianza cero, mismo
+    principio que evidence_strength/D3 en otras capacidades del
+    sistema)."""
+    client = MagicMock()
+    client.search = AsyncMock(side_effect=RuntimeError("Tavily unavailable"))
+    strategy = PedagogicalRetrievalStrategy(client=client, cache=None, timeout_seconds=1)
+    agent = ResearchAgent(retrieval_strategy=strategy)
 
+    state = await agent.analyze({"topic": "OOP"})
 
-@pytest.fixture
-def mock_tavily_disabled(agent):
-    """Mock _init_retrieval to raise an exception, forcing LLM/heuristic fallback."""
-    with patch.object(agent, "_init_retrieval", side_effect=Exception("Tavily unavailable")):
-        yield agent
-
-
-class TestResearchAgent:
-    @pytest.mark.asyncio
-    async def test_analyze_returns_expected_keys(self, mock_tavily_disabled):
-        agent = mock_tavily_disabled
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value=None)):
-            result = await agent.analyze({
-                "topic": "Binary Search Trees",
-                "learning_objectives": ["Understand BST"],
-                "syllabus": "",
-            })
-
-        assert "topic" in result
-        assert "findings" in result
-        assert "examples" in result
-        assert "real_applications" in result
-        assert "analogies" in result
-        assert "concepts" in result
-        assert "summary" in result
-        assert "confidence" in result
-        assert "research_duration_ms" in result
-        assert result["topic"] == "Binary Search Trees"
-        assert result["degraded"] is True
-
-    @pytest.mark.asyncio
-    async def test_publishes_to_shared_memory(self, agent):
-        agent.shared_memory = MagicMock()
-        mock_retrieval = MagicMock()
-        mock_retrieval.research = AsyncMock(return_value=AggregatedResearch(topic="Sorting Algorithms"))
-        agent._retrieval = mock_retrieval
-
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value=None)):
-            await agent.analyze({
-                "topic": "Sorting Algorithms",
-                "learning_objectives": [],
-                "syllabus": "",
-            })
-
-        assert agent.shared_memory.publish_observation.called
-
-    @pytest.mark.asyncio
-    async def test_fallback_when_llm_fails(self, mock_tavily_disabled):
-        agent = mock_tavily_disabled
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value=None)):
-            result = await agent.analyze({
-                "topic": "Python Lists",
-                "learning_objectives": [],
-                "syllabus": "",
-            })
-
-        assert len(result["findings"]) >= 1
-        assert result["findings"][0]["source"] == "heuristic"
-
-    @pytest.mark.asyncio
-    async def test_examples_from_llm_findings(self, mock_tavily_disabled):
-        agent = mock_tavily_disabled
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value={
-            "content": '{"conceptos": ["lista", "tupla"], "ejemplos": ["[1,2,3]"]}',
-            "parsed": None,
-            "success": True,
-        })):
-            result = await agent.analyze({
-                "topic": "Python Lists",
-                "learning_objectives": [],
-                "syllabus": "",
-            })
-
-        assert len(result["findings"]) > 0
-
-    @pytest.mark.asyncio
-    async def test_confidence_default_when_no_tavily(self, mock_tavily_disabled):
-        agent = mock_tavily_disabled
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value=None)):
-            result = await agent.analyze({
-                "topic": "OOP",
-                "learning_objectives": [],
-                "syllabus": "",
-            })
-
-        assert result["confidence"] == 0.5
-
-    @pytest.mark.asyncio
-    async def test_degraded_flag_when_tavily_fails(self, mock_tavily_disabled):
-        agent = mock_tavily_disabled
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value=None)):
-            result = await agent.analyze({
-                "topic": "OOP",
-                "learning_objectives": [],
-                "syllabus": "",
-            })
-
-        assert result["degraded"] is True
-
-    @pytest.mark.asyncio
-    async def test_with_tavily_results(self, agent):
-        agent.shared_memory = MagicMock()
-        mock_retrieval = MagicMock()
-        agg = AggregatedResearch(
-            topic="Python",
-            concepts=[{"concept": "variable", "source_title": "t1", "content": "def", "domain": "ex.com", "confidence": 0.9}],
-            examples=[{"example": "x = 1", "source": "t1", "domain": "ex.com"}],
-            analogies=[{"analogy": "box with label", "source": "t2"}],
-            real_applications=[{"application": "data science", "source": "t3"}],
-            misconceptions=[{"misconception": "dynamic typing is slow", "source": "t4"}],
-            total_sources=4,
-            unique_domains=2,
-            confidence_score=0.85,
-        )
-        mock_retrieval.research = AsyncMock(return_value=agg)
-        agent._retrieval = mock_retrieval
-
-        with patch.object(agent, "_call_llm_for_research", new=AsyncMock(return_value=None)):
-            result = await agent.analyze({
-                "topic": "Python",
-                "learning_objectives": [],
-                "syllabus": "",
-            })
-
-        assert result["confidence"] == 0.85
-        assert len(result["examples"]) == 1
-        assert len(result["concepts"]) == 1
-        assert len(result["analogies"]) == 1
-        assert len(result["real_applications"]) == 1
-        assert len(result["misconceptions"]) == 1
-        assert result["retrieval"] is not None
-        assert result["degraded"] is False
+    assert state["research"]["confidence_score"] == 0.0
