@@ -3573,3 +3573,119 @@ A   → capacidad/QueuePool N=80-90                  → PENDIENTE, condicionada
 Próximo paso, no decidido todavía: priorizar entre A (capacidad) y el
 tratamiento posterior de C2a (StaleDataError sin manejar) — decisión
 de priorización, no un fix automático.
+
+## Adenda (2026-08-11/12) — A0/A3-R1: caracterización de conexiones Runtime tras C4
+
+Octava investigación de seguimiento. Tras cerrar la línea C, se decidió
+priorizar sobre A (capacidad/QueuePool, condicionada a Render, sin
+cambios desde `verificacion_render_bloqueada_pre_diseno0_2026_08_10`)
+una pregunta nueva y más acotada, abierta directamente por C4: la
+conexión psycopg2 de `transaccion_bloqueada` permanece abierta durante
+todo el walkthrough, incluidos los productores LLM — ¿qué implica eso
+bajo concurrencia?
+
+### A0 — corrección de marco antes de medir
+
+Auditoría de código (sin ejecutar nada) que corrigió una posible
+conflación: la línea A histórica (E1-R2→E1-R3→E3→E2, N=80-90) investigó
+exclusivamente `POST /api/auth/login` sobre el motor **síncrono
+SQLAlchemy** de la plataforma (`app/db/session.py`, `QueuePool` real,
+`pool_size=10/max_overflow=20` en dev). `AlmacenTransiciones` (lo que
+C4 tocó) **nunca usó ese pool** — abre conexiones `psycopg2` crudas,
+sin límite de aplicación, cuyo único techo real es `max_connections`
+de Postgres (100 en local). Son dos mecanismos distintos, dos
+endpoints distintos, no una continuación de la misma línea. Se abrió
+**A3** (no A1/A2, que quedan congeladas) para esta pregunta nueva:
+caracterización de retención y presión de conexiones del Runtime — sin
+llamarla todavía "agotamiento de `max_connections`", esa es la
+hipótesis final, no la pregunta de partida.
+
+### A3-R1 — cuatro escalones, solo observación externa (sin tocar código)
+
+Metodología constante en los cuatro escalones: estudiante experimental
+nuevo por corrida (nunca reutilizado, ocho en total acumulados con las
+líneas anteriores), baseline de `pg_stat_activity` inmediato antes,
+polling denso (50ms) durante toda la ventana vía script externo (nunca
+instrumentación de la aplicación), disparo con `asyncio.Barrier` para
+concurrencia real (N=2/5/10), clasificación de conexiones por la
+última query ejecutada (`runtime_transitions`/`runtime_sessions` →
+Runtime; excluyendo baseline e instrumentación propia), verificación
+de facts persistidos por competencia distinguible, verificación de
+cadena hash íntegra, cero `duplicate key` en las cuatro corridas.
+
+**Tabla consolidada (recalculada uniformemente desde los 4 JSON crudos
+de cada corrida, no reportada de memoria):**
+
+| N | RT distintos | RT simultáneo máx. | `idle in transaction` máx. | `Lock/advisory` máx. | Pico total | Duración batch |
+|--:|--:|--:|--:|--:|--:|--:|
+| 1 | 1 | 1 | 1 | no instrumentado | 3 | 2.102s |
+| 2 | 2 | 2 | 1 | no instrumentado | 5 | 3.699s |
+| 5 | 5 | 5 | 1 | no instrumentado | 11 | 8.073s |
+| 10 | 13 | 10 | 4 | 9 | 21 | 20.996s |
+
+**Advertencias explícitas de lectura, para no comparar mal la tabla:**
+- `Lock/advisory` solo se instrumentó (columnas `wait_event_type`/
+  `wait_event` añadidas al script externo de observación, sin tocar la
+  aplicación) desde N=10 — no comparar ese valor entre escalones.
+- **N=2, corrección respecto al reporte de la corrida individual:**
+  recalculado uniformemente, el máximo de `idle in transaction`
+  *simultáneo* fue **1**, no 2 — ambas conexiones alcanzaron ese
+  estado, pero en instantes distintos, nunca coincidiendo en el mismo
+  poll.
+- **N=10, anomalía no resuelta:** 13 PIDs Runtime distintos, no 10.
+  Tres (459/462/463) aparecen en un único poll (t=0.129s), estado
+  `idle in transaction`, última query = el mismo `SELECT` de `leer()`
+  que las 10 conexiones principales, y nunca vuelven a aparecer — sin
+  ningún error asociado (10/10 facts, 0 `duplicate key`, cadena
+  íntegra). **No se clasifican como conexiones Runtime por request ni
+  se atribuyen a `AlmacenMemoria`** — no hay evidencia suficiente para
+  ninguna de las dos hipótesis. Quedan como **anomalía pendiente de
+  atribución**, deliberadamente no investigada más dentro de A3-R1
+  (investigarla habría cambiado la pregunta después de ver el
+  resultado). Excluyendo esos 3, N=10 da exactamente 10/10 = 1.0,
+  igual que las tres corridas anteriores — la relación 1:1 se sostiene
+  limpiamente en N=1/2/5.
+
+### Conclusión de A3-R1 (citable tal cual)
+
+> A3-R1 caracteriza una relación aproximadamente 1:1 entre requests
+> Runtime concurrentes y conexiones PostgreSQL Runtime observadas en
+> N=1, N=2 y N=5, y mantiene 10 conexiones Runtime principales para
+> N=10, con tres PIDs adicionales no atribuidos que constituyen una
+> anomalía pendiente. El `pg_advisory_xact_lock` serializa la sección
+> crítica (en N=10, 9 conexiones esperando el lock simultáneamente
+> mientras 1 progresa, adquisiciones separadas por ~2s, prácticamente
+> estrictamente secuencial), pero no evita que las requests
+> concurrentes mantengan conexiones PostgreSQL abiertas mientras
+> esperan o continúan su recorrido — pueden coexistir conexiones en
+> `Lock` y en `idle in transaction` simultáneamente (hasta 4 en N=10).
+
+### Qué demuestra y qué no
+
+**Demostrado:** el patrón de conexión-por-request y su crecimiento con
+N hasta N=10; que el lock sirve su propósito exacto (serializar la
+sección crítica, sin duplicar ni perder evidencia en ningún escalón);
+que la ocupación de conexiones no está limitada por la serialización
+del trabajo.
+
+**No demostrado:** agotamiento de `max_connections` (pico 21/100,
+21%, muy por debajo del umbral de aborto de 50%); que Postgres sea un
+cuello de botella; que N=20/50/100 mantenga la misma relación lineal;
+que los 3 PIDs de N=10 sean sistemáticos; ninguna extrapolación a
+Render (verificación de infraestructura sigue bloqueada, sin cambios).
+El lock no se cuestiona — está funcionando como C4 lo diseñó.
+
+### Estado
+
+**A3-R1 CERRADA.** Sin cambios de código, sin tocar `storage.py`,
+`walkthrough.py` ni PostgreSQL/pool/infraestructura en ningún momento
+de las cuatro corridas. Ocho estudiantes experimentales preservados
+intactos (`iteracion.6.5`, `c1`, `c2`, `c4`, `observacion.a3`,
+`a3.n2`, `a3.n5`, `a3.n10`). A1/A2 (la línea histórica de login/
+QueuePool) permanecen congeladas, sin relación causal con A3. C2a
+permanece congelada. Candidata siguiente, no abierta todavía: **A3-R2
+— atribución y cuantificación**, distinta pregunta de la de A3-R1
+("¿qué conexiones mantiene una request?" ya respondida) hacia "¿esa
+ocupación constituye presión material, o es una característica de
+ejecución muy por debajo de la capacidad disponible?" — sin repetir
+N=1/2/5/10.
