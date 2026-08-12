@@ -14,7 +14,7 @@ la fuente es nuestra cadena + AlmacenTransiciones (regla 5).
 from __future__ import annotations
 
 import dataclasses
-from typing import Callable, TypedDict
+from typing import Any, Callable, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
@@ -370,11 +370,17 @@ def _construir(
     productor_adaptar: Callable = producir_adaptacion,
     urgente: bool = False,
     objetivos: tuple[ObjetivoOrdenado, ...] = (),
+    conexion: Any | None = None,
 ):
     """Los productores son inyectables (por defecto, la versión regla de
     cada uno) — demuestra P13: el grafo, el scheduler, los reducers y el
     checkpoint no cambian una línea al intercambiar la implementación de
-    una capacidad (ADR-0005 §7, guardián de P13)."""
+    una capacidad (ADR-0005 §7, guardián de P13).
+
+    `conexion` (C4, opcional): la conexión de `transaccion_bloqueada`
+    (`AlmacenTransiciones`) — si se provee, todos los `persistir()` de
+    esta invocación quedan dentro de esa misma transacción bloqueada
+    por `session_id`, en vez de comitear cada uno por separado."""
     politica: Politica = resolver_politica(identidad.version_politica)
 
     def aplicar(grafo: EstadoGrafo) -> dict:
@@ -398,7 +404,7 @@ def _construir(
                 registros,
                 {"intent": intent, "eventos": resultado.eventos},
             )
-            almacen.persistir(registro)
+            almacen.persistir(registro, conexion=conexion)
             registros += (registro,)
         return {"estado": estado, "intents": (), "registros": registros}
 
@@ -444,6 +450,7 @@ def materializar_sesion(
     almacen: AlmacenTransiciones,
     almacen_memoria: AlmacenMemoria | None,
     identidad: Identidad,
+    conexion: Any | None = None,
 ) -> SesionAbierta:
     """Abre o reanuda una sesión — nunca decide qué versión de memoria
     usar (RFC-0003 INV-1: `identidad.version_student_model` ya la fija
@@ -455,9 +462,13 @@ def materializar_sesion(
     `ejecutar_walkthrough`): `contexto` usa el valor por defecto, sin
     tocar memoria — compatibilidad con todo caller que todavía no
     integra Memoria.
+
+    `conexion` (C4, opcional): la de `transaccion_bloqueada` — con ella,
+    `abrir_sesion`/`leer` ven exactamente el historial protegido por el
+    `pg_advisory_xact_lock` de `session_id`, cerrando la carrera de C1.
     """
-    almacen.abrir_sesion(identidad)
-    registros_previos = almacen.leer(identidad.session_id)
+    almacen.abrir_sesion(identidad, conexion=conexion)
+    registros_previos = almacen.leer(identidad.session_id, conexion=conexion)
 
     version_memoria = (
         almacen_memoria.cargar_version(identidad.student_id, identidad.version_student_model)
@@ -555,33 +566,47 @@ def ejecutar_walkthrough(
             "cerrar_sesion=True exige almacen_memoria — ADR-0008 §2.4: la "
             "consolidación nunca ocurre sin un almacén explícito"
         )
-    sesion = materializar_sesion(almacen, almacen_memoria, identidad)
-    inicial: EstadoGrafo = {
-        "estado": sesion.estado,
-        "intents": hechos_del_mundo,
-        "registros": sesion.registros,
-    }
-    final = _construir(
-        almacen,
-        identidad,
-        productor_diagnostico,
-        productor_remediar,
-        productor_orientar,
-        productor_validar,
-        productor_modelar,
-        productor_tutorizar,
-        productor_adaptar,
-        urgente=urgente,
-        objetivos=objetivos,
-    ).invoke(inicial)
+    # C4 (fix de C1): una única conexión/transacción, bloqueada por
+    # session_id (pg_advisory_xact_lock), para todo el ciclo
+    # materializar→aplicar de esta invocación — cierra la carrera de
+    # escrituras concurrentes confirmada por reproducción real
+    # (2026-08-11, ver RESEARCH_ITERATIONS.md). `almacen_memoria.
+    # consolidar` (más abajo) queda deliberadamente FUERA de esta
+    # transacción: objeto y conexión distintos, con su propia
+    # protección ya existente (ADR-0008 §5) — ampliarle el alcance no
+    # es necesario para cerrar C1.
+    with almacen.transaccion_bloqueada(identidad.session_id) as conexion:
+        sesion = materializar_sesion(
+            almacen, almacen_memoria, identidad, conexion=conexion
+        )
+        inicial: EstadoGrafo = {
+            "estado": sesion.estado,
+            "intents": hechos_del_mundo,
+            "registros": sesion.registros,
+        }
+        final = _construir(
+            almacen,
+            identidad,
+            productor_diagnostico,
+            productor_remediar,
+            productor_orientar,
+            productor_validar,
+            productor_modelar,
+            productor_tutorizar,
+            productor_adaptar,
+            urgente=urgente,
+            objetivos=objetivos,
+            conexion=conexion,
+        ).invoke(inicial)
 
-    # T14 — Cierre (M4 PR-2): proyección pura, fuera del grafo (no es un
-    # TransitionIntent, no muta el dominio, no emite Domain Events —
-    # ADR-0006 regla 1: los nodos solo proponen intents). Se recalcula
-    # en cada invocación; nunca es fuente de verdad (RFC-0003/RFC-0005).
-    final["estado"] = dataclasses.replace(
-        final["estado"], salidas=proyectar_salidas(final["estado"])
-    )
+        # T14 — Cierre (M4 PR-2): proyección pura, fuera del grafo (no es
+        # un TransitionIntent, no muta el dominio, no emite Domain Events
+        # — ADR-0006 regla 1: los nodos solo proponen intents). Se
+        # recalcula en cada invocación; nunca es fuente de verdad
+        # (RFC-0003/RFC-0005).
+        final["estado"] = dataclasses.replace(
+            final["estado"], salidas=proyectar_salidas(final["estado"])
+        )
 
     if cerrar_sesion:
         version = preparar_version(identidad, final["estado"].salidas)
