@@ -3689,3 +3689,112 @@ permanece congelada. Candidata siguiente, no abierta todavía: **A3-R2
 ocupación constituye presión material, o es una característica de
 ejecución muy por debajo de la capacidad disponible?" — sin repetir
 N=1/2/5/10.
+
+## Adenda (2026-08-12, continuación) — A3-R2: tasa sostenida, estable a 0.25 y 0.45 req/s — A3 CERRADA
+
+Novena investigación de seguimiento, cierre de la línea A3. Distinta
+metodología que A3-R1 (deliberadamente, para no repetir ráfagas más
+grandes): en vez de N simultáneas, **tasa de llegada sostenida** con
+intervalo fijo, criterios de estable/creciente/no-concluyente
+**pre-registrados antes de ejecutar** (mismo criterio de pre-registro
+que 5.x/6.4 — no se ajustan después de ver el resultado).
+
+**Definición fijada de antemano:** ocupación = PIDs Runtime
+*correlacionados con requests* (solapamiento temporal con la ventana
+de al menos una request real) presentes por poll, excluyendo los
+primeros 10s (transitorio). **Estable:** pendiente de regresión lineal
+≤0.02 conexiones/s **y** ocupación ≤2 en algún momento post-transitorio.
+**Creciente:** pendiente >0.02 **y** sin descenso posterior. **No
+concluyente:** <5 ciclos completos o ambigüedad estadística. Regla de
+avance: R2-B solo se ejecuta si R2-A da Estable; cualquier resultado
+Creciente o No concluyente detiene la escalada sin excepción.
+
+### R2-A — 0.25 req/s, intervalo 4.0s, 15 requests, ventana 60s
+
+Undécimo estudiante experimental (`observacion.a3.r2a`). **15/15 HTTP
+200, 15/15 facts, 0 `duplicate key`/errores.** Ocupación post-
+transitorio: máx=1, mín=0. Pendiente: **−0.00539** conexiones/s. 15
+ciclos completos. **Resultado: ESTABLE**, ambos criterios cumplidos
+con margen amplio.
+
+### R2-B — 0.45 req/s, intervalo 2.22s, 27 requests, ventana 60s
+
+Duodécimo estudiante (`observacion.a3.r2b`). **27/27 HTTP 200, 27/27
+facts, 0 `duplicate key`/errores.** Ocupación post-transitorio: máx=2
+(el doble que R2-A), mín=0. Pendiente: **−0.01749** conexiones/s
+(negativa, dentro del umbral, pero de mayor magnitud que R2-A — más
+cerca del límite, no al mismo margen). 27 ciclos completos. Duraciones
+individuales notablemente mayores en varios tramos (hasta 3.5s, vs.
+1.6-2.5s en R2-A) — consistente con acercarse a la capacidad de
+servicio sin superarla. Pico total de conexiones: 13/100. **Resultado:
+ESTABLE**, ambos criterios cumplidos.
+
+**Tabla conjunta:**
+
+| Condición | Tasa | Ocupación máx. | Pendiente (conexiones/s) | Resultado |
+|---|---:|---:|---:|---|
+| R2-A | 0.25 req/s | 1 | −0.00539 | Estable |
+| R2-B | 0.45 req/s | 2 | −0.01749 | Estable |
+
+Regla de continuación aplicada tal como se pre-registró: **no se
+ejecutó ninguna tasa superior a 0.45 req/s.**
+
+### Anomalía recurrente, todavía sin atribución
+
+PIDs Runtime de vida ultracorta (un único poll, sin continuidad),
+ejecutando las mismas queries (`abrir_sesion`/`leer`) que la conexión
+"principal" de la misma llegada, en un instante ~50ms antes: **N=10 →
+3; R2-A → 3; R2-B → 2.** Se repite lo suficiente como para dejar de
+tratarse como aislada, pero **sigue sin poder determinarse, con
+muestreo de 50ms, si son conexiones físicas adicionales o un artefacto
+de observación de la misma conexión principal.** No se investiga más
+dentro de A3 — no afecta la métrica primaria de ocupación (nunca
+coincidieron en el mismo poll con su PID "principal" correspondiente).
+
+### Conclusión de A3-R2 (citable tal cual)
+
+> A3-R2 observó comportamiento estable bajo tasas sostenidas de 0.25
+> req/s y 0.45 req/s durante ventanas de 60s. En ambas condiciones la
+> ocupación Runtime permaneció acotada, las requests se drenaron y no
+> se observaron errores ni pérdida de evidencia. A 0.45 req/s
+> aumentaron la ocupación máxima y las duraciones de request respecto
+> de 0.25 req/s, pero sin acumulación sostenida según los criterios
+> pre-registrados. Esto demuestra estabilidad a las tasas ensayadas,
+> no determina la capacidad máxima, y no permite extrapolar
+> directamente a producción/Render.
+
+### A3 completa — los cuatro niveles
+
+**Demostrado:** conexión propia por request bajo concurrencia (A3-R1);
+serialización real de la sección crítica por `pg_advisory_xact_lock`
+(A3-R1, N=10: 9 esperando/1 progresando); estabilidad local a 0.25 y
+0.45 req/s durante 60s (A3-R2); ausencia de agotamiento observado a
+estas escalas (pico máximo 21/100 en A3-R1, 13/100 en A3-R2).
+
+**Observado pero no resuelto:** PIDs Runtime adicionales de vida
+ultracorta, recurrentes en tres corridas distintas (N=10, R2-A, R2-B).
+
+**Inferido:** acercarse a la tasa de servicio observada aumenta
+latencia y ocupación (comparación R2-A→R2-B); una tasa suficientemente
+superior a ~0.5 req/s podría producir acumulación — no medido.
+
+**No demostrado:** capacidad máxima del mecanismo; comportamiento a
+tasas >0.45 req/s; capacidad para 350 estudiantes; comportamiento en
+Render (verificación de infraestructura sigue bloqueada, sin cambios
+desde `verificacion_render_bloqueada_pre_diseno0_2026_08_10`);
+agotamiento de `max_connections`.
+
+### Estado
+
+**A3 CERRADA (A0 + A3-R1 + A3-R2).** Sin cambios de código,
+`storage.py`/`walkthrough.py`, pool ni PostgreSQL en ningún momento de
+toda la línea A3. Doce estudiantes experimentales preservados intactos
+en total (`iteracion.6.5`, `c1`, `c2`, `c4`, `observacion.a3`,
+`a3.n2`, `a3.n5`, `a3.n10`, `a3.r2a`, `a3.r2b`, más los dos de C1/C2
+originales ya contados). A1/A2 (login/QueuePool) y C2a
+(`StaleDataError`) permanecen congeladas, sin relación causal con A3.
+Ninguna pregunta experimental nueva se abre automáticamente — la
+pregunta que motivó A3 ("¿la conexión larga de C4 produce presión
+material bajo concurrencia y tasas sostenidas razonables?") queda
+respondida: no a las tasas ensayadas; el mecanismo existe, permanece
+acotado en las condiciones probadas localmente.
