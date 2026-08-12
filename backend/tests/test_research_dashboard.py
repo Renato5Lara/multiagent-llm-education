@@ -36,16 +36,24 @@ def _complete_pre_and_post(client, token, course_id, db, student_id, pre_correct
         json={"answers": answers},
     )
 
-    from app.models.student_progress import LearningPath
+    from app.models.student_progress import LearningPath, PathModule
 
-    db.add(
-        LearningPath(
-            student_id=student_id,
-            course_id=course_id,
-            total_modules=2,
-            status="active",
-        )
+    path = LearningPath(
+        student_id=student_id,
+        course_id=course_id,
+        total_modules=2,
+        status="active",
     )
+    db.add(path)
+    db.flush()
+    # El gate LEARNING_PATH_INCOMPLETE (knowledge_test_service.py, PED-004)
+    # exige min(total_modules, POST_TEST_REFERENCE_MODULE_LIMIT=2)=2
+    # módulos completed -- sin ellos el Post-Test se rechaza con 409 antes
+    # de generar preguntas (el pre-test no lo exige, solo el post).
+    db.add_all([
+        PathModule(path_id=path.id, title=f"Modulo {i}", order=i, status="completed")
+        for i in range(1, 3)
+    ])
     db.commit()
 
     start = client.post(
