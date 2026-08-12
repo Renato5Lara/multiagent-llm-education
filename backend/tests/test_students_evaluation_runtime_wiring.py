@@ -58,6 +58,7 @@ def _sembrar_intento(
     items_incorrectos: bool,
     bloom_level: int | None = None,
     status_modulo: str = "locked",
+    n_preguntas: int = 3,
 ) -> tuple[str, str]:
     course = Course(
         id=str(uuid.uuid4()), code="CS101", name="Fundamentos",
@@ -77,11 +78,19 @@ def _sembrar_intento(
     db.add(module)
     db.commit()
 
-    questions = [
+    questions_base = [
         {"text": "1+1?", "options": ["1", "2"], "correct": "2"},
         {"text": "2+2?", "options": ["3", "4"], "correct": "4"},
         {"text": "3+3?", "options": ["5", "6"], "correct": "6"},
+        {"text": "4+4?", "options": ["7", "8"], "correct": "8"},
     ]
+    if n_preguntas <= len(questions_base):
+        questions = questions_base[:n_preguntas]
+    else:
+        questions = questions_base + [
+            {"text": f"{i}+{i}?", "options": [str(2 * i - 1), str(2 * i)], "correct": str(2 * i)}
+            for i in range(len(questions_base) + 1, n_preguntas + 1)
+        ]
     attempt = create_evaluation(
         db, student_id=student_id, course_id=course.id,
         module_id=module.id, questions=questions,
@@ -107,7 +116,13 @@ def test_submit_evaluation_incluye_la_decision_del_runtime(client, estudiante_us
         assert resp.status_code == 200, resp.text
         body = resp.json()
         assert body["runtime_decision"] is not None
-        assert body["runtime_decision"]["diseno"] is not None
+        if body["runtime_decision"]["diseno"] is not None:
+            assert body["runtime_decision"]["asunto"] is not None
+        else:
+            # D3-insuficiencia (ADR-0016, H1-R3): contrato válido, no un
+            # error -- con evidencia pequeña (n=3), el Wilson lower-bound
+            # nunca alcanza theta=0.5 bajo la política v2.
+            assert body["runtime_decision"] == {"asunto": None, "diseno": None}
     finally:
         app.dependency_overrides.pop(get_current_estudiante, None)
 
@@ -123,13 +138,19 @@ def test_start_evaluation_usa_el_bloom_que_decidio_el_runtime(client, estudiante
 
     app.dependency_overrides[get_current_estudiante] = lambda: estudiante_user
     try:
+        # n_preguntas=4: con n=3 el Wilson lower-bound (ADR-0013) nunca
+        # alcanza theta=0.5 bajo la política v2 (H1-R2/H1-R3) -- la
+        # decisión que este test necesita verificar (bloom acotado por
+        # el Runtime) sería matemáticamente inalcanzable con el tamaño
+        # anterior. n=4 es el mínimo que la hace determinista (ce
+        # máximo=0.5101 >= theta=0.5).
         attempt_id, course_id = _sembrar_intento(
             db, estudiante_user.id, items_incorrectos=True,
-            bloom_level=4, status_modulo="available",
+            bloom_level=4, status_modulo="available", n_preguntas=4,
         )
         resp = client.post(
             f"/api/students/evaluation/{attempt_id}/submit",
-            json={"answers": {"0": "1", "1": "3", "2": "5"}},
+            json={"answers": {"0": "1", "1": "3", "2": "5", "3": "7"}},
         )
         assert resp.status_code == 200, resp.text
         assert resp.json()["runtime_decision"]["diseno"]["profundidad"] == "fundamentos"

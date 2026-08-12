@@ -114,9 +114,18 @@ class TestLeerEntregaDelRuntime:
 
         almacenes.cache_clear()
         try:
+            # items_incorrectos=[0,1,2,3] + items_totales=4: con n=3 el
+            # Wilson lower-bound (ADR-0013) nunca alcanza theta=0.5 bajo
+            # v2 (H1-R2/H1-R3) -- este test verifica el bloom_target
+            # reducido por una decisión real, inalcanzable con n=3.
+            # items_totales es obligatorio: sin él, productor_llm.py
+            # (Remediar) usa total=0 y evidence_strength siempre da 0,
+            # sin importar items_incorrectos -- el camino HTTP real
+            # (students.py:1067) sí lo pasa siempre.
             registrar_evidencia_evaluacion(
                 student_id="s-bloom", course_id="c-bloom",
-                titulo_modulo="Condicionales", items_incorrectos=[0, 1, 2],
+                titulo_modulo="Condicionales", items_incorrectos=[0, 1, 2, 3],
+                items_totales=4,
             )
             modulo = _modulo("Condicionales", bloom_level=5)
             student = User(id="s-bloom")

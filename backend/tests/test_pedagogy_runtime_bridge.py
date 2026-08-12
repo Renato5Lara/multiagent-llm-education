@@ -115,9 +115,17 @@ def test_mayoria_reforzar_sugiere_esa_competencia(db):
             id=str(uuid.uuid4()), course_id=course_id, student_id=sid,
             status=EnrollmentStatus.ACTIVO,
         ))
+        # items_incorrectos=[0,1,2,3] + items_totales=4, no [0,1,2] sin
+        # total: con n=3 el Wilson lower-bound (ADR-0013) nunca alcanza
+        # theta=0.5 bajo v2 (H1-R2/H1-R3) -- este test verifica el
+        # conteo del dashboard docente cuando SÍ existe una decisión de
+        # refuerzo, inalcanzable con n=3. items_totales es obligatorio:
+        # sin él, productor_llm.py usa total=0 y evidence_strength
+        # siempre da 0 sin importar items_incorrectos.
         registrar_evidencia_evaluacion(
             student_id=sid, course_id=course_id, titulo_modulo="Condicionales",
-            items_incorrectos=[0, 1, 2],  # >= 2 errores -> dominada=False -> reforzar
+            items_incorrectos=[0, 1, 2, 3],  # >= 2 errores -> dominada=False -> reforzar
+            items_totales=4,
         )
     db.commit()
 
