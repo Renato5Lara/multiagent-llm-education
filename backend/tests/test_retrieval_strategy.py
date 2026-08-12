@@ -37,6 +37,23 @@ def _make_response(
     )
 
 
+_VARIANTES_CONTENIDO = [
+    "arrays traversal searching insertion",
+    "linked lists pointers references",
+    "binary trees rotation balance",
+    "hash tables collision resolution",
+    "graphs traversal depth breadth",
+    "sorting algorithms comparison merge",
+    "recursion base case stack",
+    "dynamic programming memoization tabulation",
+]
+"""Contenido con vocabulario genuinamente distinto por índice -- no basta
+con un sufijo numérico: _normalize_content (retrieval.py) descarta
+palabras <=3 caracteres y compara sorted(set(palabras)), así que
+"content 1"/"content 2" normalizan igual (el dígito se descarta) y
+colisionan por deduplicación de contenido aunque las URLs difieran."""
+
+
 def _make_multi_source_response(
     sources: list[tuple[str, str, float, str]],
     answer: str = "",
@@ -66,7 +83,7 @@ class TestQueryGeneration:
         assert QueryCategory.INTRODUCTION in categories
         assert QueryCategory.CONCEPTUAL in categories
         assert QueryCategory.MISCONCEPTION in categories
-        assert QueryCategory.ANALOGY in categories
+        assert QueryCategory.MULTIMODAL in categories
 
     def test_query_text_contains_topic(self):
         strategy = PedagogicalRetrievalStrategy()
@@ -149,7 +166,9 @@ class TestContradictionDetection:
         ]
         contradictions = strategy._detect_contradictions(result, all_results)
         assert len(contradictions) >= 1
-        assert contradictions[0]["severity"] == "info"
+        # _detect_contradictions hardcodea "warning" -- no existe ninguna
+        # rama que produzca "info" en el diseño vigente.
+        assert contradictions[0]["severity"] == "warning"
 
     def test_contradiction_no_answer_returns_empty(self):
         strategy = PedagogicalRetrievalStrategy()
@@ -198,15 +217,21 @@ class TestAggregation:
 
     def test_counts_unique_domains(self):
         strategy = PedagogicalRetrievalStrategy()
+        # content distinto y con tokens >3 caracteres en cada respuesta:
+        # _make_response usa content="content" por defecto para ambas, y
+        # la deduplicación real por contenido (_normalize_content, que
+        # descarta palabras <=3 caracteres) las colapsaría a la misma
+        # clave normalizada aunque las URLs difieran -- no se toca el
+        # umbral de producción, solo se evita depender de él aquí.
         results = [
             TavilyQueryResult(
                 query="q1", category=QueryCategory.INTRODUCTION,
-                response=_make_response(title="a", url="https://example.com/a"),
+                response=_make_response(title="a", url="https://example.com/a", content="introductory explanation about arrays"),
                 query_time_ms=10, confidence=0.9,
             ),
             TavilyQueryResult(
                 query="q2", category=QueryCategory.CONCEPTUAL,
-                response=_make_response(title="b", url="https://other.org/b"),
+                response=_make_response(title="b", url="https://other.org/b", content="conceptual overview regarding recursion"),
                 query_time_ms=10, confidence=0.8,
             ),
         ]
@@ -376,8 +401,8 @@ class TestConfidenceScoring:
         strategy = PedagogicalRetrievalStrategy()
         resp = _make_response(score=0.6)
         score = strategy._score_confidence(resp)
-        # 0.6 * 1.5 = 0.9
-        assert score == 0.9
+        # avg_score(0.6) + coverage_bonus(min(0.2, 1*0.05)=0.05) + answer_bonus(0.0, sin answer) = 0.65
+        assert score == 0.65
 
     def test_score_confidence_caps_at_one(self):
         strategy = PedagogicalRetrievalStrategy()
@@ -395,6 +420,14 @@ class TestPedagogicalMetrics:
     retrieval quality across pedagogical dimensions."""
 
     def test_full_coverage_all_categories_present(self):
+        """PedagogicalMetrics no tiene pedagogical_coverage ni has_* --
+        pedagogical_confidence es un score compuesto ponderado (coverage
+        30% + contradiction 20% + diversity 15% + misconception 15% +
+        bloom 10% + grounding 10%). Con las 6 categorías presentes, sin
+        contradicciones, 3/6 dominios únicos y un exercise que coincide
+        con bloom_target=3 (default): 1.0*0.30 + 1.0*0.20 + 0.5*0.15 +
+        0.5*0.15 + 1.0*0.10 + 0.0*0.10 = 0.75 (verificado contra la
+        función real, no derivado a mano)."""
         agg = AggregatedResearch(
             topic="Test",
             concepts=[{"concept": "c1"}],
@@ -408,17 +441,17 @@ class TestPedagogicalMetrics:
             confidence_score=0.85,
         )
         metrics = agg.compute_pedagogical_metrics()
-        assert metrics.pedagogical_coverage == 1.0
+        assert metrics.pedagogical_confidence == 0.75
         assert metrics.diversity_score == 0.5
-        assert metrics.has_concepts
-        assert metrics.has_examples
-        assert metrics.has_analogies
-        assert metrics.has_applications
-        assert metrics.has_misconceptions
-        assert metrics.has_exercises
+        assert metrics.contradiction_score == 1.0
+        assert metrics.misconception_coverage == 0.5
         assert metrics.contradiction_count == 0
 
     def test_partial_coverage(self):
+        """3 de 6 categorías presentes (concepts, examples, applications),
+        sin misconceptions/exercises -- pedagogical_confidence baja
+        respecto al caso de cobertura completa (0.4 vs 0.75, verificado
+        contra la función real)."""
         agg = AggregatedResearch(
             topic="Test",
             concepts=[{"concept": "c1"}],
@@ -428,18 +461,22 @@ class TestPedagogicalMetrics:
             unique_domains=1,
         )
         metrics = agg.compute_pedagogical_metrics()
-        # 3 of 6 categories: concepts, examples, applications
-        assert metrics.pedagogical_coverage == 0.5
-        assert not metrics.has_analogies
-        assert not metrics.has_misconceptions
-        assert not metrics.has_exercises
+        assert metrics.pedagogical_confidence == 0.4
+        assert metrics.misconception_coverage == 0.0
+        assert metrics.bloom_alignment_score == 0.0
 
     def test_no_coverage(self):
+        """Sin ninguna categoría ni fuente: diversity_score y
+        misconception_coverage sí caen a 0.0 (miden cobertura real), pero
+        pedagogical_confidence NO cae a 0.0 -- contradiction_score
+        contribuye 1.0*0.20 aunque no haya nada que contradecir (ausencia
+        de contradicción no es lo mismo que ausencia de cobertura).
+        Verificado contra la función real: 0.2, no 0.0."""
         agg = AggregatedResearch(topic="Test", total_sources=0, unique_domains=0)
         metrics = agg.compute_pedagogical_metrics()
-        assert metrics.pedagogical_coverage == 0.0
         assert metrics.diversity_score == 0.0
-        assert not metrics.has_concepts
+        assert metrics.misconception_coverage == 0.0
+        assert metrics.pedagogical_confidence == 0.2
 
     def test_diversity_score_perfect(self):
         agg = AggregatedResearch(
@@ -474,28 +511,39 @@ class TestPedagogicalMetrics:
         assert metrics.contradiction_count == 2
 
     def test_bloom_level_valid(self):
-        agg = AggregatedResearch(topic="Test", total_sources=1, unique_domains=1)
-        metrics = agg.compute_pedagogical_metrics(bloom_target=3)
-        assert metrics.bloom_target == 3
+        """PedagogicalMetrics no expone bloom_target como campo propio --
+        su efecto se observa a través de bloom_alignment_score, que
+        compara el bloom_level de cada exercise contra el bloom_target
+        recibido. Un exercise en el nivel exacto del target debe alinear
+        al máximo; el mismo exercise contra un target distinto, no."""
+        agg = AggregatedResearch(
+            topic="Test",
+            exercises=[{"exercise": "x1", "bloom_level": 3}],
+            total_sources=1,
+            unique_domains=1,
+        )
+        metrics_alineadas = agg.compute_pedagogical_metrics(bloom_target=3)
+        assert metrics_alineadas.bloom_alignment_score == 1.0
+
+        metrics_desalineadas = agg.compute_pedagogical_metrics(bloom_target=5)
+        assert metrics_desalineadas.bloom_alignment_score == 0.0
 
     def test_pedagogical_metrics_to_dict(self):
         metrics = PedagogicalMetrics(
-            pedagogical_coverage=0.8,
+            pedagogical_confidence=0.8,
             diversity_score=0.6,
             contradiction_count=1,
-            has_concepts=True,
-            has_examples=True,
-            has_analogies=False,
-            has_applications=True,
-            has_misconceptions=False,
-            has_exercises=True,
-            bloom_target=3,
         )
         d = metrics.to_dict()
-        assert d["pedagogical_coverage"] == 0.8
+        assert d["pedagogical_confidence"] == 0.8
         assert d["contradiction_count"] == 1
 
     def test_aggregated_research_metrics_property(self):
+        """.metrics debe delegar en compute_pedagogical_metrics() con sus
+        valores por defecto (bloom_target=3). Mismo escenario de
+        cobertura completa que test_full_coverage_all_categories_present,
+        pero con 1 contradicción -- contradiction_score baja de 1.0 a
+        0.8333 (1 - 1/6 fuentes), verificado contra la función real."""
         agg = AggregatedResearch(
             topic="Test",
             concepts=[{"concept": "c1"}],
@@ -510,7 +558,8 @@ class TestPedagogicalMetrics:
         )
         metrics = agg.metrics
         assert isinstance(metrics, PedagogicalMetrics)
-        assert metrics.pedagogical_coverage == 1.0
+        assert metrics.diversity_score == 0.5
+        assert metrics.contradiction_count == 1
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -522,11 +571,20 @@ class TestFullPipeline:
 
     @pytest.mark.asyncio
     async def test_research_all_queries_succeed(self):
+        # side_effect variando URL/contenido por llamada -- un
+        # return_value estático hace que las 8 respuestas colisionen por
+        # dedup de URL real (retrieval.py:_aggregate_results), colapsando
+        # a 1 fuente en vez de 8. Mismo dominio a propósito (unique_domains==1).
+        call_count = [0]
+        def search(*args, **kwargs):
+            call_count[0] += 1
+            return _make_response(
+                title="result", content=_VARIANTES_CONTENIDO[(call_count[0] - 1) % len(_VARIANTES_CONTENIDO)],
+                score=0.85, answer="Key insight about topic",
+                url=f"https://result.com/{call_count[0]}",
+            )
         client = MagicMock()
-        client.search = AsyncMock(return_value=_make_response(
-            title="result", content="pedagogical content", score=0.85,
-            answer="Key insight about topic",
-        ))
+        client.search = AsyncMock(side_effect=search)
         strategy = PedagogicalRetrievalStrategy(
             client=client,
             cache=None,
@@ -570,8 +628,17 @@ class TestFullPipeline:
 
     @pytest.mark.asyncio
     async def test_research_rate_limited_skips_queries(self):
+        # side_effect variando URL por llamada -- ver comentario de
+        # test_research_all_queries_succeed.
+        search_calls = [0]
+        def search(*args, **kwargs):
+            search_calls[0] += 1
+            return _make_response(
+                score=0.8, url=f"https://result.com/{search_calls[0]}",
+                content=_VARIANTES_CONTENIDO[(search_calls[0] - 1) % len(_VARIANTES_CONTENIDO)],
+            )
         client = MagicMock()
-        client.search = AsyncMock(return_value=_make_response(score=0.8))
+        client.search = AsyncMock(side_effect=search)
         call_count = [0]
         async def can_proceed():
             call_count[0] += 1
@@ -612,8 +679,18 @@ class TestFullPipeline:
         async def search(*args, **kwargs):
             call_count[0] += 1
             if call_count[0] <= 4:
-                return _make_response(title=f"ok_{call_count[0]}", content="good", score=0.8)
+                return _make_response(
+                    title=f"ok_{call_count[0]}",
+                    content=_VARIANTES_CONTENIDO[(call_count[0] - 1) % len(_VARIANTES_CONTENIDO)],
+                    score=0.8,
+                )
             raise Exception("rate limited")
+
+        # Faltaba: la función local `search` nunca se asignaba a
+        # client.search, que quedaba como MagicMock por defecto -- todas
+        # las 8 queries fallaban con "'MagicMock' object can't be awaited",
+        # no las 4 que este test pretende simular.
+        client.search = search
 
         strategy = PedagogicalRetrievalStrategy(
             client=client,
@@ -648,8 +725,17 @@ class TestFullPipeline:
 
     @pytest.mark.asyncio
     async def test_research_without_cache_still_works(self):
+        # side_effect variando URL y contenido por llamada -- ver
+        # comentario de test_research_all_queries_succeed.
+        call_count = [0]
+        def search(*args, **kwargs):
+            call_count[0] += 1
+            return _make_response(
+                score=0.8, url=f"https://result.com/{call_count[0]}",
+                content=_VARIANTES_CONTENIDO[(call_count[0] - 1) % len(_VARIANTES_CONTENIDO)],
+            )
         client = MagicMock()
-        client.search = AsyncMock(return_value=_make_response(score=0.8))
+        client.search = AsyncMock(side_effect=search)
         strategy = PedagogicalRetrievalStrategy(
             client=client,
             cache=None,
@@ -683,7 +769,8 @@ class TestEdgeCases:
         ctx = RetrievalContext(topic="Test", objectives=[])
         agg = strategy._aggregate_results(results, ctx)
         assert agg.total_sources == 1
-        assert agg.concepts[0]["content"] == ""
+        # _source_item usa la clave "content_preview", no "content".
+        assert agg.concepts[0]["content_preview"] == ""
 
     def test_very_long_content_truncated(self):
         strategy = PedagogicalRetrievalStrategy()
@@ -734,13 +821,20 @@ class TestEdgeCases:
 
     def test_multiple_sources_per_query_deduplicated(self):
         strategy = PedagogicalRetrievalStrategy()
+        # El tercer item necesita contenido con tokens >3 caracteres
+        # genuinamente distintos del primero -- "content a"/"content b"
+        # solo difieren en la última palabra de 1 carácter, que
+        # _normalize_content descarta, colapsando ambos a la misma clave
+        # normalizada ("content") y deduplicando por contenido lo que
+        # debía sobrevivir por tener una URL distinta. No se toca el
+        # umbral de producción, solo el fixture.
         results = [
             TavilyQueryResult(
                 query="q1", category=QueryCategory.CONCEPTUAL,
                 response=_make_multi_source_response([
-                    ("a", "https://ex.com/a", "content a", 0.9),
-                    ("a", "https://ex.com/a", "content a", 0.9),  # duplicate
-                    ("b", "https://ex.com/b", "content b", 0.8),
+                    ("a", "https://ex.com/a", "content about arrays", 0.9),
+                    ("a", "https://ex.com/a", "content about arrays", 0.9),  # duplicate (misma URL)
+                    ("b", "https://ex.com/b", "totally distinct explanation", 0.8),
                 ]),
                 query_time_ms=10, confidence=0.9,
             ),
@@ -751,8 +845,17 @@ class TestEdgeCases:
 
     @pytest.mark.asyncio
     async def test_research_with_unicode_topic(self):
+        # side_effect variando URL y contenido por llamada -- ver
+        # comentario de test_research_all_queries_succeed.
+        call_count = [0]
+        def search(*args, **kwargs):
+            call_count[0] += 1
+            return _make_response(
+                score=0.8, url=f"https://result.com/{call_count[0]}",
+                content=_VARIANTES_CONTENIDO[(call_count[0] - 1) % len(_VARIANTES_CONTENIDO)],
+            )
         client = MagicMock()
-        client.search = AsyncMock(return_value=_make_response(score=0.8))
+        client.search = AsyncMock(side_effect=search)
         strategy = PedagogicalRetrievalStrategy(
             client=client,
             cache=None,
