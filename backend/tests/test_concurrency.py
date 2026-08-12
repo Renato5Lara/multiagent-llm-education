@@ -13,7 +13,6 @@ import time
 import pytest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.orm.exc import StaleDataError
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
@@ -547,14 +546,354 @@ class TestP0ModuleProgressConcurrency:
             barrera_commit.wait()
             return commit_original(self, *args, **kwargs)
 
+        # C2a (2026-08-11): tras el fix, update_module_progress() ya no
+        # propaga StaleDataError al llamador -- el perdedor relee el
+        # estado fresco y, si ya confirma la operación pedida, retorna
+        # éxito idempotente. version_id_col sigue deteniendo la segunda
+        # escritura FÍSICA; solo cambia el contrato expuesto al llamador.
+        # Scores distintos (10.0 vs 20.0) para poder distinguir, por el
+        # valor final persistido, cuál de las dos transacciones ganó
+        # físicamente -- ambas deben converger en el MISMO valor.
+        errores_inesperados = []
+
+        def worker(score):
+            db = WorkerSession()
+            try:
+                modulo = update_module_progress(db, module_id, "completed", student_id, score=score)
+                resultados.append(("ok", modulo.score))
+            except Exception as exc:  # nada debe escapar, ni StaleDataError
+                errores_inesperados.append(exc)
+            finally:
+                db.close()
+
+        Session.commit = commit_sincronizado
+        try:
+            t1 = threading.Thread(target=worker, args=(10.0,))
+            t2 = threading.Thread(target=worker, args=(20.0,))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+        finally:
+            Session.commit = commit_original
+
+        # (4) StaleDataError -- ni ningún otro error -- escapó al llamador.
+        assert errores_inesperados == [], f"excepciones inesperadas: {errores_inesperados}"
+        # (3) ambas llamadas terminaron semánticamente satisfechas.
+        assert len(resultados) == 2
+        assert all(r[0] == "ok" for r in resultados)
+        # (2) el test NO cuenta los UPDATE físicos emitidos -- esa garantía
+        # la da version_id_col (la segunda escritura obsoleta debe fallar
+        # en el flush, óptimo lock ya cubierto por su propia suite). Lo
+        # que este test observa es el efecto: ambos llamadores convergen
+        # en el MISMO score persistido, nunca en un promedio ni en dos
+        # valores distintos -- consistente con que solo uno haya escrito,
+        # pero no es una medición directa de ese hecho.
+        scores_vistos = {r[1] for r in resultados}
+        assert scores_vistos in ({10.0}, {20.0}), (
+            f"se esperaba converger en el score de un único ganador, se vio {scores_vistos}"
+        )
+
+        verify = SessionLocal()
+        from app.models.student_progress import PathModule
+        # (5) estado final consistente y coincide con lo que ambos
+        # workers observaron; (1) la carrera fue real: sin la
+        # sincronización del commit, cada worker habría visto su propio
+        # score en vez de converger.
+        mod = verify.query(PathModule).filter(PathModule.id == module_id).first()
+        assert mod.status == "completed"
+        assert {mod.score} == scores_vistos
+        next_mod = verify.query(PathModule).filter(PathModule.id == next_module_id).first()
+        assert next_mod.status == "available"
+        verify.close()
+
+
+# =============================================================================
+# 9b. C2a — StaleDataError sin manejar en update_module_progress() (Gate de
+#     diseño e implementación 2026-08-11, ver memoria del proyecto:
+#     diagnóstico dirigido + diseño cerrado + autorización). El optimistic
+#     locking seguía deteniendo la segunda escritura física; el problema
+#     era que StaleDataError se propagaba sin control hasta el cliente
+#     HTTP. Estos tests verifican el contrato nuevo: éxito idempotente
+#     cuando el estado fresco ya satisface la operación pedida,
+#     ModuleUpdateConflict / HTTP 409 controlado cuando NO la satisface --
+#     nunca un StaleDataError ni detalle interno de SQLAlchemy expuesto.
+# =============================================================================
+
+class TestC2aModuleUpdateConflict:
+    def _setup(self, engine):
+        SessionLocal = sessionmaker(bind=engine)
+        session = SessionLocal()
+        from app.models.user import User, UserRole
+        from app.core.security import get_password_hash
+        from app.models.course import Course, CourseStatus
+        from app.models.student_progress import LearningPath, PathModule
+
+        user = User(
+            email="c2aconc@test.com", hashed_password=get_password_hash("123"),
+            first_name="C2a", last_name="Conc",
+            role=UserRole.ESTUDIANTE, institutional_code="C2ACONC01",
+            is_active=True,
+        )
+        session.add(user)
+        session.flush()
+
+        course = Course(
+            code="C2A-CONC", name="C2a Concurrency Course", cycle=1, year=2026,
+            teacher_id=user.id, status=CourseStatus.PUBLICADO,
+        )
+        session.add(course)
+        session.flush()
+
+        path = LearningPath(student_id=user.id, course_id=course.id, total_modules=1)
+        session.add(path)
+        session.flush()
+
+        module = PathModule(path_id=path.id, title="Modulo C2a", order=1, status="available")
+        session.add(module)
+        session.commit()
+
+        ids = (user.id, module.id)
+        session.close()
+        return ids
+
+    def _setup_con_evaluaciones(self, engine):
+        """Dos EvaluationAttempt distintos sobre el mismo módulo, ambos
+        con respuesta correcta (passed=1), para la carrera de doble
+        submit de evaluación."""
+        SessionLocal = sessionmaker(bind=engine)
+        from app.models.evaluation_attempt import EvaluationAttempt
+        from app.models.student_progress import LearningPath
+
+        student_id, module_id = self._setup(engine)
+        session = SessionLocal()
+        course_id = session.query(LearningPath).filter(
+            LearningPath.student_id == student_id
+        ).first().course_id
+
+        preguntas = [{"correct": "a"}]
+        a1 = EvaluationAttempt(
+            student_id=student_id, course_id=course_id, module_id=module_id,
+            questions=preguntas, max_score=1,
+        )
+        a2 = EvaluationAttempt(
+            student_id=student_id, course_id=course_id, module_id=module_id,
+            questions=preguntas, max_score=1,
+        )
+        session.add_all([a1, a2])
+        session.commit()
+        ids = (student_id, module_id, a1.id, a2.id)
+        session.close()
+        return ids
+
+    def test_conflicto_real_entre_estados_distintos_no_se_silencia(self, concurrent_engine):
+        """Dos escritores concurrentes piden estados finales distintos
+        ('completed' vs 'in_progress') sobre el mismo módulo. Gane quien
+        gane, el estado fresco no puede satisfacer a ambos a la vez -- el
+        perdedor debe recibir ModuleUpdateConflict, nunca un éxito
+        silencioso ni un StaleDataError sin capturar."""
+        from app.services.student_service import ModuleUpdateConflict, update_module_progress
+
+        student_id, module_id = self._setup(concurrent_engine)
+        WorkerSession = sessionmaker(bind=concurrent_engine, autoflush=False)
+
+        resultados = []
+        errores_inesperados = []
+        barrera_commit = threading.Barrier(2)
+        commit_original = Session.commit
+
+        def commit_sincronizado(self, *args, **kwargs):
+            barrera_commit.wait()
+            return commit_original(self, *args, **kwargs)
+
+        def worker(status_pedido):
+            db = WorkerSession()
+            try:
+                update_module_progress(db, module_id, status_pedido, student_id)
+                resultados.append(("ok", status_pedido))
+            except ModuleUpdateConflict:
+                resultados.append(("conflict", status_pedido))
+            except Exception as exc:
+                errores_inesperados.append(exc)
+            finally:
+                db.close()
+
+        Session.commit = commit_sincronizado
+        try:
+            t1 = threading.Thread(target=worker, args=("completed",))
+            t2 = threading.Thread(target=worker, args=("in_progress",))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+        finally:
+            Session.commit = commit_original
+
+        assert errores_inesperados == [], f"excepciones inesperadas: {errores_inesperados}"
+        assert len(resultados) == 2
+        assert sorted(r[0] for r in resultados) == ["conflict", "ok"]
+
+    def test_patch_concurrente_200_409_sin_detalles_internos(self, concurrent_engine):
+        """Mismo conflicto real, ejercitado invocando directamente la
+        función handler `update_module` (students.py) con un `db` y un
+        `current_user` reales -- cobertura del CONTRATO del handler (qué
+        excepción/código produce), NO una prueba E2E vía HTTP real
+        (TestClient/ASGI). No se debe citar esto como validación HTTP
+        real de C2a. El ganador recibe 200, el perdedor recibe
+        HTTPException 409 con detail estructurado {code, message} --
+        nunca StaleDataError ni texto de SQLAlchemy. Usa dos estados que
+        NO son 'completed' para mantener el test acotado al contrato de
+        conflicto de C2a, sin arrastrar los efectos secundarios de la
+        rama 'completed' del endpoint (active_mission_service,
+        research_metrics_service), que no son parte de este cambio."""
+        from app.api.routes.students import update_module
+        from app.schemas.progress import ModuleUpdate
+        from app.models.user import User
+        from fastapi import HTTPException
+
+        student_id, module_id = self._setup(concurrent_engine)
+        WorkerSession = sessionmaker(bind=concurrent_engine, autoflush=False)
+
+        resultados = []
+        barrera_commit = threading.Barrier(2)
+        commit_original = Session.commit
+
+        def commit_sincronizado(self, *args, **kwargs):
+            barrera_commit.wait()
+            return commit_original(self, *args, **kwargs)
+
+        def worker(status_pedido):
+            db = WorkerSession()
+            try:
+                current_user = db.query(User).filter(User.id == student_id).first()
+                data = ModuleUpdate(status=status_pedido)
+                modulo = update_module(module_id=module_id, data=data, db=db, current_user=current_user)
+                resultados.append((200, modulo.status))
+            except HTTPException as exc:
+                resultados.append((exc.status_code, exc.detail))
+            finally:
+                db.close()
+
+        Session.commit = commit_sincronizado
+        try:
+            # Ninguno coincide con el status inicial ("available") del
+            # _setup: si uno de los dos pidiera el mismo valor que ya
+            # tiene el módulo, SQLAlchemy no detecta cambio en el
+            # atributo, no emite UPDATE para esa fila y esa mitad de la
+            # carrera nunca llega a escribir nada -- deja de haber
+            # conflicto que probar.
+            t1 = threading.Thread(target=worker, args=("in_progress",))
+            t2 = threading.Thread(target=worker, args=("locked",))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+        finally:
+            Session.commit = commit_original
+
+        assert len(resultados) == 2
+        codigos = sorted(r[0] for r in resultados)
+        assert codigos == [200, 409]
+
+        conflicto = next(r for r in resultados if r[0] == 409)
+        detail = conflicto[1]
+        assert detail["code"] == "MODULE_UPDATE_CONFLICT"
+        texto = str(detail).lower()
+        for fragmento_prohibido in ("staledataerror", "sqlalchemy", "update statement", "were matched"):
+            assert fragmento_prohibido not in texto
+
+    def test_doble_submit_evaluacion_concurrente_200_200(self, concurrent_engine):
+        """Dos EvaluationAttempt DISTINTOS sobre el mismo módulo,
+        sometidos concurrentemente -- el EvaluationAttempt de cada uno ya
+        quedó committeado independientemente de la carrera en el módulo;
+        best-effort: ninguna de las dos respuestas debe fallar (ni 409 ni
+        500) aunque solo una pueda completar físicamente el módulo. La
+        carrera sobre PathModule ya queda demostrada aquí, pero NO
+        reproduce el escenario original de C2a (doble clic/reintento del
+        MISMO attempt_id) -- ver
+        test_doble_submit_mismo_attempt_id_no_expone_staledataerror
+        abajo, que sí lo hace."""
+        from app.services import evaluation_service
+
+        student_id, module_id, attempt1_id, attempt2_id = self._setup_con_evaluaciones(concurrent_engine)
+        WorkerSession = sessionmaker(bind=concurrent_engine, autoflush=False)
+
+        resultados = []
+        errores_inesperados = []
+        barrera_commit = threading.Barrier(2)
+        commit_original = Session.commit
+
+        def commit_sincronizado(self, *args, **kwargs):
+            barrera_commit.wait()
+            return commit_original(self, *args, **kwargs)
+
+        def worker(attempt_id):
+            db = WorkerSession()
+            try:
+                resultado = evaluation_service.submit_evaluation(
+                    db, attempt_id=attempt_id, student_id=student_id, answers={"0": "a"},
+                )
+                resultados.append(("ok", resultado.passed if resultado else None))
+            except Exception as exc:
+                errores_inesperados.append(exc)
+            finally:
+                db.close()
+
+        Session.commit = commit_sincronizado
+        try:
+            t1 = threading.Thread(target=worker, args=(attempt1_id,))
+            t2 = threading.Thread(target=worker, args=(attempt2_id,))
+            t1.start()
+            t2.start()
+            t1.join()
+            t2.join()
+        finally:
+            Session.commit = commit_original
+
+        assert errores_inesperados == [], f"excepciones inesperadas: {errores_inesperados}"
+        assert len(resultados) == 2
+        assert all(r[0] == "ok" and r[1] == 1 for r in resultados)
+
+        verify = sessionmaker(bind=concurrent_engine)()
+        from app.models.student_progress import PathModule
+        mod = verify.query(PathModule).filter(PathModule.id == module_id).first()
+        assert mod.status == "completed"
+        verify.close()
+
+    def test_doble_submit_mismo_attempt_id_no_expone_staledataerror(self, concurrent_engine):
+        """Reproduce el escenario ORIGINAL que dio origen a C2a: dos
+        submits concurrentes del MISMO attempt_id (doble clic o
+        reintento del cliente sobre la misma evaluación), no dos
+        attempts distintos. EvaluationAttempt no tiene version_id_col
+        -- la carrera de C2a ocurre en la actualización del módulo que
+        submit_evaluation dispara después, sobre el mismo module_id en
+        ambas llamadas (ambas comparten attempt.module_id)."""
+        from app.services import evaluation_service
+        from app.models.evaluation_attempt import EvaluationAttempt
+
+        student_id, module_id, attempt_id, _ = self._setup_con_evaluaciones(concurrent_engine)
+        WorkerSession = sessionmaker(bind=concurrent_engine, autoflush=False)
+
+        resultados = []
+        errores_inesperados = []
+        barrera_commit = threading.Barrier(2)
+        commit_original = Session.commit
+
+        def commit_sincronizado(self, *args, **kwargs):
+            barrera_commit.wait()
+            return commit_original(self, *args, **kwargs)
+
         def worker():
             db = WorkerSession()
             try:
-                update_module_progress(db, module_id, "completed", student_id, score=10.0)
-                resultados.append("ok")
-            except StaleDataError:
-                db.rollback()
-                resultados.append("stale")
+                resultado = evaluation_service.submit_evaluation(
+                    db, attempt_id=attempt_id, student_id=student_id, answers={"0": "a"},
+                )
+                resultados.append(
+                    ("ok", resultado.passed if resultado else None, resultado.score if resultado else None)
+                )
+            except Exception as exc:  # StaleDataError incluido -- no debe escapar
+                errores_inesperados.append(exc)
             finally:
                 db.close()
 
@@ -569,19 +908,25 @@ class TestP0ModuleProgressConcurrency:
         finally:
             Session.commit = commit_original
 
-        # Ambos hilos leyeron el módulo en status="available" (sincronizado
-        # justo antes del commit), así que ambos intentan aplicar el efecto
-        # de completitud — el optimistic lock (version_id_col) debe frenar
-        # al segundo, no dejarlo aplicar un segundo efecto silencioso.
-        assert resultados.count("ok") == 1
-        assert resultados.count("stale") == 1
+        # Ninguna de las dos llamadas expone StaleDataError (ni ningún
+        # otro error) -- incluyendo un eventual ModuleUpdateConflict real,
+        # que evaluation_service debe absorber como best-effort.
+        assert errores_inesperados == [], f"excepciones inesperadas: {errores_inesperados}"
+        assert len(resultados) == 2
+        # El EvaluationAttempt queda persistido correctamente en ambas
+        # respuestas -- misma respuesta enviada en los dos submits, así
+        # que el score no se corrompe entre ganador y perdedor.
+        assert all(r[0] == "ok" for r in resultados)
+        assert all(r[1] == 1 for r in resultados), f"passed inconsistente: {resultados}"
+        assert all(r[2] == 1 for r in resultados), f"score inconsistente: {resultados}"
 
-        verify = SessionLocal()
+        verify = sessionmaker(bind=concurrent_engine)()
         from app.models.student_progress import PathModule
         mod = verify.query(PathModule).filter(PathModule.id == module_id).first()
         assert mod.status == "completed"
-        next_mod = verify.query(PathModule).filter(PathModule.id == next_module_id).first()
-        assert next_mod.status == "available"
+        attempt_final = verify.query(EvaluationAttempt).filter(EvaluationAttempt.id == attempt_id).first()
+        assert attempt_final.passed == 1
+        assert attempt_final.score == 1
         verify.close()
 
 

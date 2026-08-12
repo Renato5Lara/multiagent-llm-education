@@ -10,6 +10,7 @@ from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 
 from app.models.competency import Competency, CourseCompetency
 from app.models.course import Course, CourseStatus
@@ -876,68 +877,111 @@ def get_learning_path(db: Session, student_id: str, course_id: str) -> Optional[
     )
 
 
-def update_module_progress(
-    db: Session, module_id: str, status: str, student_id: str, score: Optional[float] = None
-) -> Optional[PathModule]:
-    module = (
+class ModuleUpdateConflict(RuntimeError):
+    """Dos escrituras concurrentes sobre el mismo PathModule (version_id_col)
+    y el estado fresco, tras releer, no demuestra que la operación pedida
+    por ESTA request ya quedó satisfecha (C2a,
+    engineering_gate_c2a_diseno_2026_08_11 / cierre de diseño en memoria).
+    No se debe interpretar como éxito: el llamador decide cómo responder."""
+
+    def __init__(self, module_id: str, status: str):
+        self.module_id = module_id
+        self.status = status
+        super().__init__(
+            f"conflicto de versión en PathModule {module_id}: el estado "
+            f"fresco no confirma la operación '{status}'",
+        )
+
+
+def _consultar_modulo_propio(db: Session, module_id: str, student_id: str) -> Optional[PathModule]:
+    return (
         db.query(PathModule)
         .join(LearningPath, LearningPath.id == PathModule.path_id)
         .filter(PathModule.id == module_id, LearningPath.student_id == student_id)
         .first()
     )
+
+
+def update_module_progress(
+    db: Session, module_id: str, status: str, student_id: str, score: Optional[float] = None
+) -> Optional[PathModule]:
+    module = _consultar_modulo_propio(db, module_id, student_id)
     if not module:
         return None
 
-    if status == "completed" and module.status != "completed":
-        module.status = "completed"
-        module.score = score
-        module.completed_at = datetime.now(timezone.utc)
+    try:
+        if status == "completed" and module.status != "completed":
+            module.status = "completed"
+            module.score = score
+            module.completed_at = datetime.now(timezone.utc)
 
-        path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
+            path = db.query(LearningPath).filter(LearningPath.id == module.path_id).first()
 
-        if module.resource_id:
-            progress = (
-                db.query(StudentProgress)
-                .filter(
-                    StudentProgress.student_id == path.student_id,
-                    StudentProgress.course_id == path.course_id,
-                    StudentProgress.resource_id == module.resource_id,
+            if module.resource_id:
+                progress = (
+                    db.query(StudentProgress)
+                    .filter(
+                        StudentProgress.student_id == path.student_id,
+                        StudentProgress.course_id == path.course_id,
+                        StudentProgress.resource_id == module.resource_id,
+                    )
+                    .first()
                 )
+                if not progress:
+                    progress = StudentProgress(
+                        student_id=path.student_id,
+                        course_id=path.course_id,
+                        resource_id=module.resource_id,
+                        completed=True,
+                        completed_at=datetime.now(timezone.utc),
+                        progress_percentage=100,
+                    )
+                    db.add(progress)
+                else:
+                    progress.completed = True
+                    progress.completed_at = datetime.now(timezone.utc)
+                    progress.progress_percentage = 100
+
+            next_module = (
+                db.query(PathModule)
+                .filter(
+                    PathModule.path_id == module.path_id,
+                    PathModule.order > module.order,
+                    PathModule.status == "locked",
+                )
+                .order_by(PathModule.order)
                 .first()
             )
-            if not progress:
-                progress = StudentProgress(
-                    student_id=path.student_id,
-                    course_id=path.course_id,
-                    resource_id=module.resource_id,
-                    completed=True,
-                    completed_at=datetime.now(timezone.utc),
-                    progress_percentage=100,
-                )
-                db.add(progress)
-            else:
-                progress.completed = True
-                progress.completed_at = datetime.now(timezone.utc)
-                progress.progress_percentage = 100
+            if next_module:
+                next_module.status = "available"
+        else:
+            module.status = status
 
-        next_module = (
-            db.query(PathModule)
-            .filter(
-                PathModule.path_id == module.path_id,
-                PathModule.order > module.order,
-                PathModule.status == "locked",
-            )
-            .order_by(PathModule.order)
-            .first()
+        db.commit()
+        db.refresh(module)
+        return module
+    except StaleDataError:
+        # C2a: carrera concurrente sobre el mismo PathModule.version. No se
+        # reutiliza el objeto `module` (sus atributos quedan expirados tras
+        # el rollback) -- se relee explícitamente con el mismo criterio de
+        # pertenencia. `status=="completed"` como único chequeo es
+        # suficiente porque `PathModule.status = "completed"` se escribe en
+        # un solo lugar de todo el proyecto -- esta misma función -- así
+        # que si el estado fresco ya lo confirma, la cascada completa
+        # (score, completed_at, StudentProgress, next_module) ya se aplicó
+        # atómicamente en la transacción ganadora.
+        db.rollback()
+        modulo_fresco = _consultar_modulo_propio(db, module_id, student_id)
+        if modulo_fresco is None:
+            return None
+        satisfecho = (
+            modulo_fresco.status == "completed"
+            if status == "completed"
+            else modulo_fresco.status == status
         )
-        if next_module:
-            next_module.status = "available"
-    else:
-        module.status = status
-
-    db.commit()
-    db.refresh(module)
-    return module
+        if satisfecho:
+            return modulo_fresco
+        raise ModuleUpdateConflict(module_id, status)
 
 
 def update_resource_progress(

@@ -456,9 +456,22 @@ def update_module(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_estudiante),
 ):
-    module = student_service.update_module_progress(
-        db, module_id=module_id, status=data.status, student_id=current_user.id, score=data.score
-    )
+    try:
+        module = student_service.update_module_progress(
+            db, module_id=module_id, status=data.status, student_id=current_user.id, score=data.score
+        )
+    except student_service.ModuleUpdateConflict:
+        # C2a: conflicto real -- el estado fresco no confirma que esta
+        # request quedó satisfecha. A diferencia de submit_evaluation
+        # (best-effort), actualizar el módulo ES el propósito explícito de
+        # este endpoint, así que aquí sí se reporta como conflicto.
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "MODULE_UPDATE_CONFLICT",
+                "message": "El módulo fue modificado concurrentemente y el estado solicitado no se pudo confirmar",
+            },
+        )
     if not module:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

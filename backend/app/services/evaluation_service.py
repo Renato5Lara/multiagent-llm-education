@@ -307,11 +307,24 @@ def submit_evaluation(
     db.refresh(attempt)
 
     if attempt.passed and attempt.module_id:
-        from app.services.student_service import update_module_progress
-        update_module_progress(
-            db, module_id=attempt.module_id,
-            status="completed", student_id=attempt.student_id, score=float(correct),
-        )
+        from app.services.student_service import ModuleUpdateConflict, update_module_progress
+        try:
+            update_module_progress(
+                db, module_id=attempt.module_id,
+                status="completed", student_id=attempt.student_id, score=float(correct),
+            )
+        except ModuleUpdateConflict:
+            # C2a: el EvaluationAttempt ya quedó committeado (línea arriba)
+            # independientemente de esto -- best-effort, mismo patrón que
+            # la evidencia runtime más abajo en students.py: no bloquea la
+            # respuesta ni el resultado ya persistido de la evaluación.
+            logger.warning(
+                "Conflicto de versión al actualizar module_id=%s tras "
+                "evaluación (attempt_id=%s) -- el intento ya quedó "
+                "registrado, el módulo no se pudo confirmar completado "
+                "en esta ejecución.",
+                attempt.module_id, attempt.id,
+            )
 
     return attempt
 
