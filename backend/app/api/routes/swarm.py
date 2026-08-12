@@ -37,7 +37,7 @@ def query_memory(
     """Query shared memory records by scope and type."""
     verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
-    records = store.query(
+    records = store.query_sync(
         student_id=student_id,
         module_id=module_id,
         memory_type=memory_type,
@@ -89,7 +89,7 @@ async def stream_memory(
                 session = SessionLocal()
                 try:
                     store = memory_store_from_session(session)
-                    records = store.query(
+                    records = store.query_sync(
                         student_id=student_id,
                         module_id=module_id,
                         memory_type=memory_type,
@@ -218,7 +218,7 @@ def get_student_profile_history(
     """Get the raw pedagogical memory records for a student."""
     verificar_pertenencia_estudiante(current_user, student_id)
     store = memory_store_from_session(db)
-    records = store.query(student_id=student_id, memory_type="pedagogical_profile", limit=50, include_stale=False)
+    records = store.query_sync(student_id=student_id, memory_type="pedagogical_profile", limit=50, include_stale=False)
     return {
         "student_id": student_id,
         "count": len(records),

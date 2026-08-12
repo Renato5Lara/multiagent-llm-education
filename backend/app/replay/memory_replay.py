@@ -22,7 +22,7 @@ class MemoryReplay:
         module_id: str | None = None,
         weeks: int = 1,
     ) -> dict[str, Any]:
-        records = store.query(
+        records = store.query_sync(
             student_id=student_id,
             module_id=module_id,
             limit=200,
