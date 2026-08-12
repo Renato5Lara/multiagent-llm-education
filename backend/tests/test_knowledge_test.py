@@ -47,13 +47,20 @@ def test_seed_is_idempotent(db):
     assert db.query(KnowledgeTestQuestion).count() == len(QUESTION_BANK)
 
 
-def test_bank_covers_nine_modules(db):
+def test_bank_covers_reference_modules(db):
+    """El banco pre/post-test está deliberadamente acotado al Módulo 1 de
+    Fundamentos (comparabilidad pre/post psicométrica), no a los 9 módulos
+    del curso -- module_number={1,2,4} es un eje de cobertura INTERNO al
+    Módulo 1, coincide con los objetivos 2/4 del curso por casualidad
+    numérica, no por diseño (memoria del proyecto,
+    b1_b2_objetivos_2_4_no_intervencion_2026_08_11). Decisión confirmada
+    vigente, no reabierta aquí."""
     seed_knowledge_test_bank(db)
     modules = {
         row[0]
         for row in db.query(KnowledgeTestQuestion.module_number).distinct().all()
     }
-    assert modules == set(range(1, 10))
+    assert modules == {1, 2, 4}
 
 
 # ── Fixtures locales ─────────────────────────────────────────────────
@@ -112,8 +119,9 @@ def test_submit_grades_and_classifies(
     assert body["percentage"] == 100.0
     assert body["level"] == "avanzado"
     assert body["status"] == "completed"
-    assert set(body["module_breakdown"].keys()) == {str(m) for m in range(1, 10)}
-    assert body["mastered_modules"] == list(range(1, 10))
+    # Banco acotado a {1,2,4} -- ver test_bank_covers_reference_modules.
+    assert set(body["module_breakdown"].keys()) == {"1", "2", "4"}
+    assert body["mastered_modules"] == [1, 2, 4]
     assert body["critical_modules"] == []
 
 
@@ -131,7 +139,8 @@ def test_submit_all_wrong_is_basico(
     body = resp.json()
     assert body["score"] == 0
     assert body["level"] == "basico"
-    assert body["critical_modules"] == list(range(1, 10))
+    # Banco acotado a {1,2,4} -- ver test_bank_covers_reference_modules.
+    assert body["critical_modules"] == [1, 2, 4]
 
 
 def test_pretest_is_single_attempt(
@@ -419,7 +428,8 @@ def test_pretest_merges_knowledge_assessment_into_diagnostic(
     assert diagnostic.profile["student_profile"]["dominant_modality"] == "visual"
     ka = diagnostic.profile["knowledge_assessment"]
     assert ka["level"] == "avanzado"
-    assert ka["mastered_modules"] == list(range(1, 10))
+    # Banco acotado a {1,2,4} -- ver test_bank_covers_reference_modules.
+    assert ka["mastered_modules"] == [1, 2, 4]
     assert ka["critical_modules"] == []
 
 
