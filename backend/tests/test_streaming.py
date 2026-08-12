@@ -10,12 +10,12 @@ class TestFallbackResponse:
     def test_explanation_fallback(self):
         from app.services.streaming_service import streaming_service
         resp = streaming_service._fallback_response("¿Qué es un algoritmo?")
-        assert "excelente" in resp.lower() or "fundamental" in resp.lower()
+        assert "modo limitado" in resp.lower()
 
     def test_generic_fallback(self):
         from app.services.streaming_service import streaming_service
         resp = streaming_service._fallback_response("hola")
-        assert "específico" in resp.lower() or "ayudarte" in resp.lower()
+        assert "precisión" in resp.lower()
 
 
 class TestBuildContextualMessage:

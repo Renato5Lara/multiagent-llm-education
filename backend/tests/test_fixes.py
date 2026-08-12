@@ -33,13 +33,13 @@ class TestFix1AIServiceImports:
     def test_fallback_tutor_response_works(self):
         """_fallback_tutor_response retorna respuestas coherentes según keyword."""
         resp_que = ai_service._fallback_tutor_response("¿Qué es un algoritmo?")
-        assert "pregunta" in resp_que.lower() or "concepto" in resp_que.lower()
+        assert "modo limitado" in resp_que.lower()
 
         resp_como = ai_service._fallback_tutor_response("¿Cómo ordeno un arreglo?")
-        assert "pasos" in resp_como.lower() or "sugiero" in resp_como.lower()
+        assert "intento" in resp_como.lower()
 
         resp_ayuda = ai_service._fallback_tutor_response("Necesito ayuda")
-        assert "ayudar" in resp_ayuda.lower()
+        assert "trabaste" in resp_ayuda.lower()
 
     def test_degraded_mode(self):
         """ai_service.degraded refleja correctamente si OpenAI está disponible."""
