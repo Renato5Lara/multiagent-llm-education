@@ -264,7 +264,7 @@ async def test_research_agent_publishes_memory_and_consensus_payload(db):
     assert state["consensus_payload"]["voter_name"] == "research_agent"
     assert state["consensus_payload"]["decision"] in {"approve", "abstain"}
 
-    records = store.query(student_id="stu-arrays", module_id="mod-arrays", memory_type="research")
+    records = store.query_sync(student_id="stu-arrays", module_id="mod-arrays", memory_type="research")
     assert {record.key for record in records} >= {
         "research:summary",
         "research:metrics",

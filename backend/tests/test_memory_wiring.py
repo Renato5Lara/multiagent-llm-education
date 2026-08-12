@@ -41,7 +41,7 @@ class TestMemoryStoreFromSession:
 
     def test_store_uses_same_transaction(self, db):
         store = memory_store_from_session(db)
-        record_id = store.publish_observation(
+        record_id = store.publish_observation_sync(
             voter_name="test",
             key="test:tx",
             value={"tx": True},
@@ -53,8 +53,8 @@ class TestMemoryStoreFromSession:
     def test_multiple_stores_same_session(self, db):
         store1 = memory_store_from_session(db)
         store2 = memory_store_from_session(db)
-        id1 = store1.publish_observation(voter_name="a", key="x", value={"n": 1})
-        id2 = store2.publish_observation(voter_name="b", key="y", value={"n": 2})
+        id1 = store1.publish_observation_sync(voter_name="a", key="x", value={"n": 1})
+        id2 = store2.publish_observation_sync(voter_name="b", key="y", value={"n": 2})
         assert id1 != id2
         assert db.query(SharedMemoryRecord).count() == 2
 
@@ -109,7 +109,7 @@ class TestNarrativeContinuity:
         publish_narrative_persona(
             store, persona="Test", student_id="stu-1", module_id="mod-1",
         )
-        records = store.query(
+        records = store.query_sync(
             student_id="stu-1",
             memory_type=NARRATIVE_MEMORY_TYPE,
         )
@@ -187,7 +187,7 @@ async def test_module_orchestrator_publishes_narrative(db):
     )
     assert result["module_id"] == "mod-1"
 
-    records = store.query(
+    records = store.query_sync(
         student_id="stu-1",
         memory_type=NARRATIVE_MEMORY_TYPE,
     )
@@ -204,7 +204,7 @@ def test_memory_query_endpoint(client, docente_token, db):
     from app.memory.shared_memory import memory_store_from_session
 
     store = memory_store_from_session(db)
-    store.publish_observation(
+    store.publish_observation_sync(
         voter_name="test", key="test:hello", value={"msg": "world"},
         student_id="stu-1", memory_type="observation",
     )
@@ -267,7 +267,7 @@ async def test_week_orchestrator_publishes_memory(db):
         ).all()
         assert len(records) == len(memory_ids)
 
-    narratives = store.query(
+    narratives = store.query_sync(
         memory_type=NARRATIVE_MEMORY_TYPE,
     )
     assert len(narratives) >= 2

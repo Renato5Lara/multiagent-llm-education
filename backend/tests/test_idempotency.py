@@ -21,7 +21,7 @@ Covers:
 import json
 import uuid
 from datetime import datetime, timezone, timedelta
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, patch, call
 
 import pytest
 from sqlalchemy import create_engine
@@ -466,36 +466,36 @@ class TestReplayGuard:
 
 
 class TestIdempotentSharedMemory:
-    def test_publish_observation_dedup(self, db):
+    async def test_publish_observation_dedup(self, db):
         store_mock = MagicMock()
-        store_mock.publish_observation.return_value = "rec-1"
+        store_mock.publish_observation = AsyncMock(return_value="rec-1")
 
         wrapper = IdempotentSharedMemory(store_mock, idempotency_service)
 
-        first = wrapper.publish_observation(
+        first = await wrapper.publish_observation(
             db, "voter1", "key:test", {"val": 1},
             student_id="s1", module_id="m1",
         )
         assert first == "rec-1"
         store_mock.publish_observation.assert_called_once()
 
-        second = wrapper.publish_observation(
+        second = await wrapper.publish_observation(
             db, "voter1", "key:test", {"val": 1},
             student_id="s1", module_id="m1",
         )
         assert second is None  # dedup
         store_mock.publish_observation.assert_called_once()
 
-    def test_publish_observation_force_bypass(self, db):
+    async def test_publish_observation_force_bypass(self, db):
         store_mock = MagicMock()
-        store_mock.publish_observation.return_value = "rec-2"
+        store_mock.publish_observation = AsyncMock(return_value="rec-2")
 
         wrapper = IdempotentSharedMemory(store_mock, idempotency_service)
-        wrapper.publish_observation(
+        await wrapper.publish_observation(
             db, "voter1", "key:force", {"val": 1},
             force=True,
         )
-        wrapper.publish_observation(
+        await wrapper.publish_observation(
             db, "voter1", "key:force", {"val": 1},
             force=True,
         )
