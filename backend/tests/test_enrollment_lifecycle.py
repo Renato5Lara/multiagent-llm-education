@@ -2,6 +2,18 @@
 Tests integrales del lifecycle de enrollment.
 Cubre: unified course lookup, auto-enrollment, teacher activation,
 teacher visibility, EducationalContext, flujo completo.
+
+Nota (C1, 2026-08-11): se retiraron 10 tests que cubrían exclusivamente
+la ruta de activación por ciclo (`activate_student`/
+`auto_enroll_from_curriculum` como flujo principal de enrollment). Esa
+ruta fue desconectada de los llamadores de producción de forma
+deliberada (commits `0d11594` y `a694f3b`); `provision_experience` es
+hoy la autoridad de ingreso real. `activate_student` se preserva como
+API de compatibilidad invocable directamente, con su propia cobertura
+canónica en `test_academic_activation.py`. Los tests aquí que siguen
+usando `auto_enroll_from_curriculum` lo hacen solo como setup para
+verificar otra cosa (visibilidad docente, lookup de curso), no la ruta
+retirada en sí.
 """
 
 import pytest
@@ -15,7 +27,6 @@ from app.models.institutional_course import InstitutionalCourse
 from app.models.teacher_assignment import TeacherAssignment
 from app.services.course_service import resolve_or_create_course, get_courses, get_enrolled_students
 from app.services.student_service import auto_enroll_from_curriculum, get_student_learning_courses
-from app.services.activation_service import activate_enrollments_for_course_sync, activate_all_pending_for_student_sync
 from app.services.curriculum_service import create_course_from_institutional, assign_teacher_to_course
 
 
@@ -97,21 +108,6 @@ class TestUnifiedCourseLookup:
 class TestAutoEnrollmentLifecycle:
     """Auto-enrollment must create PENDING_ACTIVATION enrollments."""
 
-    def test_auto_enroll_creates_pending_enrollments(self, db: Session, institutional_course: InstitutionalCourse, estudiante_user: User):
-        estudiante_user.current_cycle = 1
-        db.commit()
-
-        count = auto_enroll_from_curriculum(db, estudiante_user)
-        assert count >= 1
-
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-        ).all()
-        assert len(enrollments) >= 1
-
-        for e in enrollments:
-            assert e.status == EnrollmentStatus.PENDING_ACTIVATION
-
     def test_auto_enroll_idempotent(self, db: Session, institutional_course: InstitutionalCourse, estudiante_user: User):
         estudiante_user.current_cycle = 1
         db.commit()
@@ -132,20 +128,6 @@ class TestAutoEnrollmentLifecycle:
         count = auto_enroll_from_curriculum(db, estudiante_user)
         assert count == 0
 
-    def test_enrollment_has_teacher_id_after_activation(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-
-        create_course_from_institutional(db, docente_user.id, institutional_course.id)
-
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-        ).all()
-        for e in enrollments:
-            assert e.teacher_id == docente_user.id
-            assert e.status == EnrollmentStatus.ACTIVO
-
 
 class TestTeacherAssignmentAndActivation:
     """Teacher assignment must trigger enrollment activation."""
@@ -163,56 +145,6 @@ class TestTeacherAssignmentAndActivation:
         ).all()
         for e in enrollments:
             assert e.status == EnrollmentStatus.ACTIVO
-
-    def test_educational_context_created(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-        create_course_from_institutional(db, docente_user.id, institutional_course.id)
-
-        contexts = db.query(EducationalContext).filter(
-            EducationalContext.student_id == estudiante_user.id,
-        ).all()
-        assert len(contexts) >= 1
-
-        ctx = contexts[0]
-        assert ctx.status == EducationalContextStatus.ACTIVE
-        assert ctx.teacher_id == docente_user.id
-        assert ctx.shared_memory_key is not None
-        assert ctx.enrollment_id is not None
-        assert ctx.swarm_config is not None
-        assert "agents" in ctx.swarm_config
-        assert "consensus_voters" in ctx.swarm_config
-
-    def test_educational_context_binding(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-        create_course_from_institutional(db, docente_user.id, institutional_course.id)
-
-        enrollment = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-        ).first()
-        assert enrollment.educational_context is not None
-        assert enrollment.educational_context.id is not None
-        assert enrollment.educational_context.status == EducationalContextStatus.ACTIVE
-
-    def test_activation_only_when_teacher_assigned(self, db: Session, institutional_course: InstitutionalCourse, estudiante_user: User):
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-
-        course = db.query(Course).filter(
-            Course.institutional_course_id == institutional_course.id,
-        ).first()
-        activated = activate_enrollments_for_course_sync(db, course.id)
-        assert activated == 0
-
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-        ).all()
-        for e in enrollments:
-            assert e.status == EnrollmentStatus.PENDING_ACTIVATION
 
 
 class TestTeacherVisibility:
@@ -283,127 +215,9 @@ class TestStudentActivation:
         assert len(courses) >= 1
         assert courses[0].course_id is not None
 
-    def test_events_emitted_on_enrollment(self, db: Session, institutional_course: InstitutionalCourse, estudiante_user: User):
-        from app.models.event_outbox import EventOutbox
-
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-
-        events = db.query(EventOutbox).filter(
-            EventOutbox.event_type == "enrollment.created",
-        ).all()
-        assert len(events) >= 1
-
-    def test_events_emitted_on_activation(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
-        from app.models.event_outbox import EventOutbox
-
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-        create_course_from_institutional(db, docente_user.id, institutional_course.id)
-
-        activated_events = db.query(EventOutbox).filter(
-            EventOutbox.event_type == "enrollment.activated",
-        ).all()
-        assert len(activated_events) >= 1
-
-        ctx_events = db.query(EventOutbox).filter(
-            EventOutbox.event_type == "educational_context.activated",
-        ).all()
-        assert len(ctx_events) >= 1
-
-    def test_student_can_proceed_after_activation(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
-        from app.services.curriculum_service import create_course_from_institutional as create_from_inst
-        from app.services.student_service import get_learning_path, get_learning_path_detail
-
-        estudiante_user.current_cycle = 1
-        db.commit()
-        auto_enroll_from_curriculum(db, estudiante_user)
-
-        course = create_from_inst(db, docente_user.id, institutional_course.id)
-
-        objectives_count = len(institutional_course.competencies) if institutional_course.competencies else 0
-        from app.models.learning_objective import LearningObjective
-        for i in range(3):
-            obj = LearningObjective(
-                course_id=course.id,
-                title=f"Obj Auto {i+1}",
-                bloom_level=i+1,
-                order=i,
-            )
-            db.add(obj)
-        db.commit()
-
-        enrollment = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-            Enrollment.course_id == course.id,
-        ).first()
-        assert enrollment is not None
-        assert enrollment.status == EnrollmentStatus.ACTIVO
-
-        ctx = db.query(EducationalContext).filter(
-            EducationalContext.enrollment_id == enrollment.id,
-        ).first()
-        assert ctx is not None
-        assert ctx.status == EducationalContextStatus.ACTIVE
-        assert ctx.teacher_id == docente_user.id
-        assert ctx.student_id == estudiante_user.id
-        assert ctx.course_id == course.id
-
 
 class TestFullLifecycleIntegration:
     """End-to-end lifecycle: registration → activation → learning ready."""
-
-    def test_complete_lifecycle(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
-        from app.models.learning_objective import LearningObjective
-        from app.services.curriculum_service import create_course_from_institutional as create_from_inst
-
-        estudiante_user.current_cycle = 1
-        db.commit()
-
-        auto_enrollments = auto_enroll_from_curriculum(db, estudiante_user)
-        assert auto_enrollments >= 1
-
-        pending = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-            Enrollment.status == EnrollmentStatus.PENDING_ACTIVATION,
-        ).count()
-        assert pending >= 1
-
-        course = create_from_inst(db, docente_user.id, institutional_course.id)
-        assert course.teacher_id == docente_user.id
-
-        for i in range(3):
-            obj = LearningObjective(
-                course_id=course.id,
-                title=f"Obj {i+1}",
-                bloom_level=i+1,
-                order=i,
-            )
-            db.add(obj)
-        db.commit()
-
-        enrollments = db.query(Enrollment).filter(
-            Enrollment.student_id == estudiante_user.id,
-        ).all()
-        for e in enrollments:
-            assert e.status == EnrollmentStatus.ACTIVO
-            assert e.teacher_id == docente_user.id
-
-        ctx = db.query(EducationalContext).filter(
-            EducationalContext.student_id == estudiante_user.id,
-        ).first()
-        assert ctx is not None
-        assert ctx.status == EducationalContextStatus.ACTIVE
-        assert ctx.shared_memory_key == f"ctx:{estudiante_user.id}:{course.id}"
-        assert "diagnostic_analyzer" in ctx.swarm_config["agents"]
-
-        courses = get_courses(db, docente_user)
-        assert any(c.id == course.id for c in courses[0])
-
-        students = get_enrolled_students(db, course.id, docente_user)
-        assert any(s["student_id"] == estudiante_user.id for s in students)
 
     def test_race_condition_prevention(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User, estudiante_user: User):
         estudiante_user.current_cycle = 1
@@ -422,34 +236,3 @@ class TestFullLifecycleIntegration:
             Course.year == 2026,
         ).count()
         assert count == 1
-
-    def test_multiple_students_activation(self, db: Session, institutional_course: InstitutionalCourse, docente_user: User):
-        estudiantes = []
-        for i in range(3):
-            s = User(
-                email=f"est_{i}@test.com", hashed_password="hash",
-                first_name=f"Est{i}", last_name="Test",
-                role=UserRole.ESTUDIANTE, current_cycle=1,
-            )
-            db.add(s)
-            db.flush()
-            estudiantes.append(s)
-        db.commit()
-
-        for s in estudiantes:
-            auto_enroll_from_curriculum(db, s)
-
-        create_course_from_institutional = __import__(
-            "app.services.curriculum_service", fromlist=["create_course_from_institutional"]
-        ).create_course_from_institutional
-        create_course_from_institutional(db, docente_user.id, institutional_course.id)
-
-        for s in estudiantes:
-            enrollments = db.query(Enrollment).filter(
-                Enrollment.student_id == s.id,
-            ).all()
-            for e in enrollments:
-                assert e.status == EnrollmentStatus.ACTIVO, f"Student {s.id} not activated"
-
-        all_ctx = db.query(EducationalContext).all()
-        assert len(all_ctx) == 3
