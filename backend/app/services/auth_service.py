@@ -37,8 +37,27 @@ def authenticate_user(
         .first()
     )
 
-    if not user or not verify_password(password, user.hashed_password):
-        email_for_log = identifier if "@" in identifier else f"code:{identifier}"
+    email_for_log = identifier if "@" in identifier else f"code:{identifier}"
+
+    if not user:
+        _record_attempt(db, email_for_log, success=False, ip_address=ip_address)
+        return None
+
+    # Gate A-Fix: liberar la conexion de lectura antes de bcrypt. Retenerla
+    # durante verify_password() satura el pool sincrono bajo carga concurrente
+    # (mecanismo causal confirmado, ver memoria
+    # gate_a_historico_causal_cerrado_2026_08_12). `commit()` sin cambios
+    # pendientes solo cierra la transaccion de lectura y devuelve la conexion
+    # al pool (verificado con eventos checkout/checkin del engine) -- a
+    # diferencia de `close()`, NO desprende a `user` del identity map de
+    # `db`, asi que un caller que siga usando `db`/`user` despues de esta
+    # llamada (p. ej. mutarlo y hacer db.commit()) sigue funcionando igual
+    # que antes. expire_on_commit=False evita ademas que se re-lean sus
+    # columnas ya cargadas.
+    db.commit()
+    password_ok = verify_password(password, user.hashed_password)
+
+    if not password_ok:
         _record_attempt(db, email_for_log, success=False, ip_address=ip_address)
         return None
 

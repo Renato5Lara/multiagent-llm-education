@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Concurrencia CPU-bound de bcrypt (Gate A-Bcrypt: throughput escala
+    # linealmente hasta concurrencia == cores, se estanca despues sin ganar
+    # nada, solo cola). 0 = derivar de os.cpu_count() en tiempo de arranque.
+    BCRYPT_MAX_CONCURRENCY: int = 0
+
     @model_validator(mode="after")
     def _guard_production_secret_key(self) -> "Settings":
         """Refuse to boot in production with an insecure SECRET_KEY."""

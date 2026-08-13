@@ -3,6 +3,8 @@ Funciones de seguridad: hashing de contraseñas y manejo de JWT.
 Usa bcrypt directamente (en lugar de passlib) para compatibilidad con bcrypt>=4.1.
 """
 
+import os
+import threading
 import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -12,6 +14,26 @@ import bcrypt
 from jose import JWTError, jwt
 
 from app.core.config import settings
+
+# Gate A-Bcrypt: bcrypt.checkpw es CPU-bound y escala linealmente en
+# throughput solo hasta concurrencia == cores fisicos; mas alla de eso el
+# throughput queda plano y la latencia crece linealmente por pura cola
+# (medido, ver memoria gate_a_bcrypt_limite_concurrencia_2026_08_12).
+# Antes de Gate A-Fix, el QueuePool
+# limitaba esto de rebote (retenia una conexion Postgres durante bcrypt);
+# tras liberar esa conexion antes de bcrypt, no queda ningun freno de
+# concurrencia salvo este semaforo explicito. Se acquire/release DESPUES de
+# que el llamador ya solto su conexion de lectura (ver
+# auth_service.authenticate_user), asi que esperar aqui nunca retiene una
+# conexion Postgres. BCRYPT_MAX_CONCURRENCY=0 (default) deriva de
+# os.cpu_count() en el arranque; configurable via entorno si el hardware de
+# despliegue difiere del de referencia. Sin timeout: la espera es la misma
+# cola de trabajo CPU-bound que ya existia implicitamente (antes limitada
+# por el QueuePool, ahora por este semaforo) -- no es un mecanismo nuevo de
+# fallo, solo lo hace explicito y correctamente dimensionado.
+_bcrypt_semaphore = threading.Semaphore(
+    settings.BCRYPT_MAX_CONCURRENCY or (os.cpu_count() or 1)
+)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -59,11 +81,17 @@ def create_refresh_token(data: dict) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica una contraseña plana contra su hash bcrypt."""
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"),
-        hashed_password.encode("utf-8"),
-    )
+    """Verifica una contraseña plana contra su hash bcrypt.
+
+    Acota su propia concurrencia (ver _bcrypt_semaphore) para no saturar
+    la CPU bajo carga -- bloquea el hilo llamador si ya hay
+    BCRYPT_MAX_CONCURRENCY verificaciones en curso, nunca el event loop.
+    """
+    with _bcrypt_semaphore:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8"),
+        )
 
 
 def get_password_hash(password: str) -> str:
