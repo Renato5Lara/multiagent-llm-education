@@ -146,6 +146,14 @@ def test_get_bank_questions_por_version_y_por_defecto(dos_versiones, monkeypatch
     _activar_version(monkeypatch, OTRA_VERSION)
     assert len(get_bank_questions(db)) == N_SINTETICAS
 
+    # Con la versión vigente ya distinta, pedir una versión histórica la
+    # recupera: `version` decide por sí sola qué banco se consulta y no se
+    # combina con `BANK_VERSION` (si se combinaran, esto devolvería vacío).
+    historicas = get_bank_questions(db, version=BANK_VERSION)
+    assert len(historicas) == len(QUESTION_BANK)
+    assert {q.version for q in historicas} == {BANK_VERSION}
+    assert {q.id for q in historicas}.isdisjoint({q.id for q in get_bank_questions(db)})
+
 
 # ── Un intento se sirve, puntúa y reanuda con SU versión ─────────────
 
