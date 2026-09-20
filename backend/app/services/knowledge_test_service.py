@@ -65,7 +65,18 @@ CRITICAL_THRESHOLD_PCT = 50.0  # módulo crítico (debilidad)
 # nueva: si el flag `REFERENCE_MODULE_MODE` se apaga (module3.ts/module4.ts
 # autorados), este valor debe subir en el mismo cambio o el gate volverá a
 # ser el de siempre (correcto, sin techo).
+#
+# El requisito depende del INSTRUMENTO con que el estudiante rindió el
+# Pre-Test (decisión P1, docs/architecture/DESIGN-banco-diagnostico-m1.md §8),
+# no de la versión vigente: el Post-Test se habilita cuando el estudiante ha
+# completado los módulos que ese instrumento cubre. Los bancos v2 y v3
+# evalúan el bloque amplio de "Fundamentos" (dos módulos de referencia); el
+# banco v4 evalúa solo M1 (decisión D8), así que basta completar un módulo.
+# Se cuentan módulos completados, igual que antes: con `REFERENCE_MODULE_MODE`
+# activo solo M1 es alcanzable en una ruta de 8 módulos, y al apagarlo esta
+# regla debe revisarse junto con el flag.
 POST_TEST_REFERENCE_MODULE_LIMIT = 2
+POST_TEST_MODULE_LIMIT_BY_BANK_VERSION = {2: 2, 3: 2, 4: 1}
 
 VALID_KINDS = ("pre", "post")
 
@@ -138,6 +149,24 @@ def _questions_of_attempt(
     db: Session, attempt: KnowledgeTestAttempt
 ) -> list[KnowledgeTestQuestion]:
     return get_bank_questions(db, version=_attempt_bank_version(attempt))
+
+
+def _post_test_module_limit(bank_version: int) -> int:
+    """Módulos que hay que completar para habilitar el Post-Test de un
+    estudiante cuyo Pre-Test usó `bank_version`. Una versión sin regla propia
+    usa el límite histórico; una versión nueva debe declarar la suya en
+    `POST_TEST_MODULE_LIMIT_BY_BANK_VERSION`."""
+    return POST_TEST_MODULE_LIMIT_BY_BANK_VERSION.get(
+        bank_version, POST_TEST_REFERENCE_MODULE_LIMIT
+    )
+
+
+def _mensaje_puerta_post_test(modulos: int) -> str:
+    plural = "módulo" if modulos == 1 else "módulos"
+    return (
+        f"Debes completar al menos {modulos} {plural} de la Ruta de "
+        "Aprendizaje antes de rendir el Post-Test"
+    )
 
 
 def _get_attempt(
@@ -244,6 +273,12 @@ def start_attempt(
                     "Debes completar el Pre-Test antes de rendir el Post-Test",
                 )
 
+            # La versión del instrumento sale del Pre-Test del estudiante, no
+            # de la vigente: fija a la vez el requisito de la puerta y el banco
+            # con que se sirve el Post-Test (P1).
+            pre_version = _attempt_bank_version(pre)
+            module_limit = _post_test_module_limit(pre_version)
+
             path = (
                 db.query(LearningPath)
                 .filter(
@@ -254,13 +289,13 @@ def start_attempt(
             )
             # PED-004: el requisito real es completar los módulos que la
             # Ruta de Aprendizaje efectivamente muestra (techo de
-            # POST_TEST_REFERENCE_MODULE_LIMIT hoy), no todos los
-            # LearningObjective del curso. Contado en vivo desde
+            # `_post_test_module_limit` según la versión del Pre-Test), no
+            # todos los LearningObjective del curso. Contado en vivo desde
             # `PathModule.status`, no desde `path.completed_modules`
             # (contador cacheado, ver comentario de la constante) — mismo
             # criterio que `student_service.py` ya usa para Ruta/analítica.
             required_modules = (
-                min(path.total_modules, POST_TEST_REFERENCE_MODULE_LIMIT)
+                min(path.total_modules, module_limit)
                 if path is not None
                 else 0
             )
@@ -278,12 +313,12 @@ def start_attempt(
             ):
                 raise KnowledgeTestError(
                     "LEARNING_PATH_INCOMPLETE",
-                    "Debes completar toda la Ruta de Aprendizaje antes de rendir el Post-Test",
+                    _mensaje_puerta_post_test(required_modules or module_limit),
                 )
 
             # P1: el Post-Test se sirve con el instrumento del Pre-Test del
             # estudiante, no con la versión vigente.
-            version = _attempt_bank_version(pre)
+            version = pre_version
 
         questions = get_bank_questions(db, version=version)
         if not questions:
