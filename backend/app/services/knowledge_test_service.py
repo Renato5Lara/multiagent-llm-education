@@ -86,12 +86,21 @@ def classify_level(percentage: float) -> str:
     return "basico"
 
 
-def get_bank_questions(db: Session) -> list[KnowledgeTestQuestion]:
+def get_bank_questions(
+    db: Session, version: Optional[int] = None
+) -> list[KnowledgeTestQuestion]:
+    """Preguntas activas de UNA versión del banco, en orden de servicio.
+
+    `version=None` es la versión vigente (`BANK_VERSION`), resuelta al llamar
+    y no al definir la función. Un intento no debe leerse con la versión
+    vigente sino con la suya: ver `_attempt_bank_version`."""
+    if version is None:
+        version = BANK_VERSION
     return (
         db.query(KnowledgeTestQuestion)
         .filter(
             KnowledgeTestQuestion.course_code == BANK_COURSE_CODE,
-            KnowledgeTestQuestion.version == BANK_VERSION,
+            KnowledgeTestQuestion.version == version,
             KnowledgeTestQuestion.is_active.is_(True),
         )
         .order_by(KnowledgeTestQuestion.module_number, KnowledgeTestQuestion.order)
@@ -110,6 +119,25 @@ def is_bank_seeded(db: Session) -> bool:
         .first()
         is not None
     )
+
+
+def _attempt_bank_version(attempt: KnowledgeTestAttempt) -> int:
+    """Versión de banco con la que se creó el intento: la que se usa para
+    servirlo, puntuarlo y perfilarlo, aunque la versión vigente ya sea otra.
+
+    Compatibilidad histórica: un intento sin `bank_version` (NULL) se
+    interpreta con la versión vigente. En la base local no existe ninguno
+    (todos guardan 2 o 3); el respaldo se conserva solo para no romper un
+    dato así si apareciera, y no se reescribe."""
+    if attempt.bank_version is not None:
+        return attempt.bank_version
+    return BANK_VERSION
+
+
+def _questions_of_attempt(
+    db: Session, attempt: KnowledgeTestAttempt
+) -> list[KnowledgeTestQuestion]:
+    return get_bank_questions(db, version=_attempt_bank_version(attempt))
 
 
 def _get_attempt(
@@ -176,15 +204,20 @@ def get_test_status(db: Session, student_id: str, course_id: str) -> dict:
 def start_attempt(
     db: Session, student_id: str, course_id: str, kind: str
 ) -> tuple[KnowledgeTestAttempt, list[KnowledgeTestQuestion]]:
-    """Crea o reanuda el intento. El instrumento es fijo: las preguntas se
-    sirven siempre en el orden del banco (comparabilidad pre/post)."""
+    """Crea o reanuda el intento. El instrumento es fijo por versión: las
+    preguntas se sirven en el orden del banco (comparabilidad pre/post).
+
+    La versión de banco queda fijada al crear el intento (`bank_version`):
+    el Pre-Test usa la vigente y el Post-Test la del Pre-Test del estudiante
+    (decisión P1, DESIGN-banco-diagnostico-m1.md §8), de modo que un par
+    pre/post siempre comparte instrumento. Un intento existente se reanuda
+    con su propia versión, aunque la vigente haya cambiado."""
     from app.db.locks import advisory_lock
 
     if kind not in VALID_KINDS:
         raise KnowledgeTestError("INVALID_KIND", f"Tipo de test inválido: {kind}")
 
-    questions = get_bank_questions(db)
-    if not questions:
+    if not is_bank_seeded(db):
         raise KnowledgeTestError(
             "BANK_NOT_SEEDED", "El banco de preguntas no está disponible"
         )
@@ -197,9 +230,12 @@ def start_attempt(
                     "ALREADY_COMPLETED",
                     "Este test ya fue completado; se rinde una sola vez",
                 )
-            ordered = _questions_in_attempt_order(questions, existing)
+            ordered = _questions_in_attempt_order(
+                _questions_of_attempt(db, existing), existing
+            )
             return existing, ordered
 
+        version = BANK_VERSION
         if kind == "post":
             pre = _get_attempt(db, student_id, course_id, "pre")
             if pre is None or pre.status != "completed":
@@ -245,6 +281,17 @@ def start_attempt(
                     "Debes completar toda la Ruta de Aprendizaje antes de rendir el Post-Test",
                 )
 
+            # P1: el Post-Test se sirve con el instrumento del Pre-Test del
+            # estudiante, no con la versión vigente.
+            version = _attempt_bank_version(pre)
+
+        questions = get_bank_questions(db, version=version)
+        if not questions:
+            raise KnowledgeTestError(
+                "BANK_NOT_SEEDED",
+                f"El banco de preguntas (versión {version}) no está disponible",
+            )
+
         attempt = KnowledgeTestAttempt(
             student_id=student_id,
             course_id=course_id,
@@ -252,7 +299,7 @@ def start_attempt(
             status="in_progress",
             question_order=[q.id for q in questions],
             total_questions=len(questions),
-            bank_version=BANK_VERSION,
+            bank_version=version,
         )
         db.add(attempt)
         try:
@@ -268,7 +315,9 @@ def start_attempt(
                     "ALREADY_COMPLETED",
                     "Este test ya fue completado; se rinde una sola vez",
                 )
-            return existing, _questions_in_attempt_order(questions, existing)
+            return existing, _questions_in_attempt_order(
+                _questions_of_attempt(db, existing), existing
+            )
 
     return attempt, questions
 
@@ -446,7 +495,7 @@ def submit_attempt(
             "ALREADY_COMPLETED", "Este test ya fue completado; se rinde una sola vez"
         )
 
-    questions = get_bank_questions(db)
+    questions = _questions_of_attempt(db, attempt)
     ordered = _questions_in_attempt_order(questions, attempt)
 
     now = datetime.now(timezone.utc)
@@ -717,7 +766,7 @@ def compute_competency_profile(db: Session, attempt: KnowledgeTestAttempt) -> Op
     if not answers:
         return None
 
-    topic_by_qid = {q.id: q.topic for q in get_bank_questions(db)}
+    topic_by_qid = {q.id: q.topic for q in _questions_of_attempt(db, attempt)}
     stats: dict[str, dict] = {}
     for ans in answers:
         topic = topic_by_qid.get(ans.question_id)
@@ -772,10 +821,24 @@ def compute_competency_profile(db: Session, attempt: KnowledgeTestAttempt) -> Op
 def compute_experiment_result(
     db: Session, student_id: str, course_id: str
 ) -> Optional[ExperimentResult]:
-    """Materializa (upsert) la comparación pre→post del estudiante."""
+    """Materializa (upsert) la comparación pre→post del estudiante.
+
+    Solo si ambos intentos se rindieron con la MISMA versión de banco: la
+    ganancia entre instrumentos distintos no es comparable. Si las versiones
+    difieren no se materializa nada (y no se modifica ningún registro
+    existente). Las versiones se comparan tal cual están guardadas: dos
+    intentos históricos sin versión (NULL) se consideran del mismo
+    instrumento; uno con versión y otro sin ella, no."""
     pre = get_result(db, student_id, course_id, "pre")
     post = get_result(db, student_id, course_id, "post")
     if pre is None or post is None:
+        return None
+    if pre.bank_version != post.bank_version:
+        logger.warning(
+            "ExperimentResult no materializado: pre (v%s) y post (v%s) usan "
+            "versiones de banco distintas (student=%s course=%s)",
+            pre.bank_version, post.bank_version, student_id, course_id,
+        )
         return None
 
     pre_pct = pre.percentage or 0.0
@@ -847,7 +910,7 @@ def enrich_profile_from_pretest(
     3. ResearchMetric pretest_completed
     """
     mastered, critical = module_strengths_weaknesses(attempt)
-    topic_by_module = {q.module_number: q.topic for q in get_bank_questions(db)}
+    topic_by_module = {q.module_number: q.topic for q in _questions_of_attempt(db, attempt)}
     level = attempt.level or "basico"
 
     try:
