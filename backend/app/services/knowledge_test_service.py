@@ -70,13 +70,14 @@ CRITICAL_THRESHOLD_PCT = 50.0  # módulo crítico (debilidad)
 # Pre-Test (decisión P1, docs/architecture/DESIGN-banco-diagnostico-m1.md §8),
 # no de la versión vigente: el Post-Test se habilita cuando el estudiante ha
 # completado los módulos que ese instrumento cubre. Los bancos v2 y v3
-# evalúan el bloque amplio de "Fundamentos" (dos módulos de referencia); el
-# banco v4 evalúa solo M1 (decisión D8), así que basta completar un módulo.
-# Se cuentan módulos completados, igual que antes: con `REFERENCE_MODULE_MODE`
-# activo solo M1 es alcanzable en una ruta de 8 módulos, y al apagarlo esta
-# regla debe revisarse junto con el flag.
+# evalúan el bloque amplio de "Fundamentos" (dos módulos de referencia): se
+# cuentan módulos completados, como siempre. El banco v4 evalúa solo M1
+# (decisión D8): exige ese módulo de forma explícita —la `PathModule` con
+# `order == 1`—, no cualquier módulo. La regla la expresa el backend; no
+# depende de qué módulos muestre el frontend (`REFERENCE_MODULE_MODE`).
 POST_TEST_REFERENCE_MODULE_LIMIT = 2
-POST_TEST_MODULE_LIMIT_BY_BANK_VERSION = {2: 2, 3: 2, 4: 1}
+POST_TEST_MODULE_LIMIT_BY_BANK_VERSION = {2: 2, 3: 2}
+POST_TEST_REQUIRED_MODULE_ORDER_BY_BANK_VERSION = {4: 1}
 
 VALID_KINDS = ("pre", "post")
 
@@ -153,11 +154,19 @@ def _questions_of_attempt(
 
 def _post_test_module_limit(bank_version: int) -> int:
     """Módulos que hay que completar para habilitar el Post-Test de un
-    estudiante cuyo Pre-Test usó `bank_version`. Una versión sin regla propia
-    usa el límite histórico; una versión nueva debe declarar la suya en
-    `POST_TEST_MODULE_LIMIT_BY_BANK_VERSION`."""
+    estudiante cuyo Pre-Test usó `bank_version` (regla de conteo, v2/v3). Una
+    versión sin regla propia usa el límite histórico; una versión nueva debe
+    declarar la suya en `POST_TEST_MODULE_LIMIT_BY_BANK_VERSION`, o exigir un
+    módulo concreto en `POST_TEST_REQUIRED_MODULE_ORDER_BY_BANK_VERSION`."""
     return POST_TEST_MODULE_LIMIT_BY_BANK_VERSION.get(
         bank_version, POST_TEST_REFERENCE_MODULE_LIMIT
+    )
+
+
+def _mensaje_puerta_post_test_modulo(orden: int) -> str:
+    return (
+        f"Debes completar el Módulo {orden} de la Ruta de Aprendizaje "
+        "antes de rendir el Post-Test"
     )
 
 
@@ -277,7 +286,6 @@ def start_attempt(
             # de la vigente: fija a la vez el requisito de la puerta y el banco
             # con que se sirve el Post-Test (P1).
             pre_version = _attempt_bank_version(pre)
-            module_limit = _post_test_module_limit(pre_version)
 
             path = (
                 db.query(LearningPath)
@@ -288,33 +296,53 @@ def start_attempt(
                 .first()
             )
             # PED-004: el requisito real es completar los módulos que la
-            # Ruta de Aprendizaje efectivamente muestra (techo de
-            # `_post_test_module_limit` según la versión del Pre-Test), no
-            # todos los LearningObjective del curso. Contado en vivo desde
+            # Ruta de Aprendizaje efectivamente muestra, no todos los
+            # LearningObjective del curso. Contado en vivo desde
             # `PathModule.status`, no desde `path.completed_modules`
             # (contador cacheado, ver comentario de la constante) — mismo
             # criterio que `student_service.py` ya usa para Ruta/analítica.
-            required_modules = (
-                min(path.total_modules, module_limit)
-                if path is not None
-                else 0
+            required_order = POST_TEST_REQUIRED_MODULE_ORDER_BY_BANK_VERSION.get(
+                pre_version
             )
-            completed_modules_live = (
-                db.query(PathModule)
-                .filter(PathModule.path_id == path.id, PathModule.status == "completed")
-                .count()
-                if path is not None
-                else 0
-            )
-            if (
-                path is None
-                or required_modules == 0
-                or completed_modules_live < required_modules
-            ):
-                raise KnowledgeTestError(
-                    "LEARNING_PATH_INCOMPLETE",
-                    _mensaje_puerta_post_test(required_modules or module_limit),
+            if required_order is not None:
+                # Instrumento de un módulo concreto (v4 → M1): se exige ese
+                # módulo, no cualquiera. Sin ruta o sin ese módulo, cerrada.
+                gate_open = (
+                    path is not None
+                    and db.query(PathModule)
+                    .filter(
+                        PathModule.path_id == path.id,
+                        PathModule.order == required_order,
+                        PathModule.status == "completed",
+                    )
+                    .first()
+                    is not None
                 )
+                gate_message = _mensaje_puerta_post_test_modulo(required_order)
+            else:
+                # Instrumento amplio (v2/v3): techo de módulos completados
+                # según `_post_test_module_limit`.
+                module_limit = _post_test_module_limit(pre_version)
+                required_modules = (
+                    min(path.total_modules, module_limit)
+                    if path is not None
+                    else 0
+                )
+                completed_modules_live = (
+                    db.query(PathModule)
+                    .filter(PathModule.path_id == path.id, PathModule.status == "completed")
+                    .count()
+                    if path is not None
+                    else 0
+                )
+                gate_open = not (
+                    path is None
+                    or required_modules == 0
+                    or completed_modules_live < required_modules
+                )
+                gate_message = _mensaje_puerta_post_test(required_modules or module_limit)
+            if not gate_open:
+                raise KnowledgeTestError("LEARNING_PATH_INCOMPLETE", gate_message)
 
             # P1: el Post-Test se sirve con el instrumento del Pre-Test del
             # estudiante, no con la versión vigente.
