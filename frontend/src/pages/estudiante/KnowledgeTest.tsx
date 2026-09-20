@@ -457,7 +457,7 @@ function IntroScreen({
               Puedes equivocarte con tranquilidad.
             </p>
             <p className="text-xs text-neural-muted/60 pt-2">
-              12 situaciones para explorar lo que ya sabes · sin límite de tiempo
+              8 situaciones para explorar lo que ya sabes · sin límite de tiempo
             </p>
           </div>
         ) : (
