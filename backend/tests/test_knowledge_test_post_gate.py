@@ -27,7 +27,7 @@ from app.data.knowledge_test_bank import (
 from app.models.knowledge_test import KnowledgeTestAttempt, KnowledgeTestQuestion
 from app.services import knowledge_test_service
 
-VERSION_REAL = BANK_VERSION  # banco real sembrado (v3 hoy)
+VERSION_REAL = BANK_VERSION  # banco real sembrado (v4 hoy)
 
 
 # ── Ayudantes locales ────────────────────────────────────────────────
@@ -171,7 +171,10 @@ def test_cambiar_la_version_vigente_no_altera_la_puerta_del_estudiante(
     client, estudiante_token, curso_publicado, banco_real, db, estudiante_user,
     monkeypatch, version_pre, version_vigente, habilitado,
 ):
+    # La versión vigente simulada necesita su propio banco: `start_attempt`
+    # exige que la vigente esté sembrada, como en un despliegue real.
     _asegurar_banco(db, 4)
+    _asegurar_banco(db, version_vigente)
     _pretest(db, estudiante_user.id, curso_publicado.id, version_pre)
     _ruta(db, estudiante_user.id, curso_publicado.id, 8, completados=1)
     monkeypatch.setattr(knowledge_test_service, "BANK_VERSION", version_vigente)

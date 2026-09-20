@@ -48,19 +48,17 @@ def test_seed_is_idempotent(db):
 
 
 def test_bank_covers_reference_modules(db):
-    """El banco pre/post-test está deliberadamente acotado al Módulo 1 de
-    Fundamentos (comparabilidad pre/post psicométrica), no a los 9 módulos
-    del curso -- module_number={1,2,4} es un eje de cobertura INTERNO al
-    Módulo 1, coincide con los objetivos 2/4 del curso por casualidad
-    numérica, no por diseño (memoria del proyecto,
-    b1_b2_objetivos_2_4_no_intervencion_2026_08_11). Decisión confirmada
-    vigente, no reabierta aquí."""
+    """El banco pre/post-test está acotado al Módulo 1 de Fundamentos, no a los
+    módulos del curso. Con el banco v4 TODOS los ítems son de M1
+    (DESIGN-banco-diagnostico-m1.md §7, invariantes 2 y 12): el eje
+    module_number={1,2,4} de v3 era interno al bloque amplio de "Fundamentos"
+    y atribuía a M2/M4 ítems que evaluaban M1."""
     seed_knowledge_test_bank(db)
     modules = {
         row[0]
         for row in db.query(KnowledgeTestQuestion.module_number).distinct().all()
     }
-    assert modules == {1, 2, 4}
+    assert modules == {1}
 
 
 # ── Fixtures locales ─────────────────────────────────────────────────
@@ -119,9 +117,9 @@ def test_submit_grades_and_classifies(
     assert body["percentage"] == 100.0
     assert body["level"] == "avanzado"
     assert body["status"] == "completed"
-    # Banco acotado a {1,2,4} -- ver test_bank_covers_reference_modules.
-    assert set(body["module_breakdown"].keys()) == {"1", "2", "4"}
-    assert body["mastered_modules"] == [1, 2, 4]
+    # Banco v4 acotado a M1 -- ver test_bank_covers_reference_modules.
+    assert set(body["module_breakdown"].keys()) == {"1"}
+    assert body["mastered_modules"] == [1]
     assert body["critical_modules"] == []
 
 
@@ -139,8 +137,8 @@ def test_submit_all_wrong_is_basico(
     body = resp.json()
     assert body["score"] == 0
     assert body["level"] == "basico"
-    # Banco acotado a {1,2,4} -- ver test_bank_covers_reference_modules.
-    assert body["critical_modules"] == [1, 2, 4]
+    # Banco v4 acotado a M1 -- ver test_bank_covers_reference_modules.
+    assert body["critical_modules"] == [1]
 
 
 def test_pretest_is_single_attempt(
@@ -204,8 +202,11 @@ def _seed_path_with_modules(db, student_id, course_id, total_modules, statuses):
 def test_post_requires_completed_learning_path(
     client, estudiante_token, curso_publicado, seeded_bank, db, estudiante_user
 ):
-    """Ruta con módulos de referencia pendientes (PED-004): el Post-Test debe
-    rechazarse, sin crear intento."""
+    """Ruta con el módulo que exige el instrumento pendiente (PED-004): el
+    Post-Test debe rechazarse, sin crear intento. El Pre-Test es de la versión
+    vigente (v4), cuyo requisito es completar M1 de forma explícita
+    (DESIGN-banco-diagnostico-m1.md §8): con M1 aún sin completar, la puerta
+    permanece cerrada aunque haya otros módulos disponibles."""
     from app.models.knowledge_test import KnowledgeTestAttempt
 
     pre_start = _start(client, estudiante_token, curso_publicado.id, "pre").json()
@@ -216,7 +217,7 @@ def test_post_requires_completed_learning_path(
     _seed_path_with_modules(
         db, estudiante_user.id, curso_publicado.id,
         total_modules=4,
-        statuses=["completed", "available", "locked", "locked"],
+        statuses=["available", "locked", "locked", "locked"],
     )
 
     resp = _start(client, estudiante_token, curso_publicado.id, "post")
@@ -428,8 +429,8 @@ def test_pretest_merges_knowledge_assessment_into_diagnostic(
     assert diagnostic.profile["student_profile"]["dominant_modality"] == "visual"
     ka = diagnostic.profile["knowledge_assessment"]
     assert ka["level"] == "avanzado"
-    # Banco acotado a {1,2,4} -- ver test_bank_covers_reference_modules.
-    assert ka["mastered_modules"] == [1, 2, 4]
+    # Banco v4 acotado a M1 -- ver test_bank_covers_reference_modules.
+    assert ka["mastered_modules"] == [1]
     assert ka["critical_modules"] == []
 
 

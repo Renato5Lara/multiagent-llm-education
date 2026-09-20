@@ -1,37 +1,41 @@
 """
-Banco del instrumento de diagnóstico competencial (pre/post-test) — BANK_VERSION 3.
+Banco del instrumento de diagnóstico de entrada (pre/post-test) — BANK_VERSION 4.
 
-12 ítems MCQ basados en RESOLUCIÓN DE PROBLEMAS (no percepción), organizados por
-las 6 competencias del modelo cognitivo COMP-0…COMP-5 (2 ítems por competencia).
-Pre-Test y Post-Test usan EXACTAMENTE el mismo banco (comparabilidad → ganancia
-por competencia = post − pre). Alcance: Módulo 1 de Fundamentos (variables,
-tipos, E/S, algoritmo, un condicional simple). SIN bucles: el aprendizaje de
-bucles se evidencia en las actividades adaptativas, no en el instrumento.
+8 ítems MCQ que evalúan SOLO el Módulo 1 de Fundamentos, organizados por las tres
+funciones nucleares de M1 (concebir 2 ítems, representar 2, ejecutar 4) sobre
+cuatro competencias del modelo cognitivo: COMP-0, COMP-2, COMP-3 y COMP-5, con
+dos ítems cada una. COMP-1 y COMP-4 dejan de medirse en esta versión. Pre-Test y
+Post-Test usan el MISMO banco, el de la versión con que el estudiante rindió el
+Pre-Test (comparabilidad → ganancia por competencia = post − pre). M1.6
+(declarativo) queda fuera de la afirmación diagnóstica; ningún ítem evidencia M2+.
+
+Especificación normativa: docs/architecture/DESIGN-banco-diagnostico-m1.md. Su
+§13 es la tabla de mapeo que implementa ITEM_MAPPING, y su §7 son los invariantes
+que comprueba tests/test_knowledge_test_bank_v4.py.
 
 Dimensiones (campos existentes del modelo, sin tablas nuevas):
-    topic         → competencia (comp_0…comp_5)  — dimensión cognitiva (perfil)
-    module_number → contenido del curso           — cobertura (1 intro/algoritmo,
-                    2 variables/tipos/E-S, 4 condicional simple)
-    bloom_level   → profundidad cognitiva
+    topic         → competencia (comp_0, comp_2, comp_3, comp_5)
+    module_number → 1 en todos los ítems (el banco es de M1)
+    bloom_level   → profundidad cognitiva; OBLIGATORIO en v4
+    order         → posición de servicio GLOBAL (0 a 7), única en el banco. Con
+                    (topic, order) forma la identidad del ítem.
 
-Distractores diagnósticos (RDD/REU/REA): cada distractor evidencia UN único
-modelo mental erróneo real del principiante, distinto dentro del ítem. El mapeo
-opción→mental_model_id vive en MENTAL_MODELS; el catálogo MENTAL_MODEL_CATALOG
-(nombre, descripción, explicación, remediación) lo consulta el agente evaluador
-para explicar el diagnóstico y elegir la remediación. Invisible al estudiante.
+Sin modelos mentales: v4 no declara `mental_models` (cada ítem lleva `{}`); la
+misconcepción de cada distractor se documenta como comentario. El catálogo
+MENTAL_MODEL_CATALOG de versiones anteriores no se usa en v4.
 
-El seed es idempotente: IDs deterministas (uuid5 por curso+versión+módulo+orden).
-El LLM no participa en la construcción del instrumento.
+Alternativas multilínea (pseudocódigo, diagramas de flujo, salida de programas):
+el frontend las muestra con white-space: pre-line (KnowledgeTest.tsx), por lo que
+este banco solo puede activarse con ese frontend ya desplegado.
 
-Nota sobre difficulty vs. bloom_level (auditoría jul 2026): las dos dimensiones
-son independientes por diseño en las competencias de secuenciación/ejecución
-(COMP_3, COMP_4) — dentro de una misma competencia, el par order 0→1 mantiene el
-MISMO bloom_level pese a subir de difficulty, porque el tipo de operación
-cognitiva (simular una ejecución; ordenar un procedimiento) no cambia entre el
-ítem más simple y el más complejo de esa competencia — solo cambia cuánto
-contenido hay que procesar. En el resto de las competencias sí se corrigió para
-que difficulty y bloom_level progresen juntos (ver BANK_VERSION 3 changelog más
-abajo).
+El seed es idempotente: IDs deterministas (uuid5 por curso+versión+competencia+
+orden). Las filas de versiones anteriores no se tocan. El LLM no participa en la
+construcción del instrumento.
+
+Changelog BANK_VERSION 3 → 4 (rediseño a M1, ver la especificación): los 12 ítems
+de v3 quedaban atribuidos por `module_number` a M1, M2 y M4, y solo 4 evaluaban
+realmente M1. v4 los reemplaza por 8 ítems 100 % de M1 con cobertura por función.
+Ningún ítem de v3 se reutiliza.
 
 Changelog BANK_VERSION 2 → 3 (auditoría pedagógica jul 2026, sin cambios de
 Runtime/adaptación — solo contenido de este archivo):
@@ -61,7 +65,7 @@ from app.models.knowledge_test import KnowledgeTestQuestion
 
 logger = logging.getLogger(__name__)
 
-BANK_VERSION = 3
+BANK_VERSION = 4
 BANK_COURSE_CODE = "IS301"
 
 _NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "upao-mas-edu.knowledge-test-bank")
@@ -104,216 +108,244 @@ COMPETENCY_ORDER: list[str] = [COMP_0, COMP_1, COMP_2, COMP_3, COMP_4, COMP_5]
 # Cada ítem: campos del modelo + "mental_models" (opción_index → mental_model_id;
 # la opción correcta no lleva etiqueta). QUESTION_BANK se deriva quitando
 # "mental_models" para que el seed inserte solo columnas válidas.
+#
+# v4 NO declara modelos mentales (decisión M): cada ítem lleva `{}`. La
+# misconcepción que evidencia cada distractor se documenta en el comentario de
+# la opción. `order` es la posición de servicio GLOBAL (0 a 7, decisión O = B):
+# el ítem 7 (sintaxis sin `print`) se sirve antes que los que muestran `print`.
+
+
+def _pseudocodigo(*pasos: str) -> str:
+    return "\n".join(["INICIO", *pasos, "FIN"])
+
+
+def _diagrama(
+    entrada: str = "/ Pedir una frase /",
+    proceso: str = "[ Contar las palabras de la frase ]",
+    con_fin: bool = True,
+) -> str:
+    """Diagrama de flujo textual: ( ) inicio/fin, [ ] acción, / / entrada o
+    salida de datos, ↓ sentido del flujo. Cada variante cambia UN elemento."""
+    lineas = ["( Inicio )", "↓", entrada, "↓", proceso, "↓", "/ Mostrar la cantidad de palabras /"]
+    if con_fin:
+        lineas += ["↓", "( Fin )"]
+    return "\n".join(lineas)
+
+
+_PROGRAMA_SALUDOS = (
+    'print("Buenos días")\n'
+    'print("Bienvenido al curso")\n'
+    'print("Hasta pronto")'
+)
+_PROGRAMA_COMENTARIOS = (
+    "# Saludo inicial\n"
+    'print("Hola")\n'
+    "\n"
+    '# print("Este mensaje es de prueba")\n'
+    'print("Adiós")'
+)
+_PROGRAMA_SIN_CIERRE = 'print("Gracias por venir)'
+_PROGRAMA_SIN_PARENTESIS = 'print("Buenas tardes")\nprint "Hasta luego"'
 
 DIAGNOSTIC_ITEMS: list[dict] = [
-    # ══ COMP-0 · Comprensión del problema (enunciados, sin código) ═══════════
-    {
+    # ══ Concebir la solución (COMP-0) · M1.1 y M1.2 ═══════════════════════════
+    {   # Ítem 1 · Concebir · éxito evidencia M1.1
         "module_number": 1, "topic": COMP_0, "difficulty": "basico", "bloom_level": 2, "order": 0,
         "text": (
-            "Quieres un programa que calcule cuántos años tiene una persona a "
-            "partir del año en que nació. ¿Cuál es el conjunto mínimo de datos "
-            "que el programa necesita para resolverlo?"
+            "Tienes agua, una bolsita de té y una taza vacía, y quieres obtener "
+            "una taza de té lista para tomar. ¿Cuál de estas descripciones es un "
+            "algoritmo que resuelve ese problema?"
         ),
         "options": [
-            "El nombre y la ciudad de la persona",
-            "El año actual y el año de nacimiento",
-            "Solo el año de nacimiento",
-            "El día y la hora exacta",
+            # Describe el objetivo, no el procedimiento.
+            "Lograr una taza de té con el sabor y la temperatura ideales, de "
+            "modo que quede lista para quien la va a tomar.",
+            # Pasos precisos pero sin fin: vuelve al paso 1.
+            "1. Hervir 250 ml de agua. 2. Poner una bolsita de té en la taza. "
+            "3. Verter el agua en la taza. 4. Volver al paso 1.",
+            "1. Hervir 250 ml de agua. 2. Poner una bolsita de té en la taza. "
+            "3. Verter el agua en la taza. 4. Esperar 3 minutos y sacar la bolsita.",
+            # Pasos imprecisos y dependientes del criterio de quien los sigue.
+            "1. Hervir agua. 2. Echar más o menos té en la taza. 3. Verter agua "
+            "caliente, un poco. 4. Esperar un rato y retirar el té si parece listo.",
         ],
-        "correct_index": 1,
-        "mental_models": {0: "datos_irrelevantes", 2: "analisis_incompleto", 3: "sobre_especificacion"},
+        "correct_index": 2,
+        "mental_models": {},
     },
-    {
+    {   # Ítem 2 · Concebir · éxito evidencia M1.2 (y M1.1)
         "module_number": 1, "topic": COMP_0, "difficulty": "intermedio", "bloom_level": 3, "order": 1,
         "text": (
-            "Un profesor quiere calcular el promedio final de un estudiante a "
-            "partir de sus tres notas. En términos de Entrada → Proceso → Salida, "
-            "¿cuál es el PROCESO?"
+            "Un colegio quiere una aplicación que, al abrirla, muestre a cada "
+            "estudiante las clases que tiene ese día, de la primera a la última. "
+            "Cada clase tiene su curso, su aula y su hora de inicio. Además, el "
+            "escudo del colegio es azul y dorado. Antes de programar, un equipo "
+            "divide el problema en estas partes: 1. Saber qué día es hoy. "
+            "2. Reunir las clases que el estudiante tiene ese día. 3. Mostrar "
+            "las clases en pantalla. Falta una parte necesaria para resolver el "
+            "problema. ¿Cuál es?"
         ),
         "options": [
-            "Pedir las tres notas del estudiante",
-            "Sumar las tres notas y dividir entre 3",
-            "Mostrar el promedio en pantalla",
-            "Registrar el nombre del estudiante",
+            # Repite una parte que ya está (la 3).
+            "Volver a mostrar las clases del día en la pantalla.",
+            # Detalle del enunciado que no interviene en la solución.
+            "Elegir los colores azul y dorado del escudo para la pantalla.",
+            # Confunde descomponer el problema con escribir el código.
+            "Escribir el código del programa en el computador.",
+            "Poner las clases del día en orden según su hora de inicio.",
+        ],
+        "correct_index": 3,
+        "mental_models": {},
+    },
+    # ══ Representar la solución (COMP-2) · M1.3 ═══════════════════════════════
+    {   # Ítem 3 · Representar (pseudocódigo) · alternativas multilínea
+        "module_number": 1, "topic": COMP_2, "difficulty": "basico", "bloom_level": 2, "order": 2,
+        "text": (
+            "Un algoritmo debe pedirle su nombre a un estudiante y luego "
+            "mostrarle un mensaje de bienvenida que incluya ese nombre. ¿Cuál "
+            "de estas representaciones en pseudocódigo corresponde a ese "
+            "algoritmo?"
+        ),
+        "options": [
+            _pseudocodigo(
+                "Pedir el nombre del estudiante",
+                "Armar un mensaje de bienvenida con ese nombre",
+                "Mostrar el mensaje",
+            ),
+            # Muestra el mensaje antes de tener el nombre (orden invertido).
+            _pseudocodigo(
+                "Mostrar el mensaje de bienvenida",
+                "Pedir el nombre del estudiante",
+                "Armar un mensaje de bienvenida con ese nombre",
+            ),
+            # Omite el paso de entrada: nunca pide el nombre.
+            _pseudocodigo(
+                "Armar un mensaje de bienvenida con el nombre",
+                "Mostrar el mensaje",
+            ),
+            # Muestra el nombre en vez del mensaje de bienvenida.
+            _pseudocodigo(
+                "Pedir el nombre del estudiante",
+                "Armar un mensaje de bienvenida con ese nombre",
+                "Mostrar el nombre",
+            ),
+        ],
+        "correct_index": 0,
+        "mental_models": {},
+    },
+    {   # Ítem 4 · Representar (diagrama de flujo) · alternativas multilínea
+        "module_number": 1, "topic": COMP_2, "difficulty": "intermedio", "bloom_level": 2, "order": 3,
+        "text": (
+            "Un algoritmo debe pedir una frase, contar cuántas palabras tiene y "
+            "mostrar esa cantidad. En los diagramas de flujo de abajo, ( ) marca "
+            "el inicio y el fin, / / indica una entrada o una salida de datos, "
+            "[ ] indica una acción y ↓ indica el sentido del flujo. ¿Cuál de los "
+            "diagramas representa correctamente ese algoritmo?"
+        ),
+        "options": [
+            # El proceso no es el que pide el enunciado (ordena en vez de contar).
+            _diagrama(proceso="[ Ordenar las palabras de la frase ]"),
+            _diagrama(),
+            # Usa el símbolo de acción para una entrada de datos.
+            _diagrama(entrada="[ Pedir una frase ]"),
+            # El diagrama no termina: falta el símbolo de fin.
+            _diagrama(con_fin=False),
         ],
         "correct_index": 1,
-        "mental_models": {0: "confunde_entrada_proceso", 2: "confunde_salida_proceso", 3: "no_identifica_proceso"},
+        "mental_models": {},
     },
-
-    # ══ COMP-1 · Comprensión computacional (conceptos base aplicados) ════════
-    {
-        "module_number": 2, "topic": COMP_1, "difficulty": "basico", "bloom_level": 2, "order": 0,
+    # ══ Ejecutar la solución (COMP-5 y COMP-3) · M1.4 y M1.5 ══════════════════
+    {   # Ítem 7 · Ejecutar · sintaxis sin depender de print · éxito evidencia M1.4
+        "module_number": 1, "topic": COMP_5, "difficulty": "intermedio", "bloom_level": 3, "order": 4,
         "text": (
-            "En un programa de Python escribes  nombre = \"Ana\"  y más adelante  "
-            "nombre = \"Luis\" . ¿Qué ocurrió con el valor de la variable nombre?"
+            "En Python, la instrucción print muestra en pantalla el texto que se "
+            "le indica.\n\nEste programa da error al ejecutarse:\n\n"
+            + _PROGRAMA_SIN_CIERRE
+            + "\n\n¿Cuál es la causa del error?"
         ),
         "options": [
-            "Ahora contiene dos valores a la vez: \"Ana\" y \"Luis\"",
-            "Su valor cambió: ahora contiene \"Luis\"",
-            "El programa da error porque una variable no puede cambiar",
-            "Se creó una segunda variable llamada nombre",
+            # Cree que hay un límite de longitud del texto por línea.
+            "El texto es demasiado largo para una sola línea.",
+            # Cree que las instrucciones de Python llevan mayúscula inicial.
+            "La palabra print debe empezar con mayúscula.",
+            "Falta cerrar las comillas al final del texto.",
+            # Traslada la sintaxis de otro lenguaje (C, Java) a Python.
+            "Falta un punto y coma al final de la línea.",
+        ],
+        "correct_index": 2,
+        "mental_models": {},
+    },
+    {   # Ítem 8 · Ejecutar · depuración a nivel programa
+        "module_number": 1, "topic": COMP_5, "difficulty": "intermedio", "bloom_level": 3, "order": 5,
+        "text": (
+            "Este programa da error al ejecutarse:\n\n"
+            + _PROGRAMA_SIN_PARENTESIS
+            + "\n\n¿Cuál es la causa del error?"
+        ),
+        "options": [
+            # Cree que print solo puede aparecer una vez en un programa.
+            "No se puede usar print dos veces en el mismo programa.",
+            "La segunda línea no lleva paréntesis después de print.",
+            # Cree que hace falta una línea vacía para separar instrucciones.
+            "Falta una línea vacía entre las dos instrucciones.",
+            # Atribuye el error a unas comillas que están bien escritas.
+            "La primera línea está mal escrita porque el texto lleva comillas.",
         ],
         "correct_index": 1,
-        "mental_models": {0: "variable_acumula", 2: "variable_inmutable", 3: "reasignacion_crea_variable"},
+        "mental_models": {},
     },
-    {
-        "module_number": 2, "topic": COMP_1, "difficulty": "basico", "bloom_level": 2, "order": 1,
+    {   # Ítem 5 · Ejecutar · predecir la salida de un programa multilínea
+        "module_number": 1, "topic": COMP_3, "difficulty": "intermedio", "bloom_level": 3, "order": 6,
         "text": (
-            "Un estudiante escribe un programa en Python donde aparecen  \"5\"  (con comillas) "
-            "y también  5  (sin comillas). El profesor le dice que el programa los "
-            "interpreta de forma distinta. ¿Cuál es la razón?"
+            "¿Qué muestra este programa de Python en la pantalla al ejecutarse?\n\n"
+            + _PROGRAMA_SALUDOS
         ),
         "options": [
-            "Son idénticos, las comillas no importan",
-            "\"5\" es texto y 5 es un número; el programa los trata distinto",
-            "\"5\" es un número y 5 es texto",
-            "La diferencia depende del orden en que aparecen escritos, no de las comillas",
+            # Cree que print también muestra las comillas del código.
+            '"Buenos días"\n"Bienvenido al curso"\n"Hasta pronto"',
+            # Cree que las salidas de print se muestran seguidas, en una línea.
+            "Buenos días Bienvenido al curso Hasta pronto",
+            # Cree que las instrucciones se ejecutan de la última a la primera.
+            "Hasta pronto\nBienvenido al curso\nBuenos días",
+            "Buenos días\nBienvenido al curso\nHasta pronto",
         ],
-        "correct_index": 1,
-        "mental_models": {0: "sin_distincion_tipos", 2: "tipo_invertido", 3: "diferencia_superficial"},
+        "correct_index": 3,
+        "mental_models": {},
     },
-
-    # ══ COMP-2 · Interpretación de código (¿qué HACE?, no la salida exacta) ══
-    {
-        "module_number": 2, "topic": COMP_2, "difficulty": "intermedio", "bloom_level": 2, "order": 0,
+    {   # Ítem 6 · Ejecutar · comentarios y línea en blanco
+        "module_number": 1, "topic": COMP_3, "difficulty": "intermedio", "bloom_level": 3, "order": 7,
         "text": (
-            "¿Qué hace este código de Python?\n\n"
-            "    precio = 100\n"
-            "    descuento = precio * 0.2\n"
-            "    final = precio - descuento"
+            "¿Qué muestra este programa de Python en la pantalla al ejecutarse?\n\n"
+            + _PROGRAMA_COMENTARIOS
         ),
         "options": [
-            "Calcula el precio final aplicando un 20% de descuento",
-            "Muestra el precio en pantalla",
-            "Guarda tres precios independientes, sin relación entre sí",
-            "Da error porque usa la variable precio dos veces",
+            "Hola\nAdiós",
+            # Cree que un comentario también se muestra en pantalla.
+            "Saludo inicial\nHola\nAdiós",
+            # Cree que un print comentado se ejecuta igualmente.
+            "Hola\nEste mensaje es de prueba\nAdiós",
+            # Cree que la línea vacía del código aparece en la salida.
+            "Hola\n\nAdiós",
         ],
         "correct_index": 0,
-        "mental_models": {1: "confunde_calcular_mostrar", 2: "no_sigue_flujo", 3: "reuso_variable_es_error"},
-    },
-    {
-        "module_number": 4, "topic": COMP_2, "difficulty": "avanzado", "bloom_level": 3, "order": 1,
-        "text": (
-            "¿Qué hace este código de Python?\n\n"
-            "    edad = 20\n"
-            "    if edad >= 18:\n"
-            "        mensaje = \"Puede votar\"\n"
-            "    else:\n"
-            "        mensaje = \"No puede votar\""
-        ),
-        "options": [
-            "Decide el mensaje según si la edad es 18 o más",
-            "Siempre asigna \"Puede votar\"",
-            "Compara la edad con 18 y las suma",
-            "Muestra los dos mensajes en pantalla",
-        ],
-        "correct_index": 0,
-        "mental_models": {1: "ignora_condicion", 2: "confunde_comparacion_operacion", 3: "ambas_ramas_ejecutan"},
-    },
-
-    # ══ COMP-3 · Simulación mental (predecir la salida/valor exacto) ═════════
-    {
-        "module_number": 2, "topic": COMP_3, "difficulty": "intermedio", "bloom_level": 3, "order": 0,
-        "text": (
-            "¿Qué imprime este código de Python?\n\n"
-            "    x = 5\n"
-            "    y = 3\n"
-            "    x = x + y\n"
-            "    print(x)"
-        ),
-        "options": ["8", "5", "53", "15"],
-        "correct_index": 0,
-        "mental_models": {1: "no_actualiza_variable", 2: "suma_es_concatenacion", 3: "confunde_operador"},
-    },
-    {
-        "module_number": 2, "topic": COMP_3, "difficulty": "avanzado", "bloom_level": 3, "order": 1,
-        "text": (
-            "¿Qué imprime este código de Python?\n\n"
-            "    a = \"5\"\n"
-            "    b = \"5\"\n"
-            "    print(a + b)"
-        ),
-        "options": ["55", "10", "Da error", "5"],
-        "correct_index": 0,
-        "mental_models": {1: "texto_como_numero", 2: "concatenacion_texto_es_error", 3: "ignora_segunda_variable"},
-    },
-
-    # ══ COMP-4 · Construcción algorítmica (ordenar pasos) ════════════════════
-    {
-        "module_number": 1, "topic": COMP_4, "difficulty": "basico", "bloom_level": 3, "order": 0,
-        "text": (
-            "Estos pasos para retirar dinero de un cajero están desordenados:\n\n"
-            "    1. Ingresar el monto a retirar\n"
-            "    2. Insertar la tarjeta\n"
-            "    3. Ingresar el PIN\n"
-            "    4. Retirar el dinero\n\n"
-            "¿Cuál es el orden correcto?"
-        ),
-        "options": [
-            "2 → 3 → 1 → 4",
-            "1 → 2 → 3 → 4",
-            "2 → 1 → 3 → 4",
-            "3 → 2 → 1 → 4",
-        ],
-        "correct_index": 0,
-        "mental_models": {1: "ignora_prerrequisitos", 2: "orden_parcial_incorrecto", 3: "inicio_incorrecto"},
-    },
-    {
-        "module_number": 1, "topic": COMP_4, "difficulty": "intermedio", "bloom_level": 3, "order": 1,
-        "text": (
-            "Un programa debe calcular y mostrar el promedio de dos notas. "
-            "Estos pasos están desordenados:\n\n"
-            "    1. Mostrar el promedio\n"
-            "    2. Pedir las dos notas\n"
-            "    3. Sumar las notas y dividir entre 2\n\n"
-            "¿Cuál es el orden correcto?"
-        ),
-        "options": [
-            "2 → 3 → 1",
-            "3 → 2 → 1",
-            "2 → 1 → 3",
-            "1 → 2 → 3",
-        ],
-        "correct_index": 0,
-        "mental_models": {1: "procesa_sin_datos", 2: "muestra_antes_de_calcular", 3: "orden_invertido"},
-    },
-
-    # ══ COMP-5 · Razonamiento computacional (solo errores simples) ═══════════
-    {
-        "module_number": 2, "topic": COMP_5, "difficulty": "avanzado", "bloom_level": 4, "order": 0,
-        "text": (
-            "Este programa de Python da error. ¿Por qué?\n\n"
-            "    precio = 100\n"
-            "    print(precioo)"
-        ),
-        "options": [
-            "Se escribió precioo (con doble o): una variable que no existe",
-            "Falta un punto y coma al final de la línea",
-            "No se puede usar print con variables",
-            "El número 100 debería ir entre comillas",
-        ],
-        "correct_index": 0,
-        "mental_models": {1: "sintaxis_de_otro_lenguaje", 2: "print_solo_texto", 3: "numeros_necesitan_comillas"},
-    },
-    {
-        "module_number": 4, "topic": COMP_5, "difficulty": "avanzado", "bloom_level": 4, "order": 1,
-        "text": (
-            "Se esperaba que una persona de 18 años se considerara \"Adulto\", "
-            "pero el programa de Python no lo muestra. ¿Cuál es el error?\n\n"
-            "    edad = 18\n"
-            "    if edad > 18:\n"
-            "        print(\"Adulto\")"
-        ),
-        "options": [
-            "La condición usa > (mayor que) en vez de >= (mayor o igual): 18 no es mayor que 18",
-            "Falta un else después del if",
-            "La variable edad debería llamarse Edad con mayúscula",
-            "El print debería ir antes del if",
-        ],
-        "correct_index": 0,
-        "mental_models": {1: "requiere_else", 2: "nombre_irrelevante", 3: "orden_print_if"},
+        "mental_models": {},
     },
 ]
+
+# Mapeo función/concepto por ítem (§13 de DESIGN-banco-diagnostico-m1.md), con
+# la clave canónica (competencia, orden). El modelo no tiene columnas para esto:
+# vive aquí, sin cambio de esquema, y los tests comprueban los invariantes de
+# cobertura contra él. `conceptos`: conceptos de M1 cuyo ÉXITO evidencia el ítem;
+# `fallo`: conceptos a los que se atribuye el FALLO (vacío = ninguno automático).
+ITEM_MAPPING: dict[tuple[str, int], dict] = {
+    (COMP_0, 0): {"funcion": "concebir", "conceptos": ("M1.1",), "fallo": ("M1.1",), "etiquetas": ()},
+    (COMP_0, 1): {"funcion": "concebir", "conceptos": ("M1.2", "M1.1"), "fallo": (), "etiquetas": ()},
+    (COMP_2, 2): {"funcion": "representar", "conceptos": ("M1.3", "M1.1"), "fallo": (), "etiquetas": ("opciones_multilinea",)},
+    (COMP_2, 3): {"funcion": "representar", "conceptos": ("M1.3", "M1.1"), "fallo": (), "etiquetas": ("opciones_multilinea",)},
+    (COMP_5, 4): {"funcion": "ejecutar", "conceptos": ("M1.4",), "fallo": ("M1.4",), "etiquetas": ("sintaxis_sin_print",)},
+    (COMP_5, 5): {"funcion": "ejecutar", "conceptos": ("M1.4", "M1.5"), "fallo": (), "etiquetas": ("nivel_programa",)},
+    (COMP_3, 6): {"funcion": "ejecutar", "conceptos": ("M1.4", "M1.5"), "fallo": (), "etiquetas": ("nivel_programa", "opciones_multilinea")},
+    (COMP_3, 7): {"funcion": "ejecutar", "conceptos": ("M1.4", "M1.5"), "fallo": (), "etiquetas": ("nivel_programa", "opciones_multilinea")},
+}
 
 # QUESTION_BANK: solo columnas del modelo (el seed hace **item).
 QUESTION_BANK: list[dict] = [
