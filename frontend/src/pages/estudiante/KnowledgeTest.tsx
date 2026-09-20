@@ -362,7 +362,13 @@ export default function KnowledgeTest({ kind }: KnowledgeTestProps) {
                     if (attemptId) saveDraft(attemptId, next, current)
                   }}
                 />
-                <span className="text-sm text-neural-text">{option}</span>
+                <span
+                  className={`text-sm text-neural-text whitespace-pre-line${
+                    option.includes('\n') ? ' font-mono' : ''
+                  }`}
+                >
+                  {option}
+                </span>
               </label>
             )
           })}
