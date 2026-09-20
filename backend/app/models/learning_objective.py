@@ -26,6 +26,9 @@ class LearningObjective(Base):
     resource_associations = relationship(
         "ResourceObjective", back_populates="objective", cascade="all, delete-orphan"
     )
+    concepts = relationship(
+        "Concept", back_populates="learning_objective", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<LearningObjective {self.title} (Bloom: {self.bloom_level})>"

@@ -6,7 +6,7 @@ LearningPath, PathModule y StudentProgress para el seguimiento adaptativo.
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -54,7 +54,12 @@ class PathModule(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     path_id = Column(String(36), ForeignKey("learning_paths.id"), nullable=False)
     title = Column(String(255), nullable=False)
-    description = Column(String(500), nullable=True)
+    # Text, no String(500) (2C-3.19, D19.1): snapshot completo de
+    # LearningObjective.description, que desde D1-D8/B2 es prosa de
+    # alcance pedagógico general -- 6 de los 8 módulos de IS301 superan
+    # los 500 caracteres, confirmado por StringDataRightTruncation real
+    # al generar una ruta contra la BD ya transformada.
+    description = Column(Text, nullable=True)
     order = Column(Integer, nullable=False, default=0)
     week_number = Column(Integer, nullable=True, index=True)
     status = Column(String(20), default="locked")

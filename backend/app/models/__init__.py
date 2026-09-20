@@ -1,6 +1,7 @@
 from app.models.user import User, UserRole
 from app.models.course import Course, CourseStatus
 from app.models.learning_objective import LearningObjective
+from app.models.concept import Concept
 from app.models.resource import Resource, ResourceType
 from app.models.resource_objective import ResourceObjective
 from app.models.enrollment import Enrollment, EnrollmentStatus
@@ -38,6 +39,7 @@ __all__ = [
     "User", "UserRole",
     "Course", "CourseStatus",
     "LearningObjective",
+    "Concept",
     "Resource", "ResourceType",
     "ResourceObjective",
     "Enrollment", "EnrollmentStatus",
