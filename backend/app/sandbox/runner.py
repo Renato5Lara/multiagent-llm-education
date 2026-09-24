@@ -137,6 +137,39 @@ class SandboxRunner:
             )
 
     def _docker_command(self, temp_path: Path, container_name: str, request: SandboxRequest) -> list[str]:
+        # Bind mount real, verificado con Podman real + SELinux Enforcing
+        # (log de auditoría AVC, causa exacta confirmada, no supuesta):
+        # el directorio temporal del host (`tempfile.TemporaryDirectory`,
+        # modo 0700, etiqueta SELinux `user_tmp_t`) no es legible por el
+        # proceso `container_t` dentro del contenedor — ni por diferencia
+        # de UID (confirmado: incluso con UIDs numéricamente iguales
+        # dentro/fuera sigue denegado) ni por permisos Unix (confirmado:
+        # 755/644 explícitos no lo resuelven) — es un rechazo AVC de
+        # SELinux por incompatibilidad de tipo (`user_tmp_t` vs.
+        # `container_t`), no de disponibilidad.
+        #
+        # `,z` (comparte la reetiqueta a `container_file_t` — opción
+        # estándar de la CLI, reconocida también por Docker; inocua en
+        # hosts sin SELinux) resuelve el rechazo de tipo. Bajo Podman sin
+        # daemon-remapeo (a diferencia de Docker, que no remapea UIDs de
+        # contenedor por defecto), además hace falta `--userns=keep-id`
+        # para que el UID del proceso dentro del contenedor corresponda
+        # al UID real del host — verificado exhaustivamente (aislado
+        # variable por variable): ninguna de las dos por separado basta;
+        # las dos juntas sí, y con `--user 65534:65534` fijo (que
+        # `--userns=keep-id` no puede reconciliar con un UID no
+        # relacionado) sigue fallando incluso con ambas. Por eso el UID
+        # fijo se condiciona: solo bajo Podman se sustituye por el
+        # usuario YA NO-PRIVILEGIADO que la propia imagen declara
+        # (`USER sandbox:sandbox` en el Dockerfile — nunca root, nunca
+        # un UID inventado) + `--userns=keep-id`; bajo Docker (el motor
+        # de referencia del proyecto, sin este remapeo por defecto) el
+        # comportamiento queda exactamente igual que antes, sin ningún
+        # cambio.
+        es_podman = Path(self.docker_bin).name == "podman"
+        flags_usuario = ["--userns=keep-id"] if es_podman else ["--user", "65534:65534"]
+        sufijo_montaje = ":ro,z"
+
         return [
             self.docker_bin,
             "run",
@@ -160,8 +193,7 @@ class SandboxRunner:
             "ALL",
             "--security-opt",
             "no-new-privileges",
-            "--user",
-            "65534:65534",
+            *flags_usuario,
             "-e",
             f"SANDBOX_TIMEOUT={request.limits.timeout_seconds}",
             "-e",
@@ -171,7 +203,7 @@ class SandboxRunner:
             "-e",
             f"SANDBOX_STDERR_LIMIT={request.limits.stderr_limit_chars}",
             "-v",
-            f"{temp_path.as_posix()}:/sandbox/input:ro",
+            f"{temp_path.as_posix()}:/sandbox/input{sufijo_montaje}",
             self.image,
         ]
 
