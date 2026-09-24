@@ -83,13 +83,60 @@ class SecurityError(Exception):
     pass
 
 
+def _recorrer_arbol(tree: ast.AST):
+    """Reimplementación mínima de `ast.walk()` — MISMO problema que el
+    de `compile` (docstring de `validate()` más abajo), un segundo caso
+    real encontrado del mismo patrón, no uno nuevo ni distinto: la
+    implementación real de `ast.walk()` (vía `ast.iter_child_nodes` →
+    `ast.iter_fields`) llama a `getattr(nodo, campo)` — resuelto contra
+    `builtins` en cada llamada, igual que `compile` — y `builtins.
+    getattr` también queda bloqueado (más abajo) antes de invocar
+    `validate()`. Evita depender del stdlib `ast.walk` por completo:
+    usa `_original_getattr` (capturada más abajo, mismo patrón que
+    `_original_compile`/`_original_setattr`) para leer los campos de
+    cada nodo — nunca expuesta al código del estudiante, que sigue
+    viendo `builtins.getattr` bloqueado exactamente igual que antes."""
+    pendientes = [tree]
+    while pendientes:
+        nodo = pendientes.pop()
+        yield nodo
+        for campo in nodo._fields:
+            valor = _original_getattr(nodo, campo, None)
+            if isinstance(valor, ast.AST):
+                pendientes.append(valor)
+            elif isinstance(valor, list):
+                pendientes.extend(v for v in valor if isinstance(v, ast.AST))
+
+
 def validate(code: str) -> list[dict]:
     try:
-        tree = ast.parse(code)
+        # Bug real corregido (verificado con evidencia ejecutada, Podman
+        # real): `ast.parse()` es, literalmente,
+        # `compile(source, filename, mode, flags=ast.PyCF_ONLY_AST)` —
+        # resuelve `compile` contra `builtins` en CADA llamada, dinámicamente,
+        # no contra una referencia capturada al importar `ast`. Como
+        # `builtins.compile` ya queda bloqueado (más abajo, antes de
+        # invocar `validate()`) para el código del ESTUDIANTE, la propia
+        # validación interna del sandbox —que corre ANTES de ejecutar ese
+        # código, para poder rechazarlo— se autobloqueaba: la
+        # infraestructura del sandbox nunca podía analizar nada, ni
+        # siquiera código trivial. Fix mínimo: usar `_original_compile`
+        # (ya capturada más abajo — MISMA referencia que ya usa la
+        # ejecución real del código del estudiante en la línea del
+        # `exec()`, mismo patrón que `_original_open`/`_original_setattr`)
+        # en vez de `ast.parse()`, que evita por completo depender del
+        # `builtins.compile` ya bloqueado. El código del estudiante NUNCA
+        # ve `_original_compile` — vive en el namespace de este módulo,
+        # inaccesible desde `globals_dict` (un diccionario nuevo y
+        # aislado que el `exec()` de más abajo usa para el estudiante) —
+        # y `builtins.compile` sigue siendo la versión bloqueada para
+        # cualquier llamada a `compile(...)` que el código del estudiante
+        # intente, exactamente igual que antes.
+        tree = _original_compile(code, "<student_code>", "exec", ast.PyCF_ONLY_AST)
     except SyntaxError as exc:
         return [{"rule": "syntax", "message": exc.msg, "line": exc.lineno, "symbol": exc.text}]
     violations = []
-    for node in ast.walk(tree):
+    for node in _recorrer_arbol(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 root = alias.name.split(".", 1)[0]
@@ -161,18 +208,68 @@ code_path = "/sandbox/input/code.py"
 tests_path = "/sandbox/input/tests.py"
 stdin_path = "/sandbox/input/stdin.txt"
 
+# Bug real corregido (verificado con evidencia ejecutada, Podman real):
+# las rondas anteriores parcheaban `builtins.compile`/`builtins.getattr`/
+# `builtins.setattr` IN-PLACE, mutando el módulo `builtins` real del
+# proceso — compartido por TODO el intérprete, no solo por el código del
+# estudiante. Cada vez que aparecía infraestructura interna que también
+# dependía de uno de esos nombres (el propio `validate()` vía
+# `ast.parse`→`compile`, el recorrido AST vía `ast.walk`→`getattr`, y
+# ahora `contextlib.redirect_stdout().__enter__()` vía
+# `getattr(sys, "stdout")`, y hasta `traceback.format_exc()` — que
+# también usa `getattr` internamente y por eso el manejo de la propia
+# `SecurityError` volvía a fallar en cascada) se autobloqueaba, porque
+# no hay forma de distinguir "esto lo pidió el estudiante" de "esto lo
+# pidió el runtime del sandbox" una vez que `builtins` global ya no
+# tiene la función real. Parchear un builtin más (`redirect_stdout`)
+# habría sido el cuarto caso del mismo patrón, no uno distinto.
+#
+# Fix estructural (no otro parche puntual): el módulo `builtins` real
+# del proceso NUNCA se modifica. En su lugar se construye un dict de
+# builtins RESTRINGIDO, exclusivo para el código del estudiante, y se
+# instala únicamente como `globals_dict["__builtins__"]` del `exec()`
+# más abajo — nunca como `builtins.__dict__`. `import`/`compile`/
+# `getattr`/`setattr`/etc. dentro del código del estudiante resuelven
+# esos nombres contra los builtins de SU frame (`globals_dict
+# ["__builtins__"]`, fijado por `exec()`), no contra el módulo real —
+# es la misma resolución dinámica que causó los tres bugs anteriores,
+# pero usada aquí a favor: la infraestructura del sandbox (este
+# módulo, `contextlib`, `traceback`, `ast`, etc.) sigue viendo el
+# `builtins` real, intacto, exactamente como en cualquier proceso
+# Python normal.
 _original_import = builtins.__import__
 _original_open = builtins.open
 _original_compile = builtins.compile
-builtins.__import__ = restricted_import
-builtins.open = blocked_call("open")
-import io as _io; _io.open = builtins.open  # also patch io.open
-builtins.input = blocked_call("input")
-builtins.eval = blocked_call("eval")
-builtins.compile = blocked_call("compile")
-for name in ("breakpoint", "getattr", "setattr", "delattr", "globals", "locals", "vars"):
-    if hasattr(builtins, name):
-        setattr(builtins, name, blocked_call(name))
+_original_getattr = builtins.getattr  # usada solo por _recorrer_arbol() — ver su docstring
+
+
+def _build_student_builtins() -> dict:
+    """Namespace de builtins restringido para el `exec()` del código del
+    estudiante — una copia de `builtins.__dict__`, nunca el módulo real.
+    Ninguna referencia privilegiada (`_original_*`) se incluye aquí: el
+    estudiante solo ve las versiones bloqueadas."""
+    student_builtins = dict(builtins.__dict__)
+    student_builtins["__import__"] = restricted_import
+    student_builtins["open"] = blocked_call("open")
+    student_builtins["input"] = blocked_call("input")
+    student_builtins["eval"] = blocked_call("eval")
+    student_builtins["compile"] = blocked_call("compile")
+    for name in ("breakpoint", "getattr", "setattr", "delattr", "globals", "locals", "vars"):
+        if name in student_builtins:
+            student_builtins[name] = blocked_call(name)
+    return student_builtins
+
+
+# `io.open` (distinto de `builtins.open`) se mantiene bloqueado de forma
+# directa e incondicional: es el único punto por el que el código del
+# estudiante podría recuperar una referencia utilizable a `open` sin
+# pasar por el nombre libre `open` (p. ej. `from io import open as o`,
+# que el chequeo estático de `validate()` no rastrea por alias). Ninguna
+# infraestructura interna de este módulo llama a `io.open`, así que este
+# parche puntual —a diferencia de los de `builtins`— no rompe nada
+# propio del runtime del sandbox.
+import io as _io
+_io.open = blocked_call("open")
 
 try:
     memory_bytes = memory_limit_mb * 1024 * 1024
@@ -202,7 +299,7 @@ try:
     else:
         signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(timeout)
-        globals_dict = {"__name__": "__main__", "__builtins__": builtins.__dict__}
+        globals_dict = {"__name__": "__main__", "__builtins__": _build_student_builtins()}
         with contextlib.redirect_stdout(stdout_buffer), contextlib.redirect_stderr(stderr_buffer):
             exec(_original_compile(combined, "student_code.py", "exec"), globals_dict, globals_dict)
         signal.alarm(0)
