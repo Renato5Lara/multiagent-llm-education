@@ -350,6 +350,11 @@ app.include_router(engagement.router)
 app.include_router(runtime_boundary_routes.router)
 app.include_router(weekly_learning_router)
 
+# PoC de adaptación multimodal por enjambre (asesoría 2026-09-23) — subsistema aislado del runtime/Kernel.
+from adaptation_swarm.api.router import router as adaptation_swarm_router  # noqa: E402
+
+app.include_router(adaptation_swarm_router)
+
 
 @app.get("/", tags=["Sistema"])
 def root():

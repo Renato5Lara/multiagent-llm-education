@@ -70,3 +70,6 @@ xxhash==3.7.0
 zstandard==0.25.0
 openai>=1.0.0
 openpyxl==3.1.5
+redis==8.1.0
+numpy==2.5.3
+mutagen==1.47.0
