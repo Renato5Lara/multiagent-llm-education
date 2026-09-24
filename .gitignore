@@ -146,3 +146,9 @@ backend/docs/bug_reports/
 
 # ===== RESPALDOS DE SCRIPTS DE SANEAMIENTO (datos, no versionar) =====
 backend/backups/
+
+# ===== BIBLIOTECA M1 DEL PoC adaptation_swarm (Decisión C, DECISION-CLOSURE §14) =====
+# Estrategia D híbrida: los manifiestos y los artefactos NO-audio (.py, .cpp, .mmd, .txt, .svg) se versionan; el audio (mp3)
+# y la caché de TTS quedan FUERA de Git. Los manifiestos conservan el sha256 de cada mp3.
+datasets/adaptation_library/_tts_cache/
+datasets/adaptation_library/lib-v*/artifacts/**/*.mp3
