@@ -75,6 +75,26 @@ de sensibilidad y los 100 casos de `corrida-poc-1`.
 
 **Estado de versionado a 2026-09-25:** `run_slice`, `run_experiment`, `analysis/f1_audit`, `analysis/pso_audit`, `tools/isolated_env` y `scripts/repro_db_bootstrap.sh` están versionados con las salvaguardas de arriba;
 las auditorías que generaron `f1_audit` y `pso_audit` están versionadas junto a las corridas (se produjeron antes de estas salvaguardas, escribiendo por defecto en `experiments/results/`).
+### 5.1 Reconstrucción PARCIAL de `corrida-poc-1` en la base aislada (fixture; no es la base original)
+
+`corrida-poc-1` no se puede volver a ejecutar sobre su etiqueta (evidencia congelada) y de su base original solo sobreviven los JSON/CSV. `tools/load_corrida_poc1_fixture.py` reconstruye **solo** `swarm_runs` (1 fila) y `swarm_cycles` (100 filas) en `127.0.0.1:55432/swarm_test`, para poder ejecutar `pytest -m integration` sobre `tests/adaptation_swarm/test_corrida_poc_1_reconstructed_postgres.py`.
+
+- **No se reconstruyen** `swarm_iterations`, `agent_messages` ni `multimodal_packages`: no existe ningún artefacto original de esta corrida y no se inventan (una guardia en tiempo de ejecución solo permite `SELECT` e `INSERT` en `swarm_runs` y `swarm_cycles`). Por tanto **`analysis/pso_audit` no es ejecutable** sobre lo cargado, y la base resultante **no debe presentarse como la original**.
+- **Exactos** (del JSON congelado): etiqueta, `spec_version`, semilla del lote, configuración PSO y pesos de 𝓕, commit, `summary` y, por ciclo, `profile_id`, `status`, `stop_reason`, `k_stop`, `t_conv_ms`, `total_ms` (redondeados a 2 decimales en el JSON), `g_best_S`, `g_best_F`, `predicted_dominant`, `error`.
+- **Derivados**: `config_hash` (de la configuración PSO), `concept_id` (de `profiles-v1.jsonl`), `seed` (`derive_seed(batch_seed, profile_id, 0)`) y `replicate = 0` (`run_experiment` invoca `run_cycle` sin `replicate`).
+- **Regenerados** (no coinciden con la ejecución original): `id` y `correlation_id` de cada ciclo (uuid5 deterministas), `started_at` y `created_at` (instante de la carga).
+- **SQL NULL** (no recuperables): `finished_at`, y por ciclo `W`, `g_best_x`, `g_best_breakdown`, `metrics`, `pso_diagnostics`; también `error` (es `null` en el artefacto). Es SQL NULL, **no** el JSON `null`: SQLAlchemy persiste un `None` explícito de una columna JSON como JSON `null`, así que el cargador omite esas claves y la carga lo verifica con `IS NULL`.
+- La marca `config.reconstruction` de la fila de `swarm_runs` lo declara dentro de la propia base.
+
+Requisitos y garantías: `DATABASE_URL` explícita y exactamente la base aislada (sin query string); hashes de JSON, CSV, auditorías, manifiesto de biblioteca y dataset verificados antes de tocar la base; se rechaza si la etiqueta, ciclos huérfanos o algún id ya existen; una sola transacción con rollback completo ante cualquier error. Los resultados solo se escriben en un `--out-dir` fuera de resultados congelados.
+
+    # ensayo (inserta, verifica y hace ROLLBACK; no deja nada en la base)
+    python -m adaptation_swarm.tools.load_corrida_poc1_fixture --rehearse --out-dir /ruta/fuera/del/repo
+    # carga real (append-only; exige confirmación explícita)
+    python -m adaptation_swarm.tools.load_corrida_poc1_fixture --commit --confirm corrida-poc-1-reconstruccion-parcial --out-dir /ruta/fuera/del/repo
+    # pruebas de integración de la carga (fallan si la carga falta o no coincide)
+    SWARM_POC1_RECONSTRUCTED_LOADED=1 python -m pytest tests/adaptation_swarm/test_corrida_poc_1_reconstructed_postgres.py
+
 ## 6. Carga (Locust y JMeter; escenarios 1/10/25/50/100)
 > `loadtest/` (scripts, README y resultados del 2026-09-23) y `requirements-loadtest.txt` están versionados; las cifras de carga de `EVIDENCE_INDEX.md` proceden de esos resultados, idénticos a `04_carga/` del paquete final
 > (`tests/adaptation_swarm/test_loadtest_structure.py` lo verifica sin ejecutar carga). JMeter no se instala con el proyecto (`JMETER_BIN`); detalles en `loadtest/README.md`.
