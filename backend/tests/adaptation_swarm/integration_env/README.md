@@ -17,7 +17,7 @@ set -a; source backend/tests/adaptation_swarm/integration_env/test.env; set +a
 podman-compose -f backend/tests/adaptation_swarm/integration_env/compose.yaml up -d
 
 cd backend
-# Solo la primera vez: esquema completo en la base VACÍA de prueba. La migración de datos d6e7f8a9b0c1 presupone el curso IS301 y 4 objetivos
+# Solo la primera vez: esquema completo en la base VACÍA de prueba (equivale a `bash scripts/repro_db_bootstrap.sh "$DATABASE_URL"`, que además rechaza cualquier destino que no sea esta base). La migración de datos d6e7f8a9b0c1 presupone el curso IS301 y 4 objetivos
 # legados, por eso se crean entre c5d6e7f8a9b0 y head; al final se realinean los ids de los 32 conceptos con el dataset.
 python -m alembic upgrade c5d6e7f8a9b0
 python -m adaptation_swarm.tools.bootstrap_preconditions

@@ -26,11 +26,11 @@ python -m adaptation_swarm.profiles.build_dataset          # 100 perfiles + gold
 python -m adaptation_swarm.multimodal.builder --all-mapped # biblioteca M1 real (LLM + sandbox + TTS)
 python -m adaptation_swarm.tools.library_inventory --check --require-complete   # inventario y hashes de la biblioteca (exit 0 = íntegra y completa)
 ```
-Carga (Locust/JMeter): `loadtest/README.md`. Pendientes de versionar a 2026-09-24 (existen en el árbol de trabajo, aún no en Git): `run_slice`, `run_experiment` (`--sweep`, `--run-label`),
-`analysis/f1_audit` y `analysis/pso_audit` y `scripts/repro_db_bootstrap.sh`.
+Ejecutores y auditores (`run_slice`, `run_experiment`, `analysis/f1_audit`, `analysis/pso_audit`) y `scripts/repro_db_bootstrap.sh`: SOLO sobre el entorno aislado, con `DATABASE_URL`/`SWARM_REDIS_URL` explícitas,
+`--out-dir` nuevo y sin sobrescribir; uso y requisitos de cada uno en `REPRODUCIBILITY.md` §5 y en su docstring. Carga (Locust/JMeter): `loadtest/README.md`.
 
 ## Pruebas (desde `backend/`)
-- **Sin servicios** (16 archivos, 197 pruebas, verificadas con PostgreSQL y Redis detenidos y la biblioteca local en solo lectura): `test_boundaries`, `test_dataset_profiles`, `test_evidence_and_tools`, `test_fitness`,
+- **Sin servicios** (17 archivos, 218 pruebas, verificadas con PostgreSQL y Redis detenidos y la biblioteca local en solo lectura): `test_boundaries`, `test_dataset_profiles`, `test_evidence_and_tools`, `test_executors_safeguards`, `test_fitness`,
   `test_frozen_runs_preserved`, `test_gold_f1`, `test_library_full_coverage`, `test_library_inventory`, `test_loadtest_structure`, `test_metrics`, `test_pso_diagnostics`, `test_pso_engine`, `test_pso_phi`,
   `test_semantic_validation`, `test_sensitivity_preserved`, `test_sus_panel`. `test_evidence_and_tools` lanza solo procesos locales de solo lectura (`alembic heads`, versiones de podman/node/g++/chrome, git).
 - **Con PostgreSQL y Redis** (7 archivos, 79 pruebas en el entorno aislado): `test_persistence`, `test_messages_bus`, `test_agents_library`, `test_cycle_integration`, `test_package_validation`,

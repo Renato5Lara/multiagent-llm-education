@@ -31,15 +31,17 @@ export OPENAI_API_KEY=...                  # solo para GENERAR/EXTENDER la bibli
 > `scripts/repro_db_bootstrap.sh` ya invoca `.venv/bin/python -m alembic`.
 ## 3. Base de datos (cadena Alembic completa desde una base vacía)
 ```
-createdb upao_mas_edu     # o crear la base vacía por otro medio
-bash scripts/repro_db_bootstrap.sh "postgresql+psycopg://upao_user:upao_pass@localhost:5432/upao_mas_edu"
+# Solo sobre la base AISLADA de pruebas (integration_env: 127.0.0.1:55432/swarm_test, VACÍA); el script rechaza cualquier otro destino, incluida la base de desarrollo
+bash scripts/repro_db_bootstrap.sh "$DATABASE_URL" --check-only     # valida y muestra el destino (sin contraseña); no ejecuta nada
+bash scripts/repro_db_bootstrap.sh "$DATABASE_URL"                  # esquema completo + precondiciones + ids de conceptos; no borra bases ni volúmenes
 ```
 El script es necesario porque la migración **preexistente** `d6e7f8a9b0c1` (datos: IS301 → 8 módulos) presupone el curso IS301 y 4 objetivos
 legados con ids fijos y genera al azar los 32 `concepts.id`. `bootstrap_preconditions` crea esas precondiciones mínimas y `concept_ids restore`
 realinea los ids con `datasets/synthetic_profiles/concepts-v1.json` (dataset y biblioteca las referencian). Verificado: 61 tablas, head `b2f4c9d10a02`.
 Cadena: `… → d6e7f8a9b0c1 → e7f8a9b0c1d2 → f101101bc75d → 928a10b002db → a17c0de5a001 → b2f4c9d10a02`. Head: `python -m alembic heads` (debe dar una sola cabeza, `b2f4c9d10a02`).
 **Estado de versionado a 2026-09-24:** las cuatro migraciones de la cadena (`f101101bc75d` y `928a10b002db` del CMG; `a17c0de5a001` y `b2f4c9d10a02` del PoC) **ya están en Git**, así que un clon las contiene.
-`scripts/repro_db_bootstrap.sh` aún **no** está versionado: sus cuatro comandos (`alembic upgrade c5d6e7f8a9b0` → `bootstrap_preconditions` → `alembic upgrade head` → `concept_ids restore`) están escritos en `tests/adaptation_swarm/integration_env/README.md`.
+`scripts/repro_db_bootstrap.sh` está versionado: exige una URL explícita, rechaza destinos que no sean la base aislada (`adaptation_swarm/tools/isolated_env.py`), comprueba que `backend/.env` no sobrescribe el destino y no lee ese archivo;
+ejecuta `alembic upgrade c5d6e7f8a9b0` → `bootstrap_preconditions` → `alembic upgrade head` → `concept_ids restore` (los mismos cuatro comandos están en `tests/adaptation_swarm/integration_env/README.md`).
 Cadena verificada también en la base aislada de pruebas (esquema completo en `b2f4c9d10a02`, 32 ids de conceptos alineados).
 ## 4. Datos versionados
 ```
@@ -50,13 +52,19 @@ La biblioteca (`datasets/adaptation_library/lib-vN-hash`) y el dataset (`dataset
 para reproducir resultados. Para ampliarla: `python -m adaptation_swarm.multimodal.extend --base lib-vN-hash` (crea una versión NUEVA; nunca modifica las selladas).
 ## 5. Ejecución
 ```
-python -m adaptation_swarm.run_slice                                   # vertical slice (Visual-Dominant × Bucles)
-python -m pytest tests/adaptation_swarm -q                             # pruebas propias (Redis, Postgres, sandbox, Chrome; algunas llaman a OpenAI)
-python -m adaptation_swarm.run_experiment --sweep                      # sensibilidad pre-registrada
-python -m adaptation_swarm.run_experiment --run-label corrida-poc-N --library-version lib-vN-hash
-python -m adaptation_swarm.analysis.f1_audit  --run-label corrida-poc-N   # diagnóstico de F1 (solo lectura)
-python -m adaptation_swarm.analysis.pso_audit --run-label corrida-poc-N   # diagnóstico del PSO (solo lectura)
+# Ejecutores y auditores: SOLO sobre el entorno aislado, con el destino EXPLÍCITO en el entorno (no se usan valores por defecto ni backend/.env) y resultados en un --out-dir NUEVO
+export DATABASE_URL=postgresql+psycopg://swarm_test:…@127.0.0.1:55432/swarm_test SWARM_REDIS_URL=redis://127.0.0.1:56379/0   # ver integration_env/test.env.example
+python -m adaptation_swarm.run_slice --profile syn-visual_dominant-repetitive-r0 --dry-run            # valida perfil, biblioteca y destino; sin conexión
+python -m adaptation_swarm.run_slice --profile syn-visual_dominant-repetitive-r0 --json /ruta/nueva/slice.json
+python -m adaptation_swarm.run_experiment --sweep --out-dir /ruta/nueva                                # sensibilidad pre-registrada
+python -m adaptation_swarm.run_experiment --run-label repro-1 --out-dir /ruta/nueva --library-version lib-vN-hash [--dry-run] [--no-persist]
+python -m adaptation_swarm.analysis.f1_audit  --run-label repro-1 --out-dir /ruta/nueva/auditorias   # diagnóstico de F1 (PostgreSQL, solo lectura)
+python -m adaptation_swarm.analysis.pso_audit --run-label repro-1 --out-dir /ruta/nueva/auditorias   # diagnóstico del PSO (PostgreSQL, solo lectura)
+python -m pytest tests/adaptation_swarm -q                             # ver README.md: qué archivos necesitan servicios
 ```
+Salvaguardas (`tests/adaptation_swarm/test_executors_safeguards.py`): sin `--out-dir` no se escribe; nunca dentro de `experiments/results/` (congelados), de un paquete de evidencia ni de la biblioteca, ni sobre un archivo existente;
+las etiquetas `corrida-poc-1/2` no se reutilizan (los auditores sí pueden LEER esas corridas); Redis y PostgreSQL distintos del aislado (puertos 6379/5432, `upao_mas_edu`, hosts remotos) se rechazan antes de conectar;
+los auditores abren la transacción `READ ONLY`. `run_experiment` ejecuta `git rev-parse|branch|status` (solo lectura); ninguno llama a OpenAI ni genera audio. Requisitos: Redis y biblioteca con audio (ejecutores), PostgreSQL (auditores y corridas persistidas).
 La corrida es **determinista** para (semilla, `config_hash`, `library_version`, dataset): mismas trayectorias y mismo `g_best` bit a bit.
 Comprobado sin infraestructura: `test_sensitivity_preserved.py` re-ejecuta en proceso el motor PSO versionado (sin bus, Redis, audio ni PostgreSQL) y reproduce las métricas guardadas de las 6 configuraciones
 de sensibilidad y los 100 casos de `corrida-poc-1`.
@@ -65,8 +73,8 @@ de sensibilidad y los 100 casos de `corrida-poc-1`.
 (`experiments/results/adaptation_swarm_frozen_runs.md`: semilla, versiones de dataset, gold y biblioteca, configuración PSO, métricas y sha256) se recalculan desde los datos guardados y fallan si un artefacto cambia.
 **F1_adapt = 0.8031, por debajo del objetivo 0.85**: esa verificación no lo modifica ni lo presenta como cumplido.
 
-**Estado de versionado a 2026-09-24:** `run_slice`, `run_experiment`, `analysis/f1_audit` y `analysis/pso_audit` existen en el árbol de trabajo pero **aún no están en Git** (`tools/build_evidence_package` sí, junto con el paquete de evidencia);
-`f1_audit` y `pso_audit` además leen PostgreSQL (las auditorías que generaron están versionadas junto a las corridas).
+**Estado de versionado a 2026-09-25:** `run_slice`, `run_experiment`, `analysis/f1_audit`, `analysis/pso_audit`, `tools/isolated_env` y `scripts/repro_db_bootstrap.sh` están versionados con las salvaguardas de arriba;
+las auditorías que generaron `f1_audit` y `pso_audit` están versionadas junto a las corridas (se produjeron antes de estas salvaguardas, escribiendo por defecto en `experiments/results/`).
 ## 6. Carga (Locust y JMeter; escenarios 1/10/25/50/100)
 > `loadtest/` (scripts, README y resultados del 2026-09-23) y `requirements-loadtest.txt` están versionados; las cifras de carga de `EVIDENCE_INDEX.md` proceden de esos resultados, idénticos a `04_carga/` del paquete final
 > (`tests/adaptation_swarm/test_loadtest_structure.py` lo verifica sin ejecutar carga). JMeter no se instala con el proyecto (`JMETER_BIN`); detalles en `loadtest/README.md`.
@@ -85,7 +93,7 @@ Declarar siempre en el reporte: nº de workers, `SWARM_API_PERSIST`, versión de
 
 | Variable | Cuándo | Nota |
 |---|---|---|
-| `DATABASE_URL` | Alembic, `run_experiment` con persistencia, pruebas de integración, endpoint con persistencia | default de `app/core/config.py`: `postgresql+psycopg://upao_user:upao_pass@localhost:5432/upao_mas_edu`; el bootstrap la recibe como argumento y la exporta |
+| `DATABASE_URL` | Alembic, `run_experiment` con persistencia, pruebas de integración, endpoint con persistencia | default de `app/core/config.py`: `postgresql+psycopg://upao_user:upao_pass@localhost:5432/upao_mas_edu`; ejecutores, auditores y bootstrap exigen una `DATABASE_URL` EXPLÍCITA de la base aislada y rechazan el valor por defecto |
 | `OPENAI_API_KEY` | **solo** para generar/extender la biblioteca (LLM y TTS) y para las pruebas que llaman a OpenAI | sin valor por defecto (cadena vacía → funciones de generación fallan). Ejecutar el PoC sobre una biblioteca existente no llama a OpenAI |
 | `SWARM_API_KEY` | solo para el endpoint `POST /api/adaptation` | sin valor: el endpoint responde 503 (seguro por defecto) |
 
