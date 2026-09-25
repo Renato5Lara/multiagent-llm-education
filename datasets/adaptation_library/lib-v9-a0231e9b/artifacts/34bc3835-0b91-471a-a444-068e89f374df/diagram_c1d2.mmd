@@ -1,0 +1,10 @@
+flowchart TD
+    subgraph sg_describir_tipo["def describir_tipo(valor)"]
+    n1(["Inicio"])
+    n2["tipo = type(valor)"]
+    n1 --> n2
+    n3(["return tipo.__name__"])
+    n2 --> n3
+    n4(["Fin"])
+    n3 --> n4
+    end

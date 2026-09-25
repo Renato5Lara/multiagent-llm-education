@@ -1,0 +1,17 @@
+flowchart TD
+    n1["def es_par(numero)"]
+    n2{"not isinstance(numero, int)?"}
+    n1 --> n2
+    n3(["return numero % 2 == 0"])
+    n2 --> n3
+    n2 --> n3
+    n4["def repartir_exacto(total, personas)"]
+    n5{"not isinstance(total, int) or not isinstance(personas, int)?"}
+    n4 --> n5
+    n6{"personas <= 0?"}
+    n5 --> n6
+    n5 --> n6
+    n7(["return total // personas"])
+    n6 --> n7
+    n6 --> n7
+    n8["def ejemplo_uso()"]

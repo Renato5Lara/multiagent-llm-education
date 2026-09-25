@@ -1,0 +1,24 @@
+flowchart TD
+    subgraph sg_saludar["def saludar(nombre)"]
+    n1(["Inicio"])
+    n2{"not nombre?"}
+    n1 --> n2
+    n3(["return 'Hola, invitado'"])
+    n2 -->|"Sí"| n3
+    n4(["return f'Hola, {nombre}'"])
+    n2 -->|"No"| n4
+    n5(["Fin"])
+    n3 --> n5
+    n4 --> n5
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n6(["Inicio"])
+    n7["print(saludar('Ana'))"]
+    n6 --> n7
+    n8["print(saludar('Luis'))"]
+    n7 --> n8
+    n9["print(saludar(''))"]
+    n8 --> n9
+    n10(["Fin"])
+    n9 --> n10
+    end

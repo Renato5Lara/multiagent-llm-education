@@ -1,0 +1,25 @@
+flowchart TD
+    n1["def describir_tipo(valor)"]
+    n2{"isinstance(valor, int)?"}
+    n1 --> n2
+    n3{"valor is True or valor is False?"}
+    n2 --> n3
+    n4(["return 'bool'"])
+    n3 --> n4
+    n5(["return 'int'"])
+    n3 --> n5
+    n6{"isinstance(valor, float)?"}
+    n2 --> n6
+    n7(["return 'float'"])
+    n6 --> n7
+    n8{"isinstance(valor, str)?"}
+    n6 --> n8
+    n9(["return 'str'"])
+    n8 --> n9
+    n10{"isinstance(valor, bool)?"}
+    n8 --> n10
+    n11(["return 'bool'"])
+    n10 --> n11
+    n12(["return None"])
+    n10 --> n12
+    n13["def ejemplo_uso()"]

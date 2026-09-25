@@ -1,0 +1,1011 @@
+{
+  "agent_versions": {
+    "AG2": "ag-v1",
+    "AG3": "ag-v1",
+    "AG4": "ag-v1"
+  },
+  "anchors": {
+    "80655903-265e-42cc-a904-979c5915a762": {
+      "code_identifiers": [
+        "contar_hasta",
+        "contador",
+        "resultado"
+      ],
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "concept_title": "Bucle while",
+      "concept_version": "483e8a5249970f91",
+      "function_names": [
+        "contar_hasta"
+      ],
+      "learning_objective_id": "4b300b0a-7470-42cf-856a-66b4a1c018b4",
+      "learning_objective_title": "Bucles",
+      "terms": [
+        "bucle",
+        "while",
+        "bucles"
+      ]
+    }
+  },
+  "base_version": null,
+  "calibration": {
+    "note": "tiempo de generación medido; congelado",
+    "statistic": "median",
+    "times_ms": {
+      "audio": [
+        5520.761,
+        3800.502,
+        5869.027
+      ],
+      "code": [
+        2816.536,
+        3319.165,
+        4862.463
+      ],
+      "diagram": [
+        0.805,
+        0.886,
+        0.88
+      ],
+      "text": [
+        2553.242,
+        2037.38,
+        7726.962
+      ]
+    },
+    "unit": "ms"
+  },
+  "created_at": "2026-09-24T01:01:50.513814+00:00",
+  "entries": [
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "b4b8df316f2c078d8dd67f077d181f89920c87fb5af9457b8de2cacf2a2068b4",
+      "derived_from": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+      "generated_at": "2026-09-24T01:02:16.012650+00:00",
+      "generation_ms": 5038.683,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t0a0",
+      "metadata": {
+        "duration_s": 22.776,
+        "timestamp": "2026-09-24T01:02:06.165407+00:00",
+        "tts_latency_ms": 5037.795718999405
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t0a0.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "df5806540294104e1fa6af20dbab09997ae555456220462c1a5f061b30e6ee1c",
+        "speed": 1.15,
+        "voice": "alloy"
+      },
+      "sha256": "df5806540294104e1fa6af20dbab09997ae555456220462c1a5f061b30e6ee1c",
+      "size_bytes": 364416,
+      "validation": {
+        "bytes": 364416,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "agil",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 0,
+        "text": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "9eac3b90b67dedfae41a26e43e59084c015e7208d03c5b6c0f85bd85dea82399",
+      "derived_from": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+      "generated_at": "2026-09-24T01:02:16.013652+00:00",
+      "generation_ms": 4685.01,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t0a1",
+      "metadata": {
+        "duration_s": 26.208,
+        "timestamp": "2026-09-24T01:02:05.812866+00:00",
+        "tts_latency_ms": 4665.686117001314
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t0a1.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "1e13ba1690a379900a8b1b282456f600f07cda7a3003089e5f0d8939f80324b3",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "sha256": "1e13ba1690a379900a8b1b282456f600f07cda7a3003089e5f0d8939f80324b3",
+      "size_bytes": 419328,
+      "validation": {
+        "bytes": 419328,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "normal",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 1,
+        "text": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "4e0e77ad4392dd66b18735794bd630e26b40adbd288ea2489c1938ba0afbe917",
+      "derived_from": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+      "generated_at": "2026-09-24T01:02:16.014478+00:00",
+      "generation_ms": 5869.027,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t0a2",
+      "metadata": {
+        "duration_s": 30.744,
+        "timestamp": "2026-09-24T01:02:06.997319+00:00",
+        "tts_latency_ms": 5868.5938750004425
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t0a2.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "e001c8be39aca897a75d37d2573ca105d76bd969093740ebb0488d73fa470b44",
+        "speed": 0.85,
+        "voice": "alloy"
+      },
+      "sha256": "e001c8be39aca897a75d37d2573ca105d76bd969093740ebb0488d73fa470b44",
+      "size_bytes": 491904,
+      "validation": {
+        "bytes": 491904,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "pausada",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 2,
+        "text": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "1cd6f04f2fd9ca98b8e5925715417856cc38475bde88fa723c8c990a74867ab9",
+      "derived_from": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+      "generated_at": "2026-09-24T01:02:16.015442+00:00",
+      "generation_ms": 5520.761,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t1a0",
+      "metadata": {
+        "duration_s": 35.424,
+        "timestamp": "2026-09-24T01:02:06.649375+00:00",
+        "tts_latency_ms": 5520.342060000985
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t1a0.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "07387882f6782e7007a614aad2a58dd54fbec78e036baa360a2216be1f4094f5",
+        "speed": 1.15,
+        "voice": "alloy"
+      },
+      "sha256": "07387882f6782e7007a614aad2a58dd54fbec78e036baa360a2216be1f4094f5",
+      "size_bytes": 566784,
+      "validation": {
+        "bytes": 566784,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "agil",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 0,
+        "text": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "465dd3a3d11272743c5831cc1a89683edfab8a05f8966d28fc8b15ed3a86f07d",
+      "derived_from": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+      "generated_at": "2026-09-24T01:02:16.016538+00:00",
+      "generation_ms": 3641.13,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t1a1",
+      "metadata": {
+        "duration_s": 40.392,
+        "timestamp": "2026-09-24T01:02:09.454328+00:00",
+        "tts_latency_ms": 3640.720278999652
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t1a1.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "2789b9a38c4620a2e84045000521b179cff18069b616eb802f10a1dd52400bbf",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "sha256": "2789b9a38c4620a2e84045000521b179cff18069b616eb802f10a1dd52400bbf",
+      "size_bytes": 646272,
+      "validation": {
+        "bytes": 646272,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "normal",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 1,
+        "text": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "407ec0f661d38e07242288b2a0962f6a9c7f6844de47f91ab3e3d6677a34a80d",
+      "derived_from": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+      "generated_at": "2026-09-24T01:02:16.017953+00:00",
+      "generation_ms": 3355.027,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t1a2",
+      "metadata": {
+        "duration_s": 47.832,
+        "timestamp": "2026-09-24T01:02:09.520883+00:00",
+        "tts_latency_ms": 3354.6255069995823
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t1a2.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "87ac2957e371ef621a5da327358df933413c1bf80184c390eb6d3ed735172ce7",
+        "speed": 0.85,
+        "voice": "alloy"
+      },
+      "sha256": "87ac2957e371ef621a5da327358df933413c1bf80184c390eb6d3ed735172ce7",
+      "size_bytes": 765312,
+      "validation": {
+        "bytes": 765312,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "pausada",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 2,
+        "text": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "b9838604dd9b46049e6a2ee392c6b6faf1c934dace3b98af0bcf7c4b0e660c32",
+      "derived_from": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+      "generated_at": "2026-09-24T01:02:16.023719+00:00",
+      "generation_ms": 7223.897,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t2a0",
+      "metadata": {
+        "duration_s": 85.152,
+        "timestamp": "2026-09-24T01:02:13.872916+00:00",
+        "tts_latency_ms": 7222.811502000695
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t2a0.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "d44b657d57cd892ecf22bb74b710fed9b5ac8399ae572704fa0b773c65a0ebf0",
+        "speed": 1.15,
+        "voice": "alloy"
+      },
+      "sha256": "d44b657d57cd892ecf22bb74b710fed9b5ac8399ae572704fa0b773c65a0ebf0",
+      "size_bytes": 1362432,
+      "validation": {
+        "bytes": 1362432,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "agil",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 0,
+        "text": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "82f38270da3b380ef06bd667046433364c427ee50685c1f805714ecd5c0eda93",
+      "derived_from": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+      "generated_at": "2026-09-24T01:02:16.029235+00:00",
+      "generation_ms": 3800.502,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t2a1",
+      "metadata": {
+        "duration_s": 97.752,
+        "timestamp": "2026-09-24T01:02:10.797415+00:00",
+        "tts_latency_ms": 3799.3616980002116
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t2a1.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "03d344a5e8f7c9a14125f4e7a5b028c9a4e4e53dda273394208d37feb706a952",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "sha256": "03d344a5e8f7c9a14125f4e7a5b028c9a4e4e53dda273394208d37feb706a952",
+      "size_bytes": 1564032,
+      "validation": {
+        "bytes": 1564032,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "normal",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 1,
+        "text": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "21041a8180e72d5d025057e32402a0497148c2f819a5ee08ac941259a5b4cae5",
+      "derived_from": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+      "generated_at": "2026-09-24T01:02:16.034889+00:00",
+      "generation_ms": 6555.702,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t2a2",
+      "metadata": {
+        "duration_s": 115.32,
+        "timestamp": "2026-09-24T01:02:16.009794+00:00",
+        "tts_latency_ms": 6554.841776000103
+      },
+      "modality": "audio",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/audio_t2a2.mp3",
+      "prompt_template_version": "ag4-text-v1+tts-v1",
+      "provider": {
+        "cache_hit": false,
+        "format": "mp3",
+        "input_sha256": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+        "model": "tts-1",
+        "name": "openai",
+        "output_sha256": "a3ca89ce2f1195e974477ada6466dd1eccade2a515945523f7855ca031e0d317",
+        "speed": 0.85,
+        "voice": "alloy"
+      },
+      "sha256": "a3ca89ce2f1195e974477ada6466dd1eccade2a515945523f7855ca031e0d317",
+      "size_bytes": 1845120,
+      "validation": {
+        "bytes": 1845120,
+        "mime": "audio/mpeg",
+        "narrates_text_sha256": true,
+        "profile": "pausada",
+        "status": "passed"
+      },
+      "variant": {
+        "audio": 2,
+        "text": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "832a70f8bf36d5e518069afe6fd89b4439693359c85156f5ba922fc6740e2332",
+      "derived_from": null,
+      "generated_at": "2026-09-24T01:02:01.113780+00:00",
+      "generation_ms": 2816.536,
+      "generator": {
+        "agent": "AG2",
+        "agent_version": "ag-v1"
+      },
+      "key": "c0",
+      "metadata": {
+        "identical_to_reference": false,
+        "reference_used_as": "behavior_spec",
+        "signatures": [
+          "def contar_hasta(n)"
+        ]
+      },
+      "modality": "code",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/code_c0.py",
+      "prompt_template_version": "ag2-code-v1",
+      "provider": {
+        "model": "gpt-4o-mini",
+        "name": "openai",
+        "tokens_total": 224
+      },
+      "sha256": "b8566a6b41a5651003ba0e4c17e2c4a8b21d5c87bd741e2a7436cb4d6f146d2f",
+      "size_bytes": 132,
+      "validation": {
+        "attempts": 1,
+        "language": "python",
+        "sandbox_exec_ms": 0.31,
+        "sandbox_status": "success",
+        "status": "passed",
+        "tests": "catalog-reference-asserts"
+      },
+      "variant": {
+        "code": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "4fb81a3d35a0e854827e73ccfc8c670a7b6405a09bc0da7945f73cb9039603c9",
+      "derived_from": null,
+      "generated_at": "2026-09-24T01:02:01.114240+00:00",
+      "generation_ms": 3319.165,
+      "generator": {
+        "agent": "AG2",
+        "agent_version": "ag-v1"
+      },
+      "key": "c1",
+      "metadata": {
+        "identical_to_reference": false,
+        "reference_used_as": "behavior_spec",
+        "signatures": [
+          "def contar_hasta(n)"
+        ]
+      },
+      "modality": "code",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/code_c1.py",
+      "prompt_template_version": "ag2-code-v1",
+      "provider": {
+        "model": "gpt-4o-mini",
+        "name": "openai",
+        "tokens_total": 331
+      },
+      "sha256": "e6aa221b3beea9d0e66e978f0ef2804a8ed9b582512573b6e43d8f68a32d2518",
+      "size_bytes": 489,
+      "validation": {
+        "attempts": 1,
+        "language": "python",
+        "sandbox_exec_ms": 0.33,
+        "sandbox_status": "success",
+        "status": "passed",
+        "tests": "catalog-reference-asserts"
+      },
+      "variant": {
+        "code": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "eea6a9363ab3eebbd99cad5677570e1a634c14190d4441c1b232cefbe9f40425",
+      "derived_from": null,
+      "generated_at": "2026-09-24T01:02:01.114631+00:00",
+      "generation_ms": 4862.463,
+      "generator": {
+        "agent": "AG2",
+        "agent_version": "ag-v1"
+      },
+      "key": "c2",
+      "metadata": {
+        "identical_to_reference": false,
+        "reference_used_as": "behavior_spec",
+        "signatures": [
+          "def contar_hasta(n)"
+        ]
+      },
+      "modality": "code",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/code_c2.py",
+      "prompt_template_version": "ag2-code-v1",
+      "provider": {
+        "model": "gpt-4o-mini",
+        "name": "openai",
+        "tokens_total": 553
+      },
+      "sha256": "90a87c5f29265413ee2d9958dab0b56e9c104784b6716ee1c9c700b89ad55cd1",
+      "size_bytes": 1167,
+      "validation": {
+        "attempts": 1,
+        "language": "python",
+        "sandbox_exec_ms": 0.43,
+        "sandbox_status": "success",
+        "status": "passed",
+        "tests": "catalog-reference-asserts"
+      },
+      "variant": {
+        "code": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "f09d10ac8b1ca7978859d3048b517007a542febdc5c0aedc46d723d584f4619b",
+      "derived_from": "b8566a6b41a5651003ba0e4c17e2c4a8b21d5c87bd741e2a7436cb4d6f146d2f",
+      "generated_at": "2026-09-24T01:02:01.116051+00:00",
+      "generation_ms": 0.938,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c0d0",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c0d0.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "ed463893874d7056f49eeed7bda344bedd31a2d3e071d892730b07e28b2d4a4f",
+      "size_bytes": 137,
+      "validation": {
+        "edges": 3,
+        "mermaid_validator": true,
+        "nodes": 3,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 0,
+        "diagram": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "6a0399af7c29ce63450e23339420c8a6cd80167c926b6008661c0260f3b6fd06",
+      "derived_from": "b8566a6b41a5651003ba0e4c17e2c4a8b21d5c87bd741e2a7436cb4d6f146d2f",
+      "generated_at": "2026-09-24T01:02:01.117484+00:00",
+      "generation_ms": 0.889,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c0d1",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c0d1.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "27fd97efa350a24426ee586da7257fa3b2f86131501c20e138f5f5cdd5b3eb6c",
+      "size_bytes": 281,
+      "validation": {
+        "edges": 7,
+        "mermaid_validator": true,
+        "nodes": 7,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 0,
+        "diagram": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "ef1e21ac57b24bfef83e39e4bad004901592a0f176ce57b8c5f296bba50eb394",
+      "derived_from": "b8566a6b41a5651003ba0e4c17e2c4a8b21d5c87bd741e2a7436cb4d6f146d2f",
+      "generated_at": "2026-09-24T01:02:01.119037+00:00",
+      "generation_ms": 1.019,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c0d2",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c0d2.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "345d444ffa7e1f9b186d6c90ed0eee6040b53c38a2f5dc76bf156d3cc8d76201",
+      "size_bytes": 386,
+      "validation": {
+        "edges": 8,
+        "mermaid_validator": true,
+        "nodes": 8,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 0,
+        "diagram": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "233353cc206da995020732265fd7152fb556e088ec1f271e7adabf6830d8c333",
+      "derived_from": "e6aa221b3beea9d0e66e978f0ef2804a8ed9b582512573b6e43d8f68a32d2518",
+      "generated_at": "2026-09-24T01:02:01.120180+00:00",
+      "generation_ms": 0.617,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c1d0",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c1d0.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "7d03b699d757d02a0ad34ae4dfc101b5fc502a5d9bd4b590fdc5a92174eaf32d",
+      "size_bytes": 144,
+      "validation": {
+        "edges": 3,
+        "mermaid_validator": true,
+        "nodes": 3,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 1,
+        "diagram": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "212f587bf6b38014e0d97cde42938e92080b6bef076c17838bfc7e40df032ad1",
+      "derived_from": "e6aa221b3beea9d0e66e978f0ef2804a8ed9b582512573b6e43d8f68a32d2518",
+      "generated_at": "2026-09-24T01:02:01.121442+00:00",
+      "generation_ms": 0.784,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c1d1",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c1d1.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "c6c19fa7d62c7cc317c7e49568c4eb6f5940b76fad62bc10115c3aed78df87dd",
+      "size_bytes": 309,
+      "validation": {
+        "edges": 7,
+        "mermaid_validator": true,
+        "nodes": 7,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 1,
+        "diagram": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "bcf1958ce3c17c1510b1a6883d9e362bc8d86f33bd111499d174bba038b73775",
+      "derived_from": "e6aa221b3beea9d0e66e978f0ef2804a8ed9b582512573b6e43d8f68a32d2518",
+      "generated_at": "2026-09-24T01:02:01.122617+00:00",
+      "generation_ms": 0.723,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c1d2",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c1d2.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "bc8bfefefd370de4ee9bcaecec0d98a75a8cf4ece3064198f44c996d2caf3676",
+      "size_bytes": 414,
+      "validation": {
+        "edges": 8,
+        "mermaid_validator": true,
+        "nodes": 8,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 1,
+        "diagram": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "93e24f299f6dd7b2085976fcdf55d010e4af86b72dc8cef1a301703d3d09cc56",
+      "derived_from": "90a87c5f29265413ee2d9958dab0b56e9c104784b6716ee1c9c700b89ad55cd1",
+      "generated_at": "2026-09-24T01:02:01.123869+00:00",
+      "generation_ms": 0.805,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c2d0",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c2d0.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "d74e33e6ecdb12045cf62d1c4a12a69195e9b6a6bbe6378a31e2db7c940423e2",
+      "size_bytes": 238,
+      "validation": {
+        "edges": 5,
+        "mermaid_validator": true,
+        "nodes": 6,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 2,
+        "diagram": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "ce5af93a10624d219d7829a4321cc4a7f7c38df6d2cfcfd1b4624a48e5a77ac6",
+      "derived_from": "90a87c5f29265413ee2d9958dab0b56e9c104784b6716ee1c9c700b89ad55cd1",
+      "generated_at": "2026-09-24T01:02:01.125086+00:00",
+      "generation_ms": 0.886,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c2d1",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c2d1.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "9b3c32a06a89f9386a48436e22b845d05911f2e16be291801a5c157c25ef6bc0",
+      "size_bytes": 601,
+      "validation": {
+        "edges": 13,
+        "mermaid_validator": true,
+        "nodes": 14,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 2,
+        "diagram": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "a81498197e743335ed523909e556062523b9ef81345a9f9ee36d8fe1ffe63e1a",
+      "derived_from": "90a87c5f29265413ee2d9958dab0b56e9c104784b6716ee1c9c700b89ad55cd1",
+      "generated_at": "2026-09-24T01:02:01.126293+00:00",
+      "generation_ms": 0.88,
+      "generator": {
+        "agent": "AG3",
+        "agent_version": "ag-v1"
+      },
+      "key": "c2d2",
+      "metadata": {
+        "format": "mermaid"
+      },
+      "modality": "diagram",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/diagram_c2d2.mmd",
+      "prompt_template_version": "ag3-flowchart-ast-v1",
+      "provider": {
+        "model": null,
+        "name": "ast-flowchart"
+      },
+      "sha256": "4d101394af117387a9b89a3bd37ef978a3e5f7641495c5c21c965912d8fecf1d",
+      "size_bytes": 817,
+      "validation": {
+        "edges": 16,
+        "mermaid_validator": true,
+        "nodes": 16,
+        "render": "not_implemented",
+        "status": "passed",
+        "structural": true
+      },
+      "variant": {
+        "code": 2,
+        "diagram": 2
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "e5b2a8de4d84400c086cd49cbcc28bca62ab02ed5a63b4ff75d533e3ee2109a6",
+      "derived_from": null,
+      "generated_at": "2026-09-24T01:02:01.126573+00:00",
+      "generation_ms": 2553.242,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t0",
+      "metadata": {},
+      "modality": "text",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/text_t0.txt",
+      "prompt_template_version": "ag4-text-v1",
+      "provider": {
+        "model": "gpt-4o-mini",
+        "name": "openai",
+        "tokens_total": 309
+      },
+      "sha256": "8215c8913937cc4442fa2e3ceb600cd7b184f20f75dea0a9500adeb5189a8030",
+      "size_bytes": 419,
+      "validation": {
+        "attempts": 1,
+        "status": "passed",
+        "words": 67
+      },
+      "variant": {
+        "text": 0
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "36683fd01213ab594aef9cb5123fb593f34b1734478c613ea0ce22bc632f4ab5",
+      "derived_from": null,
+      "generated_at": "2026-09-24T01:02:01.126826+00:00",
+      "generation_ms": 2037.38,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t1",
+      "metadata": {},
+      "modality": "text",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/text_t1.txt",
+      "prompt_template_version": "ag4-text-v1",
+      "provider": {
+        "model": "gpt-4o-mini",
+        "name": "openai",
+        "tokens_total": 371
+      },
+      "sha256": "82b1b9581720eeb1656ccd7041240063ceedcbec78081bd7e779debf4427a732",
+      "size_bytes": 657,
+      "validation": {
+        "attempts": 1,
+        "status": "passed",
+        "words": 115
+      },
+      "variant": {
+        "text": 1
+      }
+    },
+    {
+      "anchor_version": "483e8a5249970f91",
+      "concept_id": "80655903-265e-42cc-a904-979c5915a762",
+      "content_id": "21be179917c2eb05d7b10c13c905ae9247054ae20aa3e82123e9538813dcf2cc",
+      "derived_from": null,
+      "generated_at": "2026-09-24T01:02:01.127046+00:00",
+      "generation_ms": 7726.962,
+      "generator": {
+        "agent": "AG4",
+        "agent_version": "ag-v1"
+      },
+      "key": "t2",
+      "metadata": {},
+      "modality": "text",
+      "path": "artifacts/80655903-265e-42cc-a904-979c5915a762/text_t2.txt",
+      "prompt_template_version": "ag4-text-v1",
+      "provider": {
+        "model": "gpt-4o-mini",
+        "name": "openai",
+        "tokens_total": 1202
+      },
+      "sha256": "824dfa795fb8f74467ef5caf6803368ff0600818f17db1477286e20be1548424",
+      "size_bytes": 1586,
+      "validation": {
+        "attempts": 2,
+        "status": "passed",
+        "words": 267
+      },
+      "variant": {
+        "text": 2
+      }
+    }
+  ],
+  "layout": "layout-v1",
+  "library_version": "lib-v1-3f931e10",
+  "schema": "library-manifest-v1"
+}

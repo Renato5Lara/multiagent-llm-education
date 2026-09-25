@@ -1,0 +1,19 @@
+flowchart TD
+    n1["def leer_edad(texto_ingresado)"]
+    n2{"texto_ingresado.strip() == ''?"}
+    n1 --> n2
+    n3(["return 0"])
+    n2 --> n3
+    n4["try"]
+    n2 --> n4
+    n5{"edad < 0?"}
+    n4 --> n5
+    n6(["return 0"])
+    n5 --> n6
+    n7(["return edad"])
+    n5 --> n7
+    n8{"except ValueError"}
+    n4 --> n8
+    n9(["return 0"])
+    n8 --> n9
+    n10["def ejemplo_uso()"]

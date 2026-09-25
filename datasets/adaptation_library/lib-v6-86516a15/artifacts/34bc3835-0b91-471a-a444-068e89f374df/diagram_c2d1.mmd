@@ -1,0 +1,33 @@
+flowchart TD
+    n1["def describir_tipo(valor)"]
+    n2["tipo = type(valor)"]
+    n1 --> n2
+    n3{"tipo == int?"}
+    n2 --> n3
+    n4(["return 'int'"])
+    n3 --> n4
+    n5{"tipo == float?"}
+    n3 --> n5
+    n6(["return 'float'"])
+    n5 --> n6
+    n7{"tipo == str?"}
+    n5 --> n7
+    n8(["return 'str'"])
+    n7 --> n8
+    n9{"tipo == bool?"}
+    n7 --> n9
+    n10(["return 'bool'"])
+    n9 --> n10
+    n11(["return 'tipo desconocido'"])
+    n9 --> n11
+    n12["def ejemplo_uso()"]
+    n13["print(describir_tipo(5))"]
+    n12 --> n13
+    n14["print(describir_tipo(5.0))"]
+    n13 --> n14
+    n15["print(describir_tipo('cinco'))"]
+    n14 --> n15
+    n16["print(describir_tipo(True))"]
+    n15 --> n16
+    n17["print(describir_tipo([]))"]
+    n16 --> n17

@@ -1,0 +1,25 @@
+flowchart TD
+    n1["def actualizar_saldo(saldo_inicial, deposito)"]
+    n2{"saldo_inicial < 0?"}
+    n1 --> n2
+    n3["raise ValueError('El saldo inicial no puede ser negativo.')"]
+    n2 --> n3
+    n4{"deposito < 0?"}
+    n3 --> n4
+    n2 --> n4
+    n5["raise ValueError('El depósito no puede ser negativo.')"]
+    n4 --> n5
+    n6["nuevo_saldo = saldo_inicial + deposito"]
+    n5 --> n6
+    n4 --> n6
+    n7(["return nuevo_saldo"])
+    n6 --> n7
+    n8["def ejemplo_uso()"]
+    n9["saldo = 100"]
+    n8 --> n9
+    n10["deposito = 50"]
+    n9 --> n10
+    n11["nuevo_saldo = actualizar_saldo(saldo, deposito)"]
+    n10 --> n11
+    n12["printf'Saldo inicial: {saldo}, Depósito: {deposito}, Nuevo sal…"]
+    n11 --> n12

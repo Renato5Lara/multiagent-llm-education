@@ -1,0 +1,13 @@
+flowchart TD
+    n1["def calcular_promedio_ponderado(n1, n2, n3)"]
+    n2{"n1 is None or n2 is None or n3 is None?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 --> n3
+    n4{"n1 < 0 or n2 < 0 or n3 < 0?"}
+    n2 --> n4
+    n5(["return None"])
+    n4 --> n5
+    n6(["return promedio"])
+    n4 --> n6
+    n7["def ejemplo_uso()"]

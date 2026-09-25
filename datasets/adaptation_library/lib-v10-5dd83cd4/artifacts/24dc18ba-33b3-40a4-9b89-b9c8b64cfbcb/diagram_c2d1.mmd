@@ -1,0 +1,27 @@
+flowchart TD
+    n1["def calcular_promedio_ponderado(n1, n2, n3)"]
+    n2{"n1 is None or n2 is None or n3 is None?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 --> n3
+    n4{"n1 < 0 or n2 < 0 or n3 < 0?"}
+    n2 --> n4
+    n5(["return None"])
+    n4 --> n5
+    n6["total_notas = n1 + n2 + n3"]
+    n4 --> n6
+    n7["promedio = total_notas / 3"]
+    n6 --> n7
+    n8(["return promedio"])
+    n7 --> n8
+    n9["def ejemplo_uso()"]
+    n10["print(calcular_promedio_ponderado(10, 10, 10))"]
+    n9 --> n10
+    n11["print(calcular_promedio_ponderado(0, 0, 0))"]
+    n10 --> n11
+    n12["print(calcular_promedio_ponderado(5, 10, 15))"]
+    n11 --> n12
+    n13["print(calcular_promedio_ponderado(None, 10, 10))"]
+    n12 --> n13
+    n14["print(calcular_promedio_ponderado(-1, 10, 10))"]
+    n13 --> n14

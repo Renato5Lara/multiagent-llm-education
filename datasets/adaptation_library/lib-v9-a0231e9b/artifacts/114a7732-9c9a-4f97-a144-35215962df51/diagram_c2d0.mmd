@@ -1,0 +1,17 @@
+flowchart TD
+    n1["def aprobo(nota)"]
+    n2{"nota is None?"}
+    n1 --> n2
+    n3(["return False"])
+    n2 --> n3
+    n4{"nota < 0?"}
+    n2 --> n4
+    n5(["return False"])
+    n4 --> n5
+    n6{"nota > 20?"}
+    n4 --> n6
+    n7(["return False"])
+    n6 --> n7
+    n8(["return nota >= 11"])
+    n6 --> n8
+    n9["def ejemplo_uso()"]

@@ -1,0 +1,1 @@
+La comparación es un proceso que permite evaluar la relación entre dos valores utilizando operadores relacionales, como mayor que o menor que. En programación, las expresiones que resultan de estas comparaciones son fundamentales para tomar decisiones en el código. Por ejemplo, la función aprobo determina si una nota es suficiente al verificar si es mayor o igual a once.

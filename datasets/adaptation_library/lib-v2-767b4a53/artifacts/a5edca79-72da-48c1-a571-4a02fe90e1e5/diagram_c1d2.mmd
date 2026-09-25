@@ -1,0 +1,10 @@
+flowchart TD
+    subgraph sg_formatear_reporte["def formatear_reporte(nombre, nota)"]
+    n1(["Inicio"])
+    n2["reporte = f'Estudiante: {nombre} - Nota: {nota}'"]
+    n1 --> n2
+    n3(["return reporte"])
+    n2 --> n3
+    n4(["Fin"])
+    n3 --> n4
+    end

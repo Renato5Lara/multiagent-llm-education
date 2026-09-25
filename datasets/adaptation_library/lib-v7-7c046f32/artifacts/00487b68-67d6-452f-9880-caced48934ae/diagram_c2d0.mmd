@@ -1,0 +1,12 @@
+flowchart TD
+    n1["def es_par(numero)"]
+    n2(["return numero % 2 == 0"])
+    n1 --> n2
+    n3["def repartir_exacto(total, personas)"]
+    n4{"personas == 0?"}
+    n3 --> n4
+    n5(["return 0"])
+    n4 --> n5
+    n6(["return total // personas"])
+    n4 --> n6
+    n7["def ejemplo_uso()"]

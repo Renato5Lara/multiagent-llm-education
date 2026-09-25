@@ -1,0 +1,45 @@
+flowchart TD
+    subgraph sg_actualizar_saldo["def actualizar_saldo(saldo_inicial, deposito)"]
+    n1(["Inicio"])
+    n2{"saldo_inicial is None or deposito is None?"}
+    n1 --> n2
+    n3(["return 'Error: saldo inicial o depósito no pueden ser None'"])
+    n2 -->|"Sí"| n3
+    n4{"not isinstance(saldo_inicial, (int, float)) or not isinstance(…)?"}
+    n2 -->|"No"| n4
+    n5(["return 'Error: saldo inicial y depósito deben ser números'"])
+    n4 -->|"Sí"| n5
+    n6{"saldo_inicial < 0?"}
+    n4 -->|"No"| n6
+    n7(["return 'Error: saldo inicial no puede ser negativo'"])
+    n6 -->|"Sí"| n7
+    n8{"deposito < 0?"}
+    n6 -->|"No"| n8
+    n9(["return 'Error: el depósito no puede ser negativo'"])
+    n8 -->|"Sí"| n9
+    n10["saldo = saldo_inicial"]
+    n8 -->|"No"| n10
+    n11["saldo += deposito"]
+    n10 --> n11
+    n12(["return saldo"])
+    n11 --> n12
+    n13(["Fin"])
+    n3 --> n13
+    n5 --> n13
+    n7 --> n13
+    n9 --> n13
+    n12 --> n13
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n14(["Inicio"])
+    n15["saldo_inicial = 100"]
+    n14 --> n15
+    n16["deposito = 50"]
+    n15 --> n16
+    n17["nuevo_saldo = actualizar_saldo(saldo_inicial, deposito)"]
+    n16 --> n17
+    n18["print(f'Saldo inicial: {saldo_inicial}. Después de la suma: {nu…})"]
+    n17 --> n18
+    n19(["Fin"])
+    n18 --> n19
+    end

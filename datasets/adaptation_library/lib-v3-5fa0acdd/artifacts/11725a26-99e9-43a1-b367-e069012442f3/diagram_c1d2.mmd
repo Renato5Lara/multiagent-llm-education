@@ -1,0 +1,18 @@
+flowchart TD
+    subgraph sg_clasificar_nota["def clasificar_nota(nota)"]
+    n1(["Inicio"])
+    n2{"nota >= 16?"}
+    n1 --> n2
+    n3(["return 'excelente'"])
+    n2 -->|"Sí"| n3
+    n4{"nota >= 10?"}
+    n2 -->|"No"| n4
+    n5(["return 'regular'"])
+    n4 -->|"Sí"| n5
+    n6(["return 'insuficiente'"])
+    n4 -->|"No"| n6
+    n7(["Fin"])
+    n3 --> n7
+    n5 --> n7
+    n6 --> n7
+    end

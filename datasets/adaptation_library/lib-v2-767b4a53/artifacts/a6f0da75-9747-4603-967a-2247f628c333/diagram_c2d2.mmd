@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph sg_suma_hasta["def suma_hasta(n)"]
+    n1(["Inicio"])
+    n2{"n < 0?"}
+    n1 --> n2
+    n3(["return 0"])
+    n2 -->|"Sí"| n3
+    n4["suma = 0"]
+    n2 -->|"No"| n4
+    n5{"for i in range(1, n + 1)"}
+    n4 --> n5
+    n6["suma += i"]
+    n5 -->|"cada iteración"| n6
+    n6 -->|"siguiente"| n5
+    n7(["return suma"])
+    n5 -->|"fin del bucle"| n7
+    n8(["Fin"])
+    n3 --> n8
+    n7 --> n8
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n9(["Inicio"])
+    n10["print('Suma hasta 5:', suma_hasta(5))"]
+    n9 --> n10
+    n11["print('Suma hasta 1:', suma_hasta(1))"]
+    n10 --> n11
+    n12["print('Suma hasta 0:', suma_hasta(0))"]
+    n11 --> n12
+    n13["print('Suma hasta -3:', suma_hasta(-3))"]
+    n12 --> n13
+    n14["print('Suma hasta 10:', suma_hasta(10))"]
+    n13 --> n14
+    n15(["Fin"])
+    n14 --> n15
+    end

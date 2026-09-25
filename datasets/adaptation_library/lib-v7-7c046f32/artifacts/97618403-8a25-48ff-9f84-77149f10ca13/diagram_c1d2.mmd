@@ -1,0 +1,8 @@
+flowchart TD
+    subgraph sg_crear_saludo["def crear_saludo(nombre, saludo='Hola')"]
+    n1(["Inicio"])
+    n2(["return f'{saludo}, {nombre}'"])
+    n1 --> n2
+    n3(["Fin"])
+    n2 --> n3
+    end

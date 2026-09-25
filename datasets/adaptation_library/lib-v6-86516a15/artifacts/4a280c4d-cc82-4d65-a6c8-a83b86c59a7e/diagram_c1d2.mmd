@@ -1,0 +1,12 @@
+flowchart TD
+    subgraph sg_dividir_con_resto["def dividir_con_resto(a, b)"]
+    n1(["Inicio"])
+    n2["cociente = a // b"]
+    n1 --> n2
+    n3["resto = a % b"]
+    n2 --> n3
+    n4(["return (cociente, resto)"])
+    n3 --> n4
+    n5(["Fin"])
+    n4 --> n5
+    end

@@ -1,0 +1,19 @@
+flowchart TD
+    n1["def ejecutar_instrucciones(instrucciones)"]
+    n2["total = 0"]
+    n1 --> n2
+    n3{"for instruccion in instrucciones"}
+    n2 --> n3
+    n4{"instruccion == 'sumar1'?"}
+    n3 --> n4
+    n5["total += 1"]
+    n4 --> n5
+    n6{"instruccion == 'duplicar'?"}
+    n4 --> n6
+    n7["total *= 2"]
+    n6 --> n7
+    n5 --> n3
+    n7 --> n3
+    n6 --> n3
+    n8(["return total"])
+    n3 --> n8

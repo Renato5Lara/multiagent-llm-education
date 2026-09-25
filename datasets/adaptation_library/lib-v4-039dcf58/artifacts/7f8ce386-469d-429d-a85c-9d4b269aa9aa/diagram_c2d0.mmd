@@ -1,0 +1,16 @@
+flowchart TD
+    n1["def buscar_estudiante(lista, nombre)"]
+    n2{"not lista?"}
+    n1 --> n2
+    n3(["return -1"])
+    n2 --> n3
+    n4{"for i in range(len(lista))"}
+    n2 --> n4
+    n5{"lista[i] == nombre?"}
+    n4 --> n5
+    n6(["return i"])
+    n5 --> n6
+    n5 --> n4
+    n7(["return -1"])
+    n4 --> n7
+    n8["def ejemplo_uso()"]

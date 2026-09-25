@@ -1,0 +1,39 @@
+flowchart TD
+    subgraph sg_convertir_a_numero["def convertir_a_numero(texto)"]
+    n1(["Inicio"])
+    n2{"texto == ''?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 -->|"Sí"| n3
+    n4["numero = float(texto)"]
+    n2 -->|"No"| n4
+    n5{"numero.is_integer()?"}
+    n4 --> n5
+    n6(["return int(numero)"])
+    n5 -->|"Sí"| n6
+    n7(["return numero"])
+    n5 -->|"No"| n7
+    n8(["Fin"])
+    n3 --> n8
+    n6 --> n8
+    n7 --> n8
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n9(["Inicio"])
+    n10["print(convertir_a_numero('10'))"]
+    n9 --> n10
+    n11["print(convertir_a_numero('3.5'))"]
+    n10 --> n11
+    n12["print(convertir_a_numero(''))"]
+    n11 --> n12
+    n13["print(convertir_a_numero('abc'))"]
+    n12 --> n13
+    n14["print(convertir_a_numero('0'))"]
+    n13 --> n14
+    n15["print(convertir_a_numero('1000000'))"]
+    n14 --> n15
+    n16["print(convertir_a_numero('1e3'))"]
+    n15 --> n16
+    n17(["Fin"])
+    n16 --> n17
+    end

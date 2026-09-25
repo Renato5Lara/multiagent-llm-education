@@ -1,0 +1,18 @@
+flowchart TD
+    n1["def ejecutar_instrucciones(instrucciones)"]
+    n2{"not instrucciones?"}
+    n1 --> n2
+    n3(["return valor"])
+    n2 --> n3
+    n4{"for instruccion in instrucciones"}
+    n2 --> n4
+    n5{"instruccion == 'sumar1'?"}
+    n4 --> n5
+    n6{"instruccion == 'duplicar'?"}
+    n5 --> n6
+    n5 --> n4
+    n6 --> n4
+    n6 --> n4
+    n7(["return valor"])
+    n4 --> n7
+    n8["def ejemplo_uso()"]

@@ -1,0 +1,28 @@
+flowchart TD
+    n1["def contar_hasta(n)"]
+    n2{"n <= 0?"}
+    n1 --> n2
+    n3(["return []"])
+    n2 --> n3
+    n4["numeros = []"]
+    n2 --> n4
+    n5["contador = 1"]
+    n4 --> n5
+    n6{"while contador <= n"}
+    n5 --> n6
+    n7["numeros.append(contador)"]
+    n6 --> n7
+    n8["contador += 1"]
+    n7 --> n8
+    n8 --> n6
+    n9(["return numeros"])
+    n6 --> n9
+    n10["def ejemplo_uso()"]
+    n11["print(contar_hasta(3))"]
+    n10 --> n11
+    n12["print(contar_hasta(0))"]
+    n11 --> n12
+    n13["print(contar_hasta(-5))"]
+    n12 --> n13
+    n14["print(contar_hasta(5))"]
+    n13 --> n14

@@ -1,0 +1,17 @@
+flowchart TD
+    n1["def incrementar_local()"]
+    n2["contador_local = 0"]
+    n1 --> n2
+    n3["contador_local += 1"]
+    n2 --> n3
+    n4["contador_local += 1"]
+    n3 --> n4
+    n5(["return contador_local"])
+    n4 --> n5
+    n6["def incrementar_global()"]
+    n7["global contador_global"]
+    n6 --> n7
+    n8["contador_global += 1"]
+    n7 --> n8
+    n9(["return contador_global"])
+    n8 --> n9

@@ -1,0 +1,18 @@
+flowchart TD
+    subgraph sg_clasificar_estudiante["def clasificar_estudiante(nota, asistencia)"]
+    n1(["Inicio"])
+    n2{"nota >= 10?"}
+    n1 --> n2
+    n3{"asistencia >= 75?"}
+    n2 -->|"Sí"| n3
+    n4(["return 'aprobado'"])
+    n3 -->|"Sí"| n4
+    n5(["return 'aprobado sin certificado'"])
+    n3 -->|"No"| n5
+    n6(["return 'desaprobado'"])
+    n2 -->|"No"| n6
+    n7(["Fin"])
+    n4 --> n7
+    n5 --> n7
+    n6 --> n7
+    end

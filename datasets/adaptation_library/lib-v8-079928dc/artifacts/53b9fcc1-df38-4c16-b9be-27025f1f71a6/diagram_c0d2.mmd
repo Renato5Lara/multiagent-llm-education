@@ -1,0 +1,21 @@
+flowchart TD
+    subgraph sg_incrementar_local["def incrementar_local()"]
+    n1(["Inicio"])
+    n2["contador_local = 1"]
+    n1 --> n2
+    n3(["return contador_local + 1"])
+    n2 --> n3
+    n4(["Fin"])
+    n3 --> n4
+    end
+    subgraph sg_incrementar_global["def incrementar_global()"]
+    n5(["Inicio"])
+    n6["global contador_global"]
+    n5 --> n6
+    n7["contador_global += 1"]
+    n6 --> n7
+    n8(["return contador_global"])
+    n7 --> n8
+    n9(["Fin"])
+    n8 --> n9
+    end

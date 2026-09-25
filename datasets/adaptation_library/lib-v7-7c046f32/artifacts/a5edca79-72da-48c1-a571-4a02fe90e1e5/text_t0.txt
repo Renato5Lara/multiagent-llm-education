@@ -1,0 +1,1 @@
+La salida básica en programación se refiere a la forma en que se muestran los resultados en la pantalla. La función print es fundamental para este propósito, ya que permite mostrar información al usuario. En el ejemplo de la función formatear_reporte, se utiliza print para presentar el nombre del estudiante y su nota de manera clara y estructurada.

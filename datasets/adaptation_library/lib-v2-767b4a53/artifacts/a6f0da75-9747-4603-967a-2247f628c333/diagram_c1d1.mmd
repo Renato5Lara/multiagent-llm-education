@@ -1,0 +1,11 @@
+flowchart TD
+    n1["def suma_hasta(n)"]
+    n2["total = 0"]
+    n1 --> n2
+    n3{"for i in range(1, n + 1)"}
+    n2 --> n3
+    n4["total += i"]
+    n3 --> n4
+    n4 --> n3
+    n5(["return total"])
+    n3 --> n5

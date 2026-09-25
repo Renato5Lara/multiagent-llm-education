@@ -1,0 +1,18 @@
+flowchart TD
+    n1["def calcular_iva(precio)"]
+    n2{"precio < 0?"}
+    n1 --> n2
+    n3["raise ValueError('El precio no puede ser negativo.')"]
+    n2 --> n3
+    n4["tasa_iva = 0.18"]
+    n3 --> n4
+    n2 --> n4
+    n5["iva = precio * tasa_iva"]
+    n4 --> n5
+    n6(["return iva"])
+    n5 --> n6
+    n7["def ejemplo_uso()"]
+    n8["precio = 100"]
+    n7 --> n8
+    n9["print(f'El IVA de {precio} es: {calcular_iva(precio)}')"]
+    n8 --> n9

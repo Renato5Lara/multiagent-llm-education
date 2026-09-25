@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph sg_calcular_promedio_ponderado["def calcular_promedio_ponderado(n1, n2, n3)"]
+    n1(["Inicio"])
+    n2{"n1 is None or n2 is None or n3 is None?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 -->|"Sí"| n3
+    n4{"n1 < 0 or n2 < 0 or n3 < 0?"}
+    n2 -->|"No"| n4
+    n5(["return None"])
+    n4 -->|"Sí"| n5
+    n6["total_notas = n1 + n2 + n3"]
+    n4 -->|"No"| n6
+    n7["promedio = total_notas / 3"]
+    n6 --> n7
+    n8(["return promedio"])
+    n7 --> n8
+    n9(["Fin"])
+    n3 --> n9
+    n5 --> n9
+    n8 --> n9
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n10(["Inicio"])
+    n11["print'Promedio ponderado de 10, 10, 10:', calcular_promedio_po…"]
+    n10 --> n11
+    n12["print'Promedio ponderado de 0, 10, 20:', calcular_promedio_pon…"]
+    n11 --> n12
+    n13["print'Promedio ponderado de -5, 10, 15:', calcular_promedio_po…"]
+    n12 --> n13
+    n14["print'Promedio ponderado de None, 10, 15:', calcular_promedio_…"]
+    n13 --> n14
+    n15(["Fin"])
+    n14 --> n15
+    end

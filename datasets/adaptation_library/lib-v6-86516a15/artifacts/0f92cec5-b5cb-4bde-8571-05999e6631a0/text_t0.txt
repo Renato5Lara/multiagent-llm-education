@@ -1,0 +1,1 @@
+La indexación es el proceso de acceder a elementos específicos dentro de una estructura de datos, como los arreglos, utilizando un índice. Por ejemplo, la función obtener_primero_y_ultimo permite obtener el primer y el último elemento de una lista, facilitando así la manipulación de los datos almacenados en arreglos.

@@ -1,0 +1,26 @@
+flowchart TD
+    n1["def sumar_lista(numeros)"]
+    n2["suma = 0"]
+    n1 --> n2
+    n3{"not numeros?"}
+    n2 --> n3
+    n4(["return suma"])
+    n3 --> n4
+    n5{"for numero in numeros"}
+    n3 --> n5
+    n6["suma += numero"]
+    n5 --> n6
+    n6 --> n5
+    n7(["return suma"])
+    n5 --> n7
+    n8["def ejemplo_uso()"]
+    n9["print(sumar_lista([1, 2, 3]))"]
+    n8 --> n9
+    n10["print(sumar_lista([]))"]
+    n9 --> n10
+    n11["print(sumar_lista([0, 0, 0]))"]
+    n10 --> n11
+    n12["print(sumar_lista([-1, 1, 2]))"]
+    n11 --> n12
+    n13["print(sumar_lista([1000, 2000, 3000]))"]
+    n12 --> n13

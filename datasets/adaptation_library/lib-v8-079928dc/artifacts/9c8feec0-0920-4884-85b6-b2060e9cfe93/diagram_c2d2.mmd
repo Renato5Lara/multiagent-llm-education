@@ -1,0 +1,26 @@
+flowchart TD
+    subgraph sg_calcular_iva["def calcular_iva(precio)"]
+    n1(["Inicio"])
+    n2{"precio < 0?"}
+    n1 --> n2
+    n3["raise ValueError('El precio no puede ser negativo.')"]
+    n2 -->|"Sí"| n3
+    n4["tasa_iva = 0.18"]
+    n3 --> n4
+    n2 -->|"No"| n4
+    n5["iva = precio * tasa_iva"]
+    n4 --> n5
+    n6(["return iva"])
+    n5 --> n6
+    n7(["Fin"])
+    n6 --> n7
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n8(["Inicio"])
+    n9["precio = 100"]
+    n8 --> n9
+    n10["print(f'El IVA de {precio} es: {calcular_iva(precio)}')"]
+    n9 --> n10
+    n11(["Fin"])
+    n10 --> n11
+    end

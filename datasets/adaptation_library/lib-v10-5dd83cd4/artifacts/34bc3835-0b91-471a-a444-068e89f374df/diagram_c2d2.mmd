@@ -1,0 +1,46 @@
+flowchart TD
+    subgraph sg_describir_tipo["def describir_tipo(valor)"]
+    n1(["Inicio"])
+    n2{"isinstance(valor, int)?"}
+    n1 --> n2
+    n3{"valor is True or valor is False?"}
+    n2 -->|"Sí"| n3
+    n4(["return 'bool'"])
+    n3 -->|"Sí"| n4
+    n5(["return 'int'"])
+    n3 -->|"No"| n5
+    n6{"isinstance(valor, float)?"}
+    n2 -->|"No"| n6
+    n7(["return 'float'"])
+    n6 -->|"Sí"| n7
+    n8{"isinstance(valor, str)?"}
+    n6 -->|"No"| n8
+    n9(["return 'str'"])
+    n8 -->|"Sí"| n9
+    n10{"isinstance(valor, bool)?"}
+    n8 -->|"No"| n10
+    n11(["return 'bool'"])
+    n10 -->|"Sí"| n11
+    n12(["return None"])
+    n10 -->|"No"| n12
+    n13(["Fin"])
+    n4 --> n13
+    n5 --> n13
+    n7 --> n13
+    n9 --> n13
+    n11 --> n13
+    n12 --> n13
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n14(["Inicio"])
+    n15["print(describir_tipo(5))"]
+    n14 --> n15
+    n16["print(describir_tipo(5.0))"]
+    n15 --> n16
+    n17["print(describir_tipo('cinco'))"]
+    n16 --> n17
+    n18["print(describir_tipo(True))"]
+    n17 --> n18
+    n19(["Fin"])
+    n18 --> n19
+    end

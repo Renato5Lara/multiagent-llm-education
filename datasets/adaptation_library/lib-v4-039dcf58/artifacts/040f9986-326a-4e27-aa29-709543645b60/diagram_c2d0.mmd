@@ -1,0 +1,12 @@
+flowchart TD
+    n1["def sumar_lista(numeros)"]
+    n2{"not numeros?"}
+    n1 --> n2
+    n3(["return suma"])
+    n2 --> n3
+    n4{"for numero in numeros"}
+    n2 --> n4
+    n4 --> n4
+    n5(["return suma"])
+    n4 --> n5
+    n6["def ejemplo_uso()"]

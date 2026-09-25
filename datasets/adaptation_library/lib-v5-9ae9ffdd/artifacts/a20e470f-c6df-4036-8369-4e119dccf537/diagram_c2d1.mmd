@@ -1,0 +1,29 @@
+flowchart TD
+    n1["def convertir_a_numero(texto)"]
+    n2{"texto == ''?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 --> n3
+    n4["numero = float(texto)"]
+    n2 --> n4
+    n5{"numero.is_integer()?"}
+    n4 --> n5
+    n6(["return int(numero)"])
+    n5 --> n6
+    n7(["return numero"])
+    n5 --> n7
+    n8["def ejemplo_uso()"]
+    n9["print(convertir_a_numero('10'))"]
+    n8 --> n9
+    n10["print(convertir_a_numero('3.5'))"]
+    n9 --> n10
+    n11["print(convertir_a_numero(''))"]
+    n10 --> n11
+    n12["print(convertir_a_numero('abc'))"]
+    n11 --> n12
+    n13["print(convertir_a_numero('0'))"]
+    n12 --> n13
+    n14["print(convertir_a_numero('1000000'))"]
+    n13 --> n14
+    n15["print(convertir_a_numero('1e3'))"]
+    n14 --> n15

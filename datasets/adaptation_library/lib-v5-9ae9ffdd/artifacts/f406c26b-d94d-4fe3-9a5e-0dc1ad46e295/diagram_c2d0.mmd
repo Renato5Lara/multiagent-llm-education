@@ -1,0 +1,11 @@
+flowchart TD
+    n1["def actualizar_saldo(saldo_inicial, deposito)"]
+    n2{"saldo_inicial < 0?"}
+    n1 --> n2
+    n3{"deposito < 0?"}
+    n2 --> n3
+    n2 --> n3
+    n4(["return nuevo_saldo"])
+    n3 --> n4
+    n3 --> n4
+    n5["def ejemplo_uso()"]

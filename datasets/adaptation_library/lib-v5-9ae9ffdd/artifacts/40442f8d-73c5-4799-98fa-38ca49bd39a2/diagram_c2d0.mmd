@@ -1,0 +1,31 @@
+flowchart TD
+    n1["def primer_multiplo_de_tres(numeros)"]
+    n2{"not numeros?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 --> n3
+    n4{"for numero in numeros"}
+    n2 --> n4
+    n5{"numero % 3 == 0?"}
+    n4 --> n5
+    n6(["return numero"])
+    n5 --> n6
+    n5 --> n4
+    n7(["return numeros[-1]"])
+    n4 --> n7
+    n8["def detener_en_negativo(numeros)"]
+    n9{"not numeros?"}
+    n8 --> n9
+    n10(["return []"])
+    n9 --> n10
+    n11{"for numero in numeros"}
+    n9 --> n11
+    n12{"numero < 0?"}
+    n11 --> n12
+    n13["break"]
+    n12 --> n13
+    n12 --> n11
+    n14(["return resultado"])
+    n11 --> n14
+    n13 --> n14
+    n15["def ejemplo_uso()"]

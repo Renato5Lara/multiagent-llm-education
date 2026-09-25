@@ -1,0 +1,8 @@
+flowchart TD
+    subgraph sg_convertir_a_numero["def convertir_a_numero(texto)"]
+    n1(["Inicio"])
+    n2(["return float(texto) if '.' in texto else int(texto)"])
+    n1 --> n2
+    n3(["Fin"])
+    n2 --> n3
+    end

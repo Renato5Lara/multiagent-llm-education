@@ -1,0 +1,12 @@
+flowchart TD
+    n1["def clasificar_nota(nota)"]
+    n2{"nota >= 16?"}
+    n1 --> n2
+    n3(["return 'excelente'"])
+    n2 --> n3
+    n4{"nota >= 10?"}
+    n2 --> n4
+    n5(["return 'regular'"])
+    n4 --> n5
+    n6(["return 'insuficiente'"])
+    n4 --> n6

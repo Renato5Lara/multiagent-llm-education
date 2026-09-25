@@ -1,0 +1,1 @@
+El slicing es una técnica utilizada en programación para acceder a una porción específica de un arreglo. Por ejemplo, la función obtener_primeros_tres permite obtener los primeros tres elementos de una lista utilizando esta técnica. Así, el slicing facilita la manipulación y extracción de datos de arreglos de manera eficiente.

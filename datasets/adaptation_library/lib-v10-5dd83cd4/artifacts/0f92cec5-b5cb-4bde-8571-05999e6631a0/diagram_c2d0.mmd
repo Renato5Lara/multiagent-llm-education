@@ -1,0 +1,9 @@
+flowchart TD
+    n1["def obtener_primero_y_ultimo(lista)"]
+    n2{"not lista?"}
+    n1 --> n2
+    n3(["return (None, None)"])
+    n2 --> n3
+    n4(["return (primero, ultimo)"])
+    n2 --> n4
+    n5["def ejemplo_uso()"]

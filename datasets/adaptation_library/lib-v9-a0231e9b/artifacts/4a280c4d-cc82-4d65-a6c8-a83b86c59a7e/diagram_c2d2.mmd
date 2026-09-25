@@ -1,0 +1,26 @@
+flowchart TD
+    subgraph sg_dividir_con_resto["def dividir_con_resto(a, b)"]
+    n1(["Inicio"])
+    n2{"b == 0?"}
+    n1 --> n2
+    n3["raise ValueError('El denominador no puede ser cero.')"]
+    n2 -->|"Sí"| n3
+    n4["cociente = a // b"]
+    n3 --> n4
+    n2 -->|"No"| n4
+    n5["resto = a % b"]
+    n4 --> n5
+    n6(["return (cociente, resto)"])
+    n5 --> n6
+    n7(["Fin"])
+    n6 --> n7
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n8(["Inicio"])
+    n9["resultado = dividir_con_resto(10, 3)"]
+    n8 --> n9
+    n10["print(f'El cociente y resto de 10 dividido por 3 son: {resultad…})"]
+    n9 --> n10
+    n11(["Fin"])
+    n10 --> n11
+    end

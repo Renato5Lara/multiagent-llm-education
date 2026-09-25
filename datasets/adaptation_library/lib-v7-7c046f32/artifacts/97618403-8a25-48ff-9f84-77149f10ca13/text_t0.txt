@@ -1,0 +1,1 @@
+Los parámetros son variables que se definen en una función y que permiten recibir información externa. Los argumentos son los valores que se pasan a esos parámetros al momento de llamar a la función. Por ejemplo, en la función crear_saludo, "nombre" y "saludo" son parámetros, y al invocarla, se le pueden pasar argumentos específicos para personalizar el saludo.

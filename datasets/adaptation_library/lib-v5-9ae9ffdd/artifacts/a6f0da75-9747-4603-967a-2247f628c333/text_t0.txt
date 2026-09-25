@@ -1,0 +1,1 @@
+Un algoritmo es un conjunto de instrucciones o pasos que se siguen para resolver un problema específico. En la introducción a la programación, se utilizan funciones como suma_hasta, que permite calcular la suma de todos los números desde uno hasta un número n dado. Este tipo de funciones son fundamentales para estructurar y simplificar el código en la programación.

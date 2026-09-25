@@ -1,0 +1,1 @@
+Un bucle for es una estructura de control que permite iterar sobre una secuencia, como una lista, ejecutando un bloque de código varias veces. En el ejemplo de la función sumar_lista, el bucle for recorre cada elemento de la lista de números y los suma al total. Esto demuestra cómo los bucles son útiles para realizar operaciones repetitivas de manera eficiente.

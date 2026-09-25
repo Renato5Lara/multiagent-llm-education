@@ -1,0 +1,17 @@
+flowchart TD
+    n1["def clasificar_nota(nota)"]
+    n2{"nota is None?"}
+    n1 --> n2
+    n3(["return 'Entrada no válida'"])
+    n2 --> n3
+    n4{"nota >= 17?"}
+    n2 --> n4
+    n5(["return 'excelente'"])
+    n4 --> n5
+    n6(["return 'regular'"])
+    n4 --> n6
+    n7["def ejemplo_uso()"]
+    n8["print(clasificar_nota(18))"]
+    n7 --> n8
+    n9["print(clasificar_nota(12))"]
+    n8 --> n9

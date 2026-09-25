@@ -1,0 +1,16 @@
+flowchart TD
+    subgraph sg_calcular_promedio_ponderado["def calcular_promedio_ponderado(n1, n2, n3)"]
+    n1(["Inicio"])
+    n2["peso1 = 0.3"]
+    n1 --> n2
+    n3["peso2 = 0.3"]
+    n2 --> n3
+    n4["peso3 = 0.4"]
+    n3 --> n4
+    n5["promedio = n1 * peso1 + n2 * peso2 + n3 * peso3 / peso1 + pe…"]
+    n4 --> n5
+    n6(["return promedio"])
+    n5 --> n6
+    n7(["Fin"])
+    n6 --> n7
+    end

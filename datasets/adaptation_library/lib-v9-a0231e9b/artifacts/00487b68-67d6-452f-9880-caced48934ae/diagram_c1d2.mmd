@@ -1,0 +1,15 @@
+flowchart TD
+    subgraph sg_es_par["def es_par(numero)"]
+    n1(["Inicio"])
+    n2(["return numero % 2 == 0"])
+    n1 --> n2
+    n3(["Fin"])
+    n2 --> n3
+    end
+    subgraph sg_repartir_exacto["def repartir_exacto(total, personas)"]
+    n4(["Inicio"])
+    n5(["return total // personas"])
+    n4 --> n5
+    n6(["Fin"])
+    n5 --> n6
+    end

@@ -1,0 +1,8 @@
+flowchart TD
+    n1["def buscar_estudiante(lista, nombre)"]
+    n2{"nombre in lista?"}
+    n1 --> n2
+    n3(["return lista.index(nombre)"])
+    n2 --> n3
+    n4(["return -1"])
+    n2 --> n4

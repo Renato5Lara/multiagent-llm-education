@@ -1,0 +1,9 @@
+flowchart TD
+    n1["def saludar(nombre)"]
+    n2{"not nombre?"}
+    n1 --> n2
+    n3(["return 'Hola, invitado'"])
+    n2 --> n3
+    n4(["return f'Hola, {nombre}'"])
+    n2 --> n4
+    n5["def ejemplo_uso()"]

@@ -1,0 +1,28 @@
+flowchart TD
+    n1["def formatear_reporte(nombre, nota)"]
+    n2{"not nombre?"}
+    n1 --> n2
+    n3["nombre = 'Nombre no proporcionado'"]
+    n2 --> n3
+    n4{"nota < 0?"}
+    n3 --> n4
+    n2 --> n4
+    n5["nota = 0"]
+    n4 --> n5
+    n6{"nota > 20?"}
+    n4 --> n6
+    n7["nota = 20"]
+    n6 --> n7
+    n8(["return f'Estudiante: {nombre} - Nota: {nota}'"])
+    n5 --> n8
+    n7 --> n8
+    n6 --> n8
+    n9["def ejemplo_uso()"]
+    n10["print(formatear_reporte('Ana', 18))"]
+    n9 --> n10
+    n11["print(formatear_reporte('', 15))"]
+    n10 --> n11
+    n12["print(formatear_reporte('Luis', -5))"]
+    n11 --> n12
+    n13["print(formatear_reporte('Marta', 25))"]
+    n12 --> n13

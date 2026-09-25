@@ -1,0 +1,50 @@
+flowchart TD
+    subgraph sg_clasificar_nota["def clasificar_nota(nota)"]
+    n1(["Inicio"])
+    n2{"nota is None?"}
+    n1 --> n2
+    n3(["return 'entrada vacía'"])
+    n2 -->|"Sí"| n3
+    n4{"nota < 0?"}
+    n2 -->|"No"| n4
+    n5(["return 'nota no válida'"])
+    n4 -->|"Sí"| n5
+    n6{"nota > 20?"}
+    n4 -->|"No"| n6
+    n7(["return 'nota no válida'"])
+    n6 -->|"Sí"| n7
+    n8{"nota >= 17?"}
+    n6 -->|"No"| n8
+    n9(["return 'excelente'"])
+    n8 -->|"Sí"| n9
+    n10{"nota >= 10?"}
+    n8 -->|"No"| n10
+    n11(["return 'regular'"])
+    n10 -->|"Sí"| n11
+    n12(["return 'deficiente'"])
+    n10 -->|"No"| n12
+    n13(["Fin"])
+    n3 --> n13
+    n5 --> n13
+    n7 --> n13
+    n9 --> n13
+    n11 --> n13
+    n12 --> n13
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n14(["Inicio"])
+    n15["print(clasificar_nota(18))"]
+    n14 --> n15
+    n16["print(clasificar_nota(12))"]
+    n15 --> n16
+    n17["print(clasificar_nota(5))"]
+    n16 --> n17
+    n18["print(clasificar_nota(25))"]
+    n17 --> n18
+    n19["print(clasificar_nota(-1))"]
+    n18 --> n19
+    n20["print(clasificar_nota(None))"]
+    n19 --> n20
+    n21(["Fin"])
+    n20 --> n21
+    end

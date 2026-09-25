@@ -1,0 +1,50 @@
+flowchart TD
+    subgraph sg_convertir_a_numero["def convertir_a_numero(texto)"]
+    n1(["Inicio"])
+    n2{"texto == ''?"}
+    n1 --> n2
+    n3(["return None"])
+    n2 -->|"Sí"| n3
+    n4["try"]
+    n2 -->|"No"| n4
+    n5["numero_entero = int(texto)"]
+    n4 --> n5
+    n6(["return numero_entero"])
+    n5 --> n6
+    n7{"except ValueError"}
+    n4 -->|"excepción"| n7
+    n8["try"]
+    n7 -->|"Sí"| n8
+    n9["numero_flotante = float(texto)"]
+    n8 --> n9
+    n10(["return numero_flotante"])
+    n9 --> n10
+    n11{"except ValueError"}
+    n8 -->|"excepción"| n11
+    n12(["return None"])
+    n11 -->|"Sí"| n12
+    n13(["Fin"])
+    n3 --> n13
+    n6 --> n13
+    n10 --> n13
+    n12 --> n13
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n14(["Inicio"])
+    n15["print(convertir_a_numero('10'))"]
+    n14 --> n15
+    n16["print(convertir_a_numero('3.5'))"]
+    n15 --> n16
+    n17["print(convertir_a_numero(''))"]
+    n16 --> n17
+    n18["print(convertir_a_numero('abc'))"]
+    n17 --> n18
+    n19["print(convertir_a_numero('0'))"]
+    n18 --> n19
+    n20["print(convertir_a_numero('1000000000'))"]
+    n19 --> n20
+    n21["print(convertir_a_numero('1.5e10'))"]
+    n20 --> n21
+    n22(["Fin"])
+    n21 --> n22
+    end

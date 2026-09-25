@@ -1,0 +1,16 @@
+flowchart TD
+    subgraph sg_actualizar_lista["def actualizar_lista(lista)"]
+    n1(["Inicio"])
+    n2["lista.append(40)"]
+    n1 --> n2
+    n3["lista.insert(0, 5)"]
+    n2 --> n3
+    n4["lista.remove(20)"]
+    n3 --> n4
+    n5["lista.pop()"]
+    n4 --> n5
+    n6(["return lista"])
+    n5 --> n6
+    n7(["Fin"])
+    n6 --> n7
+    end

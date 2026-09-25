@@ -1,0 +1,25 @@
+flowchart TD
+    n1["def buscar_estudiante(lista, nombre)"]
+    n2{"not lista?"}
+    n1 --> n2
+    n3(["return -1"])
+    n2 --> n3
+    n4{"nombre in lista?"}
+    n2 --> n4
+    n5(["return lista.index(nombre)"])
+    n4 --> n5
+    n6(["return -1"])
+    n4 --> n6
+    n7["def ejemplo_uso()"]
+    n8["estudiantes = ['Ana', 'Luis', 'Pedro']"]
+    n7 --> n8
+    n9["print(buscar_estudiante(estudiantes, 'Luis'))"]
+    n8 --> n9
+    n10["print(buscar_estudiante(estudiantes, 'Marco'))"]
+    n9 --> n10
+    n11["print(buscar_estudiante([], 'Ana'))"]
+    n10 --> n11
+    n12["print(buscar_estudiante(['Juan'], 'Juan'))"]
+    n11 --> n12
+    n13["print(buscar_estudiante(['Juan'], 'Pedro'))"]
+    n12 --> n13

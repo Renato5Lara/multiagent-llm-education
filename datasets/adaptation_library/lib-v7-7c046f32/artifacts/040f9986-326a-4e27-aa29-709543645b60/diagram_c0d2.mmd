@@ -1,0 +1,15 @@
+flowchart TD
+    subgraph sg_sumar_lista["def sumar_lista(numeros)"]
+    n1(["Inicio"])
+    n2["suma = 0"]
+    n1 --> n2
+    n3{"for numero in numeros"}
+    n2 --> n3
+    n4["suma += numero"]
+    n3 -->|"cada iteración"| n4
+    n4 -->|"siguiente"| n3
+    n5(["return suma"])
+    n3 -->|"fin del bucle"| n5
+    n6(["Fin"])
+    n5 --> n6
+    end

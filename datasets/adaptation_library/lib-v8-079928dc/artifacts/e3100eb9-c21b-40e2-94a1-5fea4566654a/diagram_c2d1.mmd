@@ -1,0 +1,13 @@
+flowchart TD
+    n1["def puede_matricularse(tiene_requisitos, sin_deuda)"]
+    n2(["return tiene_requisitos and sin_deuda"])
+    n1 --> n2
+    n3["def ejemplo_uso()"]
+    n4["print(puede_matricularse(True, True))"]
+    n3 --> n4
+    n5["print(puede_matricularse(True, False))"]
+    n4 --> n5
+    n6["print(puede_matricularse(False, True))"]
+    n5 --> n6
+    n7["print(puede_matricularse(False, False))"]
+    n6 --> n7

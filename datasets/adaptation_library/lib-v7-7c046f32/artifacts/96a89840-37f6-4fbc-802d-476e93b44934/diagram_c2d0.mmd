@@ -1,0 +1,9 @@
+flowchart TD
+    n1["def obtener_primeros_tres(lista)"]
+    n2{"not lista?"}
+    n1 --> n2
+    n3(["return []"])
+    n2 --> n3
+    n4(["return lista[:3]"])
+    n2 --> n4
+    n5["def ejemplo_uso()"]

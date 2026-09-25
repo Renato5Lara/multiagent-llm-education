@@ -1,0 +1,12 @@
+flowchart TD
+    n1["def clasificar_estudiante(nota, asistencia)"]
+    n2{"nota >= 10?"}
+    n1 --> n2
+    n3{"asistencia >= 75?"}
+    n2 --> n3
+    n4(["return 'aprobado'"])
+    n3 --> n4
+    n5(["return 'aprobado sin certificado'"])
+    n3 --> n5
+    n6(["return 'desaprobado'"])
+    n2 --> n6

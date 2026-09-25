@@ -1,0 +1,1 @@
+Los condicionales básicos son estructuras que permiten tomar decisiones en un programa, evaluando condiciones específicas para ejecutar diferentes acciones. En el código de referencia, la función clasificar_nota utiliza un condicional para determinar si una nota es "excelente" o "regular" según su valor. Esto permite clasificar la nota de manera sencilla y efectiva.

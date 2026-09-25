@@ -1,0 +1,32 @@
+flowchart TD
+    n1["def ejecutar_instrucciones(instrucciones)"]
+    n2["valor = 0"]
+    n1 --> n2
+    n3{"not instrucciones?"}
+    n2 --> n3
+    n4(["return valor"])
+    n3 --> n4
+    n5{"for instruccion in instrucciones"}
+    n3 --> n5
+    n6{"instruccion == 'sumar1'?"}
+    n5 --> n6
+    n7["valor += 1"]
+    n6 --> n7
+    n8{"instruccion == 'duplicar'?"}
+    n6 --> n8
+    n9["valor *= 2"]
+    n8 --> n9
+    n10["raise ValueError(f'Instrucción desconocida: {instruccion}')"]
+    n8 --> n10
+    n7 --> n5
+    n9 --> n5
+    n10 --> n5
+    n11(["return valor"])
+    n5 --> n11
+    n12["def ejemplo_uso()"]
+    n13["instrucciones = ['sumar1', 'sumar1', 'duplicar']"]
+    n12 --> n13
+    n14["resultado = ejecutar_instrucciones(instrucciones)"]
+    n13 --> n14
+    n15["printf'Resultado de las instrucciones instrucciones: result…"]
+    n14 --> n15

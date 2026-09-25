@@ -1,0 +1,45 @@
+flowchart TD
+    subgraph sg_es_par["def es_par(numero)"]
+    n1(["Inicio"])
+    n2{"not isinstance(numero, int)?"}
+    n1 --> n2
+    n3["raise ValueError('El argumento debe ser un número entero.')"]
+    n2 -->|"Sí"| n3
+    n4(["return numero % 2 == 0"])
+    n3 --> n4
+    n2 -->|"No"| n4
+    n5(["Fin"])
+    n4 --> n5
+    end
+    subgraph sg_repartir_exacto["def repartir_exacto(total, personas)"]
+    n6(["Inicio"])
+    n7{"not isinstance(total, int) or not isinstance(personas, int)?"}
+    n6 --> n7
+    n8["raise ValueError('Ambos argumentos deben ser números enteros.')"]
+    n7 -->|"Sí"| n8
+    n9{"personas <= 0?"}
+    n8 --> n9
+    n7 -->|"No"| n9
+    n10["raise ValueError'El número de personas debe ser mayor que cero…"]
+    n9 -->|"Sí"| n10
+    n11(["return total // personas"])
+    n10 --> n11
+    n9 -->|"No"| n11
+    n12(["Fin"])
+    n11 --> n12
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n13(["Inicio"])
+    n14["print('Ejemplo de uso de es_par:')"]
+    n13 --> n14
+    n15["print('4 es par:', es_par(4))"]
+    n14 --> n15
+    n16["print('7 es par:', es_par(7))"]
+    n15 --> n16
+    n17["print('\nEjemplo de uso de repartir_exacto:')"]
+    n16 --> n17
+    n18["print('Repartir 10 entre 3 personas:', repartir_exacto(10, 3))"]
+    n17 --> n18
+    n19(["Fin"])
+    n18 --> n19
+    end

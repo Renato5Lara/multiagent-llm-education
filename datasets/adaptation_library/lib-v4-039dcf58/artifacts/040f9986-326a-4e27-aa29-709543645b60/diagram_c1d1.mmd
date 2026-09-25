@@ -1,0 +1,11 @@
+flowchart TD
+    n1["def sumar_lista(numeros)"]
+    n2["suma = 0"]
+    n1 --> n2
+    n3{"for numero in numeros"}
+    n2 --> n3
+    n4["suma += numero"]
+    n3 --> n4
+    n4 --> n3
+    n5(["return suma"])
+    n3 --> n5

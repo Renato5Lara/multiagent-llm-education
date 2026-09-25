@@ -1,0 +1,1 @@
+Los valores de retorno son aquellos resultados que una función proporciona al finalizar su ejecución. En el caso de la función dividir_con_resto, esta devuelve dos valores: el cociente y el resto de la división de dos números. Así, las funciones permiten encapsular lógica y devolver resultados que pueden ser utilizados en otras partes del programa.

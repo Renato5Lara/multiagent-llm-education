@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph sg_primer_multiplo_de_tres["def primer_multiplo_de_tres(numeros)"]
+    n1(["Inicio"])
+    n2{"for numero in numeros"}
+    n1 --> n2
+    n3{"numero % 3 != 0?"}
+    n2 -->|"cada iteración"| n3
+    n4["continue"]
+    n3 -->|"Sí"| n4
+    n4 --> n2
+    n5(["return numero"])
+    n3 -->|"No"| n5
+    n6(["Fin"])
+    n2 -->|"fin del bucle"| n6
+    n5 --> n6
+    end
+    subgraph sg_detener_en_negativo["def detener_en_negativo(numeros)"]
+    n7(["Inicio"])
+    n8["resultado = []"]
+    n7 --> n8
+    n9{"for numero in numeros"}
+    n8 --> n9
+    n10{"numero < 0?"}
+    n9 -->|"cada iteración"| n10
+    n11["break"]
+    n10 -->|"Sí"| n11
+    n12["resultado.append(numero)"]
+    n10 -->|"No"| n12
+    n12 -->|"siguiente"| n9
+    n13(["return resultado"])
+    n9 -->|"fin del bucle"| n13
+    n11 --> n13
+    n14(["Fin"])
+    n13 --> n14
+    end

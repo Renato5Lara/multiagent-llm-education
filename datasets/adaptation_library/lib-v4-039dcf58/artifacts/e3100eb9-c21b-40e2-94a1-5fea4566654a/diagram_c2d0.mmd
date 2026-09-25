@@ -1,0 +1,12 @@
+flowchart TD
+    n1["def puede_matricularse(tiene_requisitos, sin_deuda)"]
+    n2{"not isinstancetiene_requisitos, bool or not isinstancesin_de…"}
+    n1 --> n2
+    n3{"tiene_requisitos and sin_deuda?"}
+    n2 --> n3
+    n2 --> n3
+    n4(["return True"])
+    n3 --> n4
+    n5(["return False"])
+    n3 --> n5
+    n6["def ejemplo_uso()"]

@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph sg_buscar_estudiante["def buscar_estudiante(lista, nombre)"]
+    n1(["Inicio"])
+    n2{"not lista?"}
+    n1 --> n2
+    n3(["return -1"])
+    n2 -->|"Sí"| n3
+    n4{"nombre in lista?"}
+    n2 -->|"No"| n4
+    n5(["return lista.index(nombre)"])
+    n4 -->|"Sí"| n5
+    n6(["return -1"])
+    n4 -->|"No"| n6
+    n7(["Fin"])
+    n3 --> n7
+    n5 --> n7
+    n6 --> n7
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n8(["Inicio"])
+    n9["estudiantes = ['Ana', 'Luis', 'Pedro']"]
+    n8 --> n9
+    n10["print(buscar_estudiante(estudiantes, 'Luis'))"]
+    n9 --> n10
+    n11["print(buscar_estudiante(estudiantes, 'Marco'))"]
+    n10 --> n11
+    n12["print(buscar_estudiante([], 'Ana'))"]
+    n11 --> n12
+    n13["print(buscar_estudiante(['Juan'], 'Juan'))"]
+    n12 --> n13
+    n14["print(buscar_estudiante(['Juan'], 'Pedro'))"]
+    n13 --> n14
+    n15(["Fin"])
+    n14 --> n15
+    end

@@ -1,0 +1,28 @@
+flowchart TD
+    subgraph sg_calcular_area_rectangulo["def calcular_area_rectangulo(base, altura)"]
+    n1(["Inicio"])
+    n2{"base <= 0 or altura <= 0?"}
+    n1 --> n2
+    n3(["return 0"])
+    n2 -->|"Sí"| n3
+    n4["area = base * altura"]
+    n2 -->|"No"| n4
+    n5(["return area"])
+    n4 --> n5
+    n6(["Fin"])
+    n3 --> n6
+    n5 --> n6
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n7(["Inicio"])
+    n8["print'Área del rectángulo con base 4 y altura 5:', calcular_ar…"]
+    n7 --> n8
+    n9["print'Área del rectángulo con base 0 y altura 5:', calcular_ar…"]
+    n8 --> n9
+    n10["print'Área del rectángulo con base 4 y altura -3:', calcular_a…"]
+    n9 --> n10
+    n11["print'Área del rectángulo con base 10 y altura 10:', calcular_…"]
+    n10 --> n11
+    n12(["Fin"])
+    n11 --> n12
+    end

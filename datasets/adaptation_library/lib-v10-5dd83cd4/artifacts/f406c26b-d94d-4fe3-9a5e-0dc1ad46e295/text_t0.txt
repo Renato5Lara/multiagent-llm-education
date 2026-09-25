@@ -1,0 +1,1 @@
+Las variables son espacios de almacenamiento en la memoria que permiten guardar y manipular datos en un programa. Los tipos de datos definen la naturaleza de la información que se puede almacenar en estas variables, como números o cadenas de texto. Por ejemplo, la función actualizar_saldo permite modificar el saldo de una cuenta al sumar un depósito al saldo inicial.

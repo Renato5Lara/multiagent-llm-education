@@ -1,0 +1,42 @@
+flowchart TD
+    subgraph sg_aprobo["def aprobo(nota)"]
+    n1(["Inicio"])
+    n2{"nota is None?"}
+    n1 --> n2
+    n3(["return False"])
+    n2 -->|"Sí"| n3
+    n4{"nota < 0?"}
+    n2 -->|"No"| n4
+    n5(["return False"])
+    n4 -->|"Sí"| n5
+    n6{"nota > 20?"}
+    n4 -->|"No"| n6
+    n7(["return False"])
+    n6 -->|"Sí"| n7
+    n8(["return nota >= 11"])
+    n6 -->|"No"| n8
+    n9(["Fin"])
+    n3 --> n9
+    n5 --> n9
+    n7 --> n9
+    n8 --> n9
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n10(["Inicio"])
+    n11["print(aprobo(11))"]
+    n10 --> n11
+    n12["print(aprobo(10))"]
+    n11 --> n12
+    n13["print(aprobo(15))"]
+    n12 --> n13
+    n14["print(aprobo(0))"]
+    n13 --> n14
+    n15["print(aprobo(-5))"]
+    n14 --> n15
+    n16["print(aprobo(25))"]
+    n15 --> n16
+    n17["print(aprobo(None))"]
+    n16 --> n17
+    n18(["Fin"])
+    n17 --> n18
+    end

@@ -1,0 +1,37 @@
+flowchart TD
+    n1["def clasificar_nota(nota)"]
+    n2{"nota is None?"}
+    n1 --> n2
+    n3(["return 'entrada vacía'"])
+    n2 --> n3
+    n4{"nota < 0?"}
+    n2 --> n4
+    n5(["return 'nota negativa'"])
+    n4 --> n5
+    n6{"nota > 20?"}
+    n4 --> n6
+    n7(["return 'nota excesiva'"])
+    n6 --> n7
+    n8{"nota >= 17?"}
+    n6 --> n8
+    n9(["return 'excelente'"])
+    n8 --> n9
+    n10{"nota >= 10?"}
+    n8 --> n10
+    n11(["return 'regular'"])
+    n10 --> n11
+    n12(["return 'deficiente'"])
+    n10 --> n12
+    n13["def ejemplo_uso()"]
+    n14["print(clasificar_nota(18))"]
+    n13 --> n14
+    n15["print(clasificar_nota(12))"]
+    n14 --> n15
+    n16["print(clasificar_nota(5))"]
+    n15 --> n16
+    n17["print(clasificar_nota(-1))"]
+    n16 --> n17
+    n18["print(clasificar_nota(25))"]
+    n17 --> n18
+    n19["print(clasificar_nota(None))"]
+    n18 --> n19

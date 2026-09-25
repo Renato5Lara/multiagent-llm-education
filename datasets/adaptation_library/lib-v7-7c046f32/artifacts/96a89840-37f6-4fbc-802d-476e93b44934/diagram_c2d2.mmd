@@ -1,0 +1,28 @@
+flowchart TD
+    subgraph sg_obtener_primeros_tres["def obtener_primeros_tres(lista)"]
+    n1(["Inicio"])
+    n2{"not lista?"}
+    n1 --> n2
+    n3(["return []"])
+    n2 -->|"Sí"| n3
+    n4(["return lista[:3]"])
+    n2 -->|"No"| n4
+    n5(["Fin"])
+    n3 --> n5
+    n4 --> n5
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n6(["Inicio"])
+    n7["print(obtener_primeros_tres([1, 2, 3, 4, 5]))"]
+    n6 --> n7
+    n8["print(obtener_primeros_tres([10, 20]))"]
+    n7 --> n8
+    n9["print(obtener_primeros_tres([]))"]
+    n8 --> n9
+    n10["print(obtener_primeros_tres([100]))"]
+    n9 --> n10
+    n11["print(obtener_primeros_tres([1, 2, 3, 4, 5, 6]))"]
+    n10 --> n11
+    n12(["Fin"])
+    n11 --> n12
+    end

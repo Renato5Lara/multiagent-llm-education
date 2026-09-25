@@ -1,0 +1,1 @@
+Las expresiones son combinaciones de valores y operadores que producen un resultado. La precedencia se refiere al orden en que se evalúan estos operadores dentro de una expresión. En el contexto de la función calcular_promedio_ponderado, se utilizan operadores para calcular un promedio ponderado de tres notas, considerando diferentes pesos para cada una.

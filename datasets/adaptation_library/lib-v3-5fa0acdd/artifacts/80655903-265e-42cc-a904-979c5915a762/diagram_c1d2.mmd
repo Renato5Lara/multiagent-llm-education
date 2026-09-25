@@ -1,0 +1,19 @@
+flowchart TD
+    subgraph sg_contar_hasta["def contar_hasta(n)"]
+    n1(["Inicio"])
+    n2["resultado = []"]
+    n1 --> n2
+    n3["contador = 1"]
+    n2 --> n3
+    n4{"while contador <= n"}
+    n3 --> n4
+    n5["resultado.append(contador)"]
+    n4 -->|"Sí"| n5
+    n6["contador += 1"]
+    n5 --> n6
+    n6 -->|"siguiente"| n4
+    n7(["return resultado"])
+    n4 -->|"No"| n7
+    n8(["Fin"])
+    n7 --> n8
+    end

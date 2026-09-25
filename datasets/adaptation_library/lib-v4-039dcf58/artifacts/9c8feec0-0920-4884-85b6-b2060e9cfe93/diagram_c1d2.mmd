@@ -1,0 +1,12 @@
+flowchart TD
+    subgraph sg_calcular_iva["def calcular_iva(precio)"]
+    n1(["Inicio"])
+    n2["tasa_iva = 0.18"]
+    n1 --> n2
+    n3["iva = precio * tasa_iva"]
+    n2 --> n3
+    n4(["return iva"])
+    n3 --> n4
+    n5(["Fin"])
+    n4 --> n5
+    end

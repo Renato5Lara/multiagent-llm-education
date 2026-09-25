@@ -1,0 +1,22 @@
+flowchart TD
+    n1["def puede_matricularse(tiene_requisitos, sin_deuda)"]
+    n2{"not isinstancetiene_requisitos, bool or not isinstancesin_de…"}
+    n1 --> n2
+    n3["raise ValueError('Ambos parámetros deben ser de tipo booleano.')"]
+    n2 --> n3
+    n4{"tiene_requisitos and sin_deuda?"}
+    n3 --> n4
+    n2 --> n4
+    n5(["return True"])
+    n4 --> n5
+    n6(["return False"])
+    n4 --> n6
+    n7["def ejemplo_uso()"]
+    n8["print(puede_matricularse(True, True))"]
+    n7 --> n8
+    n9["print(puede_matricularse(True, False))"]
+    n8 --> n9
+    n10["print(puede_matricularse(False, True))"]
+    n9 --> n10
+    n11["print(puede_matricularse(False, False))"]
+    n10 --> n11

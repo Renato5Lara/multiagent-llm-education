@@ -1,0 +1,15 @@
+flowchart TD
+    n1["def contar_hasta(n)"]
+    n2["contador = 1"]
+    n1 --> n2
+    n3["numeros = []"]
+    n2 --> n3
+    n4{"while contador <= n"}
+    n3 --> n4
+    n5["numeros.append(contador)"]
+    n4 --> n5
+    n6["contador += 1"]
+    n5 --> n6
+    n6 --> n4
+    n7(["return numeros"])
+    n4 --> n7

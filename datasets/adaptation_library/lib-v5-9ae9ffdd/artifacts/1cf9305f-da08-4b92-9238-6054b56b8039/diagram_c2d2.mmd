@@ -1,0 +1,30 @@
+flowchart TD
+    subgraph sg_procesar_promedio["def procesar_promedio(notas)"]
+    n1(["Inicio"])
+    n2{"not notas?"}
+    n1 --> n2
+    n3(["return 0"])
+    n2 -->|"Sí"| n3
+    n4["suma_notas = sum(notas)"]
+    n2 -->|"No"| n4
+    n5["cantidad_notas = len(notas)"]
+    n4 --> n5
+    n6["promedio = suma_notas / cantidad_notas"]
+    n5 --> n6
+    n7(["return promedio"])
+    n6 --> n7
+    n8(["Fin"])
+    n3 --> n8
+    n7 --> n8
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n9(["Inicio"])
+    n10["notas = [10, 20, 30]"]
+    n9 --> n10
+    n11["promedio = procesar_promedio(notas)"]
+    n10 --> n11
+    n12["print(f'El promedio de las notas {notas} es: {promedio}')"]
+    n11 --> n12
+    n13(["Fin"])
+    n12 --> n13
+    end

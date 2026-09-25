@@ -1,0 +1,22 @@
+flowchart TD
+    subgraph sg_tabla_multiplicar["def tabla_multiplicar(n)"]
+    n1(["Inicio"])
+    n2["tabla = []"]
+    n1 --> n2
+    n3{"for i in range(1, n + 1)"}
+    n2 --> n3
+    n4["fila = []"]
+    n3 -->|"cada iteración"| n4
+    n5{"for j in range(1, n + 1)"}
+    n4 --> n5
+    n6["fila.append(i * j)"]
+    n5 -->|"cada iteración"| n6
+    n6 -->|"siguiente"| n5
+    n7["tabla.append(fila)"]
+    n5 -->|"fin del bucle"| n7
+    n7 -->|"siguiente"| n3
+    n8(["return tabla"])
+    n3 -->|"fin del bucle"| n8
+    n9(["Fin"])
+    n8 --> n9
+    end

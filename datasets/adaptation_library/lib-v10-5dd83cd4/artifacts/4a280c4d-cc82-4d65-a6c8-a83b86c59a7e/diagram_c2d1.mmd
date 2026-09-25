@@ -1,0 +1,18 @@
+flowchart TD
+    n1["def dividir_con_resto(a, b)"]
+    n2{"b == 0?"}
+    n1 --> n2
+    n3["raise ValueError('El denominador no puede ser cero.')"]
+    n2 --> n3
+    n4["cociente = a // b"]
+    n3 --> n4
+    n2 --> n4
+    n5["resto = a % b"]
+    n4 --> n5
+    n6(["return (cociente, resto)"])
+    n5 --> n6
+    n7["def ejemplo_uso()"]
+    n8["resultado = dividir_con_resto(10, 3)"]
+    n7 --> n8
+    n9["print(f'El cociente y resto de 10 dividido por 3 son: {resultad…})"]
+    n8 --> n9

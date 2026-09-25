@@ -1,0 +1,10 @@
+flowchart TD
+    n1["def procesar_promedio(notas)"]
+    n2["suma = sum(notas)"]
+    n1 --> n2
+    n3["cantidad = len(notas)"]
+    n2 --> n3
+    n4["promedio = suma / cantidad"]
+    n3 --> n4
+    n5(["return promedio"])
+    n4 --> n5

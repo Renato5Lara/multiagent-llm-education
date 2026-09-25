@@ -1,0 +1,21 @@
+flowchart TD
+    n1["def calcular_area_rectangulo(base, altura)"]
+    n2{"base <= 0 or altura <= 0?"}
+    n1 --> n2
+    n3(["return 0"])
+    n2 --> n3
+    n4["area = base * altura"]
+    n2 --> n4
+    n5(["return area"])
+    n4 --> n5
+    n6["def ejemplo_uso()"]
+    n7["print(calcular_area_rectangulo(6, 3))"]
+    n6 --> n7
+    n8["print(calcular_area_rectangulo(4, 5))"]
+    n7 --> n8
+    n9["print(calcular_area_rectangulo(0, 5))"]
+    n8 --> n9
+    n10["print(calcular_area_rectangulo(4, -2))"]
+    n9 --> n10
+    n11["print(calcular_area_rectangulo(10, 10))"]
+    n10 --> n11

@@ -1,0 +1,14 @@
+flowchart TD
+    subgraph sg_procesar_promedio["def procesar_promedio(notas)"]
+    n1(["Inicio"])
+    n2["suma = sum(notas)"]
+    n1 --> n2
+    n3["cantidad = len(notas)"]
+    n2 --> n3
+    n4["promedio = suma / cantidad"]
+    n3 --> n4
+    n5(["return promedio"])
+    n4 --> n5
+    n6(["Fin"])
+    n5 --> n6
+    end

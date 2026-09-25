@@ -1,0 +1,54 @@
+flowchart TD
+    subgraph sg_primer_multiplo_de_tres["def primer_multiplo_de_tres(numeros)"]
+    n1(["Inicio"])
+    n2{"for numero in numeros"}
+    n1 --> n2
+    n3{"numero % 3 == 0?"}
+    n2 -->|"cada iteración"| n3
+    n4(["return numero"])
+    n3 -->|"Sí"| n4
+    n5["continue"]
+    n3 -->|"No"| n5
+    n5 --> n2
+    n6(["return None"])
+    n2 -->|"fin del bucle"| n6
+    n7(["Fin"])
+    n4 --> n7
+    n6 --> n7
+    end
+    subgraph sg_detener_en_negativo["def detener_en_negativo(numeros)"]
+    n8(["Inicio"])
+    n9["resultado = []"]
+    n8 --> n9
+    n10{"for numero in numeros"}
+    n9 --> n10
+    n11{"numero < 0?"}
+    n10 -->|"cada iteración"| n11
+    n12["break"]
+    n11 -->|"Sí"| n12
+    n13["resultado.append(numero)"]
+    n11 -->|"No"| n13
+    n13 -->|"siguiente"| n10
+    n14(["return resultado"])
+    n10 -->|"fin del bucle"| n14
+    n12 --> n14
+    n15(["Fin"])
+    n14 --> n15
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n16(["Inicio"])
+    n17["lista1 = [1, 2, 4, 9]"]
+    n16 --> n17
+    n18["multiplo = primer_multiplo_de_tres(lista1)"]
+    n17 --> n18
+    n19["print(f'El primer múltiplo de tres en {lista1} es {multiplo}')"]
+    n18 --> n19
+    n20["lista2 = [1, 2, -1, 3]"]
+    n19 --> n20
+    n21["resultado = detener_en_negativo(lista2)"]
+    n20 --> n21
+    n22["printf'Los números antes del primer negativo en lista2 son …"]
+    n21 --> n22
+    n23(["Fin"])
+    n22 --> n23
+    end

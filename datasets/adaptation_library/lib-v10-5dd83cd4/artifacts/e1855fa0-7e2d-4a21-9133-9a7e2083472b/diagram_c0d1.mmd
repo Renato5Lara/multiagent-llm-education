@@ -1,0 +1,14 @@
+flowchart TD
+    n1["def encontrar_mayor(numeros)"]
+    n2["mayor = numeros[0]"]
+    n1 --> n2
+    n3{"for num in numeros"}
+    n2 --> n3
+    n4{"num > mayor?"}
+    n3 --> n4
+    n5["mayor = num"]
+    n4 --> n5
+    n5 --> n3
+    n4 --> n3
+    n6(["return mayor"])
+    n3 --> n6

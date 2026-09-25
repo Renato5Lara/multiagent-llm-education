@@ -1,0 +1,15 @@
+flowchart TD
+    n1["def crear_saludo(nombre, saludo='Hola')"]
+    n2{"not nombre?"}
+    n1 --> n2
+    n3(["return 'Nombre no puede estar vacío'"])
+    n2 --> n3
+    n4(["return f'{saludo}, {nombre}'"])
+    n2 --> n4
+    n5["def ejemplo_uso()"]
+    n6["print(crear_saludo('Ana'))"]
+    n5 --> n6
+    n7["print(crear_saludo('Ana', saludo='Buenas'))"]
+    n6 --> n7
+    n8["print(crear_saludo('', saludo='Hola'))"]
+    n7 --> n8

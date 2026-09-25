@@ -1,0 +1,35 @@
+flowchart TD
+    subgraph sg_leer_edad["def leer_edad(texto_ingresado)"]
+    n1(["Inicio"])
+    n2{"texto_ingresado.strip() == ''?"}
+    n1 --> n2
+    n3(["return 0"])
+    n2 -->|"Sí"| n3
+    n4["edad = int(texto_ingresado)"]
+    n2 -->|"No"| n4
+    n5{"edad < 0?"}
+    n4 --> n5
+    n6(["return 0"])
+    n5 -->|"Sí"| n6
+    n7(["return edad"])
+    n5 -->|"No"| n7
+    n8(["Fin"])
+    n3 --> n8
+    n6 --> n8
+    n7 --> n8
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n9(["Inicio"])
+    n10["print(leer_edad('18'))"]
+    n9 --> n10
+    n11["print(leer_edad('25'))"]
+    n10 --> n11
+    n12["print(leer_edad(''))"]
+    n11 --> n12
+    n13["print(leer_edad('-5'))"]
+    n12 --> n13
+    n14["print(leer_edad('abc'))"]
+    n13 --> n14
+    n15(["Fin"])
+    n14 --> n15
+    end

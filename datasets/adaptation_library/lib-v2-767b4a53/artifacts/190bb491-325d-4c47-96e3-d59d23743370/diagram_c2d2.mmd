@@ -1,0 +1,27 @@
+flowchart TD
+    subgraph sg_crear_lista_de_notas["def crear_lista_de_notas()"]
+    n1(["Inicio"])
+    n2["lista_notas = []"]
+    n1 --> n2
+    n3["lista_notas.append(12)"]
+    n2 --> n3
+    n4["lista_notas.append(15)"]
+    n3 --> n4
+    n5["lista_notas.append(18)"]
+    n4 --> n5
+    n6["lista_notas.append(9)"]
+    n5 --> n6
+    n7(["return lista_notas"])
+    n6 --> n7
+    n8(["Fin"])
+    n7 --> n8
+    end
+    subgraph sg_ejemplo_uso["def ejemplo_uso()"]
+    n9(["Inicio"])
+    n10["notas = crear_lista_de_notas()"]
+    n9 --> n10
+    n11["print('La lista de notas es:', notas)"]
+    n10 --> n11
+    n12(["Fin"])
+    n11 --> n12
+    end

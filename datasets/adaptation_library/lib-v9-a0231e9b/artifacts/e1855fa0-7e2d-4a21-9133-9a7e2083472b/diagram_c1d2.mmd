@@ -1,0 +1,18 @@
+flowchart TD
+    subgraph sg_encontrar_mayor["def encontrar_mayor(numeros)"]
+    n1(["Inicio"])
+    n2["mayor = numeros[0]"]
+    n1 --> n2
+    n3{"for numero in numeros"}
+    n2 --> n3
+    n4{"numero > mayor?"}
+    n3 -->|"cada iteración"| n4
+    n5["mayor = numero"]
+    n4 -->|"Sí"| n5
+    n5 -->|"siguiente"| n3
+    n4 -->|"No"| n3
+    n6(["return mayor"])
+    n3 -->|"fin del bucle"| n6
+    n7(["Fin"])
+    n6 --> n7
+    end
