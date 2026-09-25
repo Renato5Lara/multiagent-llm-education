@@ -1,0 +1,10 @@
+{
+  "name": "upao-mermaid-render",
+  "private": true,
+  "description": "Render real de Mermaid a SVG para AG3 (usa Chrome del sistema vía puppeteer-core).",
+  "type": "module",
+  "dependencies": {
+    "@mermaid-js/mermaid-cli": "11.4.2",
+    "puppeteer-core": "23.11.1"
+  }
+}
