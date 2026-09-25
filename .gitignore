@@ -152,3 +152,7 @@ backend/backups/
 # y la caché de TTS quedan FUERA de Git. Los manifiestos conservan el sha256 de cada mp3.
 datasets/adaptation_library/_tts_cache/
 datasets/adaptation_library/lib-v*/artifacts/**/*.mp3
+
+# ===== Entorno aislado de integración de adaptation_swarm: la copia local de test.env (credenciales solo de prueba) no se versiona.
+# Se versiona test.env.example (valores ficticios).
+backend/tests/adaptation_swarm/integration_env/test.env

@@ -1,0 +1,47 @@
+# Entorno AISLADO para las pruebas de integración de adaptation_swarm (PostgreSQL + Redis). Ver README.md.
+# Nombres, puertos y volumen propios; solo escucha en 127.0.0.1. Solo contiene datos de prueba.
+#
+#   set -a; source backend/tests/adaptation_swarm/integration_env/test.env; set +a     # copia local de test.env.example
+#   podman-compose -f backend/tests/adaptation_swarm/integration_env/compose.yaml up -d
+#   podman-compose -f backend/tests/adaptation_swarm/integration_env/compose.yaml down    # SIN -v: el volumen se conserva
+#
+# La contraseña NO está en este archivo: viene de SWARM_TEST_PG_PASSWORD (test.env, que no se versiona).
+name: adaptation_swarm_test
+
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: adaptation_swarm_test_postgres
+    restart: "no"
+    environment:
+      POSTGRES_USER: swarm_test
+      POSTGRES_PASSWORD: ${SWARM_TEST_PG_PASSWORD:?define SWARM_TEST_PG_PASSWORD (copia test.env.example a test.env y cárgalo)}
+      POSTGRES_DB: swarm_test
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - adaptation_swarm_test_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U swarm_test -d swarm_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: adaptation_swarm_test_redis
+    restart: "no"
+    command: ["redis-server", "--appendonly", "no", "--save", ""]
+    ports:
+      - "127.0.0.1:56379:6379"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  adaptation_swarm_test_pgdata:
+    name: adaptation_swarm_test_pgdata
