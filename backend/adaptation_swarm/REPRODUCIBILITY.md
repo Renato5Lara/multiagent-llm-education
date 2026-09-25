@@ -1,5 +1,7 @@
 # Reproducibilidad del PoC `adaptation_swarm` (procedimiento desde cero)
 
+> Estado de cierre, límites y qué no puede afirmarse frente a la asesoría: `CIERRE_POC.md`. Esta guía explica **cómo repetir**; no declara cumplimiento.
+
 Todo se ejecuta desde `backend/` salvo indicación. Versiones de Python (no confundirlas):
 - **Backend en contenedor** (`backend/Dockerfile`): `python:3.12-slim`. Es el runtime de despliegue del backend.
 - **Sandbox de Python** (`backend/app/sandbox/docker/Dockerfile`): `python:3.11-slim` (ejecuta el código de los artefactos; no comparte intérprete con el backend).
@@ -68,6 +70,7 @@ los auditores abren la transacción `READ ONLY`. `run_experiment` ejecuta `git r
 La corrida es **determinista** para (semilla, `config_hash`, `library_version`, dataset): mismas trayectorias y mismo `g_best` bit a bit.
 Comprobado sin infraestructura: `test_sensitivity_preserved.py` re-ejecuta en proceso el motor PSO versionado (sin bus, Redis, audio ni PostgreSQL) y reproduce las métricas guardadas de las 6 configuraciones
 de sensibilidad y los 100 casos de `corrida-poc-1`.
+**Alcance de ese replay:** cubre el **núcleo** (semilla → 𝓕 desde los artefactos de la biblioteca → parada literal) y coincide exactamente en `g_best_S`, `g_best_F`, `k_stop` y etiqueta de los 100 casos; **no** re-ejecuta la pila completa (agentes por Redis, ensamblado del paquete, persistencia, HTTP), cuya re-ejecución no se ha demostrado. `corrida-poc-1` y `corrida-poc-2` **no son réplicas independientes**: comparten semilla, dataset y configuración y solo cambia la biblioteca (0/100 etiquetas cambian).
 
 **Verificar ≠ reproducir** (sin servicios ni audio; usa el dataset, los manifiestos y los artefactos no-audio de Git: `pytest tests/adaptation_swarm/test_frozen_runs_preserved.py tests/adaptation_swarm/test_sensitivity_preserved.py`): los resultados congelados
 (`experiments/results/adaptation_swarm_frozen_runs.md`: semilla, versiones de dataset, gold y biblioteca, configuración PSO, métricas y sha256) se recalculan desde los datos guardados y fallan si un artefacto cambia.
@@ -148,13 +151,14 @@ Estrategia (DECISION-CLOSURE §14): **en Git** están los manifiestos de las 10 
   `python -m adaptation_swarm.multimodal.verify lib-vN-hash` (exit 0 íntegra · 1 hash incorrecto · 2 solo faltan archivos); `python -m adaptation_swarm.tools.seal_audio --dest DIR | --verify DIR`.
 - **Pruebas:** las que dependen físicamente del audio están marcadas `requires_library_audio` (`tests/adaptation_swarm/LIBRARY_TESTS.md`): con la biblioteca completa se ejecutan; si faltan archivos se omiten con la razón explícita;
   `SWARM_REQUIRE_LIBRARY=1` las hace fallar en ausencia; un archivo presente con hash incorrecto siempre hace fallar.
-- **Base de datos:** las pruebas `test_corrida_poc_1_preserved` y la exportación del paquete de evidencia leen filas reales de `swarm_runs`/`swarm_cycles` (`corrida-poc-1/2`); una base creada con el bootstrap está vacía de corridas.
-  Las corridas se reconstruyen con `run_experiment` sobre la biblioteca correspondiente o se comparan con los JSON congelados (`experiments/results/adaptation_swarm_corrida-poc-*.json`).
+- **Base de datos:** la exportación del paquete de evidencia leyó filas reales de `swarm_runs`/`swarm_cycles` (`corrida-poc-1/2`) de la base en la que se ejecutaron; una base creada con el bootstrap está vacía de corridas.
+  `test_corrida_poc_1_preserved` ya **no** usa PostgreSQL (es una prueba pura de la inmutabilidad de `lib-v5`). Las corridas se reconstruyen con `run_experiment` sobre la biblioteca correspondiente o se comparan con los JSON congelados (`experiments/results/adaptation_swarm_corrida-poc-*.json`).
+  La reconstrucción **parcial** de `corrida-poc-1` en la base aislada (§5.1) **no** es la base original: no incluye `swarm_iterations`, `agent_messages` ni `multimodal_packages`.
 - **Servicios y binarios externos al repositorio:** Postgres, Redis, podman, Node, Chrome, JMeter (`JMETER_BIN`) y las imágenes de sandbox (`podman build` de §1).
-- Los resultados de las corridas registran `git.dirty = true` sobre `d31d29c`: el commit no describe por sí solo el árbol que las produjo; la identidad experimental es (semilla, `config_hash`, `library_version`, dataset) + el paquete de evidencia con `MANIFEST.sha256`.
+- Los resultados de las corridas registran `git.dirty = true` sobre `d31d29c`: el commit no describe por sí solo el árbol que las produjo. **Además, `backend/adaptation_swarm/` no existe en `d31d29c`** (`git diff d31d29c HEAD -- backend/adaptation_swarm` añade 99 archivos): el código que produjo las corridas se versionó después. La identidad experimental es (semilla, `config_hash`, `library_version`, dataset) + el paquete de evidencia con `MANIFEST.sha256`.
 - **Verificación de hashes del audio (solo lectura):** `tests/adaptation_swarm/test_library_full_coverage.py` recalcula el sha256 de los **2151 mp3** de las 10 versiones contra sus manifiestos y distingue **ausente** (se omite; con `SWARM_REQUIRE_LIBRARY=1` falla)
   de **corrupto** (falla siempre). Sus casos negativos usan copias con enlaces simbólicos en un directorio temporal: nunca se escribe en `datasets/adaptation_library/`. Comprobado también con `library_inventory --check --require-complete` y `multimodal.verify`.
-- **Entorno aislado de integración:** las pruebas que necesitan PostgreSQL y Redis se ejecutan en contenedores propios (`tests/adaptation_swarm/integration_env/`), con la biblioteca local en solo lectura; resultado esperado: 79 pruebas pasan.
-  **No** se ejecutan el sandbox de código (crearía contenedores adicionales) ni las llamadas reales a OpenAI (TTS y LLM): 4 pruebas de `test_agents_library.py`, más `test_library_sandbox_integration.py`, `test_corrida_poc_1_preserved.py` (necesita cargar la corrida en PostgreSQL) y `test_cpp_render.py`,
-  que quedan fuera de Git por ahora. Sin `psutil`, `test_resources_integration.py` se omite.
+- **Entorno aislado de integración:** las pruebas que necesitan PostgreSQL y Redis se ejecutan en contenedores propios (`tests/adaptation_swarm/integration_env/`), con la biblioteca local en solo lectura; resultado esperado: 79 pruebas pasan (no re-verificadas el 2026-09-25).
+  **No** se ejecutan ahí el sandbox de código (crearía contenedores adicionales) ni las llamadas reales a OpenAI (TTS y LLM): 4 pruebas de `test_agents_library.py`. Los sandboxes reales **ya están versionados** y se ejecutan aparte, sin PostgreSQL ni Redis:
+  `test_library_sandbox_integration.py` (90 variantes de Python) y `test_cpp_render.py` (12 de C++/aislamiento del contenedor y 6 de Mermaid), verificadas el 2026-09-25 (`README.md`, «Pruebas»). Sin `psutil`, `test_resources_integration.py` se omite.
 - **Corridas congeladas y resultado observado:** `experiments/results/adaptation_swarm_frozen_runs.md` (y `..._sensitivity.md`). **F1_adapt = 0.8031 < 0.85** en ambas corridas; no se ajustó nada para modificarlo y la sensibilidad (máximo 0.8164) tampoco llega al objetivo.

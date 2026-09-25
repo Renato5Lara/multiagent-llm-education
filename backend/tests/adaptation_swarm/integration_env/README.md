@@ -47,6 +47,7 @@ Solo `podman volume rm adaptation_swarm_test_pgdata` reinicia la base de prueba 
 ## Qué NO ejecutan estas pruebas, a propósito
 - Las 4 pruebas excluidas: dos usan el sandbox de código (crearía contenedores podman adicionales) y dos llaman a OpenAI de verdad (TTS y generación con LLM).
 - `OPENAI_API_KEY`, `TAVILY_API_KEY` y `HF_TOKEN` van vacíos y `OPENAI_BASE_URL` apunta a un puerto local muerto: una llamada accidental falla en local.
-- `test_corrida_poc_1_preserved.py` (necesita cargar la corrida en PostgreSQL), `loadtest/` y JMeter.
+- `loadtest/` y JMeter; y `test_corrida_poc_1_reconstructed_postgres.py`, que es **opt-in** (`SWARM_POC1_RECONSTRUCTED_LOADED=1`) y valida la reconstrucción *parcial* de `corrida-poc-1` (`REPRODUCIBILITY.md` §5.1). `test_corrida_poc_1_preserved.py` ya es puro y no usa PostgreSQL.
+- Los sandboxes reales (`test_cpp_render.py`, `test_library_sandbox_integration.py`) están versionados pero crean contenedores podman y no forman parte de este entorno de PostgreSQL + Redis (`README.md`, «Pruebas»).
 
 Las pruebas no escriben en `datasets/adaptation_library/`; cualquier temporal va a `TMPDIR`.

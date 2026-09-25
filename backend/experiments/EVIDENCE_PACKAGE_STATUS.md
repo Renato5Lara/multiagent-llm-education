@@ -30,8 +30,8 @@ Se sustituyó el prefijo del directorio personal del usuario (`/home/<usuario>` 
 ## Qué copias internas quedaron superadas por el estado actual de Git
 Son instantáneas de la generación: el paquete no se reescribe, y esta lista es la que manda.
 - `05_documentacion/REPRODUCIBILITY.md` y `05_documentacion/README.md`: dicen que la biblioteca y las migraciones «aún no están versionadas» y «130+ pruebas». Hoy la biblioteca (`3a93f2b`) y las cuatro migraciones están en Git; las versiones vigentes son `backend/adaptation_swarm/REPRODUCIBILITY.md` y `README.md`.
-- `README_EVIDENCE_INDEX.md`: igual que `backend/adaptation_swarm/EVIDENCE_INDEX.md` salvo el aviso de estado en Git y la línea de sensibilidad que este último añadió después; sin contradicciones.
+- `README_EVIDENCE_INDEX.md`: copia congelada; el `backend/adaptation_swarm/EVIDENCE_INDEX.md` vivo la **supera** desde el 2026-09-25 (precisa que el código de las corridas era solo Python, que las corridas no son réplicas independientes, la reserva de las cifras de carga y enlaza `CIERRE_POC.md`). No contradice sus cifras.
 - `03_informes/GIT-COMMIT-PLAN-2026-09-24.md` (plan «NO EJECUTADO», rama `feat/pretest-m1-v4`), `GIT-CLASSIFICATION-2026-09-23-fase2.md` y `PRE-COMMIT-PRE-DEDUPE-AUDIT-2026-09-24.md`: informes de proceso históricos. Lo ejecutado en `feat/adaptation-swarm-poc`: `ad97675`, `2e3bf02`, `0961b58`, `dee4f5c`, `3a93f2b`, `1079039`, `311d846`, `7279c82`, `10995c6`, `367cd8c`, `dafbae0`.
-- `LIBRARY_TESTS.md` y `ADR-0019.md`: idénticos a los versionados.
+- `LIBRARY_TESTS.md`: idéntico al versionado. `ADR-0019.md`: **superado** — el ADR versionado se actualizó el 2026-09-25 (C++ y render de Mermaid ya implementados, límites nuevos); la copia del paquete conserva las limitaciones anteriores.
 
 Las corridas siguen registrando `git.dirty = true` sobre `d31d29c`: los resultados se **verifican** (recalculando desde los datos guardados), pero no se reproducen desde ese commit por sí solo.

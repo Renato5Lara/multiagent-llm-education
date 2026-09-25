@@ -45,9 +45,19 @@ El PSO (`pso/`) es puro: ecuaciones literales de la asesoría, φ(x)=min(2,max(0
 
 ## Limitaciones declaradas
 
-- **C++ no implementado** (la asesoría admite Python/C++): solo Python.
-- **Render de Mermaid** no implementado: se genera y valida la *fuente* Mermaid (sin renderer en el repo).
+- ~~**C++ no implementado** (la asesoría admite Python/C++): solo Python.~~ **[SUPERADO 2026-09-25 — ver «Actualización».]**
+- ~~**Render de Mermaid** no implementado: se genera y valida la *fuente* Mermaid (sin renderer en el repo).~~ **[SUPERADO 2026-09-25 — ver «Actualización».]**
 - El texto lo redacta un LLM: se valida longitud/vocabulario/identificadores, **no** corrección semántica.
 - La regla de parada literal `|ΔF|<ε` sobre 𝓕 constante a tramos puede detener el ciclo en k=1–2 (medido, ver el informe
   de la corrida); no se altera (DEC-10).
 - Ninguno de los umbrales (RNF01–RNF05) se da por cumplido sin medición real.
+
+## Actualización 2026-09-25 (el texto original de arriba se conserva como historial)
+
+Estado: **Aceptado** (sin cambios en las decisiones). Se actualizan solo las limitaciones que dejaron de ser ciertas y se registran las que la auditoría final añadió. Detalle y matriz: `backend/adaptation_swarm/CIERRE_POC.md`.
+
+- **C++ ya está implementado** como variante de la biblioteca: sandbox podman (`tools/cpp_sandbox`, compilación `g++ -std=c++17` y ejecución sin red), 90/90 en `lib-v10-5dd83cd4` (87 en `lib-v9`). **Pero las corridas principales** (`corrida-poc-1`/`2`, `lib-v5`/`lib-v9`) **entregaron código Python**; ninguna usó `lib-v10`. El C++ está validado en la biblioteca y el sandbox, no como modalidad de esas corridas.
+- **El render de Mermaid ya es real**: mermaid-cli sobre Chrome del sistema (`tools/mermaid_render`), 270/270 SVG en `lib-v10`; se distingue el rechazo del parser de un fallo de Chrome/Puppeteer (`tests/adaptation_swarm/test_cpp_render.py`).
+- **Límites nuevos** (no cambian las decisiones de arriba): el audio nunca es clase gold, así que `F1_adapt = macro_f1_defined` promedia 3 clases (con 4 sería 0.6024); el gold depende solo del arquetipo; `corrida-poc-1` y `corrida-poc-2` no son réplicas independientes; la latencia medida es de **selección desde biblioteca offline**; `g_best` no cambia tras la inicialización en 48/100 (poc-1) y 43/100 (poc-2) ciclos.
+- **Umbrales:** ya hay medición. `F1_adapt = 0.8031 < 0.85` (RNF-03 no se cumple); RNF-01/RNF-04 se cumplen solo con 4 workers; SUS sin respuestas. **La hipótesis H1 de la asesoría no está confirmada.**
+- **Riesgo abierto:** `g++` no tiene timeout de compilación propio y el timeout externo de `CppSandbox` no elimina el contenedor.
