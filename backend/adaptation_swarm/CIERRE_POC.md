@@ -131,14 +131,14 @@ Con menos de 10 evaluadores el código **no calcula conclusiones** (`metrics/sus
 2. **Validación del gold por el mismo panel (DECISION-CLOSURE §7.2, punto 2):** cada evaluador valora las **20 celdas** (arquetipo × dificultad) de la tabla `gold-v1`: «¿la modalidad dominante esperada es razonable para ese perfil y esa dificultad?» (sí/no; opcionalmente 1–5 y un comentario).
 
 ### 4.2 Prerrequisitos abiertos (decisiones que este documento NO toma ni inventa)
-- **Consentimiento:** `human_eval/templates/CONSENT_TEMPLATE.md` es una plantilla **sin validar** por comité de ética o asesor (DEC-16).
+- **Consentimiento:** `backend/adaptation_swarm/human_eval/CONSENT_TEMPLATE.md` es una plantilla **sin validar** por comité de ética o asesor (DEC-16).
 - **Versión en español del SUS:** `SUS_INSTRUMENT_ES.md` es una traducción habitual **no seleccionada ni citada formalmente** (DEC-16).
 - **Material que usará el evaluador:** `TASK_SCRIPT_v1.md` pide una **gráfica de convergencia** y una **traza de mensajes** y admite que **no existe un visor HTML dedicado** (no se declara implementado). Hay que decidir, antes de recolectar, si se adapta el guion a lo que existe (JSON de `run_slice`, artefactos de la biblioteca) o si se construye el visor (trabajo fuera del alcance documental). Lo que se decida debe quedar fijado y versionado: es lo que el SUS evalúa.
 - **Perfil y reclutamiento:** criterio de selección, proporción docentes/ingenieros y forma de contacto: no definidos.
 - **Umbral de acuerdo del panel del gold:** **no lo fija** la asesoría, ni DECISION-CLOSURE, ni el código; debe registrarse **antes** de recolectar.
 - **Dónde se guardan los datos reales:** `sus_cli` escribe en la base a la que apunte `DATABASE_URL`. No debe usarse la base aislada de pruebas (efímera; su volumen puede reiniciarse) ni mezclarse con datos de desarrollo sin una decisión explícita.
 
-### 4.3 Protocolo (según los materiales existentes en `human_eval/templates/`)
+### 4.3 Protocolo (según los materiales existentes en `backend/adaptation_swarm/human_eval/`)
 1. Registrar al participante con **seudónimo** (E01, E02…), rol y, opcionalmente, años de experiencia, con su consentimiento (`sus_cli add-participant … --consent`).
 2. Sesión de 25–30 min con `task-script-v1`, sobre los artefactos de **una versión de biblioteca fija** y con los perfiles indicados en el guion (Visual-Dominante × Bucles; Lógico-Sintáctico × Funciones).
 3. Aplicar el SUS (10 ítems, Likert 1–5) **después** de usar el artefacto (`add-sus` o `import-sus`).
