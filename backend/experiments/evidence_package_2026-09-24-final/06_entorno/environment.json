@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-09-24T06:47:37.113154+00:00",
+  "python": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]",
+  "platform": "Linux-7.2.4-ogc3.1.fc44.x86_64-x86_64-with-glibc2.43",
+  "podman": "podman version 5.8.7",
+  "node": "v22.23.1",
+  "gxx": [
+    "g++ (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)"
+  ],
+  "chrome": "Google Chrome 151.0.7922.173",
+  "images": "localhost/upao-cpp-sandbox:latest sha256:667482902d4dbd8ed6c10be274196bc10b5964ddf1b592451df43cbb36733120\nlocalhost/upao-python-repl-sandbox:latest sha256:4666d72c1e82e7fbf3a5557fe8160cc098c155c5edfb0ec90124dfc73ef9e6ff\n<none>:<none> sha256:c5da4dae39afd75a51615f273a9d0ccef22b479f7ae03a6268f09b78a38cae47\n<none>:<none> sha256:19de9a87eb7c4de7a7df74a53e57ac24b6ff340a161f7476a007c6a354f005d6\n<none>:<none> sha256:5f68cffb533f308285d1c18684a681ecce0e199fc193f97eb803f42d4facad15\n<none>:<none> sha256:a0a0a59c12f6dbe2d09910dd37ed3c9a66436ba47dbd99365e51495567ee5513\ndocker.io/library/python:3.11-slim sha256:da047cb8f9d1d98e5c070f5300ba9f7274e33b8fc0e5be5ed88740aed1b95ba9\ndocker.io/library/redis:7-alpine sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499\ndocker.io/library/postgres:16 sha256:ab47a724d0e37131ac950b98ff2beeb3fdb3bfcc592d73c6cc4b4e7626649671\ndocker.io/library/postgres:16-alpine sha256:16bc17c64a573ef34162af9298258d1aec548232985b33ed7b1eac33ba35c229\ndocker.io/library/alpine:3.20 sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc\ndocker.io/library/mongo:latest sha256:7abfba0d07c9330373f8173981ea4d09cd8a82cdf0e86ccaf7008848d1d24f62",
+  "git_head": "d31d29c819151239e932c1d3c28e56dd364507d0",
+  "git_branch": "feat/pretest-m1-v4",
+  "alembic_head": "b2f4c9d10a02",
+  "library_latest": "lib-v10-5dd83cd4"
+}

@@ -1,0 +1,170 @@
+{
+  "run_label": "corrida-poc-2",
+  "spec_version": "2026-09-23",
+  "dataset_version": "v1",
+  "library_version": "lib-v9-a0231e9b",
+  "batch_seed": 20260923,
+  "config": {
+    "pso": {
+      "n_particles": 20,
+      "w": 0.729,
+      "c1": 1.494,
+      "c2": 1.494,
+      "v_max": 1.0,
+      "k_max": 15,
+      "epsilon": 0.001,
+      "init_low": 0.0,
+      "init_high": 2.0
+    },
+    "fitness_weights": {
+      "alpha": 0.4,
+      "beta": 0.3,
+      "gamma": 0.15,
+      "delta": 0.15
+    }
+  },
+  "config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+  "git_commit": "d31d29c819151239e932c1d3c28e56dd364507d0",
+  "summary": {
+    "n": 100,
+    "completed": 100,
+    "failed": 0,
+    "convergence": {
+      "n": 100,
+      "completed": 100,
+      "failed": 0,
+      "CR": 1.0,
+      "stop_reasons": {
+        "epsilon": 100,
+        "k_max": 0,
+        "error": 0
+      },
+      "k_stop": {
+        "mean": 1.79,
+        "median": 1.5,
+        "max": 5
+      },
+      "t_conv_ms": {
+        "mean": 41.693102509999996,
+        "median": 39.521903,
+        "max": 65.76695
+      }
+    },
+    "f1": {
+      "classes": [
+        "code",
+        "diagram",
+        "text",
+        "audio"
+      ],
+      "confusion": [
+        [
+          42,
+          5,
+          3,
+          0
+        ],
+        [
+          5,
+          20,
+          0,
+          0
+        ],
+        [
+          4,
+          2,
+          19,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "per_class": {
+        "code": {
+          "precision": 0.8235294117647058,
+          "recall": 0.84,
+          "f1": 0.8316831683168315,
+          "support": 50
+        },
+        "diagram": {
+          "precision": 0.7407407407407407,
+          "recall": 0.8,
+          "f1": 0.7692307692307692,
+          "support": 25
+        },
+        "text": {
+          "precision": 0.8636363636363636,
+          "recall": 0.76,
+          "f1": 0.8085106382978724,
+          "support": 25
+        },
+        "audio": {
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "support": 0
+        }
+      },
+      "macro_f1_defined": 0.8031415252818244,
+      "macro_f1_all4": 0.6023561439613683,
+      "f1_adapt": 0.8031415252818244,
+      "accuracy": 0.81,
+      "ci95_bootstrap": [
+        0.711409200194325,
+        0.8766285036613435
+      ],
+      "n_pairs": 100
+    },
+    "search_quality": {
+      "mean_gap_to_global_optimum": 0.013608115254933566,
+      "max_gap": 0.046712477847692335,
+      "cases_at_global_optimum": 14,
+      "n": 100
+    },
+    "cycle_latency_in_process_ms": {
+      "n": 100,
+      "p50_ms": 50.403812500007916,
+      "p90_ms": 66.33197170158383,
+      "p95_ms": 72.74659875183715,
+      "p99_ms": 78.75331826118784,
+      "max_ms": 84.5963239989942,
+      "mean_ms": 51.744099789975735
+    },
+    "t_conv_ms": {
+      "n": 100,
+      "p50_ms": 39.521903,
+      "p90_ms": 53.7624167,
+      "p95_ms": 57.72946255,
+      "p99_ms": 59.23134026000003,
+      "max_ms": 65.76695,
+      "mean_ms": 41.693102509999996
+    },
+    "comm_overhead_ms_mean": 167.2939439599085,
+    "audio_in_every_package": true,
+    "package_validation": {
+      "all_valid": true,
+      "packages_with_cpp": 99,
+      "packages_with_svg": 100
+    },
+    "pso_diagnostics": {
+      "gbest_never_changed_after_init": 43,
+      "first_gbest_change_k": {
+        "null": 43,
+        "1": 57
+      },
+      "mean_duplicate_particles_pct": 17.14666666666667,
+      "mean_pbest_updates_after_init": 26.9,
+      "mean_gbest_updates_after_init": 1.06
+    },
+    "predicted_distribution": {
+      "code": 51,
+      "diagram": 27,
+      "text": 22,
+      "audio": 0
+    }
+  }
+}

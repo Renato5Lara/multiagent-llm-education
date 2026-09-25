@@ -1,0 +1,76 @@
+{
+  "library_version": "lib-v7-7c046f32",
+  "concepts": 30,
+  "code_variants_flagged": 5,
+  "text_variants_flagged": 0,
+  "diagrams_flagged": 8,
+  "per_concept": {
+    "Tipos de datos primitivos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Flujo de bucles (break/continue)": {
+      "bad_diagram": {
+        "c2d1": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'Los números antes del primer negativo en lista2 son …\"]"
+        ],
+        "c2d2": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'Los números antes del primer negativo en lista2 son …\"]"
+        ]
+      }
+    },
+    "Valores de retorno": {
+      "bad_diagram": {
+        "c2d1": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'El cociente y resto de 10 dividido por 3 son: resultad…\"]"
+        ],
+        "c2d2": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'El cociente y resto de 10 dividido por 3 son: resultad…\"]"
+        ]
+      }
+    },
+    "Qué es un lenguaje de programación": {
+      "bad_diagram": {
+        "c2d1": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'Resultado de ejecutar las instrucciones {instrucciones}…\"]"
+        ],
+        "c2d2": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'Resultado de ejecutar las instrucciones {instrucciones}…\"]"
+        ]
+      }
+    },
+    "Variables": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_diagram": {
+        "c2d1": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'Saldo inicial: {saldo}, Depósito: {deposito}, Nuevo sal…\"]"
+        ],
+        "c2d2": [
+          "etiquetas sin sentencia correspondiente en el código: [\"printf'Saldo inicial: {saldo}, Depósito: {deposito}, Nuevo sal…\"]"
+        ]
+      }
+    }
+  }
+}

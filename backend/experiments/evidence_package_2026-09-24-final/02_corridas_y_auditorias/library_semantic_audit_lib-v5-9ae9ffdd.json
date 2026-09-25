@@ -1,0 +1,399 @@
+{
+  "library_version": "lib-v5-9ae9ffdd",
+  "concepts": 30,
+  "code_variants_flagged": 53,
+  "text_variants_flagged": 6,
+  "diagrams_flagged": 15,
+  "per_concept": {
+    "División entera y módulo": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Bucle for": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Estructura y sintaxis básica de un programa en Python": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Indexación": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Comparación y operadores relacionales": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Condicionales básicos": {
+      "bad_code": {
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Creación y estructura de arreglos (listas)": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Representación de algoritmos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Entrada básica (input())": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_diagram": {
+        "c2d0": [
+          "return: el AST tiene 4 y el diagrama 3"
+        ],
+        "c2d1": [
+          "return: el AST tiene 4 y el diagrama 3"
+        ],
+        "c2d2": [
+          "return: el AST tiene 4 y el diagrama 3"
+        ]
+      }
+    },
+    "Expresiones y precedencia": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Tipos de datos primitivos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Flujo de bucles (break/continue)": {
+      "bad_code": {
+        "0": [
+          "el concepto «Flujo de bucles (break/continue)» exige `continue` y el código no lo usa"
+        ],
+        "1": [
+          "el concepto «Flujo de bucles (break/continue)» exige `continue` y el código no lo usa"
+        ],
+        "2": [
+          "el concepto «Flujo de bucles (break/continue)» exige `continue` y el código no lo usa"
+        ]
+      },
+      "bad_text": {
+        "0": [
+          "[c0] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c0] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c1] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c1] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c2] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c2] T2: el texto menciona `continue` pero el código no lo usa"
+        ],
+        "1": [
+          "[c0] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c0] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c1] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c1] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c2] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c2] T2: el texto menciona `continue` pero el código no lo usa"
+        ],
+        "2": [
+          "[c0] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c0] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c1] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c1] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c2] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c2] T2: el texto menciona `continue` pero el código no lo usa"
+        ]
+      }
+    },
+    "Valores de retorno": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Búsqueda (in, .index())": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_diagram": {
+        "c1d0": [
+          "return: el AST tiene 2 y el diagrama 1"
+        ],
+        "c1d1": [
+          "return: el AST tiene 2 y el diagrama 1"
+        ],
+        "c1d2": [
+          "return: el AST tiene 2 y el diagrama 1"
+        ]
+      }
+    },
+    "Bucle while": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_text": {
+        "1": [
+          "[c0] T3: el texto dice «desde cero» pero los bucles del código empiezan en [1]",
+          "[c1] T3: el texto dice «desde cero» pero los bucles del código empiezan en [1]",
+          "[c2] T3: el texto dice «desde cero» pero los bucles del código empiezan en [1]"
+        ],
+        "2": [
+          "[c0] T3: el texto dice «desde cero» pero los bucles del código empiezan en [1]",
+          "[c1] T3: el texto dice «desde cero» pero los bucles del código empiezan en [1]",
+          "[c2] T3: el texto dice «desde cero» pero los bucles del código empiezan en [1]"
+        ]
+      }
+    },
+    "Parámetros y argumentos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Definición e invocación de funciones": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Modificación de tamaño (append, insert, remove, pop)": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Conversión de tipos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_diagram": {
+        "c1d0": [
+          "return: el AST tiene 2 y el diagrama 1"
+        ],
+        "c1d1": [
+          "return: el AST tiene 2 y el diagrama 1"
+        ],
+        "c1d2": [
+          "return: el AST tiene 2 y el diagrama 1"
+        ],
+        "c2d0": [
+          "return: el AST tiene 4 y el diagrama 3"
+        ],
+        "c2d1": [
+          "return: el AST tiene 4 y el diagrama 3"
+        ],
+        "c2d2": [
+          "return: el AST tiene 4 y el diagrama 3"
+        ]
+      }
+    },
+    "Operadores aritméticos básicos": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Salida básica (print)": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Algoritmo": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Pensamiento computacional / proceso de resolución de problemas": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Operadores lógicos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_diagram": {
+        "c2d0": [
+          "if: el AST tiene 2 y el diagrama 1"
+        ],
+        "c2d1": [
+          "if: el AST tiene 2 y el diagrama 1"
+        ],
+        "c2d2": [
+          "if: el AST tiene 2 y el diagrama 1"
+        ]
+      }
+    },
+    "Bucles anidados": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      },
+      "bad_text": {
+        "2": [
+          "[c0] T2: el texto menciona `for` pero el código no lo usa"
+        ]
+      }
+    },
+    "Qué es un lenguaje de programación": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Variables": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    }
+  }
+}

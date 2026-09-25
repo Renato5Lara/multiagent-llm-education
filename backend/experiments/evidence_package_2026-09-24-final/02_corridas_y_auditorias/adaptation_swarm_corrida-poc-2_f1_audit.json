@@ -1,0 +1,748 @@
+{
+  "run_label": "corrida-poc-2",
+  "library_version": "lib-v9-a0231e9b",
+  "n": 100,
+  "implementation_checks": {
+    "prediction_recompute_mismatches": [],
+    "gold_table_mismatches": [],
+    "confusion_matrix_recompute_equal": true,
+    "stored_f1_recomputed": 0.8031415252818244
+  },
+  "f1": {
+    "classes": [
+      "code",
+      "diagram",
+      "text",
+      "audio"
+    ],
+    "confusion": [
+      [
+        42,
+        5,
+        3,
+        0
+      ],
+      [
+        5,
+        20,
+        0,
+        0
+      ],
+      [
+        4,
+        2,
+        19,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "per_class": {
+      "code": {
+        "precision": 0.8235294117647058,
+        "recall": 0.84,
+        "f1": 0.8316831683168315,
+        "support": 50
+      },
+      "diagram": {
+        "precision": 0.7407407407407407,
+        "recall": 0.8,
+        "f1": 0.7692307692307692,
+        "support": 25
+      },
+      "text": {
+        "precision": 0.8636363636363636,
+        "recall": 0.76,
+        "f1": 0.8085106382978724,
+        "support": 25
+      },
+      "audio": {
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "support": 0
+      }
+    },
+    "macro_f1_defined": 0.8031415252818244,
+    "macro_f1_all4": 0.6023561439613683,
+    "f1_adapt": 0.8031415252818244,
+    "accuracy": 0.81
+  },
+  "tp_fp_fn_by_class": {
+    "code": {
+      "TP": 42,
+      "FP": 9,
+      "FN": 8
+    },
+    "diagram": {
+      "TP": 20,
+      "FP": 7,
+      "FN": 5
+    },
+    "text": {
+      "TP": 19,
+      "FP": 3,
+      "FN": 6
+    },
+    "audio": {
+      "TP": 0,
+      "FP": 0,
+      "FN": 0
+    }
+  },
+  "errors_by_archetype": {
+    "balanced_multimodal": {
+      "n": 25,
+      "errors": 8,
+      "error_rate": 0.32
+    },
+    "explanatory_conceptual": {
+      "n": 25,
+      "errors": 6,
+      "error_rate": 0.24
+    },
+    "logical_syntactic": {
+      "n": 25,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "visual_dominant": {
+      "n": 25,
+      "errors": 5,
+      "error_rate": 0.2
+    }
+  },
+  "errors_by_difficulty": {
+    "arrays_vectors": {
+      "n": 20,
+      "errors": 3,
+      "error_rate": 0.15
+    },
+    "conditional": {
+      "n": 20,
+      "errors": 4,
+      "error_rate": 0.2
+    },
+    "functions": {
+      "n": 20,
+      "errors": 5,
+      "error_rate": 0.25
+    },
+    "repetitive": {
+      "n": 20,
+      "errors": 5,
+      "error_rate": 0.25
+    },
+    "sequential": {
+      "n": 20,
+      "errors": 2,
+      "error_rate": 0.1
+    }
+  },
+  "errors_by_concept": {
+    "Algoritmo": {
+      "n": 2,
+      "errors": 1,
+      "error_rate": 0.5
+    },
+    "Bucle for": {
+      "n": 5,
+      "errors": 2,
+      "error_rate": 0.4
+    },
+    "Bucle while": {
+      "n": 5,
+      "errors": 1,
+      "error_rate": 0.2
+    },
+    "Bucles anidados": {
+      "n": 5,
+      "errors": 2,
+      "error_rate": 0.4
+    },
+    "Búsqueda (in, .index())": {
+      "n": 4,
+      "errors": 2,
+      "error_rate": 0.5
+    },
+    "Comparación y operadores relacionales": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Condicionales anidados": {
+      "n": 10,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Condicionales básicos": {
+      "n": 10,
+      "errors": 4,
+      "error_rate": 0.4
+    },
+    "Conversión de tipos": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Creación y estructura de arreglos (listas)": {
+      "n": 4,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Definición e invocación de funciones": {
+      "n": 5,
+      "errors": 1,
+      "error_rate": 0.2
+    },
+    "División entera y módulo": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Entrada básica (input())": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Estructura y sintaxis básica de un programa en Python": {
+      "n": 2,
+      "errors": 1,
+      "error_rate": 0.5
+    },
+    "Expresiones y precedencia": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Flujo de bucles (break/continue)": {
+      "n": 5,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Indexación": {
+      "n": 4,
+      "errors": 1,
+      "error_rate": 0.25
+    },
+    "Modificación de tamaño (append, insert, remove, pop)": {
+      "n": 4,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Operadores aritméticos básicos": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Operadores lógicos": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Parámetros y argumentos": {
+      "n": 5,
+      "errors": 1,
+      "error_rate": 0.2
+    },
+    "Pensamiento computacional / proceso de resolución de problemas": {
+      "n": 2,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Qué es un lenguaje de programación": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Representación de algoritmos": {
+      "n": 2,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Salida básica (print)": {
+      "n": 2,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Slicing": {
+      "n": 4,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Tipos de datos primitivos": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Valores de retorno": {
+      "n": 5,
+      "errors": 1,
+      "error_rate": 0.2
+    },
+    "Variables": {
+      "n": 1,
+      "errors": 0,
+      "error_rate": 0.0
+    },
+    "Ámbito de variables": {
+      "n": 5,
+      "errors": 2,
+      "error_rate": 0.4
+    }
+  },
+  "errors_by_predicted_modality": {
+    "code": {
+      "n": 51,
+      "wrong": 9
+    },
+    "diagram": {
+      "n": 27,
+      "wrong": 7
+    },
+    "text": {
+      "n": 22,
+      "wrong": 3
+    },
+    "audio": {
+      "n": 0,
+      "wrong": 0
+    }
+  },
+  "error_causes": {
+    "acierto": 81,
+    "el óptimo global de 𝓕 no incluye la etiqueta gold (Coher/Redund/CostT dominan sobre Simil)": 6,
+    "W(perfil) no favorece la modalidad gold (gold ≠ argmax W)": 13
+  },
+  "reference_bounds": {
+    "f1_if_prediction_were_argmax_W": 0.6149152542372881,
+    "f1_if_prediction_were_global_optimum_of_F(most_common_label)": 0.8031415252818244,
+    "f1_measured": 0.8031415252818244,
+    "cases_where_gold_not_argmax_W": 19,
+    "cases_where_gold_unreachable_by_any_optimal_config": 19
+  },
+  "error_cases": [
+    {
+      "profile_id": "syn-visual_dominant-conditional-r2",
+      "archetype": "visual_dominant",
+      "difficulty": "conditional",
+      "concept": "Condicionales básicos",
+      "gold": "diagram",
+      "pred_stored": "code",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        2,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-visual_dominant-repetitive-r1",
+      "archetype": "visual_dominant",
+      "difficulty": "repetitive",
+      "concept": "Bucle for",
+      "gold": "diagram",
+      "pred_stored": "code",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-visual_dominant-repetitive-r2",
+      "archetype": "visual_dominant",
+      "difficulty": "repetitive",
+      "concept": "Bucles anidados",
+      "gold": "diagram",
+      "pred_stored": "code",
+      "w_argmax": "code",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        2,
+        1,
+        1,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-visual_dominant-functions-r1",
+      "archetype": "visual_dominant",
+      "difficulty": "functions",
+      "concept": "Parámetros y argumentos",
+      "gold": "diagram",
+      "pred_stored": "code",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        2,
+        0,
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-visual_dominant-functions-r4",
+      "archetype": "visual_dominant",
+      "difficulty": "functions",
+      "concept": "Definición e invocación de funciones",
+      "gold": "diagram",
+      "pred_stored": "code",
+      "w_argmax": "code",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        2,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-explanatory_conceptual-conditional-r0",
+      "archetype": "explanatory_conceptual",
+      "difficulty": "conditional",
+      "concept": "Condicionales básicos",
+      "gold": "text",
+      "pred_stored": "code",
+      "w_argmax": "code",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-explanatory_conceptual-conditional-r2",
+      "archetype": "explanatory_conceptual",
+      "difficulty": "conditional",
+      "concept": "Condicionales básicos",
+      "gold": "text",
+      "pred_stored": "diagram",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        1,
+        1,
+        2,
+        1,
+        2,
+        0,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-explanatory_conceptual-repetitive-r2",
+      "archetype": "explanatory_conceptual",
+      "difficulty": "repetitive",
+      "concept": "Bucle while",
+      "gold": "text",
+      "pred_stored": "code",
+      "w_argmax": "text",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-explanatory_conceptual-repetitive-r3",
+      "archetype": "explanatory_conceptual",
+      "difficulty": "repetitive",
+      "concept": "Bucle for",
+      "gold": "text",
+      "pred_stored": "code",
+      "w_argmax": "text",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-explanatory_conceptual-arrays_vectors-r2",
+      "archetype": "explanatory_conceptual",
+      "difficulty": "arrays_vectors",
+      "concept": "Búsqueda (in, .index())",
+      "gold": "text",
+      "pred_stored": "diagram",
+      "w_argmax": "text",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        0,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-explanatory_conceptual-functions-r1",
+      "archetype": "explanatory_conceptual",
+      "difficulty": "functions",
+      "concept": "Ámbito de variables",
+      "gold": "text",
+      "pred_stored": "code",
+      "w_argmax": "code",
+      "opt_labels": {
+        "code": 1
+      },
+      "S": [
+        2,
+        1,
+        1,
+        1,
+        2,
+        1,
+        0,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-sequential-r0",
+      "archetype": "balanced_multimodal",
+      "difficulty": "sequential",
+      "concept": "Algoritmo",
+      "gold": "code",
+      "pred_stored": "diagram",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        1,
+        0,
+        2,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-sequential-r3",
+      "archetype": "balanced_multimodal",
+      "difficulty": "sequential",
+      "concept": "Estructura y sintaxis básica de un programa en Python",
+      "gold": "code",
+      "pred_stored": "text",
+      "w_argmax": "text",
+      "opt_labels": {
+        "text": 1
+      },
+      "S": [
+        1,
+        1,
+        1,
+        0,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-conditional-r3",
+      "archetype": "balanced_multimodal",
+      "difficulty": "conditional",
+      "concept": "Condicionales básicos",
+      "gold": "code",
+      "pred_stored": "text",
+      "w_argmax": "text",
+      "opt_labels": {
+        "text": 1
+      },
+      "S": [
+        1,
+        1,
+        1,
+        0,
+        2,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-repetitive-r3",
+      "archetype": "balanced_multimodal",
+      "difficulty": "repetitive",
+      "concept": "Bucles anidados",
+      "gold": "code",
+      "pred_stored": "diagram",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-arrays_vectors-r1",
+      "archetype": "balanced_multimodal",
+      "difficulty": "arrays_vectors",
+      "concept": "Indexación",
+      "gold": "code",
+      "pred_stored": "diagram",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        2,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-arrays_vectors-r2",
+      "archetype": "balanced_multimodal",
+      "difficulty": "arrays_vectors",
+      "concept": "Búsqueda (in, .index())",
+      "gold": "code",
+      "pred_stored": "text",
+      "w_argmax": "text",
+      "opt_labels": {
+        "text": 1
+      },
+      "S": [
+        1,
+        1,
+        1,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-functions-r3",
+      "archetype": "balanced_multimodal",
+      "difficulty": "functions",
+      "concept": "Valores de retorno",
+      "gold": "code",
+      "pred_stored": "diagram",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        1,
+        1,
+        2,
+        1,
+        2,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "profile_id": "syn-balanced_multimodal-functions-r4",
+      "archetype": "balanced_multimodal",
+      "difficulty": "functions",
+      "concept": "Ámbito de variables",
+      "gold": "code",
+      "pred_stored": "diagram",
+      "w_argmax": "diagram",
+      "opt_labels": {
+        "diagram": 1
+      },
+      "S": [
+        1,
+        0,
+        2,
+        0,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ]
+}

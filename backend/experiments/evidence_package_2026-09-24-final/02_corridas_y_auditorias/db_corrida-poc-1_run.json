@@ -1,0 +1,155 @@
+{
+  "run_label": "corrida-poc-1",
+  "spec_version": "2026-09-23",
+  "dataset_version": "v1",
+  "library_version": "lib-v5-9ae9ffdd",
+  "batch_seed": 20260923,
+  "config": {
+    "pso": {
+      "n_particles": 20,
+      "w": 0.729,
+      "c1": 1.494,
+      "c2": 1.494,
+      "v_max": 1.0,
+      "k_max": 15,
+      "epsilon": 0.001,
+      "init_low": 0.0,
+      "init_high": 2.0
+    },
+    "fitness_weights": {
+      "alpha": 0.4,
+      "beta": 0.3,
+      "gamma": 0.15,
+      "delta": 0.15
+    }
+  },
+  "config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+  "git_commit": "d31d29c819151239e932c1d3c28e56dd364507d0",
+  "summary": {
+    "n": 100,
+    "completed": 100,
+    "failed": 0,
+    "convergence": {
+      "n": 100,
+      "completed": 100,
+      "failed": 0,
+      "CR": 1.0,
+      "stop_reasons": {
+        "epsilon": 100,
+        "k_max": 0,
+        "error": 0
+      },
+      "k_stop": {
+        "mean": 1.65,
+        "median": 1.0,
+        "max": 4
+      },
+      "t_conv_ms": {
+        "mean": 41.223901690000005,
+        "median": 39.357862499999996,
+        "max": 60.814938
+      }
+    },
+    "f1": {
+      "classes": [
+        "code",
+        "diagram",
+        "text",
+        "audio"
+      ],
+      "confusion": [
+        [
+          42,
+          5,
+          3,
+          0
+        ],
+        [
+          5,
+          20,
+          0,
+          0
+        ],
+        [
+          4,
+          2,
+          19,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "per_class": {
+        "code": {
+          "precision": 0.8235294117647058,
+          "recall": 0.84,
+          "f1": 0.8316831683168315,
+          "support": 50
+        },
+        "diagram": {
+          "precision": 0.7407407407407407,
+          "recall": 0.8,
+          "f1": 0.7692307692307692,
+          "support": 25
+        },
+        "text": {
+          "precision": 0.8636363636363636,
+          "recall": 0.76,
+          "f1": 0.8085106382978724,
+          "support": 25
+        },
+        "audio": {
+          "precision": null,
+          "recall": null,
+          "f1": null,
+          "support": 0
+        }
+      },
+      "macro_f1_defined": 0.8031415252818244,
+      "macro_f1_all4": 0.6023561439613683,
+      "f1_adapt": 0.8031415252818244,
+      "accuracy": 0.81,
+      "ci95_bootstrap": [
+        0.711409200194325,
+        0.8766285036613435
+      ],
+      "n_pairs": 100
+    },
+    "search_quality": {
+      "mean_gap_to_global_optimum": 0.006752578960547307,
+      "max_gap": 0.04521934545161305,
+      "cases_at_global_optimum": 10,
+      "n": 100
+    },
+    "cycle_latency_in_process_ms": {
+      "n": 100,
+      "p50_ms": 45.137830499697884,
+      "p90_ms": 58.30051780103532,
+      "p95_ms": 60.23346524898443,
+      "p99_ms": 65.61023053944155,
+      "max_ms": 66.76343599974643,
+      "mean_ms": 46.85318701000142
+    },
+    "t_conv_ms": {
+      "n": 100,
+      "p50_ms": 39.357862499999996,
+      "p90_ms": 52.5282106,
+      "p95_ms": 54.044394,
+      "p99_ms": 56.56303452000002,
+      "max_ms": 60.814938,
+      "mean_ms": 41.223901690000005
+    },
+    "comm_overhead_ms_mean": 179.18234224972284,
+    "audio_in_every_package": true,
+    "predicted_distribution": {
+      "code": 51,
+      "diagram": 27,
+      "text": 22,
+      "audio": 0
+    }
+  }
+}

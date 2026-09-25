@@ -1,0 +1,82 @@
+{
+  "dataset_version": "v1",
+  "generator_version": "profile-gen-v1",
+  "batch_seed": 20260923,
+  "kappa": 20.0,
+  "centroids_version": "centroids-v1",
+  "centroids": {
+    "visual_dominant": [
+      0.55,
+      0.1,
+      0.15,
+      0.2
+    ],
+    "logical_syntactic": [
+      0.2,
+      0.1,
+      0.15,
+      0.55
+    ],
+    "explanatory_conceptual": [
+      0.15,
+      0.15,
+      0.55,
+      0.15
+    ],
+    "balanced_multimodal": [
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ]
+  },
+  "centroid_order": [
+    "w_v",
+    "w_a",
+    "w_t",
+    "w_c"
+  ],
+  "distribution": {
+    "n": 100,
+    "unique_ids": 100,
+    "by_archetype": {
+      "visual_dominant": 25,
+      "logical_syntactic": 25,
+      "explanatory_conceptual": 25,
+      "balanced_multimodal": 25
+    },
+    "by_difficulty": {
+      "sequential": 20,
+      "conditional": 20,
+      "repetitive": 20,
+      "arrays_vectors": 20,
+      "functions": 20
+    },
+    "cells": 20,
+    "ok": true
+  },
+  "difficulty_modules": {
+    "sequential": [
+      "Introducción a la Programación",
+      "Variables y Tipos de Datos",
+      "Operadores y Expresiones"
+    ],
+    "conditional": [
+      "Condicionales"
+    ],
+    "repetitive": [
+      "Bucles"
+    ],
+    "arrays_vectors": [
+      "Arreglos"
+    ],
+    "functions": [
+      "Funciones"
+    ]
+  },
+  "excluded_modules": [
+    "Recursividad"
+  ],
+  "file": "profiles-v1.jsonl",
+  "sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15"
+}
