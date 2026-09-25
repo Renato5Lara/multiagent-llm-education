@@ -1,0 +1,7 @@
+# Dependencias de loadtest/ (se instalan junto con requirements.txt). Todo tercero importado por loadtest/*.py está declarado:
+#   locust   → locustfile.py (gevent llega como dependencia de locust; su versión queda en 06_entorno/pip_freeze.txt del paquete de evidencia)
+#   psutil   → sample_resources.py
+#   redis    → sample_resources.py (mismo pin que requirements.txt)
+locust==2.46.6
+psutil==7.2.2
+redis==8.1.0

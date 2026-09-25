@@ -12,7 +12,7 @@ Los paquetes `evidence_package_2026-09-23/` y `evidence_package_2026-09-24/` son
 ## Contraste con lo versionado (2026-09-24)
 - Datos de entrada (5), corridas, auditorías F1/PSO y sensibilidad (8): **idénticos** a `datasets/synthetic_profiles/` y `experiments/results/` en Git. Manifiestos de biblioteca (3): idénticos a `datasets/adaptation_library/`; las listas `audio_sha256_*` coinciden con esos manifiestos.
 - **F1_adapt = 0.8031415** en ambas corridas, **por debajo del objetivo 0.85**; sensibilidad máxima **0.8164** (tampoco lo alcanza). `db_corrida-poc-N_cycles.csv` (exportación de PostgreSQL) coincide con los JSON de corrida.
-- Carga: los 85 archivos de `04_carga/` son idénticos a `loadtest/results/` local (aún sin versionar): 1 worker 15.8 req/s y P95 2.2 s a 25 usuarios; 4 workers 40.5 req/s y P95 1.1 s. **SUS y panel: 0 respuestas** (`06_entorno/human_eval_status.json`).
+- Carga: los 85 archivos de `04_carga/` son idénticos a `loadtest/results/` (versionado después, en el commit de `loadtest/`): 1 worker 15.8 req/s y P95 2.2 s a 25 usuarios; 4 workers 40.5 req/s y P95 1.1 s. **SUS y panel: 0 respuestas** (`06_entorno/human_eval_status.json`).
 - Sin MP3, cachés, binarios, secretos ni datos de estudiantes. Duplicados por contenido: 24 CSV de carga (12 `*_failures.csv` y 12 `*_exceptions.csv`, solo con cabecera), conservados como salida de Locust.
 
 ## Redacción de rutas personales (única modificación posterior a la generación)

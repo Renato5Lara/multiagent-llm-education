@@ -1,9 +1,9 @@
 # Índice de evidencia experimental — PoC `adaptation_swarm` (corridas 2026-09-23; paquete 2026-09-24)
 
-> **Qué está en Git (2026-09-24).** Ya versionados: dataset y gold, biblioteca M1 (manifiestos y artefactos no-audio), corridas congeladas `corrida-poc-1/2` con sus auditorías, la sensibilidad y sus pruebas
-> (`experiments/results/adaptation_swarm_frozen_runs.md` y `..._sensitivity.md` fijan semilla, versiones, configuración PSO, métricas y sha256). **Aún no versionados:** el paquete de evidencia que este índice describe
-> (`experiments/evidence_package_2026-09-24-final/`), `tools/build_evidence_package` (los comandos `--verify`/`--check` de abajo), `loadtest/` con sus resultados y las auditorías semánticas de la biblioteca.
-> Las cifras de auditoría F1, auditoría semántica y carga de este índice se contrastaron el 2026-09-24 con esos archivos locales. **No se declara cumplimiento de la asesoría:** F1_adapt = 0.8031 < 0.85.
+> **Qué está en Git (2026-09-24).** Versionados: dataset y gold, biblioteca M1 (manifiestos y artefactos no-audio), corridas congeladas `corrida-poc-1/2` con sus auditorías, la sensibilidad, sus pruebas
+> (`experiments/results/adaptation_swarm_frozen_runs.md` y `..._sensitivity.md` fijan semilla, versiones, configuración PSO, métricas y sha256), el paquete de evidencia que este índice describe
+> (`experiments/evidence_package_2026-09-24-final/`, con `tools/build_evidence_package` para los comandos `--verify`/`--check` de abajo y la nota `experiments/EVIDENCE_PACKAGE_STATUS.md`) y `loadtest/` con sus resultados.
+> Las cifras de auditoría F1, auditoría semántica y carga de este índice se contrastaron el 2026-09-24 con esos archivos. **No se declara cumplimiento de la asesoría:** F1_adapt = 0.8031 < 0.85.
 
 Todo lo listado está en este paquete con su sha256 (`MANIFEST.sha256`; verificar con
 `python -m adaptation_swarm.tools.build_evidence_package --verify <este_directorio>`; hechos: `--check <este_directorio>`). Estados: **DEMOSTRADO** (medido, con evidencia) ·

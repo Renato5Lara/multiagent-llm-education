@@ -26,17 +26,17 @@ python -m adaptation_swarm.profiles.build_dataset          # 100 perfiles + gold
 python -m adaptation_swarm.multimodal.builder --all-mapped # biblioteca M1 real (LLM + sandbox + TTS)
 python -m adaptation_swarm.tools.library_inventory --check --require-complete   # inventario y hashes de la biblioteca (exit 0 = íntegra y completa)
 ```
-Pendientes de versionar a 2026-09-24 (existen en el árbol de trabajo, aún no en Git): `run_slice`, `run_experiment` (`--sweep`, `--run-label`), `analysis/f1_audit` y `analysis/pso_audit`,
-`tools/build_evidence_package`, `loadtest/` (Locust/JMeter, ver `loadtest/README.md`) y `scripts/repro_db_bootstrap.sh`.
+Carga (Locust/JMeter): `loadtest/README.md`. Pendientes de versionar a 2026-09-24 (existen en el árbol de trabajo, aún no en Git): `run_slice`, `run_experiment` (`--sweep`, `--run-label`),
+`analysis/f1_audit` y `analysis/pso_audit` y `scripts/repro_db_bootstrap.sh`.
 
 ## Pruebas (desde `backend/`)
-- **Sin servicios** (14 archivos, 169 pruebas, verificadas con PostgreSQL y Redis detenidos y la biblioteca local en solo lectura): `test_boundaries`, `test_dataset_profiles`, `test_fitness`,
-  `test_frozen_runs_preserved`, `test_gold_f1`, `test_library_full_coverage`, `test_library_inventory`, `test_metrics`, `test_pso_diagnostics`, `test_pso_engine`, `test_pso_phi`,
-  `test_semantic_validation`, `test_sensitivity_preserved`, `test_sus_panel`.
+- **Sin servicios** (16 archivos, 197 pruebas, verificadas con PostgreSQL y Redis detenidos y la biblioteca local en solo lectura): `test_boundaries`, `test_dataset_profiles`, `test_evidence_and_tools`, `test_fitness`,
+  `test_frozen_runs_preserved`, `test_gold_f1`, `test_library_full_coverage`, `test_library_inventory`, `test_loadtest_structure`, `test_metrics`, `test_pso_diagnostics`, `test_pso_engine`, `test_pso_phi`,
+  `test_semantic_validation`, `test_sensitivity_preserved`, `test_sus_panel`. `test_evidence_and_tools` lanza solo procesos locales de solo lectura (`alembic heads`, versiones de podman/node/g++/chrome, git).
 - **Con PostgreSQL y Redis** (7 archivos, 79 pruebas en el entorno aislado): `test_persistence`, `test_messages_bus`, `test_agents_library`, `test_cycle_integration`, `test_package_validation`,
   `test_api_adaptation`, `test_resources_integration`. Instrucciones y resultado esperado: `tests/adaptation_swarm/integration_env/README.md`.
 - **Excluidas a propósito** (4 en `test_agents_library.py`): 2 usan el sandbox de código (crean contenedores podman) y 2 llaman a OpenAI de verdad. También quedan fuera de Git por ahora `test_library_sandbox_integration.py`
-  (sandbox real), `test_corrida_poc_1_preserved.py` (necesita cargar la corrida en PostgreSQL), `test_cpp_render.py` y `test_evidence_and_tools.py`.
+  (sandbox real), `test_corrida_poc_1_preserved.py` (necesita cargar la corrida en PostgreSQL) y `test_cpp_render.py`.
 - **Con la biblioteca sin audio** (clon de Git): las pruebas que necesitan los MP3 se **omiten** con la razón explícita; `SWARM_REQUIRE_LIBRARY=1` las hace **fallar**; un MP3 con hash incorrecto siempre falla
   (`tests/adaptation_swarm/LIBRARY_TESTS.md`). `test_resources_integration` se omite si falta `psutil`.
 - **Ojo:** `-m "not integration"` **no** equivale a «sin servicios» (las pruebas del bus y varias de agentes usan Redis y no llevan esa marca): seleccionar por archivo, como arriba.

@@ -65,10 +65,11 @@ de sensibilidad y los 100 casos de `corrida-poc-1`.
 (`experiments/results/adaptation_swarm_frozen_runs.md`: semilla, versiones de dataset, gold y biblioteca, configuración PSO, métricas y sha256) se recalculan desde los datos guardados y fallan si un artefacto cambia.
 **F1_adapt = 0.8031, por debajo del objetivo 0.85**: esa verificación no lo modifica ni lo presenta como cumplido.
 
-**Estado de versionado a 2026-09-24:** `run_slice`, `run_experiment`, `analysis/f1_audit`, `analysis/pso_audit` y `tools/build_evidence_package` existen en el árbol de trabajo pero **aún no están en Git**;
+**Estado de versionado a 2026-09-24:** `run_slice`, `run_experiment`, `analysis/f1_audit` y `analysis/pso_audit` existen en el árbol de trabajo pero **aún no están en Git** (`tools/build_evidence_package` sí, junto con el paquete de evidencia);
 `f1_audit` y `pso_audit` además leen PostgreSQL (las auditorías que generaron están versionadas junto a las corridas).
 ## 6. Carga (Locust y JMeter; escenarios 1/10/25/50/100)
-> `loadtest/` (con sus resultados) y `requirements-loadtest.txt` **aún no están versionados** (2026-09-24); las cifras de carga de `EVIDENCE_INDEX.md` proceden de esos resultados locales.
+> `loadtest/` (scripts, README y resultados del 2026-09-23) y `requirements-loadtest.txt` están versionados; las cifras de carga de `EVIDENCE_INDEX.md` proceden de esos resultados, idénticos a `04_carga/` del paquete final
+> (`tests/adaptation_swarm/test_loadtest_structure.py` lo verifica sin ejecutar carga). JMeter no se instala con el proyecto (`JMETER_BIN`); detalles en `loadtest/README.md`.
 ```
 SWARM_API_KEY=k SWARM_API_RUN_LABEL=<run creado con start_run> python -m uvicorn app.main:app --port 8765 --workers 4
 SWARM_API_KEY=k SCENARIO_LABEL=w4 BACKEND_PID=<pid> bash loadtest/run_scenarios.sh http://localhost:8765 30
@@ -126,6 +127,6 @@ Estrategia (DECISION-CLOSURE §14): **en Git** están los manifiestos de las 10 
 - **Verificación de hashes del audio (solo lectura):** `tests/adaptation_swarm/test_library_full_coverage.py` recalcula el sha256 de los **2151 mp3** de las 10 versiones contra sus manifiestos y distingue **ausente** (se omite; con `SWARM_REQUIRE_LIBRARY=1` falla)
   de **corrupto** (falla siempre). Sus casos negativos usan copias con enlaces simbólicos en un directorio temporal: nunca se escribe en `datasets/adaptation_library/`. Comprobado también con `library_inventory --check --require-complete` y `multimodal.verify`.
 - **Entorno aislado de integración:** las pruebas que necesitan PostgreSQL y Redis se ejecutan en contenedores propios (`tests/adaptation_swarm/integration_env/`), con la biblioteca local en solo lectura; resultado esperado: 79 pruebas pasan.
-  **No** se ejecutan el sandbox de código (crearía contenedores adicionales) ni las llamadas reales a OpenAI (TTS y LLM): 4 pruebas de `test_agents_library.py`, más `test_library_sandbox_integration.py`, `test_corrida_poc_1_preserved.py` (necesita cargar la corrida en PostgreSQL), `test_cpp_render.py` y `test_evidence_and_tools.py`,
+  **No** se ejecutan el sandbox de código (crearía contenedores adicionales) ni las llamadas reales a OpenAI (TTS y LLM): 4 pruebas de `test_agents_library.py`, más `test_library_sandbox_integration.py`, `test_corrida_poc_1_preserved.py` (necesita cargar la corrida en PostgreSQL) y `test_cpp_render.py`,
   que quedan fuera de Git por ahora. Sin `psutil`, `test_resources_integration.py` se omite.
 - **Corridas congeladas y resultado observado:** `experiments/results/adaptation_swarm_frozen_runs.md` (y `..._sensitivity.md`). **F1_adapt = 0.8031 < 0.85** en ambas corridas; no se ajustó nada para modificarlo y la sensibilidad (máximo 0.8164) tampoco llega al objetivo.
