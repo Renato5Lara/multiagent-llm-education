@@ -1,0 +1,293 @@
+{
+ "meta": {
+  "source": "irrCAC (Python) — port del paquete R irrCAC de K. L. Gwet",
+  "package_version": "0.4.4",
+  "pandas_version": "2.3.3",
+  "generated_on": "2026-09-26",
+  "function": "irrCAC.raw.CAC(ratings, categories=[0, 1]).gwet()",
+  "categories": {
+   "0": "Rechazar",
+   "1": "Aprobar"
+  },
+  "items": [
+   "visual_dominant",
+   "logical_syntactic",
+   "explanatory_conceptual",
+   "balanced_multimodal"
+  ],
+  "rounding": "5 decimales (lo aplica la librería)",
+  "tolerance": 2e-05,
+  "r_irrCAC_verified": true,
+  "reference": "Gwet, K. L. (2008). Br. J. Math. Stat. Psychol. 61(1), 29-48",
+  "verification_status": "CERTIFICADO 2026-09-27: R 4.4.1 + irrCAC 1.4 (contenedor rocker/r-ver:4.4.1) confirman los 16 casos (EXACTA o REDONDEO_DOCUMENTABLE, ninguna DISCREPANCIA_REAL). Detalle: px8_certification_2026-09-27.json; salida cruda de R: r_irrCAC_results.json.",
+  "future_certification": {
+   "status": "CERTIFICADO 2026-09-27 (ver px8_certification_2026-09-27.json)",
+   "script": "verify_with_R_irrCAC.R",
+   "command": "Rscript verify_with_R_irrCAC.R ac1_reference_cases.json r_irrCAC_results.json",
+   "certifies": [
+    "gold_panel.gwet_ac1_binary_multi_rater (implementación del proyecto)",
+    "ac1_reference_cases.json (valores del port en Python)"
+   ],
+   "compares": "implementación ↔ fixture ↔ R, para AC1, p_a y p_e en los casos del fixture",
+   "r_version_required": "no se exige una versión mínima; se registra la real (r_irrCAC_results.json: r_version)",
+   "irrCAC_R_package_version_required": "no se fija de antemano; se registra la real (irrCAC_version)",
+   "expected_fields": "gwet.ac1.raw(...)$est: coeff.val, pa, pe (según la documentación de irrCAC; el script aborta si faltan; NO verificado por ejecución)",
+   "hash_inputs": [
+    "ac1_reference_cases.json (sha256/md5 registrado por el script como input_hash)",
+    "gold_panel.py al momento de certificar (registrar su sha256 junto con el resultado)"
+   ],
+   "hash_outputs": [
+    "r_irrCAC_results.json (sha256 en el addendum de certificación)"
+   ],
+   "tolerance_rule": "half-unit of the last decimal literally returned by R (and of the fixture: 5 decimals) + 1e-12; derivada de la precisión real de R, no fijada por suposición",
+   "evidence_to_keep": [
+    "r_irrCAC_results.json",
+    "versión de R e irrCAC y sessionInfo (dentro del JSON)",
+    "sha256 del fixture y de gold_panel.py",
+    "salida del test de certificación"
+   ]
+  }
+ },
+ "cases": [
+  {
+   "id": "c01_one_reject",
+   "n": 10,
+   "approvals": [
+    10,
+    10,
+    10,
+    9
+   ],
+   "external": {
+    "ac1": 0.94744,
+    "pa": 0.95,
+    "pe": 0.04875
+   }
+  },
+  {
+   "id": "c02_six_of_ten",
+   "n": 10,
+   "approvals": [
+    6,
+    10,
+    10,
+    10
+   ],
+   "external": {
+    "ac1": 0.8374,
+    "pa": 0.86667,
+    "pe": 0.18
+   }
+  },
+  {
+   "id": "c03_four_of_ten",
+   "n": 10,
+   "approvals": [
+    4,
+    10,
+    10,
+    10
+   ],
+   "external": {
+    "ac1": 0.82103,
+    "pa": 0.86667,
+    "pe": 0.255
+   }
+  },
+  {
+   "id": "c04_tie",
+   "n": 10,
+   "approvals": [
+    5,
+    10,
+    10,
+    10
+   ],
+   "external": {
+    "ac1": 0.82222,
+    "pa": 0.86111,
+    "pe": 0.21875
+   }
+  },
+  {
+   "id": "c05_mixed",
+   "n": 10,
+   "approvals": [
+    8,
+    9,
+    7,
+    10
+   ],
+   "external": {
+    "ac1": 0.65697,
+    "pa": 0.74444,
+    "pe": 0.255
+   }
+  },
+  {
+   "id": "c06_all_reject_one",
+   "n": 10,
+   "approvals": [
+    0,
+    10,
+    10,
+    10
+   ],
+   "external": {
+    "ac1": 1.0,
+    "pa": 1.0,
+    "pe": 0.375
+   }
+  },
+  {
+   "id": "c07_six_each",
+   "n": 10,
+   "approvals": [
+    6,
+    6,
+    6,
+    6
+   ],
+   "external": {
+    "ac1": -0.02564,
+    "pa": 0.46667,
+    "pe": 0.48
+   }
+  },
+  {
+   "id": "c08_n12",
+   "n": 12,
+   "approvals": [
+    7,
+    12,
+    12,
+    12
+   ],
+   "external": {
+    "ac1": 0.837,
+    "pa": 0.86742,
+    "pe": 0.18663
+   }
+  },
+  {
+   "id": "c09_n12_mixed",
+   "n": 12,
+   "approvals": [
+    6,
+    11,
+    12,
+    12
+   ],
+   "external": {
+    "ac1": 0.7629,
+    "pa": 0.82197,
+    "pe": 0.24913
+   }
+  },
+  {
+   "id": "c10_all_approve",
+   "n": 10,
+   "approvals": [
+    10,
+    10,
+    10,
+    10
+   ],
+   "external": {
+    "ac1": 1.0,
+    "pa": 1.0,
+    "pe": 0.0
+   }
+  },
+  {
+   "id": "c11_n15",
+   "n": 15,
+   "approvals": [
+    9,
+    10,
+    12,
+    15
+   ],
+   "external": {
+    "ac1": 0.48097,
+    "pa": 0.66667,
+    "pe": 0.35778
+   }
+  },
+  {
+   "id": "c12_all_reject",
+   "n": 10,
+   "approvals": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "external": {
+    "ac1": 1.0,
+    "pa": 1.0,
+    "pe": 0.0
+   }
+  },
+  {
+   "id": "c13_n11",
+   "n": 11,
+   "approvals": [
+    6,
+    7,
+    8,
+    9
+   ],
+   "external": {
+    "ac1": 0.19708,
+    "pa": 0.54545,
+    "pe": 0.43388
+   }
+  },
+  {
+   "id": "c14_n20",
+   "n": 20,
+   "approvals": [
+    11,
+    14,
+    17,
+    20
+   ],
+   "external": {
+    "ac1": 0.52722,
+    "pa": 0.69211,
+    "pe": 0.34875
+   }
+  },
+  {
+   "id": "c15_balanced_split",
+   "n": 10,
+   "approvals": [
+    10,
+    0,
+    10,
+    0
+   ],
+   "external": {
+    "ac1": 1.0,
+    "pa": 1.0,
+    "pe": 0.5
+   }
+  },
+  {
+   "id": "c16_n10_seven",
+   "n": 10,
+   "approvals": [
+    7,
+    8,
+    9,
+    10
+   ],
+   "external": {
+    "ac1": 0.65697,
+    "pa": 0.74444,
+    "pe": 0.255
+   }
+  }
+ ]
+}

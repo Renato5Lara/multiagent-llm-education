@@ -1,0 +1,751 @@
+{
+  "cases": [
+    {
+      "R_ac1": 0.94744,
+      "R_pa": 0.95,
+      "R_pe": 0.04875,
+      "approvals": [
+        10,
+        10,
+        10,
+        9
+      ],
+      "case_id": "c01_one_reject",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 2.4178712222e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 4e-17,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.94744,
+      "fixture_pa": 0.95,
+      "fixture_pe": 0.04875,
+      "n": 10,
+      "python_ac1": 0.9474375821287778,
+      "python_pa": 0.95,
+      "python_pe": 0.04875000000000004,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.8374,
+      "R_pa": 0.866666666666667,
+      "R_pe": 0.18,
+      "approvals": [
+        6,
+        10,
+        10,
+        10
+      ],
+      "case_id": "c02_six_of_ten",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 1.6260162602e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 3.333333333e-06,
+          "python_vs_R": 3e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 3e-17,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.8374,
+      "fixture_pa": 0.86667,
+      "fixture_pe": 0.18,
+      "n": 10,
+      "python_ac1": 0.8373983739837398,
+      "python_pa": 0.8666666666666667,
+      "python_pe": 0.17999999999999997,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.82103,
+      "R_pa": 0.866666666666667,
+      "R_pe": 0.255,
+      "approvals": [
+        4,
+        10,
+        10,
+        10
+      ],
+      "case_id": "c03_four_of_ten",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 9.172259507e-07,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 3.333333333e-06,
+          "python_vs_R": 3e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.82103,
+      "fixture_pa": 0.86667,
+      "fixture_pe": 0.255,
+      "n": 10,
+      "python_ac1": 0.8210290827740493,
+      "python_pa": 0.8666666666666667,
+      "python_pe": 0.255,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.82222,
+      "R_pa": 0.861111111111111,
+      "R_pe": 0.21875,
+      "approvals": [
+        5,
+        10,
+        10,
+        10
+      ],
+      "case_id": "c04_tie",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 2.2222222223e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 1.111111111e-06,
+          "python_vs_R": 2e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.82222,
+      "fixture_pa": 0.86111,
+      "fixture_pe": 0.21875,
+      "n": 10,
+      "python_ac1": 0.8222222222222223,
+      "python_pa": 0.8611111111111112,
+      "python_pe": 0.21875,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.65697,
+      "R_pa": 0.744444444444444,
+      "R_pe": 0.255,
+      "approvals": [
+        8,
+        9,
+        7,
+        10
+      ],
+      "case_id": "c05_mixed",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 2.4086502611e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 4.444444444e-06,
+          "python_vs_R": 5e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.65697,
+      "fixture_pa": 0.74444,
+      "fixture_pe": 0.255,
+      "n": 10,
+      "python_ac1": 0.6569724086502611,
+      "python_pa": 0.7444444444444445,
+      "python_pe": 0.255,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 1.0,
+      "R_pa": 1.0,
+      "R_pe": 0.375,
+      "approvals": [
+        0,
+        10,
+        10,
+        10
+      ],
+      "case_id": "c06_all_reject_one",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 1.0,
+      "fixture_pa": 1.0,
+      "fixture_pe": 0.375,
+      "n": 10,
+      "python_ac1": 1.0,
+      "python_pa": 1.0,
+      "python_pe": 0.375,
+      "status": "EXACTA"
+    },
+    {
+      "R_ac1": -0.02564,
+      "R_pa": 0.466666666666667,
+      "R_pe": 0.48,
+      "approvals": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "case_id": "c07_six_each",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 1.02564102559e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 3.333333333e-06,
+          "python_vs_R": 3e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": -0.02564,
+      "fixture_pa": 0.46667,
+      "fixture_pe": 0.48,
+      "n": 10,
+      "python_ac1": -0.02564102564102559,
+      "python_pa": 0.4666666666666667,
+      "python_pe": 0.48,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.837,
+      "R_pa": 0.867424242424242,
+      "R_pe": 0.186631944444444,
+      "approvals": [
+        7,
+        12,
+        12,
+        12
+      ],
+      "case_id": "c08_n12",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 3.9778791113e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 4.242424242e-06,
+          "python_vs_R": 4e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 1.944444444e-06,
+          "python_vs_R": 4e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.837,
+      "fixture_pa": 0.86742,
+      "fixture_pe": 0.18663,
+      "n": 12,
+      "python_ac1": 0.8370039778791113,
+      "python_pa": 0.8674242424242424,
+      "python_pe": 0.1866319444444444,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.7629,
+      "R_pa": 0.821969696969697,
+      "R_pe": 0.249131944444444,
+      "approvals": [
+        6,
+        11,
+        12,
+        12
+      ],
+      "case_id": "c09_n12_mixed",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 6.831318971e-07,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 3.03030303e-07,
+          "python_vs_R": 0.0,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 1.944444444e-06,
+          "python_vs_R": 5e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.7629,
+      "fixture_pa": 0.82197,
+      "fixture_pe": 0.24913,
+      "n": 12,
+      "python_ac1": 0.7629006831318971,
+      "python_pa": 0.821969696969697,
+      "python_pe": 0.2491319444444445,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 1.0,
+      "R_pa": 1.0,
+      "R_pe": 1e-15,
+      "approvals": [
+        10,
+        10,
+        10,
+        10
+      ],
+      "case_id": "c10_all_approve",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 1e-15,
+          "python_vs_R": 1e-15,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 1.0,
+      "fixture_pa": 1.0,
+      "fixture_pe": 0.0,
+      "n": 10,
+      "python_ac1": 1.0,
+      "python_pa": 1.0,
+      "python_pe": 0.0,
+      "status": "EXACTA"
+    },
+    {
+      "R_ac1": 0.48097,
+      "R_pa": 0.666666666666667,
+      "R_pe": 0.357777777777778,
+      "approvals": [
+        9,
+        10,
+        12,
+        15
+      ],
+      "case_id": "c11_n15",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 1.1418685121e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 3.333333333e-06,
+          "python_vs_R": 4e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 2.222222222e-06,
+          "python_vs_R": 2.5e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.48097,
+      "fixture_pa": 0.66667,
+      "fixture_pe": 0.35778,
+      "n": 15,
+      "python_ac1": 0.4809688581314879,
+      "python_pa": 0.6666666666666666,
+      "python_pe": 0.35777777777777775,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 1.0,
+      "R_pa": 1.0,
+      "R_pe": 1e-15,
+      "approvals": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "case_id": "c12_all_reject",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 1e-15,
+          "python_vs_R": 1e-15,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 1.0,
+      "fixture_pa": 1.0,
+      "fixture_pe": 0.0,
+      "n": 10,
+      "python_ac1": 1.0,
+      "python_pa": 1.0,
+      "python_pe": 0.0,
+      "status": "EXACTA"
+    },
+    {
+      "R_ac1": 0.19708,
+      "R_pa": 0.545454545454545,
+      "R_pe": 0.433884297520661,
+      "approvals": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "case_id": "c13_n11",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 2.9197080276e-07,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 4.545454545e-06,
+          "python_vs_R": 4e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 4.297520661e-06,
+          "python_vs_R": 2e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.19708,
+      "fixture_pa": 0.54545,
+      "fixture_pe": 0.43388,
+      "n": 11,
+      "python_ac1": 0.19708029197080276,
+      "python_pa": 0.5454545454545454,
+      "python_pe": 0.4338842975206612,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 0.52722,
+      "R_pa": 0.692105263157895,
+      "R_pe": 0.34875,
+      "approvals": [
+        11,
+        14,
+        17,
+        20
+      ],
+      "case_id": "c14_n20",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 4.9722194161e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 4.736842105e-06,
+          "python_vs_R": 2e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 5e-17,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.52722,
+      "fixture_pa": 0.69211,
+      "fixture_pe": 0.34875,
+      "n": 20,
+      "python_ac1": 0.5272249722194161,
+      "python_pa": 0.6921052631578948,
+      "python_pe": 0.34874999999999995,
+      "status": "REDONDEO_DOCUMENTABLE"
+    },
+    {
+      "R_ac1": 1.0,
+      "R_pa": 1.0,
+      "R_pe": 0.5,
+      "approvals": [
+        10,
+        0,
+        10,
+        0
+      ],
+      "case_id": "c15_balanced_split",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 1.0,
+      "fixture_pa": 1.0,
+      "fixture_pe": 0.5,
+      "n": 10,
+      "python_ac1": 1.0,
+      "python_pa": 1.0,
+      "python_pe": 0.5,
+      "status": "EXACTA"
+    },
+    {
+      "R_ac1": 0.65697,
+      "R_pa": 0.744444444444444,
+      "R_pe": 0.255,
+      "approvals": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "case_id": "c16_n10_seven",
+      "differences": {
+        "ac1": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 2.4086502611e-06,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 5.000001e-06
+        },
+        "pa": {
+          "fixture_vs_R": 4.444444444e-06,
+          "python_vs_R": 5e-16,
+          "status": "REDONDEO_DOCUMENTABLE",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        },
+        "pe": {
+          "fixture_vs_R": 0.0,
+          "python_vs_R": 0.0,
+          "status": "EXACTA",
+          "tolerance_fixture_vs_R": 5.000001e-06,
+          "tolerance_python_vs_R": 1.0005e-12
+        }
+      },
+      "fixture_ac1": 0.65697,
+      "fixture_pa": 0.74444,
+      "fixture_pe": 0.255,
+      "n": 10,
+      "python_ac1": 0.6569724086502611,
+      "python_pa": 0.7444444444444445,
+      "python_pe": 0.255,
+      "status": "REDONDEO_DOCUMENTABLE"
+    }
+  ],
+  "certification_date": "2026-09-27",
+  "certification_status": "CERTIFICADO",
+  "certified_at_utc": "2026-09-27T06:39:40.354477+00:00",
+  "comparison_method": "implementación Python (gwet_ac1_binary_multi_rater) ↔ fixture (port en Python de irrCAC) ↔ R (paquete irrCAC original, gwet.ac1.raw)",
+  "function_used": "irrCAC::gwet.ac1.raw(ratings, weights = 'unweighted')",
+  "gold_panel_path": "adaptation_swarm/metrics/gold_panel.py",
+  "gold_panel_sha256": "575936ba5e4fded5691de1a74ff5b18951694e548a2a7e4bd1dd6d3385543c44",
+  "input_fixture_sha256": "5ae555c8d1386b688c5683798156eb9dc3e7f6b66e913127989037fcb6d28c9a",
+  "irrCAC_version": "1.4",
+  "number_of_cases": 16,
+  "overall_status": "CERTIFICADO",
+  "r_irrCAC_results_file": "r_irrCAC_results.json",
+  "r_irrCAC_results_sha256": "0b837bfe51099b85c85b539539c98eaabd32c2e51bae158c1a04d2f3b6456e4d",
+  "r_version": "R version 4.4.1 (2024-06-14)",
+  "schema": "px8-certification-v1",
+  "scope": "Certifica ÚNICAMENTE gwet_ac1_binary_multi_rater (PX5/PX8). No incluye resultados de K=10, del panel humano ni del SUS.",
+  "session_info": [
+    "R version 4.4.1 (2024-06-14)",
+    "Platform: x86_64-pc-linux-gnu",
+    "Running under: Ubuntu 22.04.5 LTS",
+    "",
+    "Matrix products: default",
+    "BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 ",
+    "LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.20.so;  LAPACK version 3.10.0",
+    "",
+    "locale:",
+    " [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              ",
+    " [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    ",
+    " [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   ",
+    " [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 ",
+    " [9] LC_ADDRESS=C               LC_TELEPHONE=C            ",
+    "[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       ",
+    "",
+    "time zone: Etc/UTC",
+    "tzcode source: system (glibc)",
+    "",
+    "attached base packages:",
+    "[1] stats     graphics  grDevices utils     datasets  methods   base     ",
+    "",
+    "other attached packages:",
+    "[1] jsonlite_2.0.0 irrCAC_1.4    ",
+    "",
+    "loaded via a namespace (and not attached):",
+    " [1] tidyr_1.3.2      R6_2.6.1         tidyselect_1.2.1 magrittr_2.0.5  ",
+    " [5] glue_1.8.1       stringr_1.6.0    tibble_3.3.1     pkgconfig_2.0.3 ",
+    " [9] dplyr_1.2.1      generics_0.1.4   lifecycle_1.0.5  cli_3.6.6       ",
+    "[13] vctrs_0.7.3      withr_3.0.3      compiler_4.4.1   purrr_1.2.2     ",
+    "[17] tools_4.4.1      pillar_1.11.1    rlang_1.3.0      stringi_1.8.9   "
+  ],
+  "tolerance_derivation": {
+    "note": "irrCAC::gwet.ac1.raw redondea coeff.val (AC1) a 5 decimales internamente; pa y pe se devuelven con precisión completa de double. Verificado por observación directa de la salida de R (no documentado explícitamente en la ayuda del paquete)",
+    "rule": "media unidad del último decimal que R devolvió para CADA CAMPO por separado (ac1, pa, pe), + 1e-12; NO una tolerancia global ni supuesta",
+    "tolerance_by_field": {
+      "ac1": 5.000001e-06,
+      "pa": 1.0005e-12,
+      "pe": 1.0005e-12
+    },
+    "tolerance_fixture": 5.000001e-06
+  }
+}

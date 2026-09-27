@@ -21,7 +21,7 @@ cd backend
 # legados, por eso se crean entre c5d6e7f8a9b0 y head; al final se realinean los ids de los 32 conceptos con el dataset.
 python -m alembic upgrade c5d6e7f8a9b0
 python -m adaptation_swarm.tools.bootstrap_preconditions
-python -m alembic upgrade head                              # head esperado: b2f4c9d10a02
+python -m alembic upgrade head                              # head esperado: c3a91d27e5f0
 python -m adaptation_swarm.tools.concept_ids restore
 
 export PYTHONDONTWRITEBYTECODE=1 SWARM_REQUIRE_LIBRARY=1 TMPDIR=/ruta/fuera/del/repo

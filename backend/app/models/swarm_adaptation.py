@@ -61,7 +61,7 @@ class SwarmProfile(Base):
     seed = Column(String(24), nullable=False)
     replicate = Column(Integer, nullable=False)
     gold_label = Column(String(20), nullable=False)
-    gold_rule_version = Column(String(20), nullable=False)
+    gold_rule_version = Column(String(80), nullable=False)   # ensanchada de 20 a 80 (migración c3a91d27e5f0)
     payload = Column(JSON, nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
 

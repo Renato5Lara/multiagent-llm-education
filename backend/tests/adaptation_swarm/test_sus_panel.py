@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from adaptation_swarm.metrics.sus import PENDING, analyze_gold_panel, analyze_sus, fleiss_kappa, study_status, sus_score
 from adaptation_swarm.persistence.human_eval import HumanEvalRepository
-from app.models.swarm_human_evaluation import GoldPanelRating, SusParticipant, SusResponse
+from app.models.swarm_human_evaluation import GoldPanelArchetypeRating, GoldPanelRating, SusParticipant, SusResponse
 
 
 def test_sus_score_formula():
@@ -55,7 +55,7 @@ def test_gold_panel_is_pending_without_ten_evaluators():
 @pytest.fixture
 def repo():
     eng = create_engine("sqlite://")                       # BD en memoria: jamás se toca Postgres
-    for m in (SusParticipant, SusResponse, GoldPanelRating):
+    for m in (SusParticipant, SusResponse, GoldPanelRating, GoldPanelArchetypeRating):
         m.__table__.create(eng)
     return HumanEvalRepository(sessionmaker(eng))
 

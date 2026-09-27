@@ -28,7 +28,7 @@ def repo(store, profiles, slice_profile):
 
 def test_migration_head_and_tables_exist():
     with SessionLocal() as s:
-        assert s.execute(text("select version_num from alembic_version")).scalar() == "b2f4c9d10a02"
+        assert s.execute(text("select version_num from alembic_version")).scalar() == "c3a91d27e5f0"
         names = {t for (t,) in s.execute(text("select tablename from pg_tables where schemaname='public'"))}
     assert {"swarm_runs", "swarm_profiles", "swarm_cycles", "swarm_iterations", "agent_messages",
             "multimodal_candidates", "multimodal_packages", "sus_participants", "sus_responses", "gold_panel_ratings"} <= names

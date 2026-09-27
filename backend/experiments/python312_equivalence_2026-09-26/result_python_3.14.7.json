@@ -1,0 +1,400 @@
+{
+ "batch_seeds_26092601": [
+  8165928940206602054,
+  8360559651251712682,
+  7475544090998493249,
+  3634011697469882971,
+  5702031817250623442,
+  8478605148547081216,
+  3755851724589217441,
+  472686057985794298,
+  2750922979925999750,
+  957592608891830543
+ ],
+ "cycle_seed_sample": {
+  "syn-visual_dominant-sequential-r0": 3044990098478476265,
+  "syn-visual_dominant-sequential-r1": 16532581029945545341,
+  "syn-visual_dominant-sequential-r2": 3973925799024174057
+ },
+ "dataset": {
+  "manifest_file": "manifest-v1.json",
+  "manifest_sha256": "0b96fb159177f337e96b5a9f1c3fb35caf47d466b4ae0a6eb4a2694c024f96b2",
+  "n": 100,
+  "sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+  "version": "v1"
+ },
+ "env": {
+  "numpy": "2.5.3",
+  "python": "3.14.7",
+  "scipy": "1.18.1"
+ },
+ "imports": {
+  "adaptation_swarm.analysis.core_replay": "ok",
+  "adaptation_swarm.analysis.inference": "ok",
+  "adaptation_swarm.analysis.preregistration": "ok",
+  "adaptation_swarm.analysis.replica_evaluation": "ok",
+  "adaptation_swarm.analysis.replicas": "ok",
+  "adaptation_swarm.fitness.coher": "ok",
+  "adaptation_swarm.fitness.costt": "ok",
+  "adaptation_swarm.fitness.fitness": "ok",
+  "adaptation_swarm.fitness.redund": "ok",
+  "adaptation_swarm.fitness.simil": "ok",
+  "adaptation_swarm.gold.f1_multilabel": "ok",
+  "adaptation_swarm.gold.rubric_v2": "ok",
+  "adaptation_swarm.metrics.convergence": "ok",
+  "adaptation_swarm.metrics.gold_panel": "ok",
+  "adaptation_swarm.multimodal.library": "ok",
+  "adaptation_swarm.profiles.generator": "ok",
+  "adaptation_swarm.profiles.w_mapping": "ok",
+  "adaptation_swarm.pso.decode": "ok",
+  "adaptation_swarm.pso.engine": "ok",
+  "adaptation_swarm.pso.params": "ok",
+  "adaptation_swarm.pso.rng": "ok",
+  "adaptation_swarm.pso.space": "ok",
+  "adaptation_swarm.schemas.ids": "ok"
+ },
+ "library_v10": {
+  "concepts": 30,
+  "manifest_sha256": "89716455a14c2674a3a6a93bf1609be2c0cf83ed62ae654b2832b7038543a0ab",
+  "version": "lib-v10-5dd83cd4"
+ },
+ "plan": {
+  "batch_seeds_ok": true,
+  "environment": {
+   "implementation": "CPython",
+   "numpy": "2.5.3",
+   "python": "3.14.7",
+   "scipy": "1.18.1"
+  },
+  "sha256_sin_entorno_ni_codigo": "1fc272dcb5bbd953af1edce3b19fa9d92b2bcaef476413676a3a4d8884eba01b"
+ },
+ "preregistration_drift": [],
+ "replay": {
+  "corrida-poc-1": {
+   "casos": [
+    {
+     "F_bytes": "0.47408643885743135",
+     "F_historico": "0.47408643885743135",
+     "F_ok": true,
+     "S": [
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      0,
+      1
+     ],
+     "S_ok": true,
+     "i": 0,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-visual_dominant-sequential-r0",
+     "seed": 4037703324791817429,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.4894028300652375",
+     "F_historico": "0.4894028300652375",
+     "F_ok": true,
+     "S": [
+      1,
+      1,
+      2,
+      1,
+      0,
+      1,
+      0,
+      1
+     ],
+     "S_ok": true,
+     "i": 13,
+     "k": 2,
+     "k_ok": true,
+     "profile_id": "syn-visual_dominant-repetitive-r3",
+     "seed": 16202747654229527130,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.5177365941383762",
+     "F_historico": "0.5177365941383762",
+     "F_ok": true,
+     "S": [
+      2,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "S_ok": true,
+     "i": 27,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-logical_syntactic-sequential-r2",
+     "seed": 12865665482750912768,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.4761442057960404",
+     "F_historico": "0.4761442057960404",
+     "F_ok": true,
+     "S": [
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "S_ok": true,
+     "i": 41,
+     "k": 2,
+     "k_ok": true,
+     "profile_id": "syn-logical_syntactic-arrays_vectors-r1",
+     "seed": 5798414899094168723,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.5085592641724763",
+     "F_historico": "0.5085592641724763",
+     "F_ok": true,
+     "S": [
+      2,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1
+     ],
+     "S_ok": true,
+     "i": 55,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-explanatory_conceptual-conditional-r0",
+     "seed": 5403199988300762116,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.5239134742473572",
+     "F_historico": "0.5239134742473572",
+     "F_ok": true,
+     "S": [
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1
+     ],
+     "S_ok": true,
+     "i": 69,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-explanatory_conceptual-arrays_vectors-r4",
+     "seed": 914300619506913626,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.4912837776075252",
+     "F_historico": "0.4912837776075252",
+     "F_ok": true,
+     "S": [
+      1,
+      1,
+      1,
+      0,
+      2,
+      0,
+      0,
+      1
+     ],
+     "S_ok": true,
+     "i": 83,
+     "k": 2,
+     "k_ok": true,
+     "profile_id": "syn-balanced_multimodal-conditional-r3",
+     "seed": 5859446758382026149,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.510131213233446",
+     "F_historico": "0.510131213233446",
+     "F_ok": true,
+     "S": [
+      1,
+      0,
+      2,
+      1,
+      1,
+      0,
+      1,
+      1
+     ],
+     "S_ok": true,
+     "i": 99,
+     "k": 4,
+     "k_ok": true,
+     "profile_id": "syn-balanced_multimodal-functions-r4",
+     "seed": 8462033072814403669,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    }
+   ],
+   "library": "lib-v5-9ae9ffdd",
+   "n": 8,
+   "todos_coinciden": true
+  },
+  "corrida-poc-2": {
+   "casos": [
+    {
+     "F_bytes": "0.4683786250362893",
+     "F_historico": "0.4683786250362893",
+     "F_ok": true,
+     "S": [
+      1,
+      1,
+      2,
+      1,
+      0,
+      1,
+      0,
+      1
+     ],
+     "S_ok": true,
+     "i": 5,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-visual_dominant-conditional-r0",
+     "seed": 16332781649364634472,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.4552126305749631",
+     "F_historico": "0.4552126305749631",
+     "F_ok": true,
+     "S": [
+      2,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      1
+     ],
+     "S_ok": true,
+     "i": 30,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-logical_syntactic-conditional-r0",
+     "seed": 2276694705033047283,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.47259804376748366",
+     "F_historico": "0.47259804376748366",
+     "F_ok": true,
+     "S": [
+      2,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1
+     ],
+     "S_ok": true,
+     "i": 62,
+     "k": 2,
+     "k_ok": true,
+     "profile_id": "syn-explanatory_conceptual-repetitive-r2",
+     "seed": 8806879630371419678,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    },
+    {
+     "F_bytes": "0.4909309487188182",
+     "F_historico": "0.4909309487188182",
+     "F_ok": true,
+     "S": [
+      1,
+      1,
+      2,
+      1,
+      2,
+      1,
+      2,
+      1
+     ],
+     "S_ok": true,
+     "i": 91,
+     "k": 1,
+     "k_ok": true,
+     "profile_id": "syn-balanced_multimodal-arrays_vectors-r1",
+     "seed": 16930491460716235114,
+     "seed_ok": true,
+     "stop": "epsilon",
+     "stop_ok": true
+    }
+   ],
+   "library": "lib-v9-a0231e9b",
+   "n": 4,
+   "todos_coinciden": true
+  }
+ },
+ "rng": {
+  "2750922979925999750": "092ef633b640e168f930e635",
+  "3634011697469882971": "bf1e04f28211d18f98bca6ab",
+  "3755851724589217441": "f1851bf1dfb3641bd333847c",
+  "472686057985794298": "61b29f72da892e1a2ec88498",
+  "5702031817250623442": "b5bc044c05c0dc2ffabae970",
+  "7475544090998493249": "2a7b34192524af98d5447616",
+  "8165928940206602054": "2a2b2f3a4d083a77b257a475",
+  "8360559651251712682": "8a8e3fd4be2d25b3c90059d1",
+  "8478605148547081216": "1cddb7bf6d2fb4a12c3a213b",
+  "957592608891830543": "b9e2ae05e2eb82f19d69910b"
+ },
+ "rng_cycle": {
+  "syn-visual_dominant-sequential-r0": "c601314362b9419f5a2b281a",
+  "syn-visual_dominant-sequential-r1": "1fd56fdd5732749458d42260",
+  "syn-visual_dominant-sequential-r2": "18cdc2855360e171faa47919"
+ },
+ "rng_first_values": {
+  "8165928940206602054": [
+   0.10000283522103759,
+   0.7710088008111586,
+   0.9634063422534996
+  ]
+ }
+}

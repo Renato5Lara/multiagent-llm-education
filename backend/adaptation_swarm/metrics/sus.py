@@ -82,7 +82,8 @@ def fleiss_kappa(table: np.ndarray) -> float:
 
 
 def analyze_gold_panel(agrees_by_cell: dict[tuple[str, str], list[bool]]) -> dict:
-    """Acuerdo del panel con la tabla gold (20 celdas; cada valor = lista de votos «razonable»/«no razonable»)."""
+    """[HISTÓRICO gold-v1 - NO OFICIAL] Acuerdo del panel con la tabla gold (20 celdas; cada valor = lista de votos «razonable»/«no razonable»; Fleiss κ). Se conserva para reproducir el
+    diseño histórico; el protocolo OFICIAL del panel (gold-v2) vive en `metrics/gold_panel.py` y usa exclusivamente Gwet AC1."""
     n_raters = {len(v) for v in agrees_by_cell.values()}
     n = min(n_raters) if n_raters else 0
     if n < MIN_EVALUATORS or len(n_raters) != 1:

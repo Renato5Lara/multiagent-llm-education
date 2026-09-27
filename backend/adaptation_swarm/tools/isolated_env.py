@@ -35,6 +35,10 @@ FROZEN_LABELS = ("corrida-poc-1", "corrida-poc-2")                # corridas con
 BACK = Path(__file__).resolve().parents[2]
 REPO = BACK.parent
 PROTECTED_DIRS = (BACK / "experiments" / "results", REPO / "datasets")           # resultados congelados, dataset y biblioteca
+# Además, los analizadores NUEVOS (réplicas, línea base, alternativas de Balanced) no escriben en los resultados de carga ni dentro del propio paquete `adaptation_swarm`
+# (fuentes, pruebas de contrato, documentos). No se aplica a `check_output_targets`: los ejecutores existentes y los nuevos experimentos (p. ej. `loadtest/results/<fecha>_<hw>/`
+# escrito por Locust) siguen pudiendo escribir donde les corresponde.
+NEW_ANALYZER_FORBIDDEN_DIRS = (BACK / "loadtest" / "results", BACK / "adaptation_swarm")
 
 
 def mask(url: str) -> str:
@@ -128,6 +132,16 @@ def check_output_targets(targets: list[Path]) -> None:
             raise SystemExit(f"{t}: dentro de un paquete de evidencia congelado; usa otro --out-dir")
         if resolved.exists():
             raise SystemExit(f"{t} ya existe: los resultados no se sobrescriben")
+
+
+def check_new_output_targets(targets: list[Path]) -> None:
+    """`check_output_targets` + los analizadores nuevos tampoco escriben en `loadtest/results/` ni dentro de `adaptation_swarm/`. Resuelve rutas (`..`, enlaces simbólicos)."""
+    check_output_targets(targets)
+    for t in targets:
+        resolved = t.resolve()
+        for forbidden in NEW_ANALYZER_FORBIDDEN_DIRS:
+            if resolved == forbidden.resolve() or forbidden.resolve() in resolved.parents:
+                raise SystemExit(f"{t}: dentro de {forbidden.relative_to(REPO)}, que no admite salidas de los analizadores; usa otro --out-dir")
 
 
 def require_out_dir(value: str | None) -> Path:

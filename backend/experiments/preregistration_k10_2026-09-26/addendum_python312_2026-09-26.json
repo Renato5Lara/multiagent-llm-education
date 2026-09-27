@@ -1,0 +1,73 @@
+{
+  "changes_methodology": false,
+  "container_image": {
+    "image_id": "9e87977b867847e186d066f531ef783b006d582a985c341c269446088d90f2c4",
+    "note": "el tag 3.12-slim es mutable; la identidad verificable es el image_id / digest",
+    "ref": "docker.io/library/python:3.12-slim",
+    "repo_digest": "docker.io/library/python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b"
+  },
+  "created_on": "2026-09-26",
+  "evidence_files": {
+    "pip_freeze_python_3.12.14.txt": "7c056e9bbc260fb3b8a59712b1bf55c0cbaf81f9b3feaf3485ecb4e2d3ac78f4",
+    "result_python_3.12.14.json": "902c8826311fc8b967e3d18cede579fca7321cd0667aafe28510518302120028",
+    "result_python_3.14.7.json": "2332cd8135d23a2cb917296db8b0b049880fb07dd8338cc6983840607f96a593",
+    "verify_python_equivalence.py": "891bc5cc5531c0d46b2bdf46d3eb3df63c196ca8900fe7c0a788183e6e78c4f6"
+  },
+  "evidence_root": "experiments/python312_equivalence_2026-09-26",
+  "kind": "python312-equivalence-evidence",
+  "not_covered_by_this_addendum": [
+    "R + irrCAC (PX8) sigue PENDIENTE",
+    "aiosqlite no figura en requirements.txt (solo tests)",
+    "el árbol Git sigue sin sellar",
+    "APPROVED_RULE_VERSIONS sigue vacío"
+  ],
+  "note": "Addendum informativo. NO reescribe el pre-registro ni cambia ninguna decisión metodológica (semilla, K, biblioteca, dataset, regla, huellas, PSO). Registra la evidencia de Python 3.12.14 que el pre-registro dejaba como GAP TÉCNICO (environment_at_fixing.python_3_12_status).",
+  "preregistration": {
+    "path": "backend/experiments/preregistration_k10_2026-09-26/preregistration_k10.json",
+    "sha256": "9e8cd2360b38172d6ddbacee532985970a703f16746bf981c046e0230e714928"
+  },
+  "requirements": {
+    "file": "backend/requirements.txt",
+    "sha256": "199dcbe1cc82ef76812a6c67210d91399c6063c9d5ae368aa497c4cd39debb27"
+  },
+  "schema": "preregistration-addendum-v1",
+  "summary": {
+    "batch_seeds_master_26092601_equal": true,
+    "dataset_identity_equal": true,
+    "environments": {
+      "python_3_12": {
+        "numpy": "2.5.3",
+        "python": "3.12.14",
+        "scipy": "1.18.1"
+      },
+      "python_3_14": {
+        "numpy": "2.5.3",
+        "python": "3.14.7",
+        "scipy": "1.18.1"
+      }
+    },
+    "historical_replay": {
+      "corrida-poc-1": {
+        "all_match_historical": true,
+        "identical_to_python_3_14": true,
+        "library": "lib-v5-9ae9ffdd",
+        "n": 8
+      },
+      "corrida-poc-2": {
+        "all_match_historical": true,
+        "identical_to_python_3_14": true,
+        "library": "lib-v9-a0231e9b",
+        "n": 4
+      }
+    },
+    "imports_ok": {
+      "python_3_12": 23,
+      "python_3_14": 23,
+      "total": 23
+    },
+    "library_v10_identity_equal": true,
+    "plan_sha256_without_environment_equal": true,
+    "preregistration_drift_in_python_3_12": [],
+    "rng_pcg64_fingerprints_equal": true
+  }
+}

@@ -158,7 +158,7 @@ def test_final_evidence_package_is_consistent_without_audio_and_without_personal
     assert lmap["latest"].startswith("lib-v10-") and lmap["runs"] == {"corrida-poc-1": "lib-v5-9ae9ffdd", "corrida-poc-2": "lib-v9-a0231e9b"}
     assert lmap["audio_in_git"] is False and lmap["audio_in_this_package"] is False and not list(PKG.rglob("*.mp3"))
     env = json.loads((PKG / "06_entorno" / "environment.json").read_text())
-    assert env["alembic_head"] == bep.alembic_head() and env["library_latest"] == lmap["latest"]
+    assert env["alembic_head"] in bep.alembic_lineage() and env["library_latest"] == lmap["latest"]
     he = json.loads((PKG / "06_entorno" / "human_eval_status.json").read_text())
     assert he["participants"] == 0 and he["sus_responses"] == 0 and he["gold_panel"]["n_evaluators"] == 0           # SUS y panel: sin respuestas
     for f in PKG.rglob("*"):

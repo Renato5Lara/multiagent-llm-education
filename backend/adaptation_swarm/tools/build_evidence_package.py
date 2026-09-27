@@ -72,6 +72,14 @@ def alembic_head(back: Path = BACK) -> str:
     return heads[0]
 
 
+def alembic_lineage(back: Path = BACK) -> set[str]:
+    """Todas las revisiones de la cadena de migraciones hasta el head real (lectura de `alembic/versions`, sin ejecutar nada). Un paquete de evidencia CONGELADO registra el head de su fecha: sigue siendo válido
+    mientras ese head pertenezca a la cadena (una migración posterior no lo invalida; solo un head ajeno a la cadena o un fallo registrado sí)."""
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+    return {rev.revision for rev in ScriptDirectory.from_config(Config(str(back / "alembic.ini"))).walk_revisions()}
+
+
 def collect_environment(library_latest: str) -> dict:
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(), "python": sys.version, "platform": platform.platform(),
@@ -237,8 +245,8 @@ def validate_package(out: Path, *, expected_f1: float = EXPECTED_F1, expect_no_h
     top = max(numbers, key=numbers.get)
     if lmap["latest"] != top or env["library_latest"] != top or inv["latest"] != top:
         problems.append(f"latest inconsistente: mapa={lmap['latest']} env={env['library_latest']} inventario={inv['latest']} máximo numérico={top}")
-    if env.get("alembic_head") != alembic_head() or str(env.get("alembic_head", "")).startswith("FAILED"):
-        problems.append(f"alembic_head del paquete ({env.get('alembic_head')}) ≠ head real ({alembic_head()})")
+    if str(env.get("alembic_head", "")).startswith("FAILED") or env.get("alembic_head") not in alembic_lineage():
+        problems.append(f"alembic_head del paquete ({env.get('alembic_head')}) no pertenece a la cadena de migraciones hasta el head real ({alembic_head()})")
     for label in FROZEN_RUNS:
         run = json.loads((out / f"02_corridas_y_auditorias/adaptation_swarm_{label}.json").read_text())
         if run["config"]["library_version"] != lmap["runs"][label]:

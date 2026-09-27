@@ -35,7 +35,7 @@ from app.models.knowledge_test import (
 from app.models.research import ExperimentResult, ResearchMetric
 from app.models.registro_recurso import RegistroRecurso
 from app.models.experiment_cmg_result import ExperimentCMGResult
-from app.models.swarm_human_evaluation import GoldPanelRating, SusParticipant, SusResponse
+from app.models.swarm_human_evaluation import GoldPanelArchetypeRating, GoldPanelRating, SusParticipant, SusResponse
 from app.models.swarm_adaptation import (
     AgentMessage, MultimodalCandidate, MultimodalPackage, SwarmCycle, SwarmIteration, SwarmProfile, SwarmRun,
 )
@@ -74,6 +74,6 @@ __all__ = [
     "ExperimentResult", "ResearchMetric",
     "RegistroRecurso",
     "ExperimentCMGResult",
-    "GoldPanelRating", "SusParticipant", "SusResponse",
+    "GoldPanelArchetypeRating", "GoldPanelRating", "SusParticipant", "SusResponse",
     "AgentMessage", "MultimodalCandidate", "MultimodalPackage", "SwarmCycle", "SwarmIteration", "SwarmProfile", "SwarmRun",
 ]
