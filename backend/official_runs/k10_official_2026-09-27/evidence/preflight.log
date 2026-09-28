@@ -1,0 +1,20 @@
+PASS G01 HEAD == 5a1fe3b (leído de .git, sin binario git)  [5a1fe3b2fcfa34d5a3a920a01a6b1a30fc7d79a5]
+PASS G02 Python 3.12.x  [3.12.14]
+PASS G03 numpy/scipy == pines del preregistro  [2.5.3/1.18.1]
+PASS G04 regla oficial aprobada y única en el registro
+PASS G05 sha del preregistro
+PASS G06 verify_preregistration(deep=True) == []  [[]]
+PASS G07 drift de código == ['gold/rubric_v2.py'] con el hash registrado  [['gold/rubric_v2.py']]
+PASS G08 cadena metodológica fuera del fingerprint (18) sin cambios  [[]]
+PASS G09 verify_addendum(registro) == []
+PASS G10 dataset sha y 100 perfiles
+PASS G11 manifest lib-v10 e integridad de 1080 artefactos  [{'artifacts': 1080, 'missing': 0, 'hash_mismatch': 0, 'ok': True}]
+PASS G12 semilla maestra, K=10 y 10 seeds == sellados y distintos
+PASS G13 plan OFICIAL (en memoria) coincide con el preregistro  [[]]
+PASS G14 plan.environment == environment_required del preregistro (NO lo comprueba el ejecutor)
+PASS G15 revalidate_plan(plan) == OFICIAL
+PASS G16 plan.modules == módulos registrados salvo rubric_v2
+PASS G17 directorio de salida NUEVO y permitido (no results/, datasets/, paquetes, adaptation_swarm/, loadtest/results/)  [/out/k10_official_2026-09-27]
+PASS G18 el padre del destino existe y es escribible  [/out]
+
+RESUMEN: 18 PASS / 18

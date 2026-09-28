@@ -1,0 +1,17 @@
+PASS I01 archivos == plan + manifest + 10 réplicas, sin extras ni subdirectorios  [12 archivos]
+PASS I02 los 12 archivos se leen como JSON válido
+PASS I03 rp.verify(out) == [] (verificador existente: hashes de réplicas y plan vs manifiesto)  [[]]
+PASS I04 manifest: schema, status OFICIAL, master_seed 26092601, k 10
+PASS I05 batch_seeds del manifiesto == 10 seeds sellados, distintos, en orden
+PASS I06 manifest.replicas: índices 0..9, batch_seed y n_cases=100 por réplica
+PASS I07 sha256 de cada réplica recalculado == manifiesto
+PASS I08 plan_sha256 del manifiesto == sha256(plan.json)
+PASS I09 plan.json == plan reconstruido a partir del preregistro (check_plan_matches_preregistration == [])  [[]]
+PASS I10 manifiesto y plan coinciden en todos los campos compartidos
+PASS I11 identidad: biblioteca, dataset (100 perfiles, no limitado) y regla oficial aprobada
+PASS I12 código y entorno registrados: commit 5a1fe3b, Python 3.12.14, numpy/scipy, módulos == fijación salvo rubric_v2 (hash actual)  [dirty=None]
+PASS I13 cada réplica: estructura, procedencia, 100 casos en el orden del dataset, campos completos y seed de ciclo == derive_seed(batch_seed, perfil, 0)  [réplicas con problema: []]
+PASS I14 semillas de ciclo: 1000 en total, todas distintas; == n_case_seeds del manifiesto
+PASS I15 ninguna semilla de lote histórica ni de prueba
+
+RESUMEN INTEGRIDAD: 15 PASS / 15

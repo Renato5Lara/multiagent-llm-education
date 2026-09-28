@@ -1,0 +1,77 @@
+En la rama feat/adaptation-swarm-poc
+Cambios no rastreados para el commit:
+  (usa "git add <archivo>..." para actualizar lo que será confirmado)
+  (usa "git restore <archivo>..." para descartar los cambios en el directorio de trabajo)
+	modificados:     .claude/settings.local.json
+	modificados:     .codegraph/daemon.pid
+	modificados:     CLAUDE.md
+	modificados:     backend/adaptation_swarm/CIERRE_POC.md
+	modificados:     backend/app/api/routes/auth.py
+	modificados:     backend/app/main.py
+	modificados:     backend/runtime/domain/adaptar/productor.py
+	modificados:     backend/runtime/domain/diagnosticar/productor.py
+	modificados:     backend/runtime/domain/orientar/productor.py
+	modificados:     backend/runtime/domain/remediar/productor.py
+	modificados:     backend/runtime/kernel/deliberation/politica.py
+
+Archivos sin seguimiento:
+  (usa "git add <archivo>..." para incluirlo a lo que será confirmado)
+	AGENTS.md
+	backend/adaptation_swarm/ROADMAP_POST_ASESOR.md
+	backend/adaptation_swarm/tools/.impeccable/
+	backend/app/services/cmg_multiagent_configuration_service.py
+	backend/experiments/d1_adversarial_pilot.py
+	backend/experiments/d1_graduado_piloto.py
+	backend/experiments/evidence_package_2026-09-23/
+	backend/experiments/evidence_package_2026-09-24/
+	backend/experiments/results/corrida2_analysis_report_v1.md
+	backend/experiments/results/corrida2_analysis_v1.csv
+	backend/experiments/results/corrida2_evidence_assignment_v1.csv
+	backend/experiments/results/corrida2_evidence_assignment_v1.md
+	backend/experiments/results/corrida2_paired_bootstrap_v1.json
+	backend/experiments/results/corrida2_statistics_v1.json
+	backend/experiments/results/d1_adversarial_pilot_v1.json
+	backend/experiments/results/d1_sensitivity_pilot_v1.json
+	backend/experiments/results/experiment_cmg_dataset_codebook.md
+	backend/experiments/results/experiment_cmg_dataset_raw.json
+	backend/experiments/results/experiment_cmg_dataset_v1.csv
+	backend/experiments/results/library_semantic_audit_lib-v10-5dd83cd4.json
+	backend/experiments/results/library_semantic_audit_lib-v5-9ae9ffdd.json
+	backend/experiments/results/library_semantic_audit_lib-v6-86516a15.json
+	backend/experiments/results/library_semantic_audit_lib-v7-7c046f32.json
+	backend/experiments/results/library_semantic_audit_lib-v8-079928dc.json
+	backend/experiments/results/library_semantic_audit_lib-v9-a0231e9b.json
+	backend/experiments/results/r32_post_analysis_audit_v1.md
+	backend/loadtest/results/.impeccable/
+	backend/scripts/analizar_saturacion_oe3.py
+	backend/scripts/benchmark_capacidad_http.py
+	backend/scripts/benchmark_results/
+	backend/scripts/diagnostico_punto4_ventana_carrera.py
+	backend/scripts/experimento_cmg_runner.py
+	backend/scripts/experimento_oe2_punto1_interact.py
+	backend/scripts/experimento_oe2_punto2_complete.py
+	backend/scripts/experimento_oe2_punto3_diagnostico.py
+	backend/scripts/experimento_oe2_punto3_sensibilidad_n.py
+	backend/scripts/experimento_oe2_punto4_enroll.py
+	backend/scripts/experimento_oe2_punto4_sensibilidad_n.py
+	backend/scripts/experimento_oe2_punto8_idempotency.py
+	backend/scripts/experimento_oe4_excepcion_integracion.py
+	backend/scripts/experimento_oe4_llm_no_disponible.py
+	backend/scripts/experimento_oe4_saturacion_pool.py
+	backend/scripts/experimento_oe4_t2_trabajo_pendiente.py
+	backend/scripts/gateA_analisis.py
+	backend/scripts/instrumentacion_e1.py
+	backend/scripts/lanzar_servidor_experimento_oe2.py
+	backend/scripts/lanzar_servidor_experimento_oe4.py
+	backend/scripts/oe2_results/
+	backend/scripts/oe4_fixtures.py
+	backend/scripts/oe4_results/
+	backend/tests/test_cmg_multiagent_configuration_service.py
+	backend/tests/test_experimento_cmg_runner.py
+	backend/tests/test_r19_aislamiento_experimental_rama_a.py
+	backend/tests/test_r23_d1_sensitivity_pilot.py
+	backend/tests/test_r24_d1_adversarial_pilot.py
+	backend/tests/test_r26_promocion_d1_cierre_evaluacion.py
+	docs/architecture/ADR/.impeccable/
+
+sin cambios agregados al commit (usa "git add" y/o "git commit -a")

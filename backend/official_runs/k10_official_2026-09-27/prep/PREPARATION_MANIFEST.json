@@ -1,0 +1,123 @@
+{
+  "batch_seeds": [
+    8165928940206602054,
+    8360559651251712682,
+    7475544090998493249,
+    3634011697469882971,
+    5702031817250623442,
+    8478605148547081216,
+    3755851724589217441,
+    472686057985794298,
+    2750922979925999750,
+    957592608891830543
+  ],
+  "batch_seeds_note": "Sellados en el preregistro; NO se recalculan ni se modifican.",
+  "container_flags": "--rm --pull=never --network=none --security-opt label=disable --userns=keep-id ; repo :ro en /work ; ~/k10_prep :ro en /prep ; wheelhouse :ro en /wh ; staging rw en /out ; -w /work/backend ; env: PYTHONDONTWRITEBYTECODE=1 HOME=/tmp PYTHONPATH=/work/backend ; sin SWARM_*",
+  "dataset_sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+  "dependencies": {
+    "install": "pip install --no-index --find-links /wh --require-hashes -r /prep/requirements-k10.lock",
+    "lock_file": "requirements-k10.lock",
+    "lock_sha256": "6070af5967a09d6035dfadba210de658e7490e2d65b8cf3c4a17645c4afa05f4",
+    "packages": [
+      "numpy==2.5.3",
+      "scipy==1.18.1",
+      "pydantic==2.13.4",
+      "pydantic_core==2.46.4",
+      "annotated-types==0.7.0",
+      "typing_extensions==4.15.0",
+      "typing-inspection==0.4.2"
+    ],
+    "wheel_origin": "pip download --only-binary=:all: --no-deps dentro de la imagen fijada (cp312 manylinux), 2026-09-27; los hashes de wheel son evidencia NUEVA de esta preparación"
+  },
+  "expected_head": "5a1fe3b2fcfa34d5a3a920a01a6b1a30fc7d79a5",
+  "future_command": [
+    "python -m adaptation_swarm.analysis.replicas run",
+    "--master-seed 26092601",
+    "--k 10",
+    "--library-version lib-v10-5dd83cd4",
+    "--gold-rule gold-v2-cand-A",
+    "--inclusion-rule incl-ge1",
+    "--out-dir /out/k10_official_<AAAA-MM-DD>"
+  ],
+  "future_command_notes": "Sin --provisional ni --limit-profiles. NO EJECUTADO al crear este manifiesto.",
+  "host_verification_at_preparation": {
+    "branch": "feat/adaptation-swarm-poc",
+    "git_head": "5a1fe3b2fcfa34d5a3a920a01a6b1a30fc7d79a5",
+    "porcelain_entries": 68,
+    "porcelain_note": "el árbol NO está limpio (trabajo histórico ajeno a K=10); solo importa la cadena sellada",
+    "sealed_paths_checked": 50,
+    "sealed_paths_problems": []
+  },
+  "image": {
+    "arch": "amd64",
+    "created": "2026-09-19T01:07:11.796422884Z",
+    "digest_field_reported_now": "sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f",
+    "digest_note": "La imagen tiene dos RepoDigests (uno es el del addendum_python312: 44ff437b…). El campo Digest de podman informó 44ff437b… en una consulta anterior y f77ac9e4… en esta; el ID de imagen es la identidad autoritativa.",
+    "id": "9e87977b867847e186d066f531ef783b006d582a985c341c269446088d90f2c4",
+    "python_version_from_image_config": "3.12.14",
+    "reference_by": "ID (no por tag: el tag 3.12-slim es mutable)",
+    "repo_digests": [
+      "docker.io/library/python@sha256:44ff437bba879d4941b710a369a8f19266aea34b29002807f0c487fabc9eec9b",
+      "docker.io/library/python@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f"
+    ]
+  },
+  "k": 10,
+  "lib_v10_manifest_sha256": "89716455a14c2674a3a6a93bf1609be2c0cf83ed62ae654b2832b7038543a0ab",
+  "master_seed": 26092601,
+  "not_executed": {
+    "experimental_results_generated": false,
+    "k10": true,
+    "panel": true
+  },
+  "output": {
+    "final_copy_in_repo": "backend/experiments/k10_official_<AAAA-MM-DD>/ (tras rp.verify; NO creado)",
+    "forbidden_parents": [
+      "backend/experiments/results",
+      "datasets",
+      "evidence_package_*",
+      "backend/adaptation_swarm",
+      "backend/loadtest/results"
+    ],
+    "must_not_exist_before_run": true,
+    "staging_host_dir": "~/k10_staging_<AAAA-MM-DD> (vacío, fuera del repo, montado rw en /out)",
+    "staging_in_container": "/out/k10_official_<AAAA-MM-DD>"
+  },
+  "outside_repository": "Estos artefactos viven FUERA del repositorio (~/k10_prep) y NO forman parte del código sellado ni del árbol Git; no cambian HEAD ni ningún fingerprint.",
+  "preflight": {
+    "exit_code_contract": "1 si cualquier gate falla",
+    "file": "k10_preflight.py",
+    "gates": 18,
+    "last_result_before_persisting": "18/18 PASS (contenedor 3.12.14, --network=none, repo :ro)",
+    "sha256": "8faa4faffd9ab31152942485734786d4650b390148fd4d50d00d814cfa2750ca"
+  },
+  "prepared_at_utc": "2026-09-28T03:51:03+00:00",
+  "preregistration_sha256": "9e8cd2360b38172d6ddbacee532985970a703f16746bf981c046e0230e714928",
+  "purpose": "Preparación técnica de la ejecución oficial K=10. NO es una ejecución ni contiene resultados.",
+  "python_expected": "3.12.14",
+  "rubric_v2_sha256": {
+    "allowed_drift": [
+      "gold/rubric_v2.py"
+    ],
+    "at_sealing_commit": "071a2ae8896e549f02c57195188bd759ede81cfabd6c3a07e2a06c38298f596a",
+    "now": "cdf55ce0b08712df162423873686e8821d3daa019926ae666bbcd1e15b29b262"
+  },
+  "rule_version": "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2",
+  "schema": "k10-preparation-manifest-v1",
+  "sealing_commit": "5d7d12c9776a62d1234afb71acb505cd84cb5872",
+  "wheelhouse": {
+    "count": 7,
+    "dir": "wheelhouse/",
+    "in_git": false,
+    "set_sha256": "b3da4b6b9161ef1aa380fe81030c36a0d40e3a391c741aa8eb856941669cca5c",
+    "set_sha256_definition": "sha256 de las líneas '<sha256>  <nombre>\\n' ordenadas por nombre",
+    "wheels_sha256": {
+      "annotated_types-0.7.0-py3-none-any.whl": "1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53",
+      "numpy-2.5.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl": "b7e18c623bb5c95acb3b3328861272816ba199fb531921c5d6d0b675f1fde9e3",
+      "pydantic-2.13.4-py3-none-any.whl": "45a282cde31d808236fd7ea9d919b128653c8b38b393d1c4ab335c62924d9aba",
+      "pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl": "926c9541b14b12b1681dca8a0b75feb510b06c6341b70a8e500c2fdcff837cce",
+      "scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl": "f55fa87b6c612ecd6b058f167c53231b1d14e412efe361d3d6e38b3631c73218",
+      "typing_extensions-4.15.0-py3-none-any.whl": "f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548",
+      "typing_inspection-0.4.2-py3-none-any.whl": "4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7"
+    }
+  }
+}
