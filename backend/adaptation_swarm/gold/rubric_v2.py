@@ -5,8 +5,9 @@ nueva `rule_version` y nueva corrida. La respuesta NO define (a) qué significa 
 conjunto esperado de cada arquetipo. Este módulo por eso NO elige: ofrece candidatas explícitas y una guardia de aprobación.
 
     · No existe ninguna regla «por defecto»: siempre hay que pasar el identificador de la regla.
-    · `APPROVED_RULE_VERSIONS` está vacío. Aprobar una regla exige, en una revisión, añadir aquí su `official_version(rule)` (gold + inclusión + agregación + panel) con la decisión del asesor;
-      hasta entonces `require_approved()` lanza `RuleNotApproved` y todo resultado se marca PROVISIONAL.
+    · `APPROVED_RULE_VERSIONS` es el REGISTRO TÉCNICO (guardrail de ejecución) de las reglas aprobadas por el asesor; NO es el acto de aprobación, que es documental y anterior (2026-09-26). Una revisión
+      añade aquí su `official_version(rule)` (gold + inclusión + agregación + panel); `require_approved()` lo usa como barrera y, para toda regla ausente, lanza `RuleNotApproved` y todo resultado
+      se marca PROVISIONAL. El commit de sellado 5d7d12c conservó este conjunto vacío; el registro de la regla aprobada es posterior (ver `addendum_rule_registration_2026-09-27.json`).
     · gold-v1 (`gold/rubric.py`) NO se toca; `LegacyDominantRule` lo reproduce solo para comparar con la evidencia histórica.
 
 INDEPENDENCIA DE W (DECISION-CLOSURE §6.3): el gold se deriva del arquetipo (y, en la candidata B, de su CENTROIDE constante), nunca del `W`
@@ -49,8 +50,9 @@ def panel_protocol_fingerprint() -> str:
     return _fingerprint(PANEL_PROTOCOL)
 
 
-# Único lugar donde se aprueba una regla (`is_approved` además exige que sea una gold-v2 registrada). VACÍO a propósito: ninguna regla está aprobada.
-APPROVED_RULE_VERSIONS: frozenset[str] = frozenset()
+# Registro técnico (guardrail de ejecución) de las reglas aprobadas; `require_approved()` lo usa como barrera y `is_approved` además exige que sea una gold-v2 registrada. NO es el acto de aprobación
+# metodológica (documental, 2026-09-26). Contiene la única regla aprobada, registrada el 2026-09-27 (resolución del asesor, opción A) DESPUÉS del sellado 5d7d12c, cuyo `rubric_v2.py` lo tenía vacío.
+APPROVED_RULE_VERSIONS: frozenset[str] = frozenset({"gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2"})
 
 
 class RuleNotApproved(RuntimeError):

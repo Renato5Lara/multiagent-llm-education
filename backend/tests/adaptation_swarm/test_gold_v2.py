@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[3]
 RESULTS = ROOT / "backend" / "experiments" / "results"
 PKG = ROOT / "backend" / "adaptation_swarm"
 S = frozenset
+OFFICIAL_RV = "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2"      # única regla aprobada; su registro técnico es posterior al sellado 5d7d12c
 
 
 def _c(pid, gold, pred, arch=None):
@@ -116,19 +117,20 @@ def test_inclusion_rules_have_explicit_and_different_semantics():
 
 
 # ── Balanced: la regla no se fija en silencio ───────────────────────────────────────────────────────────────────────
-def test_no_default_rule_and_no_rule_is_approved():
-    assert APPROVED_RULE_VERSIONS == frozenset()
+def test_no_default_rule_and_only_the_registered_rule_is_approved():
+    assert APPROVED_RULE_VERSIONS == frozenset({OFFICIAL_RV})                                              # exactamente UNA regla registrada técnicamente, y solo esa
     for args in ((None, None), ("gold-v2-cand-A", None), (None, "incl-ge1"), ("", "")):
         with pytest.raises(NoRuleSelected):
             get_rule(*args)
     with pytest.raises(KeyError, match="regla desconocida"):
         get_rule("gold-v9", "incl-ge1")
-    rule = get_rule("gold-v2-cand-A", "incl-ge1")
+    rule = get_rule("gold-v2-cand-A", "incl-ge2")                                                          # gold-v2 registrada, ausente de APPROVED_RULE_VERSIONS: el guard sigue cerrado
     with pytest.raises(RuleNotApproved):
         require_approved(rule)
     with pytest.raises(RuleNotApproved):
         multilabel_report(_hand_cases(), rule, require_official=True)
-    assert multilabel_report(_hand_cases(), rule).status == "PROVISIONAL" and all(g.status == "PROVISIONAL" for g in GOLD_RULES.values())
+    assert multilabel_report(_hand_cases(), rule).status == "PROVISIONAL"
+    assert {n: g.status for n, g in GOLD_RULES.items()} == {"gold-v2-cand-A": "OFICIAL", "gold-v2-cand-B-tol0.05": "PROVISIONAL", "gold-v2-cand-B-tol0.35": "PROVISIONAL"}
 
 
 def test_the_approval_gate_is_the_only_way_a_rule_becomes_official(monkeypatch):
@@ -187,11 +189,13 @@ def test_historical_modules_and_data_are_untouched():
 
 
 # ── B: solo se aprueban reglas gold-v2 registradas; nunca las históricas ni las ad hoc ──────────────────────────────
-def test_only_registered_gold_v2_rules_can_be_approved_and_the_set_is_still_empty():
+def test_only_registered_gold_v2_rules_can_be_approved_and_only_the_official_one_is():
     from adaptation_swarm.gold.rubric_v2 import is_approved, is_registered_v2, status_of
-    assert APPROVED_RULE_VERSIONS == frozenset()                                                           # nadie aprobó nada: sigue vacío
+    assert APPROVED_RULE_VERSIONS == frozenset({OFFICIAL_RV})                                              # solo la regla aprobada por el asesor
     combos = [get_rule(g, i) for g in GOLD_RULES for i in INCLUSION_RULES]
-    assert len(combos) == 12 and all(is_registered_v2(r) and not is_approved(r) and status_of(r) == "PROVISIONAL" for r in combos)
+    assert len(combos) == 12 and all(is_registered_v2(r) for r in combos)
+    assert {official_version(r) for r in combos if is_approved(r)} == {OFFICIAL_RV}                        # de las 12 combinaciones, exactamente una
+    assert all(not is_approved(r) and status_of(r) == "PROVISIONAL" for r in combos if official_version(r) != OFFICIAL_RV)
     assert not is_registered_v2(LegacyDominantRule())
 
 

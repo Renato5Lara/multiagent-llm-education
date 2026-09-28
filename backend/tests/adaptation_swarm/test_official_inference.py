@@ -22,6 +22,7 @@ from adaptation_swarm.pso.space import MODALITIES, Configuration
 LIB = "lib-v5-9ae9ffdd"
 MASTER = 424242                                        # semilla maestra de PRUEBA
 RULE = ("gold-v2-cand-A", "incl-ge1")
+UNAPPROVED_RULE = ("gold-v2-cand-A", "incl-ge2")     # gold-v2 REGISTRADA pero ausente de APPROVED_RULE_VERSIONS: ejemplo de «regla no aprobada» para los guards (RULE ya está registrada técnicamente)
 
 
 # ── A · R1: IC95 t de Student, gl = K − 1 ─────────────────────────────────────────────────────────────────────────
@@ -163,7 +164,7 @@ def test_K_r6_all_zero_emphasis_is_a_valid_search_point_and_scores_zero():
 
 
 def test_official_f1_is_the_samples_mean_and_needs_an_official_report(monkeypatch):
-    rule = get_rule(*RULE)
+    rule = get_rule(*UNAPPROVED_RULE)
     rec = [{"profile_id": "a", "archetype": "balanced_multimodal", "difficulty": "repetitive", "S": [0, 1, 0, 1, 2, 1, 2, 1]}]   # e = (0,0,2,2): P = {text, audio}, G = 4
     cases = f1m.cases_from_records(rec, rule)
     with pytest.raises(RuleNotApproved):
@@ -174,6 +175,9 @@ def test_official_f1_is_the_samples_mean_and_needs_an_official_report(monkeypatc
     monkeypatch.setattr(rubric_v2, "APPROVED_RULE_VERSIONS", frozenset({official_version(rule)}))
     rep = f1m.official_report(cases, rule)
     assert rep.status == "OFICIAL" and f1m.official_f1_adapt(rep) == pytest.approx(2 * 2 / (4 + 2)) and f1m.OFFICIAL_AGGREGATION == "samples"
+    monkeypatch.undo()
+    registered = get_rule(*RULE)                                                                     # la regla registrada técnicamente no necesita parche para dar un informe OFICIAL
+    assert f1m.official_report(f1m.cases_from_records(rec, registered), registered).status == "OFICIAL"
 
 
 def test_ovr_2x2_matrices_are_four_independent_matrices_and_the_4x4_does_not_enter_any_aggregation():
@@ -206,7 +210,7 @@ def test_the_official_version_covers_inclusion_gold_aggregation_and_panel():
     v = official_version(rule)
     assert v == "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2" and len(v) == 57
     assert rule.gold.rule_version in v and rule.inclusion.rule_id in v and rubric_v2.OFFICIAL_AGGREGATION in v and rubric_v2.PANEL_PROTOCOL_VERSION in v
-    assert rubric_v2.APPROVED_RULE_VERSIONS == frozenset()                                           # nada aprobado: ninguna corrida oficial autorizada
+    assert rubric_v2.APPROVED_RULE_VERSIONS == frozenset({v})                                        # exactamente la regla aprobada y registrada técnicamente, y solo esa
 
 
 # ── R4 y evaluación de extremo a extremo (solo tmp_path, semilla y aprobación de PRUEBA) ───────────────────────────
@@ -215,7 +219,7 @@ def evaluated(tmp_path_factory):
     mp = pytest.MonkeyPatch()
     try:
         rule = get_rule(*RULE)
-        mp.setattr(rubric_v2, "APPROVED_RULE_VERSIONS", frozenset({official_version(rule)}))             # aprobación SOLO en memoria y durante este fixture
+        mp.setattr(rubric_v2, "APPROVED_RULE_VERSIONS", frozenset({official_version(rule)}))             # explícita para no depender del registro técnico; solo en memoria y durante este fixture
         plan = rp.build_plan(master_seed=MASTER, k=10, library_version=LIB, provisional=False, rule=rule)
         out = tmp_path_factory.mktemp("k10") / "r"
         manifest = rp.run(plan, out)
@@ -257,8 +261,9 @@ def test_evaluation_reports_modality_archetype_and_convergence_variability(evalu
     assert e["computational_cost"]["status"] == "no medido"
 
 
-def test_an_unapproved_directory_cannot_be_evaluated_officially(evaluated):
-    with pytest.raises(RuleNotApproved):                                                            # fuera del fixture la aprobación en memoria ya no existe
+def test_an_unapproved_directory_cannot_be_evaluated_officially(evaluated, monkeypatch):
+    monkeypatch.setattr(rubric_v2, "APPROVED_RULE_VERSIONS", frozenset())                            # la regla del directorio deja de estar registrada: el guard de evaluación sigue cerrado
+    with pytest.raises(RuleNotApproved):
         ev.evaluate(evaluated["dir"], official=True)
     assert evaluated["provisional"]["status"] == "PROVISIONAL"
 

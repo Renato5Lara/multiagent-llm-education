@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[3]
 RESULTS = ROOT / "backend" / "experiments" / "results"
 LIB = "lib-v5-9ae9ffdd"                                     # la biblioteca de corrida-poc-1
 MASTER = 424242                                             # semilla maestra de PRUEBA (no es la de ninguna corrida oficial)
+UNAPPROVED_RULE = ("gold-v2-cand-A", "incl-ge2")            # gold-v2 REGISTRADA pero ausente de APPROVED_RULE_VERSIONS: ejemplo de «regla no aprobada» para los guards (la oficial ya está registrada)
 
 
 @pytest.fixture(scope="module")
@@ -64,7 +65,7 @@ def test_an_official_run_cannot_be_planned_while_no_rule_is_approved():
     with pytest.raises(NoRuleSelected):
         rp.build_plan(master_seed=MASTER, k=10, library_version=LIB, provisional=False)
     with pytest.raises(RuleNotApproved):
-        rp.build_plan(master_seed=MASTER, k=10, library_version=LIB, provisional=False, rule=get_rule("gold-v2-cand-A", "incl-ge1"))
+        rp.build_plan(master_seed=MASTER, k=10, library_version=LIB, provisional=False, rule=get_rule(*UNAPPROVED_RULE))
     assert rp.build_plan(master_seed=MASTER, k=10, library_version=LIB, provisional=True)["status"] == "PROVISIONAL"       # lo exploratorio hay que pedirlo
 
 
@@ -167,7 +168,7 @@ def test_cli_requires_explicit_seed_and_provisional_flag_and_never_runs_official
         rp.main(["run", "--master-seed", str(MASTER), "--library-version", LIB, "--out-dir", str(tmp_path / "y")])            # oficial sin regla
     with pytest.raises(RuleNotApproved):
         rp.main(["run", "--master-seed", str(MASTER), "--library-version", LIB, "--out-dir", str(tmp_path / "z"),
-                 "--gold-rule", "gold-v2-cand-A", "--inclusion-rule", "incl-ge1"])                                             # regla sin aprobar
+                 "--gold-rule", UNAPPROVED_RULE[0], "--inclusion-rule", UNAPPROVED_RULE[1]])                                   # regla sin aprobar
     assert not any((tmp_path / n).exists() for n in ("y", "z"))
     rp.main(["run", "--master-seed", str(MASTER), "--library-version", LIB, "--out-dir", str(tmp_path / "w"), "--provisional", "--limit-profiles", "2", "--k", "2"])
     assert "PROVISIONAL" in capsys.readouterr().out and rp.verify(tmp_path / "w") == []
@@ -199,7 +200,7 @@ def _rewrite(plan, path, value):
 
 
 def test_run_ignores_a_forged_official_status_when_no_rule_is_approved(tmp_path):
-    rule = get_rule(*OFFICIAL_RULE)
+    rule = get_rule(*UNAPPROVED_RULE)
     forged_no_rule = _rewrite(_plan(k=10, limit_profiles=None), ["status"], "OFICIAL")                     # plan PROVISIONAL al que se le cambia el estado
     with pytest.raises(NoRuleSelected):
         rp.run(forged_no_rule, tmp_path / "a")

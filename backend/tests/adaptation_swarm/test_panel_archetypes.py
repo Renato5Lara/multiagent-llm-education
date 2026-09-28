@@ -484,7 +484,7 @@ def test_S_the_official_rule_version_covers_inclusion_gold_aggregation_panel_ac1
     assert PANEL_PROTOCOL["statistic"] == "gwet_ac1_binary_multi_rater" and PANEL_PROTOCOL["archetype_approval"] == "approvals > n/2" and PANEL_PROTOCOL["tie"].startswith("reject")
     assert PANEL_PROTOCOL["ac1_threshold"] == 0.70 and PANEL_PROTOCOL["raw_agreement_min"] == 0.85 and "Gwet" in PANEL_PROTOCOL["reference"] and "fuera del protocolo" in PANEL_PROTOCOL["fleiss_kappa"]
     assert len(panel_protocol_fingerprint()) == 64 and panel_protocol_fingerprint() == panel_protocol_fingerprint()
-    assert rubric_v2.APPROVED_RULE_VERSIONS == frozenset()                                           # nada aprobado: ninguna corrida oficial autorizada
+    assert rubric_v2.APPROVED_RULE_VERSIONS == frozenset({RV})                                       # la regla oficial es la única registrada técnicamente (posterior al sellado 5d7d12c)
 
 
 def test_S_the_replicas_plan_records_the_panel_protocol_and_its_fingerprint():
@@ -592,8 +592,10 @@ def test_blank_archetype_template_imports_nothing(repo):
 
 
 def test_registering_ratings_never_approves_the_rule(repo):
+    before = rubric_v2.APPROVED_RULE_VERSIONS
     _fill(repo, (10, 10, 10, 10))
-    assert repo.archetype_panel_result()["panel_valid"] is True and rubric_v2.APPROVED_RULE_VERSIONS == frozenset()      # el panel no autoriza ninguna corrida oficial
+    assert repo.archetype_panel_result()["panel_valid"] is True
+    assert rubric_v2.APPROVED_RULE_VERSIONS == before                                                # el panel NO modifica el registro técnico de reglas aprobadas (invariante real, no «vacío»)
 
 
 def test_status_report_separates_the_official_panel_from_the_historical_gold_v1_panel(repo):

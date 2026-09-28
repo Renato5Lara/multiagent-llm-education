@@ -2,9 +2,11 @@
 dataset ni la biblioteca y no aprueban ninguna regla. El único `build_plan` de este archivo es PROVISIONAL o usa una aprobación en memoria, solo para comparar campos (no ejecuta nada)."""
 
 import ast
+import difflib
 import hashlib
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -82,13 +84,14 @@ def test_the_preregistered_dataset_is_profiles_v1_with_its_hash_and_distribution
     assert ds["concepts_distinct"] == 30 and ds["one_concept_per_profile"] is True
 
 
-def test_the_preregistered_rule_version_is_the_registered_one_and_is_not_approved(prereg):
+def test_the_preregistered_rule_version_is_the_registered_one_and_its_frozen_photo_is_not_approved(prereg):
     rule = get_rule(*pr.OFFICIAL_RULE)
     r = prereg["rule"]
     assert r["official_version"] == official_version(rule) == "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2"
     assert (r["gold"], r["inclusion"], r["aggregation"], r["panel_protocol"]) == ("gold-v2-cand-A", "incl-ge1", "samples", "panel-arq-ac1-maj-tie0-v2")
     assert r["gold_fingerprint"] == rule.gold.fingerprint() and r["panel_protocol_fingerprint"] == rubric_v2.panel_protocol_fingerprint()
-    assert r["approved"] is False and rubric_v2.APPROVED_RULE_VERSIONS == frozenset()              # el pre-registro NO aprueba nada
+    assert r["approved"] is False                                                                   # la FOTO congelada del archivo no cambia: el pre-registro NO aprueba nada
+    assert rubric_v2.APPROVED_RULE_VERSIONS == frozenset({r["official_version"]})                   # estado VIVO: registro técnico posterior, exactamente esta regla y solo esa
 
 
 def test_the_environment_is_declared_and_the_python_312_gap_is_explicit(prereg):
@@ -170,9 +173,10 @@ def test_the_plan_and_manifest_record_the_environment_dataset_identity_and_an_un
 
 
 def test_an_official_run_is_still_impossible_without_an_approved_rule():
+    unapproved = get_rule("gold-v2-cand-A", "incl-ge2")                                             # gold-v2 registrada, ausente de APPROVED_RULE_VERSIONS
+    assert official_version(unapproved) not in rubric_v2.APPROVED_RULE_VERSIONS
     with pytest.raises(rubric_v2.RuleNotApproved):
-        rp.build_plan(master_seed=pr.OFFICIAL_MASTER_SEED, k=10, library_version=LIB, provisional=False, rule=get_rule(*pr.OFFICIAL_RULE))
-    assert rubric_v2.APPROVED_RULE_VERSIONS == frozenset()
+        rp.build_plan(master_seed=pr.OFFICIAL_MASTER_SEED, k=10, library_version=LIB, provisional=False, rule=unapproved)
 
 
 def test_the_library_directory_is_not_modified_by_the_audit_and_is_the_only_official_choice():
@@ -208,7 +212,7 @@ def test_the_original_preregistration_file_is_untouched_and_passes():
     assert hashlib.sha256(PREREG.read_bytes()).hexdigest() == PREREG_SHA256                        # ni una coma cambió desde la fijación
     assert pr.verify_preregistration(PREREG, deep=False) == []
     assert pr.approval_state(PREREG) == {"at_fixing": {"approved": False, "approval_note": json.loads(PREREG.read_text(encoding="utf-8"))["rule"]["approval_note"]},
-                                         "live_approved": False, "changed_since_fixing": False}
+                                         "live_approved": True, "changed_since_fixing": True}       # foto congelada (no aprobada) ≠ estado vivo (registro técnico posterior): es lo que `approval_state` distingue
 
 
 def test_the_approval_state_after_formal_registration_is_not_methodological_drift(tmp_path, prereg, monkeypatch):
@@ -247,11 +251,67 @@ def test_changing_any_methodological_field_is_detected_as_drift(tmp_path, prereg
     assert pr.verify_preregistration(f, deep=False), path
 
 
-def test_code_module_drift_is_detected_and_the_current_code_matches_the_fixing(tmp_path, prereg):
-    assert pr.code_modules_drift(PREREG) == []
-    f = _copy(prereg, tmp_path, "c.json", lambda d: d["code_modules_at_fixing"].update({"gold/rubric_v2.py": "0" * 64}))
-    assert pr.code_modules_drift(f) == ["gold/rubric_v2.py"]
+def test_code_module_drift_is_detected_by_tampering_with_the_recorded_fingerprints(tmp_path, prereg):
+    f = _copy(prereg, tmp_path, "c.json", lambda d: d["code_modules_at_fixing"].update({"pso/engine.py": "0" * 64}))
+    assert pr.code_modules_drift(f) == ["gold/rubric_v2.py", "pso/engine.py"]                        # el drift autorizado de rubric_v2 + el manipulado: la detección sigue viva
     assert pr.verify_preregistration(f, deep=False) == []                                            # los fingerprints de código son informativos para `verify`; el sellado usa `code_modules_drift`
+
+
+# ── drift posterior al sellado: el ÚNICO permitido es el registro técnico de la regla aprobada, anclado al commit de sellado ──
+SEALING_COMMIT = "5d7d12c9776a62d1234afb71acb505cd84cb5872"
+RUBRIC = "gold/rubric_v2.py"
+RUBRIC_IN_GIT = "backend/adaptation_swarm/gold/rubric_v2.py"
+SEALED_RUBRIC_SHA256 = "071a2ae8896e549f02c57195188bd759ede81cfabd6c3a07e2a06c38298f596a"          # rubric_v2.py en el commit de sellado (= `code_modules_at_fixing`)
+REGISTERED_RUBRIC_SHA256 = "cdf55ce0b08712df162423873686e8821d3daa019926ae666bbcd1e15b29b262"       # rubric_v2.py tras el registro técnico posterior (atestiguado por el addendum)
+OFFICIAL_RV = "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2"
+REGISTRATION_ADDENDUM = PREREG.parent / "addendum_rule_registration_2026-09-27.json"
+
+
+def _sealed_rubric_source() -> bytes:
+    """`rubric_v2.py` tal como está en el commit de sellado (`git show`). Sin git o sin ese commit en el entorno la prueba se OMITE de forma explícita; los hashes literales se comprueban aparte."""
+    try:
+        return subprocess.run(["git", "-C", str(pr.iso.REPO), "show", f"{SEALING_COMMIT}:{RUBRIC_IN_GIT}"], capture_output=True, check=True, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        pytest.skip(f"git o el commit de sellado {SEALING_COMMIT[:7]} no están disponibles en este entorno")
+
+
+def test_the_hash_recorded_for_rubric_v2_is_the_content_committed_at_the_sealing_commit(prereg):
+    assert prereg["code_modules_at_fixing"][RUBRIC] == SEALED_RUBRIC_SHA256
+    assert hashlib.sha256(_sealed_rubric_source()).hexdigest() == SEALED_RUBRIC_SHA256               # git show 5d7d12c:… coincide con lo registrado en el pre-registro
+
+
+def test_rubric_v2_is_the_only_module_with_drift_since_the_sealing_and_it_is_attested(prereg):
+    stored, now = prereg["code_modules_at_fixing"], rp.module_fingerprints()
+    assert set(stored) == set(now) and pr.code_modules_drift(PREREG) == [RUBRIC]
+    assert {m for m in stored if m != RUBRIC and stored[m] != now[m]} == set()                       # ningún otro módulo sellado deriva
+    assert now[RUBRIC] == REGISTERED_RUBRIC_SHA256 != stored[RUBRIC]
+    add = json.loads(REGISTRATION_ADDENDUM.read_text(encoding="utf-8"))
+    assert pr.verify_addendum(REGISTRATION_ADDENDUM) == []                                           # el addendum apunta al pre-registro intacto y su evidencia coincide con el disco
+    assert add["changes_methodology"] is False and add["preregistration"]["sha256"] == PREREG_SHA256
+    assert add["evidence_root"] == "adaptation_swarm" and add["evidence_files"] == {RUBRIC: REGISTERED_RUBRIC_SHA256}
+
+
+def _executable_without_registry_value(src: bytes):
+    """AST del módulo sin su docstring y con el VALOR de `APPROVED_RULE_VERSIONS` neutralizado; devuelve también ese valor (constructor y argumentos literales)."""
+    tree = ast.parse(src.decode("utf-8"))
+    body = tree.body[1:] if isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Constant) else tree.body
+    registry = []
+    for node in body:
+        if isinstance(node, ast.AnnAssign) and getattr(node.target, "id", None) == "APPROVED_RULE_VERSIONS":
+            registry.append((node.value.func.id, [ast.literal_eval(a) for a in node.value.args]))
+            node.value = ast.Constant("<registro>")
+    return [ast.dump(n) for n in body], registry
+
+
+def test_the_rubric_v2_drift_is_exactly_the_technical_registration_and_its_immediate_documentation():
+    sealed, current = _sealed_rubric_source(), (Path(rp.__file__).resolve().parent.parent / RUBRIC).read_bytes()
+    code_then, registry_then = _executable_without_registry_value(sealed)
+    code_now, registry_now = _executable_without_registry_value(current)
+    assert code_then == code_now                                                                     # el código ejecutable es idéntico salvo el valor del registro
+    assert registry_then == [("frozenset", [])] and registry_now == [("frozenset", [{OFFICIAL_RV}])]  # de vacío a exactamente la regla aprobada, sin otra
+    old, new = sealed.decode("utf-8").splitlines(), current.decode("utf-8").splitlines()
+    regions = [(old[i1:i2], new[j1:j2]) for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes() if tag != "equal"]
+    assert len(regions) == 2 and all("APPROVED_RULE_VERSIONS" in "\n".join(o + n) for o, n in regions)   # solo la docstring y el comentario+constante del registro
 
 
 # ── F · addendum de la evidencia de Python 3.12.14 (archivo aparte; el original no se toca) ────────────────────────
@@ -286,8 +346,11 @@ def test_inclusion_and_aggregation_are_covered_by_the_existing_module_fingerprin
     pkg = Path(rp.__file__).resolve().parent.parent
     now = rp.module_fingerprints()
     for module in ("gold/rubric_v2.py", "gold/f1_multilabel.py", "gold/labels_v2.py"):
-        assert module in now and module in prereg["code_modules_at_fixing"] and prereg["code_modules_at_fixing"][module] == hashlib.sha256((pkg / module).read_bytes()).hexdigest()
+        assert module in now and module in prereg["code_modules_at_fixing"]
+    for module in ("gold/f1_multilabel.py", "gold/labels_v2.py"):
+        assert prereg["code_modules_at_fixing"][module] == hashlib.sha256((pkg / module).read_bytes()).hexdigest()      # estos coinciden con los de la fijación
+    assert prereg["code_modules_at_fixing"][RUBRIC] == SEALED_RUBRIC_SHA256 and now[RUBRIC] == REGISTERED_RUBRIC_SHA256   # rubric_v2: sellado + registro técnico posterior (ver las pruebas de drift)
     assert 'InclusionRule("incl-ge1", "threshold", 1,' in (pkg / "gold" / "rubric_v2.py").read_text(encoding="utf-8")        # la regla de inclusión vive en un módulo fingerprintado
     assert 'OFFICIAL_AGGREGATION = "samples"' in (pkg / "gold" / "rubric_v2.py").read_text(encoding="utf-8")
     assert "def official_f1_adapt" in (pkg / "gold" / "f1_multilabel.py").read_text(encoding="utf-8")                           # y su implementación (samples) en otro
-    assert pr.code_modules_drift(PREREG) == []                                                                                   # y hoy coinciden con los de la fijación
+    assert set(pr.code_modules_drift(PREREG)) <= {RUBRIC}                                                                        # y solo rubric_v2 difiere de la fijación (registro técnico atestiguado)

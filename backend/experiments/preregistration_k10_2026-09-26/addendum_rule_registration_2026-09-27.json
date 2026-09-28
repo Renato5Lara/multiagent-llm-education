@@ -1,0 +1,87 @@
+{
+  "changes_methodology": false,
+  "created_on": "2026-09-27",
+  "evidence_files": {
+    "gold/rubric_v2.py": "cdf55ce0b08712df162423873686e8821d3daa019926ae666bbcd1e15b29b262"
+  },
+  "evidence_root": "adaptation_swarm",
+  "kind": "technical-rule-registration",
+  "not_covered_by_this_addendum": [
+    "el estado de la base de datos (panel humano)",
+    "el hash del commit que contiene este archivo (autorreferencia)",
+    "el entorno Python 3.12 de la corrida oficial (ver addendum_python312_2026-09-26.json)",
+    "R + irrCAC (PX8): ver addendum_presealing_2026-09-27.json"
+  ],
+  "note": "Addendum de trazabilidad. NO reescribe el pre-registro ni cambia ninguna decisión metodológica. Documenta que `APPROVED_RULE_VERSIONS` (guardrail técnico de ejecución, no el acto de aprobación metodológica) se registró DESPUÉS del commit de sellado, por resolución del asesor (2026-09-27, lectura 1 / opción A: conservar 5d7d12c, documentar la secuencia y registrar técnicamente la regla antes de K=10). El commit que contiene este archivo no puede citarse aquí (autorreferencia): su relación con 5d7d12c queda en el historial de Git y, en la corrida, en `code_version.commit` y `modules` del plan/manifiesto.",
+  "preregistration": {
+    "path": "backend/experiments/preregistration_k10_2026-09-26/preregistration_k10.json",
+    "sha256": "9e8cd2360b38172d6ddbacee532985970a703f16746bf981c046e0230e714928"
+  },
+  "schema": "preregistration-addendum-v1",
+  "summary": {
+    "approval_state": {
+      "at_fixing": {
+        "approval_note": "NO APROBADA: `APPROVED_RULE_VERSIONS` sigue vacío; este pre-registro no autoriza la corrida",
+        "approved": false
+      },
+      "changed_since_fixing": true,
+      "live_approved": true
+    },
+    "approved_rule_versions_at_sealing_commit": "vacío (frozenset())",
+    "code_modules_drift_vs_code_modules_at_fixing": [
+      "gold/rubric_v2.py"
+    ],
+    "drift_scope": "solo el valor de APPROVED_RULE_VERSIONS y su documentación inmediata (docstring y comentario); el resto del código ejecutable de rubric_v2.py es idéntico al del sellado (comprobado por AST en test_preregistration_k10)",
+    "k10_executed": {
+      "basis": "verificado por ausencia: no existe ningún replica_*.json, plan.json ni manifiesto de réplicas bajo backend/ (excluyendo .venv) al crear este addendum",
+      "status": false
+    },
+    "methodological_approval_record": {
+      "documented_at_sealing": "addendum_presealing_2026-09-27.json (dentro de 5d7d12c): «la aprobación es metodológica, no el registro en el sistema»; `not_yet_done` incluía «registro en APPROVED_RULE_VERSIONS»",
+      "source": "informado por el tesista según la resolución del asesor; NO verificable desde el repositorio (no hay registro fechado en el repo)",
+      "status": "completado el 2026-09-26 entre 19:29 y 19:30 (-05:00)"
+    },
+    "panel_executed": {
+      "basis": "estado informado; NO verificado técnicamente (la base de datos no se consultó al crear este addendum)",
+      "status": false
+    },
+    "rubric_v2_sha256": {
+      "after_technical_registration": "cdf55ce0b08712df162423873686e8821d3daa019926ae666bbcd1e15b29b262",
+      "at_sealing_commit_and_code_modules_at_fixing": "071a2ae8896e549f02c57195188bd759ede81cfabd6c3a07e2a06c38298f596a",
+      "verified_against_git_show_5d7d12c": "ver test_preregistration_k10 (git show 5d7d12c:backend/adaptation_swarm/gold/rubric_v2.py)"
+    },
+    "sealing_commit": "5d7d12c9776a62d1234afb71acb505cd84cb5872",
+    "technical_registration": {
+      "approved_rule_versions_now": [
+        "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2"
+      ],
+      "registered_after_sealing_commit": true,
+      "registered_rule_version": "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2",
+      "why": "el asesor confirmó que APPROVED_RULE_VERSIONS es un mecanismo técnico de control y no el acto de aprobación metodológica"
+    },
+    "unchanged_and_verified_at_creation": {
+      "batch_seeds": [
+        8165928940206602054,
+        8360559651251712682,
+        7475544090998493249,
+        3634011697469882971,
+        5702031817250623442,
+        8478605148547081216,
+        3755851724589217441,
+        472686057985794298,
+        2750922979925999750,
+        957592608891830543
+      ],
+      "dataset_sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+      "gold_fingerprint": "1f917a7ae50648c75a0ac984ea3fce1628727f4f58b64f2d71e7f0c98387edd2",
+      "k": 10,
+      "library_manifest_sha256": "89716455a14c2674a3a6a93bf1609be2c0cf83ed62ae654b2832b7038543a0ab",
+      "library_version": "lib-v10-5dd83cd4",
+      "master_seed": 26092601,
+      "panel_protocol_fingerprint": "a83f8556fb42f73cc2bb562d96f7fa9efe0305951f2cbd69169b6434cb35abd3",
+      "preregistration_file_rewritten": false,
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "verify_preregistration_deep_true": []
+    }
+  }
+}
