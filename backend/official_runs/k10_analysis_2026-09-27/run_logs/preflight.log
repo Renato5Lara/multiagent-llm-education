@@ -1,0 +1,18 @@
+PASS A01 HEAD (leído de .git) == 3088e69 (commit de resultados)  [3088e691]
+PASS A02 los 12 archivos oficiales existen
+PASS A03 hashes == results_SHA256SUMS.txt (12/12)  [12 líneas]
+PASS A04 manifest: K=10, 100 perfiles, seed 26092601, regla oficial, OFICIAL
+PASS A05 dataset y biblioteca oficiales
+PASS A06 corrida hecha con commit 5a1fe3b y Python 3.12.14 / numpy 2.5.3 / scipy 1.18.1
+PASS A07 el análisis corre en Python 3.12.14 / numpy 2.5.3 / scipy 1.18.1  [{'python': '3.12.14', 'implementation': 'CPython', 'numpy': '2.5.3', 'scipy': '1.18.1'}]
+PASS A08 preregistro sha == 9e8cd236…
+PASS A09 verify_preregistration(deep=True) == []
+PASS A10 único drift == ['gold/rubric_v2.py']  [['gold/rubric_v2.py']]
+PASS A11 gold fingerprint == 1f917a7a…
+PASS A12 regla oficial aprobada y única
+PASS A13 rp.verify(official_runs) == []
+PASS A14 módulos del análisis == sellados  [[]]
+PASS A15 nota de pre-análisis presente y sin cambios (sha 9ed7f1e5…)
+PASS A16 el directorio de salida NO existe y su padre es escribible  [/out/k10_analysis_2026-09-27]
+
+RESUMEN PRE-FLIGHT ANÁLISIS: 16 PASS / 16

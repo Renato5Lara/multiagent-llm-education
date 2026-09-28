@@ -1,0 +1,2 @@
+HEAD=3088e6912885376baba2de30a8940fa0c3453e20
+branch=feat/adaptation-swarm-poc

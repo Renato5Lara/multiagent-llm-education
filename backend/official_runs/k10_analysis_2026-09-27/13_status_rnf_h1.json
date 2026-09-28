@@ -1,0 +1,13 @@
+{
+  "H1": {
+    "F1_RNF03": "NO CUMPLE",
+    "H1_declared": "NO (componentes pendientes; la hipótesis es conjuntiva)",
+    "L_resp_lt_2s": "PENDIENTE",
+    "SUS_gt_75": "PENDIENTE"
+  },
+  "RNF01": "PENDIENTE (experimento full-stack; K=10 no lo mide)",
+  "RNF02": "PENDIENTE / NO DETERMINADO (solo descriptivo; sin regla metodológica formal — nota §5)",
+  "RNF03": "NO CUMPLE",
+  "RNF04": "PENDIENTE (experimento full-stack; K=10 no lo mide)",
+  "RNF05": "PENDIENTE (SUS: evaluación humana)"
+}

@@ -1,0 +1,9 @@
+{
+  "CI_PASS": false,
+  "RNF03": false,
+  "RNF03_label": "NO CUMPLE",
+  "RNF03_rule": "CI_PASS AND approved_test_criterion (Consulta 5, DEC-RNF03); INDETERMINADO si la prueba lo es",
+  "approved_test_criterion": false,
+  "ci_lower": 0.6371053643465779,
+  "ci_lower_ge_benchmark_check": true
+}

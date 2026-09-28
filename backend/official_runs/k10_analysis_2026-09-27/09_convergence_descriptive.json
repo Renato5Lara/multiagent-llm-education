@@ -1,0 +1,107 @@
+{
+  "RNF02": "PENDIENTE / NO DETERMINADO (solo descriptivo; sin regla metodológica formal — nota §5)",
+  "convergence": {
+    "across_replicas": {
+      "CR": {
+        "max": 1.0,
+        "mean": 1.0,
+        "min": 1.0,
+        "sd": 0.0
+      },
+      "k_stop_max": {
+        "max": 6.0,
+        "mean": 4.8,
+        "min": 4.0,
+        "sd": 0.6324555320336759
+      },
+      "k_stop_mean": {
+        "max": 1.91,
+        "mean": 1.7579999999999998,
+        "min": 1.66,
+        "sd": 0.07435649863252634
+      }
+    },
+    "per_replica": [
+      {
+        "CR": 1.0,
+        "k_stop_max": 5,
+        "k_stop_mean": 1.85,
+        "k_stop_sd": 0.967919772950572,
+        "n": 100,
+        "replica": 0
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 4,
+        "k_stop_mean": 1.66,
+        "k_stop_sd": 0.9344149576774298,
+        "n": 100,
+        "replica": 1
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 5,
+        "k_stop_mean": 1.78,
+        "k_stop_sd": 0.9804142600003944,
+        "n": 100,
+        "replica": 2
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 5,
+        "k_stop_mean": 1.69,
+        "k_stop_sd": 0.9395356686828195,
+        "n": 100,
+        "replica": 3
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 5,
+        "k_stop_mean": 1.74,
+        "k_stop_sd": 0.9279062996930783,
+        "n": 100,
+        "replica": 4
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 4,
+        "k_stop_mean": 1.76,
+        "k_stop_sd": 0.9114313307688467,
+        "n": 100,
+        "replica": 5
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 5,
+        "k_stop_mean": 1.71,
+        "k_stop_sd": 0.8795660086863087,
+        "n": 100,
+        "replica": 6
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 6,
+        "k_stop_mean": 1.75,
+        "k_stop_sd": 1.0187633620614691,
+        "n": 100,
+        "replica": 7
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 5,
+        "k_stop_mean": 1.91,
+        "k_stop_sd": 1.05500251328151,
+        "n": 100,
+        "replica": 8
+      },
+      {
+        "CR": 1.0,
+        "k_stop_max": 4,
+        "k_stop_mean": 1.73,
+        "k_stop_sd": 0.9304609480024273,
+        "n": 100,
+        "replica": 9
+      }
+    ]
+  }
+}

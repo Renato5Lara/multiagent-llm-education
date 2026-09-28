@@ -1,0 +1,8 @@
+{
+  "alpha": 0.05,
+  "n": 100,
+  "normal": false,
+  "note": "solo determina t vs Wilcoxon (preregistro)",
+  "shapiro_p": 1.753445017815773e-10,
+  "shapiro_w": 0.795079940053924
+}

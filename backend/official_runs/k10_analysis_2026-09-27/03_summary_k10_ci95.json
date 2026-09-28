@@ -1,0 +1,27 @@
+{
+  "CI_PASS": false,
+  "ci95": {
+    "confidence": 0.95,
+    "df": 9,
+    "k": 10,
+    "lower": 0.6371053643465779,
+    "mean": 0.6407047619047619,
+    "method": "student_t_one_sample",
+    "sd": 0.005031610833895485,
+    "se": 0.0015911350534688882,
+    "t_critical": 2.262157162798205,
+    "upper": 0.6443041594629458
+  },
+  "criterion_from_code": {
+    "benchmark": 0.85,
+    "ci_lower": 0.6371053643465779,
+    "ci_pass": false,
+    "combined_pass": false,
+    "rule": "AND",
+    "statistical_p_value": 0.9999999999998331,
+    "statistical_pass": false,
+    "statistical_test": "wilcoxon_signed_rank",
+    "verdict": "FAIL"
+  },
+  "n": 10
+}

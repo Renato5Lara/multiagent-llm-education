@@ -1,0 +1,16 @@
+{
+  "approved_rule": "p < 0.05 AND mean > 0.85 (Consulta 4, DEC-F1-TEST)",
+  "approved_test_criterion": false,
+  "code_and_approved_agree": true,
+  "code_output": {
+    "combined_pass": false,
+    "mean": 0.640704761904762,
+    "p_value": 0.9999999999998331,
+    "statistical_pass": false,
+    "status": "ok",
+    "test": "wilcoxon_signed_rank",
+    "verdict": "FAIL"
+  },
+  "condition_mean_gt_benchmark": false,
+  "when_code_and_approved_differ": "se reportan ambos; para RNF-03 prevalece la regla aprobada (nota §4.1)"
+}

@@ -1,0 +1,51 @@
+{
+  "aggregation": "samples",
+  "analysis": "k10-official-analysis-v1",
+  "batch_seeds": [
+    8165928940206602054,
+    8360559651251712682,
+    7475544090998493249,
+    3634011697469882971,
+    5702031817250623442,
+    8478605148547081216,
+    3755851724589217441,
+    472686057985794298,
+    2750922979925999750,
+    957592608891830543
+  ],
+  "dataset_sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+  "driver_sha256": "85d868ac1092ad156315e72d64bd2a39dec07145d8d46dce183d0bd18ed6df9a",
+  "gold_fingerprint": "1f917a7ae50648c75a0ac984ea3fce1628727f4f58b64f2d71e7f0c98387edd2",
+  "k": 10,
+  "library": {
+    "manifest_sha256": "89716455a14c2674a3a6a93bf1609be2c0cf83ed62ae654b2832b7038543a0ab",
+    "version": "lib-v10-5dd83cd4"
+  },
+  "master_seed": 26092601,
+  "n_profiles": 100,
+  "panel_protocol_fingerprint": "a83f8556fb42f73cc2bb562d96f7fa9efe0305951f2cbd69169b6434cb35abd3",
+  "pre_analysis_note_sha256": "9ed7f1e52e0db2dc41235b763c11879847f35924fa91f7922d96a8a287a343b5",
+  "preflight_sha256": "079cffaf0ea44e4c98b8841483b914e73d3bcda7c07acad6295b5ea4f30a403e",
+  "preregistration_sha256": "9e8cd2360b38172d6ddbacee532985970a703f16746bf981c046e0230e714928",
+  "results_commit": "3088e6912885376baba2de30a8940fa0c3453e20",
+  "rule_version": "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2",
+  "run_commit": "5a1fe3b2fcfa34d5a3a920a01a6b1a30fc7d79a5",
+  "scope": {
+    "does_not_support": [
+      "RNF-01",
+      "RNF-04",
+      "L_resp",
+      "throughput"
+    ],
+    "experiment": "core_replay_k10",
+    "full_stack_experiment": "separado; no ejecutado por este módulo",
+    "supports": [
+      "F1_adapt",
+      "convergence"
+    ]
+  },
+  "sealing_commit": "5d7d12c9776a62d1234afb71acb505cd84cb5872",
+  "started_utc": "2026-09-28T04:42:17+00:00",
+  "statistical_unit": "profile_mean_over_replicas",
+  "status": "OFICIAL"
+}

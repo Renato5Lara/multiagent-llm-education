@@ -1,0 +1,28 @@
+{
+  "command": "python analysis_driver.py <out_dir>  (evaluate(official=True) + write_evaluation)",
+  "finished_utc": "2026-09-28T04:42:17+00:00",
+  "n_outputs": 17,
+  "outputs_sha256": {
+    "01_metadata.json": "d1ba0a4650c5897db169ad1802e879ad9f8ffc12c7356a3c72dbf3d207bb3ef3",
+    "02_f1_adapt_by_replica.json": "4a9c316d917bc0ebc6c8a9fafa3f03df78428e328c30f7ce73e9c15bb7b78b63",
+    "03_summary_k10_ci95.json": "1389cfa2a85728d0ba40a9a303cfc262df1d93ce80589e2c3dcb2d934a6b95c6",
+    "04_profile_aggregation.json": "fb4fe3eec00dafebde28869d5fee76956167788b8852b6738f768ce769be1b03",
+    "05_shapiro_wilk.json": "649cf3a5987dcd9dc33f648623816e906e7cb867f8397f9df2a9d86f0f0297c5",
+    "06_inferential_test.json": "e7a6a42123e77fc51daf55965cf9f8c3ce9dae4d9e3283334e33867cbd592bce",
+    "07_code_vs_approved_criterion.json": "abc55f1041ab413b8b85c5f0f13f93001f1f87710ba52644618b2cb155a42505",
+    "08_rnf03.json": "bf8fb126300f6d9042035ee898c1a71d3996c7de0028691ea9152b9f501ed0f9",
+    "09_convergence_descriptive.json": "e68599d580267405beb501345cc73f54bd834104489ca135afba3ea78ac75e16",
+    "10_descriptives_modality_archetype.json": "7cd5f750ebb4a4956008a426a7617d2ea9c1d1e62d3c1cdc9ce8807c63826eed",
+    "11_input_hashes.json": "30e20c29ee1d8368032bc0be37f13bebc65622ce23a835ef7b7fb72b6de38411",
+    "12_environment.json": "53d4c1d5bbba839f68c8d6f57bdb05c553883c919397af78ad015c9de5679adf",
+    "13_status_rnf_h1.json": "e817897d3c1b94e7777049f7ec05195b978bea8f6e525592cf70d3b9e78fd6e1",
+    "evaluation.json": "a3fcc78fcbb00936a479bce10b8353e5e03e728188de09f7c590bba17e019fe6",
+    "inputs_and_scripts/NOTA-PREANALISIS-K10-2026-09-27.md": "9ed7f1e52e0db2dc41235b763c11879847f35924fa91f7922d96a8a287a343b5",
+    "inputs_and_scripts/analysis_driver.py": "85d868ac1092ad156315e72d64bd2a39dec07145d8d46dce183d0bd18ed6df9a",
+    "inputs_and_scripts/analysis_preflight.py": "079cffaf0ea44e4c98b8841483b914e73d3bcda7c07acad6295b5ea4f30a403e"
+  },
+  "profiles_per_replica": 100,
+  "replicas_used": 10,
+  "results_modified": false,
+  "schema": "k10-analysis-manifest-v1"
+}

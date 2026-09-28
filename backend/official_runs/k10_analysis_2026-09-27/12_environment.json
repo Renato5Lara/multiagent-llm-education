@@ -1,0 +1,14 @@
+{
+  "code_version_at_analysis": {
+    "commit": "3088e6912885376baba2de30a8940fa0c3453e20",
+    "dirty": null,
+    "ref": "refs/heads/feat/adaptation-swarm-poc"
+  },
+  "image_id": "9e87977b867847e186d066f531ef783b006d582a985c341c269446088d90f2c4",
+  "implementation": "CPython",
+  "lock_sha256": "6070af5967a09d6035dfadba210de658e7490e2d65b8cf3c4a17645c4afa05f4",
+  "numpy": "2.5.3",
+  "platform": "Linux-7.2.4-ogc3.1.fc44.x86_64-x86_64-with-glibc2.41",
+  "python": "3.12.14",
+  "scipy": "1.18.1"
+}
