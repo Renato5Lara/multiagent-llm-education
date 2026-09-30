@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
-import { useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
+import { useMyCourses, useLearningPath, useGeneratePath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { MODALITY_LABELS } from '@/lib/constants'
 import { getModuleExperience } from '@/lib/experiences'
 import { useAuthStore } from '@/stores/authStore'
@@ -262,6 +262,7 @@ export default function LearningPath() {
   const autostart = searchParams.get('autostart') === 'true'
 
   const { data: path, isLoading, error } = useLearningPath(courseId)
+  const { data: myCourses } = useMyCourses()
   const generatePath = useGeneratePath()
   const { data: adaptiveDecision } = useAdaptiveDecision(courseId)
   const { data: ktStatus } = useKnowledgeTestStatus(courseId)
@@ -332,7 +333,10 @@ export default function LearningPath() {
   // decide qué misiones usan ese flujo, sin backend/ruta/estado nuevos. Los
   // cursos que aún no migraron conservan la evaluación legacy intacta.
   const usesContinuousEvaluation = items.length > 0 && items.every(i => getModuleExperience(i.title) !== null)
-  const modalityStyle = MODALITY_DARK[path.dominant_modality || '']
+  // Preferencia del diagnóstico de ESTE curso. `path.dominant_modality` es el perfil global del
+  // estudiante (`student_profiles`, una fila por estudiante) y puede venir del diagnóstico de otro curso.
+  const diagnosticModality = myCourses?.find(c => c.course_id === courseId)?.dominant_modality ?? null
+  const modalityStyle = MODALITY_DARK[diagnosticModality || '']
   const xp = completedCount * XP_PER_MISSION
   const maxXp = totalCount * XP_PER_MISSION
   const levelLabel = getLevelLabel(xp)
@@ -384,9 +388,9 @@ export default function LearningPath() {
 
         {/* Adaptive profile + progress row */}
         <div className="flex items-center gap-3 mb-3 flex-wrap">
-          {path.dominant_modality && (
+          {diagnosticModality && (
             <Badge variant="outline" className={`text-[10px] py-0 ${modalityStyle}`}>
-              Perfil {MODALITY_LABELS[path.dominant_modality] || path.dominant_modality}
+              Preferencia del diagnóstico: {MODALITY_LABELS[diagnosticModality] || diagnosticModality}
             </Badge>
           )}
           <span className="text-xs font-mono text-neural-muted/60 ml-auto">

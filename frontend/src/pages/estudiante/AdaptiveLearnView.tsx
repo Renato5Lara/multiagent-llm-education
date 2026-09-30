@@ -75,7 +75,7 @@ export default function AdaptiveLearnView() {
       {/* Header */}
       <div className="mb-7">
         <p className="text-[10px] font-mono text-neural-glow/60 tracking-[0.18em] uppercase mb-1">
-          Módulo adaptativo · {MODALITY_LABELS[data.modality] ?? data.modality}
+          Módulo adaptativo · Estrategia {MODALITY_LABELS[data.modality] ?? data.modality}
         </p>
         <h1 className="text-2xl font-bold text-neural-text">{topicLabel}</h1>
       </div>

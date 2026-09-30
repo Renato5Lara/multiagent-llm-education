@@ -218,7 +218,7 @@ export default function AdaptiveContentRenderer({
       {contentOrder && (
         <div className="glass-panel rounded-2xl p-5 mb-7 border border-neural-violet/10">
           <p className="text-[9px] font-mono text-neural-violet/60 tracking-[0.2em] uppercase mb-2">
-            Orden adaptativo{modalityLabel ? ` · Perfil ${modalityLabel}` : ''}
+            Orden adaptativo{modalityLabel ? ` · Estrategia del sistema: ${modalityLabel}` : ''}
           </p>
 
           {strategyDescription && (

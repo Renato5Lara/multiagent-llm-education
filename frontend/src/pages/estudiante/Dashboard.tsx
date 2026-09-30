@@ -5,7 +5,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useMyCourses, useLearningPath, useStudentProfile, useAdaptiveDecision } from '@/hooks/useStudent'
+import { useMyCourses, useLearningPath, useAdaptiveDecision } from '@/hooks/useStudent'
 import { useKnowledgeTestStatus } from '@/hooks/useKnowledgeTest'
 import { useAuthStore } from '@/stores/authStore'
 import { useNavigate } from 'react-router-dom'
@@ -226,7 +226,6 @@ export default function EstudianteDashboard() {
   const navigate = useNavigate()
 
   const { data: courses, isLoading: coursesLoading } = useMyCourses()
-  const { data: profile } = useStudentProfile()
 
   const fdp = findActiveExperience(courses)
   const { data: path, isLoading: pathLoading } = useLearningPath(fdp?.course_id)
@@ -246,7 +245,9 @@ export default function EstudianteDashboard() {
   const name = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Estudiante'
   const initials = `${user?.first_name?.[0] || ''}${user?.last_name?.[0] || ''}`.toUpperCase() || 'E'
 
-  const modality = fdp?.dominant_modality ?? profile?.dominant_style ?? null
+  // Preferencia del diagnóstico DE ESTE CURSO — nunca el perfil global (`student_profiles`), que
+  // se sobrescribe con el diagnóstico de cualquier otro curso.
+  const modality = fdp?.dominant_modality ?? null
   const items = path?.items ?? []
   const currentMission = items.find(i => i.status === 'available') ?? null
   const missions = items.length > 0
@@ -304,7 +305,7 @@ export default function EstudianteDashboard() {
                   <p className="text-xs text-neural-muted">
                     {fdp.course_name}
                     {modality && (
-                      <> · <span className="text-neural-glow">{MODALITY_LABELS[modality] || modality}</span></>
+                      <> · Preferencia del diagnóstico: <span className="text-neural-glow">{MODALITY_LABELS[modality] || modality}</span></>
                     )}
                   </p>
                 </div>
