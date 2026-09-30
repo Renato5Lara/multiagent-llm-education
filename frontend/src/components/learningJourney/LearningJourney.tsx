@@ -68,43 +68,37 @@ function getMilestoneMessage(pct: 25 | 50 | 75, modality: LearningModality | und
 // diferente?". La anticipación de secuencia se eliminó — era una segunda
 // pregunta; el "¿por qué ahora?" de cada paso lo responde el StepContextTag.
 // Referencia visual: CURRENT ADAPTATION section + Agent Decision Stream
-// Lenguaje centrado en la adaptación, no en el actor: nada de "el Enjambre
-// analizó/detectó" ni "notamos" — el recorrido se ajustó A PARTIR DE las
-// respuestas del estudiante. El protagonista es el estudiante.
+// Copy DESCRIPTIVO: dice qué modalidad se usó y qué se prioriza, nunca afirma
+// que el sistema "detectó" o "comprobó" una preferencia del estudiante ni una
+// confianza — este banner no recibe ninguna evidencia ni métrica que lo respalde.
 
 const MODALITY_BANNER: Record<LearningModality, {
-  /** Por qué el módulo se organizó así — centrado en la adaptación, sin nombrar al actor */
+  /** Qué modalidad se usó como base del módulo */
   intro:        string
-  /** Qué mostraron las respuestas del estudiante */
-  detection:    string
-  /** Cómo beneficia eso al estudiante — tono personal, no descriptivo */
-  benefit:      string
-  /** Etiqueta del badge de confianza — referencia: CONFIDENCE 96.4% */
-  confidence:   string
+  /** Qué se prioriza con esa modalidad — descripción, no afirmación sobre el estudiante */
+  description:  string
+  /** Etiqueta del badge — solo nombra la modalidad */
+  label:        string
 }> = {
   visual: {
-    intro:      'Este módulo se organizó a partir de tus respuestas iniciales y de cómo construyes conocimiento.',
-    detection:  'Tus respuestas muestran que captas ideas más rápido cuando primero las ves.',
-    benefit:    'Eso significa que este módulo arranca exactamente como mejor funciona para ti: con imágenes y analogías antes de la teoría.',
-    confidence: 'Perfil visual · alta confianza',
+    intro:       'Este módulo está organizado según la modalidad registrada en tu perfil.',
+    description: 'Se da prioridad a los recursos visuales: imágenes y analogías.',
+    label:       'Modalidad visual',
   },
   reading: {
-    intro:      'Este módulo se organizó a partir de tu ritmo y de tu forma de procesar información nueva.',
-    detection:  'Tus respuestas revelan que profundizas mejor cuando lees con calma y a tu propio paso.',
-    benefit:    'Por eso este módulo te da primero el texto con ejemplos comentados — sin presión de ritmo.',
-    confidence: 'Perfil lector · alta confianza',
+    intro:       'Este módulo está organizado según la modalidad registrada en tu perfil.',
+    description: 'Se da prioridad a la lectura: texto con ejemplos comentados.',
+    label:       'Modalidad lectora',
   },
   audio: {
-    intro:      'Este módulo se organizó a partir de cómo procesas las ideas cuando las escuchas.',
-    detection:  'Tus respuestas muestran que retienes mejor las ideas cuando primero las escuchas explicadas.',
-    benefit:    'Por eso este módulo priorizará la narración antes de mostrarte el concepto escrito.',
-    confidence: 'Perfil auditivo · alta confianza',
+    intro:       'Este módulo está organizado según la modalidad registrada en tu perfil.',
+    description: 'Se da prioridad a la narración antes del concepto escrito.',
+    label:       'Modalidad auditiva',
   },
   kinesthetic: {
-    intro:      'Este módulo se organizó a partir de tus respuestas: tu aprendizaje se activa cuando haces, no solo cuando lees.',
-    detection:  'Tus respuestas confirman que construyes comprensión más sólida desde la práctica directa.',
-    benefit:    'Por eso este módulo te lleva al reto antes de completar la teoría — aprendes haciendo.',
-    confidence: 'Perfil kinestésico · alta confianza',
+    intro:       'Este módulo está organizado según la modalidad registrada en tu perfil.',
+    description: 'Se da prioridad a la práctica: retos antes de completar la teoría.',
+    label:       'Modalidad kinestésica',
   },
 }
 
@@ -328,7 +322,7 @@ export function LearningJourney({
 
         {/* ── Sprint 2.1 — Banner "MÓDULO PREPARADO PARA TI"
             Referencia visual: sección "CURRENT ADAPTATION" de Contenido Adaptativo.
-            Estructura: thin accent bar + label + origen de la adaptación + detección + beneficio + secuencia */}
+            Estructura: thin accent bar + label + modalidad usada + qué se prioriza */}
         {modality && banner && !bannerDismissed && (
           <div className={cn(
             'relative rounded-xl border overflow-hidden',
@@ -348,30 +342,25 @@ export function LearningJourney({
                 <p className={cn('text-[10px] font-mono font-bold tracking-[0.25em] uppercase', MODALITY_COLOR[modality])}>
                   Módulo preparado para ti
                 </p>
-                {/* Confidence badge — referencia: CONFIDENCE 96.4% */}
+                {/* Badge de modalidad — solo nombra la modalidad, no expresa confianza */}
                 <span className={cn(
                   'ml-auto text-[10px] font-mono font-semibold tracking-wide px-2 py-0.5 rounded-full border',
                   MODALITY_COLOR[modality],
                   MODALITY_BORDER[modality],
                   'bg-white/40 dark:bg-black/20',
                 )}>
-                  {MODALITY_EMOJI[modality]} {banner.confidence}
+                  {MODALITY_EMOJI[modality]} {banner.label}
                 </span>
               </div>
 
-              {/* Origin sentence — por qué el módulo se organizó así */}
+              {/* Origin sentence — qué modalidad se usó como base */}
               <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed italic">
                 {banner.intro}
               </p>
 
-              {/* Detection — qué mostraron las respuestas del estudiante */}
+              {/* Description — qué se prioriza con esa modalidad */}
               <p className="text-sm font-medium text-gray-800 dark:text-gray-200 leading-relaxed">
-                {banner.detection}
-              </p>
-
-              {/* Benefit — qué significa para el estudiante */}
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {banner.benefit}
+                {banner.description}
               </p>
 
             </div>
