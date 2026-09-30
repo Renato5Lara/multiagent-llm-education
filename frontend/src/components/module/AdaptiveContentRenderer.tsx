@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom'
 import { BookOpen, Code2, Dumbbell, Gamepad2, Cpu, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { ContentBlockItem } from '@/types/student'
+import { availableContentOrder } from '@/lib/adaptiveContentOrder'
 
 // ── Mappings ──────────────────────────────────────────────────────────────────
 
@@ -208,8 +209,8 @@ export default function AdaptiveContentRenderer({
   const available   = sorted.filter(b => !b.is_placeholder)
   const interactive = sorted.filter(b => b.is_placeholder)
 
-  // Which types in contentOrder actually have a block in this topic
-  const typeSet = new Set(blocks.map(b => b.type))
+  // El banner anuncia solo los tipos que este tema realmente tiene
+  const announcedOrder = contentOrder ? availableContentOrder(contentOrder, blocks) : []
 
   return (
     <div>
@@ -225,22 +226,20 @@ export default function AdaptiveContentRenderer({
           )}
 
           {/* Content order chips — shows the personalized sequence */}
-          <div className="flex flex-wrap gap-1.5">
-            {contentOrder.slice(0, 6).map((type, idx) => {
-              const inLibrary = typeSet.has(type)
-              const chipColor = inLibrary
-                ? (CHIP_COLORS[type] ?? 'border-white/[0.10] bg-white/[0.03] text-neural-muted/60')
-                : 'border-white/[0.05] bg-transparent text-neural-muted/20'
-              return (
+          {announcedOrder.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {announcedOrder.map((type, idx) => (
                 <span
                   key={type}
-                  className={`text-[10px] font-mono px-2.5 py-1 rounded-full border transition-colors ${chipColor}`}
+                  className={`text-[10px] font-mono px-2.5 py-1 rounded-full border transition-colors ${
+                    CHIP_COLORS[type] ?? 'border-white/[0.10] bg-white/[0.03] text-neural-muted/60'
+                  }`}
                 >
                   {idx + 1}. {CONTENT_TYPE_LABELS[type] ?? type}
                 </span>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
