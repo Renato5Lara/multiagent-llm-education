@@ -125,6 +125,51 @@ def factor_main_effects(runs: Sequence[Mapping], factors: Sequence[str], metric:
     return out
 
 
+def independent_comparison(a: Sequence[float], b: Sequence[float], *, alpha: float = ALPHA, alternative: str = "two-sided") -> dict:
+    """Dos grupos INDEPENDIENTES (p. ej. el throughput de lotes de ejecución distintos). Shapiro-Wilk en cada grupo; si ambos son normales, t de Welch; si no, U de Mann-Whitney. Tamaño del efecto: δ de Cliff.
+    Con < 3 observaciones por grupo no se infiere (`status = not_testable`)."""
+    xa, xb = np.asarray(a, float), np.asarray(b, float)
+    base = {"n_a": int(xa.size), "n_b": int(xb.size), "alpha": alpha, "alternative": alternative}
+    if xa.size < 3 or xb.size < 3:
+        return {**base, "status": "not_testable_n_lt_3"}
+    if not (np.all(np.isfinite(xa)) and np.all(np.isfinite(xb))):
+        raise ValueError("valores no finitos")
+    base.update(mean_a=float(xa.mean()), mean_b=float(xb.mean()), median_a=float(np.median(xa)), median_b=float(np.median(xb)), cliffs_delta=cliffs_delta(xa, xb))
+    if float(xa.max()) == float(xa.min()) and float(xb.max()) == float(xb.min()) and xa[0] == xb[0]:
+        return {**base, "status": "undefined_identical_constant_groups", "test": None, "p_value": None, "significant": None}
+    pa = float(stats.shapiro(xa).pvalue) if float(xa.max()) != float(xa.min()) else None
+    pb = float(stats.shapiro(xb).pvalue) if float(xb.max()) != float(xb.min()) else None
+    normal = bool(pa is not None and pb is not None and pa > alpha and pb > alpha)
+    if normal:
+        res, test = stats.ttest_ind(xa, xb, equal_var=False, alternative=alternative), "welch_t"
+    else:
+        res, test = stats.mannwhitneyu(xa, xb, alternative=alternative), "mann_whitney_u"
+    return {**base, "status": "ok", "shapiro_p_a": pa, "shapiro_p_b": pb, "normal": normal, "test": test, "statistic": float(res.statistic),
+            "p_value": float(res.pvalue), "significant": bool(res.pvalue < alpha)}
+
+
+def independent_multi_comparison(groups: Mapping[str, Sequence[float]], *, alpha: float = ALPHA) -> dict:
+    """k grupos independientes: Kruskal-Wallis y comparaciones por pares (Mann-Whitney/Welch) con Holm."""
+    names = sorted(groups)
+    if len(names) < 2:
+        raise ValueError("se necesitan al menos 2 grupos")
+    out: dict = {"groups": names, "n": {g: len(groups[g]) for g in names}, "medians": {g: float(np.median(groups[g])) for g in names}, "alpha": alpha}
+    if len(names) >= 3 and all(len(groups[g]) >= 3 for g in names):
+        flat = [v for g in names for v in groups[g]]
+        if max(flat) == min(flat):
+            out["kruskal"] = {"status": "undefined_constant", "statistic": None, "p_value": None, "significant": None}
+        else:
+            kw = stats.kruskal(*[groups[g] for g in names])
+            out["kruskal"] = {"status": "ok", "statistic": float(kw.statistic), "p_value": float(kw.pvalue), "significant": bool(kw.pvalue < alpha)}
+    pairs = {f"{p}__vs__{q}": independent_comparison(groups[p], groups[q], alpha=alpha) for p, q in itertools.combinations(names, 2)}
+    adj = holm({k: v["p_value"] for k, v in pairs.items() if v.get("p_value") is not None})
+    for k, v in pairs.items():
+        v["p_holm"] = adj.get(k)
+        v["significant_holm"] = None if k not in adj else bool(adj[k] < alpha)
+    out["pairwise"] = pairs
+    return out
+
+
 def spearman(x: Sequence[float], y: Sequence[float]) -> dict:
     """Correlación de Spearman con p-valor; INDEFINIDA si alguna variable es constante (sin variación no hay relación que medir)."""
     xa, ya = np.asarray(x, float), np.asarray(y, float)
