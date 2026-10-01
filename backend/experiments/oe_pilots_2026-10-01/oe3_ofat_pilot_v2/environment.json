@@ -1,0 +1,37 @@
+{
+  "code": {
+    "commit": "f6002af63d22ddae1ce89d1f0a1886689396d5ce",
+    "dirty": null,
+    "ref": "refs/heads/feat/adaptation-swarm-poc"
+  },
+  "dataset": {
+    "file": "profiles-v1.jsonl",
+    "file_sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+    "manifest_file": "manifest-v1.json",
+    "manifest_sha256": "0b96fb159177f337e96b5a9f1c3fb35caf47d466b4ae0a6eb4a2694c024f96b2",
+    "n_profiles": 100,
+    "version": "v1"
+  },
+  "environment_class": "PILOT",
+  "hardware": {
+    "cpu_model": "11th Gen Intel(R) Core(TM) i7-11370H @ 3.30GHz",
+    "numpy": "2.5.3",
+    "platform": "Linux-7.2.7-ogc1.1.fc44.x86_64-x86_64-with-glibc2.43",
+    "python": "3.14.7",
+    "ram_gib": 7.53,
+    "vcpu": 8
+  },
+  "library_version": "lib-v10-5dd83cd4",
+  "official_execution": "PENDING_HARDWARE",
+  "redis": "redis://127.0.0.1:56379/0",
+  "software": {
+    "implementation": "CPython",
+    "numpy": "2.5.3",
+    "python": "3.14.7",
+    "scipy": "1.18.1"
+  },
+  "target_hardware": {
+    "ram_gib": 32.0,
+    "vcpu": 8
+  }
+}

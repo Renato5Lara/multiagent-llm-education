@@ -1,0 +1,11 @@
+{
+  "experiment": "oe4",
+  "files": {
+    "analysis.json": "a2eee06872cce4fb0f2a6ba7c45167e23b4370058d7e967d0526ab5139dcdfe8",
+    "batches.json": "d37ea8bc694a13196a48a6880cef000bb23769f6ece22790bc127084e7b5c5f0",
+    "observations.jsonl": "358552cc51796a961771c487d4e06efd4d32118b695a5c2e358b177961010045",
+    "provenance.json": "32f1789310055cf19c35dd4c1172ededa43a4d39ada41592b921ff6930a4f777"
+  },
+  "schema": "oe-run-v1",
+  "validity": "EXPLORATORY"
+}

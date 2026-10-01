@@ -1,0 +1,198 @@
+{
+  "library_version": "lib-v5-9ae9ffdd",
+  "n": 100,
+  "batch_seed": 20260923,
+  "git": {
+    "commit": "d31d29c819151239e932c1d3c28e56dd364507d0",
+    "branch": "feat/pretest-m1-v4",
+    "dirty": true
+  },
+  "results": {
+    "alpha=0.3": {
+      "weights": {
+        "alpha": 0.3,
+        "beta": 0.35000000000000003,
+        "gamma": 0.17500000000000002,
+        "delta": 0.17500000000000002
+      },
+      "params": {
+        "n_particles": 20,
+        "w": 0.729,
+        "c1": 1.494,
+        "c2": 1.494,
+        "v_max": 1.0,
+        "k_max": 15,
+        "epsilon": 0.001,
+        "init_low": 0.0,
+        "init_high": 2.0
+      },
+      "f1_adapt": 0.8164434090467868,
+      "accuracy": 0.82,
+      "CR": 1.0,
+      "k_stop_mean": 1.69,
+      "mean_gap": 0.007236747399226779,
+      "predicted_distribution": {
+        "code": 51,
+        "diagram": 26,
+        "text": 23,
+        "audio": 0
+      },
+      "agreement_with_reference_predictions": 0.99
+    },
+    "alpha=0.4(ref)": {
+      "weights": {
+        "alpha": 0.4,
+        "beta": 0.3,
+        "gamma": 0.15,
+        "delta": 0.15
+      },
+      "params": {
+        "n_particles": 20,
+        "w": 0.729,
+        "c1": 1.494,
+        "c2": 1.494,
+        "v_max": 1.0,
+        "k_max": 15,
+        "epsilon": 0.001,
+        "init_low": 0.0,
+        "init_high": 2.0
+      },
+      "f1_adapt": 0.8031415252818244,
+      "accuracy": 0.81,
+      "CR": 1.0,
+      "k_stop_mean": 1.65,
+      "mean_gap": 0.006752578960547307,
+      "predicted_distribution": {
+        "code": 51,
+        "diagram": 27,
+        "text": 22,
+        "audio": 0
+      },
+      "agreement_with_reference_predictions": 1.0
+    },
+    "alpha=0.5": {
+      "weights": {
+        "alpha": 0.5,
+        "beta": 0.25,
+        "gamma": 0.125,
+        "delta": 0.125
+      },
+      "params": {
+        "n_particles": 20,
+        "w": 0.729,
+        "c1": 1.494,
+        "c2": 1.494,
+        "v_max": 1.0,
+        "k_max": 15,
+        "epsilon": 0.001,
+        "init_low": 0.0,
+        "init_high": 2.0
+      },
+      "f1_adapt": 0.8031415252818244,
+      "accuracy": 0.81,
+      "CR": 1.0,
+      "k_stop_mean": 1.61,
+      "mean_gap": 0.006278326226122841,
+      "predicted_distribution": {
+        "code": 51,
+        "diagram": 27,
+        "text": 22,
+        "audio": 0
+      },
+      "agreement_with_reference_predictions": 1.0
+    },
+    "N=10": {
+      "weights": {
+        "alpha": 0.4,
+        "beta": 0.3,
+        "gamma": 0.15,
+        "delta": 0.15
+      },
+      "params": {
+        "n_particles": 10,
+        "w": 0.729,
+        "c1": 1.494,
+        "c2": 1.494,
+        "v_max": 1.0,
+        "k_max": 15,
+        "epsilon": 0.001,
+        "init_low": 0.0,
+        "init_high": 2.0
+      },
+      "f1_adapt": 0.814188034188034,
+      "accuracy": 0.82,
+      "CR": 1.0,
+      "k_stop_mean": 1.51,
+      "mean_gap": 0.007957060776290437,
+      "predicted_distribution": {
+        "code": 50,
+        "diagram": 27,
+        "text": 23,
+        "audio": 0
+      },
+      "agreement_with_reference_predictions": 0.99
+    },
+    "N=20(ref)": {
+      "weights": {
+        "alpha": 0.4,
+        "beta": 0.3,
+        "gamma": 0.15,
+        "delta": 0.15
+      },
+      "params": {
+        "n_particles": 20,
+        "w": 0.729,
+        "c1": 1.494,
+        "c2": 1.494,
+        "v_max": 1.0,
+        "k_max": 15,
+        "epsilon": 0.001,
+        "init_low": 0.0,
+        "init_high": 2.0
+      },
+      "f1_adapt": 0.8031415252818244,
+      "accuracy": 0.81,
+      "CR": 1.0,
+      "k_stop_mean": 1.65,
+      "mean_gap": 0.006752578960547307,
+      "predicted_distribution": {
+        "code": 51,
+        "diagram": 27,
+        "text": 22,
+        "audio": 0
+      },
+      "agreement_with_reference_predictions": 1.0
+    },
+    "N=30": {
+      "weights": {
+        "alpha": 0.4,
+        "beta": 0.3,
+        "gamma": 0.15,
+        "delta": 0.15
+      },
+      "params": {
+        "n_particles": 30,
+        "w": 0.729,
+        "c1": 1.494,
+        "c2": 1.494,
+        "v_max": 1.0,
+        "k_max": 15,
+        "epsilon": 0.001,
+        "init_low": 0.0,
+        "init_high": 2.0
+      },
+      "f1_adapt": 0.8031415252818244,
+      "accuracy": 0.81,
+      "CR": 1.0,
+      "k_stop_mean": 1.72,
+      "mean_gap": 0.0055145661012002975,
+      "predicted_distribution": {
+        "code": 51,
+        "diagram": 27,
+        "text": 22,
+        "audio": 0
+      },
+      "agreement_with_reference_predictions": 1.0
+    }
+  }
+}

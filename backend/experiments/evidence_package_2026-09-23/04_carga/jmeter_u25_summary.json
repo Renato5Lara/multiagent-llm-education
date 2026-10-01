@@ -1,0 +1,16 @@
+{
+ "tool": "Apache JMeter 5.6.3",
+ "plan": "loadtest/plan.jmx",
+ "threads": 25,
+ "rampup_s": 2,
+ "duration_s": 25,
+ "workers": 4,
+ "n": 1113,
+ "errors": 0,
+ "rps": 44.7,
+ "p50_ms": 517,
+ "p90_ms": 828,
+ "p95_ms": 947,
+ "p99_ms": 1174,
+ "note": "1 de los 5 escenarios de la asesor\u00eda ejecutado con JMeter (validaci\u00f3n del plan); los 5 escenarios completos se ejecutaron con Locust"
+}

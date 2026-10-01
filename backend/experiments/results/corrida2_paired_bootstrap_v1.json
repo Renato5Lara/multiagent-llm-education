@@ -1,0 +1,15 @@
+{
+  "ic95_media_diferencia": [
+    -0.09375,
+    0.0
+  ],
+  "ic95_mediana_diferencia": [
+    0.0,
+    0.0
+  ],
+  "media_diferencia_observada": -0.03125,
+  "mediana_diferencia_observada": 0.0,
+  "metodo": "bootstrap pareado por Concept (resampleo con reemplazo de las 32 diferencias D1_experimental - D1_control)",
+  "n_replicaciones": 10000,
+  "semilla": 20260922
+}

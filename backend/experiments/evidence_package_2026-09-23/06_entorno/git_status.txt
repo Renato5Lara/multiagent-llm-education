@@ -1,0 +1,101 @@
+M .claude/settings.local.json
+ M .codegraph/daemon.pid
+ M CLAUDE.md
+ M backend/alembic/env.py
+ M backend/app/api/routes/auth.py
+ M backend/app/main.py
+ M backend/app/models/__init__.py
+ M backend/app/sandbox/docker/runner_payload.py
+ M backend/app/sandbox/runner.py
+ M backend/requirements.txt
+ M backend/runtime/domain/adaptar/productor.py
+ M backend/runtime/domain/diagnosticar/productor.py
+ M backend/runtime/domain/orientar/productor.py
+ M backend/runtime/domain/remediar/productor.py
+ M backend/runtime/kernel/deliberation/politica.py
+ M docker-compose.yml
+?? backend/adaptation_swarm/
+?? backend/alembic/versions/928a10b002db_add_run_label_to_experiment_cmg_results.py
+?? backend/alembic/versions/a17c0de5a001_add_adaptation_swarm_tables.py
+?? backend/alembic/versions/b2f4c9d10a02_add_swarm_diagnostics_and_human_evaluation.py
+?? backend/alembic/versions/f101101bc75d_add_experiment_cmg_results.py
+?? backend/app/models/experiment_cmg_result.py
+?? backend/app/models/swarm_adaptation.py
+?? backend/app/models/swarm_human_evaluation.py
+?? backend/app/services/cmg_concept_catalog.py
+?? backend/app/services/cmg_evaluation_service.py
+?? backend/app/services/cmg_experiment_repository.py
+?? backend/app/services/cmg_generation_service.py
+?? backend/app/services/cmg_multiagent_configuration_service.py
+?? backend/experiments/d1_adversarial_pilot.py
+?? backend/experiments/d1_graduado_piloto.py
+?? backend/experiments/evidence_package_2026-09-23/
+?? backend/experiments/results/adaptation_swarm_corrida-poc-1.json
+?? backend/experiments/results/adaptation_swarm_corrida-poc-1_cases.csv
+?? backend/experiments/results/adaptation_swarm_corrida-poc-1_f1_audit.json
+?? backend/experiments/results/adaptation_swarm_corrida-poc-1_pso_audit.json
+?? backend/experiments/results/adaptation_swarm_corrida-poc-2.json
+?? backend/experiments/results/adaptation_swarm_corrida-poc-2_cases.csv
+?? backend/experiments/results/adaptation_swarm_corrida-poc-2_f1_audit.json
+?? backend/experiments/results/adaptation_swarm_sensitivity.json
+?? backend/experiments/results/corrida2_analysis_report_v1.md
+?? backend/experiments/results/corrida2_analysis_v1.csv
+?? backend/experiments/results/corrida2_evidence_assignment_v1.csv
+?? backend/experiments/results/corrida2_evidence_assignment_v1.md
+?? backend/experiments/results/corrida2_paired_bootstrap_v1.json
+?? backend/experiments/results/corrida2_statistics_v1.json
+?? backend/experiments/results/d1_adversarial_pilot_v1.json
+?? backend/experiments/results/d1_sensitivity_pilot_v1.json
+?? backend/experiments/results/experiment_cmg_dataset_codebook.md
+?? backend/experiments/results/experiment_cmg_dataset_raw.json
+?? backend/experiments/results/experiment_cmg_dataset_v1.csv
+?? backend/experiments/results/library_semantic_audit_lib-v5-9ae9ffdd.json
+?? backend/experiments/results/library_semantic_audit_lib-v6-86516a15.json
+?? backend/experiments/results/library_semantic_audit_lib-v7-7c046f32.json
+?? backend/experiments/results/library_semantic_audit_lib-v8-079928dc.json
+?? backend/experiments/results/library_semantic_audit_lib-v9-a0231e9b.json
+?? backend/experiments/results/r32_post_analysis_audit_v1.md
+?? backend/loadtest/
+?? backend/requirements-loadtest.txt
+?? backend/scripts/analizar_saturacion_oe3.py
+?? backend/scripts/benchmark_capacidad_http.py
+?? backend/scripts/benchmark_results/
+?? backend/scripts/diagnostico_punto4_ventana_carrera.py
+?? backend/scripts/experimento_cmg_runner.py
+?? backend/scripts/experimento_oe2_punto1_interact.py
+?? backend/scripts/experimento_oe2_punto2_complete.py
+?? backend/scripts/experimento_oe2_punto3_diagnostico.py
+?? backend/scripts/experimento_oe2_punto3_sensibilidad_n.py
+?? backend/scripts/experimento_oe2_punto4_enroll.py
+?? backend/scripts/experimento_oe2_punto4_sensibilidad_n.py
+?? backend/scripts/experimento_oe2_punto8_idempotency.py
+?? backend/scripts/experimento_oe4_excepcion_integracion.py
+?? backend/scripts/experimento_oe4_llm_no_disponible.py
+?? backend/scripts/experimento_oe4_saturacion_pool.py
+?? backend/scripts/experimento_oe4_t2_trabajo_pendiente.py
+?? backend/scripts/gateA_analisis.py
+?? backend/scripts/instrumentacion_e1.py
+?? backend/scripts/lanzar_servidor_experimento_oe2.py
+?? backend/scripts/lanzar_servidor_experimento_oe4.py
+?? backend/scripts/oe2_results/
+?? backend/scripts/oe4_fixtures.py
+?? backend/scripts/oe4_results/
+?? backend/scripts/repro_db_bootstrap.sh
+?? backend/tests/adaptation_swarm/
+?? backend/tests/test_cmg_concept_catalog.py
+?? backend/tests/test_cmg_evaluation_service.py
+?? backend/tests/test_cmg_experiment_persistence.py
+?? backend/tests/test_cmg_generation_service.py
+?? backend/tests/test_cmg_multiagent_configuration_service.py
+?? backend/tests/test_cmg_no_contamination.py
+?? backend/tests/test_experimento_cmg_runner.py
+?? backend/tests/test_r19_aislamiento_experimental_rama_a.py
+?? backend/tests/test_r23_d1_sensitivity_pilot.py
+?? backend/tests/test_r24_d1_adversarial_pilot.py
+?? backend/tests/test_r26_promocion_d1_cierre_evaluacion.py
+?? backend/tests/test_sandbox_runner_payload_setattr_fix.py
+?? backend/tools/
+?? datasets/adaptation_library/
+?? datasets/synthetic_profiles/
+?? docs/architecture/ADR/.impeccable/
+?? docs/architecture/ADR/ADR-0019-poc-adaptacion-multimodal-enjambre-pso.md

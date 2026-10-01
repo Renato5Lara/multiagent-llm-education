@@ -1,0 +1,312 @@
+{
+  "code": {
+    "commit": "eb8a952d2467253e5b1793a4201740cea52167db",
+    "dirty": null,
+    "ref": "refs/heads/feat/adaptation-swarm-poc"
+  },
+  "conditions": [
+    {
+      "broadcast_gbest": true,
+      "concurrency": 1,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "swarm"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 1,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "rules|c1",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "rules"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 1,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "bruteforce|c1",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "bruteforce"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 10,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "swarm|batch|bc1|h1|pso|r1|N20|c10",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "swarm"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 10,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "rules|c10",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "rules"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 10,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "bruteforce|c10",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "bruteforce"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 25,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "swarm|batch|bc1|h1|pso|r1|N20|c25",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "swarm"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 25,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "rules|c25",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "rules"
+    },
+    {
+      "broadcast_gbest": true,
+      "concurrency": 25,
+      "dispatch": "batch",
+      "heuristic_seed": true,
+      "mechanism": "pso",
+      "n_particles": 20,
+      "name": "bruteforce|c25",
+      "pso": {
+        "c1": 1.494,
+        "c2": 1.494,
+        "epsilon": 0.001,
+        "init_high": 2.0,
+        "init_low": 0.0,
+        "k_max": 15,
+        "n_particles": 20,
+        "v_max": 1.0,
+        "w": 0.729
+      },
+      "pso_config_hash": "fea12cd781fcdddc38722fbc4d3406c99121280af4cffca2d52164b6effdae94",
+      "replicas": 1,
+      "system": "bruteforce"
+    }
+  ],
+  "created_utc": "2026-10-01T05:07:56+00:00",
+  "dataset": {
+    "file": "profiles-v1.jsonl",
+    "file_sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+    "manifest_file": "manifest-v1.json",
+    "manifest_sha256": "0b96fb159177f337e96b5a9f1c3fb35caf47d466b4ae0a6eb4a2694c024f96b2",
+    "n_profiles": 100,
+    "version": "v1"
+  },
+  "design": {
+    "batch_seed": 26093001,
+    "batches": 5,
+    "concurrency_levels": [
+      1,
+      10,
+      25
+    ],
+    "design": "ofat",
+    "k_replicates": 1,
+    "particles": [
+      10,
+      20,
+      30
+    ],
+    "warmup_requests": 10
+  },
+  "environment": {
+    "implementation": "CPython",
+    "numpy": "2.5.3",
+    "python": "3.14.7",
+    "scipy": "1.18.1"
+  },
+  "experiment": "oe2",
+  "fitness_weights": {
+    "alpha": 0.4,
+    "beta": 0.3,
+    "delta": 0.15,
+    "gamma": 0.15
+  },
+  "hardware": {
+    "cpu_model": "11th Gen Intel(R) Core(TM) i7-11370H @ 3.30GHz",
+    "numpy": "2.5.3",
+    "platform": "Linux-7.2.7-ogc1.1.fc44.x86_64-x86_64-with-glibc2.43",
+    "python": "3.14.7",
+    "ram_gib": 7.53,
+    "vcpu": 8
+  },
+  "label": "oe2-pilot-2026-10-01",
+  "library_version": "lib-v10-5dd83cd4",
+  "module_fingerprints": {
+    "analysis/core_replay.py": "dcf09c406276377a978e7cfee34c9e30546b8156f27cb8cac0a42a4970b89731",
+    "analysis/inference.py": "d8bb538fd242eb0ab6ab206aaf02391c48d0937569cd1034d82d5963a6202d83",
+    "analysis/replicas.py": "605f11fa4646d51f64665d41e5aa3259070250490c5e8ab2a500bf845677a537",
+    "fitness/coher.py": "16d598ff4b46b3730e8bdad996de7a61d1951d45709d75541fa6a2f45ed8b636",
+    "fitness/costt.py": "d4b9e52e7e073eb6fa8a76a2264b025e08e53b9c784d24b80c7329e6d20647b6",
+    "fitness/fitness.py": "3850d21683d24dabbc3d6a16038a28003e4d2a1266de4ce79d39d7a5b5295d3a",
+    "fitness/redund.py": "42bd023025f094288a4e697010c492d14f010bf2fdbbfd2757c1fc143e582a3f",
+    "fitness/simil.py": "5d36ae5b3e0f79568f995d7f0a03ebb84a17f6788e054fa0a556fa0ce2571763",
+    "gold/f1_multilabel.py": "7fcb8f22bd6096329a0c0797a5649c6f6eff05b10e99893ed3adb56e78ca35cb",
+    "gold/labels_v2.py": "6cd979f2de03a270dc0b22cccd957d6779af0b308895c99b8fcc50a3455e1550",
+    "gold/rubric_v2.py": "cdf55ce0b08712df162423873686e8821d3daa019926ae666bbcd1e15b29b262",
+    "multimodal/library.py": "879b6704c9821708eb316fb1b25588f1d2497cd0931e16c9dde5a950a5f78770",
+    "profiles/w_mapping.py": "a761719d8b0c8701f13783643c099723d8b11fa4161cd3e8eb5fc808035db98f",
+    "pso/decode.py": "bd7cde4dc10f1050c6ea3bc4ffd14549d7164bea3dc8316bd5be74755cd50bc1",
+    "pso/engine.py": "5d8cee951d46638c13ce5b66978910f46a50282e18ea541c0ed0b1d82dd38cc6",
+    "pso/params.py": "8f37a14ea2bed627e79fa7bfc60c5d4c1b9cbdf562df1fa850c869fb1822549f",
+    "pso/rng.py": "8fc808de9a9686acc0971c498b17351c79a2ae41298d3543059967a75d524aba",
+    "pso/space.py": "57fb8283438a4024b80aabd0b0fb52e1e568c494209323cb46a57b9c4dae807b",
+    "schemas/ids.py": "8e87bb8b00057df3c48471159fd8d8a9a4b9bdf9310677b89d3e996a3956d21d"
+  },
+  "redis": "redis://127.0.0.1:56379/0",
+  "schema": "oe-run-v1",
+  "validity": {
+    "conditions": {
+      "calentamiento_declarado": true,
+      "dataset_completo": true,
+      "hardware_cercano_al_objetivo": false,
+      "k_replicas_suficientes": false,
+      "lotes_suficientes_para_throughput": true,
+      "propuesta_y_convencionales_presentes": true
+    },
+    "pending_decisions": [
+      "Definici\u00f3n de \u00absistema convencional\u00bb (baselines/conventional.py: reglas fijas y b\u00fasqueda exhaustiva) por confirmar con el asesor.",
+      "Hardware objetivo (8 vCPU / 32 GB, P6): hasta medir en \u00e9l, los resultados son EXPLORATORIOS (D10).",
+      "Definici\u00f3n operativa de \u00abeficiencia de la adaptaci\u00f3n\u00bb (OE3): se reportan sus componentes (t_conv_ms, k_stop, mensajes, brecha al \u00f3ptimo); no se fabrica un \u00edndice compuesto."
+    ],
+    "reasons": [
+      "no se cumple: hardware_cercano_al_objetivo",
+      "no se cumple: k_replicas_suficientes"
+    ],
+    "status": "EXPLORATORY",
+    "target_hardware": {
+      "ram_gib": 32.0,
+      "vcpu": 8
+    }
+  }
+}

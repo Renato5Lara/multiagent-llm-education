@@ -1,0 +1,25 @@
+{
+  "kind": "copia sellada LOCAL; NO constituye todavía almacenamiento externo de preservación institucional",
+  "location_on_owner_machine": "/home/rlara/Documentos/2026-20/Tesis II/Biblioteca sellada 2026-09-24",
+  "verified_at_package_build": {
+    "listed": 2164,
+    "missing": [],
+    "hash_mismatch": [],
+    "manifest_missing": [],
+    "manifest_hash_mismatch": [],
+    "ok": true
+  },
+  "SHA256SUMS_sha256": "8aa47c8981886fd6f496cc0fd44f72a4df828833c6844a896f6152107b89f5ac",
+  "versions": [
+    "lib-v1-3f931e10",
+    "lib-v10-5dd83cd4",
+    "lib-v2-767b4a53",
+    "lib-v3-5fa0acdd",
+    "lib-v4-039dcf58",
+    "lib-v5-9ae9ffdd",
+    "lib-v6-86516a15",
+    "lib-v7-7c046f32",
+    "lib-v8-079928dc",
+    "lib-v9-a0231e9b"
+  ]
+}

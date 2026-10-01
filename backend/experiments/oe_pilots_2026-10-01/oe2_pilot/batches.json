@@ -1,0 +1,452 @@
+[
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 4.912315516998206,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 20.356998579176675
+  },
+  {
+    "batch": 1,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 4.6197283750007045,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.646294301877596
+  },
+  {
+    "batch": 2,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 4.62076470899774,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.641439523046035
+  },
+  {
+    "batch": 3,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 4.63945881300242,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.554238119270018
+  },
+  {
+    "batch": 4,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 4.637191203000839,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.56477825095665
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "rules|c1",
+    "elapsed_s": 0.17246717600210104,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 579.8204755134494
+  },
+  {
+    "batch": 1,
+    "concurrency": 1,
+    "condition": "rules|c1",
+    "elapsed_s": 0.07724580699868966,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 1294.568648906682
+  },
+  {
+    "batch": 2,
+    "concurrency": 1,
+    "condition": "rules|c1",
+    "elapsed_s": 0.07983021499967435,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 1252.6585328676356
+  },
+  {
+    "batch": 3,
+    "concurrency": 1,
+    "condition": "rules|c1",
+    "elapsed_s": 0.08161258299878682,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 1225.3012504393655
+  },
+  {
+    "batch": 4,
+    "concurrency": 1,
+    "condition": "rules|c1",
+    "elapsed_s": 0.07958509099989897,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 1256.51675136147
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "bruteforce|c1",
+    "elapsed_s": 8.748078093001823,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 11.431082225934487
+  },
+  {
+    "batch": 1,
+    "concurrency": 1,
+    "condition": "bruteforce|c1",
+    "elapsed_s": 8.440316694002831,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 11.847896663765452
+  },
+  {
+    "batch": 2,
+    "concurrency": 1,
+    "condition": "bruteforce|c1",
+    "elapsed_s": 8.426463268999214,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 11.86737505495312
+  },
+  {
+    "batch": 3,
+    "concurrency": 1,
+    "condition": "bruteforce|c1",
+    "elapsed_s": 8.302694043999509,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 12.044283394047456
+  },
+  {
+    "batch": 4,
+    "concurrency": 1,
+    "condition": "bruteforce|c1",
+    "elapsed_s": 8.736904645000322,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 11.445701202338842
+  },
+  {
+    "batch": 0,
+    "concurrency": 10,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c10",
+    "elapsed_s": 4.558379455000249,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.937620811779155
+  },
+  {
+    "batch": 1,
+    "concurrency": 10,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c10",
+    "elapsed_s": 4.396285413997248,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.74647585018296
+  },
+  {
+    "batch": 2,
+    "concurrency": 10,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c10",
+    "elapsed_s": 4.356991222997749,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.951618417811915
+  },
+  {
+    "batch": 3,
+    "concurrency": 10,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c10",
+    "elapsed_s": 4.472629048999806,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.35821457680747
+  },
+  {
+    "batch": 4,
+    "concurrency": 10,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c10",
+    "elapsed_s": 4.391715072997613,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.77014750224766
+  },
+  {
+    "batch": 0,
+    "concurrency": 10,
+    "condition": "rules|c10",
+    "elapsed_s": 0.2559214700013399,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 390.74486403769265
+  },
+  {
+    "batch": 1,
+    "concurrency": 10,
+    "condition": "rules|c10",
+    "elapsed_s": 0.18166240899881814,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 550.4716168365387
+  },
+  {
+    "batch": 2,
+    "concurrency": 10,
+    "condition": "rules|c10",
+    "elapsed_s": 0.24638026200045715,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 405.8766688048024
+  },
+  {
+    "batch": 3,
+    "concurrency": 10,
+    "condition": "rules|c10",
+    "elapsed_s": 0.20831517799888388,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 480.0418335361804
+  },
+  {
+    "batch": 4,
+    "concurrency": 10,
+    "condition": "rules|c10",
+    "elapsed_s": 0.20350435899672448,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 491.3899657628934
+  },
+  {
+    "batch": 0,
+    "concurrency": 10,
+    "condition": "bruteforce|c10",
+    "elapsed_s": 10.644581535001635,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 9.394451033249062
+  },
+  {
+    "batch": 1,
+    "concurrency": 10,
+    "condition": "bruteforce|c10",
+    "elapsed_s": 9.96241338999971,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.037728418334877
+  },
+  {
+    "batch": 2,
+    "concurrency": 10,
+    "condition": "bruteforce|c10",
+    "elapsed_s": 9.876211283000885,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.125340288347397
+  },
+  {
+    "batch": 3,
+    "concurrency": 10,
+    "condition": "bruteforce|c10",
+    "elapsed_s": 9.728552497999772,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.279021470106718
+  },
+  {
+    "batch": 4,
+    "concurrency": 10,
+    "condition": "bruteforce|c10",
+    "elapsed_s": 9.89610207000078,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.104988741288532
+  },
+  {
+    "batch": 0,
+    "concurrency": 25,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c25",
+    "elapsed_s": 4.747602175997599,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.063264421262783
+  },
+  {
+    "batch": 1,
+    "concurrency": 25,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c25",
+    "elapsed_s": 4.559557589000178,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 21.93195239846242
+  },
+  {
+    "batch": 2,
+    "concurrency": 25,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c25",
+    "elapsed_s": 4.456153245999303,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.440879942757615
+  },
+  {
+    "batch": 3,
+    "concurrency": 25,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c25",
+    "elapsed_s": 4.430446138001571,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.571090333829613
+  },
+  {
+    "batch": 4,
+    "concurrency": 25,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c25",
+    "elapsed_s": 4.464311499999894,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 22.39987061834784
+  },
+  {
+    "batch": 0,
+    "concurrency": 25,
+    "condition": "rules|c25",
+    "elapsed_s": 0.15557479400013108,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 642.7776468719975
+  },
+  {
+    "batch": 1,
+    "concurrency": 25,
+    "condition": "rules|c25",
+    "elapsed_s": 0.14018272500106832,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 713.3546590654298
+  },
+  {
+    "batch": 2,
+    "concurrency": 25,
+    "condition": "rules|c25",
+    "elapsed_s": 0.1156220939992636,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 864.8866020419671
+  },
+  {
+    "batch": 3,
+    "concurrency": 25,
+    "condition": "rules|c25",
+    "elapsed_s": 0.0847259980000672,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 1180.275268046069
+  },
+  {
+    "batch": 4,
+    "concurrency": 25,
+    "condition": "rules|c25",
+    "elapsed_s": 0.11336612200102536,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 882.0977399147122
+  },
+  {
+    "batch": 0,
+    "concurrency": 25,
+    "condition": "bruteforce|c25",
+    "elapsed_s": 10.050313297000685,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 9.949938578516056
+  },
+  {
+    "batch": 1,
+    "concurrency": 25,
+    "condition": "bruteforce|c25",
+    "elapsed_s": 9.8683071129999,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.133450332961988
+  },
+  {
+    "batch": 2,
+    "concurrency": 25,
+    "condition": "bruteforce|c25",
+    "elapsed_s": 9.926521145996958,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.074022764795775
+  },
+  {
+    "batch": 3,
+    "concurrency": 25,
+    "condition": "bruteforce|c25",
+    "elapsed_s": 10.003146777002257,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 9.99685421290679
+  },
+  {
+    "batch": 4,
+    "concurrency": 25,
+    "condition": "bruteforce|c25",
+    "elapsed_s": 9.775595851002436,
+    "n_failed": 0,
+    "n_ok": 100,
+    "n_requests": 100,
+    "throughput_rps": 10.229555468963616
+  }
+]

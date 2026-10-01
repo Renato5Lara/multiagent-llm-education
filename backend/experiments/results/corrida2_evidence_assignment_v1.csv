@@ -1,0 +1,33 @@
+concept_id,learning_objective_id,module,concept_order,concept_title,profile,errors,items_totales,p
+a6f0da75-9747-4603-967a-2247f628c333,7bf31573-e7d9-4a44-ab9e-2b2f6e2793f2,Introducción a la Programación,1,Algoritmo,E1,2,10,0.2
+e1855fa0-7e2d-4a21-9133-9a7e2083472b,7bf31573-e7d9-4a44-ab9e-2b2f6e2793f2,Introducción a la Programación,2,Pensamiento computacional / proceso de resolución de problemas,E2,10,10,1.0
+1cf9305f-da08-4b92-9238-6054b56b8039,7bf31573-e7d9-4a44-ab9e-2b2f6e2793f2,Introducción a la Programación,3,Representación de algoritmos,E1,2,10,0.2
+0a52084c-04e8-4bac-8fb0-d9b09e4e2966,7bf31573-e7d9-4a44-ab9e-2b2f6e2793f2,Introducción a la Programación,4,Estructura y sintaxis básica de un programa en Python,E2,10,10,1.0
+a5edca79-72da-48c1-a571-4a02fe90e1e5,7bf31573-e7d9-4a44-ab9e-2b2f6e2793f2,Introducción a la Programación,5,Salida básica (print),E1,2,10,0.2
+ec088842-052c-47ce-b0ea-49d409968de2,7bf31573-e7d9-4a44-ab9e-2b2f6e2793f2,Introducción a la Programación,6,Qué es un lenguaje de programación,E2,10,10,1.0
+f406c26b-d94d-4fe3-9a5e-0dc1ad46e295,48c83ac5-591f-44c1-9ebd-829876d9a3da,Variables y Tipos de Datos,1,Variables,E1,2,10,0.2
+34bc3835-0b91-471a-a444-068e89f374df,48c83ac5-591f-44c1-9ebd-829876d9a3da,Variables y Tipos de Datos,2,Tipos de datos primitivos,E2,10,10,1.0
+210fb120-c157-4e22-90f2-a2b38b728c9a,48c83ac5-591f-44c1-9ebd-829876d9a3da,Variables y Tipos de Datos,3,Entrada básica (input()),E1,2,10,0.2
+a20e470f-c6df-4036-8369-4e119dccf537,48c83ac5-591f-44c1-9ebd-829876d9a3da,Variables y Tipos de Datos,4,Conversión de tipos,E2,10,10,1.0
+a42e1eba-615e-4ce9-9397-4b7ff825a7c4,b4a98d92-9c51-44ff-a52c-b5605a036e15,Operadores y Expresiones,1,Operadores aritméticos básicos,E1,2,10,0.2
+00487b68-67d6-452f-9880-caced48934ae,b4a98d92-9c51-44ff-a52c-b5605a036e15,Operadores y Expresiones,2,División entera y módulo,E2,10,10,1.0
+114a7732-9c9a-4f97-a144-35215962df51,b4a98d92-9c51-44ff-a52c-b5605a036e15,Operadores y Expresiones,3,Comparación y operadores relacionales,E1,2,10,0.2
+e3100eb9-c21b-40e2-94a1-5fea4566654a,b4a98d92-9c51-44ff-a52c-b5605a036e15,Operadores y Expresiones,4,Operadores lógicos,E2,10,10,1.0
+24dc18ba-33b3-40a4-9b89-b9c8b64cfbcb,b4a98d92-9c51-44ff-a52c-b5605a036e15,Operadores y Expresiones,5,Expresiones y precedencia,E1,2,10,0.2
+11725a26-99e9-43a1-b367-e069012442f3,d90a398d-f8eb-4ef0-aade-3155528983c3,Condicionales,1,Condicionales básicos,E2,10,10,1.0
+bcba8706-bbd6-4d32-a531-03e543632388,d90a398d-f8eb-4ef0-aade-3155528983c3,Condicionales,2,Condicionales anidados,E1,2,10,0.2
+80655903-265e-42cc-a904-979c5915a762,4b300b0a-7470-42cf-856a-66b4a1c018b4,Bucles,1,Bucle while,E2,10,10,1.0
+040f9986-326a-4e27-aa29-709543645b60,4b300b0a-7470-42cf-856a-66b4a1c018b4,Bucles,2,Bucle for,E1,2,10,0.2
+e572a99f-ea49-4580-b2ab-50a2c868e199,4b300b0a-7470-42cf-856a-66b4a1c018b4,Bucles,3,Bucles anidados,E2,10,10,1.0
+40442f8d-73c5-4799-98fa-38ca49bd39a2,4b300b0a-7470-42cf-856a-66b4a1c018b4,Bucles,4,Flujo de bucles (break/continue),E1,2,10,0.2
+9c8feec0-0920-4884-85b6-b2060e9cfe93,6839a0cb-fd3b-4dc6-b7ae-309bd31a1247,Funciones,1,Definición e invocación de funciones,E2,10,10,1.0
+97618403-8a25-48ff-9f84-77149f10ca13,6839a0cb-fd3b-4dc6-b7ae-309bd31a1247,Funciones,2,Parámetros y argumentos,E1,2,10,0.2
+4a280c4d-cc82-4d65-a6c8-a83b86c59a7e,6839a0cb-fd3b-4dc6-b7ae-309bd31a1247,Funciones,3,Valores de retorno,E2,10,10,1.0
+53b9fcc1-df38-4c16-b9be-27025f1f71a6,6839a0cb-fd3b-4dc6-b7ae-309bd31a1247,Funciones,4,Ámbito de variables,E1,2,10,0.2
+190bb491-325d-4c47-96e3-d59d23743370,87809311-8783-49d7-9b43-5d46dfef1340,Arreglos,1,Creación y estructura de arreglos (listas),E2,10,10,1.0
+0f92cec5-b5cb-4bde-8571-05999e6631a0,87809311-8783-49d7-9b43-5d46dfef1340,Arreglos,2,Indexación,E1,2,10,0.2
+7f8ce386-469d-429d-a85c-9d4b269aa9aa,87809311-8783-49d7-9b43-5d46dfef1340,Arreglos,3,"Búsqueda (in, .index())",E2,10,10,1.0
+a0ca46e9-42df-4eb6-a41d-a0b0ec710f79,87809311-8783-49d7-9b43-5d46dfef1340,Arreglos,4,"Modificación de tamaño (append, insert, remove, pop)",E1,2,10,0.2
+96a89840-37f6-4fbc-802d-476e93b44934,87809311-8783-49d7-9b43-5d46dfef1340,Arreglos,5,Slicing,E2,10,10,1.0
+3e1b09fb-3637-46ed-8ced-18ac8ed640a9,f39edcaf-b63b-4e50-b171-70b4bf0ddab1,Recursividad,1,Recursividad,E1,2,10,0.2
+4ec2e7de-2133-48b2-9c9c-567f9f82d3f9,f39edcaf-b63b-4e50-b171-70b4bf0ddab1,Recursividad,2,Traza y pila de llamadas,E2,10,10,1.0

@@ -1,0 +1,118 @@
+{
+  "bootstrap": {
+    "ic95_media_diferencia": [
+      -0.09375,
+      0.0
+    ],
+    "ic95_mediana_diferencia": [
+      0.0,
+      0.0
+    ],
+    "media_diferencia_observada": -0.03125,
+    "mediana_diferencia_observada": 0.0,
+    "metodo": "bootstrap pareado por Concept (resampleo con reemplazo de las 32 diferencias D1_experimental - D1_control)",
+    "n_replicaciones": 10000,
+    "semilla": 20260922
+  },
+  "config_ctl_set": [
+    "mixta/aplicacion"
+  ],
+  "config_exp_set": [
+    "mixta/fundamentos",
+    "visual/fundamentos"
+  ],
+  "d2": {
+    "control_validos": 32,
+    "experimental_validos": 32
+  },
+  "d3": {
+    "control_validos": 32,
+    "experimental_validos": 32
+  },
+  "desc_ctl": {
+    "desviacion_estandar_auxiliar": 0.1767766952966369,
+    "dist_nivel_0": 0,
+    "dist_nivel_1": 1,
+    "dist_nivel_2": 31,
+    "frecuencias_relativas": {
+      "nivel_0": 0.0,
+      "nivel_1": 0.03125,
+      "nivel_2": 0.96875
+    },
+    "media_auxiliar": 1.96875,
+    "mediana": 2.0,
+    "n": 32,
+    "rango": [
+      1.0,
+      2.0
+    ]
+  },
+  "desc_exp": {
+    "desviacion_estandar_auxiliar": 0.24593468841898236,
+    "dist_nivel_0": 0,
+    "dist_nivel_1": 2,
+    "dist_nivel_2": 30,
+    "frecuencias_relativas": {
+      "nivel_0": 0.0,
+      "nivel_1": 0.0625,
+      "nivel_2": 0.9375
+    },
+    "media_auxiliar": 1.9375,
+    "mediana": 2.0,
+    "n": 32,
+    "rango": [
+      1.0,
+      2.0
+    ]
+  },
+  "diff_dist": {
+    "-1": 1,
+    "0": 31
+  },
+  "e1e2": {
+    "E1": {
+      "dist_nivel_0": 0,
+      "dist_nivel_1": 0,
+      "dist_nivel_2": 16,
+      "mediana": 2.0,
+      "n": 16
+    },
+    "E2": {
+      "dist_nivel_0": 0,
+      "dist_nivel_1": 2,
+      "dist_nivel_2": 14,
+      "mediana": 2.0,
+      "n": 16
+    }
+  },
+  "effect_size": {
+    "aplicable": true,
+    "definicion": "r = Z / sqrt(N) (Rosenthal), Z de la aproximación normal de Wilcoxon, N = pares con diferencia != 0",
+    "n_usado": 1,
+    "r": -1.0,
+    "z_aprox": -1.0
+  },
+  "n_ctl": 32,
+  "n_exp": 32,
+  "n_pares": 32,
+  "n_total": 64,
+  "sign_test": {
+    "aplicable": true,
+    "metodo": "binomtest exacto (k=max(n_pos,n_neg), p=0.5, two-sided) sobre pares con diferencia != 0",
+    "n_efectivo": 1,
+    "n_empates_cero": 31,
+    "n_negativos": 1,
+    "n_positivos": 0,
+    "p_value": 1.0
+  },
+  "wilcoxon": {
+    "aplicable": true,
+    "manejo_de_ceros": "scipy.stats.wilcoxon(zero_method='wilcox') descarta pares con diferencia 0 antes de rankear (comportamiento por defecto de scipy)",
+    "method": "auto (scipy elige exacto o asintótico según n y empates de rango tras remover ceros)",
+    "n_diferencias_cero": 31,
+    "n_diferencias_no_cero": 1,
+    "n_pares_total": 32,
+    "p_value": 0.31731050786291415,
+    "statistic": 0.0
+  }
+}

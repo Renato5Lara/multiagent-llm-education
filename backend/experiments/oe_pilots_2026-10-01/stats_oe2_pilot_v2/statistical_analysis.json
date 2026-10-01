@@ -1,0 +1,1380 @@
+{
+  "alpha": 0.05,
+  "contrasts": {
+    "c10|swarm_vs_bruteforce": {
+      "latency_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 2.142469067749687,
+          "dagostino_p": 0.34258532306222605,
+          "dagostino_rejects_normality": false,
+          "descriptives": {
+            "excess_kurtosis": -0.5515092981214464,
+            "iqr": 271.025658000508,
+            "max": -192.26861559945974,
+            "mean": -580.1782379859942,
+            "median": -561.6600454002764,
+            "min": -969.618247001199,
+            "n": 100,
+            "q1": -715.2569127005336,
+            "q3": -444.2312547000256,
+            "sd": 183.5379008953882,
+            "skewness": -0.09794335988251231
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": -1121.7953997012955,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": -37.69276769926364
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.3997310345620753,
+          "shapiro_rejects_normality": false,
+          "shapiro_w": 0.9864186328985696,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          -615.5924770475831,
+          -544.951281852322
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            -615.5924770475831,
+            -544.951281852322
+          ],
+          "effect_size_dz": -3.1610813633347625,
+          "mean_a": 429.1710590699731,
+          "mean_b": 1009.3492970559673,
+          "mean_diff": -580.1782379859942,
+          "median_a": 405.8288103995437,
+          "median_b": 995.5033397000079,
+          "median_diff": -561.6600454002764,
+          "n": 100,
+          "normal": true,
+          "p_value": 1.5576613834668736e-53,
+          "ratio_of_means": 0.42519577743974596,
+          "shapiro_p": 0.3997310345620753,
+          "shapiro_w": 0.9864186328985696,
+          "significant": true,
+          "statistic": -31.61081363334762,
+          "status": "ok",
+          "test": "student_t_paired"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": -3.1610813633347625
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 1.5576613834668736e-53,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": -31.61081363334762,
+        "status": "ok",
+        "test": "student_t_paired",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 0.13278265323531913,
+          "dagostino_p": 0.9357646030353721,
+          "dagostino_rejects_normality": false,
+          "descriptives": {
+            "excess_kurtosis": -0.05904118809324599,
+            "iqr": 234.89450560034425,
+            "max": -106.11313479996011,
+            "mean": -539.5359664580767,
+            "median": -537.0898593996646,
+            "min": -1000.7884850007507,
+            "n": 100,
+            "q1": -652.9543421504412,
+            "q3": -418.059836550097,
+            "sd": 180.92011378408247,
+            "skewness": -0.08434029673258919
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": -1005.2961005509576,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": -65.7180781495806
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.8670521894486604,
+          "shapiro_rejects_normality": false,
+          "shapiro_w": 0.9926649946227736,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          -573.9050000667241,
+          -504.7658288029165
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            -573.9050000667241,
+            -504.7658288029165
+          ],
+          "effect_size_dz": -2.982177908101369,
+          "mean_a": 299.878221152,
+          "mean_b": 839.4141876100766,
+          "mean_diff": -539.5359664580767,
+          "median_a": 272.436895,
+          "median_b": 855.185681399962,
+          "median_diff": -537.0898593996646,
+          "n": 100,
+          "normal": true,
+          "p_value": 2.8945220715119873e-51,
+          "ratio_of_means": 0.35724702486360516,
+          "shapiro_p": 0.8670521894486604,
+          "shapiro_w": 0.9926649946227736,
+          "significant": true,
+          "statistic": -29.821779081013688,
+          "status": "ok",
+          "test": "student_t_paired"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": -2.982177908101369
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 2.8945220715119873e-51,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": -29.821779081013688,
+        "status": "ok",
+        "test": "student_t_paired",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "throughput_rps": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "a \u2260 b (ubicaci\u00f3n)",
+        "assumptions": {
+          "normal_both": true,
+          "shapiro_p_a": 0.564693925329018,
+          "shapiro_p_b": 0.23180080421405003
+        },
+        "ci95": null,
+        "design": "independent",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "cliffs_delta": 1.0,
+          "mean_a": 22.890945151413355,
+          "mean_b": 9.724438684939892,
+          "median_a": 23.053433304191213,
+          "median_b": 9.683341814763263,
+          "n_a": 5,
+          "n_b": 5,
+          "normal": true,
+          "p_value": 1.069143418837487e-07,
+          "shapiro_p_a": 0.564693925329018,
+          "shapiro_p_b": 0.23180080421405003,
+          "significant": true,
+          "statistic": 60.687712964900065,
+          "status": "ok",
+          "test": "welch_t"
+        },
+        "effect_size": {
+          "name": "cliffs_delta",
+          "value": 1.0
+        },
+        "n": {
+          "a": 5,
+          "b": 5
+        },
+        "null_hypothesis": "la distribuci\u00f3n de a = la distribuci\u00f3n de b",
+        "p_value": 1.069143418837487e-07,
+        "selection_rationale": "Shapiro-Wilk por grupo \u21d2 Welch si ambos no rechazan, Mann-Whitney si alguno rechaza",
+        "significant": true,
+        "statistic": 60.687712964900065,
+        "status": "ok",
+        "test": "welch_t",
+        "unit": "batch"
+      }
+    },
+    "c10|swarm_vs_rules": {
+      "latency_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 13.298389669163225,
+          "dagostino_p": 0.001295064426880067,
+          "dagostino_rejects_normality": true,
+          "descriptives": {
+            "excess_kurtosis": 0.668569265512077,
+            "iqr": 124.29350249876734,
+            "max": 693.058020000899,
+            "mean": 406.93237421801314,
+            "median": 383.2259422993957,
+            "min": 213.61803780018818,
+            "n": 100,
+            "q1": 338.3716448010091,
+            "q3": 462.66514729977644,
+            "sd": 94.13314250360654,
+            "skewness": 0.8919827726933212
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [
+              36,
+              37,
+              68
+            ],
+            "k": 1.5,
+            "lower_fence": 151.9313910528581,
+            "n": 100,
+            "n_outliers": 3,
+            "status": "ok",
+            "upper_fence": 649.1054010479274
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.00028222437435971367,
+          "shapiro_rejects_normality": true,
+          "shapiro_w": 0.9426863184742248,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          388.9544416899013,
+          425.584054382804
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            388.9544416899013,
+            425.584054382804
+          ],
+          "effect_size_dz": 4.322944750329803,
+          "mean_a": 429.1710590699731,
+          "mean_b": 22.238684851959988,
+          "mean_diff": 406.93237421801314,
+          "median_a": 405.8288103995437,
+          "median_b": 21.496386200306006,
+          "median_diff": 383.2259422993957,
+          "n": 100,
+          "normal": false,
+          "p_value": 3.896559845095909e-18,
+          "ratio_of_means": 19.298401048753945,
+          "shapiro_p": 0.00028222437435971367,
+          "shapiro_w": 0.9426863184742248,
+          "significant": true,
+          "statistic": 0.0,
+          "status": "ok",
+          "test": "wilcoxon_signed_rank"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": 4.322944750329803
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 3.896559845095909e-18,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": 0.0,
+        "status": "ok",
+        "test": "wilcoxon_signed_rank",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 8.709850977753154,
+          "dagostino_p": 0.01284339652443039,
+          "dagostino_rejects_normality": true,
+          "descriptives": {
+            "excess_kurtosis": 0.1168129291411133,
+            "iqr": 137.1366460504425,
+            "max": 568.2392838007696,
+            "mean": 299.80407012997495,
+            "median": 272.36449259879845,
+            "min": 142.42306619943793,
+            "n": 100,
+            "q1": 227.251313099546,
+            "q3": 364.3879591499885,
+            "sd": 95.6021310709478,
+            "skewness": 0.7462389640601168
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": 21.546344023882256,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": 570.0929282256523
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.0006920545112909967,
+          "shapiro_rejects_normality": true,
+          "shapiro_w": 0.9487992953538332,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          281.4731116145354,
+          319.09651179147835
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            281.4731116145354,
+            319.09651179147835
+          ],
+          "effect_size_dz": 3.135955932901598,
+          "mean_a": 299.878221152,
+          "mean_b": 0.07415102202503476,
+          "mean_diff": 299.80407012997495,
+          "median_a": 272.436895,
+          "median_b": 0.07391809958789963,
+          "median_diff": 272.36449259879845,
+          "n": 100,
+          "normal": false,
+          "p_value": 3.896559845095909e-18,
+          "ratio_of_means": 4044.1549281782727,
+          "shapiro_p": 0.0006920545112909967,
+          "shapiro_w": 0.9487992953538332,
+          "significant": true,
+          "statistic": 0.0,
+          "status": "ok",
+          "test": "wilcoxon_signed_rank"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": 3.135955932901598
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 3.896559845095909e-18,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": 0.0,
+        "status": "ok",
+        "test": "wilcoxon_signed_rank",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "throughput_rps": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "a \u2260 b (ubicaci\u00f3n)",
+        "assumptions": {
+          "normal_both": false,
+          "shapiro_p_a": 0.564693925329018,
+          "shapiro_p_b": 0.0026715526101068012
+        },
+        "ci95": null,
+        "design": "independent",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "cliffs_delta": -1.0,
+          "mean_a": 22.890945151413355,
+          "mean_b": 438.90601591290476,
+          "median_a": 23.053433304191213,
+          "median_b": 427.8046791333421,
+          "n_a": 5,
+          "n_b": 5,
+          "normal": false,
+          "p_value": 0.007936507936507936,
+          "shapiro_p_a": 0.564693925329018,
+          "shapiro_p_b": 0.0026715526101068012,
+          "significant": true,
+          "statistic": 0.0,
+          "status": "ok",
+          "test": "mann_whitney_u"
+        },
+        "effect_size": {
+          "name": "cliffs_delta",
+          "value": -1.0
+        },
+        "n": {
+          "a": 5,
+          "b": 5
+        },
+        "null_hypothesis": "la distribuci\u00f3n de a = la distribuci\u00f3n de b",
+        "p_value": 0.007936507936507936,
+        "selection_rationale": "Shapiro-Wilk por grupo \u21d2 Welch si ambos no rechazan, Mann-Whitney si alguno rechaza",
+        "significant": true,
+        "statistic": 0.0,
+        "status": "ok",
+        "test": "mann_whitney_u",
+        "unit": "batch"
+      }
+    },
+    "c1|swarm_vs_bruteforce": {
+      "latency_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 0.5055789234655097,
+          "dagostino_p": 0.7766313752363545,
+          "dagostino_rejects_normality": false,
+          "descriptives": {
+            "excess_kurtosis": 0.1137295180076614,
+            "iqr": 11.866179449680203,
+            "max": -18.253522400482325,
+            "mean": -36.812178730055166,
+            "median": -37.251805500272894,
+            "min": -60.05470939926454,
+            "n": 100,
+            "q1": -42.79783984984533,
+            "q3": -30.93166040016513,
+            "sd": 8.679943080851023,
+            "skewness": -0.13337148407389213
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": -60.597109024365636,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": -13.132391225644824
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.4474768061689162,
+          "shapiro_rejects_normality": false,
+          "shapiro_w": 0.9871454034185126,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          -38.476119388788355,
+          -35.108195258989696
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            -38.476119388788355,
+            -35.108195258989696
+          ],
+          "effect_size_dz": -4.241062226694455,
+          "mean_a": 46.57004773792141,
+          "mean_b": 83.38222646797658,
+          "mean_diff": -36.812178730055166,
+          "median_a": 45.566037699609296,
+          "median_b": 83.0626047001715,
+          "median_diff": -37.251805500272894,
+          "n": 100,
+          "normal": true,
+          "p_value": 2.6702090459013727e-65,
+          "ratio_of_means": 0.558512883507697,
+          "shapiro_p": 0.4474768061689162,
+          "shapiro_w": 0.9871454034185126,
+          "significant": true,
+          "statistic": -42.41062226694455,
+          "status": "ok",
+          "test": "student_t_paired"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": -4.241062226694455
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 2.6702090459013727e-65,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": -42.41062226694455,
+        "status": "ok",
+        "test": "student_t_paired",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 0.5982913170563036,
+          "dagostino_p": 0.7414514028491263,
+          "dagostino_rejects_normality": false,
+          "descriptives": {
+            "excess_kurtosis": 0.11454102604861927,
+            "iqr": 12.005915349312652,
+            "max": -24.43904079933538,
+            "mean": -42.63358882192739,
+            "median": -43.23344830098725,
+            "min": -65.76499799984852,
+            "n": 100,
+            "q1": -48.42538719956711,
+            "q3": -36.41947185025446,
+            "sd": 8.585747100598036,
+            "skewness": -0.15117001633611335
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": -66.43426022353609,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": -18.410598826285483
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.42007030468239215,
+          "shapiro_rejects_normality": false,
+          "shapiro_w": 0.9867352578834651,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          -44.286463511264635,
+          -40.94230263292868
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            -44.286463511264635,
+            -40.94230263292868
+          ],
+          "effect_size_dz": -4.9656236460724275,
+          "mean_a": 40.175100462,
+          "mean_b": 82.80868928392738,
+          "mean_diff": -42.63358882192739,
+          "median_a": 39.2380438,
+          "median_b": 82.62681590058492,
+          "median_diff": -43.23344830098725,
+          "n": 100,
+          "normal": true,
+          "p_value": 8.865079321240537e-72,
+          "ratio_of_means": 0.48515561361261306,
+          "shapiro_p": 0.42007030468239215,
+          "shapiro_w": 0.9867352578834651,
+          "significant": true,
+          "statistic": -49.65623646072426,
+          "status": "ok",
+          "test": "student_t_paired"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": -4.9656236460724275
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 8.865079321240537e-72,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": -49.65623646072426,
+        "status": "ok",
+        "test": "student_t_paired",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "throughput_rps": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "a \u2260 b (ubicaci\u00f3n)",
+        "assumptions": {
+          "normal_both": false,
+          "shapiro_p_a": 0.12338330896985183,
+          "shapiro_p_b": 0.012850199925644474
+        },
+        "ci95": null,
+        "design": "independent",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "cliffs_delta": 1.0,
+          "mean_a": 21.471925020033595,
+          "mean_b": 11.99287126724634,
+          "median_a": 21.546300177273867,
+          "median_b": 12.139372714021881,
+          "n_a": 5,
+          "n_b": 5,
+          "normal": false,
+          "p_value": 0.007936507936507936,
+          "shapiro_p_a": 0.12338330896985183,
+          "shapiro_p_b": 0.012850199925644474,
+          "significant": true,
+          "statistic": 25.0,
+          "status": "ok",
+          "test": "mann_whitney_u"
+        },
+        "effect_size": {
+          "name": "cliffs_delta",
+          "value": 1.0
+        },
+        "n": {
+          "a": 5,
+          "b": 5
+        },
+        "null_hypothesis": "la distribuci\u00f3n de a = la distribuci\u00f3n de b",
+        "p_value": 0.007936507936507936,
+        "selection_rationale": "Shapiro-Wilk por grupo \u21d2 Welch si ambos no rechazan, Mann-Whitney si alguno rechaza",
+        "significant": true,
+        "statistic": 25.0,
+        "status": "ok",
+        "test": "mann_whitney_u",
+        "unit": "batch"
+      }
+    },
+    "c1|swarm_vs_rules": {
+      "latency_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 6.619979225534269,
+          "dagostino_p": 0.03651655305771048,
+          "dagostino_rejects_normality": true,
+          "descriptives": {
+            "excess_kurtosis": -0.09335467676307152,
+            "iqr": 9.73897814983502,
+            "max": 64.60881120001432,
+            "mean": 45.59511903185194,
+            "median": 44.511498500287416,
+            "min": 34.011839200684335,
+            "n": 100,
+            "q1": 40.53582684973662,
+            "q3": 50.27480499957164,
+            "sd": 6.838877616666251,
+            "skewness": 0.6447635371645445
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": 25.927359624984092,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": 64.88327222432417
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.003949956776159123,
+          "shapiro_rejects_normality": true,
+          "shapiro_w": 0.9598910990252674,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          44.28328022994428,
+          46.93375023511599
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            44.28328022994428,
+            46.93375023511599
+          ],
+          "effect_size_dz": 6.667047078125401,
+          "mean_a": 46.57004773792141,
+          "mean_b": 0.9749287060694769,
+          "mean_diff": 45.59511903185194,
+          "median_a": 45.566037699609296,
+          "median_b": 0.8351794000191148,
+          "median_diff": 44.511498500287416,
+          "n": 100,
+          "normal": false,
+          "p_value": 3.896559845095909e-18,
+          "ratio_of_means": 47.767644390812166,
+          "shapiro_p": 0.003949956776159123,
+          "shapiro_w": 0.9598910990252674,
+          "significant": true,
+          "statistic": 0.0,
+          "status": "ok",
+          "test": "wilcoxon_signed_rank"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": 6.667047078125401
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 3.896559845095909e-18,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": 0.0,
+        "status": "ok",
+        "test": "wilcoxon_signed_rank",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) \u2260 0",
+        "assumptions": {
+          "alpha": 0.05,
+          "dagostino_k2": 6.345341674296321,
+          "dagostino_p": 0.0418915628141468,
+          "dagostino_rejects_normality": true,
+          "descriptives": {
+            "excess_kurtosis": -0.16288989675297572,
+            "iqr": 9.42855985155034,
+            "max": 58.437355400521724,
+            "mean": 40.15294010982866,
+            "median": 39.21052639969638,
+            "min": 28.778299199506666,
+            "n": 100,
+            "q1": 34.94732654944852,
+            "q3": 44.37588640099886,
+            "sd": 6.720887556186115,
+            "skewness": 0.6272677393020029
+          },
+          "interpretation": "left_to_statistical_phase",
+          "n": 100,
+          "outliers_iqr": {
+            "indices": [],
+            "k": 1.5,
+            "lower_fence": 20.80448677212301,
+            "n": 100,
+            "n_outliers": 0,
+            "status": "ok",
+            "upper_fence": 58.51872617832437
+          },
+          "shapiro_n_gt_5000": false,
+          "shapiro_p": 0.0036642777307025398,
+          "shapiro_rejects_normality": true,
+          "shapiro_w": 0.9594325875036168,
+          "status": "ok",
+          "unit": "paired_difference_of_profile_mean_over_replicates_and_batches"
+        },
+        "ci95": [
+          38.86005399470277,
+          41.45914828840663
+        ],
+        "design": "paired",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "diff_ci95_bootstrap": [
+            38.86005399470277,
+            41.45914828840663
+          ],
+          "effect_size_dz": 5.974350824076894,
+          "mean_a": 40.175100462,
+          "mean_b": 0.02216035217134049,
+          "mean_diff": 40.15294010982866,
+          "median_a": 39.2380438,
+          "median_b": 0.02188300059060566,
+          "median_diff": 39.21052639969638,
+          "n": 100,
+          "normal": false,
+          "p_value": 3.896559845095909e-18,
+          "ratio_of_means": 1812.9269856079995,
+          "shapiro_p": 0.0036642777307025398,
+          "shapiro_w": 0.9594325875036168,
+          "significant": true,
+          "statistic": 0.0,
+          "status": "ok",
+          "test": "wilcoxon_signed_rank"
+        },
+        "effect_size": {
+          "name": "cohens_dz_paired",
+          "value": 5.974350824076894
+        },
+        "n": 100,
+        "null_hypothesis": "mediana/media de las diferencias pareadas (a \u2212 b) = 0",
+        "p_value": 3.896559845095909e-18,
+        "selection_rationale": "Shapiro-Wilk sobre las diferencias \u21d2 t pareada si no rechaza, Wilcoxon si rechaza",
+        "significant": true,
+        "statistic": 0.0,
+        "status": "ok",
+        "test": "wilcoxon_signed_rank",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "throughput_rps": {
+        "academic_label": null,
+        "alpha": 0.05,
+        "alternative": "two-sided",
+        "alternative_hypothesis": "a \u2260 b (ubicaci\u00f3n)",
+        "assumptions": {
+          "normal_both": false,
+          "shapiro_p_a": 0.12338330896985183,
+          "shapiro_p_b": 0.016025158676222055
+        },
+        "ci95": null,
+        "design": "independent",
+        "detail": {
+          "alpha": 0.05,
+          "alternative": "two-sided",
+          "cliffs_delta": -1.0,
+          "mean_a": 21.471925020033595,
+          "mean_b": 1118.0789308889048,
+          "median_a": 21.546300177273867,
+          "median_b": 1233.9181443039859,
+          "n_a": 5,
+          "n_b": 5,
+          "normal": false,
+          "p_value": 0.007936507936507936,
+          "shapiro_p_a": 0.12338330896985183,
+          "shapiro_p_b": 0.016025158676222055,
+          "significant": true,
+          "statistic": 0.0,
+          "status": "ok",
+          "test": "mann_whitney_u"
+        },
+        "effect_size": {
+          "name": "cliffs_delta",
+          "value": -1.0
+        },
+        "n": {
+          "a": 5,
+          "b": 5
+        },
+        "null_hypothesis": "la distribuci\u00f3n de a = la distribuci\u00f3n de b",
+        "p_value": 0.007936507936507936,
+        "selection_rationale": "Shapiro-Wilk por grupo \u21d2 Welch si ambos no rechazan, Mann-Whitney si alguno rechaza",
+        "significant": true,
+        "statistic": 0.0,
+        "status": "ok",
+        "test": "mann_whitney_u",
+        "unit": "batch"
+      }
+    }
+  },
+  "environment_class": "PILOT",
+  "experiment": "oe2",
+  "label": "EXPLORATORY \u2014 NO es resultado oficial de tesis",
+  "n_rows": 22030,
+  "normality_by_condition": {
+    "bruteforce|c1": {
+      "latency_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 25.408468382216075,
+        "dagostino_p": 3.0382338216275597e-06,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 2.082410600777206,
+          "iqr": 8.932780500981607,
+          "max": 106.6443255986087,
+          "mean": 83.38222646797658,
+          "median": 83.0626047001715,
+          "min": 73.75320200007991,
+          "n": 100,
+          "q1": 78.27524179974716,
+          "q3": 87.20802230072877,
+          "sd": 6.746262276055104,
+          "skewness": 1.1798760901080392
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            13,
+            37,
+            61,
+            85,
+            89
+          ],
+          "k": 1.5,
+          "lower_fence": 64.87607104827475,
+          "n": 100,
+          "n_outliers": 5,
+          "status": "ok",
+          "upper_fence": 100.60719305220118
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 9.401097910364295e-07,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.8961909509283422,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 27.638721460302143,
+        "dagostino_p": 9.96157230222906e-07,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 2.3210918271756054,
+          "iqr": 8.689372700609965,
+          "max": 106.25675679984852,
+          "mean": 82.80868928392738,
+          "median": 82.62681590058492,
+          "min": 73.32694839933538,
+          "n": 100,
+          "q1": 77.81695734956884,
+          "q3": 86.5063300501788,
+          "sd": 6.669467991587866,
+          "skewness": 1.236702252592476
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            13,
+            37,
+            61,
+            85,
+            89
+          ],
+          "k": 1.5,
+          "lower_fence": 64.78289829865389,
+          "n": 100,
+          "n_outliers": 5,
+          "status": "ok",
+          "upper_fence": 99.54038910109375
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 4.6251091028526603e-07,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.8893754842377888,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      }
+    },
+    "bruteforce|c10": {
+      "latency_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 0.7989381457656297,
+        "dagostino_p": 0.6706760316181097,
+        "dagostino_rejects_normality": false,
+        "descriptives": {
+          "excess_kurtosis": -0.37804637014602305,
+          "iqr": 216.9175217504744,
+          "max": 1427.9339409986278,
+          "mean": 1009.3492970559673,
+          "median": 995.5033397000079,
+          "min": 557.3543143997085,
+          "n": 100,
+          "q1": 899.4066296498204,
+          "q3": 1116.3241514002948,
+          "sd": 180.7415341830978,
+          "skewness": 0.09144351660655549
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            97
+          ],
+          "k": 1.5,
+          "lower_fence": 574.0303470241088,
+          "n": 100,
+          "n_outliers": 1,
+          "status": "ok",
+          "upper_fence": 1441.7004340260064
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.5800681074738712,
+        "shapiro_rejects_normality": false,
+        "shapiro_w": 0.988942680382116,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 0.8611738698158804,
+        "dagostino_p": 0.6501274002535526,
+        "dagostino_rejects_normality": false,
+        "descriptives": {
+          "excess_kurtosis": -0.02816653251142265,
+          "iqr": 211.60432420056168,
+          "max": 1346.0751200007508,
+          "mean": 839.4141876100766,
+          "median": 855.185681399962,
+          "min": 448.1664858009026,
+          "n": 100,
+          "q1": 717.4323811492286,
+          "q3": 929.0367053497903,
+          "sd": 171.79534837128713,
+          "skewness": 0.21683899567900605
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            70
+          ],
+          "k": 1.5,
+          "lower_fence": 400.0258948483861,
+          "n": 100,
+          "n_outliers": 1,
+          "status": "ok",
+          "upper_fence": 1246.4431916506328
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.5271142119349512,
+        "shapiro_rejects_normality": false,
+        "shapiro_w": 0.9882539169587845,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      }
+    },
+    "rules|c1": {
+      "latency_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 118.7967165596915,
+        "dagostino_p": 1.5981618706651114e-26,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 24.52386613649232,
+          "iqr": 0.3234427002098528,
+          "max": 3.858759000286227,
+          "mean": 0.9749287060694769,
+          "median": 0.8351794000191148,
+          "min": 0.6471586013503838,
+          "n": 100,
+          "q1": 0.7491574993764516,
+          "q3": 1.0726001995863044,
+          "sd": 0.40821955627570666,
+          "skewness": 4.010574688181693
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            12,
+            13,
+            23,
+            50,
+            51
+          ],
+          "k": 1.5,
+          "lower_fence": 0.26399344906167244,
+          "n": 100,
+          "n_outliers": 5,
+          "status": "ok",
+          "upper_fence": 1.5577642499010835
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 1.438203644065289e-14,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.6269126943487027,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 16.48334846886735,
+        "dagostino_p": 0.0002634428149932779,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 1.2754610842034229,
+          "iqr": 0.0025263016141252592,
+          "max": 0.029085400456096977,
+          "mean": 0.02216035217134049,
+          "median": 0.02188300059060566,
+          "min": 0.018350000027567148,
+          "n": 100,
+          "q1": 0.020714699348900467,
+          "q3": 0.023241000963025726,
+          "sd": 0.002134147598453408,
+          "skewness": 0.9252783780254754
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            0,
+            1,
+            51,
+            70,
+            80
+          ],
+          "k": 1.5,
+          "lower_fence": 0.01692524692771258,
+          "n": 100,
+          "n_outliers": 5,
+          "status": "ok",
+          "upper_fence": 0.027030453384213615
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.00020044799222181136,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.9402770149413331,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      }
+    },
+    "rules|c10": {
+      "latency_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 32.76576196946667,
+        "dagostino_p": 7.673706608592204e-08,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 3.350583816802601,
+          "iqr": 5.868046249088366,
+          "max": 44.35023519981769,
+          "mean": 22.238684851959988,
+          "median": 21.496386200306006,
+          "min": 13.161258200125303,
+          "n": 100,
+          "q1": 18.86334560040268,
+          "q3": 24.731391849491047,
+          "sd": 5.1433513426556265,
+          "skewness": 1.2922154688999805
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            15,
+            21,
+            46,
+            52
+          ],
+          "k": 1.5,
+          "lower_fence": 10.061276226770133,
+          "n": 100,
+          "n_outliers": 4,
+          "status": "ok",
+          "upper_fence": 33.533461223123595
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 2.816786824585036e-05,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.9255765328858641,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 0.429858768646766,
+        "dagostino_p": 0.8065983966578312,
+        "dagostino_rejects_normality": false,
+        "descriptives": {
+          "excess_kurtosis": -0.042275380413533625,
+          "iqr": 0.00835504997667158,
+          "max": 0.09062059980351478,
+          "mean": 0.07415102202503476,
+          "median": 0.07391809958789963,
+          "min": 0.05975199892418459,
+          "n": 100,
+          "q1": 0.07008384982327698,
+          "q3": 0.07843889979994856,
+          "sd": 0.0056695217573880085,
+          "skewness": 0.15236326269925696
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [],
+          "k": 1.5,
+          "lower_fence": 0.05755127485826961,
+          "n": 100,
+          "n_outliers": 0,
+          "status": "ok",
+          "upper_fence": 0.09097147476495593
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.9591272975793067,
+        "shapiro_rejects_normality": false,
+        "shapiro_w": 0.9944736351817913,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      }
+    },
+    "swarm|batch|bc1|h1|pso|r1|N20|c1": {
+      "latency_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 6.565629678017153,
+        "dagostino_p": 0.03752248825265369,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": -0.09241380459833692,
+          "iqr": 9.811911499855341,
+          "max": 65.6310937993112,
+          "mean": 46.57004773792141,
+          "median": 45.566037699609296,
+          "min": 34.75845000066329,
+          "n": 100,
+          "q1": 41.39610210004321,
+          "q3": 51.20801359989855,
+          "sd": 6.920663233577438,
+          "skewness": 0.6417532522813884
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [],
+          "k": 1.5,
+          "lower_fence": 26.678234850260196,
+          "n": 100,
+          "n_outliers": 0,
+          "status": "ok",
+          "upper_fence": 65.92588084968156
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.0038700298827494023,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.959766409886252,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 6.345947025877411,
+        "dagostino_p": 0.0418788851709595,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": -0.16256439959457003,
+          "iqr": 9.428874150000006,
+          "max": 58.4610378,
+          "mean": 40.175100462,
+          "median": 39.2380438,
+          "min": 28.800372,
+          "n": 100,
+          "q1": 34.969211099999995,
+          "q3": 44.39808525,
+          "sd": 6.720744806132439,
+          "skewness": 0.627320205331679
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [],
+          "k": 1.5,
+          "lower_fence": 20.825899874999987,
+          "n": 100,
+          "n_outliers": 0,
+          "status": "ok",
+          "upper_fence": 58.54139647500001
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.003669653985034081,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.9594415577157789,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      }
+    },
+    "swarm|batch|bc1|h1|pso|r1|N20|c10": {
+      "latency_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 11.865983652127586,
+        "dagostino_p": 0.0026505401592824165,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 0.5367541668616163,
+          "iqr": 126.76545105023251,
+          "max": 713.5765880011604,
+          "mean": 429.1710590699731,
+          "median": 405.8288103995437,
+          "min": 235.17458940041251,
+          "n": 100,
+          "q1": 361.35437520024425,
+          "q3": 488.11982625047676,
+          "sd": 94.70437461283399,
+          "skewness": 0.8459363284190033
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [
+            43,
+            77
+          ],
+          "k": 1.5,
+          "lower_fence": 171.20619862489548,
+          "n": 100,
+          "n_outliers": 2,
+          "status": "ok",
+          "upper_fence": 678.2680028258255
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.0005209267648685323,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.9468945430680012,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      },
+      "t_conv_ms": {
+        "alpha": 0.05,
+        "dagostino_k2": 8.70965522815942,
+        "dagostino_p": 0.01284465363077481,
+        "dagostino_rejects_normality": true,
+        "descriptives": {
+          "excess_kurtosis": 0.1167995683107379,
+          "iqr": 137.13255554999995,
+          "max": 568.3134206000001,
+          "mean": 299.878221152,
+          "median": 272.436895,
+          "min": 142.4895004,
+          "n": 100,
+          "q1": 227.32501815,
+          "q3": 364.45757369999995,
+          "sd": 95.60207178233227,
+          "skewness": 0.7462300791794702
+        },
+        "interpretation": "left_to_statistical_phase",
+        "n": 100,
+        "outliers_iqr": {
+          "indices": [],
+          "k": 1.5,
+          "lower_fence": 21.62618482500008,
+          "n": 100,
+          "n_outliers": 0,
+          "status": "ok",
+          "upper_fence": 570.1564070249999
+        },
+        "shapiro_n_gt_5000": false,
+        "shapiro_p": 0.0006922280554401798,
+        "shapiro_rejects_normality": true,
+        "shapiro_w": 0.9488009641995223,
+        "status": "ok",
+        "unit": "profile_mean_over_replicates_and_batches"
+      }
+    }
+  },
+  "official_execution": "PENDING_HARDWARE",
+  "schema": "oe-statistical-analysis-v1",
+  "source_checksums": "4d1f843fe7b92c8bb087ce92f5e19ef9e425400c7ab253874385cc68663e6f51",
+  "source_run": "experiments/oe_pilots_2026-10-01/oe2_pilot_v2",
+  "validity_inherited": "EXPLORATORY"
+}

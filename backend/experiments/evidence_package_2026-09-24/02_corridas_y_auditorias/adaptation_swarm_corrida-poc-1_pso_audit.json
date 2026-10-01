@@ -1,0 +1,82 @@
+{
+  "run_label": "corrida-poc-1",
+  "n_cycles": 100,
+  "k_stop": {
+    "mean": 1.65,
+    "median": 1.0,
+    "min": 1,
+    "max": 4
+  },
+  "gbest_never_changed_after_init": 48,
+  "first_gbest_change_k_distribution": {
+    "null": 48,
+    "1": 52
+  },
+  "gbest_updates_after_init": {
+    "mean": 0.88,
+    "median": 1.0,
+    "min": 0,
+    "max": 4
+  },
+  "pbest_updates_after_init": {
+    "mean": 25.58,
+    "median": 19.0,
+    "min": 16,
+    "max": 55
+  },
+  "mean_duplicate_particles_pct": {
+    "mean": 16.565,
+    "median": 16.25,
+    "min": 5.0,
+    "max": 34.0
+  },
+  "gbest_gain_over_initialization": {
+    "mean": 0.006564621137661534,
+    "median": 6.566029987498112e-07,
+    "min": 0.0,
+    "max": 0.05495256828421735
+  },
+  "cases_where_search_improved_on_initialization": 52,
+  "by_iteration": {
+    "0": {
+      "unique_positions_S": 19.91,
+      "duplicate_particles_pct": 0.45,
+      "unique_F": 19.77,
+      "F_std": 0.07247674367419084,
+      "mean_pairwise_distance_x_l2": 2.256181361251144,
+      "mean_pairwise_distance_S_l1": 5.975894736842106
+    },
+    "1": {
+      "unique_positions_S": 14.14,
+      "duplicate_particles_pct": 29.3,
+      "unique_F": 13.96,
+      "F_std": 0.03970073833992071,
+      "mean_pairwise_distance_x_l2": 1.2493346530752774,
+      "mean_pairwise_distance_S_l1": 2.484210526315789
+    },
+    "2": {
+      "unique_positions_S": 15.622222222222222,
+      "duplicate_particles_pct": 21.88888888888889,
+      "unique_F": 15.577777777777778,
+      "F_std": 0.032919727332393275,
+      "mean_pairwise_distance_x_l2": 1.3779699568354233,
+      "mean_pairwise_distance_S_l1": 2.7809356725146195
+    },
+    "3": {
+      "unique_positions_S": 14.625,
+      "duplicate_particles_pct": 26.875,
+      "unique_F": 14.4375,
+      "F_std": 0.026931257298093245,
+      "mean_pairwise_distance_x_l2": 1.5439364659167643,
+      "mean_pairwise_distance_S_l1": 2.5463815789473685
+    },
+    "4": {
+      "unique_positions_S": 13.25,
+      "duplicate_particles_pct": 33.75,
+      "unique_F": 13.0,
+      "F_std": 0.02305159569275886,
+      "mean_pairwise_distance_x_l2": 1.4777398486832891,
+      "mean_pairwise_distance_S_l1": 2.386842105263158
+    }
+  }
+}

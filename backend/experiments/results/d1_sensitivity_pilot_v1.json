@@ -1,0 +1,141 @@
+{
+  "label": "INSTRUMENT VALIDATION ONLY",
+  "descripcion": "Piloto de sensibilidad del instrumento D1 graduado candidato (R22/R23). NO es Corrida 2. NO forma parte del dataset experimental principal. NO se insertó en experiment_cmg_results.",
+  "instrumento": "experiments.d1_graduado_piloto.evaluar_d1_graduado",
+  "casos": [
+    {
+      "concept_title": "Traza y pila de llamadas",
+      "learning_objective_title": "Recursividad",
+      "resultados": {
+        "A_baja": {
+          "explicacion": "un bucle while repite una accion mientras se cumpla una condicion, evaluada antes de cada iteracion del ciclo.",
+          "nivel_esperado": 0,
+          "nivel_obtenido": 0,
+          "coincide_con_esperado": true,
+          "determinista_en_3_repeticiones": true,
+          "detalle": {
+            "nivel": 0,
+            "cobertura_concepto": false,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        },
+        "B_media": {
+          "explicacion": "cada vez que una funcion se invoca a si misma se agrega un nuevo marco a la pila de llamadas del programa, y ese marco se retira cuando la funcion retorna.",
+          "nivel_esperado": 1,
+          "nivel_obtenido": 1,
+          "coincide_con_esperado": true,
+          "determinista_en_3_repeticiones": true,
+          "detalle": {
+            "nivel": 1,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        },
+        "C_alta": {
+          "explicacion": "la recursividad ocurre cuando una funcion se invoca a si misma; cada llamada agrega un nuevo marco a la pila de llamadas, y la traza de ejecucion muestra como esos marcos se acumulan hasta alcanzar el caso base.",
+          "nivel_esperado": 2,
+          "nivel_obtenido": 2,
+          "coincide_con_esperado": true,
+          "determinista_en_3_repeticiones": true,
+          "detalle": {
+            "nivel": 2,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": true,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        }
+      },
+      "monotonico_A_lt_B_lt_C": true
+    },
+    {
+      "concept_title": "Valores de retorno",
+      "learning_objective_title": "Funciones",
+      "resultados": {
+        "A_baja": {
+          "explicacion": "una lista en python puede crearse con corchetes y contener varios elementos separados por comas, accesibles por su posicion.",
+          "nivel_esperado": 0,
+          "nivel_obtenido": 0,
+          "coincide_con_esperado": true,
+          "determinista_en_3_repeticiones": true,
+          "detalle": {
+            "nivel": 0,
+            "cobertura_concepto": false,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        },
+        "B_media": {
+          "explicacion": "cuando el flujo de ejecucion llega a la instruccion return, el valor indicado se entrega de inmediato a quien haya iniciado esa ejecucion.",
+          "nivel_esperado": 1,
+          "nivel_obtenido": 1,
+          "coincide_con_esperado": true,
+          "determinista_en_3_repeticiones": true,
+          "detalle": {
+            "nivel": 1,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        },
+        "C_alta": {
+          "explicacion": "una funcion puede terminar su ejecucion con la instruccion return, que entrega un valor de retorno al punto donde esa funcion fue invocada.",
+          "nivel_esperado": 2,
+          "nivel_obtenido": 2,
+          "coincide_con_esperado": true,
+          "determinista_en_3_repeticiones": true,
+          "detalle": {
+            "nivel": 2,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": true,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        }
+      },
+      "monotonico_A_lt_B_lt_C": true
+    }
+  ],
+  "repeticiones_por_caso": 3,
+  "determinismo_confirmado": true,
+  "monotonicidad_confirmada": true
+}

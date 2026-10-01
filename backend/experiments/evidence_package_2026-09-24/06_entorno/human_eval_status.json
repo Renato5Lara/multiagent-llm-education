@@ -1,0 +1,22 @@
+{
+  "participants": 0,
+  "sus_responses": 0,
+  "sus_status": "PENDIENTE DE RECOLECCIÓN HUMANA",
+  "sus": {
+    "n": 0,
+    "status": "PENDIENTE DE RECOLECCIÓN HUMANA",
+    "mean": null,
+    "sd": null,
+    "min": null,
+    "max": null,
+    "ci95": null,
+    "shapiro_p": null,
+    "test": null,
+    "test_p": null,
+    "exceeds_threshold": null
+  },
+  "gold_panel": {
+    "status": "PENDIENTE DE RECOLECCIÓN HUMANA",
+    "n_evaluators": 0
+  }
+}

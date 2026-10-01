@@ -1,0 +1,1031 @@
+{
+  "hashes_verified": true,
+  "latest": "lib-v10-5dd83cd4",
+  "library_root": "datasets/adaptation_library",
+  "runs": {
+    "corrida-poc-1": "lib-v5-9ae9ffdd",
+    "corrida-poc-2": "lib-v9-a0231e9b"
+  },
+  "schema": "library-inventory-v1",
+  "summary": {
+    "any_absent": false,
+    "any_hash_mismatch": false,
+    "any_manifest_id_mismatch": false,
+    "versions": 10
+  },
+  "tts_cache": {
+    "bytes": 383265024,
+    "files": 393,
+    "git_policy": "fuera_de_git (derivada; no se versiona)",
+    "orphan_bytes": 14726784,
+    "orphans_not_in_any_version": 15
+  },
+  "versions": [
+    {
+      "audio": {
+        "bytes": 8025600,
+        "count": 9,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": null,
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 8025600,
+          "entries": 9,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 9,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 1788,
+          "entries": 3,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 3,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 3327,
+          "entries": 9,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 9,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 2662,
+          "entries": 3,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 3,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 8033377,
+      "counts": {
+        "code": 3,
+        "cpp": 0,
+        "mmd": 9,
+        "text": 3
+      },
+      "directory": "lib-v1-3f931e10",
+      "files_on_disk": 25,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 24,
+      "manifest_id_ok": true,
+      "manifest_sha256": "67098f07a6b561e0038ca463c78ff2db22a7f4562aaa29b3f724cfa90a7c36e2",
+      "number": 1,
+      "svg": {
+        "bytes": 0,
+        "count": 0,
+        "integrity": "no_verificable",
+        "presence": "no_aplica"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v1-3f931e10"
+    },
+    {
+      "audio": {
+        "bytes": 116166528,
+        "count": 126,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v1-3f931e10",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 116166528,
+          "entries": 126,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 126,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 23749,
+          "entries": 42,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 42,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 46400,
+          "entries": 126,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 126,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 38638,
+          "entries": 42,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 42,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 116275315,
+      "counts": {
+        "code": 42,
+        "cpp": 0,
+        "mmd": 126,
+        "text": 42
+      },
+      "directory": "lib-v2-767b4a53",
+      "files_on_disk": 337,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 336,
+      "manifest_id_ok": true,
+      "manifest_sha256": "81ae71e85abe1724c1cb17760eb3ddcc2f871593f6b71a291291aa0db8d0dcea",
+      "number": 2,
+      "svg": {
+        "bytes": 0,
+        "count": 0,
+        "integrity": "no_verificable",
+        "presence": "no_aplica"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v2-767b4a53"
+    },
+    {
+      "audio": {
+        "bytes": 135377280,
+        "count": 144,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v1-3f931e10",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 135377280,
+          "entries": 144,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 144,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 26819,
+          "entries": 48,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 48,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 51181,
+          "entries": 144,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 144,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 44969,
+          "entries": 48,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 48,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 135500249,
+      "counts": {
+        "code": 48,
+        "cpp": 0,
+        "mmd": 144,
+        "text": 48
+      },
+      "directory": "lib-v3-5fa0acdd",
+      "files_on_disk": 385,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 384,
+      "manifest_id_ok": true,
+      "manifest_sha256": "07a16d4a77dededcf6252781bc6a83e29417286a9571b3b60a56ed46d53bb52b",
+      "number": 3,
+      "svg": {
+        "bytes": 0,
+        "count": 0,
+        "integrity": "no_verificable",
+        "presence": "no_aplica"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v3-5fa0acdd"
+    },
+    {
+      "audio": {
+        "bytes": 238140672,
+        "count": 252,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v3-5fa0acdd",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 238140672,
+          "entries": 252,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 252,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 47249,
+          "entries": 84,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 84,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 87432,
+          "entries": 252,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 252,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 78996,
+          "entries": 84,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 84,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 238354349,
+      "counts": {
+        "code": 84,
+        "cpp": 0,
+        "mmd": 252,
+        "text": 84
+      },
+      "directory": "lib-v4-039dcf58",
+      "files_on_disk": 673,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 672,
+      "manifest_id_ok": true,
+      "manifest_sha256": "b94731e2f3d26b096175f8591ef8a46de741ef0d2b94f80537f599bd26c7d8aa",
+      "number": 4,
+      "svg": {
+        "bytes": 0,
+        "count": 0,
+        "integrity": "no_verificable",
+        "presence": "no_aplica"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v4-039dcf58"
+    },
+    {
+      "audio": {
+        "bytes": 257676672,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v4-039dcf58",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 257676672,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 51287,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 94464,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 0,
+          "entries": 0,
+          "hash_mismatch": 0,
+          "integrity": "no_verificable",
+          "ok": 0,
+          "presence": "no_aplica",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 85508,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 257907931,
+      "counts": {
+        "code": 90,
+        "cpp": 0,
+        "mmd": 270,
+        "text": 90
+      },
+      "directory": "lib-v5-9ae9ffdd",
+      "files_on_disk": 721,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 720,
+      "manifest_id_ok": true,
+      "manifest_sha256": "60526cd8c2af1d9008c7ad17a2ce1cd7fc1e234165fe8ae31b22112cfe592d8d",
+      "number": 5,
+      "svg": {
+        "bytes": 0,
+        "count": 0,
+        "integrity": "no_verificable",
+        "presence": "no_aplica"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [
+        "corrida-poc-1"
+      ],
+      "version": "lib-v5-9ae9ffdd"
+    },
+    {
+      "audio": {
+        "bytes": 257871360,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v5-9ae9ffdd",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 257871360,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 47090,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 60622,
+          "entries": 66,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 66,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 90561,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 30680726,
+          "entries": 243,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 243,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 85564,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 288835923,
+      "counts": {
+        "code": 90,
+        "cpp": 66,
+        "mmd": 270,
+        "text": 90
+      },
+      "directory": "lib-v6-86516a15",
+      "files_on_disk": 1030,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 1029,
+      "manifest_id_ok": true,
+      "manifest_sha256": "049193d5e7ff78fe1c47ca9d4a2d6f67fe2c1e9d5d4e633035a9da942572f444",
+      "number": 6,
+      "svg": {
+        "bytes": 30680726,
+        "count": 243,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v6-86516a15"
+    },
+    {
+      "audio": {
+        "bytes": 257871360,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v6-86516a15",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 257871360,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 46975,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 70270,
+          "entries": 75,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 75,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 90654,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 32483321,
+          "entries": 252,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 252,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 85564,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 290648144,
+      "counts": {
+        "code": 90,
+        "cpp": 75,
+        "mmd": 270,
+        "text": 90
+      },
+      "directory": "lib-v7-7c046f32",
+      "files_on_disk": 1048,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 1047,
+      "manifest_id_ok": true,
+      "manifest_sha256": "465839fa779e02c020740376e7b803fe6e813447135ef175174d0c847950e39e",
+      "number": 7,
+      "svg": {
+        "bytes": 32483321,
+        "count": 252,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v7-7c046f32"
+    },
+    {
+      "audio": {
+        "bytes": 257871360,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v7-7c046f32",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 257871360,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 47465,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 76323,
+          "entries": 81,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 81,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 92297,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 35466862,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 85564,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 293639871,
+      "counts": {
+        "code": 90,
+        "cpp": 81,
+        "mmd": 270,
+        "text": 90
+      },
+      "directory": "lib-v8-079928dc",
+      "files_on_disk": 1072,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 1071,
+      "manifest_id_ok": true,
+      "manifest_sha256": "58a5ce3e1a66cee063ea74a5fb9466c9012a7260c7f50d5984e8180df1a6f357",
+      "number": 8,
+      "svg": {
+        "bytes": 35466862,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v8-079928dc"
+    },
+    {
+      "audio": {
+        "bytes": 257871360,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v8-079928dc",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 257871360,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 47465,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 83087,
+          "entries": 87,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 87,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 92297,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 35466862,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 85564,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 293646635,
+      "counts": {
+        "code": 90,
+        "cpp": 87,
+        "mmd": 270,
+        "text": 90
+      },
+      "directory": "lib-v9-a0231e9b",
+      "files_on_disk": 1078,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": false,
+      "manifest_entries": 1077,
+      "manifest_id_ok": true,
+      "manifest_sha256": "08436553d3c010c4ad38eee1079c85e631ba3605ec2a598b63352b850ab44156",
+      "number": 9,
+      "svg": {
+        "bytes": 35466862,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [
+        "corrida-poc-2"
+      ],
+      "version": "lib-v9-a0231e9b"
+    },
+    {
+      "audio": {
+        "bytes": 257871360,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "base_version": "lib-v9-a0231e9b",
+      "by_modality": {
+        "audio": {
+          "absent": 0,
+          "bytes": 257871360,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "code": {
+          "absent": 0,
+          "bytes": 47465,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "cpp": {
+          "absent": 0,
+          "bytes": 87500,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "diagram": {
+          "absent": 0,
+          "bytes": 92297,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "svg": {
+          "absent": 0,
+          "bytes": 35466862,
+          "entries": 270,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 270,
+          "presence": "completa",
+          "unverified": 0
+        },
+        "text": {
+          "absent": 0,
+          "bytes": 85564,
+          "entries": 90,
+          "hash_mismatch": 0,
+          "integrity": "hash_correcto",
+          "ok": 90,
+          "presence": "completa",
+          "unverified": 0
+        }
+      },
+      "bytes_total_manifest": 293651048,
+      "counts": {
+        "code": 90,
+        "cpp": 90,
+        "mmd": 270,
+        "text": 90
+      },
+      "directory": "lib-v10-5dd83cd4",
+      "files_on_disk": 1081,
+      "git_policy": {
+        "audio_mp3": "fuera_de_git",
+        "code_cpp_mmd_txt_svg": "en_git",
+        "manifest": "en_git"
+      },
+      "is_latest": true,
+      "manifest_entries": 1080,
+      "manifest_id_ok": true,
+      "manifest_sha256": "89716455a14c2674a3a6a93bf1609be2c0cf83ed62ae654b2832b7038543a0ab",
+      "number": 10,
+      "svg": {
+        "bytes": 35466862,
+        "count": 270,
+        "integrity": "hash_correcto",
+        "presence": "completa"
+      },
+      "unlisted_files": [],
+      "used_by_runs": [],
+      "version": "lib-v10-5dd83cd4"
+    }
+  ],
+  "versions_order": [
+    "lib-v1-3f931e10",
+    "lib-v2-767b4a53",
+    "lib-v3-5fa0acdd",
+    "lib-v4-039dcf58",
+    "lib-v5-9ae9ffdd",
+    "lib-v6-86516a15",
+    "lib-v7-7c046f32",
+    "lib-v8-079928dc",
+    "lib-v9-a0231e9b",
+    "lib-v10-5dd83cd4"
+  ]
+}

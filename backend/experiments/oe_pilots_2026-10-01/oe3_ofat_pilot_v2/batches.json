@@ -1,0 +1,79 @@
+[
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 14.299665989998175,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:40:29.264+00:00",
+    "throughput_rps": 20.979511004650977
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h0|pso|r1|N20|c1",
+    "elapsed_s": 16.202217080997798,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:40:45.205+00:00",
+    "throughput_rps": 18.51598447917628
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|pso|r2|N20|c1",
+    "elapsed_s": 14.34077135300322,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:41:03.024+00:00",
+    "throughput_rps": 20.919376832346924
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|sequential|bc1|h1|pso|r1|N20|c1",
+    "elapsed_s": 16.52301506599906,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:41:18.942+00:00",
+    "throughput_rps": 18.156492553065437
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc0|h1|pso|r1|N20|c1",
+    "elapsed_s": 12.397812425999291,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:41:36.938+00:00",
+    "throughput_rps": 24.197817299677315
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|cognitive|r1|N20|c1",
+    "elapsed_s": 11.961412564000057,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:41:50.537+00:00",
+    "throughput_rps": 25.08064983084874
+  },
+  {
+    "batch": 0,
+    "concurrency": 1,
+    "condition": "swarm|batch|bc1|h1|social|r1|N20|c1",
+    "elapsed_s": 14.317263536999235,
+    "n_failed": 0,
+    "n_ok": 300,
+    "n_requests": 300,
+    "t_start_utc": "2026-10-01T05:42:03.918+00:00",
+    "throughput_rps": 20.953724796971727
+  }
+]

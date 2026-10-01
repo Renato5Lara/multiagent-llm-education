@@ -7,6 +7,8 @@
 > **Regla de lectura:** este documento **no declara confirmada la hipótesis H1** de la asesoría (`F1_adapt ≥ 0.85 ∧ L_resp < 2.0 s ∧ SUS > 75.0`, conjuntiva). F1 no cumple, el SUS no tiene datos y la latencia cumple solo con una configuración declarada.
 > No convierte pruebas de infraestructura en cumplimiento metodológico, no presenta `F1_adapt = 0.8031` como éxito frente a `0.85`, no presenta un SUS sin respuestas como validado y no presenta la reconstrucción parcial de `corrida-poc-1` como la base original.
 
+> **ACTUALIZACIÓN 2026-09-25 — respuesta del asesor (§8).** El asesor confirmó que la implementación actual no basta para cerrar la validación metodológica: `F1_adapt` debe redefinirse como inclusión/exclusión multimodal 4×4 con audio, el gold de Balanced se redefine sin el desempate, se requieren 10 réplicas con semillas independientes, una línea base fuerza bruta frente a PSO y mediciones en hardware cercano a 8 vCPU / 32 GB; la hipótesis oficial es conjuntiva. **`F1_adapt = 0.8031` pasa a ser un resultado HISTÓRICO de la definición anterior (`gold-v1`) y no se reutiliza como resultado final.** Este documento **no reescribe** los resultados históricos: se conservan tal cual. Plan: `ROADMAP_POST_ASESOR.md`.
+
 Estados: **demostrado** · **parcialmente demostrado** · **abierto** (medido y no alcanza el umbral, o sin evidencia de la ventaja alegada) · **no ejecutado**.
 
 ## 1. ESTADO DE CIERRE DE LA PoC
@@ -26,7 +28,7 @@ Estados: **demostrado** · **parcialmente demostrado** · **abierto** (medido y 
 - Texto (sin evaluación humana), overhead de comunicación y coherencia (definición del tesista, sin umbral de la asesoría), entorno real frente al declarado, reproducibilidad de la pila completa y reconstrucción parcial de `corrida-poc-1` (R14, R22, R25, R26, R28).
 
 ### 1.3 Abierto
-- **RNF-03 `F1_adapt ≥ 0.85`: NO CUMPLE.** `F1_adapt = 0.8031` (IC95 0.711–0.877) en ambas corridas; la sensibilidad pre-registrada llega a 0.8164 como máximo (R18; límites de la definición en la §3).
+- **RNF-03 `F1_adapt ≥ 0.85`: NO CUMPLE.** `F1_adapt = 0.8031` (IC95 0.711–0.877) en ambas corridas; la sensibilidad pre-registrada llega a 0.8164 como máximo (R18; límites de la definición en la §3). **Es el resultado HISTÓRICO de la definición anterior** (`gold-v1`, etiqueta única, audio fuera de la métrica): tras la respuesta del asesor (§8) la evaluación oficial usará una definición nueva y una corrida nueva, y este valor no se reutiliza como resultado final.
 - La **ventaja del enjambre** frente a alternativas (fuerza bruta, monolítico, reglas): no hay línea base ni comparación de tiempos (R08, R27).
 - **Almacenamiento externo del audio** (mecanismo pendiente; la copia sellada es local) (R16).
 - **Timeout de compilación de C++** (`g++` sin límite propio; el timeout externo no mata el contenedor) (R29).
@@ -51,6 +53,7 @@ Estados: **demostrado** · **parcialmente demostrado** · **abierto** (medido y 
 10. Que la reconstrucción PostgreSQL de `corrida-poc-1` sea la **base original**: solo contiene `swarm_runs` (1) y `swarm_cycles` (100); no hay `swarm_iterations`, `agent_messages` ni `multimodal_packages`.
 11. Que un clon del repositorio puede re-ejecutar ciclos (falta el audio) ni que las corridas se reproducen desde el commit registrado (`d31d29c` no contiene `adaptation_swarm/`).
 12. Que existe preservación externa del audio.
+13. Que `F1_adapt = 0.8031` sea el resultado final de la PoC: tras la respuesta del asesor (2026-09-25) es el resultado **histórico** de la definición anterior (§8).
 
 ## 2. Matriz de cumplimiento (29 requisitos)
 
@@ -112,6 +115,8 @@ Columnas: (1) requisito · (2) implementación real · (3) evidencia versionada 
 
 ## 3. Limitaciones estructurales del F1 (necesarias para no sobreinterpretar 0.8031)
 
+> **Nota 2026-09-25:** estas limitaciones describen la definición **histórica** (`gold-v1`). El asesor la sustituyó (D1, D2; §8): el audio entra en la métrica y el desempate de Balanced hacia `code` queda rechazado. Se conservan para interpretar el resultado histórico y como justificación de la nueva definición.
+
 1. **`audio` nunca es clase gold** (ADR-0019 #5): fila y columna de la matriz 4×4 en cero. `F1_adapt = macro_f1_defined` promedia **3** clases; con las 4 (0/0 ⇒ 0) es **0.6024**. El audio **no influye** en el F1: la métrica no evalúa la adaptación de la modalidad audio.
 2. **`Balanced-Multimodal` siempre tiene gold `code`** (empate exacto ⇒ orden código>diagrama>texto>audio); el gold real es `code` 50, `diagram` 25, `text` 25 (50 % `code`).
 3. **El gold depende solo del arquetipo**: no varía con la dificultad, aunque la tabla tenga 20 celdas. Es, en la práctica, «arquetipo → modalidad».
@@ -131,11 +136,11 @@ Con menos de 10 evaluadores el código **no calcula conclusiones** (`metrics/sus
 2. **Validación del gold por el mismo panel (DECISION-CLOSURE §7.2, punto 2):** cada evaluador valora las **20 celdas** (arquetipo × dificultad) de la tabla `gold-v1`: «¿la modalidad dominante esperada es razonable para ese perfil y esa dificultad?» (sí/no; opcionalmente 1–5 y un comentario).
 
 ### 4.2 Prerrequisitos abiertos (decisiones que este documento NO toma ni inventa)
-- **Consentimiento:** `backend/adaptation_swarm/human_eval/CONSENT_TEMPLATE.md` es una plantilla **sin validar** por comité de ética o asesor (DEC-16).
-- **Versión en español del SUS:** `SUS_INSTRUMENT_ES.md` es una traducción habitual **no seleccionada ni citada formalmente** (DEC-16).
+- **Consentimiento:** `backend/adaptation_swarm/human_eval/CONSENT_TEMPLATE.md` es una plantilla **sin validar** por comité de ética o asesor (DEC-16). **Actualización 2026-09-25 (D8b):** el asesor validará la plantilla y, según su respuesta, no se requiere trámite institucional adicional; la validación formal sigue pendiente de registrarse.
+- **Versión en español del SUS:** `SUS_INSTRUMENT_ES.md` es una traducción habitual **no seleccionada ni citada formalmente** (DEC-16). **Actualización 2026-09-25 (D8a):** el asesor indicó adoptar una **versión española publicada y validada** del SUS; la referencia concreta está **por citar** (`ROADMAP_POST_ASESOR.md`, P7).
 - **Material que usará el evaluador:** `TASK_SCRIPT_v1.md` pide una **gráfica de convergencia** y una **traza de mensajes** y admite que **no existe un visor HTML dedicado** (no se declara implementado). Hay que decidir, antes de recolectar, si se adapta el guion a lo que existe (JSON de `run_slice`, artefactos de la biblioteca) o si se construye el visor (trabajo fuera del alcance documental). Lo que se decida debe quedar fijado y versionado: es lo que el SUS evalúa.
 - **Perfil y reclutamiento:** criterio de selección, proporción docentes/ingenieros y forma de contacto: no definidos.
-- **Umbral de acuerdo del panel del gold:** **no lo fija** la asesoría, ni DECISION-CLOSURE, ni el código; debe registrarse **antes** de recolectar.
+- **Umbral de acuerdo del panel del gold:** la asesoría, DECISION-CLOSURE y el código no lo fijaban. **Fijado por el asesor el 2026-09-25 (D7b): κ ≥ 0.70**, y un **desacuerdo mayoritario exige reportar, redefinir la `rule_version` y repetir la corrida.** Queda por precisar qué es «desacuerdo mayoritario» y si κ ≥ 0.70 es global, por celda o ambos (P4). El mismo panel (n ≥ 10) valida el gold y responde el SUS (D7a, D7c).
 - **Dónde se guardan los datos reales:** `sus_cli` escribe en la base a la que apunte `DATABASE_URL`. No debe usarse la base aislada de pruebas (efímera; su volumen puede reiniciarse) ni mezclarse con datos de desarrollo sin una decisión explícita.
 
 ### 4.3 Protocolo (según los materiales existentes en `backend/adaptation_swarm/human_eval/`)
@@ -161,7 +166,7 @@ Con menos de 10 evaluadores el código **no calcula conclusiones** (`metrics/sus
 
 ### 4.6 Criterio de aceptación
 - **SUS:** media **> 75.0** con **n ≥ 10** (asesoría §4.4, «Grado B+»). El código informa `exceeds_threshold = media > 75 ∧ p < 0.05` (asesoría §4.5) y lo califica de **hallazgo estadístico, no de veredicto automático**. Si la media es ≤ 75 o p ≥ 0.05, RNF-05 **no se cumple** y se reporta tal cual.
-- **Gold:** umbral de acuerdo **no definido** (ver §4.2): debe fijarse y registrarse antes de recolectar. Este documento no lo inventa.
+- **Gold:** **κ ≥ 0.70** (fijado por el asesor el 2026-09-25, D7b; alcance de κ y «desacuerdo mayoritario» por precisar, P4). Un desacuerdo mayoritario obliga a reportar, redefinir la `rule_version` y repetir la corrida. El panel **no se ejecuta antes de congelar la nueva definición del gold** (`ROADMAP_POST_ASESOR.md`, F7).
 - **Efecto sobre H1:** H1 es conjuntiva (`F1 ≥ 0.85 ∧ L_resp < 2.0 s ∧ SUS > 75`). **Aun con SUS > 75, H1 no queda confirmada mientras `F1_adapt < 0.85`.**
 
 ### 4.7 Prohibición de fabricar respuestas
@@ -220,3 +225,43 @@ El informe original vive fuera del repositorio (`Auditoria/auditoria_final_cumpl
 **Evidencia que falta:** (1) SUS con n ≥ 10 evaluadores reales y panel del gold (§4); (2) mecanismo de almacenamiento externo del audio; (3) Shapiro-Wilk + t/Wilcoxon sobre `L_resp` (y una forma defendible de tratar el F1) o declarar la desviación; (4) curvas de convergencia y trazas de mensajes, `W` y desglose de 𝓕 de los 100 casos; (5) línea base empírica (fuerza bruta cronometrada; opcionalmente una solución monolítica o de reglas) si se quiere sostener OE2 y la justificación §1.4 de la asesoría; (6) re-ejecución de la **pila completa** (agentes por Redis, ensamblado, HTTP) con el código de `HEAD`: el núcleo PSO+𝓕 ya coincide en los 100 casos, la pila no se ha re-ejecutado; (7) las enmiendas de la §5.2.
 **¿PoC cerrada?** Sí, como PoC técnica con limitaciones; **no** como validación de la hipótesis (§1).
 **Único paso necesario:** recolectar la evaluación humana real (SUS con ≥ 10 evaluadores y validación del gold por ese panel; §4): es lo único que no se puede sustituir por una declaración de limitación ni por software, y desbloquea RNF-05, la validez del gold y el estado de H1.
+> **Actualización 2026-09-25:** la respuesta del asesor añade pasos **previos**: aprobar una `rule_version` y congelar el gold nuevo, ejecutar 10 réplicas, la línea base, y repetir latencia/throughput en hardware cercano a 8 vCPU / 32 GB. **El panel humano solo puede ejecutarse después de congelar el gold.** Ver `ROADMAP_POST_ASESOR.md`.
+
+## 8. Respuesta del asesor (2026-09-25) y su efecto
+
+> **Reserva de fidelidad:** se registra el **resumen comunicado por el tesista**; el texto literal del asesor está **por anexar** (`Docuemento de tesis/ADDENDUM-DECISIONES-ASESOR-2026-09-25.md`). Este documento no reescribe los resultados históricos.
+
+| ID | Decisión (resumen) | Efecto en este documento |
+|---|---|---|
+| D1 | `F1_adapt` = inclusión/exclusión multimodal 4×4, **audio obligatorio**; nueva `rule_version` y nueva corrida | R18: el 0.8031 es **histórico**; la definición oficial es nueva (pendiente P1–P3) |
+| D2 | Se rechaza el desempate de Balanced hacia `code`; gold que represente las cuatro modalidades; nueva corrida sobre los 100 perfiles | §3 describe la definición histórica; B2 resuelto en su dirección, falta fijar el conjunto esperado (P2) |
+| D3 / D4 | Se ratifica excluir Recursividad / N = 20 incluye la partícula heurística | B4 y B3 quedan ratificados; sin cambios de código |
+| D5 | K = 10 réplicas con semillas independientes | R26: las dos corridas históricas no son réplicas; las nuevas se ejecutarán con `analysis/replicas.py` |
+| D6 | Hipótesis oficial conjuntiva (`F1_adapt ≥ 0.85` ∧ `L_resp < 2.0 s` ∧ `SUS > 75`) | B7/B8 resueltos: la H1 comparativa del borrador de tesis se sustituye. **H1 sigue sin confirmarse** |
+| D7 | Mismo panel (n ≥ 10) valida gold y SUS; **κ ≥ 0.70**; desacuerdo mayoritario ⇒ reportar, redefinir `rule_version`, repetir | §4.2 y §4.6 actualizados |
+| D8 | SUS en versión española publicada y validada; el asesor valida el consentimiento; sin trámite institucional adicional | §4.2 actualizado; falta citar la versión (P7) |
+| D9 | Git LFS para el audio; repositorio institucional como contingencia; falta verificar cuota, instalación y viabilidad | R16 sigue **abierto** hasta verificarlo (F6) |
+| D10 (a–c) | Respondidas con la opción hardware cloud de 8 vCPU / 32 GB: no son definitivas las mediciones con 7.5 GiB; repetir en ese hardware (comunicaciones previas: «cercano a 8 vCPU / 32 GB») | R20, R21, R25: pasan a **históricas / exploratorias** |
+| D11 | Shapiro-Wilk + prueba correspondiente sobre latencias por petición; unidad por caso para el F1; línea base fuerza bruta frente a PSO | R08, R24, R27: siguen abiertas; implementación preparada (ver abajo) |
+
+**Clasificación (corrección del tesista, 2026-09-25):** D9a–D9f fueron **respondidas con la opción Git LFS** y D10a–D10c con la opción **hardware cloud de 8 vCPU / 32 GB**. **Detalles no especificados** (no se completan por suposición): pronunciamiento específico sobre descarga pública del audio (D9a), términos de OpenAI (D9d) y retención de versiones antiguas (D9e); verificación técnica de cuota/instalación/viabilidad de Git LFS (D9c); **aceptación definitiva** de M1 y de los 4 workers, que queda condicionada a la medición en el hardware objetivo (D10a/D10b). Lo comunicado por el tesista está transcrito en `TRANSCRIPCION-RESPUESTAS-ASESOR-2026-09-25.md` (carpeta de documentos de tesis; **no** es el texto original del asesor).
+
+### 8.1 Estado del sprint acelerado (preparación, no resultados)
+Implementado y probado en módulos **nuevos** (los históricos no se tocan; `test_gold_v2::test_historical_modules_and_data_are_untouched` lo comprueba): métrica multietiqueta 4×4 con audio (`gold/f1_multilabel.py`), reglas gold-v2 **candidatas y PROVISIONALES** con guardia de aprobación (`gold/rubric_v2.py`; `APPROVED_RULE_VERSIONS` **vacío**), ejecutor puro de K réplicas (`analysis/replicas.py`), informe exploratorio de alternativas de Balanced (`analysis/balanced_alternatives.py`) y línea base PSO frente a fuerza bruta (`analysis/baseline_bruteforce.py`). **No se ejecutó ninguna corrida oficial ni se aprobó ninguna regla.** Salvaguardas reforzadas tras la auditoría: `replicas.run()` revalida la puerta oficial en lugar de confiar en el plan, solo una regla gold-v2 registrada puede aprobarse y los analizadores nuevos no escriben en `loadtest/results/` ni en `adaptation_swarm/`. Regresión pura **sin Redis**: 325 pruebas pasan (`tests/adaptation_swarm -m "not integration"`, excluyendo `test_messages_bus.py` y `test_agents_library.py`: 40 pruebas que requieren un Redis en ejecución y **no se ejecutaron**; tampoco las marcadas `integration`, que requieren PostgreSQL, Redis, LLM o contenedores).
+
+### 8.2 Resultado exploratorio que conviene conocer (PROVISIONAL; no evidencia)
+Sobre las corridas históricas y alternativas explícitas, el F1 varía entre ≈ 0.64 y ≈ 0.87 **solo según cómo se defina «incluida» y el gold**; **una sola** de las 12 combinaciones v2 supera 0.85 (con agregación por caso) y ninguna lo hace con macro o micro. Es un cálculo post-hoc: **no se usa para elegir la regla ni para declarar cumplimiento**; la regla se aprueba por criterio conceptual antes de la corrida nueva (`ROADMAP_POST_ASESOR.md` §4).
+
+### 8.3 Resolución de las discrepancias B1–B10 tras la respuesta
+B1 (F1 3 vs 4 clases) → D1; B2 (Balanced) → D2; B3 (N = 20) → D4 ratificado; B4 (30 vs 32) → D3 ratificado; B5 (M1 y 4 workers) → D10/D11, con la aceptación definitiva de M1 y de los 4 workers **condicionada a la medición en hardware cloud de 8 vCPU / 32 GB**; B6 (Python 3.12) → sin respuesta específica; B7 y B8 (hipótesis) → D6; B9 y B10 (colisión de «H1 confirmada», dos `Asesoria.docx`) → aclaraciones documentales del tesista. Las enmiendas de `MASTER-SPEC` y `DECISION-CLOSURE` siguen en un cambio documental **separado** (en esos documentos solo se añadió un aviso inicial).
+
+## 9. Actualización 2026-09-30 — decisión del asesor sobre RF-03 y `comm_overhead_ms`
+
+> **Registro posterior.** Las filas **R03** y **R22** de este documento se conservan **sin cambios** como historial del estado al 25/09/2026 («parcialmente demostrado»). Esta sección registra la decisión del asesor del **30/09/2026** (`Docuemento de tesis/ADDENDUM-DECISIONES-ASESOR-RF03-COMM-OVERHEAD-2026-09-30.md`, en respuesta a `CONSULTA-ASESOR-RF03-COMM-OVERHEAD-2026-09-30.md`). *Reserva de fidelidad:* respuesta transcrita según la comunicó el tesista; original por anexar.
+
+| ID | Estado al 25/09 (histórico) | Estado tras la decisión del 30/09/2026 | Criterio |
+|---|---|---|---|
+| R03 (RF-03) | parcialmente demostrado | **CUMPLE** (Alternativa A) | Despacho concurrente a AG2–AG4 (`publish_many` + `asyncio.gather`), mensajes en vuelo simultáneos (`inflight_overlap = True`, 200/200 ciclos históricos auditados), logs inter-agente y `cycle_id`. `parallel_overlap` (0/200) **no** es criterio normativo: se conserva como diagnóstico; el MASTER-SPEC lo exigía como sobre-especificación técnica. No se afirma ejecución simultánea de handlers |
+| R22 (M2 `comm_overhead_ms`) | parcialmente demostrado; definición del tesista | **Métrica descriptiva y de diagnóstico** (Alternativa A) | Fórmula implementada sin cambios; no es tiempo de pared, no es aditiva, puede superar `total_ms`, sin umbral normativo, no condiciona ningún RNF |
+
+**Consecuencias (según el asesor):** solo cambio documental. No se modifican la función de aptitud (DEC-04), el PSO, el gold (P2), la regla de inclusión (P1), las semillas ni el dataset; no cambia la `rule_version`, no se reabre el pre-registro y no se reejecuta el K = 10. El K = 10 v2 (`3088e69` / `dc74ae9`) permanece congelado; el K = 10 v3 no está ejecutado. RF-06, RNF01–RNF04, F1_adapt, PSO y H1: sin afectación.

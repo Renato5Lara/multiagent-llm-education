@@ -1,0 +1,990 @@
+{
+  "determinism": {
+    "batch_seed": 26093001,
+    "identical": 20,
+    "mismatches": [],
+    "n": 20,
+    "rate": 1.0
+  },
+  "dimensions": {
+    "calidad": {
+      "met": 0,
+      "not_measured": 2,
+      "not_met": 0,
+      "requirements": [
+        "RNF03",
+        "RNF05"
+      ]
+    },
+    "confiabilidad": {
+      "met": 2,
+      "not_measured": 0,
+      "not_met": 0,
+      "requirements": [
+        "REL-C",
+        "REL-D"
+      ]
+    },
+    "eficiencia": {
+      "met": 2,
+      "not_measured": 0,
+      "not_met": 1,
+      "requirements": [
+        "RNF01",
+        "RNF02",
+        "RNF04"
+      ]
+    },
+    "funcionalidad": {
+      "met": 5,
+      "not_measured": 0,
+      "not_met": 1,
+      "requirements": [
+        "RF01",
+        "RF02",
+        "RF03",
+        "RF04",
+        "RF05",
+        "RF06"
+      ]
+    }
+  },
+  "pending_decisions": [
+    "Agregaci\u00f3n de los requisitos en un \u00abpuntaje de cumplimiento\u00bb por condici\u00f3n y mapa requisito\u2192dimensi\u00f3n: definici\u00f3n operativa de este estudio, por confirmar con el asesor.",
+    "Latencia en proceso (sin HTTP): sustituto exploratorio de RNF01; la medici\u00f3n oficial es HTTP (Locust/JMeter) en el hardware objetivo.",
+    "RNF03 (F1_adapt) depende de la regla v3, cuyo pre-registro no est\u00e1 sellado (PENDING_ADVISOR); RNF05 depende del panel humano."
+  ],
+  "persistence": {
+    "complete": 10,
+    "failures": [],
+    "n": 10,
+    "rate": 1.0
+  },
+  "relationship": {
+    "n_conditions": 65,
+    "per_condition": {
+      "swarm|batch|bc0|h0|cognitive|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 53.52214589947834,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 32.584192,
+        "throughput_median_rps": 23.202484028698294
+      },
+      "swarm|batch|bc0|h0|cognitive|r2|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 55.075543499333435,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 32.803865,
+        "throughput_median_rps": 22.826301667039893
+      },
+      "swarm|batch|bc0|h0|pso|r1|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 66.91078139992895,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 42.914509,
+        "throughput_median_rps": 19.054858057153652
+      },
+      "swarm|batch|bc0|h0|pso|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 69.9595820980903,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 43.002569,
+        "throughput_median_rps": 18.923633473684788
+      },
+      "swarm|batch|bc0|h0|social|r1|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 65.74961165133571,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 42.21891,
+        "throughput_median_rps": 19.21427879215439
+      },
+      "swarm|batch|bc0|h0|social|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 91.44092854876362,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 43.249816,
+        "throughput_median_rps": 17.965880747224997
+      },
+      "swarm|batch|bc0|h1|cognitive|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 48.10952440238906,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 28.747739,
+        "throughput_median_rps": 27.020161883046004
+      },
+      "swarm|batch|bc0|h1|cognitive|r2|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 50.629949348694915,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 32.346159,
+        "throughput_median_rps": 24.667245417719826
+      },
+      "swarm|batch|bc0|h1|pso|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 59.81208804969354,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 34.29394,
+        "throughput_median_rps": 22.743549670659966
+      },
+      "swarm|batch|bc0|h1|pso|r2|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 66.79232834994764,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 39.033058,
+        "throughput_median_rps": 20.398758434384593
+      },
+      "swarm|batch|bc0|h1|social|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 64.44828915027755,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 37.048017,
+        "throughput_median_rps": 21.3251829007475
+      },
+      "swarm|batch|bc0|h1|social|r2|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 64.12270445052852,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 38.745982,
+        "throughput_median_rps": 20.774452326904072
+      },
+      "swarm|batch|bc1|h0|cognitive|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 64.31211444760264,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 37.570465,
+        "throughput_median_rps": 20.01619613712966
+      },
+      "swarm|batch|bc1|h0|cognitive|r2|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 59.202083952004585,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 38.633578,
+        "throughput_median_rps": 20.28079382277006
+      },
+      "swarm|batch|bc1|h0|pso|r1|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 86.02675039819582,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 51.074308,
+        "throughput_median_rps": 15.87462930986287
+      },
+      "swarm|batch|bc1|h0|pso|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 82.79049974917142,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 52.163681,
+        "throughput_median_rps": 15.862786476927562
+      },
+      "swarm|batch|bc1|h0|social|r1|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 82.33041620042054,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 50.365038,
+        "throughput_median_rps": 16.170142900757384
+      },
+      "swarm|batch|bc1|h0|social|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 81.41274830140901,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 51.031626,
+        "throughput_median_rps": 16.15012863841413
+      },
+      "swarm|batch|bc1|h1|cognitive|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 54.50565565006399,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 33.305017,
+        "throughput_median_rps": 23.707763813154155
+      },
+      "swarm|batch|bc1|h1|cognitive|r2|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 61.66010285287482,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 37.690856,
+        "throughput_median_rps": 21.22640686985661
+      },
+      "swarm|batch|bc1|h1|pso|r1|N10|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.01572861073614309,
+        "latency_p95_ms": 58.30844125121076,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 32.767295,
+        "throughput_median_rps": 24.279059271040733
+      },
+      "swarm|batch|bc1|h1|pso|r1|N10|c10": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.01572861073614309,
+        "latency_p95_ms": 609.1459572493477,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 259.521043,
+        "throughput_median_rps": 25.862304345948683
+      },
+      "swarm|batch|bc1|h1|pso|r1|N10|c100": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.01572861073614309,
+        "latency_p95_ms": 3950.774998400084,
+        "n_applicable": 8,
+        "not_met": [],
+        "t_conv_ms_median": 2908.361481,
+        "throughput_median_rps": 25.077986299244618
+      },
+      "swarm|batch|bc1|h1|pso|r1|N10|c25": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.01572861073614309,
+        "latency_p95_ms": 1418.933147902135,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 637.809222,
+        "throughput_median_rps": 26.295986001235338
+      },
+      "swarm|batch|bc1|h1|pso|r1|N10|c5": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.01572861073614309,
+        "latency_p95_ms": 295.8567213989227,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 139.877518,
+        "throughput_median_rps": 25.82707751024881
+      },
+      "swarm|batch|bc1|h1|pso|r1|N10|c50": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.01572861073614309,
+        "latency_p95_ms": 2728.9929235490495,
+        "n_applicable": 8,
+        "not_met": [],
+        "t_conv_ms_median": 1262.486995,
+        "throughput_median_rps": 25.000994583323127
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011890861444345334,
+        "latency_p95_ms": 69.9438250498133,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 43.548625,
+        "throughput_median_rps": 18.61319357283835
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c10": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011963281225938345,
+        "latency_p95_ms": 733.1865140515221,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 333.112329,
+        "throughput_median_rps": 19.64572062205602
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c100": {
+        "compliance_score": 0.875,
+        "gap_vs_optimum": 0.011963281225938345,
+        "latency_p95_ms": 5127.849630700621,
+        "n_applicable": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 3124.966822,
+        "throughput_median_rps": 19.37753332291328
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c25": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011963281225938345,
+        "latency_p95_ms": 1720.7352696001183,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 697.477803,
+        "throughput_median_rps": 19.558126984391496
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c5": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011963281225938345,
+        "latency_p95_ms": 438.54913004815904,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 181.185917,
+        "throughput_median_rps": 19.18091558927114
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c50": {
+        "compliance_score": 0.875,
+        "gap_vs_optimum": 0.011963281225938345,
+        "latency_p95_ms": 3213.0327604498234,
+        "n_applicable": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 1351.343336,
+        "throughput_median_rps": 19.762452455921583
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.00803540686903981,
+        "latency_p95_ms": 84.0172636508214,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 55.314628,
+        "throughput_median_rps": 15.809301704584698
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c10": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.00803540686903981,
+        "latency_p95_ms": 920.8565890005048,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 401.114648,
+        "throughput_median_rps": 15.945613883966292
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c100": {
+        "compliance_score": 0.875,
+        "gap_vs_optimum": 0.00803540686903981,
+        "latency_p95_ms": 6106.0379306492905,
+        "n_applicable": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 3791.402637,
+        "throughput_median_rps": 16.236133667640036
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c25": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.00803540686903981,
+        "latency_p95_ms": 2143.3985836500146,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF01",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 839.871145,
+        "throughput_median_rps": 16.411990981634904
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c5": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.00803540686903981,
+        "latency_p95_ms": 509.5492700507748,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 217.79832,
+        "throughput_median_rps": 15.777944615511698
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c50": {
+        "compliance_score": 0.875,
+        "gap_vs_optimum": 0.00803540686903981,
+        "latency_p95_ms": 3956.6443031990284,
+        "n_applicable": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 1516.065011,
+        "throughput_median_rps": 16.563066043968092
+      },
+      "swarm|batch|bc1|h1|pso|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 78.61135770090183,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 46.105277,
+        "throughput_median_rps": 17.488937365673042
+      },
+      "swarm|batch|bc1|h1|social|r1|N20|c1": {
+        "compliance_score": 1.0,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 66.56159499980275,
+        "n_applicable": 9,
+        "not_met": [],
+        "t_conv_ms_median": 40.016218,
+        "throughput_median_rps": 20.22678179560617
+      },
+      "swarm|batch|bc1|h1|social|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 74.2386012998395,
+        "n_applicable": 9,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 46.496835,
+        "throughput_median_rps": 17.702157304107384
+      },
+      "swarm|sequential|bc0|h0|cognitive|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 59.74144189876824,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 41.424273,
+        "throughput_median_rps": 19.386230096023144
+      },
+      "swarm|sequential|bc0|h0|cognitive|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 62.62071809996996,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 42.307544,
+        "throughput_median_rps": 19.0007210300487
+      },
+      "swarm|sequential|bc0|h0|pso|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 77.80104185058006,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 52.128779,
+        "throughput_median_rps": 16.243287711499473
+      },
+      "swarm|sequential|bc0|h0|pso|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 75.57735684840735,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 51.607233,
+        "throughput_median_rps": 16.293119178606617
+      },
+      "swarm|sequential|bc0|h0|social|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 79.78822140066768,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 51.769149,
+        "throughput_median_rps": 16.162366866007527
+      },
+      "swarm|sequential|bc0|h0|social|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 75.08186849809132,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 51.589455,
+        "throughput_median_rps": 16.37649323837042
+      },
+      "swarm|sequential|bc0|h1|cognitive|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 63.601157451739674,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 41.347542,
+        "throughput_median_rps": 19.88520437555323
+      },
+      "swarm|sequential|bc0|h1|cognitive|r2|N20|c1": {
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 61.93553344946849,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03"
+        ],
+        "t_conv_ms_median": 41.466021,
+        "throughput_median_rps": 20.120249409008288
+      },
+      "swarm|sequential|bc0|h1|pso|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 73.6080827002297,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 48.817692,
+        "throughput_median_rps": 17.287095617400162
+      },
+      "swarm|sequential|bc0|h1|pso|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 75.16868720231287,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 47.267741,
+        "throughput_median_rps": 17.656729862644223
+      },
+      "swarm|sequential|bc0|h1|social|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 76.24896215038461,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 47.744544,
+        "throughput_median_rps": 17.38024141762006
+      },
+      "swarm|sequential|bc0|h1|social|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 70.58735605060063,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 47.602554,
+        "throughput_median_rps": 17.873134037936893
+      },
+      "swarm|sequential|bc1|h0|cognitive|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 74.61618940069455,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 47.562718,
+        "throughput_median_rps": 16.762400489238388
+      },
+      "swarm|sequential|bc1|h0|cognitive|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.04268063430871365,
+        "latency_p95_ms": 68.60321705062233,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 47.211705,
+        "throughput_median_rps": 17.341520124866392
+      },
+      "swarm|sequential|bc1|h0|pso|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 91.79227000167884,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 60.833629,
+        "throughput_median_rps": 14.040291128042622
+      },
+      "swarm|sequential|bc1|h0|pso|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.018572231523603506,
+        "latency_p95_ms": 94.79877254962047,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 60.688025,
+        "throughput_median_rps": 13.98791522149403
+      },
+      "swarm|sequential|bc1|h0|social|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 93.1598894010676,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 59.187907,
+        "throughput_median_rps": 14.0671176152096
+      },
+      "swarm|sequential|bc1|h0|social|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.019223439607281803,
+        "latency_p95_ms": 92.28157564957651,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 59.53383,
+        "throughput_median_rps": 14.14227729488191
+      },
+      "swarm|sequential|bc1|h1|cognitive|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 67.00050205090518,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 43.603815,
+        "throughput_median_rps": 18.870908015298717
+      },
+      "swarm|sequential|bc1|h1|cognitive|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.02140323771353652,
+        "latency_p95_ms": 65.5209101489163,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 46.462553,
+        "throughput_median_rps": 18.115821092749332
+      },
+      "swarm|sequential|bc1|h1|pso|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 78.75719675121216,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 48.873597,
+        "throughput_median_rps": 17.0398733101938
+      },
+      "swarm|sequential|bc1|h1|pso|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011782231771955816,
+        "latency_p95_ms": 99.68616560108778,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 54.129263,
+        "throughput_median_rps": 14.96957440999632
+      },
+      "swarm|sequential|bc1|h1|social|r1|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 109.69996619987795,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 54.53387,
+        "throughput_median_rps": 14.76188330371469
+      },
+      "swarm|sequential|bc1|h1|social|r2|N20|c1": {
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011805159031174389,
+        "latency_p95_ms": 81.62301435077094,
+        "n_applicable": 9,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 54.632569,
+        "throughput_median_rps": 15.625552441405144
+      }
+    },
+    "request_level_functional_compliance_vs_gap": {
+      "alpha": 0.05,
+      "alternative": "two-sided",
+      "cliffs_delta": -0.1332970588235294,
+      "mean_a": 0.016145361280493212,
+      "mean_b": 0.020911155659377616,
+      "median_a": 0.01253564549090147,
+      "median_b": 0.019803777820581292,
+      "n_a": 10200,
+      "n_b": 4800,
+      "n_compliant": 10200,
+      "n_non_compliant": 4800,
+      "normal": false,
+      "p_value": 8.31192891685517e-40,
+      "shapiro_p_a": 3.3129777657578675e-75,
+      "shapiro_p_b": 9.793118482338534e-56,
+      "significant": true,
+      "statistic": 21216888.0,
+      "status": "ok",
+      "test": "mann_whitney_u"
+    },
+    "spearman_compliance_vs_performance": {
+      "gap_vs_optimum": {
+        "n": 65,
+        "p_value": 0.7247123989865678,
+        "rho": 0.04452326820762603,
+        "status": "ok"
+      },
+      "latency_p95_ms": {
+        "n": 65,
+        "p_value": 0.0514199843596819,
+        "rho": -0.24269782530875708,
+        "status": "ok"
+      },
+      "t_conv_ms_median": {
+        "n": 65,
+        "p_value": 0.005516413614453309,
+        "rho": -0.34048049403158237,
+        "status": "ok"
+      },
+      "throughput_median_rps": {
+        "n": 65,
+        "p_value": 3.931828241964852e-12,
+        "rho": 0.7328297161700761,
+        "status": "ok"
+      }
+    }
+  },
+  "run_labels": [
+    "oe3-pilot-2026-10-01",
+    "oe4-pilot-2026-10-01"
+  ],
+  "runs": [
+    "experiments/oe_pilots_2026-10-01/oe3_pilot",
+    "experiments/oe_pilots_2026-10-01/oe4_pilot"
+  ],
+  "schema": "oe1-report-v1",
+  "table": [
+    {
+      "dimension": "funcionalidad",
+      "id": "RF01",
+      "indicator": "proporci\u00f3n de peticiones cuyo perfil es aceptado y validado",
+      "kind": "RF",
+      "n": 15000,
+      "source": "observaciones (error_code \u2260 ProfileError)",
+      "statement": "Perfil JSON estandarizado",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "funcionalidad",
+      "id": "RF02",
+      "indicator": "proporci\u00f3n de ciclos con W normalizada (\u03a3 = 1)",
+      "kind": "RF",
+      "n": 15000,
+      "source": "observaciones (w_valid)",
+      "statement": "AG1 asigna el vector W",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "funcionalidad",
+      "id": "RF03",
+      "indicator": "proporci\u00f3n de ciclos con peticiones en vuelo solapadas (inflight_overlap)",
+      "kind": "RF",
+      "n": 15000,
+      "source": "observaciones (inflight_overlap)",
+      "statement": "Despacho concurrente a AG2\u2013AG4 con trazas",
+      "status": "NOT_MET",
+      "threshold": "= 100 %",
+      "value": 0.68
+    },
+    {
+      "dimension": "funcionalidad",
+      "id": "RF04",
+      "indicator": "proporci\u00f3n de ciclos con iteraciones registradas = k_stop + 1",
+      "kind": "RF",
+      "n": 15000,
+      "source": "observaciones (iterations_logged)",
+      "statement": "AG0 ejecuta PSO y \ud835\udcd5 con log de iteraciones",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "funcionalidad",
+      "id": "RF05",
+      "indicator": "proporci\u00f3n de peticiones con paquete v\u00e1lido y cadena de hashes \u00edntegra",
+      "kind": "RF",
+      "n": 15000,
+      "source": "observaciones (package_valid)",
+      "statement": "Paquete con las 4 modalidades v\u00e1lidas",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "funcionalidad",
+      "id": "RF06",
+      "indicator": "proporci\u00f3n de ciclos persistidos completos (ciclo, iteraciones, mensajes, paquete)",
+      "kind": "RF",
+      "n": 10,
+      "reason": null,
+      "source": "sonda de persistencia",
+      "statement": "M\u00e9tricas de cada ciclo en PostgreSQL",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "confiabilidad",
+      "id": "REL-C",
+      "indicator": "tasa de ciclos completados",
+      "kind": "RNF",
+      "n": 15000,
+      "source": "observaciones (status)",
+      "statement": "Los ciclos terminan sin error",
+      "status": "MET",
+      "threshold": "\u2265 99%",
+      "value": 1.0
+    },
+    {
+      "dimension": "confiabilidad",
+      "id": "REL-D",
+      "indicator": "proporci\u00f3n de pares id\u00e9nticos (S, \ud835\udcd5, k_stop, motivo)",
+      "kind": "RNF",
+      "n": 20,
+      "reason": null,
+      "source": "sonda de determinismo",
+      "statement": "Reproducibilidad: misma semilla \u21d2 mismo resultado",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "eficiencia",
+      "id": "RNF01",
+      "indicator": "P95 de la latencia por petici\u00f3n (EN PROCESO, sin HTTP)",
+      "kind": "RNF",
+      "n": 13200,
+      "scope": "en proceso, sin HTTP; \u2264 25 usuarios",
+      "source": "observaciones (latency_ms)",
+      "statement": "Latencia L_resp < 2.0 s (P95, \u2264 25 usuarios)",
+      "status": "MET",
+      "threshold": "< 2000 ms",
+      "value": 955.1942711019359
+    },
+    {
+      "CR": 1.0,
+      "dimension": "eficiencia",
+      "id": "RNF02",
+      "indicator": "m\u00e1x. k_stop y proporci\u00f3n de paradas por \u03b5",
+      "kind": "RNF",
+      "n": 15000,
+      "source": "observaciones (k_stop, stop_reason)",
+      "statement": "Convergencia: T_conv \u2264 15 iteraciones y CR \u2265 98 %",
+      "status": "MET",
+      "threshold": "k_stop \u2264 15 \u2227 CR \u2265 98%",
+      "value": 6
+    },
+    {
+      "dimension": "eficiencia",
+      "error_rate": 0.0,
+      "id": "RNF04",
+      "indicator": "mediana del throughput por lote y tasa de error",
+      "kind": "RNF",
+      "n": 102,
+      "note": "mediana sobre todos los lotes de todas las condiciones de la propuesta (incluye cargas bajas); ver la relaci\u00f3n por condici\u00f3n",
+      "source": "lotes (throughput_rps)",
+      "statement": "Throughput \u2265 20 req/s con error < 1 %",
+      "status": "NOT_MET",
+      "threshold": "\u2265 20 req/s \u2227 error < 1%",
+      "value": 18.870908015298717
+    },
+    {
+      "dimension": "calidad",
+      "id": "RNF03",
+      "indicator": "F1_adapt oficial (regla v3, K = 10)",
+      "kind": "RNF",
+      "reason": "sin resultado oficial de F1 (K = 10 v3 no ejecutado)",
+      "source": "resultado oficial de F1",
+      "statement": "F1_adapt \u2265 0.85",
+      "status": "NOT_MEASURED",
+      "threshold": "\u2265 0.85",
+      "value": null
+    },
+    {
+      "dimension": "calidad",
+      "id": "RNF05",
+      "indicator": "media SUS y contraste contra 75",
+      "kind": "RNF",
+      "n": 0,
+      "reason": "sin SUS con n \u2265 10 (panel humano pendiente)",
+      "source": "SUS (panel humano)",
+      "statement": "Usabilidad SUS > 75 (n \u2265 10)",
+      "status": "NOT_MEASURED",
+      "threshold": "media > 75 \u2227 p < 0.05 \u2227 n \u2265 10",
+      "value": null
+    }
+  ]
+}

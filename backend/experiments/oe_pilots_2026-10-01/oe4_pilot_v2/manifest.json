@@ -1,0 +1,18 @@
+{
+  "environment_class": "PILOT",
+  "experiment": "oe4",
+  "files": {
+    "analysis.json": "a33ce3842f170e3f0075b8cbee84954e6e2ab202f2689bceced759300b7e255a",
+    "batches.json": "e2347751a105e62276366b6777047cba0c8db585d6be7281237425730b3d172f",
+    "environment.json": "1895056089deac5c184d9d699af2b99f8270d426396a9c48324e8c30d5f9ee05",
+    "logs/run.log": "1f80a56de0ae9f449751ea979fafb8096a3847cc6200bfd5c43db2414ed0f1cb",
+    "observations.jsonl": "73bde2b05de21980df62f4cf79f7952fd096f118f91de10b9dedc2bbab629823",
+    "provenance.json": "12efbaad54f6b22226445ab201c24002809e5bb00fbdd3436f40faa33ca14781",
+    "raw_observations.csv": "955c19f3c7be2902548b170cab7ac97557c849cd0f4f2c7e8bb6425b0352a859",
+    "statistical_input.csv": "b09660657ba00107a9c05044308d04ea2761f0ddc655d3dde13d0bd99d4642f1",
+    "summary.json": "a72a278dadb7b47e514e9d528c2388cb877b7bb9c17f675d0cffe0d197ce54e2"
+  },
+  "official_execution": "PENDING_HARDWARE",
+  "schema": "oe-run-v2",
+  "validity": "EXPLORATORY"
+}

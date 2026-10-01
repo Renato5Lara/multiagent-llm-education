@@ -1,0 +1,70 @@
+{
+  "audio_in_git": false,
+  "audio_in_this_package": false,
+  "audio_presence_on_this_machine": {
+    "lib-v10-5dd83cd4": {
+      "bytes": 257871360,
+      "count": 270,
+      "integrity": "hash_correcto",
+      "presence": "completa"
+    },
+    "lib-v5-9ae9ffdd": {
+      "bytes": 257676672,
+      "count": 270,
+      "integrity": "hash_correcto",
+      "presence": "completa"
+    },
+    "lib-v9-a0231e9b": {
+      "bytes": 257871360,
+      "count": 270,
+      "integrity": "hash_correcto",
+      "presence": "completa"
+    }
+  },
+  "estrategia": "Decisión C = D híbrida (DECISION-CLOSURE §14): en Git manifiestos + código/C++/.mmd/texto/SVG; fuera de Git audio (mp3) y _tts_cache/",
+  "external_audio_mechanism": "PENDIENTE (requisitos del asesor/jurado, almacenamiento, Git LFS/cuota, términos de OpenAI, retención v1-v4/v6-v8)",
+  "featured_versions": [
+    "lib-v5-9ae9ffdd",
+    "lib-v9-a0231e9b",
+    "lib-v10-5dd83cd4"
+  ],
+  "latest": "lib-v10-5dd83cd4",
+  "rerun_cycles_needs_audio_and_svg": true,
+  "runs": {
+    "corrida-poc-1": "lib-v5-9ae9ffdd",
+    "corrida-poc-2": "lib-v9-a0231e9b"
+  },
+  "svg_presence_on_this_machine": {
+    "lib-v10-5dd83cd4": {
+      "bytes": 35466862,
+      "count": 270,
+      "integrity": "hash_correcto",
+      "presence": "completa"
+    },
+    "lib-v5-9ae9ffdd": {
+      "bytes": 0,
+      "count": 0,
+      "integrity": "no_verificable",
+      "presence": "no_aplica"
+    },
+    "lib-v9-a0231e9b": {
+      "bytes": 35466862,
+      "count": 270,
+      "integrity": "hash_correcto",
+      "presence": "completa"
+    }
+  },
+  "verify_frozen_results_needs_library": false,
+  "versions_order": [
+    "lib-v1-3f931e10",
+    "lib-v2-767b4a53",
+    "lib-v3-5fa0acdd",
+    "lib-v4-039dcf58",
+    "lib-v5-9ae9ffdd",
+    "lib-v6-86516a15",
+    "lib-v7-7c046f32",
+    "lib-v8-079928dc",
+    "lib-v9-a0231e9b",
+    "lib-v10-5dd83cd4"
+  ]
+}

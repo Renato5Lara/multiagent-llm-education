@@ -1,0 +1,169 @@
+{
+  "label": "INSTRUMENT VALIDATION ONLY",
+  "descripcion": "Micro-piloto adversarial del instrumento D1 graduado candidato (R24). Comprueba el límite de constructo identificado en R23: si una explicación circular/tautológica que solo MENCIONA las palabras clave (sin explicar nada) recibe el mismo nivel 2 que una explicación legítima. NO es Corrida 2. NO se insertó en experiment_cmg_results.",
+  "instrumento": "experiments.d1_graduado_piloto.evaluar_d1_graduado",
+  "casos": [
+    {
+      "par": "Traza y pila de llamadas / Recursividad",
+      "resultados": {
+        "A_baja": {
+          "explicacion": "un bucle while repite una accion mientras se cumpla una condicion, evaluada antes de cada iteracion del ciclo.",
+          "nivel_esperado": 0,
+          "nivel_obtenido": 0,
+          "contiene_todas_las_palabras_clave": false,
+          "detalle": {
+            "nivel": 0,
+            "cobertura_concepto": false,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        },
+        "B_media": {
+          "explicacion": "cada vez que una funcion se invoca a si misma se agrega un nuevo marco a la pila de llamadas del programa, y ese marco se retira cuando la funcion retorna.",
+          "nivel_esperado": 1,
+          "nivel_obtenido": 1,
+          "contiene_todas_las_palabras_clave": false,
+          "detalle": {
+            "nivel": 1,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        },
+        "C_alta_legitima": {
+          "explicacion": "la recursividad ocurre cuando una funcion se invoca a si misma; cada llamada agrega un nuevo marco a la pila de llamadas, y la traza de ejecucion muestra como esos marcos se acumulan hasta alcanzar el caso base.",
+          "nivel_esperado": 2,
+          "nivel_obtenido": 2,
+          "contiene_todas_las_palabras_clave": true,
+          "detalle": {
+            "nivel": 2,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": true,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        },
+        "D_adversarial": {
+          "explicacion": "la recursividad tiene traza, pila y llamadas. traza es traza, pila es pila, llamadas son llamadas. recursividad significa recursividad, y asi funciona la recursividad.",
+          "nivel_esperado": null,
+          "nivel_obtenido": 2,
+          "contiene_todas_las_palabras_clave": true,
+          "detalle": {
+            "nivel": 2,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": true,
+            "claves_concepto": [
+              "traza",
+              "pila",
+              "llamadas"
+            ],
+            "claves_objetivo": [
+              "recursividad"
+            ]
+          }
+        }
+      },
+      "caso_D_obtuvo_nivel_2": true
+    },
+    {
+      "par": "Valores de retorno / Funciones",
+      "resultados": {
+        "A_baja": {
+          "explicacion": "una lista en python puede crearse con corchetes y contener varios elementos separados por comas, accesibles por su posicion.",
+          "nivel_esperado": 0,
+          "nivel_obtenido": 0,
+          "contiene_todas_las_palabras_clave": false,
+          "detalle": {
+            "nivel": 0,
+            "cobertura_concepto": false,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        },
+        "B_media": {
+          "explicacion": "cuando el flujo de ejecucion llega a la instruccion return, el valor indicado se entrega de inmediato a quien haya iniciado esa ejecucion.",
+          "nivel_esperado": 1,
+          "nivel_obtenido": 1,
+          "contiene_todas_las_palabras_clave": false,
+          "detalle": {
+            "nivel": 1,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": false,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        },
+        "C_alta_legitima": {
+          "explicacion": "una funcion puede terminar su ejecucion con la instruccion return, que entrega un valor de retorno al punto donde esa funcion fue invocada.",
+          "nivel_esperado": 2,
+          "nivel_obtenido": 2,
+          "contiene_todas_las_palabras_clave": true,
+          "detalle": {
+            "nivel": 2,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": true,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        },
+        "D_adversarial": {
+          "explicacion": "las funciones tienen valores y retorno. valores son valores, retorno es retorno. las funciones tienen funciones con valores de retorno que retornan valores de las funciones.",
+          "nivel_esperado": null,
+          "nivel_obtenido": 2,
+          "contiene_todas_las_palabras_clave": true,
+          "detalle": {
+            "nivel": 2,
+            "cobertura_concepto": true,
+            "cobertura_objetivo": true,
+            "claves_concepto": [
+              "valores",
+              "retorno"
+            ],
+            "claves_objetivo": [
+              "funciones"
+            ]
+          }
+        }
+      },
+      "caso_D_obtuvo_nivel_2": true
+    }
+  ],
+  "limite_de_constructo_confirmado": true,
+  "conclusion": "El instrumento D1 presenta un límite de constructo conocido: puede otorgar cobertura alta (nivel 2) ante presencia léxica de las palabras clave sin verificar por sí mismo la calidad semántica/pedagógica de la explicación."
+}

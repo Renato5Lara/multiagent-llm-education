@@ -1,0 +1,77 @@
+{
+  "library_version": "lib-v6-86516a15",
+  "concepts": 30,
+  "code_variants_flagged": 8,
+  "text_variants_flagged": 3,
+  "diagrams_flagged": 0,
+  "per_concept": {
+    "Tipos de datos primitivos": {
+      "bad_code": {
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)",
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    },
+    "Flujo de bucles (break/continue)": {
+      "bad_code": {
+        "0": [
+          "el concepto «Flujo de bucles (break/continue)» exige `continue` y el código no lo usa"
+        ],
+        "1": [
+          "el concepto «Flujo de bucles (break/continue)» exige `continue` y el código no lo usa"
+        ],
+        "2": [
+          "el concepto «Flujo de bucles (break/continue)» exige `continue` y el código no lo usa"
+        ]
+      },
+      "bad_text": {
+        "0": [
+          "[c0] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c0] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c1] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c1] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c2] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c2] T2: el texto menciona `continue` pero el código no lo usa"
+        ],
+        "1": [
+          "[c0] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c0] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c1] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c1] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c2] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c2] T2: el texto menciona `continue` pero el código no lo usa"
+        ],
+        "2": [
+          "[c0] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c0] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c1] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c1] T2: el texto menciona `continue` pero el código no lo usa",
+          "[c2] T1: el concepto es «Flujo de bucles (break/continue)» pero el código no usa `continue`",
+          "[c2] T2: el texto menciona `continue` pero el código no lo usa"
+        ]
+      }
+    },
+    "Variables": {
+      "bad_code": {
+        "0": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "1": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ],
+        "2": [
+          "el código incluye `assert` a nivel de módulo (las pruebas no forman parte del artefacto)"
+        ]
+      }
+    }
+  }
+}
