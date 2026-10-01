@@ -278,8 +278,11 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--probe-n", type=int, default=0, help="perfiles para la sonda de determinismo (0 = no se ejecuta)")
     ap.add_argument("--persistence-probe", type=int, default=0, metavar="N", help="ciclos para la sonda de persistencia RF06 (requiere PostgreSQL aislado)")
     ap.add_argument("--f1-json", type=Path, help="resultado oficial de F1 (JSON con la clave f1_adapt); sin él RNF03 queda NOT_MEASURED")
+    ap.add_argument("--f1-definition-version", help="versión de la definición F1 con la que se produjo el JSON de --f1-json (obligatoria con --f1-json: no se asume ninguna)")
     ap.add_argument("--batch-seed", type=int, default=DEFAULT_BATCH_SEED)
     a = ap.parse_args(argv)
+    if a.f1_json and not a.f1_definition_version:
+        raise SystemExit("--f1-json exige --f1-definition-version (v2 | v3): el resultado F1 debe declarar con qué definición se calculó")
     out_dir = iso.require_out_dir(a.out_dir)
     iso.check_new_output_targets([out_dir])
     obs, bat, labels = _load_runs(a.runs)
@@ -298,7 +301,7 @@ def main(argv: list[str] | None = None) -> None:
     table = requirement_table(obs, bat, persistence=persistence, determinism=determinism, f1=f1)
     dims, rel = dimension_summary(table), relationship(obs, bat)
     from adaptation_swarm.oe import definitions as defs
-    report = {"schema": "oe1-report-v2", "OE1_COMPLIANCE_SCORE": COMPLIANCE_SCORE_STATE, "requirements_version": defs.REQUIREMENTS_VERSION,
+    report = {"schema": "oe1-report-v2", "f1_definition": defs.f1_selection_record(a.f1_definition_version), "OE1_COMPLIANCE_SCORE": COMPLIANCE_SCORE_STATE, "requirements_version": defs.REQUIREMENTS_VERSION,
               "requirements_universe": [r.id for r in REQUIREMENTS], "evaluated_ids": [r["id"] for r in table if r["status"] != NOT_MEASURED],
               "evidence_by_requirement": {r["id"]: {"kind": r["evidence_kind"], "source": r["source"], "status": r["status"], "numerator": r.get("numerator"), "denominator": r.get("denominator")} for r in table},
               "runs": [str(p) for p in a.runs], "run_labels": labels, "table": table, "dimensions": dims, "relationship": rel,

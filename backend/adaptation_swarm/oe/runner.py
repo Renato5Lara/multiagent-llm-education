@@ -211,7 +211,8 @@ def provenance(store: LibraryStore, profiles_path: Path, args: argparse.Namespac
             "fitness_weights": FitnessWeights().to_dict(), "redis": iso.mask(SETTINGS.redis_url), "module_fingerprints": _infra.module_fingerprints(),
             "conditions": [{"name": c.name, **c.factors(), "pso": c.pso_params().to_dict(), "pso_config_hash": c.pso_params().config_hash()} for c in conditions],
             "validity": validity(args.experiment, hw=hw, n_profiles=n_profiles, k=args.k, batches=args.batches, warmup=args.warmup, conditions=conditions),
-            "definitions": {"requirements_version": oe_defs.REQUIREMENTS_VERSION, "registry": oe_defs.DEFINITIONS}}
+            "definitions": {"requirements_version": oe_defs.REQUIREMENTS_VERSION, "registry": oe_defs.DEFINITIONS, "f1_definition_versions": oe_defs.F1_DEFINITION_VERSIONS,
+                            "f1_selected": oe_defs.f1_selection_record(getattr(args, "f1_definition_version", None))}}
 
 
 def write_results(out_dir: Path, prov: dict, obs: list[dict], bat: list[dict], log_lines: list[str] | None = None) -> dict:
@@ -269,6 +270,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--concurrency", type=_ints, default=[1])
     ap.add_argument("--particles", type=_ints, default=[10, 20, 30])
     ap.add_argument("--design", choices=("full", "ofat"), default="ofat")
+    ap.add_argument("--f1-definition-version", choices=sorted(oe_defs.F1_DEFINITION_VERSIONS), help="versión de la definición F1 que la corrida declara en su provenance (este ejecutor no calcula F1; sin valor se registra `selected: null`)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     out_dir = iso.require_out_dir(args.out_dir)
