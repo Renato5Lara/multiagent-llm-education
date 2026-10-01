@@ -32,11 +32,14 @@ def main() -> None:
     p.add_argument("--difficulty", required=True); p.add_argument("--agrees", choices=["yes", "no"], required=True)
     p.add_argument("--rating", type=int); p.add_argument("--comment")
     p = sub.add_parser("export-archetype"); p.add_argument("--out-dir", required=True)
+    p.add_argument("--panel-protocol-version", help="versión del panel a exportar (por defecto la v2 histórica)")
     p = sub.add_parser("export-sus-analysis"); p.add_argument("--out-dir", required=True)
     p = sub.add_parser("add-archetype"); p.add_argument("--pseudonym", required=True); p.add_argument("--archetype", required=True)
     p.add_argument("--approves", choices=["yes", "no"], required=True); p.add_argument("--comment")
     for name in ("import-sus", "import-gold", "import-archetype"):
         p = sub.add_parser(name); p.add_argument("--csv", required=True)
+        if name == "import-archetype":
+            p.add_argument("--panel-protocol-version", help="versión explícita del panel (obligatoria para v3; sin ella solo se acepta la plantilla v2 histórica)")
     p = sub.add_parser("export"); p.add_argument("--out", required=True)
     a = ap.parse_args()
     repo = HumanEvalRepository(SessionLocal)
@@ -51,11 +54,12 @@ def main() -> None:
     elif a.cmd == "export-sus-analysis":
         print(repo.export_sus_analysis(Path(a.out_dir)))
     elif a.cmd == "export-archetype":
-        print(repo.export_archetype_panel(Path(a.out_dir)))
+        from adaptation_swarm.metrics.panel_versions import SPEC_V2, get_panel_spec
+        print(repo.export_archetype_panel(Path(a.out_dir), get_panel_spec(a.panel_protocol_version or SPEC_V2.panel_protocol_version).rule_version))
     elif a.cmd == "add-archetype":
         repo.add_archetype_rating(a.pseudonym, a.archetype, a.approves == "yes", a.comment)
     elif a.cmd == "import-archetype":
-        print(f"{repo.import_archetype_csv(Path(a.csv))} juicios por arquetipo importados")
+        print(f"{repo.import_archetype_csv(Path(a.csv), panel_protocol_version=a.panel_protocol_version)} juicios por arquetipo importados")
     elif a.cmd == "import-sus":
         print(f"{repo.import_sus_csv(Path(a.csv))} respuestas SUS importadas")
     elif a.cmd == "import-gold":

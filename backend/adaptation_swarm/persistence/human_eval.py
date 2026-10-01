@@ -15,14 +15,18 @@ from app.models.swarm_human_evaluation import GoldPanelArchetypeRating, GoldPane
 
 from adaptation_swarm.gold.rubric import GOLD_TABLE, RULE_VERSION
 from adaptation_swarm.gold.rubric_v2 import PANEL_PROTOCOL_VERSION, get_rule, official_version
-from adaptation_swarm.metrics.gold_panel import ARCHETYPES, EXPECTED_SETS, analyze_archetype_panel
+from adaptation_swarm.metrics.gold_panel import ARCHETYPES
+from adaptation_swarm.metrics.panel_versions import PANEL_SPECS, SPEC_V2, PanelSpec, analyze_panel, get_panel_spec, spec_for_rule_version
 from adaptation_swarm.metrics.sus import MIN_EVALUATORS, SUS_THRESHOLD, analyze_gold_panel, analyze_sus, study_status, sus_score
 
 ROLES = ("docente_programacion", "ingeniero_software")
 INSTRUMENT_VERSION = "sus-brooke-1996-es"
 TASK_SCRIPT_VERSION = "task-script-v1"
 # Versión OFICIAL de gold-v2 (gold + inclusión + agregación + protocolo del panel) cuyo gold valida el panel por arquetipo. Registrar el juicio NO aprueba la regla.
+# COMPATIBILIDAD HISTÓRICA: es el ÚNICO default v2 que queda (llamadas anteriores a la versión explícita: `add_archetype_rating`, `archetype_votes*`, plantilla v2 sin columnas de protocolo). Ninguna entrada
+# identificada como v3 puede caer en él: v3 exige `panel_protocol_version` / `rule_version` explícitos y toda `rule_version` se valida contra `metrics/panel_versions.py` (sin fallback).
 PANEL_RULE_VERSION = official_version(get_rule("gold-v2-cand-A", "incl-ge1"))
+assert PANEL_RULE_VERSION == SPEC_V2.rule_version
 HISTORIC_PANEL_LABEL = "[HISTÓRICO gold-v1 - NO OFICIAL]"
 
 
@@ -84,6 +88,10 @@ class HumanEvalRepository:
     def _archetype_row(session, pseudonym: str, archetype: str, approves: bool, comment: str | None, rule_version: str) -> GoldPanelArchetypeRating:
         if archetype not in ARCHETYPES:
             raise ValueError(f"arquetipo inexistente: {archetype!r}; válidos: {ARCHETYPES}")
+        try:
+            spec_for_rule_version(rule_version)                      # solo versiones registradas: un juicio no puede quedar bajo una clave desconocida ni inferida
+        except KeyError as exc:
+            raise ValueError(str(exc)) from exc
         part = session.scalars(select(SusParticipant).where(SusParticipant.pseudonym == pseudonym)).one()
         return GoldPanelArchetypeRating(participant_id=part.id, rule_version=rule_version, archetype=archetype, approves=bool(approves), comment=comment)
 
@@ -104,8 +112,9 @@ class HumanEvalRepository:
 
     def archetype_panel_result(self, rule_version: str = PANEL_RULE_VERSION) -> dict:
         """Resultado del panel por arquetipo (AC1, acuerdo crudo, matriz absoluta, aprobación por arquetipo, decisión) más los votos individuales que lo sustentan."""
+        spec = spec_for_rule_version(rule_version)                   # KeyError si la versión no está registrada
         votes = self.archetype_votes(rule_version)
-        return {**analyze_archetype_panel(votes, rule_version), "votes_by_evaluator": self.archetype_votes_by_evaluator(rule_version)}
+        return {**analyze_panel(spec, votes), "votes_by_evaluator": self.archetype_votes_by_evaluator(rule_version)}
 
     def export_archetype_panel(self, out_dir: Path, rule_version: str = PANEL_RULE_VERSION) -> Path:
         """Exporta a un directorio NUEVO: `archetype_panel_result.json` (resultado completo), `archetype_votes_matrix.csv` (matriz absoluta) y `archetype_votes_by_evaluator.csv`."""
@@ -127,28 +136,64 @@ class HumanEvalRepository:
                 w.writerow([r["pseudonym"], r["archetype"], "yes" if r["approves"] else "no"])
         return out
 
-    def import_archetype_csv(self, src: Path) -> int:
-        """Importa juicios del panel por arquetipo (plantilla `gold_panel_archetype_template.csv`); el participante ya debe existir. Todo o nada: valida antes de insertar e inserta en UNA transacción.
-        Si `expected_set_shown` viene informado debe coincidir con el conjunto esperado del arquetipo (protege contra una plantilla desalineada)."""
-        rows = []
+    def import_archetype_csv(self, src: Path, *, panel_protocol_version: str | None = None) -> int:
+        """Importa juicios del panel por arquetipo; el participante ya debe existir. Todo o nada: valida TODO antes de insertar e inserta en UNA transacción.
+
+        La versión del panel es EXPLÍCITA y los juicios se guardan con la `rule_version` de ESA versión (nunca con un valor fijo):
+          · `panel_protocol_version` (argumento) y/o la columna `panel_protocol_version` del CSV la determinan; si ambos existen deben coincidir; no hay conversión ni corrección automática;
+          · si el CSV trae la columna `rule_version`, debe ser exactamente la de la versión elegida;
+          · `expected_set_shown` debe coincidir con el conjunto de ESA versión (un conjunto de otra versión se rechaza);
+          · v3 exige versión explícita (argumento o columna en todas las filas con juicio). Única excepción histórica: un CSV SIN ninguna de las dos columnas y sin argumento es la plantilla v2 anterior
+            a las columnas de versión (`gold_panel_archetype_template.csv`) y se registra como v2 solo si su `expected_set_shown` (cuando viene) coincide con v2."""
         with src.open(newline="", encoding="utf-8") as fh:
-            for n, r in enumerate(csv.DictReader(fh), start=2):
-                if not (r.get("pseudonym") or "").strip() and not (r.get("approves") or "").strip():
-                    continue
-                approves = (r.get("approves") or "").strip().lower()
-                if approves not in {"yes", "no"} or not (r.get("pseudonym") or "").strip():
-                    raise ValueError(f"fila {n}: `pseudonym` y `approves` (yes/no) son obligatorios")
-                arch = (r.get("archetype") or "").strip()
-                if arch not in ARCHETYPES:
-                    raise ValueError(f"fila {n}: arquetipo inexistente {arch!r}")
-                shown = (r.get("expected_set_shown") or "").strip()
-                if shown and shown != "+".join(EXPECTED_SETS[arch]):
-                    raise ValueError(f"fila {n}: `expected_set_shown` {shown!r} no coincide con el conjunto esperado de {arch}")
-                rows.append((r["pseudonym"].strip(), arch, approves == "yes", (r.get("comment") or "").strip() or None))
+            reader = csv.DictReader(fh)
+            header = set(reader.fieldnames or [])
+            raw = list(enumerate(reader, start=2))
+        active = [(n, r) for n, r in raw if (r.get("pseudonym") or "").strip() or (r.get("approves") or "").strip()]
+        has_cols = bool(header & {"panel_protocol_version", "rule_version"})
+        declared = {(r.get("panel_protocol_version") or "").strip() for _, r in active}
+        if len(declared - {""}) > 1:
+            raise ValueError(f"el CSV mezcla versiones de panel: {sorted(declared - {''})}")
+        if panel_protocol_version and declared - {""} and declared - {""} != {panel_protocol_version}:
+            raise ValueError(f"el protocolo del argumento {panel_protocol_version!r} no coincide con el del CSV {sorted(declared - {''})}")
+        chosen = panel_protocol_version or next(iter(declared - {""}), None)
+        if chosen is None:
+            if has_cols and active:
+                raise ValueError("el CSV declara columnas de versión pero las filas con juicio no informan `panel_protocol_version`: indique el protocolo")
+            spec = SPEC_V2                                          # plantilla v2 histórica (sin columnas de versión): solo v2
+            legacy = True
+        else:
+            try:
+                spec = get_panel_spec(chosen)
+            except KeyError as exc:
+                raise ValueError(str(exc)) from exc
+            legacy = False
+        rows = []
+        for n, r in active:
+            approves = (r.get("approves") or "").strip().lower()
+            if approves not in {"yes", "no"} or not (r.get("pseudonym") or "").strip():
+                raise ValueError(f"fila {n}: `pseudonym` y `approves` (yes/no) son obligatorios")
+            arch = (r.get("archetype") or "").strip()
+            if arch not in ARCHETYPES:
+                raise ValueError(f"fila {n}: arquetipo inexistente {arch!r}")
+            proto_cell = (r.get("panel_protocol_version") or "").strip()
+            if not legacy and "panel_protocol_version" in header and proto_cell != spec.panel_protocol_version:
+                raise ValueError(f"fila {n}: `panel_protocol_version` {proto_cell!r} no coincide con {spec.panel_protocol_version!r}")
+            rule_cell = (r.get("rule_version") or "").strip()
+            if rule_cell and rule_cell != spec.rule_version:
+                raise ValueError(f"fila {n}: `rule_version` {rule_cell!r} no corresponde al protocolo {spec.panel_protocol_version!r} (esperada {spec.rule_version!r})")
+            if "rule_version" in header and not rule_cell and not legacy:
+                raise ValueError(f"fila {n}: falta `rule_version` (columna presente): no se completa automáticamente")
+            shown = (r.get("expected_set_shown") or "").strip()
+            if shown and shown != spec.shown(arch):
+                other = next((o.panel_protocol_version for o in PANEL_SPECS.values() if o is not spec and shown == o.shown(arch)), None)
+                hint = f" (coincide con el conjunto de {other!r}: mezcla de versiones)" if other else ""
+                raise ValueError(f"fila {n}: `expected_set_shown` {shown!r} no coincide con el conjunto esperado de {arch} en {spec.panel_protocol_version!r}{hint}")
+            rows.append((r["pseudonym"].strip(), arch, approves == "yes", (r.get("comment") or "").strip() or None))
         with self._sf() as s:                      # UNA transacción: cualquier error ⇒ rollback completo
             try:
                 for pseud, arch, approves, comment in rows:
-                    s.add(self._archetype_row(s, pseud, arch, approves, comment, PANEL_RULE_VERSION))
+                    s.add(self._archetype_row(s, pseud, arch, approves, comment, spec.rule_version))
                     s.flush()
                 s.commit()
             except Exception:
@@ -167,14 +212,15 @@ class HumanEvalRepository:
                 votes.setdefault((r.archetype, r.difficulty), []).append(r.agrees)
         return votes
 
-    def status_report(self) -> dict[str, Any]:
+    def status_report(self, panel_protocol_version: str = SPEC_V2.panel_protocol_version) -> dict[str, Any]:
         with self._sf() as s:
             n_part = len(list(s.scalars(select(SusParticipant.id))))
+        spec: PanelSpec = get_panel_spec(panel_protocol_version)     # v2 por defecto (histórico); v3 solo si se pide explícitamente
         scores = self.sus_scores()
         return {"participants": n_part, "sus_responses": len(scores), "sus_status": study_status(len(scores)),
                 "sus": analyze_sus(scores).to_dict(),
                 # Protocolo OFICIAL vigente (gold-v2): 4 arquetipos, Gwet AC1 único estadístico, mayoría aprobatoria, empate = rechazo.
-                "archetype_panel": {**analyze_archetype_panel(self.archetype_votes(), PANEL_RULE_VERSION), "official": True, "protocol": PANEL_PROTOCOL_VERSION},
+                "archetype_panel": {**analyze_panel(spec, self.archetype_votes(spec.rule_version)), "official": spec.official, "protocol": spec.panel_protocol_version},
                 # Panel HISTÓRICO de gold-v1 (20 celdas, Fleiss κ): se conserva como evidencia, NO es parte del protocolo oficial. Sus cálculos no cambian; solo se rotula.
                 "gold_panel": {**analyze_gold_panel(self.gold_votes()), "official": False, "label": HISTORIC_PANEL_LABEL,
                                "protocol": "gold-v1 (20 celdas arquetipo×dificultad, Fleiss κ)"}}

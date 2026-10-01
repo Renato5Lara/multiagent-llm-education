@@ -1,0 +1,5 @@
+pseudonym,archetype,expected_set_shown,approves,comment,panel_protocol_version,rule_version
+,visual_dominant,code+diagram,,,provisional-panel-v3-unsealed,gold-v3-multimodal+incl-rel20+samples+provisional-panel-v3-unsealed
+,logical_syntactic,code+diagram,,,provisional-panel-v3-unsealed,gold-v3-multimodal+incl-rel20+samples+provisional-panel-v3-unsealed
+,explanatory_conceptual,code+diagram+text,,,provisional-panel-v3-unsealed,gold-v3-multimodal+incl-rel20+samples+provisional-panel-v3-unsealed
+,balanced_multimodal,code+diagram+text+audio,,,provisional-panel-v3-unsealed,gold-v3-multimodal+incl-rel20+samples+provisional-panel-v3-unsealed
