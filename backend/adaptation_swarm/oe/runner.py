@@ -33,6 +33,7 @@ from adaptation_swarm.analysis import replicas as _infra
 from adaptation_swarm.analysis.baseline_bruteforce import TARGET_HARDWARE, bruteforce_search, hardware_profile, meets_target
 from adaptation_swarm.analysis.core_replay import precompute_terms
 from adaptation_swarm.baselines.conventional import ConventionalAdapter
+from adaptation_swarm.bus.redis_bus import RedisBus
 from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.fitness.fitness import FitnessWeights
 from adaptation_swarm.multimodal.library import LibraryStore
@@ -122,14 +123,17 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
 
     if cond.system == "swarm":
         params = cond.pso_params()
-        async with SwarmStack(library_version=store.version, prefix=f"swarm-oe-{uuid.uuid4().hex[:8]}:", params=params, fitness_weights=fw,
-                              protocol=cond.protocol(), replicas=cond.replicas) as stack:
-            async def call(p: ProfileRequest, rep: int) -> dict:
-                return _swarm_row(await stack.orchestrator.run_cycle(p, batch_seed=batch_seed, replicate=rep))
-            try:
+        prefix = f"swarm-oe-{uuid.uuid4().hex[:8]}:"
+        try:
+            async with SwarmStack(library_version=store.version, prefix=prefix, params=params, fitness_weights=fw,
+                                  protocol=cond.protocol(), replicas=cond.replicas) as stack:
+                async def call(p: ProfileRequest, rep: int) -> dict:
+                    return _swarm_row(await stack.orchestrator.run_cycle(p, batch_seed=batch_seed, replicate=rep))
                 await execute(call)
-            finally:
-                await stack.bus.purge_prefix()
+        finally:                                    # limpieza DESPUÉS de detener los agentes (si no, sus consumidores pierden el grupo y registran «bus caído»)
+            cleanup = await RedisBus(prefix=prefix).connect()
+            await cleanup.purge_prefix()
+            await cleanup.close()
     else:
         adapter = ConventionalAdapter(store, cond.system, fw)
 

@@ -176,12 +176,21 @@ def relationship(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict:
 
 
 # ── sondas ──────────────────────────────────────────────────────────────────────────────────────────────
+async def _purge(prefix: str) -> None:
+    """Limpia las claves de Redis DESPUÉS de detener los agentes (si no, sus consumidores pierden el grupo y registran «bus caído»)."""
+    from adaptation_swarm.bus.redis_bus import RedisBus
+    bus = await RedisBus(prefix=prefix).connect()
+    await bus.purge_prefix()
+    await bus.close()
+
+
 async def determinism_probe(store, profiles, n: int, batch_seed: int) -> dict:
     """Cada perfil se ejecuta DOS veces con la misma semilla en la pila real; deben coincidir S, 𝓕, k_stop y motivo de parada."""
     from adaptation_swarm.stack import SwarmStack
     same, mismatches = 0, []
-    async with SwarmStack(library_version=store.version, prefix=f"swarm-oe1-{uuid.uuid4().hex[:8]}:") as st:
-        try:
+    prefix = f"swarm-oe1-{uuid.uuid4().hex[:8]}:"
+    try:
+        async with SwarmStack(library_version=store.version, prefix=prefix) as st:
             for p in profiles[:n]:
                 a = await st.orchestrator.run_cycle(p, batch_seed=batch_seed)
                 b = await st.orchestrator.run_cycle(p, batch_seed=batch_seed)
@@ -190,8 +199,8 @@ async def determinism_probe(store, profiles, n: int, batch_seed: int) -> dict:
                     same += 1
                 else:
                     mismatches.append(p.profile_id)
-        finally:
-            await st.bus.purge_prefix()
+    finally:
+        await _purge(prefix)
     return {"n": min(n, len(profiles)), "identical": same, "rate": same / min(n, len(profiles)), "mismatches": mismatches, "batch_seed": batch_seed}
 
 
@@ -208,25 +217,24 @@ async def persistence_probe(store, profiles, n: int, batch_seed: int) -> dict:
     repo.save_profiles(profiles[:n], "v1")
     repo.sync_library(store)
     complete, failures = 0, []
+    prefix = f"swarm-oe1-{uuid.uuid4().hex[:8]}:"
     try:
-        async with SwarmStack(library_version=store.version, prefix=f"swarm-oe1-{uuid.uuid4().hex[:8]}:", repository=repo) as st:
-            try:
-                for p in profiles[:n]:
-                    r = await st.orchestrator.run_cycle(p, batch_seed=batch_seed)
-                    with SessionLocal() as s:
-                        cyc = s.get(SwarmCycle, r.cycle_id)
-                        n_it = s.scalar(select(func.count()).select_from(SwarmIteration).where(SwarmIteration.cycle_id == r.cycle_id))
-                        n_msg = s.scalar(select(func.count()).select_from(AgentMessage).where(AgentMessage.cycle_id == r.cycle_id))
-                        pkg = s.scalars(select(MultimodalPackage).where(MultimodalPackage.cycle_id == r.cycle_id)).first()
-                    ok = bool(cyc is not None and r.status == "completed" and cyc.status == "completed" and n_it == r.k_stop + 1 and n_msg == r.metrics.n_messages
-                              and pkg is not None and pkg.chain_valid)
-                    complete += ok
-                    if not ok:
-                        failures.append({"profile_id": p.profile_id, "cycle_row": cyc is not None, "iterations": n_it, "expected_iterations": (r.k_stop or 0) + 1, "messages": n_msg,
-                                         "expected_messages": r.metrics.n_messages, "package": pkg is not None})
-            finally:
-                await st.bus.purge_prefix()
+        async with SwarmStack(library_version=store.version, prefix=prefix, repository=repo) as st:
+            for p in profiles[:n]:
+                r = await st.orchestrator.run_cycle(p, batch_seed=batch_seed)
+                with SessionLocal() as s:
+                    cyc = s.get(SwarmCycle, r.cycle_id)
+                    n_it = s.scalar(select(func.count()).select_from(SwarmIteration).where(SwarmIteration.cycle_id == r.cycle_id))
+                    n_msg = s.scalar(select(func.count()).select_from(AgentMessage).where(AgentMessage.cycle_id == r.cycle_id))
+                    pkg = s.scalars(select(MultimodalPackage).where(MultimodalPackage.cycle_id == r.cycle_id)).first()
+                ok = bool(cyc is not None and r.status == "completed" and cyc.status == "completed" and n_it == r.k_stop + 1 and n_msg == r.metrics.n_messages
+                          and pkg is not None and pkg.chain_valid)
+                complete += ok
+                if not ok:
+                    failures.append({"profile_id": p.profile_id, "cycle_row": cyc is not None, "iterations": n_it, "expected_iterations": (r.k_stop or 0) + 1, "messages": n_msg,
+                                     "expected_messages": r.metrics.n_messages, "package": pkg is not None})
     finally:
+        await _purge(prefix)
         repo.delete_run(label)
     return {"n": min(n, len(profiles)), "complete": complete, "rate": complete / min(n, len(profiles)), "failures": failures}
 
