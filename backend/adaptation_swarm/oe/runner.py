@@ -88,13 +88,16 @@ def _swarm_row(r) -> dict:
             "S": r.g_best_S, "predicted": r.predicted_dominant, "n_messages": m.n_messages if m else None,
             "comm_overhead_ms": m.comm_overhead_ms if m else None, "inflight_overlap": m.inflight_overlap if m else None, "n_evaluations": None,
             "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]),
-            "error": None if r.error is None else r.error.get("message")}
+            "w_valid": bool(r.W) and abs(sum(r.W.values()) - 1.0) < 1e-9,                       # RF02: AG1 entregó W normalizada
+            "iterations_logged": bool(r.k_stop is not None and len(r.iterations) == r.k_stop + 1),   # RF04: log de iteraciones completo
+            "error": None if r.error is None else r.error.get("message"), "error_code": None if r.error is None else r.error.get("code")}
 
 
 def _baseline_row(r) -> dict:
     return {"status": r.status, "stop_reason": None, "k_stop": None, "t_conv_ms": r.t_conv_ms, "total_ms": r.total_ms, "F": r.F, "S": r.S, "predicted": r.predicted_dominant,
             "n_messages": 0, "comm_overhead_ms": None, "inflight_overlap": None, "n_evaluations": r.n_evaluations,
-            "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]), "error": r.error}
+            "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]), "w_valid": None, "iterations_logged": None,
+            "error": r.error, "error_code": None}
 
 
 async def run_condition(store: LibraryStore, cond: Condition, profiles: list[ProfileRequest], *, k: int, batches: int, warmup: int, batch_seed: int,
