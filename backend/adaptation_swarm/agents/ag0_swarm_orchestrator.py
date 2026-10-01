@@ -32,6 +32,7 @@ from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.multimodal.package import MultimodalPackage, assemble
 from adaptation_swarm.multimodal.validation import validate_package
 from adaptation_swarm.profiles.models import ModalityWeights, ProfileRequest
+from adaptation_swarm.protocol import ProtocolConfig
 from adaptation_swarm.pso import engine
 from adaptation_swarm.pso.decode import decode
 from adaptation_swarm.pso.params import PSOParams
@@ -91,9 +92,11 @@ class SwarmOrchestrator(SwarmAgent):
 
     def __init__(self, bus, store: LibraryStore, *, params: PSOParams | None = None,
                  fitness_weights: FitnessWeights | None = None, repository=None,
-                 request_timeout: float | None = None, consumer: str | None = None):
+                 request_timeout: float | None = None, consumer: str | None = None,
+                 protocol: ProtocolConfig | None = None):
         super().__init__(bus, consumer)
         self.store = store
+        self.protocol = protocol or ProtocolConfig()          # por defecto = comportamiento histórico (ver protocol.py)
         self.params = params or PSOParams()
         self.fw = fitness_weights or FitnessWeights()
         self.repository = repository
@@ -240,7 +243,8 @@ class SwarmOrchestrator(SwarmAgent):
 
     async def step_seed(self, st: dict) -> dict:
         rng = make_rng(st["seed"])
-        pso = engine.initialize(self.params, rng, np.array(st["heuristic_start"]))
+        heuristic = np.array(st["heuristic_start"]) if self.protocol.heuristic_seed else None
+        pso = engine.initialize(self.params, rng, heuristic)
         return {"pso": pso, "rng": rng, "t_search_ns": time.perf_counter_ns()}
 
     async def _realize(self, cycle_id: str, correlation_id: str, k: int, concept_id: str,
@@ -262,8 +266,13 @@ class SwarmOrchestrator(SwarmAgent):
                                           [MessageType.TEXT_READY, MessageType.AUDIO_READY])
         if not need:
             return
-        results = await self.request_batch(cycle_id=cycle_id, correlation_id=correlation_id, iteration=k, specs=[
-            (key, recv, mt, pl, exp) for key, (recv, mt, pl, exp) in need.items()])
+        specs = [(key, recv, mt, pl, exp) for key, (recv, mt, pl, exp) in need.items()]
+        if self.protocol.dispatch == "batch":
+            results = await self.request_batch(cycle_id=cycle_id, correlation_id=correlation_id, iteration=k, specs=specs)
+        else:                                  # "sequential": una petición por vez, sin solapamiento entre agentes
+            results = [await self.request(cycle_id=cycle_id, correlation_id=correlation_id, receiver=recv, mtype=mt,
+                                          payload=pl, request_key=key, expect=exp, iteration=k)
+                       for key, recv, mt, pl, exp in specs]
         for key, res in zip(need, results):
             cache[key] = {t.value: m.payload for t, m in res.items()}
 
@@ -310,8 +319,8 @@ class SwarmOrchestrator(SwarmAgent):
                                  "pbest_updates": ps.pbest_updates[-1], "gbest_updated": ps.gbest_updates[-1]}}
         await self.bus.set_state(st["cycle_id"], {"k": ps.k, "gbest_F": ps.gbest_F, "gbest_S": list(ps.gbest_S()),
                                                   "status": CycleStatus.RUNNING.value})
-        for agent in (AgentId.AG1, AgentId.AG2, AgentId.AG3, AgentId.AG4):     # AG0 retroalimenta con g_best
-            await self.bus.publish(BusMessage(
+        for agent in ((AgentId.AG1, AgentId.AG2, AgentId.AG3, AgentId.AG4) if self.protocol.broadcast_gbest else ()):
+            await self.bus.publish(BusMessage(                                   # AG0 retroalimenta con g_best
                 correlation_id=st["correlation_id"], cycle_id=st["cycle_id"], sender=AgentId.AG0, receiver=agent,
                 message_type=MessageType.GBEST_BROADCAST, iteration=ps.k,
                 payload={"k": ps.k, "gbest_F": ps.gbest_F, "gbest_S": list(ps.gbest_S())}))
@@ -419,7 +428,7 @@ class SwarmOrchestrator(SwarmAgent):
             k_stop=final.get("k_stop"), t_conv_ms=final.get("t_conv_ms"), total_ms=total_ms, seed=seed,
             config_hash=self.params.config_hash(), library_version=self.store.version, W=final.get("W"),
             g_best_x=gb.get("x"), g_best_S=gb.get("S"), g_best_F=gb.get("F"), g_best_breakdown=gb.get("breakdown"),
-            predicted_dominant=gb.get("predicted_dominant"), package=final.get("package"),
+            predicted_dominant=gb.get("predicted_dominant"), package=final.get("package"), heuristic_seeded=self.protocol.heuristic_seed,
             iterations=final.get("iteration_log", []), pso_diagnostics=final.get("pso_diagnostics"), metrics=metrics, error=final.get("error"), replicate=replicate,
             log_messages=log_msgs)
         if self.repository is not None:

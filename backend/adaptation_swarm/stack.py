@@ -16,13 +16,18 @@ from adaptation_swarm.bus.redis_bus import RedisBus
 from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.fitness.fitness import FitnessWeights
 from adaptation_swarm.multimodal.library import LibraryStore
+from adaptation_swarm.protocol import ProtocolConfig
 from adaptation_swarm.pso.params import PSOParams
 
 
 class SwarmStack:
     def __init__(self, *, library_root: Path | None = None, library_version: str | None = None,
                  prefix: str | None = None, params: PSOParams | None = None,
-                 fitness_weights: FitnessWeights | None = None, repository=None, redis_url: str | None = None):
+                 fitness_weights: FitnessWeights | None = None, repository=None, redis_url: str | None = None,
+                 protocol: ProtocolConfig | None = None, replicas: int = 1):
+        if replicas < 1:
+            raise ValueError("replicas >= 1")
+        self._protocol, self._replicas = protocol, replicas       # factores OE3 (ver protocol.py); por defecto = historial
         self.store = LibraryStore.open(library_root or SETTINGS.library_root, library_version)
         self.bus = RedisBus(url=redis_url, prefix=prefix)
         self._params, self._fw, self._repo = params, fitness_weights, repository
@@ -33,13 +38,15 @@ class SwarmStack:
 
     async def __aenter__(self) -> "SwarmStack":
         await self.bus.connect()
-        self.agents = [ProfilAgent(self.bus), CodeAgent(self.bus, self.store),
-                       DiagramAgent(self.bus, self.store), TextAgent(self.bus, self.store)]
+        self.agents = [a for _ in range(self._replicas)          # `replicas` consumidores por agente en el mismo grupo de Redis
+                       for a in (ProfilAgent(self.bus), CodeAgent(self.bus, self.store),
+                                 DiagramAgent(self.bus, self.store), TextAgent(self.bus, self.store))]
         for a in self.agents:
             await a.start()                     # crea el grupo de consumidores antes de aceptar tráfico
         self._tasks = [asyncio.create_task(a.run(self._stop)) for a in self.agents]
         self.orchestrator = SwarmOrchestrator(self.bus, self.store, params=self._params,
-                                              fitness_weights=self._fw, repository=self._repo)
+                                              fitness_weights=self._fw, repository=self._repo,
+                                              protocol=self._protocol)
         await self.orchestrator.start()
         return self
 
