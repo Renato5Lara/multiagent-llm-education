@@ -14,6 +14,24 @@ Todo se ejecuta desde `backend/` salvo indicación. Versiones de Python (no conf
 Lo que **no** es determinista y cómo se controla: el LLM/TTS (por eso la biblioteca M1 se genera **una vez**, se versiona por hash y
 el PSO solo la lee); la latencia de red del proveedor (CostT usa tiempos **congelados** en el manifiesto).
 
+## 0. Migración al hardware objetivo (estado a 2026-10-01) — LEER ANTES DE EJECUTAR
+**Hardware objetivo de las ejecuciones OFICIALES:** ≥ 8 vCPU y ≥ 90 % de 32 GB de RAM (`analysis/baseline_bruteforce.meets_target`; el requisito no se relaja). La máquina de desarrollo (8 vCPU / 7.5 GiB) solo sirve para pruebas y pilotos.
+**Python del entorno oficial: 3.12** (`backend/.python-version`; K10 v2 se ejecutó con CPython 3.12.14, numpy 2.5.3, scipy 1.18.1: son los pines de `requirements.txt`, y `backend/Dockerfile` usa `python:3.12-slim`).
+La línea de «3.14.7» de arriba describe solo la máquina de desarrollo. **No se ha verificado todavía** que `requirements.txt` se instale ni que la suite pase bajo 3.12: esa verificación es el primer paso en la máquina nueva (abajo).
+**Puerta de hardware:** `python -m adaptation_swarm.oe.runner oe2|oe3|oe4 … --official` y `replicas_v3.run_replicas_v3` con un plan OFICIAL se niegan a arrancar (antes de escribir nada) si el hardware no cumple; sin `--official` la corrida es PILOT/EXPLORATORY. Además `--official` rechaza mientras haya definiciones bloqueadas (`oe/definitions.blocked_for`: hoy `statistical_unit_performance`, y `t_conv_baselines` en OE2) o condiciones de validez sin cumplir. K10 v3 sigue bloqueado: `rubric_v3.APPROVED_RULE_VERSIONS` vacío y pre-registro v3 no sellable (pendientes de personas/infraestructura: hardware, entorno oficial, originales del asesor, declaración y confirmación del tesista).
+
+**Orden en la máquina nueva** (desde `backend/`; nada de esto es una campaña oficial):
+```
+git fetch origin && git checkout feat/adaptation-swarm-poc && git pull --ff-only
+python3.12 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt -r requirements-loadtest.txt
+.venv/bin/python -c "from adaptation_swarm.analysis.baseline_bruteforce import hardware_profile, meets_target as m; h=hardware_profile(); print(h, 'CUMPLE' if m(h) else 'NO CUMPLE')"
+podman-compose -f tests/adaptation_swarm/integration_env/compose.yaml up -d      # Redis/PostgreSQL AISLADOS (ver integration_env/README.md)
+.venv/bin/python -m pytest tests/adaptation_swarm -m "not integration" -q          # sin servicios
+.venv/bin/python -m pytest tests/adaptation_swarm -q                               # completa (con el entorno aislado levantado)
+.venv/bin/python -m adaptation_swarm.oe.runner oe4 --label smoke --out-dir /ruta/NUEVA --limit 5 --dry-run   # luego un piloto SIN --official
+```
+**NO ejecutar hasta cumplir lo anterior:** cualquier corrida con `--official`, K = 10 v3, el panel humano, ni el benchmark de hardware (F4/F5). Los resultados históricos (K10 v2, pilotos, `gold-v1`, bibliotecas selladas) no se modifican; todo resultado nuevo va a un directorio nuevo.
+
 ## 1. Servicios
 ```
 podman-compose up -d postgres redis        # raíz del repo (docker compose up -d igual)
