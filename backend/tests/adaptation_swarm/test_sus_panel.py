@@ -192,3 +192,33 @@ def test_import_gold_case_e_unknown_participant_rolls_back_everything(repo, tmp_
     with pytest.raises(IntegrityError):                       # celda repetida por el mismo participante
         repo.import_gold_csv(f)
     assert _counts(repo) == (1, 0, 0)
+
+
+# ── OE5: resultado SUS reproducible y trazable (vectores de formato; no son respuestas de personas) ─────────────────────
+def test_export_sus_analysis_is_pending_below_ten_and_never_computes_conclusions(repo, tmp_path):
+    for i in range(3):
+        repo.register_participant(f"P{i:02d}", "ingeniero_software", consent=True)
+        repo.add_sus_response(f"P{i:02d}", [3] * 10)
+    out = repo.export_sus_analysis(tmp_path / "sus")
+    import hashlib
+    import json
+    res = json.loads((out / "sus_analysis.json").read_text())
+    assert res["status"] == PENDING and res["n_responses"] == 3 and res["analysis"]["mean"] is None and res["analysis"]["exceeds_threshold"] is None
+    assert res["threshold"] == 75.0 and res["min_evaluators"] == 10 and res["responses_by_role"] == {"ingeniero_software": 3}
+    assert res["instrument_and_script_versions"] == [{"instrument_version": "sus-brooke-1996-es", "task_script_version": "task-script-v1"}]
+    for line in (out / "SHA256SUMS").read_text().splitlines():
+        sha, name = line.split("  ")
+        assert hashlib.sha256((out / name).read_bytes()).hexdigest() == sha
+    with pytest.raises(FileExistsError):
+        repo.export_sus_analysis(tmp_path / "sus")                       # nunca sobrescribe
+
+
+def test_export_sus_analysis_with_ten_responses_contrasts_against_75(repo, tmp_path):
+    import json
+    for i, items in enumerate([[4, 2, 4, 2, 4, 2, 4, 2, 4, 2]] * 5 + [[5, 1, 5, 1, 5, 1, 5, 1, 5, 2]] * 5):
+        repo.register_participant(f"Q{i:02d}", "docente_programacion", consent=True)
+        repo.add_sus_response(f"Q{i:02d}", items)
+    res = json.loads((repo.export_sus_analysis(tmp_path / "sus10") / "sus_analysis.json").read_text())
+    a = res["analysis"]
+    assert res["n_responses"] == 10 and a["n"] == 10 and a["mean"] == pytest.approx(86.25) and a["test"] and a["test_p"] is not None
+    assert a["exceeds_threshold"] is True and res["responses_by_role"] == {"docente_programacion": 10}

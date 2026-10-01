@@ -4,6 +4,7 @@ datos por sí mismo: solo lo hace cuando una persona real aporta respuestas (CSV
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -15,7 +16,7 @@ from app.models.swarm_human_evaluation import GoldPanelArchetypeRating, GoldPane
 from adaptation_swarm.gold.rubric import GOLD_TABLE, RULE_VERSION
 from adaptation_swarm.gold.rubric_v2 import PANEL_PROTOCOL_VERSION, get_rule, official_version
 from adaptation_swarm.metrics.gold_panel import ARCHETYPES, EXPECTED_SETS, analyze_archetype_panel
-from adaptation_swarm.metrics.sus import analyze_gold_panel, analyze_sus, study_status, sus_score
+from adaptation_swarm.metrics.sus import MIN_EVALUATORS, SUS_THRESHOLD, analyze_gold_panel, analyze_sus, study_status, sus_score
 
 ROLES = ("docente_programacion", "ingeniero_software")
 INSTRUMENT_VERSION = "sus-brooke-1996-es"
@@ -212,6 +213,29 @@ class HumanEvalRepository:
                 s.rollback()
                 raise
         return len(rows)
+
+    def export_sus_analysis(self, out_dir: Path) -> Path:
+        """OE5: resultado SUS reproducible y trazable, en un directorio NUEVO: `sus_analysis.json` (análisis del plan de la asesoría contra 75, con el estado PENDIENTE mientras n < 10),
+        `sus_responses.csv` (respuestas crudas con seudónimo) y `SHA256SUMS`. Con n < 10 el análisis no calcula conclusiones (`analyze_sus`); no se simula ni se imputa nada."""
+        scores = self.sus_scores()
+        with self._sf() as s:
+            versions = sorted({(r.instrument_version, r.task_script_version) for r in s.scalars(select(SusResponse))})
+            roles: dict[str, int] = {}
+            for r in s.scalars(select(SusResponse)):
+                role = s.get(SusParticipant, r.participant_id).role
+                roles[role] = roles.get(role, 0) + 1
+        result = {"schema": "sus-analysis-v1", "threshold": SUS_THRESHOLD, "min_evaluators": MIN_EVALUATORS, "n_responses": len(scores), "status": study_status(len(scores)),
+                  "analysis": analyze_sus(scores).to_dict(), "scores": sorted(scores), "responses_by_role": roles,
+                  "instrument_and_script_versions": [{"instrument_version": i, "task_script_version": t} for i, t in versions]}
+        out = Path(out_dir)
+        out.mkdir(parents=True, exist_ok=False)
+        with (out / "sus_analysis.json").open("x", encoding="utf-8") as fh:
+            fh.write(json.dumps(result, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+        self.export_csv(out / "sus_responses.csv")
+        with (out / "SHA256SUMS").open("x", encoding="utf-8") as fh:
+            for name in ("sus_analysis.json", "sus_responses.csv"):
+                fh.write(f"{hashlib.sha256((out / name).read_bytes()).hexdigest()}  {name}\n")
+        return out
 
     def import_gold_csv(self, src: Path) -> int:
         """Importa valoraciones del panel (plantilla `gold_panel_template.csv`); el participante ya debe existir.

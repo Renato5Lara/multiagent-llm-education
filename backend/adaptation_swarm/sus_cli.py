@@ -4,6 +4,7 @@
     python -m adaptation_swarm.sus_cli add-sus --pseudonym E01 --items 4 2 5 1 4 2 5 1 4 2
     python -m adaptation_swarm.sus_cli add-gold --pseudonym E01 --archetype visual_dominant --difficulty repetitive --agrees yes
     python -m adaptation_swarm.sus_cli add-archetype --pseudonym E01 --archetype visual_dominant --approves yes    # panel por ARQUETIPO (gold-v2)
+    python -m adaptation_swarm.sus_cli export-sus-analysis --out-dir DIR_NUEVO    # OE5: análisis SUS vs 75 + respuestas crudas + SHA256SUMS
     python -m adaptation_swarm.sus_cli export-archetype --out-dir DIR_NUEVO    # resultado (AC1, crudo, matriz absoluta) + votos por evaluador
     python -m adaptation_swarm.sus_cli import-archetype --csv panel_arq.csv   # plantilla human_eval/templates/gold_panel_archetype_template.csv
     python -m adaptation_swarm.sus_cli import-sus --csv respuestas.csv      # plantilla human_eval/templates/sus_responses_template.csv
@@ -31,6 +32,7 @@ def main() -> None:
     p.add_argument("--difficulty", required=True); p.add_argument("--agrees", choices=["yes", "no"], required=True)
     p.add_argument("--rating", type=int); p.add_argument("--comment")
     p = sub.add_parser("export-archetype"); p.add_argument("--out-dir", required=True)
+    p = sub.add_parser("export-sus-analysis"); p.add_argument("--out-dir", required=True)
     p = sub.add_parser("add-archetype"); p.add_argument("--pseudonym", required=True); p.add_argument("--archetype", required=True)
     p.add_argument("--approves", choices=["yes", "no"], required=True); p.add_argument("--comment")
     for name in ("import-sus", "import-gold", "import-archetype"):
@@ -46,6 +48,8 @@ def main() -> None:
         print(f"SUS = {repo.add_sus_response(a.pseudonym, a.items)}")
     elif a.cmd == "add-gold":
         repo.add_gold_rating(a.pseudonym, a.archetype, a.difficulty, a.agrees == "yes", a.rating, a.comment)
+    elif a.cmd == "export-sus-analysis":
+        print(repo.export_sus_analysis(Path(a.out_dir)))
     elif a.cmd == "export-archetype":
         print(repo.export_archetype_panel(Path(a.out_dir)))
     elif a.cmd == "add-archetype":
