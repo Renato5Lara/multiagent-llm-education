@@ -214,3 +214,22 @@ def test_equivalence_detects_unequal_workloads():
     unequal = same + [row("a", "p3")]
     eq = runner.equivalence(unequal)
     assert eq["all_equivalent"] is False and eq["per_load_level"]["c1"]["n_requests_each"] == {"a": 3, "b": 2}
+
+
+def test_official_gate_refuses_non_target_hardware_without_relaxing_the_requirement():
+    full = oe2_systems(1)
+    bad = runner.validity("oe2", hw={"vcpu": 8, "ram_gib": 7.5}, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
+    reasons = runner.official_gate(bad)
+    assert reasons and reasons[0].startswith("hardware:")                                       # 7.5 GiB nunca habilita una ejecución oficial
+    ok_hw = runner.validity("oe2", hw={"vcpu": 8, "ram_gib": 32.0}, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
+    assert not any(r.startswith("hardware:") for r in runner.official_gate(ok_hw))               # con el hardware objetivo, el hardware deja de ser la razón
+    assert runner.TARGET_HARDWARE == {"vcpu": 8, "ram_gib": 32.0}                                # el requisito no se relajó
+
+
+def test_official_flag_aborts_before_writing_anything(tmp_path, monkeypatch):
+    monkeypatch.setattr(runner, "meets_target", lambda hw: False)
+    out = tmp_path / "nuevo"
+    monkeypatch.setattr(runner.iso, "require_isolated_redis", lambda: None)
+    with pytest.raises(SystemExit, match="OFICIAL RECHAZADA"):
+        runner.main(["oe4", "--label", "gate-test", "--out-dir", str(out), "--official", "--limit", "2"])
+    assert not out.exists()

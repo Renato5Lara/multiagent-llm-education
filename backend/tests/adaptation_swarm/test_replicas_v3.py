@@ -242,3 +242,13 @@ def test_P_the_historical_k10_v2_artifacts_and_fingerprints_are_untouched(tmp_pa
 def test_the_v3_layer_fingerprints_are_separate_and_cover_the_three_v3_modules():
     f = rp3.module_fingerprints_v3()
     assert set(f) == {"analysis/statistical_rule_v3.py", "gold/rubric_v3.py", "analysis/replicas_v3.py"} and all(len(h) == 64 for h in f.values())
+
+
+def test_an_official_execution_is_refused_on_non_target_hardware_before_writing(tmp_path, monkeypatch):
+    monkeypatch.setattr(rubric_v3, "APPROVED_RULE_VERSIONS", frozenset({rubric_v3.official_version(RULE)}))        # registro en memoria, SOLO para llegar a la puerta de hardware
+    monkeypatch.setattr(rp3, "hardware_profile", lambda: {"vcpu": 8, "ram_gib": 7.5})
+    plan = _plan(master_seed=rp3.K10_MASTER_SEED, k=10, official=True, full_rule_version=FULL, limit_profiles=None)
+    out = tmp_path / "k10_v3_no"
+    with pytest.raises(rp3.HardwareNotTarget):
+        rp3.run_replicas_v3(plan, out)
+    assert not out.exists()

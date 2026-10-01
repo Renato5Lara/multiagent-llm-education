@@ -26,6 +26,7 @@ from pathlib import Path
 import adaptation_swarm
 from adaptation_swarm.analysis import replicas as _v2_infra                     # solo utilidades PURAS y constantes (no se modifica ni se usa su puerta de aprobación)
 from adaptation_swarm.analysis import statistical_rule_v3
+from adaptation_swarm.analysis.baseline_bruteforce import TARGET_HARDWARE, hardware_profile, meets_target
 from adaptation_swarm.analysis.core_replay import replay_cycle
 from adaptation_swarm.analysis.inference import PROTOCOL as INFERENCE_PROTOCOL
 from adaptation_swarm.config import SETTINGS
@@ -79,6 +80,10 @@ def module_fingerprints_v3() -> dict[str, str]:
 def _require_v3_rule(rule: object) -> None:
     if not rubric_v3.is_registered_v3(rule):
         raise ValueError("replicas_v3 solo acepta una regla v3 REGISTRADA de `rubric_v3` (no una regla de v2, ad hoc ni alterada)")
+
+
+class HardwareNotTarget(RuntimeError):
+    """Una ejecución OFICIAL se intentó en hardware que no cumple el objetivo (8 vCPU / 32 GB, con la fracción operativa de `meets_target`)."""
 
 
 def _gate(*, official: bool, k: int, master_seed: int, rule: object, full_rule_version: str | None, limit_profiles: int | None) -> str:
@@ -172,6 +177,8 @@ def run_replicas_v3(plan: dict, out_dir: Path, *, profiles_path: Path = DEFAULT_
     """Ejecuta el plan v3: K réplicas × perfiles, en proceso (núcleo PSO+𝓕, sin Redis, LLM ni red). Devuelve el manifiesto (también escrito en `manifest.json`). El estado lo fija `revalidate_plan`, no
     el campo `status` del plan. Con un plan OFICIAL y la regla no aprobada lanza `RuleNotApproved` ANTES de crear archivo alguno."""
     status = revalidate_plan(plan, profiles_path=profiles_path, library_root=library_root)
+    if status == "OFICIAL" and not meets_target(hardware_profile()):                     # puerta de hardware: ANTES de crear archivo alguno; el requisito no se relaja
+        raise HardwareNotTarget(f"ejecución OFICIAL rechazada: el hardware medido {hardware_profile()['vcpu']} vCPU / {hardware_profile()['ram_gib']} GiB no es el objetivo {TARGET_HARDWARE}")
     library_root = Path(library_root or SETTINGS.library_root)
     store = LibraryStore.open(library_root, plan["library"]["version"])
     profiles = read_dataset(profiles_path)[: plan["dataset"]["n_used"]]

@@ -106,7 +106,7 @@ def _baseline_row(r) -> dict:
 
 
 async def run_condition(store: LibraryStore, cond: Condition, profiles: list[ProfileRequest], *, k: int, batches: int, warmup: int, batch_seed: int,
-                        fw: FitnessWeights, log=print) -> tuple[list[dict], list[dict]]:
+                        fw: FitnessWeights, log=print, batch_offset: int = 0, exec_index: int | None = None) -> tuple[list[dict], list[dict]]:
     tasks = [(p, rep) for rep in range(k) for p in profiles]
     obs: list[dict] = []
     bat: list[dict] = []
@@ -120,9 +120,9 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
             rows, elapsed = await _closed_loop(call, list(tasks), cond.concurrency)
             ok = [r for r in rows if r["status"] == "completed"]
             for r in rows:
-                r.update(condition=cond.name, batch=b, **{f"f_{kk}": vv for kk, vv in cond.factors().items()})
+                r.update(condition=cond.name, batch=b + batch_offset, exec_index=exec_index, **{f"f_{kk}": vv for kk, vv in cond.factors().items()})
             obs.extend(rows)
-            bat.append({"condition": cond.name, "batch": b, "concurrency": cond.concurrency, "n_requests": len(rows), "n_ok": len(ok), "n_failed": len(rows) - len(ok),
+            bat.append({"condition": cond.name, "batch": b + batch_offset, "exec_index": exec_index, "concurrency": cond.concurrency, "n_requests": len(rows), "n_ok": len(ok), "n_failed": len(rows) - len(ok),
                         "t_start_utc": b_started, "elapsed_s": elapsed, "throughput_rps": len(ok) / elapsed if elapsed > 0 else None})
             log(f"  {cond.name} lote {b + 1}/{batches}: {len(ok)}/{len(rows)} ok, {elapsed:.2f} s, {len(ok) / elapsed:.1f} req/s")
 
@@ -159,6 +159,22 @@ def add_optimum_gap(store: LibraryStore, profiles: list[ProfileRequest], obs: li
         r["F_opt"] = opt[r["profile_id"]]
         r["gap_vs_optimum"] = None if r.get("F") is None else opt[r["profile_id"]] - r["F"]
     return opt
+
+
+def execution_plan(conds: list[Condition], batches: int, order: str, seed: int) -> list[tuple[Condition, int, int]]:
+    """Orden de ejecución, determinista dado `seed`. `sequential`: cada condición con todos sus lotes seguidos (comportamiento original). `randomized-blocks`: `batches` RONDAS; en cada ronda todas las
+    condiciones corren una vez en orden aleatorio (semilla = seed + ronda). Reparte la deriva térmica/temporal entre condiciones (el efecto condición deja de confundirse con la posición temporal); cada observación y
+    lote registra `exec_index` para poder modelar la deriva."""
+    if order == "sequential":
+        plan = [(c, 0, len(conds)) for c in conds]
+        return plan
+    import random
+    out = []
+    for rnd in range(batches):
+        shuffled = list(conds)
+        random.Random(seed + rnd).shuffle(shuffled)
+        out += [(c, rnd, len(conds) * batches) for c in shuffled]
+    return out
 
 
 def equivalence(obs: list[dict]) -> dict:
@@ -207,7 +223,7 @@ def provenance(store: LibraryStore, profiles_path: Path, args: argparse.Namespac
             "code": _infra.code_version(), "environment": _infra.environment(), "hardware": hw, "library_version": store.version,
             "dataset": {**_infra.dataset_identity(profiles_path), "file": profiles_path.name, "file_sha256": _sha_bytes(profiles_path.read_bytes()), "n_profiles": n_profiles},
             "design": {"k_replicates": args.k, "batches": args.batches, "warmup_requests": args.warmup, "batch_seed": args.batch_seed, "concurrency_levels": args.concurrency,
-                       "design": getattr(args, "design", None), "particles": getattr(args, "particles", None)},
+                       "design": getattr(args, "design", None), "order": getattr(args, "order", "sequential"), "particles": getattr(args, "particles", None)},
             "fitness_weights": FitnessWeights().to_dict(), "redis": iso.mask(SETTINGS.redis_url), "module_fingerprints": _infra.module_fingerprints(),
             "conditions": [{"name": c.name, **c.factors(), "pso": c.pso_params().to_dict(), "pso_config_hash": c.pso_params().config_hash()} for c in conditions],
             "validity": validity(args.experiment, hw=hw, n_profiles=n_profiles, k=args.k, batches=args.batches, warmup=args.warmup, conditions=conditions),
@@ -251,6 +267,17 @@ def analyze_dir(out_dir: Path) -> dict:
     return oe_analysis.analyze(prov["experiment"], obs, bat)
 
 
+def official_gate(validity_: dict) -> list[str]:
+    """Razones por las que una ejecución declarada `--official` NO puede comenzar (lista vacía = puede). Se evalúa ANTES de conectar o escribir nada: una máquina que no cumple el hardware objetivo no puede producir
+    resultados que se confundan con oficiales (el requisito de 8 vCPU / 32 GB no se relaja). Reutiliza `validity`, sin reglas nuevas."""
+    reasons = [f"hardware: {r}" for r in validity_["reasons"] if "hardware" in r]
+    if validity_["official_execution"] == "PENDING_HARDWARE" and not reasons:
+        reasons.append(f"hardware: no cercano al objetivo {validity_['target_hardware']}")
+    reasons += [r for r in validity_["reasons"] if "hardware" not in r]
+    reasons += [f"definición bloqueada: {b}" for b in validity_["blocked_definitions"]]
+    return reasons
+
+
 def _ints(s: str) -> list[int]:
     return [int(x) for x in s.split(",") if x]
 
@@ -271,6 +298,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--particles", type=_ints, default=[10, 20, 30])
     ap.add_argument("--design", choices=("full", "ofat"), default="ofat")
     ap.add_argument("--f1-definition-version", choices=sorted(oe_defs.F1_DEFINITION_VERSIONS), help="versión de la definición F1 que la corrida declara en su provenance (este ejecutor no calcula F1; sin valor se registra `selected: null`)")
+    ap.add_argument("--order", choices=("sequential", "randomized-blocks"), default="sequential", help="orden de ejecución de las condiciones (randomized-blocks: --batches rondas con orden aleatorio por ronda)")
+    ap.add_argument("--official", action="store_true", help="declara la ejecución como OFICIAL: se niega a arrancar si el hardware objetivo o las condiciones de validez no se cumplen (sin esta marca la corrida es PILOT/exploratoria)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
     out_dir = iso.require_out_dir(args.out_dir)
@@ -289,6 +318,10 @@ def main(argv: list[str] | None = None) -> None:
         raise SystemExit(f"BLOQUEADO: la biblioteca {store.version} no cubre {len(missing)} conceptos")
     conds = conditions_for(args.experiment, args)
     prov = provenance(store, args.profiles, args, conds, len(profiles))
+    if args.official:
+        refusals = official_gate(prov["validity"])
+        if refusals:
+            raise SystemExit("EJECUCIÓN OFICIAL RECHAZADA (no se escribió nada):\n  - " + "\n  - ".join(refusals))
     if args.dry_run:
         print(f"DRY-RUN OK: {args.experiment}, {len(conds)} condiciones × {args.batches} lotes × {len(profiles)} perfiles × {args.k} réplicas; validez: {prov['validity']['status']}; "
               f"no se conectó ni se escribió nada")
@@ -301,9 +334,10 @@ def main(argv: list[str] | None = None) -> None:
         lines.append(msg)
         print(msg, flush=True)
 
-    for i, c in enumerate(conds, 1):
-        log(f"[{i}/{len(conds)}] {c.name}")
-        o, b = asyncio.run(run_condition(store, c, profiles, k=args.k, batches=args.batches, warmup=args.warmup, batch_seed=args.batch_seed, fw=fw, log=log))
+    for exec_index, (c, batch_no, n_total) in enumerate(execution_plan(conds, args.batches, args.order, args.batch_seed), 1):
+        log(f"[{exec_index}/{n_total}] {c.name} (lote {batch_no})")
+        o, b = asyncio.run(run_condition(store, c, profiles, k=args.k, batches=1 if args.order == "randomized-blocks" else args.batches, warmup=args.warmup,
+                                         batch_seed=args.batch_seed, fw=fw, log=log, batch_offset=batch_no, exec_index=exec_index))
         obs.extend(o)
         bat.extend(b)
     add_optimum_gap(store, profiles, obs, fw)
