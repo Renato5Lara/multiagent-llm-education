@@ -38,14 +38,17 @@ from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.fitness.fitness import FitnessWeights
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.oe import analysis as oe_analysis
+from adaptation_swarm.oe import definitions as oe_defs
+from adaptation_swarm.oe import export as oe_export
 from adaptation_swarm.oe.conditions import Condition, oe2_systems, oe3_full_factorial, oe3_one_factor_at_a_time, oe4_grid
 from adaptation_swarm.profiles.generator import read_dataset
 from adaptation_swarm.profiles.models import ProfileRequest
 from adaptation_swarm.profiles.w_mapping import compute_weights
+from adaptation_swarm.schemas.ids import derive_seed
 from adaptation_swarm.stack import SwarmStack
 from adaptation_swarm.tools import isolated_env as iso
 
-SCHEMA = "oe-run-v1"
+SCHEMA = "oe-run-v2"      # v2: + seed y marca de tiempo por observación, statistical_input.csv, entorno PILOT/OFFICIAL_TARGET, equivalencia y definiciones
 DEFAULT_PROFILES = _infra.DEFAULT_PROFILES
 DEFAULT_BATCH_SEED = 26093001                      # semilla de lote propia de OE2–OE4 (no reutiliza las históricas 20260923 ni la maestra de K = 10)
 MIN_BATCHES_FOR_THROUGHPUT = 5
@@ -71,10 +74,11 @@ async def _closed_loop(call: Call, tasks: list[tuple[ProfileRequest, int]], conc
     async def user() -> None:
         while queue:
             prof, rep = queue.popleft()
+            started = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
             t0 = time.perf_counter()
             out = await call(prof, rep)
             out["latency_ms"] = (time.perf_counter() - t0) * 1000.0
-            out.update(profile_id=prof.profile_id, archetype=prof.archetype.value if prof.archetype else None,
+            out.update(t_start_utc=started, profile_id=prof.profile_id, archetype=prof.archetype.value if prof.archetype else None,
                        difficulty=prof.difficulty.value if prof.difficulty else None, replicate=rep)
             rows.append(out)
 
@@ -112,13 +116,14 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
         if warm:
             await _closed_loop(call, list(warm), cond.concurrency)
         for b in range(batches):
+            b_started = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
             rows, elapsed = await _closed_loop(call, list(tasks), cond.concurrency)
             ok = [r for r in rows if r["status"] == "completed"]
             for r in rows:
                 r.update(condition=cond.name, batch=b, **{f"f_{kk}": vv for kk, vv in cond.factors().items()})
             obs.extend(rows)
             bat.append({"condition": cond.name, "batch": b, "concurrency": cond.concurrency, "n_requests": len(rows), "n_ok": len(ok), "n_failed": len(rows) - len(ok),
-                        "elapsed_s": elapsed, "throughput_rps": len(ok) / elapsed if elapsed > 0 else None})
+                        "t_start_utc": b_started, "elapsed_s": elapsed, "throughput_rps": len(ok) / elapsed if elapsed > 0 else None})
             log(f"  {cond.name} lote {b + 1}/{batches}: {len(ok)}/{len(rows)} ok, {elapsed:.2f} s, {len(ok) / elapsed:.1f} req/s")
 
     if cond.system == "swarm":
@@ -128,7 +133,7 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
             async with SwarmStack(library_version=store.version, prefix=prefix, params=params, fitness_weights=fw,
                                   protocol=cond.protocol(), replicas=cond.replicas) as stack:
                 async def call(p: ProfileRequest, rep: int) -> dict:
-                    return _swarm_row(await stack.orchestrator.run_cycle(p, batch_seed=batch_seed, replicate=rep))
+                    return {**_swarm_row(await stack.orchestrator.run_cycle(p, batch_seed=batch_seed, replicate=rep)), "seed": derive_seed(batch_seed, p.profile_id, rep)}
                 await execute(call)
         finally:                                    # limpieza DESPUÉS de detener los agentes (si no, sus consumidores pierden el grupo y registran «bus caído»)
             cleanup = await RedisBus(prefix=prefix).connect()
@@ -138,7 +143,7 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
         adapter = ConventionalAdapter(store, cond.system, fw)
 
         async def call(p: ProfileRequest, rep: int) -> dict:
-            return _baseline_row(await asyncio.to_thread(adapter.adapt, p))
+            return {**_baseline_row(await asyncio.to_thread(adapter.adapt, p)), "seed": None}      # determinista: no usa semilla
         await execute(call)
     return obs, bat
 
@@ -154,6 +159,21 @@ def add_optimum_gap(store: LibraryStore, profiles: list[ProfileRequest], obs: li
         r["F_opt"] = opt[r["profile_id"]]
         r["gap_vs_optimum"] = None if r.get("F") is None else opt[r["profile_id"]] - r["F"]
     return opt
+
+
+def equivalence(obs: list[dict]) -> dict:
+    """Condiciones EQUIVALENTES entre sistemas: a cada nivel de carga, todas las condiciones procesaron exactamente las mismas tareas (perfil, réplica) el mismo número de veces; la propuesta y los convencionales
+    comparten además biblioteca, 𝓕, hardware y proceso (una sola corrida). Se verifica con los datos crudos, no se asume."""
+    by_level: dict[int, dict[str, list]] = {}
+    for r in obs:
+        by_level.setdefault(int(r["f_concurrency"]), {}).setdefault(r["condition"], []).append((r["profile_id"], r["replicate"], r["batch"]))
+    out = {}
+    for level, conds in sorted(by_level.items()):
+        sig = {c: sorted(v) for c, v in conds.items()}
+        ref = next(iter(sig.values()))
+        out[f"c{level}"] = {"conditions": sorted(sig), "same_tasks_and_batches": all(v == ref for v in sig.values()), "n_requests_each": {c: len(v) for c, v in sig.items()}}
+    return {"per_load_level": out, "all_equivalent": all(v["same_tasks_and_batches"] for v in out.values()),
+            "shared_by_construction": ["dataset", "biblioteca", "pesos de 𝓕", "hardware y proceso", "ensamblado y validación del paquete", "semilla derivada (propuesta) / determinista (convencionales)"]}
 
 
 def conditions_for(experiment: str, args: argparse.Namespace) -> list[Condition]:
@@ -173,7 +193,11 @@ def validity(experiment: str, *, hw: dict, n_profiles: int, k: int, batches: int
     if experiment == "oe2":
         conds["propuesta_y_convencionales_presentes"] = {c.system for c in conditions} >= {"swarm", "rules", "bruteforce"}
     reasons = [f"no se cumple: {k_}" for k_, ok in conds.items() if not ok]
-    return {"conditions": conds, "status": "OFFICIAL_CANDIDATE" if not reasons else "EXPLORATORY", "reasons": reasons,
+    blocked = oe_defs.blocked_for(experiment)
+    official_execution = ("PENDING_HARDWARE" if not conds["hardware_cercano_al_objetivo"] else
+                          ("BLOCKED_DEFINITION" if blocked else ("READY" if not reasons else "NOT_READY")))
+    return {"conditions": conds, "status": "OFFICIAL_CANDIDATE" if not reasons and not blocked else "EXPLORATORY", "reasons": reasons, "blocked_definitions": blocked,
+            "official_execution": official_execution, "environment_class": "OFFICIAL_TARGET" if conds["hardware_cercano_al_objetivo"] else "PILOT",
             "target_hardware": TARGET_HARDWARE, "pending_decisions": PENDING_DECISIONS}
 
 
@@ -186,19 +210,33 @@ def provenance(store: LibraryStore, profiles_path: Path, args: argparse.Namespac
                        "design": getattr(args, "design", None), "particles": getattr(args, "particles", None)},
             "fitness_weights": FitnessWeights().to_dict(), "redis": iso.mask(SETTINGS.redis_url), "module_fingerprints": _infra.module_fingerprints(),
             "conditions": [{"name": c.name, **c.factors(), "pso": c.pso_params().to_dict(), "pso_config_hash": c.pso_params().config_hash()} for c in conditions],
-            "validity": validity(args.experiment, hw=hw, n_profiles=n_profiles, k=args.k, batches=args.batches, warmup=args.warmup, conditions=conditions)}
+            "validity": validity(args.experiment, hw=hw, n_profiles=n_profiles, k=args.k, batches=args.batches, warmup=args.warmup, conditions=conditions),
+            "definitions": {"requirements_version": oe_defs.REQUIREMENTS_VERSION, "registry": oe_defs.DEFINITIONS}}
 
 
-def write_results(out_dir: Path, prov: dict, obs: list[dict], bat: list[dict]) -> dict:
+def write_results(out_dir: Path, prov: dict, obs: list[dict], bat: list[dict], log_lines: list[str] | None = None) -> dict:
     out_dir.mkdir(parents=True, exist_ok=False)
+    label, exp = prov["label"], prov["experiment"]
+    analysis = oe_analysis.analyze(exp, obs, bat)
+    eq = equivalence(obs)
+    env = {"environment_class": prov["validity"]["environment_class"], "official_execution": prov["validity"]["official_execution"], "hardware": prov["hardware"], "software": prov["environment"],
+           "redis": prov["redis"], "target_hardware": prov["validity"]["target_hardware"], "code": prov["code"], "library_version": prov["library_version"], "dataset": prov["dataset"]}
     files = {"observations.jsonl": "\n".join(json.dumps(r, sort_keys=True, default=str) for r in obs) + "\n",
-             "batches.json": json.dumps(bat, indent=2, sort_keys=True), "provenance.json": json.dumps(prov, indent=2, sort_keys=True, default=str)}
-    analysis = oe_analysis.analyze(prov["experiment"], obs, bat)
-    files["analysis.json"] = json.dumps(analysis, indent=2, sort_keys=True, default=str)
+             "batches.json": json.dumps(bat, indent=2, sort_keys=True), "provenance.json": json.dumps({**prov, "equivalence": eq}, indent=2, sort_keys=True, default=str),
+             "analysis.json": json.dumps(analysis, indent=2, sort_keys=True, default=str),
+             "raw_observations.csv": oe_export.raw_observations_csv(label, exp, obs), "statistical_input.csv": oe_export.statistical_input_csv(label, exp, obs, bat),
+             "environment.json": json.dumps(env, indent=2, sort_keys=True, default=str),
+             "summary.json": json.dumps({"experiment": exp, "label": label, "conditions": analysis["conditions"], "equivalence": eq["all_equivalent"]}, indent=2, sort_keys=True, default=str),
+             "logs/run.log": "\n".join(log_lines or []) + "\n"}
+    (out_dir / "logs").mkdir()
     for name, text in files.items():
         with (out_dir / name).open("x", encoding="utf-8") as fh:
             fh.write(text)
-    manifest = {"schema": SCHEMA, "experiment": prov["experiment"], "validity": prov["validity"]["status"], "files": {n: _sha_bytes((out_dir / n).read_bytes()) for n in files}}
+    sums = {n: _sha_bytes((out_dir / n).read_bytes()) for n in files}
+    with (out_dir / "checksums.txt").open("x", encoding="utf-8") as fh:
+        fh.write("".join(f"{h}  {n}\n" for n, h in sorted(sums.items())))
+    manifest = {"schema": SCHEMA, "experiment": exp, "validity": prov["validity"]["status"], "environment_class": env["environment_class"], "official_execution": env["official_execution"],
+                "files": sums}
     with (out_dir / "manifest.json").open("x", encoding="utf-8") as fh:
         fh.write(json.dumps(manifest, indent=2, sort_keys=True))
     return analysis
@@ -255,14 +293,19 @@ def main(argv: list[str] | None = None) -> None:
         for r in prov["validity"]["reasons"]:
             print("  -", r)
         return
-    fw, obs, bat = FitnessWeights(), [], []
+    fw, obs, bat, lines = FitnessWeights(), [], [], []
+
+    def log(msg: str) -> None:
+        lines.append(msg)
+        print(msg, flush=True)
+
     for i, c in enumerate(conds, 1):
-        print(f"[{i}/{len(conds)}] {c.name}")
-        o, b = asyncio.run(run_condition(store, c, profiles, k=args.k, batches=args.batches, warmup=args.warmup, batch_seed=args.batch_seed, fw=fw))
+        log(f"[{i}/{len(conds)}] {c.name}")
+        o, b = asyncio.run(run_condition(store, c, profiles, k=args.k, batches=args.batches, warmup=args.warmup, batch_seed=args.batch_seed, fw=fw, log=log))
         obs.extend(o)
         bat.extend(b)
     add_optimum_gap(store, profiles, obs, fw)
-    analysis = write_results(out_dir, prov, obs, bat)
+    analysis = write_results(out_dir, prov, obs, bat, lines)
     print(f"escrito: {out_dir} ({len(obs)} observaciones; validez {prov['validity']['status']})")
     print(json.dumps(analysis.get("headline", {}), indent=2, default=str))
 

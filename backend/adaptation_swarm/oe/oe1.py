@@ -34,6 +34,9 @@ RNF03_F1 = 0.85
 RNF04_RPS, RNF04_ERROR = 20.0, 0.01
 RNF05_SUS, RNF05_MIN_N = 75.0, 10
 RELIABILITY_COMPLETION = 0.99
+COMPLIANCE_SCORE_STATE = "BLOCKED_DEFINITION"
+COMPLIANCE_SCORE_NOTE = ("No existe una definición aprobada del «puntaje de cumplimiento» (ver `oe/definitions.py`: compliance_score_oe1 PENDING). `compliance_score` por condición es una razón EXPLORATORIA "
+                         "(requisitos cumplidos / aplicables, con numerador, denominador e ids) y NO se usa para declarar ningún resultado oficial de OE1.")
 PENDING = ["Agregación de los requisitos en un «puntaje de cumplimiento» por condición y mapa requisito→dimensión: definición operativa de este estudio, por confirmar con el asesor.",
            "Latencia en proceso (sin HTTP): sustituto exploratorio de RNF01; la medición oficial es HTTP (Locust/JMeter) en el hardware objetivo.",
            "RNF03 (F1_adapt) depende de la regla v3, cuyo pre-registro no está sellado (PENDING_ADVISOR); RNF05 depende del panel humano."]
@@ -48,6 +51,7 @@ class Requirement:
     indicator: str
     threshold: str
     source: str               # de dónde sale el dato
+    evidence_kind: str = "automated"   # automated (por petición) | probe (sonda dirigida) | benchmark (medición de carga) | external (resultado oficial / humano)
 
 
 REQUIREMENTS: tuple[Requirement, ...] = (
@@ -56,14 +60,14 @@ REQUIREMENTS: tuple[Requirement, ...] = (
     Requirement("RF03", "RF", "funcionalidad", "Despacho concurrente a AG2–AG4 con trazas", "proporción de ciclos con peticiones en vuelo solapadas (inflight_overlap)", "= 100 %", "observaciones (inflight_overlap)"),
     Requirement("RF04", "RF", "funcionalidad", "AG0 ejecuta PSO y 𝓕 con log de iteraciones", "proporción de ciclos con iteraciones registradas = k_stop + 1", "= 100 %", "observaciones (iterations_logged)"),
     Requirement("RF05", "RF", "funcionalidad", "Paquete con las 4 modalidades válidas", "proporción de peticiones con paquete válido y cadena de hashes íntegra", "= 100 %", "observaciones (package_valid)"),
-    Requirement("RF06", "RF", "funcionalidad", "Métricas de cada ciclo en PostgreSQL", "proporción de ciclos persistidos completos (ciclo, iteraciones, mensajes, paquete)", "= 100 %", "sonda de persistencia"),
+    Requirement("RF06", "RF", "funcionalidad", "Métricas de cada ciclo en PostgreSQL", "proporción de ciclos persistidos completos (ciclo, iteraciones, mensajes, paquete)", "= 100 %", "sonda de persistencia", evidence_kind="probe"),
     Requirement("REL-C", "RNF", "confiabilidad", "Los ciclos terminan sin error", "tasa de ciclos completados", f"≥ {RELIABILITY_COMPLETION:.0%}", "observaciones (status)"),
-    Requirement("REL-D", "RNF", "confiabilidad", "Reproducibilidad: misma semilla ⇒ mismo resultado", "proporción de pares idénticos (S, 𝓕, k_stop, motivo)", "= 100 %", "sonda de determinismo"),
+    Requirement("REL-D", "RNF", "confiabilidad", "Reproducibilidad: misma semilla ⇒ mismo resultado", "proporción de pares idénticos (S, 𝓕, k_stop, motivo)", "= 100 %", "sonda de determinismo", evidence_kind="probe"),
     Requirement("RNF01", "RNF", "eficiencia", "Latencia L_resp < 2.0 s (P95, ≤ 25 usuarios)", "P95 de la latencia por petición (EN PROCESO, sin HTTP)", f"< {RNF01_P95_MS:.0f} ms", "observaciones (latency_ms)"),
     Requirement("RNF02", "RNF", "eficiencia", "Convergencia: T_conv ≤ 15 iteraciones y CR ≥ 98 %", "máx. k_stop y proporción de paradas por ε", f"k_stop ≤ {RNF02_KMAX} ∧ CR ≥ {RNF02_CR:.0%}", "observaciones (k_stop, stop_reason)"),
-    Requirement("RNF04", "RNF", "eficiencia", "Throughput ≥ 20 req/s con error < 1 %", "mediana del throughput por lote y tasa de error", f"≥ {RNF04_RPS:.0f} req/s ∧ error < {RNF04_ERROR:.0%}", "lotes (throughput_rps)"),
-    Requirement("RNF03", "RNF", "calidad", "F1_adapt ≥ 0.85", "F1_adapt oficial (regla v3, K = 10)", f"≥ {RNF03_F1}", "resultado oficial de F1"),
-    Requirement("RNF05", "RNF", "calidad", "Usabilidad SUS > 75 (n ≥ 10)", "media SUS y contraste contra 75", f"media > {RNF05_SUS:.0f} ∧ p < 0.05 ∧ n ≥ {RNF05_MIN_N}", "SUS (panel humano)"),
+    Requirement("RNF04", "RNF", "eficiencia", "Throughput ≥ 20 req/s con error < 1 %", "mediana del throughput por lote y tasa de error", f"≥ {RNF04_RPS:.0f} req/s ∧ error < {RNF04_ERROR:.0%}", "lotes (throughput_rps)", evidence_kind="benchmark"),
+    Requirement("RNF03", "RNF", "calidad", "F1_adapt ≥ 0.85", "F1_adapt oficial (regla v3, K = 10)", f"≥ {RNF03_F1}", "resultado oficial de F1", evidence_kind="external"),
+    Requirement("RNF05", "RNF", "calidad", "Usabilidad SUS > 75 (n ≥ 10)", "media SUS y contraste contra 75", f"media > {RNF05_SUS:.0f} ∧ p < 0.05 ∧ n ≥ {RNF05_MIN_N}", "SUS (panel humano)", evidence_kind="external"),
 )
 DIMENSIONS = ("funcionalidad", "confiabilidad", "eficiencia", "calidad")
 
@@ -91,7 +95,7 @@ def requirement_table(obs: Sequence[Mapping], bat: Sequence[Mapping], *, persist
 
     def share_req(rid: str, pred, subset) -> None:
         v, n = _share(subset, pred)
-        out[rid] = _status(v, None if v is None else v == 1.0, n=n)
+        out[rid] = _status(v, None if v is None else v == 1.0, n=n, numerator=None if v is None else round(v * n), denominator=n)
 
     share_req("RF01", lambda r: r.get("error_code") != "ProfileError", rows)
     share_req("RF02", lambda r: r.get("w_valid"), ok)
@@ -118,7 +122,7 @@ def requirement_table(obs: Sequence[Mapping], bat: Sequence[Mapping], *, persist
     out["RNF03"] = _status(None if not f1 else f1.get("f1_adapt"), None if not f1 else bool(f1["f1_adapt"] >= RNF03_F1), reason=None if f1 else "sin resultado oficial de F1 (K = 10 v3 no ejecutado)")
     sus_ok = None if not sus or sus.get("mean") is None else bool(sus["mean"] > RNF05_SUS and sus["test_p"] < 0.05 and sus["n"] >= RNF05_MIN_N)
     out["RNF05"] = _status(None if not sus else sus.get("mean"), sus_ok, n=0 if not sus else sus.get("n"), reason=None if sus_ok is not None else "sin SUS con n ≥ 10 (panel humano pendiente)")
-    return [{"id": r.id, "kind": r.kind, "dimension": r.dimension, "statement": r.statement, "indicator": r.indicator, "threshold": r.threshold, "source": r.source, **out[r.id]}
+    return [{"evidence_kind": r.evidence_kind, "id": r.id, "kind": r.kind, "dimension": r.dimension, "statement": r.statement, "indicator": r.indicator, "threshold": r.threshold, "source": r.source, **out[r.id]}
             for r in REQUIREMENTS]
 
 
@@ -146,6 +150,7 @@ def condition_compliance(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict
         tc = [r["t_conv_ms"] for r in ok if r.get("t_conv_ms") is not None]
         lat = [r["latency_ms"] for r in ok if r.get("latency_ms") is not None]
         out[cond] = {"compliance_score": (sum(r["status"] == MET for r in applicable) / len(applicable)) if applicable else None, "n_applicable": len(applicable),
+                     "n_met": sum(r["status"] == MET for r in applicable), "applicable_ids": [r["id"] for r in applicable],
                      "not_met": [r["id"] for r in applicable if r["status"] == NOT_MET], "gap_vs_optimum": sum(gaps) / len(gaps) if gaps else None,
                      "t_conv_ms_median": sorted(tc)[len(tc) // 2] if tc else None, "latency_p95_ms": latency_report(lat)["p95_ms"] if lat else None,
                      "throughput_median_rps": thr[len(thr) // 2] if thr else None}
@@ -155,7 +160,8 @@ def condition_compliance(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict
 def relationship(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict:
     per = condition_compliance(obs, bat)
     scores = {c: v["compliance_score"] for c, v in per.items() if v["compliance_score"] is not None}
-    res: dict = {"per_condition": per, "n_conditions": len(scores)}
+    res: dict = {"OE1_COMPLIANCE_SCORE": COMPLIANCE_SCORE_STATE, "compliance_score_note": COMPLIANCE_SCORE_NOTE,
+                 "per_condition": per, "n_conditions": len(scores)}
     names = sorted(scores)
     rel: dict = {}
     for ind in ("gap_vs_optimum", "t_conv_ms_median", "latency_p95_ms", "throughput_median_rps"):
@@ -291,7 +297,11 @@ def main(argv: list[str] | None = None) -> None:
     f1 = json.loads(a.f1_json.read_text(encoding="utf-8")) if a.f1_json else None
     table = requirement_table(obs, bat, persistence=persistence, determinism=determinism, f1=f1)
     dims, rel = dimension_summary(table), relationship(obs, bat)
-    report = {"schema": "oe1-report-v1", "runs": [str(p) for p in a.runs], "run_labels": labels, "table": table, "dimensions": dims, "relationship": rel,
+    from adaptation_swarm.oe import definitions as defs
+    report = {"schema": "oe1-report-v2", "OE1_COMPLIANCE_SCORE": COMPLIANCE_SCORE_STATE, "requirements_version": defs.REQUIREMENTS_VERSION,
+              "requirements_universe": [r.id for r in REQUIREMENTS], "evaluated_ids": [r["id"] for r in table if r["status"] != NOT_MEASURED],
+              "evidence_by_requirement": {r["id"]: {"kind": r["evidence_kind"], "source": r["source"], "status": r["status"], "numerator": r.get("numerator"), "denominator": r.get("denominator")} for r in table},
+              "runs": [str(p) for p in a.runs], "run_labels": labels, "table": table, "dimensions": dims, "relationship": rel,
               "determinism": determinism, "persistence": persistence, "pending_decisions": PENDING}
     out_dir.mkdir(parents=True, exist_ok=False)
     files = {"oe1_report.json": json.dumps(report, indent=2, sort_keys=True, default=str), "oe1_report.md": render_markdown(table, dims, rel)}
@@ -299,7 +309,7 @@ def main(argv: list[str] | None = None) -> None:
         with (out_dir / n).open("x", encoding="utf-8") as fh:
             fh.write(t)
     with (out_dir / "manifest.json").open("x", encoding="utf-8") as fh:
-        fh.write(json.dumps({"schema": "oe1-report-v1", "files": {n: _sha_bytes((out_dir / n).read_bytes()) for n in files}}, indent=2, sort_keys=True))
+        fh.write(json.dumps({"schema": "oe1-report-v2", "files": {n: _sha_bytes((out_dir / n).read_bytes()) for n in files}}, indent=2, sort_keys=True))
     print(files["oe1_report.md"])
 
 

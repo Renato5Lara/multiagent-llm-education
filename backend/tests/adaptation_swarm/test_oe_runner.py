@@ -58,9 +58,12 @@ def test_validity_requires_all_conditions_and_lists_reasons():
     hw_bad = {"vcpu": 8, "ram_gib": 7.5}
     full = oe2_systems(1)
     ok = runner.validity("oe2", hw=hw_ok, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
-    assert ok["status"] == "OFFICIAL_CANDIDATE" and not ok["reasons"]
+    assert not ok["reasons"] and ok["blocked_definitions"] == ["t_conv_baselines", "statistical_unit_performance"]          # todo medido, pero hay definiciones PENDING
+    assert ok["status"] == "EXPLORATORY" and ok["official_execution"] == "BLOCKED_DEFINITION" and ok["environment_class"] == "OFFICIAL_TARGET"
+    assert runner.validity("oe3", hw=hw_ok, n_profiles=100, k=10, batches=1, warmup=10, conditions=[])["blocked_definitions"] == ["statistical_unit_performance"]
     bad = runner.validity("oe2", hw=hw_bad, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
     assert bad["status"] == "EXPLORATORY" and bad["reasons"] == ["no se cumple: hardware_cercano_al_objetivo"]
+    assert bad["official_execution"] == "PENDING_HARDWARE" and bad["environment_class"] == "PILOT"
     assert runner.validity("oe2", hw=hw_ok, n_profiles=100, k=10, batches=5, warmup=10, conditions=full[:2])["status"] == "EXPLORATORY"
     assert runner.validity("oe3", hw=hw_ok, n_profiles=100, k=3, batches=1, warmup=10, conditions=[])["status"] == "EXPLORATORY"
     assert runner.PENDING_DECISIONS and "convencional" in runner.PENDING_DECISIONS[0]
@@ -167,11 +170,26 @@ async def test_end_to_end_small_run_writes_reproducible_results(store, profiles,
         experiment, label, k, batches, warmup, batch_seed, concurrency, design, particles = "oe2", "t", 1, 3, 2, runner.DEFAULT_BATCH_SEED, [2], None, None
 
     prov = runner.provenance(store, runner.DEFAULT_PROFILES, Args, oe2_systems(2), len(profs))
+    assert prov["definitions"]["registry"]["compliance_score_oe1"]["status"] == "PENDING" and prov["validity"]["blocked_definitions"]
     assert prov["validity"]["status"] == "EXPLORATORY" and prov["library_version"] == store.version and prov["code"]["commit"]
     out = tmp_path / "run"
     analysis = runner.write_results(out, prov, obs, bat)
     manifest = json.loads((out / "manifest.json").read_text())
-    assert manifest["validity"] == "EXPLORATORY" and set(manifest["files"]) == {"observations.jsonl", "batches.json", "provenance.json", "analysis.json"}
+    assert manifest["validity"] == "EXPLORATORY" and manifest["environment_class"] == "PILOT" and manifest["official_execution"] == "PENDING_HARDWARE"
+    assert set(manifest["files"]) == {"observations.jsonl", "batches.json", "provenance.json", "analysis.json", "raw_observations.csv", "statistical_input.csv", "environment.json", "summary.json", "logs/run.log"}
+    sums = dict(reversed(l.split("  ")) for l in (out / "checksums.txt").read_text().splitlines())
+    assert sums == manifest["files"]                                                                      # checksums.txt = hashes del manifiesto
+    # datos crudos para la fase estadística: una fila por observación (con semilla y marca de tiempo) y formato largo por métrica
+    import csv
+    raw = list(csv.DictReader((out / "raw_observations.csv").open(encoding="utf-8")))
+    assert len(raw) == len(obs) and all(r["t_start_utc"] and r["run_label"] == "t" for r in raw)
+    assert all(r["seed"] for r in raw if r["f_system"] == "swarm") and all(r["seed"] == "" for r in raw if r["f_system"] != "swarm")
+    long = list(csv.DictReader((out / "statistical_input.csv").open(encoding="utf-8")))
+    assert {r["metric"] for r in long} >= {"t_conv_ms", "latency_ms", "throughput_rps", "gap_vs_optimum"}
+    assert sum(1 for r in long if r["metric"] == "latency_ms") == len(obs) and sum(1 for r in long if r["metric"] == "throughput_rps") == len(bat)
+    assert all(r["unit_type"] == "batch" for r in long if r["metric"] == "throughput_rps") and all(r["unit_id"].startswith("batch:") for r in long if r["unit_type"] == "batch")
+    eq = json.loads((out / "provenance.json").read_text())["equivalence"]
+    assert eq["all_equivalent"] and set(eq["per_load_level"]["c2"]["conditions"]) == {c.name for c in oe2_systems(2)}
     for name, sha in manifest["files"].items():
         assert runner._sha_bytes((out / name).read_bytes()) == sha
     assert json.loads(json.dumps(runner.analyze_dir(out), sort_keys=True, default=str)) == json.loads(json.dumps(analysis, sort_keys=True, default=str))   # análisis reproducible
@@ -186,3 +204,13 @@ async def test_swarm_condition_variants_all_complete(store, profiles):
     for cond in (Condition(dispatch="sequential"), Condition(broadcast_gbest=False), Condition(heuristic_seed=False), Condition(mechanism="cognitive"), Condition(replicas=2)):
         o, _ = await runner.run_condition(store, cond, profs, k=1, batches=1, warmup=0, batch_seed=runner.DEFAULT_BATCH_SEED, fw=FitnessWeights(), log=lambda *_: None)
         assert len(o) == 3 and all(r["status"] == "completed" and r["package_valid"] for r in o), cond.name
+
+
+def test_equivalence_detects_unequal_workloads():
+    def row(cond, pid, rep=0, batch=0, level=1):
+        return {"condition": cond, "profile_id": pid, "replicate": rep, "batch": batch, "f_concurrency": level}
+    same = [row(c, p) for c in ("a", "b") for p in ("p1", "p2")]
+    assert runner.equivalence(same)["all_equivalent"] is True
+    unequal = same + [row("a", "p3")]
+    eq = runner.equivalence(unequal)
+    assert eq["all_equivalent"] is False and eq["per_load_level"]["c1"]["n_requests_each"] == {"a": 3, "b": 2}

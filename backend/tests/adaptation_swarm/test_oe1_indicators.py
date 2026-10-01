@@ -94,6 +94,16 @@ def test_relationship_detects_a_known_association():
     assert req["n_compliant"] == 100 and req["n_non_compliant"] == 100 and req["significant"] is True and req["mean_a"] < req["mean_b"]
 
 
+def test_compliance_score_is_blocked_by_definition_and_requirements_carry_evidence():
+    rel = oe1.relationship(_obs(), _bat())
+    assert rel["OE1_COMPLIANCE_SCORE"] == "BLOCKED_DEFINITION" and "NO se usa" in rel["compliance_score_note"]
+    c = rel["per_condition"]["swarm|a"]
+    assert c["n_met"] == len(c["applicable_ids"]) and "RF01" in c["applicable_ids"]
+    t = _by_id(oe1.requirement_table(_obs(n=18) + _obs(n=2, status="failed", package_valid=False), _bat()))
+    assert (t["RF05"]["numerator"], t["RF05"]["denominator"]) == (18, 20) and t["RF05"]["evidence_kind"] == "automated"
+    assert {r["id"]: r["evidence_kind"] for r in t.values()}["RF06"] == "probe" and t["RNF04"]["evidence_kind"] == "benchmark" and t["RNF05"]["evidence_kind"] == "external"
+
+
 def test_markdown_renders_every_requirement():
     t = oe1.requirement_table(_obs(), _bat())
     md = oe1.render_markdown(t, oe1.dimension_summary(t), oe1.relationship(_obs(), _bat()))
