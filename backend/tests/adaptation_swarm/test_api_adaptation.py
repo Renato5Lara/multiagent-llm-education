@@ -78,3 +78,27 @@ async def test_package_exposes_svg_and_cpp_when_the_library_has_them(client, sli
         assert svg.status_code == 200 and svg.headers["content-type"] == "image/svg+xml" and svg.content.startswith(b"<svg")
     if store.cpp(slice_profile.concept_id, pkg["code"]["variant"]) is not None:
         assert "int main" in pkg["code"]["cpp"]["source"]
+
+
+# ── OE2: sistemas convencionales detrás del mismo servidor ─────────────────────────────────────────────────────────
+@pytest.mark.requires_library_audio
+@pytest.mark.parametrize("system", ["rules", "bruteforce"])
+async def test_baseline_endpoint_returns_the_same_kind_of_package(client, slice_profile, system):
+    r = await client.post(f"/api/adaptation/baseline/{system}", json=slice_profile.model_dump(mode="json"), headers={"X-Swarm-Key": KEY})
+    assert r.status_code == 200, r.text
+    out = r.json()
+    pkg = out["package"]
+    assert out["system"] == system and out["status"] == "completed" and 0 < out["metrics"]["t_conv_ms"] <= out["metrics"]["total_ms"]
+    assert pkg["chain_valid"] and pkg["validation"]["valid"] and pkg["code"]["source"] and pkg["diagram"]["mermaid"] and pkg["text"]["text"]
+    assert (out["metrics"]["n_evaluations"] == 6561) == (system == "bruteforce")
+    audio = await client.get(pkg["audio"]["url"], headers={"X-Swarm-Key": KEY})
+    assert audio.status_code == 200 and audio.headers["content-type"] == "audio/mpeg"
+
+
+async def test_baseline_endpoint_security_and_validation(client, slice_profile, monkeypatch):
+    body = slice_profile.model_dump(mode="json")
+    assert (await client.post("/api/adaptation/baseline/rules", json=body)).status_code == 401
+    assert (await client.post("/api/adaptation/baseline/otro", json=body, headers={"X-Swarm-Key": KEY})).status_code == 404
+    assert (await client.post("/api/adaptation/baseline/rules", json={"profile_id": "x", "nivel": 5}, headers={"X-Swarm-Key": KEY})).status_code == 422
+    monkeypatch.delenv("SWARM_API_KEY")
+    assert (await client.post("/api/adaptation/baseline/rules", json=body, headers={"X-Swarm-Key": KEY})).status_code == 503

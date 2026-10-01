@@ -21,6 +21,7 @@ DATASET = Path(__file__).resolve().parents[2] / "datasets" / "synthetic_profiles
 PROFILES = [json.loads(l) for l in DATASET.read_text(encoding="utf-8").splitlines() if l.strip()]
 KEY = os.environ.get("SWARM_API_KEY", "")
 BATCH_SEED = int(os.environ.get("SWARM_LOAD_BATCH_SEED", "20260923"))
+SYSTEM = os.environ.get("SWARM_LOAD_SYSTEM", "swarm")      # OE2: swarm (propuesta) | rules | bruteforce (sistemas convencionales, mismo servidor y mismo paquete)
 
 
 class AdaptationUser(HttpUser):
@@ -33,7 +34,8 @@ class AdaptationUser(HttpUser):
     def adapt(self):
         profile = self.rng.choice(PROFILES)
         with self.client.post(
-            f"/api/adaptation?batch_seed={BATCH_SEED}&replicate={self.rng.randint(0, 10**6)}", json=profile,
+            f"/api/adaptation?batch_seed={BATCH_SEED}&replicate={self.rng.randint(0, 10**6)}" if SYSTEM == "swarm"
+            else f"/api/adaptation/baseline/{SYSTEM}", json=profile,
             headers={"X-Swarm-Key": KEY}, name="POST /api/adaptation", catch_response=True,
         ) as resp:
             if resp.status_code != 200:

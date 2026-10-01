@@ -7,6 +7,8 @@
   · Seguro por defecto: exige la cabecera `X-Swarm-Key` == variable de entorno `SWARM_API_KEY`; si la
     variable no está definida, el endpoint responde 503 (no hay acceso anónimo al cómputo).
   · `SWARM_API_PERSIST=0` desactiva la persistencia (debe declararse en cualquier medición).
+  · `POST /api/adaptation/baseline/{system}` (OE2): el sistema CONVENCIONAL (`rules` | `bruteforce`, `baselines/conventional.py`) detrás del MISMO servidor, la misma clave y el mismo paquete,
+    para comparar latencia y throughput HTTP con la propuesta bajo condiciones equivalentes (mismo host, mismos workers, misma herramienta de carga). No usa Redis ni persiste.
 """
 
 from __future__ import annotations
@@ -21,6 +23,9 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
+from adaptation_swarm.baselines.conventional import SYSTEMS as BASELINE_SYSTEMS, ConventionalAdapter
+from adaptation_swarm.config import SETTINGS
+from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.profiles.models import ProfileRequest
 from adaptation_swarm.stack import SwarmStack
 
@@ -30,6 +35,7 @@ _stack: SwarmStack | None = None
 _lock: asyncio.Lock | None = None
 _repo = None
 _bg: set[asyncio.Task] = set()
+_baselines: dict[str, ConventionalAdapter] = {}
 
 
 def _check_key(x_swarm_key: str | None) -> None:
@@ -94,6 +100,27 @@ async def adapt(
     out["package"]["audio"]["url"] = f"/api/adaptation/audio/{result.package['audio']['content_id']}"
     if (out["package"]["diagram"].get("svg") or None) is not None:
         out["package"]["diagram"]["svg"]["url"] = f"/api/adaptation/diagram/{out['package']['diagram']['svg']['content_id']}.svg"
+    return out
+
+
+@router.post("/baseline/{system}")
+async def adapt_baseline(system: str, profile: dict[str, Any], x_swarm_key: str | None = Header(default=None)):
+    """Sistema convencional (OE2) con el mismo contrato de respuesta que `POST /api/adaptation` (paquete + métricas)."""
+    _check_key(x_swarm_key)
+    if system not in BASELINE_SYSTEMS:
+        raise HTTPException(404, f"sistema convencional desconocido: {system!r} (válidos: {', '.join(BASELINE_SYSTEMS)})")
+    try:
+        prof = ProfileRequest.model_validate(profile)
+    except ValidationError as exc:
+        raise HTTPException(422, exc.errors(include_url=False, include_context=False))
+    if system not in _baselines:
+        _baselines[system] = ConventionalAdapter(LibraryStore.open(SETTINGS.library_root), system)
+    r = await asyncio.to_thread(_baselines[system].adapt, prof)       # servidor síncrono: un hilo por petición
+    if r.status != "completed":
+        raise HTTPException(502, {"system": system, "error": r.error})
+    out = {"system": system, "profile_id": r.profile_id, "status": r.status, "g_best": {"S": r.S, "F": r.F, "predicted_dominant": r.predicted_dominant},
+           "metrics": {"t_conv_ms": r.t_conv_ms, "total_ms": r.total_ms, "n_evaluations": r.n_evaluations}, "package": r.package}
+    out["package"]["audio"]["url"] = f"/api/adaptation/audio/{r.package['audio']['content_id']}"
     return out
 
 
