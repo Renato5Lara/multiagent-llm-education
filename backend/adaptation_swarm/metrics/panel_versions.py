@@ -5,8 +5,8 @@ Existe para que un juicio humano NUNCA pueda quedar registrado bajo una versión
 es el gold v2 HISTÓRICO. Aquí se elige la configuración y se corrige el reporte (`expected_sets`, `panel_protocol`, `rule_version`) para la versión seleccionada.
 
     v2  HISTÓRICO OFICIAL        `panel-arq-ac1-maj-tie0-v2` · gold `gold-v2-cand-A` · inclusión `incl-ge1` (valores sellados en `rubric_v2`; no se cambia nada)
-    v3  PROVISIONAL (preparación técnica) — NO aprobado: el `panel_protocol_version` y la `full_rule_version` oficiales de v3 están PENDIENTES (asesor). Los identificadores de abajo son INTERNOS y se distinguen
-        a propósito del ejemplo del asesor para que no puedan confundirse con una decisión; NO se registran en ningún `APPROVED_RULE_VERSIONS` y no sirven para una evaluación oficial. Los conjuntos esperados son los de la
+    v3  DEFINIDO, NO APROBADO — `panel_protocol_version` y `full_rule_version` son identificadores técnicos definidos en `rubric_v3` (el nombre es una decisión de ingeniería; los componentes del protocolo son
+        los cerrados en DECISION-CLOSURE §15). NO se registran en ningún `APPROVED_RULE_VERSIONS` hasta el sellado del pre-registro v3: no sirven para una evaluación oficial. Los conjuntos esperados son los de la
         matriz P2 del 28/09 (`rubric_v3`); el panel valida el GOLD: la inclusión F1 (`incl-rel20`) no se recalcula aquí.
 
 Resolución sin inferencias: `get_panel_spec(<protocolo>)` y `spec_for_rule_version(<rule_version>)` lanzan `KeyError` si no están registrados; no existe ningún camino v3 → v2.
@@ -26,8 +26,8 @@ from adaptation_swarm.pso.space import MODALITIES
 STATUS_V2 = "HISTORICAL_OFFICIAL_V2"
 STATUS_V3 = "PROVISIONAL_TECHNICAL_PREPARATION_V3_NOT_APPROVED"
 
-V3_PROVISIONAL_PROTOCOL = "provisional-panel-v3-unsealed"                          # identificador INTERNO; no es el valor oficial pendiente (ni el ejemplo del asesor)
-V3_PROVISIONAL_RULE_VERSION = f"{rubric_v3.RULE_VERSION}+samples+{V3_PROVISIONAL_PROTOCOL}"
+V3_PROTOCOL = rubric_v3.PANEL_PROTOCOL_VERSION                                         # identificador técnico definido en rubric_v3; su APROBACIÓN se registra con el sellado
+V3_RULE_VERSION = rubric_v3.FULL_RULE_VERSION
 
 
 @dataclass(frozen=True)
@@ -55,7 +55,7 @@ def _ordered(sets: Mapping[Archetype, frozenset[str]]) -> dict[str, tuple[str, .
 
 _V2_RULE = get_rule_v2("gold-v2-cand-A", "incl-ge1")
 SPEC_V2 = PanelSpec(V2_PROTOCOL, official_version_v2(_V2_RULE), "gold-v2-cand-A", "incl-ge1", dict(gold_panel.EXPECTED_SETS), "gold_panel_archetype_template.csv", STATUS_V2)
-SPEC_V3 = PanelSpec(V3_PROVISIONAL_PROTOCOL, V3_PROVISIONAL_RULE_VERSION, rubric_v3.GOLD_RULE_VERSION, rubric_v3.INCLUSION_RULE_ID,
+SPEC_V3 = PanelSpec(V3_PROTOCOL, V3_RULE_VERSION, rubric_v3.GOLD_RULE_VERSION, rubric_v3.INCLUSION_RULE_ID,
                     _ordered(rubric_v3.GOLD_RULES[rubric_v3.GOLD_RULE_VERSION].expected_by_archetype), "gold_panel_archetype_template_v3_provisional.csv", STATUS_V3)
 
 PANEL_SPECS: dict[str, PanelSpec] = {s.panel_protocol_version: s for s in (SPEC_V2, SPEC_V3)}

@@ -1,7 +1,8 @@
 """`analysis/preregistration_v3.py` — pre-registro de K = 10 v3 como BORRADOR BLOQUEADO (capa aditiva; el de K = 10 v2 no se toca). Pruebas PURAS: leen artefactos y no escriben nada; NO ejecutan K = 10 v3 ni sellan.
 
 Los valores aprobados (P1, P2, P3, semillas, regla estadística, componentes de P4) se escriben AQUÍ de forma independiente (tomados de la especificación aprobada) y se comparan con lo que registra el módulo.
-Lo que NO está cerrado (versión del protocolo del panel, biblioteca oficial de v3, hardware, entorno, declaraciones) debe quedar PENDING_ADVISOR y bloquear el sellado sin inventar ningún valor.
+Lo que NO está cerrado (hardware, entorno oficial, originales del asesor, declaraciones y, si no se verifica idéntica a la de v2, la biblioteca) debe quedar PENDING_ADVISOR y bloquear el sellado sin inventar ningún valor.
+El nombre del protocolo del panel y la `full_rule_version` son identificadores técnicos definidos en `rubric_v3`.
 """
 
 import ast
@@ -138,9 +139,11 @@ def test_E_the_integration_no_longer_appears_as_pending(doc):
 
 def test_F_G_H_closing_the_integration_does_not_make_the_draft_sealable_and_keeps_every_advisor_pending(doc):
     assert doc["status"] == "DRAFT_BLOCKED" and pr3.is_sealable(doc) is False and doc["sealing"]["sealable"] is False
-    assert set(pr3.pending_fields(doc)) == {"rule.P4_panel.panel_protocol_version", "rule.full_rule_version", "library.version", "environment.hardware", "environment.software_environment",
-                                            "execution_constraints.declaration_f1_not_computed_before_sealing", "execution_constraints.advisor_originals_annexed",
-                                            "execution_constraints.tesista_confirmation_statistical_rule"}
+    expected = {"environment.hardware", "environment.software_environment", "execution_constraints.declaration_f1_not_computed_before_sealing",
+                "execution_constraints.advisor_originals_annexed", "execution_constraints.tesista_confirmation_statistical_rule"}
+    if doc["library"]["version"]["same_as_k10_v2"] is not True:
+        expected.add("library.version")
+    assert set(pr3.pending_fields(doc)) == expected
     assert all(f["value"] is None for p, f in pr3._walk(doc) if f["status"] == "PENDING_ADVISOR")                # ninguno recibió un valor
     with pytest.raises(pr3.PreregistrationNotSealable):
         pr3.require_sealable(doc)
@@ -179,7 +182,10 @@ def test_K_the_library_requires_an_explicit_version_and_is_not_sealed_silently(d
     lib = doc["library"]
     assert lib["explicit_version_required"]["value"] is True
     v = lib["version"]
-    assert v["status"] == "PENDING_ADVISOR" and v["value"] is None                      # no se declara oficial solo porque exista localmente
+    if v["same_as_k10_v2"] is True:                                                      # solo se cierra si el manifiesto local es idéntico al de K = 10 v2
+        assert v["status"] == "DERIVED" and v["value"] == "lib-v10-5dd83cd4"
+    else:
+        assert v["status"] == "PENDING_ADVISOR" and v["value"] is None
     assert v["proposed"] == "lib-v10-5dd83cd4" and v["exists_locally"] is True
     manifest = Path(SETTINGS.library_root) / "lib-v10-5dd83cd4" / "manifest.json"
     assert v["manifest_sha256_local"] == hashlib.sha256(manifest.read_bytes()).hexdigest() and doc["traceability"]["library_manifest_sha256"] == v["manifest_sha256_local"]
@@ -193,12 +199,14 @@ def test_an_unknown_library_version_is_reported_as_not_existing(tmp_path):
 
 
 # ── L · M · P4 ───────────────────────────────────────────────────────────────────────────────────────────────────
-def test_L_p4_does_not_invent_a_panel_protocol_version(doc):
+def test_L_p4_panel_protocol_version_is_the_technical_v3_identifier_and_never_the_v2_one(doc):
     v = doc["rule"]["P4_panel"]["panel_protocol_version"]
-    assert v["status"] == "PENDING_ADVISOR" and v["value"] is None
+    assert v["status"] == "CLOSED" and v["value"] == "panel-arq-ac1-maj-tie0-v3"
     text = pr3.canonical_bytes(doc).decode("utf-8")
-    assert "panel-arq" not in text                                                        # ninguna cadena de versión del panel, ni v2 ni v3
-    assert doc["rule"]["full_rule_version"]["value"] is None and doc["rule"]["full_rule_version"]["status"] == "PENDING_ADVISOR"
+    assert "panel-arq-ac1-maj-tie0-v2" not in text                                        # el protocolo v2 no se filtra al pre-registro v3
+    f = doc["rule"]["full_rule_version"]
+    assert f["status"] == "DERIVED" and f["value"] == "gold-v3-multimodal+incl-rel20+samples+panel-arq-ac1-maj-tie0-v3" and len(f["value"]) <= 80
+    assert pr3.full_rule_version(doc) == f["value"]
 
 
 def test_M_the_defined_p4_components_are_kept_separately_from_the_version(doc):
@@ -216,11 +224,11 @@ def test_M_the_defined_p4_components_are_kept_separately_from_the_version(doc):
 def test_N_pending_advisor_fields_block_the_seal(doc):
     d = pr3.sealing_diagnosis(doc)
     assert pr3.is_sealable(doc) is False and d["sealable"] is False and doc["status"] == "DRAFT_BLOCKED" and doc["sealing"] == d
-    assert {"rule.P4_panel.panel_protocol_version", "rule.full_rule_version", "library.version", "environment.hardware", "environment.software_environment"} <= set(d["pending"])
-    assert d["pending_integration"] == [] and d["n_pending"] == len(d["pending"]) == 8 and d["n_closed"] > 20 and d["n_derived"] >= 3
+    assert {"environment.hardware", "environment.software_environment"} <= set(d["pending"])
+    assert d["pending_integration"] == [] and d["n_pending"] == len(d["pending"]) == (5 if doc["library"]["version"]["same_as_k10_v2"] is True else 6) and d["n_closed"] > 20 and d["n_derived"] >= 3
     with pytest.raises(pr3.PreregistrationNotSealable) as exc:
         pr3.require_sealable(doc)
-    assert exc.value.diagnosis["sealable"] is False and "library.version" in exc.value.diagnosis["pending"]
+    assert exc.value.diagnosis["sealable"] is False and "environment.hardware" in exc.value.diagnosis["pending"]
 
 
 def test_N_the_hardware_is_a_target_but_not_a_closed_condition(doc):
@@ -243,12 +251,12 @@ def test_N_the_seal_is_blocked_only_by_the_statuses_not_by_hidden_rules(doc):
     assert pr3.is_sealable(doc) is False                                                       # el documento real no cambió
 
 
-def test_O_full_rule_version_is_not_invented_and_follows_the_v2_scheme_only_when_p4_is_closed(doc):
-    assert pr3.full_rule_version(doc) is None
-    closed = copy.deepcopy(doc)
-    closed["rule"]["P4_panel"]["panel_protocol_version"].update(status="CLOSED", value="panel-PRUEBA")         # cadena ficticia SOLO en una copia de la prueba
-    assert pr3.full_rule_version(closed) == "gold-v3-multimodal+incl-rel20+samples+panel-PRUEBA"
-    assert pr3.full_rule_version(doc) is None
+def test_O_full_rule_version_follows_the_v2_scheme_and_is_none_if_the_panel_protocol_is_missing(doc):
+    assert pr3.full_rule_version(doc) == "gold-v3-multimodal+incl-rel20+samples+panel-arq-ac1-maj-tie0-v3"
+    assert pr3.full_rule_version(doc).split("+")[2] == rubric_v3.AGGREGATION_ID == evaluation_v3.OFFICIAL_AGGREGATION          # la agregación del identificador ES la de la métrica (P3)
+    open_ = copy.deepcopy(doc)
+    open_["rule"]["P4_panel"]["panel_protocol_version"].update(status="PENDING_ADVISOR", value=None)
+    assert pr3.full_rule_version(open_) is None                                                              # nunca se inventa si el protocolo falta
 
 
 def test_every_field_has_a_valid_state_a_source_and_pending_fields_have_no_value(doc):

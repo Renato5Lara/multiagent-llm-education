@@ -60,14 +60,14 @@ def test_v3_returns_the_p2_matrix_and_is_provisional_not_approved():
     assert (V3.gold_rule_version, V3.inclusion_rule_id) == (rubric_v3.GOLD_RULE_VERSION, "incl-rel20") and V3.status == pv.STATUS_V3 and V3.official is False
     assert V3.rule_version not in rubric_v3.APPROVED_RULE_VERSIONS and V3.rule_version not in rubric_v2.APPROVED_RULE_VERSIONS
     assert rubric_v3.APPROVED_RULE_VERSIONS == frozenset()                                  # nada aprobó v3
-    assert "panel-arq-ac1-maj-tie0-v3" not in V3.panel_protocol_version                     # el ejemplo del asesor NO se usa como valor
+    assert V3.panel_protocol_version == "panel-arq-ac1-maj-tie0-v3" != V2.panel_protocol_version                     # el ejemplo del asesor NO se usa como valor
     assert V3.rule_version != V2.rule_version and V3.panel_protocol_version != V2.panel_protocol_version and len(V3.rule_version) <= 80
 
 
 def test_resolution_has_no_silent_fallback_between_versions():
     assert pv.get_panel_spec(V2.panel_protocol_version) is V2 and pv.get_panel_spec(V3.panel_protocol_version) is V3
     assert pv.spec_for_rule_version(V2.rule_version) is V2 and pv.spec_for_rule_version(V3.rule_version) is V3
-    for bad in ("panel-arq-ac1-maj-tie0-v3", "", "v3", "gold-v3-multimodal+incl-rel20"):
+    for bad in ("panel-arq-ac1-maj-tie0-v4", "", "v3", "gold-v3-multimodal+incl-rel20"):
         with pytest.raises(KeyError):
             pv.get_panel_spec(bad)
         with pytest.raises(KeyError):
@@ -117,7 +117,7 @@ def test_a_v3_csv_stored_as_v3_works_structurally_and_is_reported_as_v3_not_offi
     ([_row(V3), _row(V2, who="F02")], {}, "mezcla versiones de panel"),                                    # CSV con ambas
     ([_row(V3, proto="")], {}, "no informan `panel_protocol_version`"),                                    # v3 sin protocolo explícito: no hay fallback a v2
     ([_row(V3, rule="")], {}, "falta `rule_version`"),
-    ([_row(V3)], {"panel_protocol_version": "panel-arq-ac1-maj-tie0-v3"}, "no registrado|no coincide"),    # el ejemplo del asesor NO es un valor registrado
+    ([_row(V3)], {"panel_protocol_version": "panel-arq-ac1-maj-tie0-v4"}, "no registrado|no coincide"),    # el ejemplo del asesor NO es un valor registrado
 ])
 def test_any_v2_v3_inconsistency_is_rejected_without_persisting_anything(repo, tmp_path, rows, kwargs, match):
     with pytest.raises(ValueError, match=match):
@@ -149,7 +149,7 @@ def test_no_path_persists_a_v3_judgment_under_the_v2_key(repo, tmp_path):
     assert _stored(repo) == sorted([V2.rule_version, V3.rule_version])
     assert repo.archetype_votes(V3.rule_version)["visual_dominant"] == [True] and repo.archetype_votes(V2.rule_version)["visual_dominant"] == [False]
     with pytest.raises(KeyError):
-        repo.archetype_panel_result("gold-v3-multimodal+incl-rel20+samples+panel-arq-ac1-maj-tie0-v3")        # el ejemplo del asesor tampoco resuelve
+        repo.archetype_panel_result("gold-v3-multimodal+incl-rel20+samples+panel-arq-ac1-maj-tie0-v4")        # una versión no registrada no resuelve
 
 
 def test_blank_templates_import_nothing_and_v2_status_report_is_unchanged(repo, tmp_path):

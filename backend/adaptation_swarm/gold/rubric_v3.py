@@ -33,6 +33,11 @@ STATUS_OFFICIAL = "OFICIAL"
 GOLD_RULE_VERSION = "gold-v3-multimodal"
 INCLUSION_RULE_ID = "incl-rel20"
 RULE_VERSION = f"{GOLD_RULE_VERSION}+{INCLUSION_RULE_ID}"
+# Identificador técnico del protocolo del panel de v3 (decisión de ingeniería: nombre, no metodología). Sus componentes (AC1, mayoría estricta, empate 5-5 inválido, umbrales) son los CERRADOS de
+# DECISION-CLOSURE §15 y no cambian respecto de v2; solo cambia el gold que se muestra (matriz P2). Seguir el esquema de v2 (`panel-arq-ac1-maj-tie0-v2`) hace trazable la relación v2 → v3.
+PANEL_PROTOCOL_VERSION = "panel-arq-ac1-maj-tie0-v3"
+AGGREGATION_ID = "samples"                                  # = f1_multilabel.OFFICIAL_AGGREGATION (P3); verificado por prueba
+FULL_RULE_VERSION = f"{RULE_VERSION}+{AGGREGATION_ID}+{PANEL_PROTOCOL_VERSION}"      # gold + inclusión + agregación + protocolo (≤ 80 caracteres: columna `rule_version`)
 
 EMPHASIS_LEVELS = (0, 1, 2)            # e_m ∈ {0,1,2}: 0 apoyo · 1 estándar · 2 principal
 

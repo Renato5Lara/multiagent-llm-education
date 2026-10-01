@@ -151,7 +151,7 @@ def test_matrix_of_forbidden_crossings_is_rejected_before_persisting_anything(re
             repo.import_archetype_csv(_csv(tmp_path, [row], name + ".csv"))
     assert _rows_stored(repo) == []                                                              # NADA persistido por ningún cruce
     # además, el registro no resuelve identificadores cruzados ni el ejemplo del asesor
-    for bad in ("panel-arq-ac1-maj-tie0-v3", V3P.rule_version.replace("provisional-panel-v3-unsealed", "panel-arq-ac1-maj-tie0-v3")):
+    for bad in ("panel-arq-ac1-maj-tie0-v4", V3P.rule_version.replace("panel-arq-ac1-maj-tie0-v3", "panel-arq-ac1-maj-tie0-v2")):
         with pytest.raises(KeyError):
             pv.spec_for_rule_version(bad)
 
@@ -201,9 +201,9 @@ def test_official_v3_flow_is_rejected_with_the_current_real_state():
         from adaptation_swarm.analysis import evaluation_v3
         evaluation_v3.evaluate_v3([{"replica_index": 0, "batch_seed": 1, "cases": []}], rule=RULE_V3, official=True)
     doc = prereg3.build_preregistration_v3()
-    assert prereg3.full_rule_version(doc) is None and doc["rule"]["P4_panel"]["panel_protocol_version"]["value"] is None
+    assert prereg3.full_rule_version(doc) == rubric_v3.FULL_RULE_VERSION == V3P.rule_version               # definido, pero NO aprobado ni sellado
     pending = prereg3.pending_fields(doc)
-    assert "rule.full_rule_version" in pending and "rule.P4_panel.panel_protocol_version" in pending and prereg3.is_sealable(doc) is False
+    assert "environment.hardware" in pending and "execution_constraints.advisor_originals_annexed" in pending and prereg3.is_sealable(doc) is False
     with pytest.raises(prereg3.PreregistrationNotSealable):
         prereg3.require_sealable(doc)
     assert V3P.official is False and V3P.rule_version not in rubric_v3.APPROVED_RULE_VERSIONS

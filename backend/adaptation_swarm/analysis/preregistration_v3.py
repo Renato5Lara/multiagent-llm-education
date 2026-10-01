@@ -8,8 +8,9 @@ Cada campo metodológico lleva un ESTADO explícito y una fuente:
 Además `pending_integration` lista lo que está decidido pero aún no demostrado en el código v3; también bloquea el sellado, pero no es una decisión pendiente del asesor. El criterio conjunto (`ci_pass AND statistical_pass`) se integra
 REUTILIZANDO `inference.combined_criterion` de v2 (sin cambios): el pre-registro registra su salida real y verifica que coincide con la regla; no hay una segunda fórmula. Que esa integración esté cerrada NO hace sellable el borrador.
 
-`full_rule_version` (gold + inclusión + agregación + protocolo del panel) NO existe mientras `panel_protocol_version` (P4) siga PENDING_ADVISOR: la versión formal del protocolo del panel no está cerrada y este módulo no
-la inventa. Sus componentes ya definidos se conservan aparte, como componentes (no como versión). `rubric_v3.APPROVED_RULE_VERSIONS` no se toca: la aprobación técnica se registra tras el sellado.
+`panel_protocol_version` y `full_rule_version` (gold + inclusión + agregación + protocolo del panel) son identificadores TÉCNICOS definidos en `rubric_v3` (nombre = decisión de ingeniería, esquema de v2; los componentes del
+protocolo siguen siendo los cerrados en DECISION-CLOSURE §15). La versión de la biblioteca solo se cierra si el manifiesto local coincide con el de K = 10 v2. Siguen PENDING los puntos que son personas o infraestructura:
+hardware, entorno de software oficial, originales del asesor, declaración del tesista y confirmación de la regla estadística. `rubric_v3.APPROVED_RULE_VERSIONS` no se toca: la aprobación técnica se registra tras el sellado.
 
 La información técnica (hashes de módulos, commit, dataset, biblioteca) se LEE de los artefactos; `code_modules_at_fixing_v3` es una estructura propia que NO altera `replicas.module_fingerprints()` de v2: contiene
 las huellas de los 19 módulos que v2 ya huella (sin cambios) y las de los módulos v3. La salida es determinista (sin marcas de tiempo).
@@ -88,7 +89,8 @@ def _rule_section() -> dict:
                               "ovr_matrices": {"modalities": list(MODALITIES), "role": "DESCRIPTIVAS (One-vs-Rest 2x2 por modalidad; no es una métrica multiclase)"},
                               "metric_version": METRIC_VERSION}, CLOSED, f"{SRC_CLOSURE}; P3 (asesor, 26/09); {SRC_SPEC}"),
         "P4_panel": {
-            "panel_protocol_version": _f(None, PENDING_ADVISOR, f"{SRC_DRAFT} §9.2 y {SRC_SPEC}: la versión del protocolo del panel para el material nuevo no está decidida", note="no se inventa ninguna cadena de versión"),
+            "panel_protocol_version": _f(rubric_v3.PANEL_PROTOCOL_VERSION, CLOSED, "rubric_v3.PANEL_PROTOCOL_VERSION: decisión técnica de nombre (esquema de v2); componentes cerrados en DECISION-CLOSURE §15",
+                                         note="el identificador no cambia ningún componente metodológico del panel"),
             "components": {"statistic": _f("Gwet AC1 (binario, multi-evaluador)", CLOSED, f"{SRC_CLOSURE} (C1–C3)"),
                            "ac1_threshold": _f({"value": 0.70, "comparison": ">"}, CLOSED, SRC_CLOSURE),
                            "majority": _f("estricta", CLOSED, SRC_CLOSURE),
@@ -98,7 +100,7 @@ def _rule_section() -> dict:
                            "raw_agreement_threshold": _f({"value": 0.85, "comparison": ">="}, CLOSED, SRC_CLOSURE),
                            "review_rule": _f("si AC1 <= 0.70 OR acuerdo crudo < 0.85 ⇒ revisar la rule_version", CLOSED, SRC_CLOSURE),
                            "min_evaluators": _f(10, CLOSED, f"{SRC_CLOSURE}; D7 (asesor, 25/09)")}},
-        "full_rule_version": _f(None, PENDING_ADVISOR, "depende de panel_protocol_version (P4): gold + inclusión + agregación + protocolo del panel", note="no se inventa mientras P4 siga pendiente"),
+        "full_rule_version": _f(rubric_v3.FULL_RULE_VERSION, DERIVED, "rubric_v3.FULL_RULE_VERSION = gold + inclusión + agregación + protocolo del panel"),
     }
 
 
@@ -195,9 +197,13 @@ def _library_section(library_root: Path | None) -> dict:
     exists = manifest.exists()
     v2 = json.loads(V2_OFFICIAL_MANIFEST.read_text(encoding="utf-8")) if V2_OFFICIAL_MANIFEST.exists() else None
     sha = _sha_file(manifest) if exists else None
-    return {"version": _f(None, PENDING_ADVISOR, f"{SRC_DRAFT} §4 la lista como «sin cambios» pero §9.7 deja sin precisar su «asociación con la nueva versión de la biblioteca»: no está formalmente sellada como la biblioteca oficial de v3",
-                          proposed=PROPOSED_LIBRARY_VERSION, exists_locally=exists, manifest_sha256_local=sha,
-                          same_as_k10_v2=None if v2 is None or sha is None else v2["library"]["manifest_sha256"] == sha and v2["library"]["version"] == PROPOSED_LIBRARY_VERSION),
+    same_v2 = None if v2 is None or sha is None else v2["library"]["manifest_sha256"] == sha and v2["library"]["version"] == PROPOSED_LIBRARY_VERSION
+    extra = dict(proposed=PROPOSED_LIBRARY_VERSION, exists_locally=exists, manifest_sha256_local=sha, same_as_k10_v2=same_v2)
+    # Decisión técnica: la biblioteca de v3 es la de K = 10 v2 (§10.4: la única diferencia experimental es la regla de evaluación). Se CIERRA solo si el manifiesto local existe y coincide en versión y sha256 con el
+    # de v2; en cualquier otro caso queda pendiente (nunca se asume).
+    version = (_f(PROPOSED_LIBRARY_VERSION, DERIVED, f"{SRC_DRAFT} §10.4 (solo cambia la regla de evaluación) + manifiesto local idéntico al de K = 10 v2", **extra) if same_v2
+               else _f(None, PENDING_ADVISOR, f"{SRC_DRAFT} §4: la biblioteca propuesta no se verificó idéntica a la de K = 10 v2 (manifiesto local ausente, distinto o referencia v2 no disponible)", **extra))
+    return {"version": version,
             "explicit_version_required": _f(True, CLOSED, "no se asume ninguna versión de forma silenciosa (replicas_v3 exige library_version explícita)")}
 
 
