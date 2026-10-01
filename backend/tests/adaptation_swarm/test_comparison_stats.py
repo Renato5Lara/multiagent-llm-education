@@ -96,3 +96,21 @@ def test_spearman_and_cliffs_delta():
     assert cmp.spearman([1, 2, 3, 4], [2, 4, 6, 8])["rho"] == pytest.approx(1.0)
     assert cmp.spearman([1, 1, 1], [1, 2, 3])["status"] == "undefined_constant_variable"
     assert cmp.cliffs_delta([5, 6, 7], [1, 2, 3]) == 1.0 and cmp.cliffs_delta([1, 2], [1, 2]) == 0.0
+
+
+def test_independent_comparison_normal_welch_and_skewed_mannwhitney():
+    rng = np.random.default_rng(6)
+    r = cmp.independent_comparison(rng.normal(10, 1, 30), rng.normal(13, 1, 30))
+    assert r["test"] == "welch_t" and r["significant"] and r["cliffs_delta"] < -0.8
+    r2 = cmp.independent_comparison(rng.exponential(1, 40), rng.exponential(1, 40) + 3)
+    assert r2["test"] == "mann_whitney_u" and r2["significant"]
+    assert cmp.independent_comparison([1, 2], [1, 2, 3])["status"] == "not_testable_n_lt_3"
+    assert cmp.independent_comparison([5, 5, 5], [5, 5, 5])["status"] == "undefined_identical_constant_groups"
+
+
+def test_independent_multi_kruskal_and_holm():
+    rng = np.random.default_rng(7)
+    g = {"c1": rng.normal(40, 2, 10), "c10": rng.normal(41, 2, 10), "c100": rng.normal(60, 2, 10)}
+    r = cmp.independent_multi_comparison(g)
+    assert r["kruskal"]["significant"] and r["pairwise"]["c1__vs__c100"]["significant_holm"] is True
+    assert r["pairwise"]["c1__vs__c10"]["significant_holm"] is False
