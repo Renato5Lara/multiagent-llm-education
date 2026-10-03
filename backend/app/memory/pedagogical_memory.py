@@ -68,7 +68,7 @@ class PedagogicalMemoryService:
     # ------------------------------------------------------------------
 
     def record_learning_style(self, student_id: str, learning_style: str, *, confidence: float = 0.8, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["learning_style"],
             value={"learning_style": learning_style, "inferred_from": "history"},
@@ -79,7 +79,7 @@ class PedagogicalMemoryService:
         )
 
     def record_modality_preference(self, student_id: str, modality: str, *, confidence: float = 0.8, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["modality_preference"],
             value={"modality": modality, "inferred_from": "history"},
@@ -90,7 +90,7 @@ class PedagogicalMemoryService:
         )
 
     def record_analogy_domain(self, student_id: str, domains: list[str], *, confidence: float = 0.7, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["analogy_domain"],
             value={"domains": domains, "inferred_from": "history"},
@@ -101,7 +101,7 @@ class PedagogicalMemoryService:
         )
 
     def record_pacing(self, student_id: str, pacing: str, *, confidence: float = 0.7, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["pacing"],
             value={"pacing": pacing, "inferred_from": "history"},
@@ -112,7 +112,7 @@ class PedagogicalMemoryService:
         )
 
     def record_cognitive_load(self, student_id: str, signal: float, *, confidence: float = 0.6, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["cognitive_load"],
             value={"signal": signal, "trend": "increasing" if signal > 0.7 else "stable" if signal > 0.4 else "decreasing"},
@@ -123,7 +123,7 @@ class PedagogicalMemoryService:
         )
 
     def record_bloom_progress(self, student_id: str, bloom_level: int, *, confidence: float = 0.9, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["bloom_progress"],
             value={"bloom_level": bloom_level},
@@ -134,7 +134,7 @@ class PedagogicalMemoryService:
         )
 
     def record_engagement(self, student_id: str, pattern: str, *, confidence: float = 0.6, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["engagement"],
             value={"pattern": pattern},
@@ -145,7 +145,7 @@ class PedagogicalMemoryService:
         )
 
     def record_successful_example(self, student_id: str, example_type: str, *, confidence: float = 0.7, module_id: str | None = None) -> str:
-        return self._store.publish_observation(
+        return self._store.publish_observation_sync(
             voter_name="pedagogical_memory",
             key=PEDAGOGICAL_KEYS["successful_example"],
             value={"example_type": example_type},
