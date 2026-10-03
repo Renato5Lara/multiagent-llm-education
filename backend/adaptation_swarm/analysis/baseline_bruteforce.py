@@ -52,8 +52,32 @@ DEFAULT_PROFILES = iso.REPO / "datasets" / "synthetic_profiles" / "profiles-v1.j
 TOL = 1e-12
 
 
+def _windows_hardware() -> tuple[str | None, float | None]:
+    """Respaldo de `hardware_profile` cuando no hay /proc (Windows): modelo de CPU (registro) y RAM física total (GlobalMemoryStatusEx)."""
+    import ctypes
+    model, mem_gib = None, None
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"HARDWARE\DESCRIPTION\System\CentralProcessor\0") as k:
+            model = winreg.QueryValueEx(k, "ProcessorNameString")[0].strip()
+    except (OSError, ImportError):
+        pass
+    try:
+        class _MemStatus(ctypes.Structure):
+            _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong), ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong), ("ullTotalVirtual", ctypes.c_ulonglong),
+                        ("ullAvailVirtual", ctypes.c_ulonglong), ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+        st = _MemStatus()
+        st.dwLength = ctypes.sizeof(_MemStatus)
+        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st)):
+            mem_gib = round(st.ullTotalPhys / (1024 ** 3), 2)
+    except (OSError, AttributeError):
+        pass
+    return model, mem_gib
+
+
 def hardware_profile() -> dict:
-    """Hardware y software del proceso (solo lectura de /proc; sin ejecutar comandos)."""
+    """Hardware y software del proceso (lectura de /proc en Linux; API del sistema en Windows; sin ejecutar comandos)."""
     model, mem_gib = None, None
     try:
         for line in Path("/proc/cpuinfo").read_text().splitlines():
@@ -66,6 +90,9 @@ def hardware_profile() -> dict:
                 break
     except OSError:
         pass
+    if mem_gib is None and os.name == "nt":
+        w_model, mem_gib = _windows_hardware()
+        model = model or w_model
     return {"vcpu": os.cpu_count(), "cpu_model": model, "ram_gib": mem_gib, "python": platform.python_version(), "numpy": np.__version__,
             "platform": platform.platform()}
 

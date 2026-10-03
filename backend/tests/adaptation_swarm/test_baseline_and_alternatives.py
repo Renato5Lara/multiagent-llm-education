@@ -153,3 +153,12 @@ def test_the_report_never_touches_the_frozen_sources_and_records_their_hashes(re
 
 def test_the_report_is_deterministic():
     assert json.dumps(ba.build_report(), sort_keys=True) == json.dumps(ba.build_report(), sort_keys=True)
+
+
+def test_hardware_profile_measures_ram_on_any_platform(monkeypatch):
+    """Regresión: en Windows no existe /proc y la RAM salía None (el gate OFICIAL rechazaba hardware que sí cumple). Debe medirse siempre."""
+    hw = bb.hardware_profile()
+    assert isinstance(hw["ram_gib"], float) and hw["ram_gib"] > 0 and hw["vcpu"] >= 1
+    monkeypatch.setattr(bb.Path, "read_text", lambda *_a, **_k: (_ for _ in ()).throw(OSError("sin /proc")))   # fuerza el respaldo de SO
+    if bb.os.name == "nt":
+        assert bb.hardware_profile()["ram_gib"] == hw["ram_gib"]
