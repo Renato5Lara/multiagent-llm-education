@@ -4,6 +4,12 @@
 #         bash loadtest/run_jmeter_scenarios.sh [http://localhost:8765] [segundos_por_escenario]
 # Instalación de JMeter (no forma parte del repo):  curl -O https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz && tar xzf ...
 set -euo pipefail
+# Intérprete del venv, portable (Linux: .venv/bin/python; Windows: .venv/Scripts/python.exe; el venv puede estar en backend/ o en la raíz del repo). PYTHON=... lo fuerza.
+PY="${PYTHON:-}"
+if [ -z "$PY" ]; then
+  for c in .venv/bin/python .venv/Scripts/python.exe ../.venv/bin/python ../.venv/Scripts/python.exe; do [ -x "$c" ] && { PY="$c"; break; }; done
+fi
+PY="${PY:-python}"
 HOST="${1:-http://localhost:8765}"; DUR="${2:-30}"
 : "${SWARM_API_KEY:?definir SWARM_API_KEY}"; : "${JMETER_BIN:?definir JMETER_BIN}"
 HP="${HOST#http://}"; H="${HP%%:*}"; P="${HP##*:}"
@@ -14,8 +20,8 @@ echo "warm-up (10 s, descartado)..."
 PID="${BACKEND_PID:-}"
 for U in 1 10 25 50 100; do
   echo "escenario JMeter: $U hilos ($DUR s)"
-  if [ -n "$PID" ]; then .venv/bin/python loadtest/sample_resources.py "$PID" "$OUTDIR/u${U}_resources.json" 0.5 >/dev/null & SAMP=$!; fi
+  if [ -n "$PID" ]; then "$PY" loadtest/sample_resources.py "$PID" "$OUTDIR/u${U}_resources.json" 0.5 >/dev/null & SAMP=$!; fi
   "$JMETER_BIN" -n -t loadtest/plan.jmx -Jthreads="$U" -Jrampup=2 -Jduration="$DUR" -Jkey="$SWARM_API_KEY" -Jhost="$H" -Jport="$P" -Jdata="$DATA" -l "$OUTDIR/u$U.jtl" 2>&1 | tail -2
   if [ -n "$PID" ]; then kill -TERM "$SAMP" 2>/dev/null; wait "$SAMP" 2>/dev/null || true; fi
 done
-.venv/bin/python loadtest/summarize_jtl.py "$OUTDIR" | tee "$OUTDIR/summary.md"
+"$PY" loadtest/summarize_jtl.py "$OUTDIR" | tee "$OUTDIR/summary.md"
