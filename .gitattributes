@@ -1,0 +1,5 @@
+# Contenido fijado por hash/huella (sha256): Git NO debe convertir finales de línea (core.autocrlf=true en Windows rompe la integridad).
+datasets/** -text
+backend/experiments/** -text
+backend/official_runs/** -text
+backend/adaptation_swarm/** -text
