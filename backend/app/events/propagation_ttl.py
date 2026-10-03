@@ -503,9 +503,10 @@ class PropagationRateTracker:
         recent = [t for t in timestamps if t >= cutoff]
         if not recent:
             return 0.0
-        span = (recent[-1] - recent[0]).total_seconds()
-        if span <= 0:
+        if len(recent) < 2:
             return 0.0
+        # Una ráfaga puede caer en un mismo tick del reloj (Windows: ~15.6 ms): el span nulo no significa «sin eventos» sino «más rápido que la resolución».
+        span = max((recent[-1] - recent[0]).total_seconds(), 1e-6)
         return len(recent) / span
 
     def check_storm(
