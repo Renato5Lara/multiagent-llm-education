@@ -51,3 +51,19 @@ Solo `podman volume rm adaptation_swarm_test_pgdata` reinicia la base de prueba 
 - Los sandboxes reales (`test_cpp_render.py`, `test_library_sandbox_integration.py`) están versionados pero crean contenedores podman y no forman parte de este entorno de PostgreSQL + Redis (`README.md`, «Pruebas»).
 
 Las pruebas no escriben en `datasets/adaptation_library/`; cualquier temporal va a `TMPDIR`.
+
+## Windows 11 + Python 3.12 + Docker Desktop (validado 2026-10-03)
+Entorno medido: i7-12700K (20 hilos), 31.75 GiB, Windows 11, Python 3.12.10, Node 22.16, Docker Desktop 29.5 / Compose v5. `hardware_profile()` mide RAM/CPU en Windows (GlobalMemoryStatusEx + registro) y `meets_target()` da `True`.
+
+- **Docker Desktop en lugar de Podman.** El mismo `compose.yaml` funciona sin cambios: `docker compose -f backend/tests/adaptation_swarm/integration_env/compose.yaml up -d` (con `test.env` cargado). Solo las pruebas de sandbox (`test_cpp_render.py`, `test_library_sandbox_integration.py`) invocan `podman` y no corren sin él; también quedan fuera las de OpenAI real, como en Linux.
+- **Finales de línea.** Con `core.autocrlf=true` (por defecto en Git para Windows) los artefactos con sha256 (`datasets/`, `backend/experiments/`, `backend/official_runs/`, fuentes con huella de `adaptation_swarm`) cambian de hash. `.gitattributes` los marca `-text`; además clonar con `git clone -c core.autocrlf=false` y no usar `git add --renormalize` sobre esas rutas.
+- **`PYTHONUTF8=1`** es obligatorio (varias herramientas usan `read_text()` sin encoding y Windows usa cp1252).
+- **Worktrees.** `code_version()` lee `.git` como directorio: dentro de un `git worktree` el commit queda en `None`. Ejecutar corridas con provenance desde un clon normal.
+- **Audio de la biblioteca** (fuera de Git): restaurar de forma aditiva desde la copia sellada y verificar con `SHA256SUMS` antes de usar `SWARM_REQUIRE_LIBRARY=1`.
+- **Symlinks.** Cinco pruebas de guardas (`test_sprint_modules_safeguards.py`, `test_library_inventory.py::test_verify_reports_missing_files…`, `test_library_full_coverage.py::test_absent_and_corrupt…`) crean enlaces simbólicos: en Windows requieren **Modo de desarrollador** activado (Configuración → Para programadores) o una sesión de administrador (`WinError 1314` en caso contrario).
+- **`test_R1_R6_storage_killtest.py`** usa `signal.SIGKILL`, que no existe en Windows (corre en Linux/WSL).
+- **Base de datos de las pruebas `test_runtime_bridge*`.** Usan `RUNTIME_TEST_DATABASE_URL` (por defecto `localhost:5432/upao_mas_edu`, la base de desarrollo, y crean un esquema temporal en ella). Para no tocarla: `RUNTIME_TEST_DATABASE_URL=postgresql://swarm_test:<pw de test.env>@127.0.0.1:55432/swarm_test`.
+- **Pilotos técnicos (no OFICIALES; la salida va FUERA del repo).** Con `test.env` cargado y `PYTHONUTF8=1 SWARM_REQUIRE_LIBRARY=1`, desde `backend/`:
+  - OE3: `python -m adaptation_swarm.oe.runner oe3 --label L --out-dir D --design ofat --limit 5 --k 2 --batches 3 --warmup 2 --order randomized-blocks`
+  - OE4 (la rejilla sale de los argumentos; el valor por defecto de `--concurrency` es `[1]`): `python -m adaptation_swarm.oe.runner oe4 --label L --out-dir D --limit 5 --k 1 --batches 2 --warmup 1 --concurrency 1,5,10,25,50,100 --particles 10,20,30 --order randomized-blocks`
+  - Latencia HTTP (`L_resp`): `SWARM_API_KEY=… SWARM_API_PERSIST=1 uvicorn app.main:app --port 8000` y `bash loadtest/run_scenarios.sh http://localhost:8000 <s>` (los scripts detectan `.venv/Scripts/python.exe`; `PYTHON=` lo fuerza). JMeter 5.6 no está instalado (Java disponible es 1.8; JMeter 5.6 requiere Java 8+).
