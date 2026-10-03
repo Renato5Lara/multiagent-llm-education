@@ -151,7 +151,7 @@ def test_analyze_oe4_load_trend_and_particles_effect():
 # ── integración: corrida pequeña de extremo a extremo ──────────────────────────────────────────────────
 @pytest.mark.integration
 @pytest.mark.requires_library_audio
-async def test_end_to_end_small_run_writes_reproducible_results(store, profiles, tmp_path):
+async def test_end_to_end_small_run_writes_reproducible_results(store, profiles, tmp_path, monkeypatch):
     profs = list(profiles.values())[:5]
     fw = FitnessWeights()
     obs, bat = [], []
@@ -169,6 +169,7 @@ async def test_end_to_end_small_run_writes_reproducible_results(store, profiles,
     class Args:
         experiment, label, k, batches, warmup, batch_seed, concurrency, design, particles = "oe2", "t", 1, 3, 2, runner.DEFAULT_BATCH_SEED, [2], None, None
 
+    monkeypatch.setattr(runner, "hardware_profile", lambda: {"vcpu": 8, "cpu_model": None, "ram_gib": 7.53, "python": "fijo", "numpy": "fijo", "platform": "fijo"})   # la clase de entorno depende del hardware medido: se fija uno que NO cumple para que el test sea determinista
     prov = runner.provenance(store, runner.DEFAULT_PROFILES, Args, oe2_systems(2), len(profs))
     assert prov["definitions"]["registry"]["compliance_score_oe1"]["status"] == "PENDING" and prov["validity"]["blocked_definitions"]
     assert prov["validity"]["status"] == "EXPLORATORY" and prov["library_version"] == store.version and prov["code"]["commit"]
