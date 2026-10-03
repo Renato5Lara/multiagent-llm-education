@@ -286,7 +286,7 @@ class TestCircuitBreaker:
         with pytest.raises(ValueError):
             cb.call(lambda: (_ for _ in ()).throw(ValueError("fail")))
         assert cb.state == "open"
-        time.sleep(0.06)
+        time.sleep(0.25)   # margen >> resolución del reloj de Windows (~15.6 ms) y carga de la suite
         result = cb.call(lambda: "recovered")
         assert result == "recovered"
         assert cb.state == "closed"
@@ -295,7 +295,7 @@ class TestCircuitBreaker:
         cb = CircuitBreaker("test", failure_threshold=1, recovery_timeout=0.05, half_open_max_calls=1)
         with pytest.raises(ValueError):
             cb.call(lambda: (_ for _ in ()).throw(ValueError("fail")))
-        time.sleep(0.06)
+        time.sleep(0.25)   # margen >> resolución del reloj de Windows (~15.6 ms) y carga de la suite
         cb.call(lambda: "ok")  # half-open, succeeds → closes
         assert cb.state == "closed"
 
