@@ -4,8 +4,10 @@ Unidades (campaign_spec): T_conv → perfil, pareado (las K réplicas de un perf
 corrida: grupos INDEPENDIENTES de corridas (Shapiro → Welch / Mann-Whitney), nunca peticiones. Regímenes: solo ≤ 25 usuarios contrasta el umbral de 2 s; 50/100 se miden y quedan en `stress` (no entran a la familia).
 Comparador PRIMARIO = el convencional independiente `decision_table` (`campaign_spec.oe2.conventional_system`, fijado antes de ver datos); su familia de Holm es la CONFIRMATORIA. `rules` (ablación del enjambre) y `bruteforce`
 (óptimo de referencia) NO son comparadores convencionales: son contrastes AUXILIARES, cada uno con su propia familia descriptiva (`confirmatory: False`). Cada hipótesis registra familia, p bruto, p ajustado, método y α.
-T_conv es SOLO de la propuesta y NO se contrasta. `decision_ms` (tiempo operacional de decisión; métrica común CANDIDATA, contrato `oe/time_contract.py`) se calcula como EXPLORATORIO en `pending_metric_validation`: queda FUERA de la familia
-confirmatoria y de Holm mientras su equivalencia con T_conv esté `PENDING`. La familia confirmatoria contiene solo L_resp P95 HTTP y throughput HTTP.
+T_conv es SOLO de la propuesta y NO se contrasta. El indicador operacional común `time_to_final_config_ms` (D.3; contrato `oe/time_contract.py`; solo condición aislada en proceso) y el campo histórico `decision_ms` (LEGACY) se calculan
+como EXPLORATORIOS en `pending_metric_validation`: quedan FUERA de la familia confirmatoria y de Holm mientras su validación metodológica esté `PENDING`. La familia confirmatoria contiene solo L_resp P95 HTTP y throughput HTTP.
+PERSISTENCIA (D.3): solo las corridas con `persist_policy == off` y rol de contraste entran al contraste; las de la propuesta con persistencia ON (`proposal_persistence_cost`) se reportan APARTE (descriptivas) y nunca
+entran al contraste swarm-vs-decision_table; una corrida sin condición/rol declarados se excluye (falla cerrado).
 No interpreta ni escribe «mejor/peor».
 """
 
@@ -21,6 +23,32 @@ from adaptation_swarm.oe import campaign_spec, http_window, time_contract
 
 CONTRAST_MAX_USERS = 25
 ALPHA = campaign_spec.SPEC["alpha"]
+
+
+def in_contrast(r: Mapping) -> bool:
+    """¿Entra la corrida HTTP al contraste? Solo con persistencia común OFF y un rol de contraste EXPLÍCITO; sin ambos campos NO entra (fail-closed)."""
+    return r.get("persist_policy") == campaign_spec.COMPARISON_PERSISTENCE and r.get("comparison_role") in campaign_spec.CONTRAST_ROLES
+
+
+def is_proposal_cost(r: Mapping) -> bool:
+    return (r.get("system") == campaign_spec.SPEC["oe2"]["proposal_system"] and r.get("persist_policy") == campaign_spec.PROPOSAL_COST_PERSISTENCE
+            and r.get("comparison_role") == campaign_spec.ROLE_PROPOSAL_COST)
+
+
+def proposal_cost_block(cost_runs: Sequence[Mapping], off_runs: Sequence[Mapping]) -> dict:
+    """Costo de la persistencia síncrona de la PROPUESTA (condición ON, L_resp literal) frente a su propia condición OFF. DESCRIPTIVO/EXPLORATORIO: no es el contraste swarm-vs-decision_table, no entra a Holm y su familia no está decidida."""
+    out: dict = {"role": campaign_spec.ROLE_PROPOSAL_COST, "confirmatory": False, "in_swarm_vs_decision_table_contrast": False, "l_resp_literal": True,
+                 "family": "PENDING_METHODOLOGICAL_DECISION", "note": "medición complementaria de la propuesta con persistencia síncrona mínima; no se compara contra decision_table"}
+    ok_on = [r for r in cost_runs if r.get("status") == "ok" and r.get("comparable") is True]
+    for users in sorted({r["users"] for r in ok_on}):
+        on = [r for r in ok_on if r["users"] == users]
+        off = [r for r in off_runs if r["system"] == "swarm" and r["users"] == users]
+        p95 = [r["latency_p95_ms"] for r in on]
+        out[f"u{users}"] = {"regime": "contrast" if users <= CONTRAST_MAX_USERS else "stress", "n_runs_on": len(on), "latency_p95_ms_on": p95, "throughput_rps_on": [r["throughput_rps"] for r in on],
+                            "runs_with_p95_below_2000ms": sum(1 for x in p95 if x is not None and x < campaign_spec.SPEC["oe2"]["latency"]["threshold_ms"]),
+                            "vs_swarm_off": {"latency_p95_ms": runs_comparison(p95, [r["latency_p95_ms"] for r in off], log=True, metric="latency_p95_ms"),
+                                             "throughput_rps": runs_comparison([r["throughput_rps"] for r in on], [r["throughput_rps"] for r in off], metric="throughput_rps"), "confirmatory": False}}
+    return out
 
 
 def _profile_means(rows: Sequence[Mapping], key: str) -> dict[str, float]:
@@ -80,7 +108,10 @@ def analyze(obs: Sequence[Mapping], http_runs: Sequence[Mapping]) -> dict:
     by_sys_level: dict[tuple[str, int], list[Mapping]] = {}
     for r in obs:
         by_sys_level.setdefault((r["f_system"], int(r["f_concurrency"])), []).append(r)
-    ok_all = [r for r in http_runs if r.get("status") == "ok"]
+    contrast_runs = [r for r in http_runs if in_contrast(r)]
+    cost_runs = [r for r in http_runs if is_proposal_cost(r)]
+    excluded = [{"run_id": r.get("run_id"), "reason": "condición de persistencia o rol de contraste ausente/inválido (fail-closed): no entra al contraste"} for r in http_runs if not in_contrast(r) and not is_proposal_cost(r)]
+    ok_all = [r for r in contrast_runs if r.get("status") == "ok"]
     ok_runs = [r for r in ok_all if r.get("comparable") is True]                     # B7: corridas no comparables (generador saturado / sin CPU) se CONSERVAN en el registro pero no entran al contraste
     limited = {}
     for r in ok_all:
@@ -95,23 +126,30 @@ def analyze(obs: Sequence[Mapping], http_runs: Sequence[Mapping]) -> dict:
         for (sysname, level), rows in sorted(by_sys_level.items()):
             if sysname != "swarm" or level > CONTRAST_MAX_USERS or (comp, level) not in by_sys_level:
                 continue
-            pending[f"decision_ms@c{level}"] = {**paired_log_by_profile(rows, by_sys_level[(comp, level)], "decision_ms"), "metric_validation": time_contract.VALIDATION_STATUS}
+            iso_sw, iso_cv = [r for r in rows if r.get("ttfc_isolated") is True], [r for r in by_sys_level[(comp, level)] if r.get("ttfc_isolated") is True]      # solo condición AISLADA (en proceso, concurrencia 1)
+            pending[f"{time_contract.TTFC_METRIC}@c{level}"] = {**paired_log_by_profile(iso_sw, iso_cv, time_contract.TTFC_METRIC), "metric_validation": time_contract.VALIDATION_STATUS,
+                                                               "isolated_condition_only": True, "is_t_conv": False}
+            pending[f"decision_ms@c{level}"] = {**paired_log_by_profile(rows, by_sys_level[(comp, level)], "decision_ms"), "metric_validation": time_contract.LEGACY_STATUS, "legacy": True, "note": time_contract.LEGACY_NOTE}
         for users in sorted({r["users"] for r in ok_runs if r["users"] <= CONTRAST_MAX_USERS}):
             sw = [r for r in ok_runs if r["system"] == "swarm" and r["users"] == users]
             cv = [r for r in ok_runs if r["system"] == comp and r["users"] == users]
             hyp[f"L_resp_P95_http@u{users}"] = runs_comparison([r["latency_p95_ms"] for r in sw], [r["latency_p95_ms"] for r in cv], log=True, metric="latency_p95_ms")
             hyp[f"throughput_http@u{users}"] = runs_comparison([r["throughput_rps"] for r in sw], [r["throughput_rps"] for r in cv], metric="throughput_rps")
             dm_sw, dm_cv = [r["decision_ms_mean"] for r in sw if r.get("decision_ms_mean") is not None], [r["decision_ms_mean"] for r in cv if r.get("decision_ms_mean") is not None]
-            if dm_sw and dm_cv:                                                       # decision_ms de los datos HTTP reales: EXPLORATORIO, fuera de Holm (equivalencia con T_conv sin validar)
-                pending[f"decision_ms_http@u{users}"] = {**runs_comparison(dm_sw, dm_cv, log=True, metric="decision_ms_mean"), "metric_validation": time_contract.VALIDATION_STATUS}
+            if dm_sw and dm_cv:                                                       # decision_ms de los datos HTTP reales: LEGACY/EXPLORATORIO (bajo carga mezcla cola del servidor), fuera de Holm
+                pending[f"decision_ms_http@u{users}"] = {**runs_comparison(dm_sw, dm_cv, log=True, metric="decision_ms_mean"), "metric_validation": time_contract.LEGACY_STATUS, "legacy": True, "note": time_contract.LEGACY_NOTE}
         fams[f"{role}:swarm_vs_{comp}"] = holm_family(f"{role}:swarm_vs_{comp}", hyp, confirmatory=role == "primary", pending=pending)
     for users in sorted({r["users"] for r in ok_runs if r["users"] > CONTRAST_MAX_USERS}):
         stress[f"u{users}"] = {s: {"runs": sum(1 for r in ok_runs if r["system"] == s and r["users"] == users),
                                    "latency_p95_ms": [r["latency_p95_ms"] for r in ok_runs if r["system"] == s and r["users"] == users],
                                    "throughput_rps": [r["throughput_rps"] for r in ok_runs if r["system"] == s and r["users"] == users]} for s in ("swarm", primary, *auxiliary)}
-    return {"experiment": "oe2", "official": False, "oe2_official": False, "official_blocked_by": campaign_spec.open_blockers(), "campaign_spec": campaign_spec.identity(), "proposal_system": spec["proposal_system"], "comparator_primary": primary, "auxiliary_contrasts": auxiliary, "candidate_time_metric": spec["time_contract"]["candidate_common_metric"], "time_metric_validation": time_contract.VALIDATION_STATUS, "t_conv_contrast": "not_performed_t_conv_is_proposal_only", "families": fams,
+    return {"experiment": "oe2", "official": False, "oe2_official": False, "official_blocked_by": campaign_spec.open_blockers(), "campaign_spec": campaign_spec.identity(), "proposal_system": spec["proposal_system"], "comparator_primary": primary, "auxiliary_contrasts": auxiliary, "candidate_time_metric": spec["time_contract"]["candidate_common_metric"], "legacy_time_metric": time_contract.LEGACY_METRIC, "time_metric_validation": time_contract.VALIDATION_STATUS,
+            "t_conv_contrast": "not_performed_t_conv_is_proposal_only", "families": fams,
+            "proposal_persistence_cost": proposal_cost_block(cost_runs, ok_runs), "http_runs_excluded_from_contrast": excluded,
+            "persistence_conditions": {"comparison": campaign_spec.COMPARISON_PERSISTENCE, "proposal_cost": campaign_spec.PROPOSAL_COST_PERSISTENCE, "comparison_off_is_literal_l_resp": False,
+                                       "note": "el contraste usa persistencia común OFF (NO es literalmente el L_resp aprobado); la condición ON de la propuesta se reporta aparte"},
             "stress_regime_descriptive_only": stress, "stress_note": "> 25 usuarios: medido y conservado; fuera del contraste del umbral de 2 s y de la familia confirmatoria",
-            "benchmark_2_1_open": "LMS tradicional y LLM monolítico no implementados; D11c abierta: las conclusiones se limitan a los comparadores medidos",
-            "n_http_runs_used": len(ok_runs), "n_http_runs_invalid": len(http_runs) - len(ok_all),
+            "benchmark_2_1_open": "LMS tradicional y LLM monolítico no implementados; D11c abierta: las conclusiones se limitan al baseline `decision_table` (D.3, provisional) y no generalizan a otros sistemas convencionales",
+            "n_http_runs_used": len(ok_runs), "n_http_runs_invalid": len(contrast_runs) - len(ok_all), "n_http_runs_proposal_cost": len(cost_runs),
             "n_http_runs_not_comparable": sum(1 for r in ok_all if r.get("comparable") is not True), "generator_limited_levels": {str(u): sorted(v) for u, v in sorted(limited.items())},
             "generator_policy": http_window.GENERATOR_POLICY["id"]}

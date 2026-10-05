@@ -12,10 +12,11 @@ de 4 modalidades (con el audio real abierto y validado), y la misma función de 
 PETICIÓN (en la propuesta: por ciclo); la validación de paquetes se memoiza entre peticiones en ambos lados. Esto NO significa que las métricas de tiempo sean metodológicamente equivalentes (ver abajo).
 
 INDICADORES DE TIEMPO (en proceso, sin HTTP):
-    decision_ms   tiempo desde que el sistema empieza a decidir la configuración hasta que tiene S (sin ensamblar el paquete).
+    time_to_final_config_ms   INDICADOR OPERACIONAL COMÚN (D.3; `oe/time_contract.py`): perfil ya validado → S final decidida (incluye W solo en los sistemas que lo usan para decidir), sin ensamblar el paquete,
+                  sin HTTP ni persistencia. NO es T_conv. Misma frontera conceptual que la de la propuesta (fin de `step_receive` → g_best final).
     t_conv_ms     SIEMPRE `None` en estos sistemas: T_conv (AG0) es de la propuesta y aquí no hay convergencia iterativa; no se le llama así (contrato `oe/time_contract.py`, Fase B).
-    decision_ms   tiempo OPERACIONAL de decisión de S (métrica común CANDIDATA de OE2, validación pendiente): perfil y W disponibles → S final decidida, sin ensamblar el paquete. En la propuesta el mismo campo copia el `t_conv_ms` de AG0 (sin cambios).
-                  Su equivalencia metodológica con T_conv NO está validada (límites en `time_contract.KNOWN_LIMITS`). Este módulo no redefine ni modifica el T_conv de la propuesta.
+    decision_ms   campo HISTÓRICO (LEGACY/exploratorio): tiempo alrededor de `_decide` con W ya calculado. NO coincide con la frontera del indicador común (en la propuesta copia el `t_conv_ms` de AG0): no se reutiliza como
+                  indicador común. Este módulo no redefine ni modifica el T_conv de la propuesta.
     total_ms      latencia de la petición en proceso: perfil recibido → paquete validado listo.
 
 ALCANCE: `decision_table` es la implementación convencional por reglas estáticas que este estudio define para la comparación; no reproduce un LMS real ni un LLM monolítico (no se miden ni se inventan).
@@ -62,7 +63,8 @@ class ConventionalResult:
     F: float | None = None
     predicted_dominant: str | None = None
     t_conv_ms: float | None = None   # SIEMPRE None: T_conv es de la propuesta (AG0); estos sistemas no convergen iterativamente (se conserva el campo solo por compatibilidad de estructura)
-    decision_ms: float | None = None  # tiempo OPERACIONAL de decisión (candidata a métrica común; validación pendiente): tiempo, en proceso, desde que el sistema empieza a decidir S hasta que la tiene (sin ensamblado del paquete)
+    decision_ms: float | None = None  # LEGACY/exploratorio: alrededor de `_decide`, con W ya calculado (frontera distinta de la del indicador común)
+    time_to_final_config_ms: float | None = None  # indicador operacional común (D.3): perfil validado → S final decidida (W incluido si el sistema lo usa); sin ensamblado; en proceso; NO es T_conv
     total_ms: float = 0.0
     n_evaluations: int = 0
     package: dict[str, Any] | None = field(default=None, repr=False)
@@ -120,17 +122,20 @@ class ConventionalAdapter:
         return evaluate(cfg, compute_weights(profile).by_modality(), *variant_terms(self.store, profile.concept_id, cfg.variants, {}), self.fw).F
 
     def adapt(self, profile: ProfileRequest | dict, *, report_quality: bool = True) -> ConventionalResult:
-        """Regiones de tiempo: `decision_ms` = solo la decisión; `total_ms` = perfil recibido → paquete validado listo. La evaluación de 𝓕 NO está en ninguna de ellas. Con `report_quality=True` (por defecto, uso
+        """Regiones de tiempo: `decision_ms` (legacy) = solo la decisión; `time_to_final_config_ms` = perfil validado → S final (indicador común); `total_ms` = perfil recibido → paquete validado listo. La evaluación de 𝓕 NO está en ninguna de ellas. Con `report_quality=True` (por defecto, uso
         directo) 𝓕 se calcula DESPUÉS de cerrar ambas, pero aún dentro de esta llamada; quien mida la latencia de la llamada (endpoint HTTP, ejecutor in-process) debe pasar `report_quality=False` y reconstruir 𝓕
         fuera de la región medida con `evaluate_quality`. `bruteforce` conserva su 𝓕 (es el resultado de la propia búsqueda, parte de su decisión)."""
         t0 = time.perf_counter()
         pid = profile.get("profile_id", "?") if isinstance(profile, dict) else profile.profile_id
         try:
             prof = profile if isinstance(profile, ProfileRequest) else ProfileRequest.model_validate(profile)
-            W = compute_weights(prof)
+            t_start = time.perf_counter()                                         # indicador común: perfil validado en poder del sistema
+            W = None if self.system == "decision_table" else compute_weights(prof)       # W solo si el sistema lo usa para decidir (decision_table lee únicamente el perfil)
             t_s = time.perf_counter()
             S, F, n_eval = self._decide(prof, W)
-            decision_ms = (time.perf_counter() - t_s) * 1000.0
+            t_d = time.perf_counter()
+            decision_ms = (t_d - t_s) * 1000.0
+            ttfc_ms = (t_d - t_start) * 1000.0
             pkg = self._validated_package(prof.concept_id, S, new_id())
             total_ms = (time.perf_counter() - t0) * 1000.0
         except Exception as exc:                                                  # error explícito, no silencioso
@@ -138,6 +143,6 @@ class ConventionalAdapter:
                                       error=f"{type(exc).__name__}: {str(exc)[:300]}")
         cfg = Configuration(S)
         if F is None and report_quality:        # 𝓕 no se optimiza en estos sistemas; se informa solo si se pide, DESPUÉS de cerrar las regiones de tiempo
-            F = evaluate(cfg, W.by_modality(), *variant_terms(self.store, prof.concept_id, cfg.variants, {}), self.fw).F
+            F = evaluate(cfg, (W or compute_weights(prof)).by_modality(), *variant_terms(self.store, prof.concept_id, cfg.variants, {}), self.fw).F
         return ConventionalResult(self.system, prof.profile_id, "completed", list(S), F, predicted_dominant(cfg.emphasis), decision_ms=decision_ms,
-                                  total_ms=total_ms, n_evaluations=n_eval, package=pkg)
+                                  time_to_final_config_ms=ttfc_ms, total_ms=total_ms, n_evaluations=n_eval, package=pkg)

@@ -34,7 +34,7 @@ def test_oe2_plan_pairs_by_profile_and_tests_throughput_by_batch(tmp_path):
     assert r["t_conv_ms"]["status"] == "blocked_t_conv_is_proposal_only" and "significant" not in r["t_conv_ms"]       # T_conv no se contrasta entre sistemas
     d = r["decision_ms"]
     assert d["design"] == "paired" and d["unit"].startswith("profile_mean") and d["significant"] and d["academic_label"] is None
-    assert d["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and d["confirmatory"] is False                 # exploratorio mientras la equivalencia no esté validada
+    assert d["metric_validation"] == "LEGACY_EXPLORATORY" and d["legacy"] is True and d["confirmatory"] is False       # campo histórico: exploratorio, no se reutiliza como indicador común
     assert r["latency_ms"]["design"] == "paired" and r["latency_ms"]["significant"]
     assert r["throughput_rps"]["design"] == "independent" and r["throughput_rps"]["unit"] == "batch" and r["throughput_rps"]["significant"]
     assert res["label"].startswith("EXPLORATORY") and res["environment_class"] == "PILOT" and "swarm|batch|bc1|h1|pso|r1|N20|c1" in res["normality_by_condition"]

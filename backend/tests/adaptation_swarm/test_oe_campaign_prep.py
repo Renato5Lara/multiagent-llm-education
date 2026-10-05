@@ -147,10 +147,10 @@ def test_campaign_spec_is_hashed_internal_and_never_claims_advisor_approval():
     assert oe2["system_roles"] == {"swarm": "proposal", "decision_table": "conventional_independent", "rules": "swarm_heuristic_ablation", "bruteforce": "reference_optimum"}
     assert oe2["auxiliary_contrasts"] == ["rules", "bruteforce"] and oe2["design"]["systems"] == ["swarm", "decision_table"] and "comparator_secondary" not in oe2
     assert oe2["persist_policy"]["campaign"] == "off" and oe2["persist_policy"]["on_supported_for_comparison"] is False and oe2["profile_sequence"]["same_sequence_for_all_systems"] is True
-    assert oe2["time_contract"]["candidate_common_metric"] == "decision_ms" and oe2["time_contract"]["validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and oe2["time_contract"]["t_conv_equivalence"] == "NOT_ESTABLISHED"
+    assert oe2["time_contract"]["candidate_common_metric"] == "time_to_final_config_ms" and oe2["time_contract"]["validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and oe2["time_contract"]["t_conv_equivalence"] == "NOT_ESTABLISHED"
     assert "FUERA de Holm" in oe2["holm_family"] and "{L_resp P95 HTTP, throughput HTTP}" in oe2["holm_family"]
     assert spec["h1"]["conjunctive"] is True and spec["oe5"]["sus"]["rule"].startswith("media > 75 NO basta")
     assert len(campaign_spec.spec_hash()) == 64 and campaign_spec.spec_hash() == campaign_spec.identity()["sha256"]
     blockers = " | ".join(campaign_spec.open_blockers())
-    assert "F1 v3 sin sellar" in blockers and "LMS" in blockers and "t_conv_baselines" in blockers
-    assert "contrato de tiempo oe2-time-contract-v1 sin validar" in blockers and "decisión del asesor" not in blockers          # GAP tecnico concreto, no una consulta al asesor
+    assert "F1 v3" not in blockers and "LMS" in blockers and "t_conv_baselines" not in blockers and "common_time_indicator_oe2" in blockers       # F1 v3 es dependencia de OE5, no de OE2
+    assert "contrato de tiempo oe2-time-contract-v2 sin validar" in blockers and "decisión del asesor" not in blockers          # GAP tecnico concreto, no una consulta al asesor

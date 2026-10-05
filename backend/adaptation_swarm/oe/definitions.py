@@ -10,12 +10,18 @@ from adaptation_swarm.gold import rubric_v2, rubric_v3
 from adaptation_swarm.pso.space import MODALITIES
 
 APPROVED, PARTIAL, PENDING = "APPROVED", "PARTIAL", "PENDING"
+SUPERSEDED = "SUPERSEDED"      # definición retirada por una decisión posterior: ya no es dependencia de ningún objetivo ni se reutiliza
 REQUIREMENTS_VERSION = "RF01-RF06+RNF01-RNF05 (MS §RF/RNF, 2026-09-23) + REL-C/REL-D (oe1, propias de este estudio)"
 
 DEFINITIONS: dict[str, dict] = {
     "t_conv": {"status": APPROVED, "source": "DC DEC-10; MS (VD dimensión «Eficiencia T_conv»)", "definition": "T_conv se reporta en iteraciones (k_stop) y en milisegundos (t_convergencia − t_inicio_búsqueda); regla de parada |ΔF|<ε o k_max=15",
-               "note": "Extensión a los sistemas convencionales (tiempo desde que deciden hasta tener S) es operativa de este estudio: ver `t_conv_baselines`."},
-    "t_conv_baselines": {"status": PENDING, "source": "—", "definition": "tiempo de decisión de la configuración en `rules`/`bruteforce` equiparado a T_conv de la propuesta", "note": "por confirmar con el asesor"},
+               "note": "T_conv es SOLO de la propuesta. No se extiende a los sistemas convencionales ni se declara equivalente entre sistemas (decisión B1, D.3, provisional): el tiempo comparable entre sistemas es el indicador operacional separado `common_time_indicator_oe2` (`time_to_final_config_ms`)."},
+    "t_conv_baselines": {"status": SUPERSEDED, "source": "—; reemplazada por la decisión B1-B (Fase D.3, provisional, no aprobada por el asesor)",
+                         "definition": "RETIRADA: la idea de equiparar un «tiempo de convergencia» de los sistemas convencionales con T_conv de la propuesta NO se establece (los convencionales no iteran ni tienen criterio |ΔF|<ε)",
+                         "note": "su lugar lo ocupa `common_time_indicator_oe2` (indicador operacional separado, no T_conv). Se conserva la clave solo para trazabilidad; no es dependencia de ningún objetivo."},
+    "common_time_indicator_oe2": {"status": PENDING, "source": "Fase D.3 (decisión B1-B provisional del tesista; NO aprobada por el asesor)",
+                                  "definition": "`time_to_final_config_ms`: tiempo hasta obtener la configuración final S (perfil validado → S decidida; sin ensamblado, HTTP ni persistencia), condición aislada en proceso, ambos sistemas (oe/time_contract.py `TTFC_CONTRACT`)",
+                                  "note": "indicador operacional SEPARADO: no es T_conv ni se le asigna equivalencia; su validación metodológica sigue pendiente"},
     "latency_l_resp": {"status": APPROVED, "source": "DC §9.2", "definition": "L_resp = petición HTTP → último byte del JSON con el paquete (incluye RF01, AG1, PSO, Redis, ensamblado y persistencia síncrona mínima; excluye descarga de audio y persistencia asíncrona); P95 con ≤ 25 usuarios",
                        "note": "La latencia EN PROCESO del ejecutor `oe/runner.py` es un sustituto exploratorio, no L_resp; la medición HTTP es Locust/JMeter en el hardware objetivo."},
     "throughput": {"status": PARTIAL, "source": "RNF04 (MS): ≥ 20 req/s con error < 1 %; DC §9.2", "definition": "peticiones correctas por segundo",
@@ -25,7 +31,11 @@ DEFINITIONS: dict[str, dict] = {
     "usability_sus": {"status": APPROVED, "source": "Asesoría §4.4/§4.5; AD D7/D8", "definition": "SUS 0–100, n ≥ 10, media > 75, Shapiro → t/Wilcoxon contra 75", "note": "versión española publicada del SUS por citar (P7)"},
     "reference_value_75": {"status": APPROVED, "source": "Asesoría §4.4; OE5 aprobado", "definition": "valor de referencia SUS = 75 puntos", "note": ""},
     "statistical_unit_f1": {"status": APPROVED, "source": "AD 2026-09-26 R2", "definition": "la unidad es el perfil: sus F1 de las K réplicas se promedian; la inferencia usa los 100 promedios", "note": ""},
-    "statistical_unit_performance": {"status": PENDING, "source": "—", "definition": "unidad para T_conv, latencia y throughput", "note": "propuesta técnica de este estudio (por confirmar): media por perfil para T_conv y latencia (diseño pareado); el LOTE para el throughput"},
+    "statistical_unit_performance": {"status": PENDING, "source": "—; decisión técnica provisional D.3/D.4.1 (no aprobada por el asesor)",
+                                     "definition": ("unidad estadística de OE2 por indicador: L_resp = P95 por CORRIDA HTTP; throughput = por CORRIDA HTTP; time_to_final_config_ms = PERFIL (media de las K réplicas), pareado swarm vs baseline, solo condición aislada in-process; "
+                                                    "T_conv = solo descriptivo de la propuesta (no se contrasta entre sistemas ni es comparable). Una petición HTTP o una réplica nunca es una observación independiente. OE3/OE4: corrida (campaign_spec)"),
+                                     "note": ("coincide con `campaign_spec.oe2.design` y `oe2_confirmatory`; sigue PENDING hasta su validación. Pendientes metodológicos NO resueltos aquí: pareamiento del contraste HTTP, tamaño `m` de Holm, "
+                                              "tratamiento de errores/timeouts en el P95 e hipótesis de H1 con el L_resp literal")},
     "replicate": {"status": PARTIAL, "source": "AD D5 (K=10 réplicas con semillas independientes, para F1)", "definition": "réplica = repetición del perfil con semilla derivada derive_seed(batch_seed, profile_id, replicate)", "note": "su uso en OE2–OE4 (K ≥ 10) es operativo"},
     "efficiency_of_adaptation_oe3": {"status": PARTIAL, "source": "MS (VD dimensión «Eficiencia T_conv»)", "definition": "indicador de eficiencia aprobado = T_conv",
                                      "note": "Se reportan además k_stop, mensajes y brecha al óptimo como indicadores COMPLEMENTARIOS; no existe un índice compuesto aprobado y no se inventa uno."},
@@ -33,7 +43,7 @@ DEFINITIONS: dict[str, dict] = {
     "reliability_oe1": {"status": PENDING, "source": "—", "definition": "indicador de confiabilidad", "note": "CR (DC DEC-10) es tasa de convergencia por ε, no confiabilidad; REL-C/REL-D son propuestas propias por confirmar"},
     "conventional_system_oe2": {"status": PARTIAL, "source": "AD 2026-09-25 D11c (línea base fuerza bruta frente a PSO); AD 2026-09-26 D11c (¿reemplaza o complementa el benchmark §2.1 LMS/reglas/LLM?: pregunta abierta al asesor)",
                                 "definition": "`bruteforce` aprobado como línea base empírica; `rules` (reglas fijas) corresponde a la categoría «motores basados en reglas» (MS §comparadores) pero su definición empírica es de este estudio",
-                                "note": "LMS tradicional y LLM monolítico NO están implementados ni medidos"},
+                                "note": "LMS tradicional y LLM monolítico NO están implementados ni medidos. En el diseño experimental de OE2 (D.3, provisional): el único baseline convencional es `decision_table`; `rules` = ablación del enjambre y `bruteforce` = óptimo de referencia, no convencionales."},
     "precision_multimodal_oe5": {"definition_version": "v3", "status": PARTIAL, "source": "AD 2026-09-26 (F1 4×4 con audio, gold por arquetipo)", "definition": "F1_adapt de la regla v3", "note": "regla completa sin sellar (P4 `panel_protocol_version` PENDING_ADVISOR)"},
 }
 
@@ -98,8 +108,28 @@ def f1_selection_record(version: str | None) -> dict:
             "panel_protocol_version": d["panel_protocol_version"]}
 
 
+# Dependencias de DEFINICIÓN de cada objetivo (dependency-aware): una definición PENDING bloquea SOLO a los objetivos que la necesitan; las de otro objetivo no cuentan. Las demás dependencias de OE2
+# (alcance del comparador, persistencia/L_resp, provenance, esquema de corrida) las evalúan sus propios guards (`oe/campaign_guards.py`: B13, B5, B12, B11).
+OE_DEFINITION_DEPENDENCIES: dict[str, list[str]] = {
+    "oe1": ["compliance_score_oe1", "reliability_oe1"],
+    "oe2": ["t_conv", "common_time_indicator_oe2", "statistical_unit_performance", "latency_l_resp", "throughput", "conventional_system_oe2"],
+    "oe3": ["statistical_unit_performance", "t_conv", "efficiency_of_adaptation_oe3"],
+    "oe4": ["statistical_unit_performance", "t_conv", "latency_l_resp", "throughput"],
+    "oe5": ["quality_f1_adapt", "statistical_unit_f1", "usability_sus", "reference_value_75"],
+}
+_RESOLVED = (APPROVED, PARTIAL)
+
+
 def blocked_for(experiment: str) -> list[str]:
-    """Definiciones PENDING que condicionan una corrida oficial del experimento."""
-    needs = {"oe1": ["compliance_score_oe1", "reliability_oe1"], "oe2": ["t_conv_baselines", "statistical_unit_performance"], "oe3": ["statistical_unit_performance"],
-             "oe4": ["statistical_unit_performance"]}
-    return [k for k in needs.get(experiment, []) if DEFINITIONS[k]["status"] == PENDING]
+    """Dependencias de definición de `experiment` NO resueltas. FALLA CERRADO: una dependencia PENDING, de estado desconocido o no registrada bloquea; un experimento desconocido bloquea. No mira texto libre."""
+    deps = OE_DEFINITION_DEPENDENCIES.get(experiment)
+    if deps is None:
+        return [f"<experimento desconocido: {experiment!r}>"]
+    out = []
+    for k in deps:
+        d = DEFINITIONS.get(k)
+        if d is None:
+            out.append(f"{k} (no registrada)")
+        elif d.get("status") not in _RESOLVED:
+            out.append(k)
+    return out

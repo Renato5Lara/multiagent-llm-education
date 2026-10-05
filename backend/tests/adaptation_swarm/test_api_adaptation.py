@@ -89,7 +89,7 @@ async def test_baseline_endpoint_returns_the_same_kind_of_package(client, slice_
     out = r.json()
     pkg = out["package"]
     assert out["system"] == system and out["status"] == "completed" and out["metrics"]["t_conv_ms"] is None and 0 < out["metrics"]["decision_ms"] <= out["metrics"]["total_ms"]
-    assert out["persistence"] == "off" and out["time_contract"] == {"version": "oe2-time-contract-v1", "candidate_common_metric": "decision_ms", "validation": "PENDING_METHODOLOGICAL_VALIDATION", "t_conv_applies": False}
+    assert out["persistence"] == "off" and out["time_contract"] == {"version": "oe2-time-contract-v2", "candidate_common_metric": "time_to_final_config_ms", "validation": "PENDING_METHODOLOGICAL_VALIDATION", "t_conv_applies": False, "legacy_metric": "decision_ms", "legacy_status": "LEGACY_EXPLORATORY"}
     assert pkg["chain_valid"] and pkg["validation"]["valid"] and pkg["code"]["source"] and pkg["diagram"]["mermaid"] and pkg["text"]["text"]
     assert (out["metrics"]["n_evaluations"] == 6561) == (system == "bruteforce")
     audio = await client.get(pkg["audio"]["url"], headers={"X-Swarm-Key": KEY})

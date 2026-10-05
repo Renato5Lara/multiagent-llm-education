@@ -25,15 +25,15 @@ KEY = "test-key-b"
 
 # ── B.1 contrato de tiempo ──────────────────────────────────────────────────────────────────────────────────
 def test_time_contract_keeps_t_conv_proposal_only_and_defines_the_common_metric():
-    assert time_contract.COMMON_METRIC == "decision_ms" and time_contract.STATUS.endswith("UNVALIDATED") and "NOT_ADVISOR_APPROVED" in time_contract.STATUS
+    assert time_contract.COMMON_METRIC == "time_to_final_config_ms" and time_contract.LEGACY_METRIC == "decision_ms" and time_contract.STATUS.endswith("UNVALIDATED") and "NOT_ADVISOR_APPROVED" in time_contract.STATUS
     assert time_contract.VALIDATION_STATUS == "PENDING_METHODOLOGICAL_VALIDATION" and time_contract.T_CONV_EQUIVALENCE == "NOT_ESTABLISHED"
-    assert time_contract.response_contract("proposal") == {"version": "oe2-time-contract-v1", "candidate_common_metric": "decision_ms", "validation": "PENDING_METHODOLOGICAL_VALIDATION", "t_conv_applies": True}
+    assert time_contract.response_contract("proposal") == {"version": "oe2-time-contract-v2", "candidate_common_metric": "time_to_final_config_ms", "validation": "PENDING_METHODOLOGICAL_VALIDATION", "t_conv_applies": True, "legacy_metric": "decision_ms", "legacy_status": "LEGACY_EXPLORATORY"}
     for role in ("conventional_independent", "swarm_heuristic_ablation", "reference_optimum"):
         assert time_contract.response_contract(role)["t_conv_applies"] is False
     d = time_contract.DEFINITIONS
     assert "Solo propuesta" in d["t_conv_ms"] and "engine.initialize" in d["t_conv_ms"] and "= t_conv_ms de AG0 (copiado)" in d["decision_ms"]
-    assert "NO es T_conv" in d["decision_ms"] and "candidata" in d["decision_ms"] and "validación pendiente" in d["decision_ms"]       # nunca como sinónimo de T_conv
-    assert any("inicialización de partículas" in x for x in time_contract.KNOWN_LIMITS) and any("NO validada" in x for x in time_contract.KNOWN_LIMITS)
+    assert "NO es T_conv" in d["decision_ms"] and "LEGACY" in d["decision_ms"] and "NO es T_conv" in d["time_to_final_config_ms"]       # nunca como sinónimo de T_conv
+    assert any("inicialización de partículas" in x for x in time_contract.KNOWN_LIMITS) and any("no está aprobada por el asesor" in x for x in time_contract.KNOWN_LIMITS)
 
 
 def test_in_process_swarm_row_copies_t_conv_into_decision_ms_without_changing_it():
@@ -43,8 +43,10 @@ def test_in_process_swarm_row_copies_t_conv_into_decision_ms_without_changing_it
     class R:
         status, stop_reason, k_stop, t_conv_ms, total_ms, g_best_F, g_best_S, predicted_dominant, metrics = "completed", "epsilon", 4, 123.456, 200.0, 0.5, [1] * 8, "code", M()
         package, W, iterations, error = None, None, [], None
+        t_start_ns, t_search_ns = 5_000, 5_000 + 1_000_000                                            # marcas de AG0 (observabilidad aditiva): 1 ms entre el fin de step_receive y el inicio de la búsqueda
     row = runner._swarm_row(R())
-    assert row["t_conv_ms"] == 123.456 and row["decision_ms"] == 123.456
+    assert row["t_conv_ms"] == 123.456 and row["decision_ms"] == 123.456                              # decision_ms legacy: copia de t_conv_ms, sin cambios
+    assert row["time_to_final_config_ms"] == pytest.approx(1.0 + 123.456)                              # indicador común: pre-búsqueda + t_conv_ms, campo APARTE
 
 
 # ── B.2 secuencia determinista ──────────────────────────────────────────────────────────────────────────────
@@ -175,7 +177,7 @@ async def test_proposal_response_exposes_decision_ms_equal_to_t_conv_and_the_eff
     assert r.status_code == 200, r.text
     out = r.json()
     assert out["t_conv_ms"] > 0 and out["decision_ms"] == out["t_conv_ms"] and out["system"] == "swarm" and out["system_role"] == "proposal"
-    assert out["time_contract"] == {"version": "oe2-time-contract-v1", "candidate_common_metric": "decision_ms", "validation": "PENDING_METHODOLOGICAL_VALIDATION", "t_conv_applies": True} and out["persistence"] == "off"
+    assert out["time_contract"] == {"version": "oe2-time-contract-v2", "candidate_common_metric": "time_to_final_config_ms", "validation": "PENDING_METHODOLOGICAL_VALIDATION", "t_conv_applies": True, "legacy_metric": "decision_ms", "legacy_status": "LEGACY_EXPLORATORY"} and out["persistence"] == "off"
     assert hw.extract_cycle_metrics(out) == {"shape": "swarm", "t_conv_ms": out["t_conv_ms"], "decision_ms": out["decision_ms"], "k_stop": out["k_stop"], "profile_id": out["profile_id"]}
     health = (await client.get("/api/adaptation/health", headers={"X-Swarm-Key": KEY})).json()
     assert health["persist_policy"] == "off"
@@ -215,7 +217,7 @@ def test_dry_run_plan_shows_proposal_conventional_sequence_persistence_metrics_a
     assert not out_dir.exists()                                                                       # el dry-run no escribe nada
     assert d["proposal"] == ["swarm"] and d["conventional_independent"] == ["decision_table"] and d["auxiliary_contrasts"] == [] and d["official"] is False
     assert d["profile_sequence"]["same_sequence_for_all_systems"] is True and len(d["profile_sequence"]["example_sha256_run00"]) == 64 and d["persist_policy"] == "off"
-    assert d["metrics"]["candidate_common_time_metric"] == "decision_ms" and d["metrics"]["candidate_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and d["metrics"]["t_conv_equivalence"] == "NOT_ESTABLISHED" and d["metrics"]["t_conv_ms"].startswith("solo la propuesta")
+    assert d["metrics"]["candidate_common_time_metric"] == "time_to_final_config_ms" and d["metrics"]["candidate_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and d["metrics"]["t_conv_equivalence"] == "NOT_ESTABLISHED" and d["metrics"]["t_conv_ms"].startswith("solo la propuesta")
     assert d["load_conditions"] == {"contrast_users_le_25": [1, 10, 25], "stress_users_gt_25": [50]} and d["configuration"]["swarm_N"] == [20]
     assert {"code_state", "campaign_source_fingerprints", "systems", "time_contract", "profile_sequence", "persist_policy", "hardware"} <= set(d["provenance_prepared"])
     assert d["campaign"] == "OE2-PREPARATION-NOT-EXECUTED" and any("contrato de tiempo" in r for r in d["official_refusals"]) and d["oe2_official"] is False
@@ -236,7 +238,7 @@ def test_provenance_records_real_code_state_fingerprints_roles_and_sequence_hash
     fp = prov["campaign_source_fingerprints"]
     assert set(fp) == set(code_state.CAMPAIGN_SOURCES) and all(len(h) == 64 for h in fp.values())
     assert fp["adaptation_swarm/baselines/decision_table.py"] == hashlib.sha256((BACK / "adaptation_swarm/baselines/decision_table.py").read_bytes()).hexdigest()
-    assert prov["time_contract"]["candidate_common_metric"] == "decision_ms" and prov["time_contract"]["validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and prov["campaign_spec"]["sha256"] == campaign_spec.spec_hash() and prov["official"] is False
+    assert prov["time_contract"]["candidate_common_metric"] == "time_to_final_config_ms" and prov["time_contract"]["validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and prov["campaign_spec"]["sha256"] == campaign_spec.spec_hash() and prov["official"] is False
     assert set(prov["profile_sequence"]["sha256_by_run_index_and_load"]) == {"r00|u1", "r00|u10", "r01|u1", "r01|u10"}
 
 

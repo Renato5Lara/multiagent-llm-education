@@ -2,15 +2,18 @@
 Modificar un mensaje no desbloquea nada: para desbloquear hay que cambiar el estado que lo origina (p. ej. que el contrato de tiempo pase a VALIDATED, o que la definición de L_resp y la política de persistencia sean
 compatibles). Ningún guard decide cuestiones metodológicas: los marcados `frozen` (B1, B5, B13) solo REPRESENTAN la decisión pendiente.
 
-    B1   contrato de tiempo: equivalencia `decision_ms`/T_conv NOT_ESTABLISHED                        (metodológico, congelado)
+    B1   indicador común `time_to_final_config_ms` sin aprobar/validar (decisión B1-B provisional)    (metodológico, congelado). Se resuelve SOLO con su estado de aprobación explícito; NUNCA con una
+         equivalencia con T_conv (declararla es una contradicción de B1).
     B3   la evaluación de 𝓕 de reporte del baseline corre dentro de la petición medida                (técnico)
-    B5   política de persistencia incompatible con la definición aprobada de L_resp                    (metodológico, congelado)
+    B5   decisión B5-C (comparación OFF común + costo ON de la propuesta) sin aprobar                  (metodológico, congelado). Se resuelve SOLO con su estado de aprobación explícito y coherencia
+         de la política; NO modificando L_resp ni activando persistencia en el baseline.
     B6   timeout de cliente no configurado (provisional = aviso no crítico)                             (técnico)
     B7   política del generador de carga no definida                                                    (técnico)
     B11  esquema de corrida/análisis HTTP sin integrar (campos requeridos, `inprocess_obs`)            (técnico)
     B12  provenance incompleta (solo con provenance)                                                    (técnico)
     B13  alcance del comparador pendiente de validación (OE2 dice «sistemas convencionales»)           (metodológico, congelado)
-    DEF  definiciones PENDING y F1 v3 sin sellar                                                        (definición)
+    PEND decisiones metodológicas de D.5 sin cerrar (pareamiento, `m` de Holm, errores/timeouts, H1/L_resp literal, cold/warm, asimetría, estadístico de latencia, orden)   (metodológico, congelado)
+    DEF  definiciones PENDING DE LAS DEPENDENCIAS DEL OBJETIVO (`definitions.blocked_for(experiment)`)  (definición; dependency-aware: las PENDING de OE1/OE5 que OE2 no necesita no bloquean)
 """
 
 from __future__ import annotations
@@ -23,6 +26,8 @@ from typing import Mapping
 REQUIRED_RUN_FIELDS = (
     "campaign_id", "system", "system_role", "run_id", "batch_seed", "profile_sequence_hash", "load", "users", "warmup_seconds", "persist_policy", "p95_latency_ms", "throughput_http",
     "error_count", "timeout_count", "decision_ms_mean", "decision_ms_median", "decision_ms_p95", "t_conv_ms_mean", "metric_validation_status", "comparable", "client_timeout_s", "official", "oe2_official",
+    "persistence_condition", "comparison_role", "confirmatory_role", "persist_policy_effective", "redis_isolation",
+    "run_index", "execution_index", "server_instance", "server_restarted_before_run", "server_runs_served_before", "postgres_observation",
 )
 
 
@@ -68,30 +73,65 @@ def persistence_status(policy: str | None, baseline_supports_persistence: bool |
     return {"policy": policy, "l_resp_definition_requires_sync_persistence": required, "baseline_supports_persistence": supports, "status": status}
 
 
-def evaluate(prov: Mapping | None = None) -> list[Blocker]:
-    """Todos los bloqueos y avisos vigentes. Sin `prov` se evalúa el estado del CÓDIGO; con `prov` (la provenance de la campaña) también lo registrado para esa ejecución."""
+def persistence_decision_state(policy: str | None) -> dict:
+    """Estado de la decisión B5-C. Se resuelve SOLO si (1) tiene aprobación EXPLÍCITA del asesor, (2) su estructura es coherente (contraste OFF, costo ON de la propuesta, sin persistencia en el baseline, OFF declarado como NO
+    literal), (3) la política efectiva es la del contraste y (4) la definición aprobada de L_resp sigue exigiendo la persistencia síncrona (nadie la reformuló para que OFF parezca literal). Nada de esto exige que el
+    baseline persista ni que L_resp cambie."""
+    from adaptation_swarm.oe import campaign_spec
+    pp = campaign_spec.SPEC["oe2"]["persist_policy"]
+    approved = pp.get("status") == campaign_spec.APPROVED_STATUS
+    reasons = [] if approved else [f"sin aprobación del asesor (estado {pp.get('status')})"]
+    if not (pp.get("comparison_persistence") == "off" and pp.get("proposal_persistence_cost") == "on" and pp.get("artificial_persistence_in_baseline") is False
+            and pp.get("comparison_off_is_literal_l_resp") is False and pp.get("on_supported_for_comparison") is False):
+        reasons.append("la estructura de la decisión no es coherente (contraste OFF, costo ON de la propuesta, sin persistencia en el baseline, OFF no literal)")
+    if policy != pp.get("comparison_persistence"):
+        reasons.append(f"la política efectiva {policy!r} no es la del contraste ({pp.get('comparison_persistence')!r})")
+    if not l_resp_requires_sync_persistence():
+        reasons.append("la definición aprobada de L_resp dejó de exigir la persistencia síncrona (fue modificada)")
+    return {"approved": approved, "pending_approval": not approved, "reasons": reasons, "blocking": bool(reasons)}
+
+
+def pending_methodological_decisions() -> list[str]:
+    """Decisiones de `campaign_spec.oe2.methodological_decisions` aún sin resolver. FALLA CERRADO: se resuelve solo con `status == DECIDED` y `chosen` ∈ `options`; cualquier otra cosa (estado ausente, elección fuera de las opciones,
+    estructura mal formada) cuenta como pendiente. No decide nada y no mira textos."""
+    from adaptation_swarm.oe import campaign_spec
+    decisions = campaign_spec.SPEC["oe2"].get("methodological_decisions")
+    if not isinstance(decisions, Mapping) or not decisions:
+        return ["<estructura de decisiones ausente>"]
+    return sorted(k for k, d in decisions.items() if not (isinstance(d, Mapping) and d.get("status") == "DECIDED" and d.get("chosen") in (d.get("options") or ())))
+
+
+def evaluate(prov: Mapping | None = None, experiment: str | None = None) -> list[Blocker]:
+    """Todos los bloqueos y avisos vigentes. Sin `prov` se evalúa el estado del CÓDIGO; con `prov` (la provenance de la campaña) también lo registrado para esa ejecución. `experiment` (por defecto el de la provenance,
+    si no `oe2`) elige las dependencias de definición que cuentan (`definitions.blocked_for`): DEF no bloquea por definiciones PENDING de otros objetivos (p. ej. OE1) ni por F1 v3 (dependencia de OE5)."""
     from adaptation_swarm.baselines import conventional
-    from adaptation_swarm.gold import rubric_v3
     from adaptation_swarm.oe import campaign_spec, code_state, definitions as defs, http_campaign as hc, http_window, time_contract
-    out: list[Blocker] = [Blocker("DEF", "definition", True, f"definición PENDING: {k}") for k, v in defs.DEFINITIONS.items() if v["status"] == defs.PENDING]
-    if not rubric_v3.APPROVED_RULE_VERSIONS:
-        out.append(Blocker("DEF", "definition", True, "F1 v3 sin sellar (rubric_v3.APPROVED_RULE_VERSIONS vacío; PENDING_ADVISOR en el pre-registro v3)"))
+    experiment = experiment or (prov or {}).get("experiment") or "oe2"
+    out: list[Blocker] = [Blocker("DEF", "definition", True, f"definición PENDING (dependencia de {experiment}): {k}") for k in defs.blocked_for(experiment)]
     spec = campaign_spec.SPEC["oe2"]
 
-    if time_contract.T_CONV_EQUIVALENCE != "ESTABLISHED" or time_contract.VALIDATION_STATUS != "VALIDATED":
-        out.append(Blocker("B1", "methodological", True, f"contrato de tiempo {time_contract.CONTRACT_VERSION} sin validar: la equivalencia metodológica entre `decision_ms` y el T_conv de la propuesta "
-                           f"({time_contract.T_CONV_EQUIVALENCE}, validación {time_contract.VALIDATION_STATUS}) no está establecida; decision_ms no puede sustituir a T_conv en ningún contraste confirmatorio", frozen=True))
+    if time_contract.T_CONV_EQUIVALENCE == "ESTABLISHED":
+        out.append(Blocker("B1", "methodological", True, "contradicción con B1: se declaró equivalencia de T_conv entre sistemas (T_CONV_EQUIVALENCE = ESTABLISHED). T_conv es SOLO de la propuesta; esa equivalencia no se establece y no desbloquea nada"))
+    elif time_contract.TTFC_CONTRACT.get("status") != time_contract.APPROVED_STATUS or time_contract.VALIDATION_STATUS != "VALIDATED":
+        out.append(Blocker("B1", "methodological", True, f"contrato de tiempo {time_contract.CONTRACT_VERSION} sin validar: el indicador común `{time_contract.COMMON_METRIC}` es una decisión provisional "
+                           f"(estado {time_contract.TTFC_CONTRACT.get('status')}, validación {time_contract.VALIDATION_STATUS}); se resuelve con su aprobación/validación explícita, NO con equivalencia con T_conv "
+                           f"({time_contract.T_CONV_EQUIVALENCE}); `decision_ms` es LEGACY; ninguno puede sustituir a T_conv en un contraste confirmatorio", frozen=True))
 
     policy = (prov or {}).get("persist_policy", spec["persist_policy"]["campaign"])
-    ps = persistence_status(policy)
-    if ps["status"] != "COMPATIBLE":
-        out.append(Blocker("B5", "methodological", True, f"política de persistencia {policy!r}: {ps['status']} (la definición vigente de L_resp {'incluye' if ps['l_resp_definition_requires_sync_persistence'] else 'no incluye'} "
-                           "la persistencia síncrona mínima; el baseline " + ("soporta" if ps["baseline_supports_persistence"] else "no soporta") + " persistencia); decisión metodológica pendiente", frozen=True))
+    b5 = persistence_decision_state(policy)
+    if b5["blocking"]:
+        out.append(Blocker("B5", "methodological", True, f"decisión B5-C de persistencia ({policy!r}) sin resolver: " + "; ".join(b5["reasons"]) + ". Se resuelve con su aprobación explícita (comparación OFF común aceptada, costo ON de la propuesta aparte, "
+                           "sin persistencia en el baseline, L_resp aprobado intacto); no modificando L_resp ni activando persistencia en el baseline", frozen=b5["pending_approval"]))
 
     scope = spec.get("comparator_scope_validation", {})
     if scope.get("status") != "VALIDATED":
         out.append(Blocker("B13", "methodological", True, f"alcance del comparador pendiente de validación: solo {scope.get('implemented_conventional_systems')} implementado(s) como convencional independiente "
                            "(LMS real y LLM monolítico no implementados) y OE2 habla de «sistemas convencionales»; OE2 solo puede concluir sobre ese comparador", frozen=True))
+
+    pending = pending_methodological_decisions()
+    if pending:
+        out.append(Blocker("PEND", "methodological", True, f"decisiones metodológicas de D.5 sin cerrar: {', '.join(pending)}. Se resuelven con una decisión explícita (`status = DECIDED` y `chosen` entre sus opciones); "
+                           "ningún código las decide por defecto", frozen=True))
 
     in_request = conventional.BASELINE_REPORTS_QUALITY_IN_REQUEST
     if prov is not None and in_request is False:

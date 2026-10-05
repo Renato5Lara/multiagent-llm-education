@@ -30,7 +30,7 @@ from typing import Callable, Sequence
 from adaptation_swarm.analysis import replicas as _infra
 from adaptation_swarm.analysis.baseline_bruteforce import DEFAULT_PROFILES, TARGET_HARDWARE, hardware_profile, meets_target
 from adaptation_swarm.baselines.conventional import BASELINE_REPORTS_QUALITY_IN_REQUEST, SYSTEM_ROLES
-from adaptation_swarm.oe import campaign_guards, campaign_spec, code_state, http_window, oe2_confirmatory, profile_sequence, time_contract
+from adaptation_swarm.oe import campaign_guards, campaign_spec, code_state, http_window, oe2_confirmatory, profile_sequence, run_isolation, time_contract
 from adaptation_swarm.oe import definitions as oe_defs
 from adaptation_swarm.oe.conditions import SYSTEMS
 from adaptation_swarm.oe.factorial import factorial_anova
@@ -43,7 +43,7 @@ OE4_USERS, OE4_PARTICLES = (1, 5, 10, 25, 50, 100), (10, 20, 30)
 RUNS_PER_CELL_MIN = 10
 DEFAULT_BASE_SEED = 26100501
 DEFAULT_OE2_SYSTEMS = tuple(campaign_spec.SPEC["oe2"]["design"]["systems"])        # propuesta + convencional independiente (campaign_spec); rules y bruteforce son auxiliares opcionales
-PERSIST_POLICIES = ("off",)                                                         # «on» no está soportada para comparar: el baseline nunca persiste
+PERSIST_POLICIES = ("off",)                                                         # política del CONTRASTE: «on» no está soportada para comparar (el baseline nunca persiste); la condición ON de la propuesta es una medición APARTE (`proposal_persistence_cost`)
 SEQUENCE_PREVIEW_REQUESTS = 50                                                      # peticiones por usuario que entran al hash de la secuencia esperada
 CLIENT_TIMEOUT_S = float(campaign_spec.SPEC["oe2"]["client_timeout"]["seconds"])       # B6: timeout de cliente de campaña (PROVISIONAL_TECHNICAL), el mismo para todos los sistemas; configurable con --client-timeout
 CLIENT_TIMEOUT_STATUS = campaign_spec.SPEC["oe2"]["client_timeout"]["status"]
@@ -57,10 +57,29 @@ def run_seed(base_seed: int, run_index: int) -> int:
     return derive_seed(base_seed, "http-campaign-run", run_index)
 
 
-def plan(experiment: str, *, runs: int, base_seed: int, users: Sequence[int], particles: Sequence[int], systems: Sequence[str], order: str, campaign_id: str, profile_ids: Sequence[str] | None = None) -> list[dict]:
-    """Todas las corridas previstas, en orden de ejecución. `randomized-blocks`: por ronda `i` todas las celdas en orden aleatorio determinista (Random(base_seed + i)): reparte la deriva térmica entre celdas."""
+def _cell_conditions(experiment: str, system: str, load: int, persist: str) -> dict:
+    """Condición de persistencia y roles de UNA celda (se registran en el plan, la provenance y cada corrida). Una corrida ON solo existe como `proposal_persistence_cost` de la propuesta."""
+    spec = campaign_spec
+    if persist == spec.PROPOSAL_COST_PERSISTENCE:
+        if system != spec.SPEC["oe2"]["proposal_system"]:
+            raise ValueError(f"la persistencia ON solo se mide en la propuesta ({spec.SPEC['oe2']['proposal_system']}), no en {system!r}: no se implementa persistencia artificial en el baseline")
+        return {"persist_policy": persist, "persistence_condition": "proposal_cost_on", "comparison_role": spec.ROLE_PROPOSAL_COST, "confirmatory_role": "descriptive_cost_measurement"}
     if experiment == "oe4":
-        cells = [{"system": "swarm", "load": u, "swarm_N": n} for n in particles for u in users]
+        return {"persist_policy": persist, "persistence_condition": "comparison_off", "comparison_role": "oe4_swarm_grid", "confirmatory_role": "oe4_grid"}
+    if system in spec.SPEC["oe2"]["auxiliary_contrasts"]:
+        return {"persist_policy": persist, "persistence_condition": "comparison_off", "comparison_role": spec.ROLE_AUXILIARY, "confirmatory_role": "auxiliary_descriptive"}
+    return {"persist_policy": persist, "persistence_condition": "comparison_off", "comparison_role": spec.ROLE_CONTRAST,
+            "confirmatory_role": "confirmatory_family_candidate" if load <= http_window.CONTRAST_MAX_USERS else "stress_descriptive"}
+
+
+def plan(experiment: str, *, runs: int, base_seed: int, users: Sequence[int], particles: Sequence[int], systems: Sequence[str], order: str, campaign_id: str, profile_ids: Sequence[str] | None = None,
+         proposal_persistence_cost: bool = False) -> list[dict]:
+    """Todas las corridas previstas, en orden de ejecución. `randomized-blocks`: por ronda `i` todas las celdas en orden aleatorio determinista (Random(base_seed + i)): reparte la deriva térmica entre celdas.
+    `proposal_persistence_cost` (solo OE2): añade celdas de la PROPUESTA con persistencia ON (misma secuencia de perfiles y semillas que su celda OFF); no forman parte del contraste."""
+    if proposal_persistence_cost and experiment != "oe2":
+        raise ValueError("la condición ON de la propuesta solo aplica a OE2")
+    if experiment == "oe4":
+        cells = [{"system": "swarm", "load": u, "swarm_N": n, "persist": "off"} for n in particles for u in users]
     elif experiment == "oe2":
         ref_n = PSOParams().n_particles
         bad = [s for s in systems if s not in SYSTEMS]
@@ -69,7 +88,9 @@ def plan(experiment: str, *, runs: int, base_seed: int, users: Sequence[int], pa
         missing = {campaign_spec.SPEC["oe2"]["proposal_system"], campaign_spec.SPEC["oe2"]["conventional_system"]} - set(systems)
         if missing:
             raise ValueError(f"una campaña OE2 exige la propuesta y el convencional independiente; faltan: {sorted(missing)} (rules y bruteforce son contrastes auxiliares)")
-        cells = [{"system": s, "load": u, "swarm_N": ref_n} for s in systems for u in users]
+        cells = [{"system": s, "load": u, "swarm_N": ref_n, "persist": "off"} for s in systems for u in users]
+        if proposal_persistence_cost:
+            cells += [{"system": campaign_spec.SPEC["oe2"]["proposal_system"], "load": u, "swarm_N": ref_n, "persist": campaign_spec.PROPOSAL_COST_PERSISTENCE} for u in users]
     else:
         raise ValueError(f"experimento desconocido: {experiment!r}")
     ids = list(profile_ids) if profile_ids is not None else [p.profile_id for p in read_dataset(DEFAULT_PROFILES)]
@@ -79,9 +100,11 @@ def plan(experiment: str, *, runs: int, base_seed: int, users: Sequence[int], pa
         if order == "randomized-blocks":
             random.Random(base_seed + i).shuffle(ordered)
         for c in ordered:
-            cell = f"{c['system']}|u{c['load']}|N{c['swarm_N']}"
+            persist = c["persist"]
+            cell = f"{c['system']}|u{c['load']}|N{c['swarm_N']}" + ("|persON" if persist == campaign_spec.PROPOSAL_COST_PERSISTENCE else "")
             seed = run_seed(base_seed, i)
-            out.append({**c, "cell": cell, "run_index": i, "seed": seed, "system_role": time_contract.PROPOSAL if c["system"] == "swarm" else SYSTEM_ROLES[c["system"]], "persist_policy": "off",
+            out.append({**{k: v for k, v in c.items() if k != "persist"}, "cell": cell, "run_index": i, "seed": seed, "system_role": time_contract.PROPOSAL if c["system"] == "swarm" else SYSTEM_ROLES[c["system"]],
+                        **_cell_conditions(experiment, c["system"], c["load"], persist),
                         "profile_sequence_sha256": profile_sequence.sequence_sha256(seed, c["load"], SEQUENCE_PREVIEW_REQUESTS, ids), "batch_id": f"{campaign_id}-b{i:02d}", "run_id": f"{campaign_id}-{cell}-r{i:02d}"})
     return out
 
@@ -111,7 +134,8 @@ def record(run: dict, summary: dict, prov: dict) -> dict:
             "throughput_rps": summary.get("throughput_rps"), "users": run["load"], "t_conv_ms_mean": summary.get("t_conv_ms_mean"), "generator_possibly_bottleneck": summary.get("generator_possibly_bottleneck"),
             "environment_class": prov["environment_class"], "official": prov["official"], "oe2_official": prov["oe2_official"],
             # contrato de tiempo, rol, persistencia y secuencia (Fase B)
-            "system_role": run["system_role"], "persist_policy": run["persist_policy"], "decision_ms_mean": summary.get("decision_ms_mean"), "decision_ms_validation": time_contract.VALIDATION_STATUS,
+            "system_role": run["system_role"], "persist_policy": run["persist_policy"], "decision_ms_mean": summary.get("decision_ms_mean"), "decision_ms_validation": time_contract.LEGACY_STATUS,
+            "persistence_condition": run["persistence_condition"], "comparison_role": run["comparison_role"], "confirmatory_role": run["confirmatory_role"],
             "profile_sequence_sha256": run["profile_sequence_sha256"], "profile_sequence_check": summary.get("profile_sequence_check"),
             "requests_without_cycle_metrics": summary.get("requests_without_cycle_metrics"),
             # B11: campos requeridos del artefacto de corrida (nombres estables; t_conv_ms_mean solo donde corresponde, nunca copia de decision_ms)
@@ -119,18 +143,27 @@ def record(run: dict, summary: dict, prov: dict) -> dict:
             "error_count": summary.get("error_count"), "timeout_count": summary.get("timeout_count"), "errors_by_kind": summary.get("errors_by_kind"),
             "decision_ms_median": summary.get("decision_ms_median"), "decision_ms_p95": summary.get("decision_ms_p95"),
             "metric_validation_status": time_contract.VALIDATION_STATUS, "comparable": summary.get("comparable"), "generator_saturated": summary.get("generator_saturated"),
-            "non_comparable_reason": summary.get("non_comparable_reason"), "client_timeout_s": prov.get("client_timeout_s")}
+            "non_comparable_reason": summary.get("non_comparable_reason"), "client_timeout_s": prov.get("client_timeout_s"),
+            # D.4.1: estado EFECTIVO verificado del servidor y aislamiento de Redis de ESTA corrida (los completa `execute`; None = no verificado)
+            "persist_policy_effective": None, "redis_isolation": None,
+            # E: trazabilidad de orden, de arranque del servidor (cold/warm) y de PostgreSQL por corrida; `run_index`/`batch_id`/`seed` quedan disponibles para un eventual pareamiento (NO se usan en el análisis actual)
+            "run_index": run["run_index"], "execution_index": None, "server_instance": None, "server_restarted_before_run": None, "server_runs_served_before": None, "postgres_observation": None}
 
 
-def record_effective_server(prov: dict, health: dict) -> None:
-    """Anota en la provenance lo que el SERVIDOR informó realmente (no lo que el cliente supone) y si la biblioteca coincide con la registrada."""
-    prov["server"]["effective"] = {k: health.get(k) for k in ("library_version", "persist_policy", "baseline_quality_in_request")}
-    prov["server"]["library_version_matches"] = health.get("library_version") == prov["library"]["version"]
+def record_effective_server(prov: dict, health) -> None:
+    """Anota en la provenance lo que el SERVIDOR informó realmente (no lo que el cliente supone) y si la biblioteca coincide con la registrada. `health`: un /health, o la lista de `(N, persistencia, /health)` de TODOS los
+    servidores que usó la campaña (uno por política): `effective_by_policy` conserva el de cada política y `library_version_matches` exige que TODOS coincidan."""
+    entries = [("-", "-", health)] if isinstance(health, dict) else list(health)
+    keys = ("library_version", "persist_policy", "baseline_quality_in_request")
+    prov["server"]["effective"] = {k: entries[-1][2].get(k) for k in keys} if entries else {k: None for k in keys}
+    prov["server"]["effective_by_policy"] = {f"{p}": {k: h.get(k) for k in keys} for _n, p, h in entries}
+    prov["server"]["library_version_matches"] = bool(entries) and all(h.get("library_version") == prov["library"]["version"] for _n, _p, h in entries)
 
 
 def record_stub() -> dict:
     """Registro de corrida construido con datos mínimos: el ESQUEMA real que produce `record` (lo usa el guard B11; no son datos)."""
-    run = {"run_id": "s", "batch_id": "b", "seed": 1, "system": "swarm", "load": 1, "swarm_N": 20, "system_role": "proposal", "persist_policy": "off", "profile_sequence_sha256": "x"}
+    run = {"run_id": "s", "batch_id": "b", "run_index": 0, "seed": 1, "system": "swarm", "load": 1, "swarm_N": 20, "system_role": "proposal", "persist_policy": "off", "profile_sequence_sha256": "x",
+           "persistence_condition": "comparison_off", "comparison_role": campaign_spec.ROLE_CONTRAST, "confirmatory_role": "confirmatory_family_candidate"}
     prov = {"campaign_id": "s", "campaign_spec": {"sha256": "x"}, "code": {}, "hardware": {}, "definition_version": {}, "environment_class": "PILOT", "official": False, "oe2_official": False, "client_timeout_s": CLIENT_TIMEOUT_S}
     return record(run, {"status": "ok"}, prov)
 
@@ -149,20 +182,31 @@ def provenance(args: argparse.Namespace, runs: list[dict]) -> dict:
             "design": {"runs_per_cell": args.runs, "users": args.users, "particles": args.particles, "systems": args.systems, "warmup_s": args.warmup, "window_s": args.window, "base_seed": args.base_seed,
                        "order": args.order, "n_planned_runs": len(runs), "seed_rule": "derive_seed(base_seed, 'http-campaign-run', run_index); distinta por corrida, compartida entre celdas (bloqueado)"},
             "persist_policy": args.persist_policy, "api_persist_env_forced": "0" if args.persist_policy == "off" else None, "generator_shares_host_with_server": True,
+            "persistence_conditions": {"comparison": campaign_spec.COMPARISON_PERSISTENCE, "proposal_cost": campaign_spec.PROPOSAL_COST_PERSISTENCE if any(r["persist_policy"] == campaign_spec.PROPOSAL_COST_PERSISTENCE for r in runs) else None,
+                                       "n_runs_by_condition": {c: sum(1 for r in runs if r["persistence_condition"] == c) for c in sorted({r["persistence_condition"] for r in runs})},
+                                       "roles": campaign_spec.SPEC["oe2"]["persist_policy"]["roles"], "comparison_off_is_literal_l_resp": False, "proposal_on_in_contrast": False,
+                                       "server_env": {"comparison_off": {"SWARM_API_PERSIST": "0"}, "proposal_cost_on": {"SWARM_API_PERSIST": "1"}}},
             "code_state": code_state.git_state(), "campaign_source_fingerprints": code_state.source_fingerprints(),
             "systems": {s: (time_contract.PROPOSAL if s == "swarm" else SYSTEM_ROLES[s]) for s in sorted({r["system"] for r in runs})},
             "time_contract": {"version": time_contract.CONTRACT_VERSION, "status": time_contract.STATUS, "candidate_common_metric": time_contract.COMMON_METRIC, "validation": time_contract.VALIDATION_STATUS,
-                              "t_conv_equivalence": time_contract.T_CONV_EQUIVALENCE, "definitions": time_contract.DEFINITIONS,
-                              "known_limits": list(time_contract.KNOWN_LIMITS)},
+                              "t_conv_equivalence": time_contract.T_CONV_EQUIVALENCE, "definitions": time_contract.DEFINITIONS, "common_indicator": time_contract.TTFC_CONTRACT,
+                              "legacy_metric": {"name": time_contract.LEGACY_METRIC, "status": time_contract.LEGACY_STATUS}, "known_limits": list(time_contract.KNOWN_LIMITS)},
             "profile_sequence": {"algorithm": profile_sequence.ALGORITHM, "preview_requests_per_user": SEQUENCE_PREVIEW_REQUESTS, "worker_index": 0,
                                  "sha256_by_run_index_and_load": {f"r{r['run_index']:02d}|u{r['load']}": r["profile_sequence_sha256"] for r in runs}},
             # B12: entorno y datos de la ejecución (lo que no puede obtenerse queda `unavailable`)
-            "software": code_state.software_report(args.persist_policy), "library": code_state.library_report(), "dataset": code_state.dataset_report(DEFAULT_PROFILES),
+            "software": code_state.software_report({r["persist_policy"] for r in runs} | {args.persist_policy}), "library": code_state.library_report(), "dataset": code_state.dataset_report(DEFAULT_PROFILES),
             "server": {"uvicorn_workers": SERVER_WORKERS, "port": getattr(args, "port", None), "baseline_quality_in_request": BASELINE_REPORTS_QUALITY_IN_REQUEST,
                        "n_particles_by_system": "swarm: --particles / referencia; decision_table: no aplica"},
             # B6 / B7 / B5
             "client_timeout_s": timeout, "client_timeout_status": CLIENT_TIMEOUT_STATUS, "generator_policy": http_window.GENERATOR_POLICY,
-            "persistence_status": campaign_guards.persistence_status(args.persist_policy)}
+            "persistence_status": campaign_guards.persistence_status(args.persist_policy),
+            # D.4.1: roles por celda, aislamiento de Redis y decisiones metodológicas que siguen pendientes
+            "run_roles": {c: {k: next(r[k] for r in runs if r["cell"] == c) for k in ("system", "system_role", "persist_policy", "persistence_condition", "comparison_role", "confirmatory_role")} for c in sorted({r["cell"] for r in runs})},
+            "redis_isolation": {"prefix": run_isolation.campaign_prefix(args.campaign_id), "mechanism": run_isolation.MECHANISM, "pending": run_isolation.PENDING_DECISION},
+            "cold_warm": {"policy": "NOT_DECIDED (decisión metodológica pendiente: campaign_spec.oe2.methodological_decisions.cold_warm_policy)", "planned_server_starts": planned_server_starts(runs), "n_runs": len(runs),
+                          "recorded_per_run": ["server_instance", "server_restarted_before_run", "server_runs_served_before", "execution_index"]},
+            "methodological_decisions": campaign_spec.SPEC["oe2"]["methodological_decisions"],
+            "pending_methodological_decisions": campaign_spec.SPEC["oe2"]["pending_methodological_decisions"]}
     prov["blockers"] = [b.as_dict() for b in campaign_guards.evaluate(prov)]
     prov["official_refusals"] = official_refusals(hw, args.runs, args.warmup, args.window, prov)
     return prov
@@ -183,17 +227,25 @@ def locust_runner(host: str, locustfile: Path, plugin: Path, raw_dir: Path, pyth
 class ServerPerN:
     """Un uvicorn por tamaño de enjambre N (el servidor lee `SWARM_API_N_PARTICLES` al arrancar). El arranque y la parada quedan FUERA de toda ventana de medición."""
 
-    def __init__(self, python: str, port: int, api_key: str, ready_s: float = 90.0):
-        self.python, self.port, self.key, self.ready_s, self.proc, self.n = python, port, api_key, ready_s, None, None
+    def __init__(self, python: str, port: int, api_key: str, ready_s: float = 90.0, *, redis_prefix: str | None = None, run_label: str | None = None):
+        self.python, self.port, self.key, self.ready_s, self.proc, self.n, self.persist = python, port, api_key, ready_s, None, None, None
+        self.redis_prefix, self.run_label = redis_prefix, run_label           # namespace de Redis de la campaña y etiqueta de las filas de PostgreSQL (solo si no son None)
         self.last_health: dict = {}
+        self.health_log: list[tuple] = []                                    # (N, persistencia, /health) de cada servidor arrancado
+        self.instance, self.runs_served = 0, 0                               # nº de servidor arrancado en la campaña y corridas ya atendidas por él (trazabilidad cold/warm)
 
-    def ensure(self, n: int) -> None:
-        if self.n == n and self.proc and self.proc.poll() is None:
-            return
+    def ensure(self, n: int, persist: str = "off") -> dict:
+        """Un servidor por (N, política de persistencia): la política pedida se fuerza por entorno y se VERIFICA vía /health (no se asume)."""
+        if persist not in ("off", "on"):
+            raise ValueError(f"política de persistencia desconocida: {persist!r}")
+        if self.n == n and self.persist == persist and self.proc and self.proc.poll() is None:
+            return self._report(False)
         self.stop()
-        env = {**os.environ, "SWARM_API_KEY": self.key, "SWARM_API_N_PARTICLES": str(n), "SWARM_API_PERSIST": "0"}        # política de campaña «off», forzada y verificada vía /health
+        self.instance, self.runs_served = self.instance + 1, 0
+        env = {**os.environ, "SWARM_API_KEY": self.key, "SWARM_API_N_PARTICLES": str(n), "SWARM_API_PERSIST": "0" if persist == "off" else "1",
+               **({"SWARM_REDIS_PREFIX": self.redis_prefix} if self.redis_prefix else {}), **({"SWARM_API_RUN_LABEL": self.run_label} if self.run_label else {})}
         self.proc = subprocess.Popen([self.python, "-m", "uvicorn", "app.main:app", "--port", str(self.port), "--workers", str(SERVER_WORKERS)], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        self.n = n
+        self.n, self.persist = n, persist
         import urllib.request
         t0 = time.time()
         while time.time() - t0 < self.ready_s:
@@ -204,36 +256,93 @@ class ServerPerN:
                 time.sleep(1.0)
                 continue
             self.last_health = health
-            if health.get("persist_policy") != "off":                                    # no se asume: se verifica la política EFECTIVA del servidor
+            self.health_log.append((n, persist, health))
+            if health.get("persist_policy") != persist:                                  # no se asume: se verifica la política EFECTIVA del servidor
                 self.stop()
-                raise RuntimeError(f"política de persistencia efectiva {health.get('persist_policy')!r} ≠ 'off' (campaña): no se mide")
+                raise RuntimeError(f"política de persistencia efectiva {health.get('persist_policy')!r} ≠ {persist!r} (condición de la corrida): no se mide")
             if health.get("baseline_quality_in_request") is not False:                    # B3: se verifica lo que el servidor HACE, no lo que la spec dice
                 self.stop()
                 raise RuntimeError(f"el servidor evalúa 𝓕 de reporte dentro de la petición del baseline ({health.get('baseline_quality_in_request')!r}): medición no equivalente")
-            return
+            return self._report(True)
         self.stop()
         raise RuntimeError(f"el servidor no respondió en {self.ready_s:.0f} s (N={n})")
+
+    def _report(self, restarted: bool) -> dict:
+        """El /health verificado más la trazabilidad de arranque de ESTA corrida: servidor nº, si se reinició justo antes, y cuántas corridas había atendido antes (cold/warm: solo se REGISTRA, no se decide)."""
+        before = self.runs_served
+        self.runs_served += 1
+        return {**self.last_health, "server_instance": self.instance, "server_restarted_before_run": restarted, "server_runs_served_before": before}
 
     def stop(self) -> None:
         if self.proc and self.proc.poll() is None:
             self.proc.terminate()
             self.proc.wait(timeout=30)
-        self.proc, self.n = None, None
+        self.proc, self.n, self.persist = None, None, None
 
 
-def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_run: Callable, ensure_server: Callable[[int], None], log: Callable[[str], None] = print,
-            profile_ids: Sequence[str] | None = None) -> list[dict]:
+def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_run: Callable, ensure_server: Callable[[int, str], object], log: Callable[[str], None] = print,
+            profile_ids: Sequence[str] | None = None, isolate: Callable[[dict], dict] | None = None, observe: Callable[[dict], int | None] | None = None) -> list[dict]:
+    """`ensure_server(N, persistencia)` devuelve el /health verificado (o None si no se verifica). `isolate(run)` limpia el estado por ciclo de Redis ANTES de la corrida y devuelve su registro; si falla, la campaña se detiene.
+    `observe(run)` (solo lectura) devuelve cuántos ciclos hay persistidos en PostgreSQL con la etiqueta de la campaña; se consulta antes y después de la carga para comprobar que ON escribió y OFF no."""
     ids = list(profile_ids) if profile_ids is not None else [p.profile_id for p in read_dataset(DEFAULT_PROFILES)]
     out = []
     for k, r in enumerate(runs, 1):
-        ensure_server(r["swarm_N"])
+        effective = ensure_server(r["swarm_N"], r["persist_policy"])
+        iso = isolate(r) if isolate is not None else None
+        before = observe(r) if observe is not None else None
         log(f"[{k}/{len(runs)}] {r['run_id']} seed={r['seed']}")
         raw, cpu = do_run(r, warmup, window)
+        after = observe(r) if observe is not None else None
         summary = http_window.summarize_run(raw, cpu, users=r["load"], system=r["system"], run_id=r["run_id"], warmup_s=warmup, min_window_s=window,
                                          batch_seed=r["seed"], profile_ids=ids)
-        out.append(record(r, summary, prov))
+        rec = record(r, summary, prov)
+        rec["persist_policy_effective"] = effective.get("persist_policy") if isinstance(effective, dict) else None
+        rec["redis_isolation"] = iso
+        rec["execution_index"] = k
+        if isinstance(effective, dict):
+            rec["server_instance"], rec["server_restarted_before_run"], rec["server_runs_served_before"] = (effective.get(x) for x in ("server_instance", "server_restarted_before_run", "server_runs_served_before"))
+        rec["postgres_observation"] = postgres_observation(rec["persist_policy_effective"] or r["persist_policy"], before, after) if observe is not None else None
+        out.append(rec)
         log(f"    {summary['status']}: " + (f"P95 {summary['latency_p95_ms']:.0f} ms · {summary['throughput_rps']:.2f} req/s · error {summary['error_rate']:.2%}" if summary["status"] == "ok" else ""))
     return out
+
+
+def postgres_observation(policy: str, before: int | None, after: int | None) -> dict:
+    """Lo que PostgreSQL mostró en ESTA corrida: ciclos persistidos antes y después. `consistent`: ON ⇒ escribió filas; OFF ⇒ no escribió ninguna; `None` si PostgreSQL no respondió (no se supone nada)."""
+    if before is None or after is None:
+        return {"observed": False, "cycles_before": before, "cycles_after": after, "cycles_delta": None, "expected": "rows" if policy == "on" else "no_rows", "consistent": None}
+    delta = after - before
+    return {"observed": True, "cycles_before": before, "cycles_after": after, "cycles_delta": delta, "expected": "rows" if policy == "on" else "no_rows", "consistent": (delta > 0) if policy == "on" else (delta == 0)}
+
+
+def integrity_violations(records: Sequence[dict]) -> list[dict]:
+    """Violaciones de INVARIANTES técnicos ya declarados en el diseño (no son una regla de exclusión nueva: las corridas se conservan y el análisis no cambia): secuencia de perfiles distinta de la esperada, respuestas sin métricas
+    de ciclo, persistencia efectiva distinta de la pedida, o PostgreSQL en desacuerdo con la política (ON sin filas / OFF con filas)."""
+    out = []
+    for r in records:
+        chk = r.get("profile_sequence_check") or {}
+        if chk.get("mismatches"):
+            out.append({"run_id": r["run_id"], "kind": "profile_sequence_mismatch", "detail": chk})
+        if chk.get("unindexed"):
+            out.append({"run_id": r["run_id"], "kind": "profile_sequence_unindexed_requests", "detail": chk})
+        if r.get("requests_without_cycle_metrics"):
+            out.append({"run_id": r["run_id"], "kind": "requests_without_cycle_metrics", "detail": r["requests_without_cycle_metrics"]})
+        eff = r.get("persist_policy_effective")
+        if eff is not None and eff != r.get("persist_policy"):
+            out.append({"run_id": r["run_id"], "kind": "effective_persistence_differs", "detail": {"requested": r.get("persist_policy"), "effective": eff}})
+        if (r.get("postgres_observation") or {}).get("consistent") is False:
+            out.append({"run_id": r["run_id"], "kind": "postgres_disagrees_with_persistence_policy", "detail": r["postgres_observation"]})
+    return out
+
+
+def planned_server_starts(runs: Sequence[dict]) -> int:
+    """Arranques de servidor que el plan exige (uno cada vez que cambia el par N/persistencia entre corridas consecutivas): dato para decidir la política cold/warm (NO la decide)."""
+    n, cur = 0, None
+    for r in runs:
+        key = (r["swarm_N"], r["persist_policy"])
+        if key != cur:
+            n, cur = n + 1, key
+    return n
 
 
 # ── análisis ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -265,7 +374,9 @@ def analyze_records(experiment: str, records: Sequence[dict], inprocess_obs: Seq
     if experiment == "oe4":
         return analyze_oe4(records)
     summaries = [{"status": r["status"], "system": r["system"], "users": r["load"], "latency_p95_ms": r["p95_ms"], "throughput_rps": r["throughput_http"], "run_id": r["run_id"],
-                  "decision_ms_mean": r.get("decision_ms_mean"), "comparable": r.get("comparable"), "non_comparable_reason": r.get("non_comparable_reason")} for r in records]
+                  "decision_ms_mean": r.get("decision_ms_mean"), "comparable": r.get("comparable"), "non_comparable_reason": r.get("non_comparable_reason"),
+                  "persist_policy": r.get("persist_policy"), "comparison_role": r.get("comparison_role"), "persistence_condition": r.get("persistence_condition"),
+                  "run_index": r.get("run_index"), "batch_id": r.get("batch_id"), "seed": r.get("seed"), "execution_index": r.get("execution_index")} for r in records]       # disponibles para un eventual pareamiento; el análisis actual no los usa
     return oe2_confirmatory.analyze(list(inprocess_obs or []), summaries)
 
 
@@ -287,6 +398,9 @@ def runs_csv(records: Sequence[dict]) -> str:
 
 
 def write_campaign(out_dir: Path, prov: dict, runs: list[dict], records: list[dict], log_lines: list[str], *, raw_dir: Path | None = None, inprocess_obs: Sequence[dict] | None = None) -> None:
+    incomplete = sorted({r.get("run_id", "?") for r in records if any(f not in r for f in campaign_guards.REQUIRED_RUN_FIELDS)})
+    if incomplete:                                                                                   # esquema de corrida: no se escribe evidencia con campos requeridos ausentes
+        raise ValueError(f"registros de corrida sin los campos requeridos {campaign_guards.REQUIRED_RUN_FIELDS}: {incomplete[:5]}")
     out_dir.mkdir(parents=True, exist_ok=False)
     analysis = analyze_records(prov["experiment"], records, inprocess_obs)
     files = {"plan.json": json.dumps(runs, indent=2, sort_keys=True), "runs.jsonl": "\n".join(json.dumps(r, sort_keys=True, default=str) for r in records) + "\n", "runs.csv": runs_csv(records),
@@ -296,6 +410,7 @@ def write_campaign(out_dir: Path, prov: dict, runs: list[dict], records: list[di
             fh.write(t)
     with (out_dir / "manifest.json").open("x", encoding="utf-8") as fh:
         fh.write(json.dumps({"schema": SCHEMA, "campaign_id": prov["campaign_id"], "environment_class": prov["environment_class"], "official": prov["official"], "oe2_official": prov["oe2_official"],
+                             "official_valid": bool(prov["official"]) and not prov.get("integrity_violations") and not prov.get("provenance_completion_gaps"),
                              "files": {n: _sha((out_dir / n).read_bytes()) for n in files},
                              "raw_files": {p.name: _sha(p.read_bytes()) for p in sorted(raw_dir.glob("*"))} if raw_dir is not None else {}}, indent=2, sort_keys=True))
 
@@ -314,7 +429,10 @@ def describe_plan(prov: dict, runs: list[dict]) -> dict:
                               "order": d["order"], "base_seed": d["base_seed"], "seed_rule": d["seed_rule"]},
             "profile_sequence": {"algorithm": profile_sequence.ALGORITHM, "same_sequence_for_all_systems": all(len(v) == 1 for v in by_key.values()),
                                  "example_sha256_run00": next((r["profile_sequence_sha256"] for r in runs if r["run_index"] == 0), None)},
-            "persist_policy": prov["persist_policy"], "metrics": {"candidate_common_time_metric": time_contract.COMMON_METRIC, "candidate_validation": time_contract.VALIDATION_STATUS, "t_conv_equivalence": time_contract.T_CONV_EQUIVALENCE, "t_conv_ms": "solo la propuesta (T_conv real)", "latency": "P95 HTTP por corrida", "throughput": "HTTP, peticiones correctas/s"},
+            "persist_policy": prov["persist_policy"], "persistence_conditions": prov["persistence_conditions"], "redis_isolation": prov["redis_isolation"], "cold_warm": prov["cold_warm"],
+            "pending_methodological_decisions": prov["pending_methodological_decisions"], "methodological_decisions_unresolved": campaign_guards.pending_methodological_decisions(),
+            "scope": campaign_spec.SPEC["oe2"]["scope"],
+            "metrics": {"candidate_common_time_metric": time_contract.COMMON_METRIC, "legacy_time_metric": f"{time_contract.LEGACY_METRIC} ({time_contract.LEGACY_STATUS})", "candidate_validation": time_contract.VALIDATION_STATUS, "t_conv_equivalence": time_contract.T_CONV_EQUIVALENCE, "t_conv_ms": "solo la propuesta (T_conv real)", "latency": "P95 HTTP por corrida", "throughput": "HTTP, peticiones correctas/s"},
             "load_conditions": {"contrast_users_le_25": [u for u in d["users"] if u <= http_window.CONTRAST_MAX_USERS], "stress_users_gt_25": [u for u in d["users"] if u > http_window.CONTRAST_MAX_USERS]},
             "provenance_prepared": sorted(k for k in ("campaign_spec", "code", "code_state", "campaign_source_fingerprints", "hardware", "systems", "time_contract", "profile_sequence", "persist_policy", "design") if k in prov),
             "code_state_dirty": prov["code_state"]["dirty"], "official_refusals": prov["official_refusals"],
@@ -340,6 +458,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--particles", type=_ints, default=list(OE4_PARTICLES))
     ap.add_argument("--systems", type=lambda s: s.split(","), default=list(DEFAULT_OE2_SYSTEMS), help="OE2: propuesta + convencional independiente (por defecto); rules/bruteforce solo como contrastes auxiliares")
     ap.add_argument("--persist-policy", choices=PERSIST_POLICIES, default="off", help="política de persistencia de la campaña, IGUAL para ambos sistemas (el baseline no persiste: solo «off»)")
+    ap.add_argument("--proposal-persistence-cost", action="store_true", help="OE2: añade corridas de la PROPUESTA con persistencia ON (costo de la persistencia síncrona); NO entran al contraste contra decision_table")
     ap.add_argument("--client-timeout", type=float, default=CLIENT_TIMEOUT_S, help=f"timeout de cliente por petición, igual para todos los sistemas ({CLIENT_TIMEOUT_STATUS}); queda en la provenance")
     ap.add_argument("--inprocess-run", type=Path, help="analyze: directorio de una corrida de `oe/runner.py oe2` cuyas observaciones in-process (decision_ms por perfil) se unen al análisis HTTP")
     ap.add_argument("--warmup", type=float, default=http_window.WARMUP_S_MIN)
@@ -361,7 +480,7 @@ def main(argv: list[str] | None = None) -> None:
         raise SystemExit("--campaign-id es obligatorio")
     if out_dir.exists():
         raise SystemExit(f"{out_dir} ya existe: no se sobrescribe evidencia")
-    runs = plan(args.experiment, runs=args.runs, base_seed=args.base_seed, users=args.users, particles=args.particles, systems=args.systems, order=args.order, campaign_id=args.campaign_id)
+    runs = plan(args.experiment, runs=args.runs, base_seed=args.base_seed, users=args.users, particles=args.particles, systems=args.systems, order=args.order, campaign_id=args.campaign_id, proposal_persistence_cost=args.proposal_persistence_cost)
     prov = provenance(args, runs)
     if args.official and prov["official_refusals"]:
         raise SystemExit("CAMPAÑA OFICIAL RECHAZADA (no se escribió nada):\n  - " + "\n  - ".join(prov["official_refusals"]))
@@ -369,13 +488,18 @@ def main(argv: list[str] | None = None) -> None:
         print(f"DRY-RUN OK: {args.experiment}, {len(runs)} corridas ({len({r['cell'] for r in runs})} celdas × {args.runs}); clase {prov['environment_class']}; no se ejecutó nada")
         print(json.dumps(describe_plan(prov, runs), indent=2, sort_keys=True, ensure_ascii=False))
         return
+    exec_gaps = code_state.provenance_gaps(prov, code_state.PROVENANCE_REQUIRED_FOR_EXECUTION)
+    if exec_gaps:                                                                                       # una ejecución real necesita lo que un dry-run puede omitir (p. ej. Redis respondiendo)
+        raise SystemExit(f"no se ejecuta: faltan datos de provenance indispensables para una ejecución real: {exec_gaps}")
     key = os.environ.get("SWARM_API_KEY")
     if not key:
         raise SystemExit("definir SWARM_API_KEY")
     back = Path(__file__).resolve().parents[2]
     raw_dir = out_dir.with_name(out_dir.name + ".tmp-raw")          # fuera de out_dir: write_campaign exige un directorio NUEVO
     raw_dir.mkdir(parents=True)
-    server = ServerPerN(sys.executable, args.port, key)
+    isolation = run_isolation.RedisRunIsolation(prov["redis_isolation"]["prefix"])
+    server = ServerPerN(sys.executable, args.port, key, redis_prefix=isolation.prefix, run_label=args.campaign_id)
+    probe = run_isolation.PostgresRunProbe(args.campaign_id) if any(r["persist_policy"] == campaign_spec.PROPOSAL_COST_PERSISTENCE for r in runs) else None     # PostgreSQL solo interviene si hay celdas ON
     lines: list[str] = []
 
     def log(m: str) -> None:
@@ -384,10 +508,17 @@ def main(argv: list[str] | None = None) -> None:
     try:
         records = execute(runs, prov, warmup=args.warmup, window=args.window,
                           do_run=locust_runner(f"http://localhost:{args.port}", back / "loadtest" / "locustfile.py", Path(__file__).with_name("locust_raw_log.py"), raw_dir, sys.executable, args.client_timeout),
-                          ensure_server=server.ensure, log=log)
+                          ensure_server=server.ensure, log=log, isolate=lambda r: isolation.reset(r["run_id"]),
+                          observe=(lambda r: probe.cycles()) if probe is not None else None)
     finally:
         server.stop()
-    record_effective_server(prov, server.last_health)
+    record_effective_server(prov, server.health_log)
+    prov["redis_isolation"]["final"] = isolation.purge_namespace()                    # servidor detenido: se limpia el namespace de ESTA campaña (nada más)
+    code_state.final_code_state(prov)                                                  # verificación final del estado de Git y de los fuentes
+    prov["provenance_completion_gaps"] = code_state.completion_gaps(prov)
+    prov["integrity_violations"] = integrity_violations(records)
+    if prov["integrity_violations"] or prov["provenance_completion_gaps"]:
+        log(f"ATENCIÓN: {len(prov['integrity_violations'])} violación(es) de invariantes y {len(prov['provenance_completion_gaps'])} hueco(s) de provenance al terminar: la campaña NO es válida como oficial (`official_valid = false` en el manifiesto)")
     write_campaign(out_dir, prov, runs, records, lines, raw_dir=raw_dir)
     raw_dir.rename(out_dir / "raw")
     print(f"escrito: {out_dir} ({len(records)} corridas; clase {prov['environment_class']}; oficial={prov['official']})")

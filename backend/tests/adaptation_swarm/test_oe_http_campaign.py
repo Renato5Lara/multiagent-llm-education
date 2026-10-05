@@ -55,7 +55,7 @@ def test_the_same_profile_sequence_hash_applies_to_every_system_of_a_run_and_cha
 def test_official_is_refused_on_non_target_hardware_and_short_windows_and_open_blockers():
     refusals = hc.official_refusals({"cpu_count": 4}, runs=5, warmup=5, window=30)
     text = " | ".join(refusals)
-    assert "hardware" in text and "corridas por celda" in text and "ventana" in text and "F1 v3 sin sellar" in text
+    assert "hardware" in text and "corridas por celda" in text and "ventana" in text and "common_time_indicator_oe2" in text and "F1 v3" not in text       # DEF solo por las dependencias de OE2: F1 v3 es de OE5
 
 
 def _fake_raw(rate, lat_ms, seconds=80):
@@ -67,7 +67,7 @@ def test_execute_writes_one_record_per_run_with_the_required_fields_and_no_inven
     runs = _plan(runs=2, users=[1, 25], particles=[10])
     prov = {"campaign_id": "C", "campaign_spec": campaign_spec.identity(), "code": {"commit": "x"}, "hardware": {"cpu": "t"}, "definition_version": {"requirements": "v"}, "environment_class": "PILOT", "official": False, "oe2_official": False}
     started = []
-    out = hc.execute(runs, prov, warmup=10, window=60, do_run=lambda r, w, win: _fake_raw(10, 120.0), ensure_server=started.append, log=lambda m: None)
+    out = hc.execute(runs, prov, warmup=10, window=60, do_run=lambda r, w, win: _fake_raw(10, 120.0), ensure_server=lambda n, p: started.append(n), log=lambda m: None)
     assert len(out) == len(runs) and started == [r["swarm_N"] for r in runs]
     for rec in out:
         assert set(hc.RECORD_FIELDS) <= set(rec) and rec["status"] == "ok" and rec["throughput_internal"] is None
@@ -80,7 +80,7 @@ def test_execute_writes_one_record_per_run_with_the_required_fields_and_no_inven
 def test_short_run_is_recorded_as_invalid_not_dropped_or_padded():
     runs = _plan(runs=1, users=[1], particles=[10])
     prov = {"campaign_id": "C", "campaign_spec": campaign_spec.identity(), "code": {}, "hardware": {}, "definition_version": {}, "environment_class": "PILOT", "official": False, "oe2_official": False}
-    (rec,) = hc.execute(runs, prov, warmup=10, window=60, do_run=lambda r, w, win: _fake_raw(10, 100.0, seconds=40), ensure_server=lambda n: None, log=lambda m: None)
+    (rec,) = hc.execute(runs, prov, warmup=10, window=60, do_run=lambda r, w, win: _fake_raw(10, 100.0, seconds=40), ensure_server=lambda n, p: None, log=lambda m: None)
     assert rec["status"] == "invalid_window_shorter_than_min" and rec["successful_requests"] is None and rec["p95_ms"] is None
 
 
@@ -92,7 +92,8 @@ def _records(rng, systems=("swarm", "decision_table", "rules", "bruteforce"), us
             for n in particles:
                 for i in range(runs):
                     out.append({"status": "ok", "comparable": True, "system": s, "load": u, "swarm_N": n, "run_id": f"{s}-{u}-{n}-{i}", "p95_ms": lat[s] * (1 + 0.05 * u / 10) * float(np.exp(rng.normal(0, 0.05))),
-                                "throughput_http": 12.0 * (1 if s == "swarm" else 3) + float(rng.normal(0, 0.3)), "error_rate": 0.0, "t_conv_ms_mean": 100.0 + u + float(rng.normal(0, 1))})
+                                "throughput_http": 12.0 * (1 if s == "swarm" else 3) + float(rng.normal(0, 0.3)), "error_rate": 0.0, "t_conv_ms_mean": 100.0 + u + float(rng.normal(0, 1)),
+                                "persist_policy": "off", "comparison_role": "swarm_vs_decision_table_contrast" if s == "decision_table" or s == "swarm" else "auxiliary_contrast"})
     return out
 
 
@@ -108,7 +109,7 @@ def test_oe2_http_confirmatory_families_use_only_contrast_loads_and_holm_per_fam
     h = prim["hypotheses"]["L_resp_P95_http@u10"]
     assert h["result"]["unit"] == "run" and h["result"]["scale"] == "log" and h["result"]["geometric_ratio"] > 1 and h["p_holm"] >= h["p_raw"]
     assert sec["m"] == 6 and res["comparator_primary"] == "decision_table" and res["auxiliary_contrasts"] == ["rules", "bruteforce"] and res["proposal_system"] == "swarm" and "comparator_secondary" not in res
-    assert res["candidate_time_metric"] == "decision_ms" and res["time_metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and "time_metric" not in res
+    assert res["candidate_time_metric"] == "time_to_final_config_ms" and res["legacy_time_metric"] == "decision_ms" and res["time_metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and "time_metric" not in res
     assert res["t_conv_contrast"] == "not_performed_t_conv_is_proposal_only"
 
 
@@ -144,7 +145,7 @@ def test_oe4_http_analysis_separates_regimes_and_estimates_interaction():
 
 def test_write_campaign_never_overwrites_and_is_reproducible(tmp_path):
     rng = np.random.default_rng(4)
-    recs = _records(rng, systems=("swarm",), users=(1, 10), particles=(10, 20), runs=4)
+    recs = [{**hc.record_stub(), **r} for r in _records(rng, systems=("swarm",), users=(1, 10), particles=(10, 20), runs=4)]               # registros con el esquema completo (se rechazan los incompletos)
     prov = {"campaign_id": "C", "experiment": "oe4", "campaign_spec": campaign_spec.identity(), "environment_class": "PILOT", "official": False, "oe2_official": False}
     runs = [{"run_id": r["run_id"]} for r in recs]
     out = tmp_path / "camp"
@@ -164,7 +165,7 @@ def test_in_process_oe2_analysis_adds_log_paired_family_without_removing_legacy_
             for rep in range(3):
                 v = scale * float(np.exp(rng.normal(0, 0.1))) * (1 + p / 10)
                 obs.append({"condition": f"{s}|c1", "f_system": s, "f_concurrency": 1, "profile_id": f"p{p}", "replicate": rep, "batch": 0, "status": "completed", "package_valid": True,
-                            "t_conv_ms": v if s == "swarm" else None, "decision_ms": v, "latency_ms": scale, "gap_vs_optimum": 0.0})      # T_conv solo en la propuesta; decision_ms en ambos
+                            "t_conv_ms": v if s == "swarm" else None, "decision_ms": v, "time_to_final_config_ms": v + 5.0, "ttfc_isolated": True, "latency_ms": scale, "gap_vs_optimum": 0.0})      # T_conv solo en la propuesta; decision_ms en ambos
     a = oea.analyze("oe2", obs, [])
     assert "comparisons" in a and "oe1_per_run" in a
     fams = a["oe2_families_in_process"]["families"]
@@ -173,8 +174,11 @@ def test_in_process_oe2_analysis_adds_log_paired_family_without_removing_legacy_
     pend = prim["pending_metric_validation"]
     assert pend["status"] == "PENDING_METHODOLOGICAL_VALIDATION" and pend["excluded_from_holm"] is True
     h = pend["hypotheses"]["decision_ms@c1"]
-    assert h["confirmatory"] is False and h["p_holm"] is None and h["p_raw"] is not None and h["result"]["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION"
-    assert h["result"]["n_effective"] == 6 and h["result"]["metric"] == "decision_ms" and h["result"]["geometric_ratio"] > 1       # calculado, pero exploratorio
+    assert h["confirmatory"] is False and h["p_holm"] is None and h["p_raw"] is not None and h["result"]["metric_validation"] == "LEGACY_EXPLORATORY"
+    assert h["result"]["n_effective"] == 6 and h["result"]["metric"] == "decision_ms" and h["result"]["geometric_ratio"] > 1       # calculado, pero exploratorio (legacy)
+    t = pend["hypotheses"]["time_to_final_config_ms@c1"]                                                       # indicador común: exploratorio, fuera de Holm, no es T_conv
+    assert t["confirmatory"] is False and t["p_holm"] is None and t["result"]["n_effective"] == 6 and t["result"]["is_t_conv"] is False and t["result"]["isolated_condition_only"] is True
+    assert t["result"]["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION"
     assert not any("t_conv" in k.lower() for k in prim["hypotheses"]) and not any("t_conv" in k.lower() for k in pend["hypotheses"])     # no existe contraste de T_conv entre sistemas
     assert fams["auxiliary:swarm_vs_rules"]["confirmatory"] is False
     only_ablation = [r for r in obs if r["f_system"] != "decision_table"]                       # rules NO sustituye al convencional independiente
@@ -183,4 +187,4 @@ def test_in_process_oe2_analysis_adds_log_paired_family_without_removing_legacy_
     assert "confirmatory_t_conv_log_paired" not in a                                                  # el nombre antiguo sugeria un contraste confirmatorio de T_conv
     legacy = a["comparisons"]["c1|swarm_vs_decision_table"]
     assert legacy["t_conv_ms"]["status"] == "blocked_t_conv_is_proposal_only" and "p_value" not in legacy["t_conv_ms"]       # el análisis legado tampoco contrasta T_conv
-    assert legacy["decision_ms"]["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and legacy["decision_ms"]["confirmatory"] is False
+    assert legacy["decision_ms"]["metric_validation"] == "LEGACY_EXPLORATORY" and legacy["decision_ms"]["confirmatory"] is False

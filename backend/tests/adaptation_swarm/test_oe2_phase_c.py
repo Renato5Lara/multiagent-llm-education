@@ -249,7 +249,7 @@ def _http_records(saturated_at=None, systems=("swarm", "decision_table"), loads=
                 bad = saturated_at is not None and (s, u, i) == saturated_at
                 recs.append({"status": "ok", "system": s, "load": u, "users": u, "run_id": f"{s}-{u}-{i}", "latency_p95_ms": lat * float(np.exp(rng.normal(0, 0.05))), "throughput_rps": thr + float(rng.normal(0, 0.3)),
                              "decision_ms_mean": (130.0 if s == "swarm" else 0.02) * float(np.exp(rng.normal(0, 0.05))), "comparable": not bad,
-                             "non_comparable_reason": "generator_saturated" if bad else None})
+                             "non_comparable_reason": "generator_saturated" if bad else None, "persist_policy": "off", "comparison_role": "swarm_vs_decision_table_contrast"})
     return recs
 
 
@@ -291,7 +291,7 @@ def _fake_do_run(r, w, win):
 
 def test_every_required_field_is_in_the_run_record_and_t_conv_is_never_copied_from_decision_ms():
     prov, runs = _prov()
-    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=_fake_do_run, ensure_server=lambda n: None, log=lambda m: None, profile_ids=IDS)
+    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=_fake_do_run, ensure_server=lambda n, p: None, log=lambda m: None, profile_ids=IDS)
     assert not [f for f in guards.REQUIRED_RUN_FIELDS if any(f not in r for r in recs)]
     by = {r["system"]: r for r in recs}
     assert by["swarm"]["t_conv_ms_mean"] == pytest.approx(128.0) and by["decision_table"]["t_conv_ms_mean"] is None                    # T_conv solo donde corresponde
@@ -304,7 +304,7 @@ def test_every_required_field_is_in_the_run_record_and_t_conv_is_never_copied_fr
 
 def test_campaign_artifact_joins_run_level_http_data_with_the_analysis_and_hashes_the_raw_logs(tmp_path):
     prov, runs = _prov()
-    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=_fake_do_run, ensure_server=lambda n: None, log=lambda m: None, profile_ids=IDS)
+    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=_fake_do_run, ensure_server=lambda n, p: None, log=lambda m: None, profile_ids=IDS)
     raw = tmp_path / "raw"
     raw.mkdir()
     (raw / "r1.csv").write_text("a,b\n1,2\n", encoding="utf-8")
@@ -335,7 +335,7 @@ def test_http_decision_ms_reaches_the_analysis_only_as_exploratory():
 
 def test_cli_analyze_joins_the_inprocess_run(tmp_path, capsys):
     prov, runs = _prov()
-    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=_fake_do_run, ensure_server=lambda n: None, log=lambda m: None, profile_ids=IDS)
+    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=_fake_do_run, ensure_server=lambda n, p: None, log=lambda m: None, profile_ids=IDS)
     out = tmp_path / "camp"
     hc.write_campaign(out, prov, runs, recs, [])
     inproc = tmp_path / "inproc"
@@ -409,10 +409,12 @@ def test_uvicorn_is_started_with_the_recorded_number_of_workers(monkeypatch):
 # ═════════════════════════════ B14 — guards dinámicos ═════════════════════════════
 def _green(monkeypatch):
     """Lleva TODO el estado a «resuelto» SIN tocar ningún mensaje: solo el estado que origina cada bloqueo."""
-    monkeypatch.setattr(time_contract, "T_CONV_EQUIVALENCE", "ESTABLISHED")
+    monkeypatch.setitem(time_contract.TTFC_CONTRACT, "status", time_contract.APPROVED_STATUS)                  # B1 se resuelve con la aprobación/validación del indicador común (NO con equivalencia con T_conv)
     monkeypatch.setattr(time_contract, "VALIDATION_STATUS", "VALIDATED")
     monkeypatch.setitem(campaign_spec.SPEC["oe2"]["comparator_scope_validation"], "status", "VALIDATED")
-    monkeypatch.setitem(defs.DEFINITIONS, "latency_l_resp", {**defs.DEFINITIONS["latency_l_resp"], "definition": "L_resp = petición HTTP → último byte, sin persistencia síncrona"})
+    monkeypatch.setitem(campaign_spec.SPEC["oe2"]["persist_policy"], "status", campaign_spec.APPROVED_STATUS)     # B5 se resuelve con la aprobación de B5-C (L_resp intacto, sin persistencia en el baseline)
+    for k, d in campaign_spec.SPEC["oe2"]["methodological_decisions"].items():                                   # PEND: cada decisión de D.5 resuelta de forma EXPLÍCITA (solo para probar que el guard sigue al estado)
+        monkeypatch.setitem(campaign_spec.SPEC["oe2"]["methodological_decisions"], k, {**d, "status": "DECIDED", "chosen": d["options"][0]})
     for k, v in list(defs.DEFINITIONS.items()):
         if v["status"] == defs.PENDING:
             monkeypatch.setitem(defs.DEFINITIONS, k, {**v, "status": defs.APPROVED})
@@ -425,7 +427,7 @@ def test_the_default_state_is_fully_blocked_and_every_frozen_decision_is_represe
     ids = {b.id for b in guards.evaluate(None) if b.critical}
     assert {"B1", "B5", "B13", "DEF"} <= ids and not ids & {"B3", "B6", "B7", "B11", "B12"}                    # técnicos cerrados; metodológicos congelados
     frozen = {b.id for b in guards.evaluate(None) if b.frozen}
-    assert frozen == {"B1", "B5", "B13"} and all(b.kind == "methodological" for b in guards.evaluate(None) if b.frozen)
+    assert frozen == {"B1", "B5", "B13", "PEND"} and all(b.kind == "methodological" for b in guards.evaluate(None) if b.frozen)
     assert {b.id: b.critical for b in guards.evaluate(None) if b.id in ("B6", "B7")} == {"B6": False, "B7": False}     # provisionales: avisos
 
 
@@ -438,14 +440,17 @@ def test_with_every_state_resolved_nothing_blocks_proving_the_guards_are_state_d
 
 
 @pytest.mark.parametrize("breaker, expected", [
-    (lambda m: m.setattr(time_contract, "T_CONV_EQUIVALENCE", "NOT_ESTABLISHED"), "B1"),
+    (lambda m: m.setattr(time_contract, "T_CONV_EQUIVALENCE", "ESTABLISHED"), "B1"),                          # declarar equivalencia de T_conv CONTRADICE B1: bloquea, no desbloquea
     (lambda m: m.setattr(time_contract, "VALIDATION_STATUS", "PENDING_METHODOLOGICAL_VALIDATION"), "B1"),
+    (lambda m: m.setitem(time_contract.TTFC_CONTRACT, "status", "FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED"), "B1"),
     (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["comparator_scope_validation"], "status", "PENDING_METHODOLOGICAL_VALIDATION"), "B13"),
-    (lambda m: m.setitem(defs.DEFINITIONS, "latency_l_resp", {**defs.DEFINITIONS["latency_l_resp"], "definition": "incluye persistencia síncrona mínima"}), "B5"),
+    (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["persist_policy"], "status", "FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED"), "B5"),
+    (lambda m: m.setitem(defs.DEFINITIONS, "latency_l_resp", {**defs.DEFINITIONS["latency_l_resp"], "definition": "L_resp = petición HTTP → último byte, sin persistencia síncrona"}), "B5"),      # L_resp reformulada para que OFF parezca literal
+    (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["persist_policy"], "artificial_persistence_in_baseline", True), "B5"),
     (lambda m: m.setattr(conv, "BASELINE_REPORTS_QUALITY_IN_REQUEST", True), "B3"),
     (lambda m: m.setattr(guards, "REQUIRED_RUN_FIELDS", guards.REQUIRED_RUN_FIELDS + ("campo_inexistente",)), "B11"),
     (lambda m: m.delitem(hw.GENERATOR_POLICY, "on_saturation"), "B7"),
-    (lambda m: m.setattr(rubric_v3, "APPROVED_RULE_VERSIONS", frozenset()), "DEF"),
+    (lambda m: m.setitem(defs.DEFINITIONS, "statistical_unit_performance", {**defs.DEFINITIONS["statistical_unit_performance"], "status": defs.PENDING}), "DEF"),
 ])
 def test_each_single_state_change_produces_exactly_its_own_blocker_and_the_official_flag_is_refused(monkeypatch, breaker, expected):
     _green(monkeypatch)
@@ -469,7 +474,7 @@ def test_an_official_run_is_refused_when_the_git_tree_is_dirty_or_unknown(monkey
 def test_combined_blockers_are_all_reported_and_official_main_refuses_without_writing(monkeypatch, tmp_path):
     _green(monkeypatch)
     monkeypatch.setattr(conv, "BASELINE_REPORTS_QUALITY_IN_REQUEST", True)
-    monkeypatch.setattr(time_contract, "T_CONV_EQUIVALENCE", "NOT_ESTABLISHED")
+    monkeypatch.setitem(time_contract.TTFC_CONTRACT, "status", "FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED")
     prov, _ = _prov(client_timeout=0)
     assert {b.id for b in guards.evaluate(prov) if b.critical} == {"B1", "B3", "B6"}
     out = tmp_path / "never"
@@ -493,7 +498,7 @@ def test_the_dry_run_shows_the_dynamic_state_and_still_refuses_official(capsys, 
     text = capsys.readouterr().out
     d = json.loads(text[text.index("{"):])
     assert not out.exists() and d["official"] is False and d["oe2_official"] is False
-    assert d["frozen_methodological_decisions_pending"] == ["B1", "B13", "B5"] and d["provenance_gaps"] == []
+    assert d["frozen_methodological_decisions_pending"] == ["B1", "B13", "B5", "PEND"] and d["provenance_gaps"] == []
     assert d["client_timeout"] == {"seconds": 30.0, "status": "PROVISIONAL_TECHNICAL"} and d["generator_policy"]["id"] == "generator-saturation-v1"
     assert d["persistence_status"]["status"] == "INCOMPATIBLE_WITH_APPROVED_L_RESP_DEFINITION" and d["server"]["uvicorn_workers"] == 1 and d["server"]["baseline_quality_in_request"] is False
     assert d["library"]["version"].startswith("lib-v") and d["dataset"]["n_profiles"] == 100 and d["software"]["locust"] != "unavailable"
@@ -512,9 +517,10 @@ def test_the_dry_run_shows_the_dynamic_state_and_still_refuses_official(capsys, 
     ("L_resp excluye persistencia asíncrona", True),                                                    # excluir la ASÍNCRONA no libera la síncrona
 ])
 def test_b5_guard_fails_closed_when_the_definition_is_reworded(monkeypatch, text, required):
+    _green(monkeypatch)                                                                                 # B5-C aprobada: lo único que puede volver a bloquear es que L_resp ya no exija la persistencia síncrona
     monkeypatch.setitem(defs.DEFINITIONS, "latency_l_resp", {**defs.DEFINITIONS["latency_l_resp"], "definition": text})
     assert guards.l_resp_requires_sync_persistence() is required
-    assert ("B5" in {b.id for b in guards.evaluate(None)}) is required                                  # política `off` ⇒ bloquea exactamente cuando se exige
+    assert ("B5" in {b.id for b in guards.evaluate(None)}) is (not required)                            # reformular L_resp para que OFF parezca literal NO desbloquea: bloquea
 
 
 def test_campaign_sources_have_no_duplicates_exist_and_cover_what_determines_the_campaign():

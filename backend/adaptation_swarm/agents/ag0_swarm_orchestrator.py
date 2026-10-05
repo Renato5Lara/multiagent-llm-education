@@ -74,6 +74,9 @@ class CycleResult:
     iterations: list[dict[str, Any]] = field(default_factory=list)
     metrics: CycleMetrics | None = None
     error: dict[str, str] | None = None
+    # observabilidad ADITIVA (D.3): marcas de `time.perf_counter_ns()` que el estado del grafo ya contenía (step_receive / step_seed); no intervienen en ningún cálculo
+    t_start_ns: int | None = None
+    t_search_ns: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -84,6 +87,7 @@ class CycleResult:
             "g_best": {"x": self.g_best_x, "S": self.g_best_S, "F": self.g_best_F, "breakdown": self.g_best_breakdown},
             "predicted_dominant": self.predicted_dominant, "package": self.package,
             "metrics": self.metrics.to_dict() if self.metrics else None, "error": self.error,
+            "t_start_ns": self.t_start_ns, "t_search_ns": self.t_search_ns,
         }
 
 
@@ -430,7 +434,7 @@ class SwarmOrchestrator(SwarmAgent):
             g_best_x=gb.get("x"), g_best_S=gb.get("S"), g_best_F=gb.get("F"), g_best_breakdown=gb.get("breakdown"),
             predicted_dominant=gb.get("predicted_dominant"), package=final.get("package"), heuristic_seeded=self.protocol.heuristic_seed,
             iterations=final.get("iteration_log", []), pso_diagnostics=final.get("pso_diagnostics"), metrics=metrics, error=final.get("error"), replicate=replicate,
-            log_messages=log_msgs)
+            log_messages=log_msgs, t_start_ns=final.get("t_start_ns"), t_search_ns=final.get("t_search_ns"))
         if self.repository is not None:
             await self.repository.save_cycle(result, log_msgs)
         self._cycles.pop(cycle_id, None)

@@ -8,11 +8,12 @@ from adaptation_swarm.oe import export as E
 
 
 def test_registry_distinguishes_approved_from_pending_and_cites_sources():
-    assert {v["status"] for v in D.DEFINITIONS.values()} <= {D.APPROVED, D.PARTIAL, D.PENDING}
+    assert {v["status"] for v in D.DEFINITIONS.values()} <= {D.APPROVED, D.PARTIAL, D.PENDING, D.SUPERSEDED}
     for k in ("t_conv", "latency_l_resp", "quality_f1_adapt", "usability_sus", "reference_value_75", "statistical_unit_f1"):
         assert D.DEFINITIONS[k]["status"] == D.APPROVED and D.DEFINITIONS[k]["source"] != "—", k
-    for k in ("compliance_score_oe1", "reliability_oe1", "t_conv_baselines", "statistical_unit_performance"):
+    for k in ("compliance_score_oe1", "reliability_oe1", "common_time_indicator_oe2", "statistical_unit_performance"):
         assert D.DEFINITIONS[k]["status"] == D.PENDING, k
+    assert D.DEFINITIONS["t_conv_baselines"]["status"] == D.SUPERSEDED and not any("t_conv_baselines" in v for v in D.OE_DEFINITION_DEPENDENCIES.values())
     assert "75" in D.DEFINITIONS["reference_value_75"]["definition"] and "T_conv" in D.DEFINITIONS["efficiency_of_adaptation_oe3"]["definition"]
     assert D.blocked_for("oe1") == ["compliance_score_oe1", "reliability_oe1"] and D.blocked_for("oe5") == []
 

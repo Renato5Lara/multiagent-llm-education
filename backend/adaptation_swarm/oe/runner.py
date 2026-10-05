@@ -39,7 +39,7 @@ from adaptation_swarm.fitness.fitness import FitnessWeights
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.oe import analysis as oe_analysis
 from adaptation_swarm.oe import definitions as oe_defs
-from adaptation_swarm.oe import campaign_spec
+from adaptation_swarm.oe import campaign_spec, time_contract
 from adaptation_swarm.oe import export as oe_export
 from adaptation_swarm.oe.conditions import Condition, oe2_systems, oe3_full_factorial, oe3_one_factor_at_a_time, oe4_grid
 from adaptation_swarm.profiles.generator import read_dataset
@@ -56,7 +56,7 @@ MIN_BATCHES_FOR_THROUGHPUT = 5
 MIN_K_FOR_CLAIM = 10
 N_PROFILES_FOR_CLAIM = 100
 PENDING_DECISIONS = [
-    "Convencional independiente `decision_table` y métrica común CANDIDATA `decision_ms` (oe/time_contract.py): decisión técnica interna; equivalencia con T_conv NO validada y T_conv solo de la propuesta; `rules` (ablación) y `bruteforce` (referencia) no son comparadores convencionales.",
+    "Convencional independiente `decision_table` (único baseline convencional de OE2) e indicador operacional común `time_to_final_config_ms` (oe/time_contract.py, condición aislada): decisiones PROVISIONALES no aprobadas por el asesor; sin equivalencia con T_conv (solo de la propuesta); `decision_ms` es legacy/exploratorio; `rules` (ablación) y `bruteforce` (referencia) no son comparadores convencionales.",
     "Hardware objetivo (8 vCPU / 32 GB, P6): hasta medir en él, los resultados son EXPLORATORIOS (D10).",
     "Definición operativa de «eficiencia de la adaptación» (OE3): se reportan sus componentes (t_conv_ms, k_stop, mensajes, brecha al óptimo); no se fabrica un índice compuesto.",
 ]
@@ -90,7 +90,7 @@ async def _closed_loop(call: Call, tasks: list[tuple[ProfileRequest, int]], conc
 
 def _swarm_row(r) -> dict:
     m = r.metrics
-    return {"status": r.status, "stop_reason": r.stop_reason, "k_stop": r.k_stop, "t_conv_ms": r.t_conv_ms, "decision_ms": r.t_conv_ms, "total_ms": r.total_ms, "F": r.g_best_F,
+    return {"status": r.status, "stop_reason": r.stop_reason, "k_stop": r.k_stop, "t_conv_ms": r.t_conv_ms, "decision_ms": r.t_conv_ms, "time_to_final_config_ms": time_contract.ttfc_swarm_ms(r.t_start_ns, r.t_search_ns, r.t_conv_ms), "total_ms": r.total_ms, "F": r.g_best_F,
             "S": r.g_best_S, "predicted": r.predicted_dominant, "n_messages": m.n_messages if m else None,
             "comm_overhead_ms": m.comm_overhead_ms if m else None, "inflight_overlap": m.inflight_overlap if m else None, "n_evaluations": None,
             "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]),
@@ -100,7 +100,7 @@ def _swarm_row(r) -> dict:
 
 
 def _baseline_row(r) -> dict:
-    return {"status": r.status, "stop_reason": None, "k_stop": None, "t_conv_ms": None, "decision_ms": r.decision_ms, "total_ms": r.total_ms, "F": r.F, "S": r.S, "predicted": r.predicted_dominant,
+    return {"status": r.status, "stop_reason": None, "k_stop": None, "t_conv_ms": None, "decision_ms": r.decision_ms, "time_to_final_config_ms": r.time_to_final_config_ms, "total_ms": r.total_ms, "F": r.F, "S": r.S, "predicted": r.predicted_dominant,
             "n_messages": 0, "comm_overhead_ms": None, "inflight_overlap": None, "n_evaluations": r.n_evaluations,
             "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]), "w_valid": None, "iterations_logged": None,
             "error": r.error, "error_code": None}
@@ -126,7 +126,7 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
             rows, elapsed = await _closed_loop(call, tasks_for(b + batch_offset), cond.concurrency)
             ok = [r for r in rows if r["status"] == "completed"]
             for r in rows:
-                r.update(condition=cond.name, batch=b + batch_offset, exec_index=exec_index, **{f"f_{kk}": vv for kk, vv in cond.factors().items()})
+                r.update(condition=cond.name, batch=b + batch_offset, exec_index=exec_index, ttfc_isolated=cond.concurrency == 1, **{f"f_{kk}": vv for kk, vv in cond.factors().items()})
             obs.extend(rows)
             bat.append({"condition": cond.name, "batch": b + batch_offset, "exec_index": exec_index, "concurrency": cond.concurrency, "n_requests": len(rows), "n_ok": len(ok), "n_failed": len(rows) - len(ok),
                         "t_start_utc": b_started, "elapsed_s": elapsed, "throughput_rps": len(ok) / elapsed if elapsed > 0 else None,

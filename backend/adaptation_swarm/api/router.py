@@ -103,7 +103,7 @@ async def adapt(
         raise HTTPException(502, {"cycle_id": result.cycle_id, "stop_reason": result.stop_reason, "error": result.error})
     out = result.to_dict()
     out["system"], out["system_role"] = "swarm", time_contract.PROPOSAL
-    out["decision_ms"] = out["t_conv_ms"]                                       # tiempo operacional de decisión (candidata a métrica común; validación pendiente, oe/time_contract.py): copia del T_conv de AG0, no recalculado; NO es T_conv validado
+    out["decision_ms"] = out["t_conv_ms"]                                       # campo HISTÓRICO (LEGACY/exploratorio, oe/time_contract.py): copia del T_conv de AG0, no recalculado; NO es el indicador común (`time_to_final_config_ms`) ni T_conv comparable entre sistemas
     out["time_contract"] = time_contract.response_contract(time_contract.PROPOSAL)
     out["persistence"] = "on" if _repo is not None else "off"                   # política efectiva de persistencia de ESTA respuesta
     out["package"]["audio"]["url"] = f"/api/adaptation/audio/{result.package['audio']['content_id']}"

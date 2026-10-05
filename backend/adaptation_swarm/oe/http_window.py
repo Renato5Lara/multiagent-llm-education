@@ -46,13 +46,13 @@ NON_COMPARABLE_NO_CPU = "generator_cpu_unavailable"
 
 def extract_cycle_metrics(body: Mapping) -> dict:
     """Métricas de ciclo de la respuesta de AMBOS endpoints, con su forma explícita (contrato `oe/time_contract.py`):
-    · propuesta (`POST /api/adaptation`): `t_conv_ms` (T_conv de AG0), `decision_ms` (tiempo operacional de decisión, copia del anterior; candidata a métrica común, validación pendiente), `k_stop` en el nivel superior;
+    · propuesta (`POST /api/adaptation`): `t_conv_ms` (T_conv de AG0), `decision_ms` (campo LEGACY/exploratorio, copia del anterior; NO es el indicador común), `k_stop` en el nivel superior;
     · convencional (`POST /api/adaptation/baseline/{system}`): `metrics.decision_ms`; `t_conv_ms` = None (no hay convergencia iterativa), sin `k_stop`.
     Una respuesta de otra forma lanza `ValueError`: nunca se asume ni se rellena."""
     pid = body.get("profile_id")
     if "t_conv_ms" in body:
         if "decision_ms" not in body:
-            raise ValueError("respuesta de la propuesta sin `decision_ms` (contrato de tiempo oe2-time-contract-v1)")
+            raise ValueError("respuesta de la propuesta sin `decision_ms` (contrato de tiempo oe2-time-contract-v2)")
         return {"shape": "swarm", "t_conv_ms": body["t_conv_ms"], "decision_ms": body["decision_ms"], "k_stop": body.get("k_stop"), "profile_id": pid}
     metrics = body.get("metrics")
     if isinstance(metrics, Mapping) and "decision_ms" in metrics:
@@ -138,7 +138,7 @@ def summarize_run(raw: Sequence[Mapping], cpu: Sequence[Mapping], *, users: int,
             "errors_non_timeout": (len(win) - len(ok)) - sum(r["timeout"] for r in win),
             "throughput_rps": len(ok) / duration, "latency_p50_ms": rep["p50_ms"], "latency_mean_ms": rep["mean_ms"], "latency_p95_ms": rep["p95_ms"],
             "requests_without_cycle_metrics": sum(1 for r in ok if not r.get("metrics_ok", True)),
-            "decision_ms_mean": (sum(dec) / len(dec)) if dec else None, "decision_ms_median": percentile(dec, 50) if dec else None, "decision_ms_p95": percentile(dec, 95) if dec else None,       # tiempo operacional de decisión (candidata; validación pendiente: oe/time_contract.py); NO se mezcla con t_conv_ms_mean
+            "decision_ms_mean": (sum(dec) / len(dec)) if dec else None, "decision_ms_median": percentile(dec, 50) if dec else None, "decision_ms_p95": percentile(dec, 95) if dec else None,       # campo LEGACY/exploratorio (oe/time_contract.py); NO se mezcla con t_conv_ms_mean ni es el indicador común
             "profile_sequence_check": (check_logged(raw, batch_seed, profile_ids, worker_index) if batch_seed is not None and profile_ids is not None else None),
             "t_conv_ms_mean": (sum(t) / len(t)) if (t := [r["t_conv_ms"] for r in ok if r.get("t_conv_ms") is not None]) else None,
             "loadgen_cpu_percent_mean": sum(cpus) / len(cpus) if cpus else None, "loadgen_cpu_percent_max": cpu_max,

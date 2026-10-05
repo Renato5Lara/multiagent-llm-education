@@ -58,7 +58,7 @@ def test_validity_requires_all_conditions_and_lists_reasons():
     hw_bad = {"vcpu": 8, "ram_gib": 7.5}
     full = oe2_systems(1)
     ok = runner.validity("oe2", hw=hw_ok, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
-    assert not ok["reasons"] and ok["blocked_definitions"] == ["t_conv_baselines", "statistical_unit_performance"]          # todo medido, pero hay definiciones PENDING
+    assert not ok["reasons"] and ok["blocked_definitions"] == ["common_time_indicator_oe2", "statistical_unit_performance"]          # todo medido, pero hay definiciones PENDING
     assert ok["status"] == "EXPLORATORY" and ok["official_execution"] == "BLOCKED_DEFINITION" and ok["environment_class"] == "OFFICIAL_TARGET"
     assert runner.validity("oe3", hw=hw_ok, n_profiles=100, k=10, batches=1, warmup=10, conditions=[])["blocked_definitions"] == ["statistical_unit_performance"]
     bad = runner.validity("oe2", hw=hw_bad, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
@@ -94,7 +94,7 @@ def test_analyze_oe2_detects_a_known_difference_and_reports_throughput():
     a = oea.analyze("oe2", obs, bat)
     c = a["comparisons"]["c1|swarm_vs_rules"]
     assert c["t_conv_ms"]["status"] == "blocked_t_conv_is_proposal_only"                                  # T_conv es de la propuesta: no se contrasta
-    assert c["decision_ms"]["significant"] and c["decision_ms"]["mean_diff"] > 30 and c["decision_ms"]["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and c["decision_ms"]["confirmatory"] is False
+    assert c["decision_ms"]["significant"] and c["decision_ms"]["mean_diff"] > 30 and c["decision_ms"]["metric_validation"] == "LEGACY_EXPLORATORY" and c["decision_ms"]["confirmatory"] is False
     assert c["latency_ms"]["significant"] and c["throughput_rps"]["significant"]
     assert a["conditions"]["swarm|c1"]["error_rate"] == 0 and len(a["conditions"]["swarm|c1"]["throughput_by_batch"]) == 5
 

@@ -16,7 +16,7 @@ INDEPENDENCIA DEL ENJAMBRE. Este módulo NO importa ni usa: PSO (`pso.engine`, `
 el bus ni el estado de partículas. Solo lee `estilo`, `nivel` y `tasa_error_previa` del perfil y usa el ESPACIO de configuración (`pso.space`: la definición del problema, compartida por todos los sistemas). A diferencia de
 `rules` —que decodifica el punto de arranque heurístico de AG1 (el enjambre sin búsqueda)—, aquí no hay normalización por el máximo, ni modulación por error sobre los pesos, ni reutilización de W.
 
-MÉTRICAS. Tiempo de decisión (`decision_ms`, tiempo operacional y métrica común CANDIDATA con validación pendiente: `oe/time_contract.py`; `t_conv_ms` es `None` aquí), tiempo total en proceso, 𝓕 de la configuración elegida (evaluada FUERA del
+MÉTRICAS. Tiempo hasta la configuración final (`time_to_final_config_ms`, indicador operacional común provisional: `oe/time_contract.py`; `decision_ms` es legacy; `t_conv_ms` es `None` aquí: T_conv es solo de la propuesta), tiempo total en proceso, 𝓕 de la configuración elegida (evaluada FUERA del
 cronómetro con el mismo 𝓕 para comparar calidad) y validez del paquete.
 
 QUÉ NO REPRESENTA. Es un baseline convencional DEFINIDO PARA ESTE EXPERIMENTO: no es Moodle, Canvas ni ningún LMS real, no es un LLM monolítico ni un sistema del estado del arte; no optimiza; no es el óptimo de referencia (`bruteforce`) ni la ablación del enjambre (`rules`). Es la implementación

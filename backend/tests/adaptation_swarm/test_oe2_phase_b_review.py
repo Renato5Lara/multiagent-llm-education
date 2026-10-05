@@ -47,7 +47,7 @@ def test_confirmatory_module_computes_only_decision_ms_and_only_as_pending(monke
     real = o2.paired_log_by_profile
     monkeypatch.setattr(o2, "paired_log_by_profile", lambda a, b, m: (asked.append(m), real(a, b, m))[1])
     res = o2.analyze(_oe2_obs(), [])
-    assert set(asked) == {"decision_ms"}                                                              # única métrica de tiempo calculada entre sistemas
+    assert set(asked) == {"decision_ms", "time_to_final_config_ms"}                                   # únicas métricas de tiempo calculadas entre sistemas (legacy + indicador común, ambas exploratorias)
     prim = res["families"]["primary:swarm_vs_decision_table"]
     assert prim["m"] == 0 and prim["hypotheses"] == {} and prim["pending_metric_validation"]["excluded_from_holm"] is True
     assert all(v["confirmatory"] is False and v["p_holm"] is None for v in prim["pending_metric_validation"]["hypotheses"].values())
@@ -75,14 +75,17 @@ def test_stats_cli_keeps_t_conv_for_within_proposal_comparisons():
 def test_legacy_headline_exposes_no_decision_ms_p_value_as_if_it_were_confirmatory():
     a = oea.analyze("oe2", _oe2_obs(), [])
     assert all(set(v) == {"latency_ms"} for v in a["headline"].values())                              # decision_ms y t_conv_ms fuera del headline
-    ex = a["headline_exploratory_pending_metric_validation"]["c1|swarm_vs_decision_table"]["decision_ms"]
-    assert ex["confirmatory"] is False and ex["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and ex["p_value"] is not None
+    exp = a["headline_exploratory_pending_metric_validation"]["c1|swarm_vs_decision_table"]
+    ex = exp["decision_ms"]
+    assert ex["confirmatory"] is False and ex["metric_validation"] == "LEGACY_EXPLORATORY" and ex["p_value"] is not None
+    assert exp["time_to_final_config_ms"]["confirmatory"] is False and exp["time_to_final_config_ms"]["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION"
     assert a["t_conv_contrast_between_systems"] == "blocked_t_conv_is_proposal_only" and "confirmatory_t_conv_log_paired" not in a
 
 
 def test_primary_confirmatory_family_contains_only_http_l_resp_and_throughput_and_the_output_is_not_official():
     rng = np.random.default_rng(1)
-    recs = [{"status": "ok", "system": s, "load": u, "run_id": f"{s}{u}{i}", "p95_ms": lat * float(np.exp(rng.normal(0, 0.05))), "throughput_http": thr + float(rng.normal(0, 0.3))}
+    recs = [{"status": "ok", "system": s, "load": u, "run_id": f"{s}{u}{i}", "p95_ms": lat * float(np.exp(rng.normal(0, 0.05))), "throughput_http": thr + float(rng.normal(0, 0.3)),
+            "persist_policy": "off", "comparison_role": "swarm_vs_decision_table_contrast"}
             for s, lat, thr in (("swarm", 900.0, 12.0), ("decision_table", 200.0, 300.0)) for u in (1, 10) for i in range(5)]
     for r in recs:
         r["comparable"] = True
@@ -105,10 +108,10 @@ def test_every_http_record_and_manifest_declares_oe2_not_official_and_decision_m
     prov = hc.provenance(_args(), runs)
     assert prov["official"] is False and prov["oe2_official"] is False and prov["time_contract"]["t_conv_equivalence"] == "NOT_ESTABLISHED"
     raw = ([{"t_end_epoch_s": 1000 + i / 10, "response_ms": 5.0, "ok": True, "timeout": False, "decision_ms": 0.1, "t_conv_ms": None, "metrics_ok": True} for i in range(800)], [])
-    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=lambda r, w, win: raw, ensure_server=lambda n: None, log=lambda m: None, profile_ids=IDS)
+    recs = hc.execute(runs, prov, warmup=10, window=60, do_run=lambda r, w, win: raw, ensure_server=lambda n, p: None, log=lambda m: None, profile_ids=IDS)
     assert {r["system"] for r in recs} == {"swarm", "decision_table"}
     for r in recs:
-        assert r["official"] is False and r["oe2_official"] is False and r["decision_ms_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and r["persist_policy"] == "off"
+        assert r["official"] is False and r["oe2_official"] is False and r["decision_ms_validation"] == "LEGACY_EXPLORATORY" and r["persist_policy"] == "off"
         assert r["t_conv_ms_mean"] is None and r["decision_ms_mean"] == pytest.approx(0.1)           # decision_ms no se convierte en t_conv_ms_mean
     out = tmp_path / "c"
     hc.write_campaign(out, prov, runs, recs, [])
