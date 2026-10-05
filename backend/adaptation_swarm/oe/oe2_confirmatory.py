@@ -2,7 +2,10 @@
 
 Unidades (campaign_spec): T_conv → perfil, pareado (las K réplicas de un perfil se promedian PRIMERO; Δ = swarm − convencional; análisis sobre log); L_resp oficial = P95 HTTP POR CORRIDA y throughput HTTP = por
 corrida: grupos INDEPENDIENTES de corridas (Shapiro → Welch / Mann-Whitney), nunca peticiones. Regímenes: solo ≤ 25 usuarios contrasta el umbral de 2 s; 50/100 se miden y quedan en `stress` (no entran a la familia).
-Comparador PRIMARIO `rules`, SECUNDARIO `bruteforce`, fijados en `campaign_spec` antes de ver datos; cada uno forma su propia familia de Holm. Cada hipótesis registra familia, p bruto, p ajustado, método y α.
+Comparador PRIMARIO = el convencional independiente `decision_table` (`campaign_spec.oe2.conventional_system`, fijado antes de ver datos); su familia de Holm es la CONFIRMATORIA. `rules` (ablación del enjambre) y `bruteforce`
+(óptimo de referencia) NO son comparadores convencionales: son contrastes AUXILIARES, cada uno con su propia familia descriptiva (`confirmatory: False`). Cada hipótesis registra familia, p bruto, p ajustado, método y α.
+T_conv es SOLO de la propuesta y NO se contrasta. `decision_ms` (tiempo operacional de decisión; métrica común CANDIDATA, contrato `oe/time_contract.py`) se calcula como EXPLORATORIO en `pending_metric_validation`: queda FUERA de la familia
+confirmatoria y de Holm mientras su equivalencia con T_conv esté `PENDING`. La familia confirmatoria contiene solo L_resp P95 HTTP y throughput HTTP.
 No interpreta ni escribe «mejor/peor».
 """
 
@@ -14,7 +17,7 @@ from typing import Mapping, Sequence
 import numpy as np
 
 from adaptation_swarm.analysis import comparison as cmp
-from adaptation_swarm.oe import campaign_spec
+from adaptation_swarm.oe import campaign_spec, time_contract
 
 CONTRAST_MAX_USERS = 25
 ALPHA = campaign_spec.SPEC["alpha"]
@@ -59,11 +62,13 @@ def runs_comparison(swarm: Sequence[float], other: Sequence[float], *, log: bool
     return out
 
 
-def holm_family(name: str, hypotheses: Mapping[str, Mapping]) -> dict:
+def holm_family(name: str, hypotheses: Mapping[str, Mapping], *, confirmatory: bool = True, pending: Mapping[str, Mapping] | None = None) -> dict:
     """Holm dentro de UNA familia. Entra solo lo que tiene p; lo no testable se lista aparte (no cuenta en m)."""
     p = {h: v["p_value"] for h, v in hypotheses.items() if v.get("p_value") is not None}
     adj = cmp.holm(p)
-    return {"family": name, "method": "Holm-Bonferroni", "alpha": ALPHA, "m": len(p),
+    pend = {} if not pending else {"pending_metric_validation": {"status": time_contract.VALIDATION_STATUS, "note": time_contract.PENDING_NOTE, "excluded_from_holm": True,
+                                                                     "hypotheses": {h: {"result": v, "p_raw": v.get("p_value"), "p_holm": None, "confirmatory": False} for h, v in pending.items()}}}
+    return {**pend, "family": name, "confirmatory": confirmatory, "method": "Holm-Bonferroni", "alpha": ALPHA, "m": len(p),
             "hypotheses": {h: {"result": v, "p_raw": v.get("p_value"), "p_holm": adj.get(h), "significant_holm": None if h not in adj else bool(adj[h] < ALPHA)} for h, v in hypotheses.items()},
             "not_testable": sorted(h for h, v in hypotheses.items() if v.get("p_value") is None)}
 
@@ -71,30 +76,31 @@ def holm_family(name: str, hypotheses: Mapping[str, Mapping]) -> dict:
 def analyze(obs: Sequence[Mapping], http_runs: Sequence[Mapping]) -> dict:
     """`obs`: observaciones de `oe/runner.py oe2` (T_conv por perfil, in-process). `http_runs`: salida de `http_window.summarize_run` (una por corrida HTTP)."""
     spec = campaign_spec.SPEC["oe2"]
-    primary, secondary = spec["comparator_primary"], spec["comparator_secondary"]
+    primary, auxiliary = spec["comparator_primary"], list(spec["auxiliary_contrasts"])
     by_sys_level: dict[tuple[str, int], list[Mapping]] = {}
     for r in obs:
         by_sys_level.setdefault((r["f_system"], int(r["f_concurrency"])), []).append(r)
     ok_runs = [r for r in http_runs if r.get("status") == "ok"]
     fams: dict = {}
     stress: dict = {}
-    for role, comp in (("primary", primary), ("secondary", secondary)):
+    for role, comp in (("primary", primary), *(("auxiliary", a) for a in auxiliary)):
         hyp: dict = {}
+        pending: dict = {}
         for (sysname, level), rows in sorted(by_sys_level.items()):
             if sysname != "swarm" or level > CONTRAST_MAX_USERS or (comp, level) not in by_sys_level:
                 continue
-            hyp[f"T_conv@c{level}"] = paired_log_by_profile(rows, by_sys_level[(comp, level)], "t_conv_ms")
+            pending[f"decision_ms@c{level}"] = {**paired_log_by_profile(rows, by_sys_level[(comp, level)], "decision_ms"), "metric_validation": time_contract.VALIDATION_STATUS}
         for users in sorted({r["users"] for r in ok_runs if r["users"] <= CONTRAST_MAX_USERS}):
             sw = [r for r in ok_runs if r["system"] == "swarm" and r["users"] == users]
             cv = [r for r in ok_runs if r["system"] == comp and r["users"] == users]
             hyp[f"L_resp_P95_http@u{users}"] = runs_comparison([r["latency_p95_ms"] for r in sw], [r["latency_p95_ms"] for r in cv], log=True, metric="latency_p95_ms")
             hyp[f"throughput_http@u{users}"] = runs_comparison([r["throughput_rps"] for r in sw], [r["throughput_rps"] for r in cv], metric="throughput_rps")
-        fams[f"{role}:swarm_vs_{comp}"] = holm_family(f"{role}:swarm_vs_{comp}", hyp)
+        fams[f"{role}:swarm_vs_{comp}"] = holm_family(f"{role}:swarm_vs_{comp}", hyp, confirmatory=role == "primary", pending=pending)
     for users in sorted({r["users"] for r in ok_runs if r["users"] > CONTRAST_MAX_USERS}):
         stress[f"u{users}"] = {s: {"runs": sum(1 for r in ok_runs if r["system"] == s and r["users"] == users),
                                    "latency_p95_ms": [r["latency_p95_ms"] for r in ok_runs if r["system"] == s and r["users"] == users],
-                                   "throughput_rps": [r["throughput_rps"] for r in ok_runs if r["system"] == s and r["users"] == users]} for s in ("swarm", primary, secondary)}
-    return {"experiment": "oe2", "campaign_spec": campaign_spec.identity(), "comparator_primary": primary, "comparator_secondary": secondary, "families": fams,
+                                   "throughput_rps": [r["throughput_rps"] for r in ok_runs if r["system"] == s and r["users"] == users]} for s in ("swarm", primary, *auxiliary)}
+    return {"experiment": "oe2", "official": False, "oe2_official": False, "official_blocked_by": campaign_spec.open_blockers(), "campaign_spec": campaign_spec.identity(), "proposal_system": spec["proposal_system"], "comparator_primary": primary, "auxiliary_contrasts": auxiliary, "candidate_time_metric": spec["time_contract"]["candidate_common_metric"], "time_metric_validation": time_contract.VALIDATION_STATUS, "t_conv_contrast": "not_performed_t_conv_is_proposal_only", "families": fams,
             "stress_regime_descriptive_only": stress, "stress_note": "> 25 usuarios: medido y conservado; fuera del contraste del umbral de 2 s y de la familia confirmatoria",
             "benchmark_2_1_open": "LMS tradicional y LLM monolítico no implementados; D11c abierta: las conclusiones se limitan a los comparadores medidos",
             "n_http_runs_used": len(ok_runs), "n_http_runs_invalid": len(http_runs) - len(ok_runs)}

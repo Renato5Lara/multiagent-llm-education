@@ -11,7 +11,7 @@ import csv
 import io
 from typing import Mapping, Sequence
 
-METRICS = ("t_conv_ms", "latency_ms", "total_ms", "k_stop", "n_messages", "F", "gap_vs_optimum", "comm_overhead_ms", "n_evaluations")
+METRICS = ("t_conv_ms", "decision_ms", "latency_ms", "total_ms", "k_stop", "n_messages", "F", "gap_vs_optimum", "comm_overhead_ms", "n_evaluations")
 FACTOR_PREFIX = "f_"
 RAW_FIELDS = ("run_label", "experiment", "condition", "profile_id", "archetype", "difficulty", "replicate", "batch", "exec_index", "seed", "t_start_utc", "status", "stop_reason", "package_valid", "w_valid",
               "iterations_logged", "inflight_overlap", "error_code", *METRICS, "predicted", "S", "F_opt")

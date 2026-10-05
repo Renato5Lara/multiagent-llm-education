@@ -27,6 +27,7 @@ from pydantic import ValidationError
 from adaptation_swarm.baselines.conventional import SYSTEM_ROLES, SYSTEMS as BASELINE_SYSTEMS, ConventionalAdapter
 from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.multimodal.library import LibraryStore
+from adaptation_swarm.oe import time_contract
 from adaptation_swarm.profiles.models import ProfileRequest
 from adaptation_swarm.pso.params import PSOParams
 from adaptation_swarm.stack import SwarmStack
@@ -101,6 +102,10 @@ async def adapt(
     if result.status != "completed":
         raise HTTPException(502, {"cycle_id": result.cycle_id, "stop_reason": result.stop_reason, "error": result.error})
     out = result.to_dict()
+    out["system"], out["system_role"] = "swarm", time_contract.PROPOSAL
+    out["decision_ms"] = out["t_conv_ms"]                                       # tiempo operacional de decisión (candidata a métrica común; validación pendiente, oe/time_contract.py): copia del T_conv de AG0, no recalculado; NO es T_conv validado
+    out["time_contract"] = time_contract.response_contract(time_contract.PROPOSAL)
+    out["persistence"] = "on" if _repo is not None else "off"                   # política efectiva de persistencia de ESTA respuesta
     out["package"]["audio"]["url"] = f"/api/adaptation/audio/{result.package['audio']['content_id']}"
     if (out["package"]["diagram"].get("svg") or None) is not None:
         out["package"]["diagram"]["svg"]["url"] = f"/api/adaptation/diagram/{out['package']['diagram']['svg']['content_id']}.svg"
@@ -123,6 +128,7 @@ async def adapt_baseline(system: str, profile: dict[str, Any], x_swarm_key: str 
     if r.status != "completed":
         raise HTTPException(502, {"system": system, "error": r.error})
     out = {"system": system, "system_role": SYSTEM_ROLES[system], "profile_id": r.profile_id, "status": r.status, "g_best": {"S": r.S, "F": r.F, "predicted_dominant": r.predicted_dominant},
+           "time_contract": time_contract.response_contract(SYSTEM_ROLES[system]), "persistence": "off",           # el baseline nunca persiste (política de campaña «off»)
            "metrics": {"t_conv_ms": r.t_conv_ms, "decision_ms": r.decision_ms, "total_ms": r.total_ms, "n_evaluations": r.n_evaluations}, "package": r.package}
     out["package"]["audio"]["url"] = f"/api/adaptation/audio/{r.package['audio']['content_id']}"
     return out
@@ -154,5 +160,5 @@ async def health(x_swarm_key: str | None = Header(default=None)):
     _check_key(x_swarm_key)
     stack = await get_stack()
     await stack.bus.redis.ping()
-    return {"status": "ok", "library_version": stack.store.version, "redis": "ok",
+    return {"status": "ok", "library_version": stack.store.version, "redis": "ok", "persist_policy": "on" if _repo is not None else "off",
             "agents": [a.agent_id.value for a in stack.agents] + ["AG0"]}

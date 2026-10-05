@@ -16,9 +16,9 @@ from adaptation_swarm.metrics.performance import latency_report
 from adaptation_swarm.oe.conditions import OE3_FACTORS
 from adaptation_swarm.oe.factorial import aggregate_runs, factorial_anova
 from adaptation_swarm.oe.oe1_scores import oe1_per_run
-from adaptation_swarm.oe import oe2_confirmatory
+from adaptation_swarm.oe import oe2_confirmatory, time_contract
 
-PERF_METRICS = ("t_conv_ms", "latency_ms")                       # indicadores de OE2/OE4 (+ throughput por lote)
+PERF_METRICS = ("t_conv_ms", "decision_ms", "latency_ms")                       # indicadores de OE2/OE4 (+ throughput por lote)
 OE3_METRICS = ("t_conv_ms", "k_stop", "latency_ms", "n_messages", "gap_vs_optimum", "F")
 
 
@@ -53,7 +53,7 @@ def summarize_conditions(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict
     for cond, rows in _by_condition(obs).items():
         ok = _ok(rows)
         out[cond] = {"n_requests": len(rows), "n_ok": len(ok), "error_rate": 1 - len(ok) / len(rows) if rows else None,
-                     "t_conv_ms": _stats(_num(ok, "t_conv_ms")), "k_stop": _stats(_num(ok, "k_stop")), "latency": latency_report(_num(ok, "latency_ms")),
+                     "t_conv_ms": _stats(_num(ok, "t_conv_ms")), "decision_ms": _stats(_num(ok, "decision_ms")), "k_stop": _stats(_num(ok, "k_stop")), "latency": latency_report(_num(ok, "latency_ms")),
                      "n_messages": _stats(_num(ok, "n_messages")), "F": _stats(_num(ok, "F")), "gap_vs_optimum": _stats(_num(ok, "gap_vs_optimum")),
                      "throughput_rps": _stats(thr.get(cond, [])), "throughput_by_batch": thr.get(cond, []),
                      "factors": {k[2:]: v for k, v in rows[0].items() if k.startswith("f_")}}
@@ -74,6 +74,21 @@ def _paired(a_rows, b_rows, key) -> dict:
     return res
 
 
+HEADLINE_METRICS = ("latency_ms",)                                     # solo lo no pendiente de validación de métrica (latencia en proceso: diagnóstico; L_resp oficial = HTTP)
+T_CONV_BLOCKED = {"status": "blocked_t_conv_is_proposal_only", "note": "T_conv es de la propuesta: no se contrasta contra un sistema sin convergencia iterativa (oe/time_contract.py)"}
+
+
+def _perf_comparison(sw, other, metric: str) -> dict:
+    """Comparación propuesta vs otro sistema por indicador. `t_conv_ms` NO se contrasta (solo la propuesta lo produce; en un baseline un `t_conv_ms` heredado sería un tiempo de decisión con otro nombre).
+    `decision_ms` se calcula como EXPLORATORIO y marcado (equivalencia con T_conv sin validar). El resto, sin cambios."""
+    if metric == "t_conv_ms":
+        return dict(T_CONV_BLOCKED)
+    res = _paired(sw, other, metric)
+    if metric == "decision_ms":
+        res = {**res, "metric_validation": time_contract.VALIDATION_STATUS, "confirmatory": False, "note": time_contract.PENDING_NOTE}
+    return res
+
+
 def analyze_oe2(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict:
     groups = _by_condition(obs)
     by_level: dict[int, dict[str, str]] = {}
@@ -90,11 +105,15 @@ def analyze_oe2(obs: Sequence[Mapping], bat: Sequence[Mapping]) -> dict:
             sw = groups[systems["swarm"]]
             comps[f"c{level}|swarm_vs_{sysname}"] = {
                 "concurrency": level, "alternative": "two-sided", "unit": "profile_mean",
-                **{m: _paired(sw, groups[cname], m) for m in PERF_METRICS},
+                **{m: _perf_comparison(sw, groups[cname], m) for m in PERF_METRICS},
                 "throughput_rps": cmp.independent_comparison(thr[systems["swarm"]], thr[cname]),
                 "gap_vs_optimum_context": _paired(sw, groups[cname], "gap_vs_optimum")}
-    return {"experiment": "oe2", "conditions": summarize_conditions(obs, bat), "comparisons": comps, "confirmatory_t_conv_log_paired": oe2_confirmatory.analyze(obs, []),
-            "headline": {k: {m: (v[m].get("p_value"), v[m].get("mean_diff")) for m in PERF_METRICS} for k, v in comps.items()}}
+    return {"experiment": "oe2", "conditions": summarize_conditions(obs, bat), "comparisons": comps, "oe2_families_in_process": oe2_confirmatory.analyze(obs, []),
+            "headline": {k: {m: (v[m].get("p_value"), v[m].get("mean_diff")) for m in HEADLINE_METRICS} for k, v in comps.items()},
+            # decision_ms: EXPLORATORIO (equivalencia con T_conv sin validar): fuera del headline, marcado, no confirmatorio; t_conv_ms no se contrasta entre sistemas
+            "headline_exploratory_pending_metric_validation": {k: {"decision_ms": {"p_value": v["decision_ms"].get("p_value"), "mean_diff": v["decision_ms"].get("mean_diff"), "confirmatory": False,
+                                                                                    "metric_validation": time_contract.VALIDATION_STATUS}} for k, v in comps.items()},
+            "t_conv_contrast_between_systems": "blocked_t_conv_is_proposal_only"}
 
 
 def factorial_run_unit(obs: Sequence[Mapping], *, swarm_conditions: set[str]) -> dict:

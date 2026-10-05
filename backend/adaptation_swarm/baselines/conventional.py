@@ -13,8 +13,9 @@ PETICIÓN (en la propuesta: por ciclo); la validación de paquetes se memoiza en
 
 INDICADORES DE TIEMPO (en proceso, sin HTTP):
     decision_ms   tiempo desde que el sistema empieza a decidir la configuración hasta que tiene S (sin ensamblar el paquete).
-    t_conv_ms     nombre de COMPATIBILIDAD de contrato: mismo valor que `decision_ms`. No representa convergencia iterativa. Su equivalencia metodológica con el T_conv de la propuesta (AG0: desde el inicio de la búsqueda
-                  hasta la convergencia de g_best) NO está establecida: la comparabilidad de T_conv queda pendiente (Fase B). Este módulo no redefine ni modifica el T_conv de la propuesta.
+    t_conv_ms     SIEMPRE `None` en estos sistemas: T_conv (AG0) es de la propuesta y aquí no hay convergencia iterativa; no se le llama así (contrato `oe/time_contract.py`, Fase B).
+    decision_ms   tiempo OPERACIONAL de decisión de S (métrica común CANDIDATA de OE2, validación pendiente): perfil y W disponibles → S final decidida, sin ensamblar el paquete. En la propuesta el mismo campo copia el `t_conv_ms` de AG0 (sin cambios).
+                  Su equivalencia metodológica con T_conv NO está validada (límites en `time_contract.KNOWN_LIMITS`). Este módulo no redefine ni modifica el T_conv de la propuesta.
     total_ms      latencia de la petición en proceso: perfil recibido → paquete validado listo.
 
 ALCANCE: `decision_table` es la implementación convencional por reglas estáticas que este estudio define para la comparación; no reproduce un LMS real ni un LLM monolítico (no se miden ni se inventan).
@@ -59,8 +60,8 @@ class ConventionalResult:
     S: list[int] | None = None
     F: float | None = None
     predicted_dominant: str | None = None
-    t_conv_ms: float | None = None   # COMPATIBILIDAD de contrato: tiempo de DECISIÓN del convencional (= `decision_ms`); NO es convergencia iterativa ni se declara equivalente al T_conv de la propuesta (AG0)
-    decision_ms: float | None = None  # tiempo, en proceso, desde que el sistema empieza a decidir hasta que tiene S (sin ensamblado del paquete)
+    t_conv_ms: float | None = None   # SIEMPRE None: T_conv es de la propuesta (AG0); estos sistemas no convergen iterativamente (se conserva el campo solo por compatibilidad de estructura)
+    decision_ms: float | None = None  # tiempo OPERACIONAL de decisión (candidata a métrica común; validación pendiente): tiempo, en proceso, desde que el sistema empieza a decidir S hasta que la tiene (sin ensamblado del paquete)
     total_ms: float = 0.0
     n_evaluations: int = 0
     package: dict[str, Any] | None = field(default=None, repr=False)
@@ -119,7 +120,7 @@ class ConventionalAdapter:
             W = compute_weights(prof)
             t_s = time.perf_counter()
             S, F, n_eval = self._decide(prof, W)
-            t_conv_ms = (time.perf_counter() - t_s) * 1000.0
+            decision_ms = (time.perf_counter() - t_s) * 1000.0
             pkg = self._validated_package(prof.concept_id, S, new_id())
             total_ms = (time.perf_counter() - t0) * 1000.0
         except Exception as exc:                                                  # error explícito, no silencioso
@@ -128,5 +129,5 @@ class ConventionalAdapter:
         cfg = Configuration(S)
         if F is None:        # reglas: 𝓕 no se optimiza; se informa su valor (para comparar calidad) FUERA de los cronómetros
             F = evaluate(cfg, W.by_modality(), *variant_terms(self.store, prof.concept_id, cfg.variants, {}), self.fw).F
-        return ConventionalResult(self.system, prof.profile_id, "completed", list(S), F, predicted_dominant(cfg.emphasis), t_conv_ms=t_conv_ms, decision_ms=t_conv_ms,
+        return ConventionalResult(self.system, prof.profile_id, "completed", list(S), F, predicted_dominant(cfg.emphasis), decision_ms=decision_ms,
                                   total_ms=total_ms, n_evaluations=n_eval, package=pkg)

@@ -10,6 +10,8 @@ from __future__ import annotations
 import hashlib
 import json
 
+from adaptation_swarm.oe import profile_sequence, time_contract
+
 SPEC_VERSION = "oe-campaign-spec-v1"
 STATUS = "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED"
 
@@ -18,18 +20,28 @@ SPEC: dict = {
     "alpha": 0.05, "multiplicity": "Holm dentro de cada familia confirmatoria (abajo); sin corrección entre familias",
     "unit_rule": "dato crudo ≠ dato agregado ≠ unidad de inferencia; ninguna petición/caso/réplica interna se usa como observación independiente",
     "oe2": {
-        "comparator_primary": "rules", "comparator_secondary": "bruteforce", "comparator_fixed_before_data": True,
-        "comparator_note": "rules = categoría «motores basados en reglas» (MS §comparadores); bruteforce = línea base aprobada D11c (referencia de costo/calidad). LMS real y LLM monolítico NO implementados (benchmark §2.1): ver blockers.",
-        "t_conv_baseline_operational": "tiempo desde que el sistema empieza a decidir hasta tener S (conventional.py); se reporta siempre con F y brecha al óptimo",
-        "design": {"profiles_min": 30, "replicates_per_profile_min": 10, "systems": ["swarm", "rules", "bruteforce"], "unit_t_conv_and_latency": "profile (media de K réplicas), pareado",
+        "proposal_system": "swarm", "conventional_system": "decision_table", "comparator_primary": "decision_table", "comparator_fixed_before_data": True,
+        "system_roles": {"swarm": "proposal", "decision_table": "conventional_independent", "rules": "swarm_heuristic_ablation", "bruteforce": "reference_optimum"},
+        "auxiliary_contrasts": ["rules", "bruteforce"],
+        "comparator_note": ("decision_table = tabla de decisión estática independiente del enjambre (baselines/decision_table.py): decisión técnica interna de este estudio. NO es un LMS real ni un LLM monolítico (no implementados): "
+                            "las conclusiones de OE2 se limitan a este comparador. rules (ablación del enjambre) y bruteforce (óptimo de referencia, D11c) NO son comparadores convencionales: son contrastes auxiliares."),
+        "time_contract": {"version": time_contract.CONTRACT_VERSION, "status": time_contract.STATUS, "candidate_common_metric": time_contract.COMMON_METRIC, "validation": time_contract.VALIDATION_STATUS,
+                          "t_conv_equivalence": time_contract.T_CONV_EQUIVALENCE, "definitions": time_contract.DEFINITIONS,
+                          "known_limits": list(time_contract.KNOWN_LIMITS)},
+        "design": {"profiles_min": 30, "replicates_per_profile_min": 10, "systems": ["swarm", "decision_table"], "auxiliary_systems_optional": ["rules", "bruteforce"],
+                   "unit_decision_ms_and_latency": "profile (media de K réplicas), pareado (decision_ms in-process, exploratorio mientras su validación esté pendiente); L_resp y throughput: corrida HTTP",
                    "unit_throughput": "run (corrida/lote HTTP independiente)", "throughput_runs_per_system_min": 10, "stationary_window_s_min": 60, "warmup_s_min": 10},
+        "profile_sequence": {"algorithm": profile_sequence.ALGORITHM, "depends_only_on": ["batch_seed", "worker_index", "user_index", "seq_pos"], "same_sequence_for_all_systems": True,
+                             "recorded": "hash de la secuencia esperada en plan/provenance y (user_index, seq_pos, profile_id) por petición en el log HTTP; `profile_sequence_check.mismatches` debe ser 0"},
+        "persist_policy": {"campaign": "off", "applies_to": "swarm y decision_table por igual (SWARM_API_PERSIST=0 en el servidor; el baseline nunca persiste)",
+                           "on_supported_for_comparison": False, "verified_via": "GET /api/adaptation/health → persist_policy; campo `persistence` de cada respuesta"},
         "latency": {"official": "HTTP extremo a extremo", "indicator": "P95 por corrida", "also_reported": ["p50", "mean"], "contrast_regime_max_users": 25,
                     "stress_regime": "> 25 usuarios: estrés; no contrasta el umbral de 2 s", "threshold_ms": 2000},
         "throughput": {"official": "HTTP, peticiones correctas/s en ventana estacionaria", "rnf04": {"min_rps": 20.0, "max_error": 0.01}, "pilot_rps_not_official": "≈10–12 req/s (piloto in-process): diagnóstico",
                        "record": ["requests_total", "requests_ok", "errors", "timeouts", "duration_s", "throughput_rps", "users", "load_generator_cpu_percent"]},
         "tests": {"paired": "Shapiro-Wilk sobre diferencias → t pareada sobre log(tiempo) si razonable; si no Wilcoxon signed-rank", "independent_runs": "Shapiro-Wilk → Welch / Mann-Whitney",
                   "delta": "swarm − conventional", "report": ["effect", "ci95", "difference", "p", "n_effective"]},
-        "holm_family": "{T_conv, L_resp P95, throughput} × {swarm vs rules} (comparador primario); bruteforce = secundaria con su propia familia",
+        "holm_family": "primary:swarm_vs_decision_table = {L_resp P95 HTTP, throughput HTTP} × cargas de contraste (≤ 25 usuarios); decision_ms (candidata, validación PENDIENTE) se calcula aparte como exploratorio y queda FUERA de Holm; auxiliary:swarm_vs_rules y auxiliary:swarm_vs_bruteforce = familias propias, descriptivas (no son comparadores convencionales)",
     },
     "oe3": {
         "design": "factorial completo 2×2×2×2×3 = 48 celdas con los factores/niveles de conditions.py (heuristic_seed, replicas, dispatch, broadcast_gbest, mechanism)", "ofat_role": "piloto/cribado/validación del pipeline (no evidencia confirmatoria)",
@@ -78,6 +90,7 @@ def open_blockers() -> list[str]:
     out = [f"definición PENDING: {k}" for k, v in defs.DEFINITIONS.items() if v["status"] == defs.PENDING]
     if not rubric_v3.APPROVED_RULE_VERSIONS:
         out.append("F1 v3 sin sellar (rubric_v3.APPROVED_RULE_VERSIONS vacío; PENDING_ADVISOR en el pre-registro v3)")
-    out.append("benchmark §2.1: LMS tradicional y LLM monolítico no implementados; D11c (¿bruteforce reemplaza o complementa?) abierta — requiere decisión del asesor")
+    out.append("contrato de tiempo oe2-time-contract-v1 sin validar: la equivalencia metodológica entre `decision_ms` y el T_conv de la propuesta NO está validada; decision_ms no puede sustituir a T_conv en ningún contraste confirmatorio (límites en time_contract.KNOWN_LIMITS)")
+    out.append("alcance del comparador: solo `decision_table` está implementado como convencional independiente (LMS real y LLM monolítico no implementados); OE2 solo puede concluir sobre ese comparador. D11C queda como línea base empírica separada")
     out.append("medición HTTP oficial (ventana estacionaria, CPU del generador) pendiente de ejecutar en el hardware objetivo")
     return out

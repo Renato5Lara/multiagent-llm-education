@@ -89,11 +89,13 @@ def test_analyze_oe2_detects_a_known_difference_and_reports_throughput():
     for system, mu, thr in (("swarm", 40.0, 20.0), ("rules", 1.0, 900.0)):
         name = f"{system}|c1"
         for i in range(30):
-            obs.append(_row(name, _factors(system=system), f"p{i}", t_conv_ms=mu + rng.normal(0, 2), latency_ms=mu + 5 + rng.normal(0, 2)))
+            obs.append(_row(name, _factors(system=system), f"p{i}", t_conv_ms=mu + rng.normal(0, 2), decision_ms=mu + rng.normal(0, 2), latency_ms=mu + 5 + rng.normal(0, 2)))
         bat += [{"condition": name, "batch": b, "concurrency": 1, "n_requests": 30, "n_ok": 30, "n_failed": 0, "elapsed_s": 1.0, "throughput_rps": thr + rng.normal(0, 1)} for b in range(5)]
     a = oea.analyze("oe2", obs, bat)
     c = a["comparisons"]["c1|swarm_vs_rules"]
-    assert c["t_conv_ms"]["significant"] and c["t_conv_ms"]["mean_diff"] > 30 and c["latency_ms"]["significant"] and c["throughput_rps"]["significant"]
+    assert c["t_conv_ms"]["status"] == "blocked_t_conv_is_proposal_only"                                  # T_conv es de la propuesta: no se contrasta
+    assert c["decision_ms"]["significant"] and c["decision_ms"]["mean_diff"] > 30 and c["decision_ms"]["metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and c["decision_ms"]["confirmatory"] is False
+    assert c["latency_ms"]["significant"] and c["throughput_rps"]["significant"]
     assert a["conditions"]["swarm|c1"]["error_rate"] == 0 and len(a["conditions"]["swarm|c1"]["throughput_by_batch"]) == 5
 
 

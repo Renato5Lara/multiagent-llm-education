@@ -1,7 +1,7 @@
 """Sistema convencional INDEPENDIENTE `decision_table` (OE2): adaptación por TABLA DE DECISIÓN ESTÁTICA sobre los campos DECLARADOS del perfil.
 
-QUÉ HACE. Para un `ProfileRequest` (la misma entrada que la propuesta) decide la configuración S = (e_m, v_m) de las 4 modalidades con una tabla fija de reglas, como lo haría un motor de reglas de un
-sistema de gestión del aprendizaje: «presentar primero el estilo declarado; apoyar con los estilos secundarios; ajustar la profundidad al nivel y a la tasa de error». Sin búsqueda, sin función objetivo, sin iteración.
+QUÉ HACE. Para un `ProfileRequest` (la misma entrada que la propuesta) decide la configuración S = (e_m, v_m) de las 4 modalidades con una tabla fija de reglas estáticas definida para este experimento:
+«presentar primero el estilo declarado; apoyar con los estilos secundarios; ajustar la profundidad al nivel y a la tasa de error». Sin búsqueda, sin función objetivo, sin iteración.
 
 REGLAS (versión `decision-table-v1`, constantes de este módulo; no se calibran con datos):
     énfasis e_m   modalidad PRIMARIA (mayor preferencia declarada en `estilo`; empate → orden de prioridad código > diagrama > texto > audio): e = 2.
@@ -16,10 +16,10 @@ INDEPENDENCIA DEL ENJAMBRE. Este módulo NO importa ni usa: PSO (`pso.engine`, `
 el bus ni el estado de partículas. Solo lee `estilo`, `nivel` y `tasa_error_previa` del perfil y usa el ESPACIO de configuración (`pso.space`: la definición del problema, compartida por todos los sistemas). A diferencia de
 `rules` —que decodifica el punto de arranque heurístico de AG1 (el enjambre sin búsqueda)—, aquí no hay normalización por el máximo, ni modulación por error sobre los pesos, ni reutilización de W.
 
-MÉTRICAS. Tiempo de decisión (`decision_ms`; en el endpoint baseline también `t_conv_ms` por compatibilidad: ver `conventional.py`), tiempo total en proceso, 𝓕 de la configuración elegida (evaluada FUERA del
+MÉTRICAS. Tiempo de decisión (`decision_ms`, tiempo operacional y métrica común CANDIDATA con validación pendiente: `oe/time_contract.py`; `t_conv_ms` es `None` aquí), tiempo total en proceso, 𝓕 de la configuración elegida (evaluada FUERA del
 cronómetro con el mismo 𝓕 para comparar calidad) y validez del paquete.
 
-QUÉ NO REPRESENTA. No es un LMS real ni reproduce uno de la literatura; no es un LLM monolítico; no optimiza; no es el óptimo de referencia (`bruteforce`) ni la ablación del enjambre (`rules`). Es la implementación
+QUÉ NO REPRESENTA. Es un baseline convencional DEFINIDO PARA ESTE EXPERIMENTO: no es Moodle, Canvas ni ningún LMS real, no es un LLM monolítico ni un sistema del estado del arte; no optimiza; no es el óptimo de referencia (`bruteforce`) ni la ablación del enjambre (`rules`). Es la implementación
 convencional por reglas estáticas que este estudio define para la comparación. Su tiempo de decisión NO es un tiempo de convergencia iterativa: no hay convergencia.
 """
 

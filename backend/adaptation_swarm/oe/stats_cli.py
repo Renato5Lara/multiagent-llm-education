@@ -6,7 +6,8 @@ la etiqueta de validez de la corrida (`EXPLORATORY` mientras el entorno sea PILO
 
     python -m adaptation_swarm.oe.stats_cli --run DIR --out-dir NUEVO [--alpha 0.05]
 Plan por experimento:
-    oe2  por nivel de carga y por indicador (t_conv_ms, latency_ms): propuesta vs cada convencional, PAREADO por perfil (media por perfil) + normalidad de las diferencias;
+    oe2  por nivel de carga y por indicador (latency_ms; `decision_ms` EXPLORATORIO y marcado; `t_conv_ms` BLOQUEADO: es solo de la propuesta): propuesta vs cada otro sistema, PAREADO por perfil (media por perfil) +
+         normalidad de las diferencias;
          throughput_rps: grupos independientes (unidad = lote)
     oe3  efectos principales por factor sobre t_conv_ms y k_stop (diseño factorial completo) o, con el diseño OFAT, cada condición vs la referencia (pareado, Holm)
     oe4  throughput entre niveles de carga (k independientes: Kruskal-Wallis + Holm) y efecto de N sobre t_conv_ms a carga 1 (k pareados)
@@ -63,10 +64,13 @@ def plan_oe2(rows, meta, alpha) -> dict:
                 continue
             key = f"c{lv}|swarm_vs_{m['system']}"
             out[key] = {}
-            for metric in ("t_conv_ms", "latency_ms"):
+            out[key]["t_conv_ms"] = {"status": "blocked_t_conv_is_proposal_only", "note": "T_conv es de la propuesta; no se contrasta contra un sistema sin convergencia iterativa (oe/time_contract.py)"}
+            for metric in ("decision_ms", "latency_ms"):
                 a, b = _unit_means(rows, sw, metric), _unit_means(rows, c, metric)
                 common = sorted(set(a) & set(b))
                 out[key][metric] = hyp.paired({k: a[k] for k in common}, {k: b[k] for k in common}, unit="profile_mean_over_replicates_and_batches", alpha=alpha) if len(common) >= 3 else {"status": "not_testable"}
+            out[key]["decision_ms"] = {**out[key]["decision_ms"], "metric_validation": "PENDING_METHODOLOGICAL_VALIDATION", "confirmatory": False,
+                                       "note": "tiempo operacional de decisión (candidata a métrica común): equivalencia con T_conv NO validada; resultado exploratorio"}
             out[key]["throughput_rps"] = hyp.independent(_batches(rows, sw), _batches(rows, c), unit="batch", alpha=alpha)
     return out
 
@@ -110,7 +114,7 @@ def analyze_run(run_dir: Path, alpha: float = 0.05) -> dict:
     meta = _meta(rows)
     plan = {"oe2": plan_oe2, "oe3": plan_oe3, "oe4": plan_oe4}[exp](rows, meta, alpha)
     norm = {c: {m: assumptions.normality(list(_unit_means(rows, c, m).values()), unit="profile_mean_over_replicates_and_batches", alpha=alpha)
-                for m in ("t_conv_ms", "latency_ms") if _unit_means(rows, c, m)} for c in sorted(meta)}
+                for m in ("t_conv_ms", "decision_ms", "latency_ms") if _unit_means(rows, c, m)} for c in sorted(meta)}
     return {"schema": "oe-statistical-analysis-v1", "experiment": exp, "source_run": str(run_dir), "source_checksums": manifest["files"].get("statistical_input.csv"),
             "validity_inherited": manifest["validity"], "environment_class": manifest["environment_class"], "official_execution": manifest["official_execution"],
             "label": "EXPLORATORY — NO es resultado oficial de tesis" if manifest["validity"] != "OFFICIAL_CANDIDATE" else "OFFICIAL_CANDIDATE (pendiente de decisión metodológica)",

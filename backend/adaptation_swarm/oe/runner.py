@@ -56,7 +56,7 @@ MIN_BATCHES_FOR_THROUGHPUT = 5
 MIN_K_FOR_CLAIM = 10
 N_PROFILES_FOR_CLAIM = 100
 PENDING_DECISIONS = [
-    "Definición de «sistema convencional» (baselines/conventional.py: reglas fijas y búsqueda exhaustiva) por confirmar con el asesor.",
+    "Convencional independiente `decision_table` y métrica común CANDIDATA `decision_ms` (oe/time_contract.py): decisión técnica interna; equivalencia con T_conv NO validada y T_conv solo de la propuesta; `rules` (ablación) y `bruteforce` (referencia) no son comparadores convencionales.",
     "Hardware objetivo (8 vCPU / 32 GB, P6): hasta medir en él, los resultados son EXPLORATORIOS (D10).",
     "Definición operativa de «eficiencia de la adaptación» (OE3): se reportan sus componentes (t_conv_ms, k_stop, mensajes, brecha al óptimo); no se fabrica un índice compuesto.",
 ]
@@ -90,7 +90,7 @@ async def _closed_loop(call: Call, tasks: list[tuple[ProfileRequest, int]], conc
 
 def _swarm_row(r) -> dict:
     m = r.metrics
-    return {"status": r.status, "stop_reason": r.stop_reason, "k_stop": r.k_stop, "t_conv_ms": r.t_conv_ms, "total_ms": r.total_ms, "F": r.g_best_F,
+    return {"status": r.status, "stop_reason": r.stop_reason, "k_stop": r.k_stop, "t_conv_ms": r.t_conv_ms, "decision_ms": r.t_conv_ms, "total_ms": r.total_ms, "F": r.g_best_F,
             "S": r.g_best_S, "predicted": r.predicted_dominant, "n_messages": m.n_messages if m else None,
             "comm_overhead_ms": m.comm_overhead_ms if m else None, "inflight_overlap": m.inflight_overlap if m else None, "n_evaluations": None,
             "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]),
@@ -100,7 +100,7 @@ def _swarm_row(r) -> dict:
 
 
 def _baseline_row(r) -> dict:
-    return {"status": r.status, "stop_reason": None, "k_stop": None, "t_conv_ms": r.t_conv_ms, "total_ms": r.total_ms, "F": r.F, "S": r.S, "predicted": r.predicted_dominant,
+    return {"status": r.status, "stop_reason": None, "k_stop": None, "t_conv_ms": None, "decision_ms": r.decision_ms, "total_ms": r.total_ms, "F": r.F, "S": r.S, "predicted": r.predicted_dominant,
             "n_messages": 0, "comm_overhead_ms": None, "inflight_overlap": None, "n_evaluations": r.n_evaluations,
             "package_valid": bool(r.package and r.package["validation"]["valid"] and r.package["chain_valid"]), "w_valid": None, "iterations_logged": None,
             "error": r.error, "error_code": None}
@@ -214,7 +214,7 @@ def validity(experiment: str, *, hw: dict, n_profiles: int, k: int, batches: int
     if experiment in ("oe2", "oe4"):
         conds["lotes_suficientes_para_throughput"] = batches >= MIN_BATCHES_FOR_THROUGHPUT
     if experiment == "oe2":
-        conds["propuesta_y_convencionales_presentes"] = {c.system for c in conditions} >= {"swarm", "rules", "bruteforce"}
+        conds["propuesta_y_convencional_independiente_presentes"] = {c.system for c in conditions} >= {"swarm", "decision_table"}      # rules (ablación) y bruteforce (referencia) son opcionales
     reasons = [f"no se cumple: {k_}" for k_, ok in conds.items() if not ok]
     blocked = oe_defs.blocked_for(experiment)
     official_execution = ("PENDING_HARDWARE" if not conds["hardware_cercano_al_objetivo"] else

@@ -88,7 +88,7 @@ def test_adapter_is_executable_reproducible_and_times_its_decision(store, slice_
     assert a.status == "completed" and a.error is None and a.n_evaluations == 0
     assert a.package["chain_valid"] and a.package["validation"]["valid"] and len(a.package["S"]) == 8 and a.package["code"]["source"] and a.package["audio"]["path"]
     assert a.S == list(dt.decide(slice_profile).vector) == b.S and a.F == b.F                    # misma entrada → misma salida; F evaluada con el mismo 𝓕 fuera del cronómetro
-    assert a.decision_ms is not None and a.decision_ms == a.t_conv_ms and 0 < a.decision_ms <= a.total_ms
+    assert a.t_conv_ms is None and a.decision_ms is not None and 0 < a.decision_ms <= a.total_ms        # sin convergencia iterativa: no se publica T_conv
     assert conv.ConventionalAdapter(store, "decision_table").adapt({"profile_id": "x"}).status == "failed"
 
 
@@ -111,29 +111,31 @@ async def test_baseline_endpoint_selects_each_system_and_distinguishes_its_role(
     out = r.json()
     assert out["system"] == system and out["system_role"] == role
     m = out["metrics"]
-    assert m["decision_ms"] == m["t_conv_ms"] and 0 < m["decision_ms"] <= m["total_ms"]
-    assert hw.extract_cycle_metrics(out) == {"shape": "baseline", "t_conv_ms": m["t_conv_ms"], "k_stop": None}      # lo que el log HTTP captura del convencional
+    assert m["t_conv_ms"] is None and 0 < m["decision_ms"] <= m["total_ms"]
+    assert hw.extract_cycle_metrics(out) == {"shape": "baseline", "t_conv_ms": None, "decision_ms": m["decision_ms"], "k_stop": None, "profile_id": out["profile_id"]}      # lo que el log HTTP captura del convencional
 
 
 # ── captura de T_conv en el log HTTP ────────────────────────────────────────────────────────────────────────
 def test_extract_cycle_metrics_reads_both_response_shapes_and_refuses_unknown_ones():
-    assert hw.extract_cycle_metrics({"t_conv_ms": 12.5, "k_stop": 3, "metrics": {"n_messages": 9}}) == {"shape": "swarm", "t_conv_ms": 12.5, "k_stop": 3}
-    assert hw.extract_cycle_metrics({"metrics": {"t_conv_ms": 0.02, "decision_ms": 0.02, "total_ms": 5.0}}) == {"shape": "baseline", "t_conv_ms": 0.02, "k_stop": None}
+    assert hw.extract_cycle_metrics({"profile_id": "p", "t_conv_ms": 12.5, "decision_ms": 12.5, "k_stop": 3, "metrics": {"n_messages": 9}}) == {"shape": "swarm", "t_conv_ms": 12.5, "decision_ms": 12.5, "k_stop": 3, "profile_id": "p"}
+    assert hw.extract_cycle_metrics({"profile_id": "q", "metrics": {"t_conv_ms": None, "decision_ms": 0.02, "total_ms": 5.0}}) == {"shape": "baseline", "t_conv_ms": None, "decision_ms": 0.02, "k_stop": None, "profile_id": "q"}
+    with pytest.raises(ValueError, match="decision_ms"):                                          # la propuesta sin la métrica común no se acepta ni se rellena
+        hw.extract_cycle_metrics({"t_conv_ms": 12.5, "k_stop": 3})
     for bad in ({}, {"metrics": None}, {"metrics": {"total_ms": 1.0}}, {"metrics": "x"}):
-        with pytest.raises(ValueError, match="t_conv_ms"):
+        with pytest.raises(ValueError, match="reconocibles"):
             hw.extract_cycle_metrics(bad)
 
 
 def test_raw_log_marks_requests_without_metrics_and_the_summary_counts_them(tmp_path):
     csv_path = tmp_path / "raw.csv"
-    rows = ["t_end_epoch_s,response_ms,ok,timeout,t_conv_ms,k_stop,metrics_ok"]
+    rows = ["t_end_epoch_s,response_ms,ok,timeout,t_conv_ms,k_stop,metrics_ok,decision_ms,profile_id,user_index,seq_pos"]
     for i in range(900):
-        rows.append(f"{1000 + i / 10:.3f},100.0,1,0,{'' if i % 100 == 0 else 0.05},,{0 if i % 100 == 0 else 1}")
+        rows.append(f"{1000 + i / 10:.3f},100.0,1,0,,,{0 if i % 100 == 0 else 1},{'' if i % 100 == 0 else 0.05},p{i % 3},0,{i}")      # convencional: sin T_conv, con decision_ms
     csv_path.write_text("\n".join(rows) + "\n", encoding="utf-8")
     raw = hw.read_raw(csv_path)
-    assert sum(not r["metrics_ok"] for r in raw) == 9 and raw[1]["t_conv_ms"] == 0.05 and raw[0]["t_conv_ms"] is None
+    assert sum(not r["metrics_ok"] for r in raw) == 9 and raw[1]["decision_ms"] == 0.05 and raw[0]["decision_ms"] is None and all(r["t_conv_ms"] is None for r in raw)
     s = hw.summarize_run(raw, [], users=1, system="decision_table", run_id="t")
-    assert s["status"] == "ok" and s["requests_without_cycle_metrics"] >= 5 and s["t_conv_ms_mean"] == pytest.approx(0.05)
+    assert s["status"] == "ok" and s["requests_without_cycle_metrics"] >= 5 and s["decision_ms_mean"] == pytest.approx(0.05) and s["t_conv_ms_mean"] is None
 
 
 def test_locust_plugin_uses_the_shared_extractor_and_does_not_swallow_failures():

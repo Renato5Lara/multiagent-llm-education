@@ -29,7 +29,8 @@ def test_baseline_delivers_a_valid_four_modality_package(store, slice_profile, s
     p = r.package
     assert p["chain_valid"] and p["validation"]["valid"] and len(p["S"]) == 8
     assert p["code"]["source"] and p["diagram"]["mermaid"] and p["text"]["text"] and p["audio"]["path"]
-    assert 0 < r.t_conv_ms <= r.total_ms and r.predicted_dominant in ("code", "diagram", "text", "audio")
+    assert r.t_conv_ms is None and 0 < r.decision_ms <= r.total_ms and r.predicted_dominant      # T_conv es de la propuesta; el convencional solo tiene tiempo de DECISIÓN (oe/time_contract.py)
+    assert r.predicted_dominant in ("code", "diagram", "text", "audio")
 
 
 def test_rules_system_is_the_heuristic_without_search(store, slice_profile):
