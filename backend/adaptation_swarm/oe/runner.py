@@ -39,6 +39,7 @@ from adaptation_swarm.fitness.fitness import FitnessWeights
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.oe import analysis as oe_analysis
 from adaptation_swarm.oe import definitions as oe_defs
+from adaptation_swarm.oe import campaign_spec
 from adaptation_swarm.oe import export as oe_export
 from adaptation_swarm.oe.conditions import Condition, oe2_systems, oe3_full_factorial, oe3_one_factor_at_a_time, oe4_grid
 from adaptation_swarm.profiles.generator import read_dataset
@@ -106,8 +107,13 @@ def _baseline_row(r) -> dict:
 
 
 async def run_condition(store: LibraryStore, cond: Condition, profiles: list[ProfileRequest], *, k: int, batches: int, warmup: int, batch_seed: int,
-                        fw: FitnessWeights, log=print, batch_offset: int = 0, exec_index: int | None = None) -> tuple[list[dict], list[dict]]:
-    tasks = [(p, rep) for rep in range(k) for p in profiles]
+                        fw: FitnessWeights, log=print, batch_offset: int = 0, exec_index: int | None = None,
+                        distinct_seeds: bool = False) -> tuple[list[dict], list[dict]]:
+    def tasks_for(batch_index: int) -> list[tuple[ProfileRequest, int]]:
+        """`distinct_seeds`: el lote `b` usa las réplicas b·k … b·k+k−1 (semillas propias); así las corridas de una celda son réplicas ESTADÍSTICAS y no repeticiones de reloj con las mismas semillas. Mismo reparto para todas las condiciones."""
+        base = batch_index * k if distinct_seeds else 0
+        return [(p, base + rep) for rep in range(k) for p in profiles]
+    tasks = tasks_for(0)
     obs: list[dict] = []
     bat: list[dict] = []
     warm = [(p, 0) for p in profiles[:warmup]]
@@ -117,13 +123,14 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
             await _closed_loop(call, list(warm), cond.concurrency)
         for b in range(batches):
             b_started = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
-            rows, elapsed = await _closed_loop(call, list(tasks), cond.concurrency)
+            rows, elapsed = await _closed_loop(call, tasks_for(b + batch_offset), cond.concurrency)
             ok = [r for r in rows if r["status"] == "completed"]
             for r in rows:
                 r.update(condition=cond.name, batch=b + batch_offset, exec_index=exec_index, **{f"f_{kk}": vv for kk, vv in cond.factors().items()})
             obs.extend(rows)
             bat.append({"condition": cond.name, "batch": b + batch_offset, "exec_index": exec_index, "concurrency": cond.concurrency, "n_requests": len(rows), "n_ok": len(ok), "n_failed": len(rows) - len(ok),
-                        "t_start_utc": b_started, "elapsed_s": elapsed, "throughput_rps": len(ok) / elapsed if elapsed > 0 else None})
+                        "t_start_utc": b_started, "elapsed_s": elapsed, "throughput_rps": len(ok) / elapsed if elapsed > 0 else None,
+                        "throughput_internal_rps": len(ok) / elapsed if elapsed > 0 else None, "seed_per_batch": distinct_seeds})
             log(f"  {cond.name} lote {b + 1}/{batches}: {len(ok)}/{len(rows)} ok, {elapsed:.2f} s, {len(ok) / elapsed:.1f} req/s")
 
     if cond.system == "swarm":
@@ -223,7 +230,8 @@ def provenance(store: LibraryStore, profiles_path: Path, args: argparse.Namespac
             "code": _infra.code_version(), "environment": _infra.environment(), "hardware": hw, "library_version": store.version,
             "dataset": {**_infra.dataset_identity(profiles_path), "file": profiles_path.name, "file_sha256": _sha_bytes(profiles_path.read_bytes()), "n_profiles": n_profiles},
             "design": {"k_replicates": args.k, "batches": args.batches, "warmup_requests": args.warmup, "batch_seed": args.batch_seed, "concurrency_levels": args.concurrency,
-                       "design": getattr(args, "design", None), "order": getattr(args, "order", "sequential"), "particles": getattr(args, "particles", None)},
+                       "design": getattr(args, "design", None), "order": getattr(args, "order", "sequential"), "particles": getattr(args, "particles", None), "seed_per_batch": getattr(args, "seed_per_batch", False)},
+            "campaign_spec": campaign_spec.identity(),
             "fitness_weights": FitnessWeights().to_dict(), "redis": iso.mask(SETTINGS.redis_url), "module_fingerprints": _infra.module_fingerprints(),
             "conditions": [{"name": c.name, **c.factors(), "pso": c.pso_params().to_dict(), "pso_config_hash": c.pso_params().config_hash()} for c in conditions],
             "validity": validity(args.experiment, hw=hw, n_profiles=n_profiles, k=args.k, batches=args.batches, warmup=args.warmup, conditions=conditions),
@@ -299,6 +307,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--design", choices=("full", "ofat"), default="ofat")
     ap.add_argument("--f1-definition-version", choices=sorted(oe_defs.F1_DEFINITION_VERSIONS), help="versión de la definición F1 que la corrida declara en su provenance (este ejecutor no calcula F1; sin valor se registra `selected: null`)")
     ap.add_argument("--order", choices=("sequential", "randomized-blocks"), default="sequential", help="orden de ejecución de las condiciones (randomized-blocks: --batches rondas con orden aleatorio por ronda)")
+    ap.add_argument("--seed-per-batch", action="store_true", help="cada lote usa semillas propias (réplicas b·k…b·k+k−1): requerido para que las corridas de una celda sean réplicas estadísticas (OE3/OE4 confirmatorios)")
     ap.add_argument("--official", action="store_true", help="declara la ejecución como OFICIAL: se niega a arrancar si el hardware objetivo o las condiciones de validez no se cumplen (sin esta marca la corrida es PILOT/exploratoria)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
@@ -337,7 +346,8 @@ def main(argv: list[str] | None = None) -> None:
     for exec_index, (c, batch_no, n_total) in enumerate(execution_plan(conds, args.batches, args.order, args.batch_seed), 1):
         log(f"[{exec_index}/{n_total}] {c.name} (lote {batch_no})")
         o, b = asyncio.run(run_condition(store, c, profiles, k=args.k, batches=1 if args.order == "randomized-blocks" else args.batches, warmup=args.warmup,
-                                         batch_seed=args.batch_seed, fw=fw, log=log, batch_offset=batch_no, exec_index=exec_index))
+                                         batch_seed=args.batch_seed, fw=fw, log=log, batch_offset=batch_no, exec_index=exec_index,
+                                         distinct_seeds=args.seed_per_batch))
         obs.extend(o)
         bat.extend(b)
     add_optimum_gap(store, profiles, obs, fw)

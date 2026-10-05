@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import hmac
 import os
 import uuid
@@ -27,6 +28,7 @@ from adaptation_swarm.baselines.conventional import SYSTEMS as BASELINE_SYSTEMS,
 from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.profiles.models import ProfileRequest
+from adaptation_swarm.pso.params import PSOParams
 from adaptation_swarm.stack import SwarmStack
 
 router = APIRouter(prefix="/api/adaptation", tags=["adaptation-swarm"])
@@ -58,7 +60,9 @@ async def get_stack() -> SwarmStack:
             if os.getenv("SWARM_API_PERSIST", "1") != "0":
                 from adaptation_swarm.persistence.repository import PostgresCycleRepository
                 _repo = PostgresCycleRepository(run_label=os.getenv("SWARM_API_RUN_LABEL"))
-            stack = SwarmStack(prefix=os.getenv("SWARM_REDIS_PREFIX") or None)
+            n_env = os.getenv("SWARM_API_N_PARTICLES")        # OE4: tamaño del enjambre por celda (sin variable = valor de referencia de PSOParams, comportamiento histórico)
+            params = None if not n_env else dataclasses.replace(PSOParams(), n_particles=int(n_env))
+            stack = SwarmStack(prefix=os.getenv("SWARM_REDIS_PREFIX") or None, params=params)
             await stack.__aenter__()
             _stack = stack
     return _stack
