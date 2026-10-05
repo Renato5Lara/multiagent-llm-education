@@ -24,6 +24,7 @@ KEY = os.environ.get("SWARM_API_KEY", "")
 BATCH_SEED = int(os.environ.get("SWARM_LOAD_BATCH_SEED", "20260923"))
 SYSTEM = os.environ.get("SWARM_LOAD_SYSTEM", "swarm")      # OE2: swarm (propuesta) | decision_table (convencional independiente) | rules (ablación) | bruteforce (referencia); mismo servidor y mismo paquete
 WORKER_INDEX = int(os.environ.get("SWARM_LOAD_WORKER_INDEX", "0"))
+TIMEOUT_S = float(os.environ.get("SWARM_LOAD_TIMEOUT_S", "30"))        # timeout de CLIENTE por petición. 30 s es un valor por defecto PROVISIONAL (técnico, no metodológico) para uso manual; la campaña OE2 lo pasa SIEMPRE explícito (el mismo para todos los sistemas) y lo registra
 
 
 # SECUENCIA DETERMINISTA de perfiles (OE2, Fase B.2). Copia AUTOCONTENIDA (solo stdlib) de `adaptation_swarm/oe/profile_sequence.py`, que es la versión canónica; un test comprueba que ambas producen la misma secuencia.
@@ -61,8 +62,11 @@ class AdaptationUser(HttpUser):
         with self.client.post(
             f"/api/adaptation?batch_seed={BATCH_SEED}&replicate={replicate}" if SYSTEM == "swarm"
             else f"/api/adaptation/baseline/{SYSTEM}", json=profile, context=context,
-            headers={"X-Swarm-Key": KEY}, name="POST /api/adaptation", catch_response=True,
+            headers={"X-Swarm-Key": KEY}, name="POST /api/adaptation", catch_response=True, timeout=TIMEOUT_S,
         ) as resp:
+            if resp.status_code == 0 and getattr(resp, "error", None) is not None:
+                resp.failure(resp.error)                       # sin respuesta HTTP (timeout de cliente, conexión): se conserva la EXCEPCIÓN original para clasificarla por tipo
+                return
             if resp.status_code != 200:
                 resp.failure(f"HTTP {resp.status_code}")
                 return

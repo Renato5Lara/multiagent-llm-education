@@ -128,7 +128,7 @@ def test_server_is_started_with_persistence_off_and_the_effective_policy_is_veri
             self.policy = policy
 
         def read(self):
-            return json.dumps({"status": "ok", "persist_policy": self.policy}).encode()
+            return json.dumps({"status": "ok", "persist_policy": self.policy, "baseline_quality_in_request": False}).encode()
     seen = {}
 
     def urlopen(req, timeout=None):

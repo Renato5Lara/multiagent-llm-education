@@ -17,7 +17,7 @@ from typing import Mapping, Sequence
 import numpy as np
 
 from adaptation_swarm.analysis import comparison as cmp
-from adaptation_swarm.oe import campaign_spec, time_contract
+from adaptation_swarm.oe import campaign_spec, http_window, time_contract
 
 CONTRAST_MAX_USERS = 25
 ALPHA = campaign_spec.SPEC["alpha"]
@@ -80,7 +80,13 @@ def analyze(obs: Sequence[Mapping], http_runs: Sequence[Mapping]) -> dict:
     by_sys_level: dict[tuple[str, int], list[Mapping]] = {}
     for r in obs:
         by_sys_level.setdefault((r["f_system"], int(r["f_concurrency"])), []).append(r)
-    ok_runs = [r for r in http_runs if r.get("status") == "ok"]
+    ok_all = [r for r in http_runs if r.get("status") == "ok"]
+    ok_runs = [r for r in ok_all if r.get("comparable") is True]                     # B7: corridas no comparables (generador saturado / sin CPU) se CONSERVAN en el registro pero no entran al contraste
+    limited = {}
+    for r in ok_all:
+        if r.get("comparable") is not True and r["users"] <= CONTRAST_MAX_USERS:
+            limited.setdefault(r["users"], set()).add(r.get("non_comparable_reason") or "comparable_not_declared")      # carga entera `generator_limited` para AMBOS sistemas (simetría)
+    ok_runs = [r for r in ok_runs if r["users"] not in limited]
     fams: dict = {}
     stress: dict = {}
     for role, comp in (("primary", primary), *(("auxiliary", a) for a in auxiliary)):
@@ -95,6 +101,9 @@ def analyze(obs: Sequence[Mapping], http_runs: Sequence[Mapping]) -> dict:
             cv = [r for r in ok_runs if r["system"] == comp and r["users"] == users]
             hyp[f"L_resp_P95_http@u{users}"] = runs_comparison([r["latency_p95_ms"] for r in sw], [r["latency_p95_ms"] for r in cv], log=True, metric="latency_p95_ms")
             hyp[f"throughput_http@u{users}"] = runs_comparison([r["throughput_rps"] for r in sw], [r["throughput_rps"] for r in cv], metric="throughput_rps")
+            dm_sw, dm_cv = [r["decision_ms_mean"] for r in sw if r.get("decision_ms_mean") is not None], [r["decision_ms_mean"] for r in cv if r.get("decision_ms_mean") is not None]
+            if dm_sw and dm_cv:                                                       # decision_ms de los datos HTTP reales: EXPLORATORIO, fuera de Holm (equivalencia con T_conv sin validar)
+                pending[f"decision_ms_http@u{users}"] = {**runs_comparison(dm_sw, dm_cv, log=True, metric="decision_ms_mean"), "metric_validation": time_contract.VALIDATION_STATUS}
         fams[f"{role}:swarm_vs_{comp}"] = holm_family(f"{role}:swarm_vs_{comp}", hyp, confirmatory=role == "primary", pending=pending)
     for users in sorted({r["users"] for r in ok_runs if r["users"] > CONTRAST_MAX_USERS}):
         stress[f"u{users}"] = {s: {"runs": sum(1 for r in ok_runs if r["system"] == s and r["users"] == users),
@@ -103,4 +112,6 @@ def analyze(obs: Sequence[Mapping], http_runs: Sequence[Mapping]) -> dict:
     return {"experiment": "oe2", "official": False, "oe2_official": False, "official_blocked_by": campaign_spec.open_blockers(), "campaign_spec": campaign_spec.identity(), "proposal_system": spec["proposal_system"], "comparator_primary": primary, "auxiliary_contrasts": auxiliary, "candidate_time_metric": spec["time_contract"]["candidate_common_metric"], "time_metric_validation": time_contract.VALIDATION_STATUS, "t_conv_contrast": "not_performed_t_conv_is_proposal_only", "families": fams,
             "stress_regime_descriptive_only": stress, "stress_note": "> 25 usuarios: medido y conservado; fuera del contraste del umbral de 2 s y de la familia confirmatoria",
             "benchmark_2_1_open": "LMS tradicional y LLM monolítico no implementados; D11c abierta: las conclusiones se limitan a los comparadores medidos",
-            "n_http_runs_used": len(ok_runs), "n_http_runs_invalid": len(http_runs) - len(ok_runs)}
+            "n_http_runs_used": len(ok_runs), "n_http_runs_invalid": len(http_runs) - len(ok_all),
+            "n_http_runs_not_comparable": sum(1 for r in ok_all if r.get("comparable") is not True), "generator_limited_levels": {str(u): sorted(v) for u, v in sorted(limited.items())},
+            "generator_policy": http_window.GENERATOR_POLICY["id"]}

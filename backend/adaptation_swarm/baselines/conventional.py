@@ -49,6 +49,7 @@ BASELINE_VERSION = "conventional-v1"
 #   conventional_independent   sistema convencional de adaptación independiente del enjambre (OE2): `decision_table` (baselines/decision_table.py).
 #   swarm_heuristic_ablation   `rules`: decodifica el punto de arranque heurístico de AG1 (el enjambre SIN búsqueda). NO es un convencional independiente; se conserva como ablación.
 #   reference_optimum          `bruteforce`: óptimo global de 𝓕 por enumeración. Referencia de calidad/costo (D11c); NO es un sistema convencional de adaptación.
+BASELINE_REPORTS_QUALITY_IN_REQUEST = False       # B3: el endpoint baseline NO evalúa 𝓕 de reporte dentro de la petición medida (única fuente de verdad: la usan el router, el health y los guards)
 SYSTEM_ROLES = {"decision_table": "conventional_independent", "rules": "swarm_heuristic_ablation", "bruteforce": "reference_optimum"}
 
 
@@ -112,7 +113,16 @@ class ConventionalAdapter:
             raise ValueError(f"paquete inválido: {validation.errors[:3]}")
         return {**pkg, "validation": validation.to_dict()}
 
-    def adapt(self, profile: ProfileRequest | dict) -> ConventionalResult:
+    def evaluate_quality(self, profile: ProfileRequest, S) -> float:
+        """𝓕 de la configuración `S` con el MISMO 𝓕 que la propuesta (términos Coher/Redund/CostT, pesos y W). Es solo REPORTE de calidad: NO forma parte de la decisión del convencional ni de ninguna región de
+        tiempo comparable, así que nunca debe ejecutarse dentro de la petición medida (ver `adapt(report_quality=False)`). Determinista: se puede reconstruir fuera de línea desde `S`."""
+        cfg = Configuration(tuple(S))
+        return evaluate(cfg, compute_weights(profile).by_modality(), *variant_terms(self.store, profile.concept_id, cfg.variants, {}), self.fw).F
+
+    def adapt(self, profile: ProfileRequest | dict, *, report_quality: bool = True) -> ConventionalResult:
+        """Regiones de tiempo: `decision_ms` = solo la decisión; `total_ms` = perfil recibido → paquete validado listo. La evaluación de 𝓕 NO está en ninguna de ellas. Con `report_quality=True` (por defecto, uso
+        directo) 𝓕 se calcula DESPUÉS de cerrar ambas, pero aún dentro de esta llamada; quien mida la latencia de la llamada (endpoint HTTP, ejecutor in-process) debe pasar `report_quality=False` y reconstruir 𝓕
+        fuera de la región medida con `evaluate_quality`. `bruteforce` conserva su 𝓕 (es el resultado de la propia búsqueda, parte de su decisión)."""
         t0 = time.perf_counter()
         pid = profile.get("profile_id", "?") if isinstance(profile, dict) else profile.profile_id
         try:
@@ -127,7 +137,7 @@ class ConventionalAdapter:
             return ConventionalResult(self.system, pid, "failed", total_ms=(time.perf_counter() - t0) * 1000.0,
                                       error=f"{type(exc).__name__}: {str(exc)[:300]}")
         cfg = Configuration(S)
-        if F is None:        # reglas: 𝓕 no se optimiza; se informa su valor (para comparar calidad) FUERA de los cronómetros
+        if F is None and report_quality:        # 𝓕 no se optimiza en estos sistemas; se informa solo si se pide, DESPUÉS de cerrar las regiones de tiempo
             F = evaluate(cfg, W.by_modality(), *variant_terms(self.store, prof.concept_id, cfg.variants, {}), self.fw).F
         return ConventionalResult(self.system, prof.profile_id, "completed", list(S), F, predicted_dominant(cfg.emphasis), decision_ms=decision_ms,
                                   total_ms=total_ms, n_evaluations=n_eval, package=pkg)

@@ -24,7 +24,7 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
-from adaptation_swarm.baselines.conventional import SYSTEM_ROLES, SYSTEMS as BASELINE_SYSTEMS, ConventionalAdapter
+from adaptation_swarm.baselines.conventional import BASELINE_REPORTS_QUALITY_IN_REQUEST, SYSTEM_ROLES, SYSTEMS as BASELINE_SYSTEMS, ConventionalAdapter
 from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.oe import time_contract
@@ -124,11 +124,11 @@ async def adapt_baseline(system: str, profile: dict[str, Any], x_swarm_key: str 
         raise HTTPException(422, exc.errors(include_url=False, include_context=False))
     if system not in _baselines:
         _baselines[system] = ConventionalAdapter(LibraryStore.open(SETTINGS.library_root), system)
-    r = await asyncio.to_thread(_baselines[system].adapt, prof)       # servidor síncrono: un hilo por petición
+    r = await asyncio.to_thread(_baselines[system].adapt, prof, report_quality=BASELINE_REPORTS_QUALITY_IN_REQUEST)       # servidor síncrono: un hilo por petición; 𝓕 de reporte FUERA de la petición medida (B3)
     if r.status != "completed":
         raise HTTPException(502, {"system": system, "error": r.error})
     out = {"system": system, "system_role": SYSTEM_ROLES[system], "profile_id": r.profile_id, "status": r.status, "g_best": {"S": r.S, "F": r.F, "predicted_dominant": r.predicted_dominant},
-           "time_contract": time_contract.response_contract(SYSTEM_ROLES[system]), "persistence": "off",           # el baseline nunca persiste (política de campaña «off»)
+           "time_contract": time_contract.response_contract(SYSTEM_ROLES[system]), "persistence": "off", "quality_in_request": BASELINE_REPORTS_QUALITY_IN_REQUEST,           # el baseline nunca persiste (política de campaña «off»)
            "metrics": {"t_conv_ms": r.t_conv_ms, "decision_ms": r.decision_ms, "total_ms": r.total_ms, "n_evaluations": r.n_evaluations}, "package": r.package}
     out["package"]["audio"]["url"] = f"/api/adaptation/audio/{r.package['audio']['content_id']}"
     return out
@@ -160,5 +160,5 @@ async def health(x_swarm_key: str | None = Header(default=None)):
     _check_key(x_swarm_key)
     stack = await get_stack()
     await stack.bus.redis.ping()
-    return {"status": "ok", "library_version": stack.store.version, "redis": "ok", "persist_policy": "on" if _repo is not None else "off",
+    return {"status": "ok", "library_version": stack.store.version, "redis": "ok", "persist_policy": "on" if _repo is not None else "off", "baseline_quality_in_request": BASELINE_REPORTS_QUALITY_IN_REQUEST,
             "agents": [a.agent_id.value for a in stack.agents] + ["AG0"]}

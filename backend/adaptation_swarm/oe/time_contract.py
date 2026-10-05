@@ -29,6 +29,12 @@ DEFINITIONS = {
     "total_ms": "perfil recibido -> paquete validado listo, en proceso (sin HTTP); mismas fronteras en ambos lados.",
     "L_resp": "latencia HTTP extremo a extremo; P95 por corrida; misma metodología en ambos lados.",
 }
+MEASUREMENT_REGIONS = {
+    "decision_ms": "solo la decisión (propuesta: AG0 tras engine.initialize → step_finalize; convencional: alrededor de la decisión)",
+    "total_ms": "perfil recibido → paquete validado listo (ensamblado y validación del paquete incluidos en ambos lados)",
+    "http_latency": "petición → último byte de la respuesta: decisión + ensamblado/validación + serialización; NO incluye la evaluación de 𝓕 de reporte del convencional",
+    "quality_reporting": "𝓕 de reporte del convencional: FUERA de toda región de tiempo (se reconstruye desde S fuera de la petición); en la propuesta 𝓕 es inherente a la búsqueda",
+}
 KNOWN_LIMITS = (
     "AG0 inicia el reloj tras engine.initialize: la inicialización de partículas queda fuera de decision_ms de la propuesta",
     "el intervalo de la propuesta incluye el bus Redis y los agentes (coste de la arquitectura)",

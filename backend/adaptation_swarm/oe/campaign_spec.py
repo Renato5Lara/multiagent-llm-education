@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 
-from adaptation_swarm.oe import profile_sequence, time_contract
+from adaptation_swarm.oe import http_window, profile_sequence, time_contract
 
 SPEC_VERSION = "oe-campaign-spec-v1"
 STATUS = "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED"
@@ -33,6 +33,12 @@ SPEC: dict = {
                    "unit_throughput": "run (corrida/lote HTTP independiente)", "throughput_runs_per_system_min": 10, "stationary_window_s_min": 60, "warmup_s_min": 10},
         "profile_sequence": {"algorithm": profile_sequence.ALGORITHM, "depends_only_on": ["batch_seed", "worker_index", "user_index", "seq_pos"], "same_sequence_for_all_systems": True,
                              "recorded": "hash de la secuencia esperada en plan/provenance y (user_index, seq_pos, profile_id) por petición en el log HTTP; `profile_sequence_check.mismatches` debe ser 0"},
+        "comparator_scope_validation": {"status": "PENDING_METHODOLOGICAL_VALIDATION", "implemented_conventional_systems": ["decision_table"], "oe2_text_requires": "sistemas convencionales (plural)",
+                                        "note": "no se implementa un LMS/LLM para satisfacer el plural; decisión de alcance pendiente"},
+        "measurement": {"regions": time_contract.MEASUREMENT_REGIONS, "baseline_quality_in_request": False},
+        "client_timeout": {"seconds": 30.0, "status": "PROVISIONAL_TECHNICAL", "same_for_all_systems": True, "recorded_in": "provenance.client_timeout_s y cada registro de corrida",
+                           "note": "constante de campaña provisional (≫ 2 s del umbral de L_resp); no es un valor metodológico aprobado"},
+        "generator_policy": http_window.GENERATOR_POLICY,
         "persist_policy": {"campaign": "off", "applies_to": "swarm y decision_table por igual (SWARM_API_PERSIST=0 en el servidor; el baseline nunca persiste)",
                            "on_supported_for_comparison": False, "verified_via": "GET /api/adaptation/health → persist_policy; campo `persistence` de cada respuesta"},
         "latency": {"official": "HTTP extremo a extremo", "indicator": "P95 por corrida", "also_reported": ["p50", "mean"], "contrast_regime_max_users": 25,
@@ -84,13 +90,6 @@ def identity() -> dict:
 
 
 def open_blockers() -> list[str]:
-    """Condiciones de la campaña oficial que HOY no se cumplen (se leen de los registros reales; nada se declara resuelto aquí)."""
-    from adaptation_swarm.gold import rubric_v3
-    from adaptation_swarm.oe import definitions as defs
-    out = [f"definición PENDING: {k}" for k, v in defs.DEFINITIONS.items() if v["status"] == defs.PENDING]
-    if not rubric_v3.APPROVED_RULE_VERSIONS:
-        out.append("F1 v3 sin sellar (rubric_v3.APPROVED_RULE_VERSIONS vacío; PENDING_ADVISOR en el pre-registro v3)")
-    out.append("contrato de tiempo oe2-time-contract-v1 sin validar: la equivalencia metodológica entre `decision_ms` y el T_conv de la propuesta NO está validada; decision_ms no puede sustituir a T_conv en ningún contraste confirmatorio (límites en time_contract.KNOWN_LIMITS)")
-    out.append("alcance del comparador: solo `decision_table` está implementado como convencional independiente (LMS real y LLM monolítico no implementados); OE2 solo puede concluir sobre ese comparador. D11C queda como línea base empírica separada")
-    out.append("medición HTTP oficial (ventana estacionaria, CPU del generador) pendiente de ejecutar en el hardware objetivo")
-    return out
+    """Condiciones de la campaña oficial que HOY no se cumplen, CALCULADAS del estado real (`campaign_guards.evaluate`): un bloqueo desaparece solo si cambia el estado que lo origina, no si se edita un texto."""
+    from adaptation_swarm.oe import campaign_guards
+    return campaign_guards.critical_reasons(None)

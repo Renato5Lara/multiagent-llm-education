@@ -91,7 +91,7 @@ def _records(rng, systems=("swarm", "decision_table", "rules", "bruteforce"), us
         for u in users:
             for n in particles:
                 for i in range(runs):
-                    out.append({"status": "ok", "system": s, "load": u, "swarm_N": n, "run_id": f"{s}-{u}-{n}-{i}", "p95_ms": lat[s] * (1 + 0.05 * u / 10) * float(np.exp(rng.normal(0, 0.05))),
+                    out.append({"status": "ok", "comparable": True, "system": s, "load": u, "swarm_N": n, "run_id": f"{s}-{u}-{n}-{i}", "p95_ms": lat[s] * (1 + 0.05 * u / 10) * float(np.exp(rng.normal(0, 0.05))),
                                 "throughput_http": 12.0 * (1 if s == "swarm" else 3) + float(rng.normal(0, 0.3)), "error_rate": 0.0, "t_conv_ms_mean": 100.0 + u + float(rng.normal(0, 1))})
     return out
 
@@ -150,7 +150,7 @@ def test_write_campaign_never_overwrites_and_is_reproducible(tmp_path):
     out = tmp_path / "camp"
     hc.write_campaign(out, prov, runs, recs, ["log"])
     manifest = json.loads((out / "manifest.json").read_text())
-    assert manifest["official"] is False and set(manifest["files"]) == {"plan.json", "runs.jsonl", "provenance.json", "analysis.json", "run.log"}
+    assert manifest["official"] is False and set(manifest["files"]) == {"plan.json", "runs.jsonl", "runs.csv", "provenance.json", "analysis.json", "run.log"}
     assert json.loads((out / "analysis.json").read_text()) == json.loads(json.dumps(hc.analyze_records("oe4", recs), default=str))
     with pytest.raises(FileExistsError):
         hc.write_campaign(out, prov, runs, recs, [])

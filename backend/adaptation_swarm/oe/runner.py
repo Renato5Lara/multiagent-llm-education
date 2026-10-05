@@ -150,9 +150,22 @@ async def run_condition(store: LibraryStore, cond: Condition, profiles: list[Pro
         adapter = ConventionalAdapter(store, cond.system, fw)
 
         async def call(p: ProfileRequest, rep: int) -> dict:
-            return {**_baseline_row(await asyncio.to_thread(adapter.adapt, p)), "seed": None}      # determinista: no usa semilla
+            return {**_baseline_row(await asyncio.to_thread(adapter.adapt, p, report_quality=False)), "seed": None}      # determinista; 𝓕 de reporte FUERA de la región medida
         await execute(call)
+        fill_baseline_quality(adapter, profiles, obs)                                                              # …y se reconstruye aquí, después de todos los cronómetros
     return obs, bat
+
+
+def fill_baseline_quality(adapter: ConventionalAdapter, profiles: list[ProfileRequest], rows: list[dict]) -> None:
+    """𝓕 de REPORTE de los sistemas sin búsqueda (`rules`, `decision_table`), calculada DESPUÉS de medir (no pertenece a ninguna región de tiempo). Misma 𝓕 que la propuesta; determinista desde `S`."""
+    by_id = {p.profile_id: p for p in profiles}
+    cache: dict[tuple, float] = {}
+    for r in rows:
+        if r.get("F") is None and r.get("S") is not None and r.get("status") == "completed":
+            key = (r["profile_id"], tuple(r["S"]))
+            if key not in cache:
+                cache[key] = adapter.evaluate_quality(by_id[r["profile_id"]], r["S"])
+            r["F"] = cache[key]
 
 
 def add_optimum_gap(store: LibraryStore, profiles: list[ProfileRequest], obs: list[dict], fw: FitnessWeights) -> dict[str, float]:

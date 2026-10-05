@@ -84,6 +84,8 @@ def test_primary_confirmatory_family_contains_only_http_l_resp_and_throughput_an
     rng = np.random.default_rng(1)
     recs = [{"status": "ok", "system": s, "load": u, "run_id": f"{s}{u}{i}", "p95_ms": lat * float(np.exp(rng.normal(0, 0.05))), "throughput_http": thr + float(rng.normal(0, 0.3))}
             for s, lat, thr in (("swarm", 900.0, 12.0), ("decision_table", 200.0, 300.0)) for u in (1, 10) for i in range(5)]
+    for r in recs:
+        r["comparable"] = True
     res = hc.analyze_records("oe2", recs)
     prim = res["families"]["primary:swarm_vs_decision_table"]
     assert {h.split("@")[0] for h in prim["hypotheses"]} == {"L_resp_P95_http", "throughput_http"} and prim["m"] == 4
