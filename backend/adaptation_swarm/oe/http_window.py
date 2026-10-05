@@ -25,10 +25,21 @@ RNF01_P95_MS = 2000.0
 RNF04_RPS, RNF04_MAX_ERROR = 20.0, 0.01
 
 
+def extract_cycle_metrics(body: Mapping) -> dict:
+    """`t_conv_ms` y `k_stop` de la respuesta de AMBOS endpoints, con su forma explícita: la propuesta (`POST /api/adaptation`) los devuelve en el nivel superior; el convencional
+    (`POST /api/adaptation/baseline/{system}`) en `metrics` (y no tiene `k_stop`). Una respuesta de otra forma lanza `ValueError`: nunca se asume ni se rellena."""
+    if "t_conv_ms" in body:
+        return {"shape": "swarm", "t_conv_ms": body["t_conv_ms"], "k_stop": body.get("k_stop")}
+    metrics = body.get("metrics")
+    if isinstance(metrics, Mapping) and "t_conv_ms" in metrics:
+        return {"shape": "baseline", "t_conv_ms": metrics["t_conv_ms"], "k_stop": None}
+    raise ValueError("respuesta sin t_conv_ms reconocible (ni nivel superior ni metrics.t_conv_ms)")
+
+
 def read_raw(path: Path) -> list[dict]:
     with path.open(newline="", encoding="utf-8") as fh:
         return [{"t_end_epoch_s": float(r["t_end_epoch_s"]), "response_ms": float(r["response_ms"]), "ok": r["ok"] == "1", "timeout": r["timeout"] == "1",
-                 "t_conv_ms": float(r["t_conv_ms"]) if r.get("t_conv_ms") else None} for r in csv.DictReader(fh)]
+                 "t_conv_ms": float(r["t_conv_ms"]) if r.get("t_conv_ms") else None, "metrics_ok": r.get("metrics_ok", "1") != "0"} for r in csv.DictReader(fh)]
 
 
 def read_cpu(path: Path) -> list[dict]:
@@ -61,6 +72,7 @@ def summarize_run(raw: Sequence[Mapping], cpu: Sequence[Mapping], *, users: int,
     cpu_max = max(cpus) if cpus else None
     return {**out, "status": "ok", "requests_ok": len(ok), "errors": len(win) - len(ok), "timeouts": sum(r["timeout"] for r in win), "error_rate": err,
             "throughput_rps": len(ok) / duration, "latency_p50_ms": rep["p50_ms"], "latency_mean_ms": rep["mean_ms"], "latency_p95_ms": rep["p95_ms"],
+            "requests_without_cycle_metrics": sum(1 for r in ok if not r.get("metrics_ok", True)),
             "t_conv_ms_mean": (sum(t) / len(t)) if (t := [r["t_conv_ms"] for r in ok if r.get("t_conv_ms") is not None]) else None,
             "loadgen_cpu_percent_mean": sum(cpus) / len(cpus) if cpus else None, "loadgen_cpu_percent_max": cpu_max,
             "generator_possibly_bottleneck": None if cpu_max is None else cpu_max >= LOADGEN_CPU_SATURATION,

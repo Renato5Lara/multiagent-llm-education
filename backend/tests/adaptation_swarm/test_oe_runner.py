@@ -18,7 +18,7 @@ from adaptation_swarm.oe.conditions import Condition, oe2_systems, oe3_full_fact
 def test_designs_have_unique_named_conditions():
     full, ofat, grid = oe3_full_factorial(), oe3_one_factor_at_a_time(), oe4_grid()
     assert len(full) == 48 and len({c.name for c in full}) == 48 and len(ofat) == 7 and len(grid) == 18
-    assert [c.system for c in oe2_systems(4)] == ["swarm", "rules", "bruteforce"] and all(c.concurrency == 4 for c in oe2_systems(4))
+    assert [c.system for c in oe2_systems(4)] == ["swarm", "rules", "bruteforce", "decision_table"] and all(c.concurrency == 4 for c in oe2_systems(4))
     assert Condition() in full and Condition() in ofat                                    # la referencia histórica forma parte de ambos diseños
 
 
@@ -160,11 +160,11 @@ async def test_end_to_end_small_run_writes_reproducible_results(store, profiles,
         obs += o
         bat += b
     runner.add_optimum_gap(store, profs, obs, fw)
-    assert len(obs) == 3 * 5 * 3 and all(r["status"] == "completed" and r["package_valid"] for r in obs)
-    assert all(r["gap_vs_optimum"] >= -1e-9 for r in obs) and {r["f_system"] for r in obs} == {"swarm", "rules", "bruteforce"}
+    assert len(obs) == len(oe2_systems(2)) * 5 * 3 == 60 and all(r["status"] == "completed" and r["package_valid"] for r in obs)
+    assert all(r["gap_vs_optimum"] >= -1e-9 for r in obs) and {r["f_system"] for r in obs} == {"swarm", "rules", "bruteforce", "decision_table"}
     swarm = [r for r in obs if r["f_system"] == "swarm"]
     assert all(r["k_stop"] is not None and r["n_messages"] > 20 for r in swarm)
-    assert all(b["throughput_rps"] > 0 and b["n_ok"] == 5 for b in bat) and len(bat) == 9
+    assert all(b["throughput_rps"] > 0 and b["n_ok"] == 5 for b in bat) and len(bat) == 3 * len(oe2_systems(2))
 
     class Args:
         experiment, label, k, batches, warmup, batch_seed, concurrency, design, particles = "oe2", "t", 1, 3, 2, runner.DEFAULT_BATCH_SEED, [2], None, None

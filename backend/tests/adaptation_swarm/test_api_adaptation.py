@@ -82,7 +82,7 @@ async def test_package_exposes_svg_and_cpp_when_the_library_has_them(client, sli
 
 # ── OE2: sistemas convencionales detrás del mismo servidor ─────────────────────────────────────────────────────────
 @pytest.mark.requires_library_audio
-@pytest.mark.parametrize("system", ["rules", "bruteforce"])
+@pytest.mark.parametrize("system", ["rules", "bruteforce", "decision_table"])
 async def test_baseline_endpoint_returns_the_same_kind_of_package(client, slice_profile, system):
     r = await client.post(f"/api/adaptation/baseline/{system}", json=slice_profile.model_dump(mode="json"), headers={"X-Swarm-Key": KEY})
     assert r.status_code == 200, r.text

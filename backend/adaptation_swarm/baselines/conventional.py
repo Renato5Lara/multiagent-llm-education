@@ -1,21 +1,23 @@
-"""Sistemas CONVENCIONALES de adaptación de contenidos — líneas base de OE2 (comparación estadística frente a la propuesta basada en enjambre).
+"""Sistemas de adaptación de contenidos para la comparación de OE2: el convencional INDEPENDIENTE y dos sistemas de contraste/referencia, todos ejecutables detrás del mismo servidor y del mismo ensamblado de paquete.
 
-DEFINICIÓN OPERATIVA (de este estudio): un sistema convencional es un adaptador monolítico, SECUENCIAL y en un solo proceso (sin agentes, sin bus de mensajes, sin enjambre) que, para
-el mismo perfil, la misma biblioteca de artefactos, el mismo ensamblado y la misma validación del paquete, decide la configuración S por un procedimiento no basado en enjambre:
+CLASIFICACIÓN (`SYSTEM_ROLES`; única, y es la que devuelve el endpoint baseline en `system_role`):
+    decision_table   convencional INDEPENDIENTE: tabla de decisión estática sobre los campos declarados del perfil (baselines/decision_table.py); sin enjambre, sin PSO, sin búsqueda, sin la heurística de AG1.
+    rules            ablación/contraste del enjambre: decodifica el punto de arranque heurístico que AG1 entrega a la partícula 0 (S = φ(e_m = 2·w_m/max(w), variantes en nivel medio)), es decir, la propuesta SIN búsqueda.
+                     NO es un sistema convencional independiente.
+    bruteforce       referencia/óptimo: enumera las 6.561 configuraciones con el mismo 𝓕 y devuelve el óptimo global (línea base empírica D11c). Sirve de referencia de calidad y costo; NO es un sistema
+                     convencional independiente de adaptación.
 
-    rules        reglas fijas perfil → configuración: S = φ(punto heurístico derivado de W) (énfasis e_m = 2·w_m/max(w), variantes en nivel medio), sin búsqueda. Es la adaptación por
-                 reglas típica de un LMS; no optimiza 𝓕.
-    bruteforce   búsqueda exhaustiva de 𝓕 sobre las 6.561 configuraciones (óptimo global; la línea base que fijó el asesor, D11c).
+EQUIVALENCIA DE ENTRADA Y PROBLEMA: los tres reciben el mismo tipo de perfil (`ProfileRequest`), usan la misma biblioteca de artefactos, el mismo espacio de configuración, el mismo ensamblado y la misma validación del paquete
+de 4 modalidades (con el audio real abierto y validado), y la misma función de evaluación 𝓕 (mismos términos Coher/Redund/CostT y pesos α/β/γ/δ, `W` de la regla de AG1) para informar la calidad. La caché de términos de 𝓕 es POR
+PETICIÓN (en la propuesta: por ciclo); la validación de paquetes se memoiza entre peticiones en ambos lados. Esto NO significa que las métricas de tiempo sean metodológicamente equivalentes (ver abajo).
 
-Condiciones equivalentes con la propuesta: mismo perfil de entrada, misma `W` (regla de AG1), mismos términos de 𝓕 (Coher/Redund/CostT calculados desde los mismos artefactos), mismos pesos
-α/β/γ/δ, mismo paquete de 4 modalidades (con el audio real abierto y validado) y la misma validación de paquete. La caché de términos de 𝓕 es POR PETICIÓN (en la propuesta: por ciclo);
-la validación de paquetes se memoiza entre peticiones en ambos sistemas.
+INDICADORES DE TIEMPO (en proceso, sin HTTP):
+    decision_ms   tiempo desde que el sistema empieza a decidir la configuración hasta que tiene S (sin ensamblar el paquete).
+    t_conv_ms     nombre de COMPATIBILIDAD de contrato: mismo valor que `decision_ms`. No representa convergencia iterativa. Su equivalencia metodológica con el T_conv de la propuesta (AG0: desde el inicio de la búsqueda
+                  hasta la convergencia de g_best) NO está establecida: la comparabilidad de T_conv queda pendiente (Fase B). Este módulo no redefine ni modifica el T_conv de la propuesta.
+    total_ms      latencia de la petición en proceso: perfil recibido → paquete validado listo.
 
-Definición de los indicadores (idéntica en los dos sistemas, para que sean comparables):
-    t_conv_ms   tiempo desde que el sistema empieza a decidir la configuración hasta que la tiene decidida (propuesta: inicio de la búsqueda → convergencia de g_best);
-    total_ms    latencia de la petición en proceso: perfil recibido → paquete validado listo (sin HTTP).
-
-No es un sistema de la literatura reproducido: es la implementación convencional que este estudio define para la comparación. El LLM monolítico y los LMS reales quedan fuera (no se mide ni se inventa).
+ALCANCE: `decision_table` es la implementación convencional por reglas estáticas que este estudio define para la comparación; no reproduce un LMS real ni un LLM monolítico (no se miden ni se inventan).
 """
 
 from __future__ import annotations
@@ -37,10 +39,16 @@ from adaptation_swarm.profiles.models import ProfileRequest
 from adaptation_swarm.profiles.w_mapping import compute_weights, heuristic_start
 from adaptation_swarm.pso.decode import decode
 from adaptation_swarm.pso.space import Configuration
+from adaptation_swarm.baselines import decision_table
 from adaptation_swarm.schemas.ids import new_id
 
-SYSTEMS = ("rules", "bruteforce")
+SYSTEMS = ("rules", "bruteforce", "decision_table")
 BASELINE_VERSION = "conventional-v1"
+# Clasificación EXPLÍCITA de cada sistema (no mezclar semánticas; el endpoint baseline la devuelve en `system_role`):
+#   conventional_independent   sistema convencional de adaptación independiente del enjambre (OE2): `decision_table` (baselines/decision_table.py).
+#   swarm_heuristic_ablation   `rules`: decodifica el punto de arranque heurístico de AG1 (el enjambre SIN búsqueda). NO es un convencional independiente; se conserva como ablación.
+#   reference_optimum          `bruteforce`: óptimo global de 𝓕 por enumeración. Referencia de calidad/costo (D11c); NO es un sistema convencional de adaptación.
+SYSTEM_ROLES = {"decision_table": "conventional_independent", "rules": "swarm_heuristic_ablation", "bruteforce": "reference_optimum"}
 
 
 @dataclass
@@ -51,7 +59,8 @@ class ConventionalResult:
     S: list[int] | None = None
     F: float | None = None
     predicted_dominant: str | None = None
-    t_conv_ms: float | None = None
+    t_conv_ms: float | None = None   # COMPATIBILIDAD de contrato: tiempo de DECISIÓN del convencional (= `decision_ms`); NO es convergencia iterativa ni se declara equivalente al T_conv de la propuesta (AG0)
+    decision_ms: float | None = None  # tiempo, en proceso, desde que el sistema empieza a decidir hasta que tiene S (sin ensamblado del paquete)
     total_ms: float = 0.0
     n_evaluations: int = 0
     package: dict[str, Any] | None = field(default=None, repr=False)
@@ -66,6 +75,8 @@ class ConventionalAdapter:
         self._validation_memo: dict[tuple, Any] = {}
 
     def _decide(self, prof: ProfileRequest, W) -> tuple[tuple[int, ...], float | None, int]:
+        if self.system == "decision_table":                                          # independiente: solo lee el perfil (no W, no heurística del enjambre, no PSO)
+            return decision_table.decide(prof).vector, None, 0
         if self.system == "rules":
             S = decode(np.array(heuristic_start(W))).vector
             return S, None, 0
@@ -117,5 +128,5 @@ class ConventionalAdapter:
         cfg = Configuration(S)
         if F is None:        # reglas: 𝓕 no se optimiza; se informa su valor (para comparar calidad) FUERA de los cronómetros
             F = evaluate(cfg, W.by_modality(), *variant_terms(self.store, prof.concept_id, cfg.variants, {}), self.fw).F
-        return ConventionalResult(self.system, prof.profile_id, "completed", list(S), F, predicted_dominant(cfg.emphasis),
-                                  t_conv_ms, total_ms, n_eval, pkg)
+        return ConventionalResult(self.system, prof.profile_id, "completed", list(S), F, predicted_dominant(cfg.emphasis), t_conv_ms=t_conv_ms, decision_ms=t_conv_ms,
+                                  total_ms=total_ms, n_evaluations=n_eval, package=pkg)

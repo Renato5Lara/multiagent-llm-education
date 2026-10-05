@@ -19,7 +19,7 @@ pytestmark = pytest.mark.requires_library_audio
 def test_unknown_system_is_rejected(store):
     with pytest.raises(ValueError):
         ConventionalAdapter(store, "monolitico-llm")
-    assert SYSTEMS == ("rules", "bruteforce")
+    assert SYSTEMS == ("rules", "bruteforce", "decision_table")        # contrato vigente: + convencional independiente `decision_table` (rules y bruteforce se conservan)
 
 
 @pytest.mark.parametrize("system", SYSTEMS)

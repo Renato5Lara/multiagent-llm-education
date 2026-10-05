@@ -7,7 +7,7 @@
   · Seguro por defecto: exige la cabecera `X-Swarm-Key` == variable de entorno `SWARM_API_KEY`; si la
     variable no está definida, el endpoint responde 503 (no hay acceso anónimo al cómputo).
   · `SWARM_API_PERSIST=0` desactiva la persistencia (debe declararse en cualquier medición).
-  · `POST /api/adaptation/baseline/{system}` (OE2): el sistema CONVENCIONAL (`rules` | `bruteforce`, `baselines/conventional.py`) detrás del MISMO servidor, la misma clave y el mismo paquete,
+  · `POST /api/adaptation/baseline/{system}` (OE2): sistema `decision_table` (convencional independiente), `rules` (ablación del enjambre) o `bruteforce` (óptimo de referencia); `baselines/conventional.py`, clasificación en `system_role` detrás del MISMO servidor, la misma clave y el mismo paquete,
     para comparar latencia y throughput HTTP con la propuesta bajo condiciones equivalentes (mismo host, mismos workers, misma herramienta de carga). No usa Redis ni persiste.
 """
 
@@ -24,7 +24,7 @@ from fastapi import APIRouter, Header, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
-from adaptation_swarm.baselines.conventional import SYSTEMS as BASELINE_SYSTEMS, ConventionalAdapter
+from adaptation_swarm.baselines.conventional import SYSTEM_ROLES, SYSTEMS as BASELINE_SYSTEMS, ConventionalAdapter
 from adaptation_swarm.config import SETTINGS
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.profiles.models import ProfileRequest
@@ -122,8 +122,8 @@ async def adapt_baseline(system: str, profile: dict[str, Any], x_swarm_key: str 
     r = await asyncio.to_thread(_baselines[system].adapt, prof)       # servidor síncrono: un hilo por petición
     if r.status != "completed":
         raise HTTPException(502, {"system": system, "error": r.error})
-    out = {"system": system, "profile_id": r.profile_id, "status": r.status, "g_best": {"S": r.S, "F": r.F, "predicted_dominant": r.predicted_dominant},
-           "metrics": {"t_conv_ms": r.t_conv_ms, "total_ms": r.total_ms, "n_evaluations": r.n_evaluations}, "package": r.package}
+    out = {"system": system, "system_role": SYSTEM_ROLES[system], "profile_id": r.profile_id, "status": r.status, "g_best": {"S": r.S, "F": r.F, "predicted_dominant": r.predicted_dominant},
+           "metrics": {"t_conv_ms": r.t_conv_ms, "decision_ms": r.decision_ms, "total_ms": r.total_ms, "n_evaluations": r.n_evaluations}, "package": r.package}
     out["package"]["audio"]["url"] = f"/api/adaptation/audio/{r.package['audio']['content_id']}"
     return out
 

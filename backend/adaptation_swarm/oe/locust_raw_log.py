@@ -1,15 +1,23 @@
 """Plugin de Locust (se carga junto al locustfile SIN modificarlo): escribe el registro por petición y la CPU del generador que `oe/http_window.py` necesita para la ventana estacionaria.
 
     SWARM_LOAD_RAW_CSV=out/u25_run03.csv locust -f loadtest/locustfile.py,backend/adaptation_swarm/oe/locust_raw_log.py --headless -u 25 -r 25 -t 90s --host http://localhost:8000
-Salidas: `<SWARM_LOAD_RAW_CSV>` (t_end_epoch_s,response_ms,ok,timeout) y `<SWARM_LOAD_RAW_CSV>.cpu.csv` (t_epoch_s,loadgen_cpu_percent; CPU del proceso de Locust, 100 = un núcleo).
+Salidas: `<SWARM_LOAD_RAW_CSV>` (t_end_epoch_s,response_ms,ok,timeout,t_conv_ms,k_stop,metrics_ok) y `<SWARM_LOAD_RAW_CSV>.cpu.csv` (t_epoch_s,loadgen_cpu_percent; CPU del proceso de Locust, 100 = un núcleo).
 Sin la variable de entorno no hace nada. No forma parte de las pruebas automáticas (requiere locust).
 """
 
+import logging
 import os
+import sys
 import time
+from pathlib import Path
 
 import gevent
 from locust import events
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))          # backend/: `adaptation_swarm` importable aunque Locust se lance desde otro directorio
+from adaptation_swarm.oe.http_window import extract_cycle_metrics  # noqa: E402
+
+_log = logging.getLogger("swarm.raw_log")
 
 _PATH = os.environ.get("SWARM_LOAD_RAW_CSV")
 _raw = None
@@ -20,7 +28,7 @@ if _PATH:
     def _start(environment, **_kw):
         global _raw
         _raw = open(_PATH, "w", encoding="utf-8", newline="")
-        _raw.write("t_end_epoch_s,response_ms,ok,timeout,t_conv_ms,k_stop\n")
+        _raw.write("t_end_epoch_s,response_ms,ok,timeout,t_conv_ms,k_stop,metrics_ok\n")
         gevent.spawn(_sample_cpu)
 
     def _sample_cpu():
@@ -40,14 +48,15 @@ if _PATH:
             return
         end = (start_time or time.time()) + response_time / 1000.0
         timeout = int(exception is not None and "timeout" in type(exception).__name__.lower() + str(exception).lower())
-        t_conv, k_stop = None, None
-        if exception is None and response is not None:
-            try:                                          # métricas del ciclo devueltas por el servidor (swarm y baselines): T_conv por petición, para agregarlo por corrida
-                body = response.json()
-                t_conv, k_stop = body.get("t_conv_ms"), body.get("k_stop")
-            except Exception:
-                pass
-        _raw.write(f"{end:.3f},{response_time:.3f},{int(exception is None)},{timeout},{'' if t_conv is None else t_conv},{'' if k_stop is None else k_stop}\n")
+        t_conv, k_stop, metrics_ok = None, None, 1
+        if exception is None:
+            try:                                          # respuesta correcta: T_conv y k_stop según la forma de la propuesta o del convencional (`extract_cycle_metrics`)
+                m = extract_cycle_metrics(response.json())
+                t_conv, k_stop = m["t_conv_ms"], m["k_stop"]
+            except Exception as exc:                      # NO se silencia: queda marcado en el CSV (`metrics_ok=0`), se registra y el resumen cuenta estas peticiones
+                metrics_ok = 0
+                _log.warning("respuesta sin métricas de ciclo reconocibles: %s", exc)
+        _raw.write(f"{end:.3f},{response_time:.3f},{int(exception is None)},{timeout},{'' if t_conv is None else t_conv},{'' if k_stop is None else k_stop},{metrics_ok}\n")
 
     @events.test_stop.add_listener
     def _stop(environment, **_kw):
