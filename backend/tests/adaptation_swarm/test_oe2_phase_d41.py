@@ -24,7 +24,7 @@ def test_statistical_unit_performance_states_the_real_units_and_cannot_go_back_t
     for must in ("L_resp = P95 por CORRIDA HTTP", "throughput = por CORRIDA HTTP", "time_to_final_config_ms = PERFIL", "media de las K réplicas", "T_conv = solo descriptivo de la propuesta", "nunca es una observación independiente"):
         assert must in text, must
     assert "unidad para T_conv, latencia y throughput" not in text and "media por perfil para T_conv" not in text + d["note"] and "LOTE" not in text + d["note"]
-    assert "pareamiento" in d["note"] and "tamaño `m` de Holm" in d["note"] and "errores/timeouts" in d["note"] and "H1" in d["note"]            # lo pendiente queda dicho, no resuelto
+    assert "DEFINITIVA de OE2 sigue PENDING" in d["note"] and "INTERNA de estudio (F.2.3, no aprobada por el asesor)" in d["note"] and "P95 vs media" in d["note"] and "H1" in d["note"]            # G.2: lo pendiente queda dicho; lo interno no se presenta como del asesor
 
 
 def test_the_definition_matches_what_the_implementation_and_the_spec_actually_use():
@@ -319,8 +319,9 @@ def test_final_git_state_is_recorded_compared_with_the_start_and_a_change_during
 def test_pending_methodological_decisions_are_documented_in_spec_provenance_and_dry_run_and_not_decided(capsys, tmp_path):
     pend = campaign_spec.SPEC["oe2"]["pending_methodological_decisions"]
     joined = " | ".join(pend)
-    for key in ("pareamiento", "tamaño `m` de la familia de Holm", "errores y timeouts", "H1", "cold/warm", "asimetría del indicador común", "aprobación del asesor de B1"):
+    for key in ("estadístico de latencia", "unidad estadística definitiva", "hipótesis estadística formal de OE2", "aprobación de B1", "hardware objetivo (P6)"):        # lo que SIGUE pendiente tras F.2.3
         assert key in joined, key
+    assert "REQUIERE RESPALDO DEL ASESOR" in joined and "pareamiento" not in joined and "cold/warm" not in joined                                              # las decisiones internas ya no figuran como pendientes
     assert _prov_for(_plan())["pending_methodological_decisions"] == pend
     hc.main(["oe2", "--campaign-id", "dry", "--out-dir", str(tmp_path / "never"), "--runs", "1", "--users", "1", "--dry-run"])
     text = capsys.readouterr().out

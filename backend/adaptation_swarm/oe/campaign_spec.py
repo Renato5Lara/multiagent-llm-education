@@ -22,6 +22,20 @@ ROLE_CONTRAST = "swarm_vs_decision_table_contrast"     # corrida del contraste p
 ROLE_AUXILIARY = "auxiliary_contrast"                  # rules / bruteforce (persistencia OFF; contrastes auxiliares descriptivos)
 ROLE_PROPOSAL_COST = "proposal_persistence_cost"       # propuesta con persistencia ON: costo de la persistencia, fuera del contraste
 CONTRAST_ROLES = (ROLE_CONTRAST, ROLE_AUXILIARY)
+
+# Familia de Holm de OE2 (decisión INTERNA del estudio F.2.3; sin respaldo explícito del asesor): FIJA, declarada antes de los datos.
+HOLM_LOADS = (1, 5, 10, 25)
+HOLM_METRICS = ("L_resp_P95_http", "throughput_http")
+HOLM_HYPOTHESES = tuple(f"{m}@u{u}" for m in HOLM_METRICS for u in HOLM_LOADS)
+HOLM_M = len(HOLM_HYPOTHESES)                                  # 8
+INTERNAL_SOURCE = "internal_decision_F2.3"
+COLD_PER_RUN_STATEMENT = ("Se adopta el reinicio completo del servidor antes de cada corrida como condición experimental controlada para reducir la variabilidad asociada al estado previo del servidor.")
+
+
+def _decided(chosen: str, options: list, question_source: str, implemented_today: str, rationale: str, **extra) -> dict:
+    """Decisión INTERNA del estudio (F.2.3): resuelta para el guard `PEND`, pero NO aprobada por el asesor (`advisor_approved = False`, `decision_level = INTERNAL_STUDY_DECISION`)."""
+    return {"status": "DECIDED", "chosen": chosen, "options": options, "source": INTERNAL_SOURCE, "question_source": question_source, "decision_level": "INTERNAL_STUDY_DECISION", "advisor_approved": False,
+            "decided_in": "F.2.3", "rationale": rationale, "implemented_today": implemented_today, **extra}
 STATUS = "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED"
 
 SPEC: dict = {
@@ -63,33 +77,57 @@ SPEC: dict = {
                            "isolation_rule": "una corrida ON de la propuesta NO entra al contraste swarm-vs-decision_table (oe2_confirmatory la excluye y la reporta aparte); L_resp aprobada no se redefine",
                            "note": "la comparación OFF común NO es literalmente el L_resp aprobado (incluye persistencia síncrona mínima); el costo de esa persistencia se mide en la propuesta con la condición ON"},
         "isolation": {"redis": "namespace de campaña `oe2c:<campaign_id>:` + eliminación verificada de las claves por ciclo antes de cada corrida (oe/run_isolation.py); streams de agentes intactos", "postgresql": "las corridas ON se etiquetan con `SWARM_API_RUN_LABEL`",
-                      "pending": "política cold/warm de cachés en memoria del servidor (el proceso no se reinicia entre corridas del mismo N y persistencia): decisión metodológica PENDIENTE"},
+                      "server": "política `cold_per_run` (decisión INTERNA F.2.3, no aprobada por el asesor): reinicio completo del servidor antes de cada corrida; ver `server_policy`"},
         # Decisiones metodológicas que D.5 deja SIN CERRAR. Aquí solo se REPRESENTAN (opciones y estado): ningún módulo de análisis lee `chosen`. Una decisión se resuelve únicamente con `status == DECIDED` y `chosen` ∈ `options`
         # (decisión explícita del responsable del estudio, con respaldo del asesor cuando corresponda: `advisor_backing` NO está determinado). El guard `PEND` bloquea la campaña oficial mientras alguna siga PENDING.
         "methodological_decisions": {
-            "http_pairing": {"status": "PENDING", "chosen": None, "options": ["independent_runs", "paired_by_run_index_and_load", "paired_by_profile"], "source": "D.5 decisión 1", "implemented_today": "independent_runs"},
-            "holm_family_size": {"status": "PENDING", "chosen": None, "options": ["fixed_m_declared_before_data", "dynamic_m", "other"], "source": "D.5 decisión 2", "implemented_today": "dynamic_m", "advisor_backing": "NO DETERMINABLE: la tesis prevé Holm en OE3/OE4, no en OE2"},
-            "errors_timeouts_in_l_resp": {"status": "PENDING", "chosen": None, "options": ["exclude_with_validity_rule", "penalize", "separate_indicators"], "source": "D.5 decisión 3", "implemented_today": "p95_of_successful_requests_errors_counted_apart"},
-            "l_resp_literal_hypothesis_h1": {"status": "PENDING", "chosen": None, "options": ["not_part_of_oe2", "descriptive_only", "confirmatory_contrast"], "source": "D.5 decisión 4", "implemented_today": "descriptive_only"},
-            "cold_warm_policy": {"status": "PENDING", "chosen": None, "options": ["cold_per_run", "controlled_warm", "mixed_registered"], "source": "D.5 decisión 5", "implemented_today": "mixed_registered_implicit"},
-            "common_indicator_asymmetry": {"status": "PENDING", "chosen": None, "options": ["keep_documented", "extend_baseline", "reduce_swarm_scope", "drop_common_indicator", "use_total_ms"], "source": "D.5 decisión 6", "implemented_today": "keep_documented"},
-            "latency_statistic": {"status": "PENDING", "chosen": None, "options": ["p95", "mean"], "source": "D11b (addendum 26/09): P95 o media pendiente del asesor", "implemented_today": "p95"},
-            "execution_order": {"status": "PENDING", "chosen": None, "options": ["sequential", "randomized_blocks"], "source": "tesis 01/10: aleatorización «pendiente de decisión»", "implemented_today": "randomized_blocks_default"},
+            "http_pairing": _decided("independent_runs", ["independent_runs", "paired_by_run_index_and_load", "paired_by_profile"], "D.5 decisión 1", "independent_runs",
+                                     "A (grupos independientes por corrida) como análisis primario: con reinicio por corrida y Redis aislado las corridas son procesos nuevos; F.2.2 mostró correlación débil entre miembros de pares (r ≈ 0,2; SE B/A ≈ 0,9) y F.2.1 resultados inconsistentes entre cargas",
+                                     condition="CONDICIONADA a que la unidad estadística que fije el asesor no contradiga esta estructura (REQUIERE RESPALDO DEL ASESOR)",
+                                     technical_capability={"paired_by_run_index_and_load": {"module": "oe/paired_runs.py", "status": "IMPLEMENTED_TECHNICALLY_NOT_METHODOLOGICALLY_APPROVED", "role": "descriptive_sensitivity_outside_holm",
+                                                                                          "selected_as_primary": False, "approved_by_advisor": False, "connected_to_confirmatory_output": False,
+                                                                                          "estimand_and_test": "se piden explícitamente; no entra en Holm ni modifica A"}}),
+            "holm_family_size": _decided("fixed_m_declared_before_data", ["fixed_m_declared_before_data", "dynamic_m", "other"], "D.5 decisión 2", "fixed_m_declared_before_data",
+                                         "Holm aplicado a OE2 con familia FIJA de 8 hipótesis (L_resp P95 y throughput × cargas 1, 5, 10, 25), bilateral, FWER 0,05; una hipótesis no testada se registra y sigue contando en m",
+                                         advisor_backing="NONE: la tesis prevé Holm en OE3/OE4, no en OE2; decisión interna del estudio"),
+            "errors_timeouts_in_l_resp": _decided("separate_indicators", ["exclude_with_validity_rule", "penalize", "separate_indicators"], "D.5 decisión 3", "separate_indicators",
+                                                  "P95 de las respuestas correctas; errores y timeouts contados y reportados por corrida y celda como indicadores aparte; sin invalidar por tasa y sin umbral nuevo (el 1 % de RNF04 es criterio de throughput, no de validez de L_resp)"),
+            "l_resp_literal_hypothesis_h1": {"status": "PENDING", "chosen": None, "options": ["not_part_of_oe2", "descriptive_only", "confirmatory_contrast"], "source": "D.5 decisión 4", "question_source": "D.5 decisión 4",
+                                             "implemented_today": "descriptive_only", "decision_level": "REQUIERE_RESPALDO_DEL_ASESOR", "advisor_approved": False},
+            "cold_warm_policy": _decided("cold_per_run", ["cold_per_run", "controlled_warm", "mixed_registered"], "D.5 decisión 5", "cold_per_run",
+                                         "reinicio completo del servidor antes de cada corrida; F.2.2: CV del P95 de 1,5 % (decision_table) y 2,0 % (swarm) frente a 74 % con servidor reutilizado; transitorio inicial eliminado; 20/20 reinicios operativos (≈ 8 s entre corridas)",
+                                         statement=COLD_PER_RUN_STATEMENT, universal_claim=False),                                          # NO se afirma que el estado frío sea más representativo; solo una condición experimental controlada
+            "common_indicator_asymmetry": _decided("keep_documented", ["keep_documented", "extend_baseline", "reduce_swarm_scope", "drop_common_indicator", "use_total_ms"], "D.5 decisión 6", "keep_documented",
+                                                   "se mantiene time_to_final_config_ms como indicador operacional separado, fuera de Holm, con la asimetría declarada; no se modifica AG0 ni ningún sistema; su aprobación depende de B1 (asesor)"),
+            "latency_statistic": {"status": "PENDING", "chosen": None, "options": ["p95", "mean"], "source": "D11b (addendum 26/09): P95 o media pendiente del asesor", "question_source": "D11b (addendum 26/09)",
+                                  "implemented_today": "p95", "decision_level": "REQUIERE_RESPALDO_DEL_ASESOR", "advisor_approved": False},
+            "execution_order": _decided("randomized_blocks", ["sequential", "randomized_blocks"], "tesis 01/10: aleatorización «pendiente de decisión»", "randomized_blocks",
+                                        "randomized-blocks por ronda; no se afirma que elimine el efecto del orden; se registran execution_index, started_utc, sistema que ocurrió primero y reinicio"),
         },
+        # Decisiones internas F.2.3 → implementación (documentación del protocolo; ninguna es aprobación del asesor):
+        "analysis_primary": {"structure": "independent_runs", "unit": "run", "scale": "log", "test": "welch_t", "alternative": "two-sided", "alpha": 0.05, "test_selection": "FIJA: Shapiro es solo diagnóstico y NUNCA selecciona la prueba",
+                             "complement": "mann_whitney_u (predeclarado; fuera de Holm; no cambia el resultado primario)", "descriptive_companions": ["diferencias absolutas en escala original (ms, req/s)", "tasas de error/timeout por corrida y celda"],
+                             "estimand": "razón de medias geométricas de los valores por corrida (swarm / decision_table)", "sensitivity": "oe/paired_runs.py (B): descriptiva, fuera de Holm", "status": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED",
+                             "conditional_on": "la unidad estadística y el estadístico de latencia (P95 o media) que fije el asesor"},
+        "holm_design": {"applies": True, "m_fixed": HOLM_M, "alpha": 0.05, "alternative": "two-sided", "metrics": list(HOLM_METRICS), "loads": list(HOLM_LOADS), "hypotheses": list(HOLM_HYPOTHESES),
+                        "excluded": ["time_to_final_config_ms", "t_conv", "proposal_persistence_on", "loads_50_100", "auxiliary_contrasts(rules,bruteforce)"], "untested_hypothesis_rule": "se registra como no testada y sigue contando en m (conservador)",
+                        "source": INTERNAL_SOURCE, "advisor_backing": "NONE"},
+        "server_policy": {"policy": "cold_per_run", "statement": COLD_PER_RUN_STATEMENT, "verified_per_run": ["server_restarted_before_run = true", "server_runs_served_before = 0"], "universal_claim": False, "source": INTERNAL_SOURCE},
+        "error_reporting": {"fields": ["total_requests", "successful_requests", "errors", "timeouts", "error_rate", "timeout_rate", "total_failure_rate", "latency_p95_successful", "throughput_successful"],
+                            "validity_threshold": "NONE (no se invalida por tasa de error; el 1 % de RNF04 no es criterio de validez de L_resp)", "no_successful_responses": "no analizable: se lista, no se imputa", "client_timeout_status": "PROVISIONAL_TECHNICAL"},
+        # Lo que SIGUE pendiente tras F.2.3 (todo requiere respaldo del asesor o aprobación externa); las decisiones internas ya tomadas están en `methodological_decisions` con `decision_level = INTERNAL_STUDY_DECISION`.
         "pending_methodological_decisions": [
-            "pareamiento del contraste HTTP: corridas independientes (hoy) vs pareadas por índice de corrida (misma semilla y secuencia)",
-            "tamaño `m` de la familia de Holm: hoy cuenta solo las hipótesis testables; no está fijado antes de ver datos",
-            "tratamiento de errores y timeouts en el estimando de L_resp: hoy P95 solo de las peticiones correctas (posible sesgo de supervivencia)",
-            "hipótesis estadística de H1 con el L_resp literal (condición ON de la propuesta): hoy solo descriptiva",
-            "política cold/warm de cachés del servidor entre corridas",
-            "asimetría del indicador común: obtención/evaluación de artefactos candidatos dentro del swarm y fuera del convencional",
-            "aprobación del asesor de B1 (indicador común), B5-C (persistencia) y B13 (alcance)",
+            "estadístico de latencia: P95 o media (D11b) — REQUIERE RESPALDO DEL ASESOR",
+            "unidad estadística definitiva del rendimiento (condiciona la estructura de A) — REQUIERE RESPALDO DEL ASESOR",
+            "hipótesis estadística formal de OE2 y uso del L_resp literal (2,0 s) — REQUIERE RESPALDO DEL ASESOR",
+            "aprobación de B1 (indicador común), B5-C (persistencia) y B13 (alcance) — REQUIERE RESPALDO DEL ASESOR",
+            "hardware objetivo (P6) — REQUIERE RESPUESTA EXTERNA",
         ],
         "latency": {"official": "HTTP extremo a extremo", "indicator": "P95 por corrida", "also_reported": ["p50", "mean"], "contrast_regime_max_users": 25,
                     "stress_regime": "> 25 usuarios: estrés; no contrasta el umbral de 2 s", "threshold_ms": 2000},
         "throughput": {"official": "HTTP, peticiones correctas/s en ventana estacionaria", "rnf04": {"min_rps": 20.0, "max_error": 0.01}, "pilot_rps_not_official": "≈10–12 req/s (piloto in-process): diagnóstico",
                        "record": ["requests_total", "requests_ok", "errors", "timeouts", "duration_s", "throughput_rps", "users", "load_generator_cpu_percent"]},
-        "tests": {"paired": "Shapiro-Wilk sobre diferencias → t pareada sobre log(tiempo) si razonable; si no Wilcoxon signed-rank", "independent_runs": "Shapiro-Wilk → Welch / Mann-Whitney",
+        "tests": {"paired": "SENSIBILIDAD descriptiva (oe/paired_runs.py): t pareada o Wilcoxon pedidos de forma explícita; fuera de Holm", "independent_runs": "PRIMARIA (F.2.3): Welch t bilateral sobre log, fija; Mann-Whitney complementario; Shapiro solo diagnóstico",
                   "delta": "swarm − conventional", "report": ["effect", "ci95", "difference", "p", "n_effective"]},
         "holm_family": "primary:swarm_vs_decision_table = {L_resp P95 HTTP, throughput HTTP} × cargas de contraste (≤ 25 usuarios); el indicador común time_to_final_config_ms (decisión provisional, validación PENDIENTE; condición aislada) y el legacy decision_ms se calculan aparte como exploratorios y quedan FUERA de Holm; la condición ON de la propuesta no entra al contraste; auxiliary:swarm_vs_rules y auxiliary:swarm_vs_bruteforce = familias propias, descriptivas (no son comparadores convencionales)",
     },

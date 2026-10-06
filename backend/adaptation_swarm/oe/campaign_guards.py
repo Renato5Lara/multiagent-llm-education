@@ -12,7 +12,7 @@ compatibles). Ningún guard decide cuestiones metodológicas: los marcados `froz
     B11  esquema de corrida/análisis HTTP sin integrar (campos requeridos, `inprocess_obs`)            (técnico)
     B12  provenance incompleta (solo con provenance)                                                    (técnico)
     B13  alcance del comparador pendiente de validación (OE2 dice «sistemas convencionales»)           (metodológico, congelado)
-    PEND decisiones metodológicas de D.5 sin cerrar (pareamiento, `m` de Holm, errores/timeouts, H1/L_resp literal, cold/warm, asimetría, estadístico de latencia, orden)   (metodológico, congelado)
+    PEND decisiones metodológicas de D.5 sin resolver (hoy: estadístico de latencia y H1/L_resp literal; las demás tienen decisión INTERNA F.2.3, no aprobada por el asesor)   (metodológico, congelado)
     DEF  definiciones PENDING DE LAS DEPENDENCIAS DEL OBJETIVO (`definitions.blocked_for(experiment)`)  (definición; dependency-aware: las PENDING de OE1/OE5 que OE2 no necesita no bloquean)
 """
 
@@ -28,6 +28,7 @@ REQUIRED_RUN_FIELDS = (
     "error_count", "timeout_count", "decision_ms_mean", "decision_ms_median", "decision_ms_p95", "t_conv_ms_mean", "metric_validation_status", "comparable", "client_timeout_s", "official", "oe2_official",
     "persistence_condition", "comparison_role", "confirmatory_role", "persist_policy_effective", "redis_isolation",
     "run_index", "execution_index", "server_instance", "server_restarted_before_run", "server_runs_served_before", "postgres_observation",
+    "started_utc", "pair_first_system", "non_timeout_errors", "timeout_rate", "total_failure_rate", "non_timeout_error_rate", "latency_p95_successful_ms", "throughput_successful_rps",
 )
 
 

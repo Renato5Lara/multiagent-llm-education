@@ -34,13 +34,28 @@ PROVENANCE_REQUIRED_FOR_EXECUTION = ("software.redis_server",)
 PROVENANCE_REQUIRED_AT_END = ("code_state_final.dirty", "code_state_final.unchanged_since_start", "campaign_source_fingerprints_final")
 
 
+def _status_files(repo: Path | None = None) -> list[str] | None:
+    """Archivos de `git status --porcelain --untracked-files=all` (NIVEL DE ARCHIVO: un directorio sin versionar se expande a sus archivos). `None` si git no responde."""
+    try:
+        res = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=str(repo or iso.REPO), capture_output=True, text=True, timeout=60, check=True)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return sorted(l[3:].strip().strip('"') for l in res.stdout.splitlines() if l.strip())
+
+
+def _files_sha256(files: list[str]) -> str:
+    return hashlib.sha256("\n".join(sorted(files)).encode("utf-8")).hexdigest()
+
+
 def git_state(repo: Path | None = None) -> dict:
     try:
         res = subprocess.run(["git", "status", "--porcelain"], cwd=str(repo or iso.REPO), capture_output=True, text=True, timeout=30, check=True)
     except (OSError, subprocess.SubprocessError):
         return {"dirty": None, "method": "git status --porcelain", "modified_paths": None, "note": "git no disponible: estado desconocido"}
     paths = [l[3:] for l in res.stdout.splitlines() if l.strip()]
-    return {"dirty": bool(paths), "method": "git status --porcelain", "n_modified_or_untracked": len(paths), "modified_paths": paths[:50]}
+    files = _status_files(repo)
+    return {"dirty": bool(paths), "method": "git status --porcelain", "n_modified_or_untracked": len(paths), "modified_paths": paths[:50],
+            "files_sha256": None if files is None else _files_sha256(files), "n_files": None if files is None else len(files)}
 
 
 def source_fingerprints(sources: Sequence[str] = CAMPAIGN_SOURCES) -> dict[str, str]:
@@ -127,10 +142,31 @@ def completion_gaps(prov: Mapping) -> list[str]:
     return gaps
 
 
-def final_code_state(prov: dict, repo: Path | None = None) -> None:
-    """Verificación FINAL de una campaña ejecutada: vuelve a leer el árbol de Git y los hashes de los fuentes y compara con los del inicio. No decide nada: registra `unchanged_since_start`."""
+def _under(path: str, prefixes: Sequence[str]) -> bool:
+    return any(path == p or path.startswith(p + "/") for p in prefixes)
+
+
+def final_code_state(prov: dict, repo: Path | None = None, ignore_paths: Sequence[Path] = ()) -> None:
+    """Verificación FINAL de una campaña ejecutada: vuelve a leer el árbol de Git y los hashes de los fuentes y compara con los del inicio. No decide nada: registra `unchanged_since_start`.
+    `ignore_paths`: directorios de SALIDA de la propia campaña (p. ej. `out_dir` y su carpeta temporal de crudos). Si la salida está dentro del repositorio, esos archivos nuevos aparecerían como «cambios» y la
+    campaña se declararía alterada por lo que ella misma escribe; la comparación es a NIVEL DE ARCHIVO y excluye solo esas rutas (cualquier otro cambio sí cuenta)."""
     start = prov.get("code_state", {})
     final = git_state(repo)
     fp_final = source_fingerprints()
-    final["unchanged_since_start"] = bool(final.get("dirty") == start.get("dirty") and final.get("modified_paths") == start.get("modified_paths") and fp_final == prov.get("campaign_source_fingerprints") and final.get("dirty") is not None)
+    same_fp = fp_final == prov.get("campaign_source_fingerprints")
+    if start.get("files_sha256") is not None:
+        files = _status_files(repo)
+        root = Path(repo or iso.REPO).resolve()
+        rel = []
+        for p in ignore_paths:
+            try:
+                rel.append(Path(p).resolve().relative_to(root).as_posix())
+            except ValueError:                                                         # fuera del repositorio: no aparece en git, nada que excluir
+                pass
+        kept = None if files is None else [f for f in files if not _under(f.rstrip("/"), rel)]
+        final["files_sha256_excluding_campaign_output"] = None if kept is None else _files_sha256(kept)
+        final["ignored_campaign_output_paths"] = rel
+        final["unchanged_since_start"] = bool(kept is not None and final["files_sha256_excluding_campaign_output"] == start["files_sha256"] and same_fp and final.get("dirty") is not None)
+    else:                                                                                 # estado de inicio sin detalle por archivo: comparación anterior
+        final["unchanged_since_start"] = bool(final.get("dirty") == start.get("dirty") and final.get("modified_paths") == start.get("modified_paths") and same_fp and final.get("dirty") is not None)
     prov["code_state_final"], prov["campaign_source_fingerprints_final"] = final, fp_final

@@ -53,6 +53,76 @@ RECORD_FIELDS = ("campaign_id", "campaign_spec_hash", "run_id", "batch_id", "see
                  "timeouts", "p50_ms", "mean_ms", "p95_ms", "throughput_http", "throughput_internal", "generator_cpu", "timestamp", "commit", "hardware", "definition_version")
 
 
+_FILENAME_SAFE = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-")
+SERVER_POLICIES = ("cold_per_run", "reuse")
+
+
+def raw_filename(run_id: str) -> str:
+    """Nombre FÍSICO del CSV crudo de una corrida. El `run_id` lógico (p. ej. `swarm|u10|N20`) contiene caracteres inválidos en Windows (`|`): aquí se codifica de forma INYECTIVA (cada carácter no seguro →
+    `%XX`, y `%` → `%25`), de modo que dos `run_id` distintos nunca colisionan y el original se recupera con `run_id_from_filename`. El `run_id` lógico NO cambia en ningún registro."""
+    return "".join(c if c in _FILENAME_SAFE else (f"%{ord(c):02X}" if ord(c) < 256 else f"%u{ord(c):04X}") for c in run_id) + ".csv"
+
+
+def run_id_from_filename(name: str) -> str:
+    import re
+    stem = name[:-4] if name.endswith(".csv") else name
+    return re.sub(r"%u([0-9A-F]{4})|%([0-9A-F]{2})", lambda m: chr(int(m.group(1) or m.group(2), 16)), stem)
+
+
+def default_server_policy(experiment: str) -> str:
+    """Política de servidor por experimento: OE2 usa `cold_per_run` (decisión INTERNA F.2.3, no aprobada por el asesor); los demás conservan la reutilización (no se decidió para ellos)."""
+    return "cold_per_run" if experiment == "oe2" else "reuse"
+
+
+def _terminate_tree(server) -> None:
+    """Termina los hijos del proceso de uvicorn antes que el padre (en Windows `terminate()` del padre puede dejarlos vivos y el puerto ocupado)."""
+    proc = getattr(server, "proc", None)
+    if proc is not None and proc.poll() is None:
+        try:
+            import psutil
+            for child in psutil.Process(proc.pid).children(recursive=True):
+                try:
+                    child.terminate()
+                except psutil.Error:
+                    pass
+        except (ImportError, OSError):
+            pass
+        except Exception:                                                              # psutil.Error (proceso ya terminado): se continúa con `stop()`
+            pass
+    server.stop()
+
+
+def _port_free(port: int) -> bool:
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        return s.connect_ex(("127.0.0.1", port)) != 0
+
+
+def make_ensure_server(server, policy: str, *, clean: Callable[[], dict] | None = None, wait_s: float = 15.0) -> Callable[[int, str], dict]:
+    """`ensure_server` de la campaña según la política. `reuse`: el de `ServerPerN` (reinicia solo si cambia N o la persistencia). `cold_per_run` (orquestador; `ServerPerN` no cambia): ANTES de CADA corrida 1) detiene el
+    servidor, 2) comprueba que terminó (el puerto queda libre), 3) limpia el estado de la campaña (`clean`, el mecanismo de aislamiento existente), 4) inicia un servidor nuevo, 5) espera su /health (lo verifica `ServerPerN.ensure`:
+    política de persistencia efectiva y 𝓕 fuera de la petición) y 6) VERIFICA `server_restarted_before_run = true` y `server_runs_served_before = 0`; si no se cumple, la corrida no arranca."""
+    if policy == "reuse":
+        return server.ensure
+    if policy != "cold_per_run":
+        raise ValueError(f"política de servidor desconocida: {policy!r}; válidas: {SERVER_POLICIES}")
+
+    def ensure(n: int, persist: str) -> dict:
+        _terminate_tree(server)
+        t0 = time.time()
+        while not _port_free(server.port):
+            if time.time() - t0 > wait_s:
+                raise RuntimeError(f"cold_per_run: el servidor anterior sigue escuchando en el puerto {server.port} tras {wait_s:.0f} s: no se arranca la corrida")
+            time.sleep(0.2)
+        report = clean() if clean is not None else None
+        health = server.ensure(n, persist)
+        if not (isinstance(health, dict) and health.get("server_restarted_before_run") is True and health.get("server_runs_served_before") == 0):
+            raise RuntimeError(f"cold_per_run no se cumplió (server_restarted_before_run / server_runs_served_before): {None if not isinstance(health, dict) else {k: health.get(k) for k in ('server_restarted_before_run', 'server_runs_served_before')}}")
+        return {**health, "pre_restart_clean": report} if report is not None else health
+    return ensure
+
+
 def run_seed(base_seed: int, run_index: int) -> int:
     return derive_seed(base_seed, "http-campaign-run", run_index)
 
@@ -117,6 +187,8 @@ def official_refusals(hw: dict, runs: int, warmup: float, window: float, prov: d
         reasons.append(f"calentamiento ≥ {http_window.WARMUP_S_MIN:.0f} s y ventana ≥ {http_window.WINDOW_S_MIN:.0f} s requeridos")
     if prov is not None and prov.get("code_state", {}).get("dirty") is not False:        # una campaña OFICIAL debe poder reproducirse desde su commit
         reasons.append("código: árbol de Git " + ("con cambios sin commit" if prov.get("code_state", {}).get("dirty") else "de estado desconocido") + ": el commit no identifica el código que produce la campaña")
+    if prov is not None and prov.get("experiment") == "oe2" and (prov.get("cold_warm") or {}).get("policy") != "cold_per_run":
+        reasons.append("servidor: la política decidida para OE2 es `cold_per_run` (reinicio antes de cada corrida) y esta campaña usa " + repr((prov.get("cold_warm") or {}).get("policy")))
     return reasons + [f"bloqueo: {b}" for b in campaign_guards.critical_reasons(prov)]          # B14: bloqueos CALCULADOS del estado real (y de la provenance, si se pasa)
 
 
@@ -147,7 +219,13 @@ def record(run: dict, summary: dict, prov: dict) -> dict:
             # D.4.1: estado EFECTIVO verificado del servidor y aislamiento de Redis de ESTA corrida (los completa `execute`; None = no verificado)
             "persist_policy_effective": None, "redis_isolation": None,
             # E: trazabilidad de orden, de arranque del servidor (cold/warm) y de PostgreSQL por corrida; `run_index`/`batch_id`/`seed` quedan disponibles para un eventual pareamiento (NO se usan en el análisis actual)
-            "run_index": run["run_index"], "execution_index": None, "server_instance": None, "server_restarted_before_run": None, "server_runs_served_before": None, "postgres_observation": None}
+            "run_index": run["run_index"], "execution_index": None, "server_instance": None, "server_restarted_before_run": None, "server_runs_served_before": None, "postgres_observation": None,
+            # F.2.3: instante de inicio de la generación de carga (antes del warm-up), sistema que se midió primero en su par (ronda, carga) y los indicadores de fallo/éxito por corrida
+            "started_utc": None, "pair_first_system": None, "non_timeout_errors": summary.get("errors_non_timeout") if ok else None,
+            "timeout_rate": (summary["timeouts"] / summary["requests_total"]) if ok and summary.get("requests_total") else None,
+            "total_failure_rate": (summary["errors"] / summary["requests_total"]) if ok and summary.get("requests_total") else None,
+            "non_timeout_error_rate": (summary["errors_non_timeout"] / summary["requests_total"]) if ok and summary.get("requests_total") else None,
+            "latency_p95_successful_ms": summary.get("latency_p95_ms"), "throughput_successful_rps": summary.get("throughput_rps")}
 
 
 def record_effective_server(prov: dict, health) -> None:
@@ -203,8 +281,12 @@ def provenance(args: argparse.Namespace, runs: list[dict]) -> dict:
             # D.4.1: roles por celda, aislamiento de Redis y decisiones metodológicas que siguen pendientes
             "run_roles": {c: {k: next(r[k] for r in runs if r["cell"] == c) for k in ("system", "system_role", "persist_policy", "persistence_condition", "comparison_role", "confirmatory_role")} for c in sorted({r["cell"] for r in runs})},
             "redis_isolation": {"prefix": run_isolation.campaign_prefix(args.campaign_id), "mechanism": run_isolation.MECHANISM, "pending": run_isolation.PENDING_DECISION},
-            "cold_warm": {"policy": "NOT_DECIDED (decisión metodológica pendiente: campaign_spec.oe2.methodological_decisions.cold_warm_policy)", "planned_server_starts": planned_server_starts(runs), "n_runs": len(runs),
-                          "recorded_per_run": ["server_instance", "server_restarted_before_run", "server_runs_served_before", "execution_index"]},
+            "cold_warm": {"policy": (getattr(args, "server_policy", None) or default_server_policy(args.experiment)), "decision": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED (campaign_spec.oe2.methodological_decisions.cold_warm_policy; F.2.3)",
+                          "statement": campaign_spec.COLD_PER_RUN_STATEMENT, "universal_claim": False,
+                          "planned_server_starts": planned_server_starts(runs, getattr(args, "server_policy", None) or default_server_policy(args.experiment)), "n_runs": len(runs),
+                          "recorded_per_run": ["server_instance", "server_restarted_before_run", "server_runs_served_before", "execution_index", "started_utc", "pair_first_system"]},
+            "internal_decisions_not_advisor_approved": sorted(k for k, d in campaign_spec.SPEC["oe2"]["methodological_decisions"].items() if d.get("decision_level") == "INTERNAL_STUDY_DECISION"),
+            "analysis_primary": campaign_spec.SPEC["oe2"]["analysis_primary"], "holm_design": campaign_spec.SPEC["oe2"]["holm_design"],
             "methodological_decisions": campaign_spec.SPEC["oe2"]["methodological_decisions"],
             "pending_methodological_decisions": campaign_spec.SPEC["oe2"]["pending_methodological_decisions"]}
     prov["blockers"] = [b.as_dict() for b in campaign_guards.evaluate(prov)]
@@ -215,7 +297,7 @@ def provenance(args: argparse.Namespace, runs: list[dict]) -> dict:
 # ── ejecución (E/S real; inyectable en pruebas) ─────────────────────────────────────────────────────────────────
 def locust_runner(host: str, locustfile: Path, plugin: Path, raw_dir: Path, python: str, timeout_s: float = CLIENT_TIMEOUT_S) -> Callable[[dict, float, float], tuple[list[dict], list[dict]]]:
     def run(r: dict, warmup: float, window: float) -> tuple[list[dict], list[dict]]:
-        raw = raw_dir / f"{r['run_id']}.csv"
+        raw = raw_dir / raw_filename(r["run_id"])                                       # nombre físico seguro en Windows; el run_id lógico no cambia
         env = {**os.environ, "SWARM_LOAD_RAW_CSV": str(raw), "SWARM_LOAD_BATCH_SEED": str(r["seed"]), "SWARM_LOAD_SYSTEM": r["system"], "SWARM_LOAD_WORKER_INDEX": "0", "SWARM_LOAD_TIMEOUT_S": str(timeout_s)}
         total = int(warmup + window + START_MARGIN_S)
         subprocess.run([python, "-m", "locust", "-f", f"{locustfile},{plugin}", "--headless", "-u", str(r["load"]), "-r", str(r["load"]), "-t", f"{total}s", "--host", host], env=env, check=True,
@@ -286,11 +368,17 @@ def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_ru
     `observe(run)` (solo lectura) devuelve cuántos ciclos hay persistidos en PostgreSQL con la etiqueta de la campaña; se consulta antes y después de la carga para comprobar que ON escribió y OFF no."""
     ids = list(profile_ids) if profile_ids is not None else [p.profile_id for p in read_dataset(DEFAULT_PROFILES)]
     out = []
+    first_of_pair: dict[tuple, str] = {}
+    for r in runs:                                                                                    # sistema que ocurre primero en cada par (ronda, carga): el orden del plan ES el orden de ejecución
+        first_of_pair.setdefault((r["run_index"], r["load"]), r["system"])
     for k, r in enumerate(runs, 1):
         effective = ensure_server(r["swarm_N"], r["persist_policy"])
         iso = isolate(r) if isolate is not None else None
+        if isinstance(effective, dict) and effective.get("pre_restart_clean") is not None:
+            iso = {**(iso or {}), "pre_restart_clean": effective["pre_restart_clean"]}
         before = observe(r) if observe is not None else None
         log(f"[{k}/{len(runs)}] {r['run_id']} seed={r['seed']}")
+        started_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
         raw, cpu = do_run(r, warmup, window)
         after = observe(r) if observe is not None else None
         summary = http_window.summarize_run(raw, cpu, users=r["load"], system=r["system"], run_id=r["run_id"], warmup_s=warmup, min_window_s=window,
@@ -299,6 +387,7 @@ def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_ru
         rec["persist_policy_effective"] = effective.get("persist_policy") if isinstance(effective, dict) else None
         rec["redis_isolation"] = iso
         rec["execution_index"] = k
+        rec["started_utc"], rec["pair_first_system"] = started_utc, first_of_pair[(r["run_index"], r["load"])]
         if isinstance(effective, dict):
             rec["server_instance"], rec["server_restarted_before_run"], rec["server_runs_served_before"] = (effective.get(x) for x in ("server_instance", "server_restarted_before_run", "server_runs_served_before"))
         rec["postgres_observation"] = postgres_observation(rec["persist_policy_effective"] or r["persist_policy"], before, after) if observe is not None else None
@@ -335,8 +424,10 @@ def integrity_violations(records: Sequence[dict]) -> list[dict]:
     return out
 
 
-def planned_server_starts(runs: Sequence[dict]) -> int:
-    """Arranques de servidor que el plan exige (uno cada vez que cambia el par N/persistencia entre corridas consecutivas): dato para decidir la política cold/warm (NO la decide)."""
+def planned_server_starts(runs: Sequence[dict], policy: str = "reuse") -> int:
+    """Arranques de servidor que el plan exige: con `reuse`, uno cada vez que cambia el par N/persistencia entre corridas consecutivas; con `cold_per_run`, uno POR CORRIDA."""
+    if policy == "cold_per_run":
+        return len(runs)
     n, cur = 0, None
     for r in runs:
         key = (r["swarm_N"], r["persist_policy"])
@@ -376,7 +467,8 @@ def analyze_records(experiment: str, records: Sequence[dict], inprocess_obs: Seq
     summaries = [{"status": r["status"], "system": r["system"], "users": r["load"], "latency_p95_ms": r["p95_ms"], "throughput_rps": r["throughput_http"], "run_id": r["run_id"],
                   "decision_ms_mean": r.get("decision_ms_mean"), "comparable": r.get("comparable"), "non_comparable_reason": r.get("non_comparable_reason"),
                   "persist_policy": r.get("persist_policy"), "comparison_role": r.get("comparison_role"), "persistence_condition": r.get("persistence_condition"),
-                  "run_index": r.get("run_index"), "batch_id": r.get("batch_id"), "seed": r.get("seed"), "execution_index": r.get("execution_index")} for r in records]       # disponibles para un eventual pareamiento; el análisis actual no los usa
+                  "run_index": r.get("run_index"), "batch_id": r.get("batch_id"), "seed": r.get("seed"), "execution_index": r.get("execution_index"),
+                  "requests_total": r.get("total_requests"), "requests_ok": r.get("successful_requests"), "errors": r.get("errors"), "timeouts": r.get("timeouts")} for r in records]       # disponibles para un eventual pareamiento; el análisis actual no los usa
     return oe2_confirmatory.analyze(list(inprocess_obs or []), summaries)
 
 
@@ -458,6 +550,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--particles", type=_ints, default=list(OE4_PARTICLES))
     ap.add_argument("--systems", type=lambda s: s.split(","), default=list(DEFAULT_OE2_SYSTEMS), help="OE2: propuesta + convencional independiente (por defecto); rules/bruteforce solo como contrastes auxiliares")
     ap.add_argument("--persist-policy", choices=PERSIST_POLICIES, default="off", help="política de persistencia de la campaña, IGUAL para ambos sistemas (el baseline no persiste: solo «off»)")
+    ap.add_argument("--server-policy", choices=SERVER_POLICIES, default=None, help="cold_per_run = reinicio completo del servidor antes de CADA corrida (por defecto en OE2: decisión INTERNA F.2.3, no aprobada por el asesor); reuse = el servidor se reutiliza (no oficial en OE2)")
     ap.add_argument("--proposal-persistence-cost", action="store_true", help="OE2: añade corridas de la PROPUESTA con persistencia ON (costo de la persistencia síncrona); NO entran al contraste contra decision_table")
     ap.add_argument("--client-timeout", type=float, default=CLIENT_TIMEOUT_S, help=f"timeout de cliente por petición, igual para todos los sistemas ({CLIENT_TIMEOUT_STATUS}); queda en la provenance")
     ap.add_argument("--inprocess-run", type=Path, help="analyze: directorio de una corrida de `oe/runner.py oe2` cuyas observaciones in-process (decision_ms por perfil) se unen al análisis HTTP")
@@ -508,13 +601,14 @@ def main(argv: list[str] | None = None) -> None:
     try:
         records = execute(runs, prov, warmup=args.warmup, window=args.window,
                           do_run=locust_runner(f"http://localhost:{args.port}", back / "loadtest" / "locustfile.py", Path(__file__).with_name("locust_raw_log.py"), raw_dir, sys.executable, args.client_timeout),
-                          ensure_server=server.ensure, log=log, isolate=lambda r: isolation.reset(r["run_id"]),
+                          ensure_server=make_ensure_server(server, args.server_policy or default_server_policy(args.experiment), clean=lambda: isolation.reset("pre-restart")), log=log,
+                          isolate=lambda r: isolation.reset(r["run_id"]),
                           observe=(lambda r: probe.cycles()) if probe is not None else None)
     finally:
         server.stop()
     record_effective_server(prov, server.health_log)
     prov["redis_isolation"]["final"] = isolation.purge_namespace()                    # servidor detenido: se limpia el namespace de ESTA campaña (nada más)
-    code_state.final_code_state(prov)                                                  # verificación final del estado de Git y de los fuentes
+    code_state.final_code_state(prov, ignore_paths=(out_dir, raw_dir))                 # verificación final del estado de Git y de los fuentes (sin contar lo que la propia campaña escribe)
     prov["provenance_completion_gaps"] = code_state.completion_gaps(prov)
     prov["integrity_violations"] = integrity_violations(records)
     if prov["integrity_violations"] or prov["provenance_completion_gaps"]:

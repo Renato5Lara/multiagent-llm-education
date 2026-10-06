@@ -104,11 +104,11 @@ def test_oe2_http_confirmatory_families_use_only_contrast_loads_and_holm_per_fam
     assert set(res["families"]) == {"primary:swarm_vs_decision_table", "auxiliary:swarm_vs_rules", "auxiliary:swarm_vs_bruteforce"}          # sin "secondary": rules y bruteforce son auxiliares
     prim, sec = res["families"]["primary:swarm_vs_decision_table"], res["families"]["auxiliary:swarm_vs_bruteforce"]
     assert prim["confirmatory"] is True and sec["confirmatory"] is False and res["families"]["auxiliary:swarm_vs_rules"]["confirmatory"] is False
-    assert prim["method"] == "Holm-Bonferroni" and prim["alpha"] == 0.05 and prim["m"] == 6          # cargas de contraste 1, 10, 25 × {L_resp, throughput}
+    assert prim["method"] == "Holm-Bonferroni" and prim["alpha"] == 0.05 and prim["m"] == 8 and prim["n_tested"] == 6          # familia FIJA de 8; con datos en las cargas 1, 10 y 25 × {L_resp, throughput}
     assert not any(h.endswith("u50") for h in prim["hypotheses"]) and "u50" in res["stress_regime_descriptive_only"]
     h = prim["hypotheses"]["L_resp_P95_http@u10"]
     assert h["result"]["unit"] == "run" and h["result"]["scale"] == "log" and h["result"]["geometric_ratio"] > 1 and h["p_holm"] >= h["p_raw"]
-    assert sec["m"] == 6 and res["comparator_primary"] == "decision_table" and res["auxiliary_contrasts"] == ["rules", "bruteforce"] and res["proposal_system"] == "swarm" and "comparator_secondary" not in res
+    assert sec["m"] == 8 and sec["n_tested"] == 6 and res["comparator_primary"] == "decision_table" and res["auxiliary_contrasts"] == ["rules", "bruteforce"] and res["proposal_system"] == "swarm" and "comparator_secondary" not in res
     assert res["candidate_time_metric"] == "time_to_final_config_ms" and res["legacy_time_metric"] == "decision_ms" and res["time_metric_validation"] == "PENDING_METHODOLOGICAL_VALIDATION" and "time_metric" not in res
     assert res["t_conv_contrast"] == "not_performed_t_conv_is_proposal_only"
 
@@ -170,7 +170,7 @@ def test_in_process_oe2_analysis_adds_log_paired_family_without_removing_legacy_
     assert "comparisons" in a and "oe1_per_run" in a
     fams = a["oe2_families_in_process"]["families"]
     prim = fams["primary:swarm_vs_decision_table"]
-    assert prim["m"] == 0 and prim["hypotheses"] == {} and prim["confirmatory"] is True                    # sin L_resp/throughput HTTP en este análisis: la familia confirmatoria queda vacía
+    assert prim["m"] == 8 and prim["n_tested"] == 0 and prim["confirmatory"] is True                    # sin L_resp/throughput HTTP en este análisis: la familia confirmatoria queda vacía
     pend = prim["pending_metric_validation"]
     assert pend["status"] == "PENDING_METHODOLOGICAL_VALIDATION" and pend["excluded_from_holm"] is True
     h = pend["hypotheses"]["decision_ms@c1"]

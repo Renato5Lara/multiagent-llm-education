@@ -18,22 +18,30 @@ EXPECTED = sorted(["common_indicator_asymmetry", "cold_warm_policy", "errors_tim
 
 
 # ═════════════════════════ guard PEND ═════════════════════════
-def test_every_d5_decision_is_represented_pending_and_blocks_official_without_being_decided_by_default():
-    assert sorted(DECISIONS) == EXPECTED and guards.pending_methodological_decisions() == EXPECTED
-    assert all(d["status"] == "PENDING" and d["chosen"] is None and len(d["options"]) >= 2 and d["source"] for d in DECISIONS.values())
+INTERNAL = ["common_indicator_asymmetry", "cold_warm_policy", "errors_timeouts_in_l_resp", "execution_order", "holm_family_size", "http_pairing"]
+ADVISOR = ["l_resp_literal_hypothesis_h1", "latency_statistic"]
+
+
+def test_every_d5_decision_is_represented_and_after_f23_only_the_advisor_ones_stay_pending_and_block_official():
+    assert sorted(DECISIONS) == EXPECTED and guards.pending_methodological_decisions() == ADVISOR
+    for k in INTERNAL:                                                                                    # decididas INTERNAMENTE (F.2.3): resueltas para el guard, NO aprobadas por el asesor
+        d = DECISIONS[k]
+        assert d["status"] == "DECIDED" and d["chosen"] in d["options"] and d["advisor_approved"] is False and d["decision_level"] == "INTERNAL_STUDY_DECISION" and d["source"] == "internal_decision_F2.3" and d["question_source"]
+    for k in ADVISOR:
+        d = DECISIONS[k]
+        assert d["status"] == "PENDING" and d["chosen"] is None and d["advisor_approved"] is False and d["decision_level"] == "REQUIERE_RESPALDO_DEL_ASESOR"
     peb = [b for b in guards.evaluate(None) if b.id == "PEND"]
-    assert len(peb) == 1 and peb[0].critical and peb[0].frozen and peb[0].kind == "methodological" and all(k in peb[0].reason for k in EXPECTED)
+    assert len(peb) == 1 and peb[0].critical and peb[0].frozen and peb[0].kind == "methodological" and all(k in peb[0].reason for k in ADVISOR) and not any(k in peb[0].reason for k in INTERNAL)
     assert any("[PEND]" in r for r in hc.official_refusals({"vcpu": 20, "ram_gib": 31.75}, 10, 10.0, 60.0, None))
 
 
 def test_a_decision_is_resolved_only_by_an_explicit_decided_status_with_a_choice_among_its_options(monkeypatch):
-    key = "http_pairing"
-    for bad in ({"status": "DECIDED", "chosen": None}, {"status": "DECIDED", "chosen": "otra_cosa"}, {"status": "PENDING", "chosen": "independent_runs"}, {"status": "decided", "chosen": "independent_runs"},
-                {"status": "ADVISOR_APPROVED", "chosen": "independent_runs"}):
+    key = "latency_statistic"                                                                           # una decisión que SIGUE pendiente (requiere al asesor)
+    for bad in ({"status": "DECIDED", "chosen": None}, {"status": "DECIDED", "chosen": "otra_cosa"}, {"status": "PENDING", "chosen": "p95"}, {"status": "decided", "chosen": "p95"}, {"status": "ADVISOR_APPROVED", "chosen": "p95"}):
         monkeypatch.setitem(DECISIONS, key, {**DECISIONS[key], **bad})
         assert key in guards.pending_methodological_decisions(), bad
-    monkeypatch.setitem(DECISIONS, key, {**DECISIONS[key], "status": "DECIDED", "chosen": "paired_by_run_index_and_load"})
-    assert key not in guards.pending_methodological_decisions() and len(guards.pending_methodological_decisions()) == len(EXPECTED) - 1
+    monkeypatch.setitem(DECISIONS, key, {**DECISIONS[key], "status": "DECIDED", "chosen": "p95"})
+    assert key not in guards.pending_methodological_decisions() and guards.pending_methodological_decisions() == ["l_resp_literal_hypothesis_h1"]
 
 
 def test_the_pend_guard_fails_closed_on_missing_or_malformed_structure_and_lifts_only_when_everything_is_decided(monkeypatch):
@@ -53,7 +61,7 @@ def test_no_analysis_module_reads_the_pending_decisions_so_representing_them_cha
         assert "methodological_decisions" not in src and '"chosen"' not in src, mod.__name__
     assert "independent_comparison" in inspect.getsource(o2.runs_comparison)                          # lo implementado hoy sigue siendo lo declarado en `implemented_today`
     assert DECISIONS["http_pairing"]["implemented_today"] == "independent_runs" and DECISIONS["latency_statistic"]["implemented_today"] == "p95"
-    assert "dynamic_m" == DECISIONS["holm_family_size"]["implemented_today"] and DECISIONS["holm_family_size"]["advisor_backing"].startswith("NO DETERMINABLE")
+    assert DECISIONS["holm_family_size"]["implemented_today"] == "fixed_m_declared_before_data" and DECISIONS["holm_family_size"]["advisor_backing"].startswith("NONE")
 
 
 def test_provenance_and_dry_run_carry_the_unresolved_decisions_and_the_cold_warm_facts(capsys, tmp_path):
@@ -61,8 +69,8 @@ def test_provenance_and_dry_run_carry_the_unresolved_decisions_and_the_cold_warm
     hc.main(["oe2", "--campaign-id", "dry", "--out-dir", str(out), "--runs", "2", "--users", "1,10", "--proposal-persistence-cost", "--dry-run"])
     text = capsys.readouterr().out
     d = json.loads(text[text.index("{"):])
-    assert not out.exists() and d["methodological_decisions_unresolved"] == EXPECTED and d["cold_warm"]["policy"].startswith("NOT_DECIDED") and d["cold_warm"]["n_runs"] == 12
-    assert d["cold_warm"]["planned_server_starts"] >= 2 and "server_instance" in d["cold_warm"]["recorded_per_run"]
+    assert not out.exists() and d["methodological_decisions_unresolved"] == ADVISOR and d["cold_warm"]["policy"] == "cold_per_run" and d["cold_warm"]["n_runs"] == 12
+    assert d["cold_warm"]["planned_server_starts"] == 12 and "server_instance" in d["cold_warm"]["recorded_per_run"] and d["cold_warm"]["universal_claim"] is False        # cold_per_run: un arranque por corrida
     assert d["official"] is False and any("[PEND]" in r for r in d["official_refusals"])
 
 
@@ -236,7 +244,7 @@ def test_hardware_cpu_model_and_the_other_environment_facts_are_required_for_rep
     broken = json.loads(json.dumps(prov))
     broken["hardware"]["cpu_model"] = None
     assert "hardware.cpu_model" in code_state.provenance_gaps(broken)
-    assert prov["cold_warm"]["planned_server_starts"] == 1 and prov["methodological_decisions"] == campaign_spec.SPEC["oe2"]["methodological_decisions"]
+    assert prov["cold_warm"]["planned_server_starts"] == len(_plan()) and prov["methodological_decisions"] == campaign_spec.SPEC["oe2"]["methodological_decisions"]
 
 
 def test_a_real_execution_is_refused_before_anything_starts_when_redis_cannot_be_recorded(monkeypatch, tmp_path):

@@ -257,9 +257,10 @@ def test_a_generator_limited_load_leaves_the_confirmatory_family_for_both_system
     res = o2.analyze([], _http_records(saturated_at=("decision_table", 10, 2)))
     prim = res["families"]["primary:swarm_vs_decision_table"]
     assert res["generator_limited_levels"] == {"10": ["generator_saturated"]} and res["n_http_runs_not_comparable"] == 1
-    assert {h.split("@")[1] for h in prim["hypotheses"]} == {"u1", "u25"} and prim["m"] == 4                # u10 sale para AMBOS sistemas (aunque la propuesta no saturó)
+    assert prim["m"] == 8 and prim["n_tested"] == 4 and {h.split("@")[1] for h, v in prim["hypotheses"].items() if v["p_raw"] is not None} == {"u1", "u25"}                # u10 sale para AMBOS sistemas (aunque la propuesta no saturó) y sigue contando en m
+    assert all(prim["hypotheses"][f"{m}@u10"]["result"]["reason"].startswith("generator_limited_level") for m in ("L_resp_P95_http", "throughput_http")) and all(f"{m}@u5" in prim["not_tested"] for m in ("L_resp_P95_http", "throughput_http"))
     full = o2.analyze([], _http_records())
-    assert full["generator_limited_levels"] == {} and {h.split("@")[1] for h in full["families"]["primary:swarm_vs_decision_table"]["hypotheses"]} == {"u1", "u10", "u25"}
+    assert full["generator_limited_levels"] == {} and full["families"]["primary:swarm_vs_decision_table"]["n_tested"] == 6 and full["families"]["primary:swarm_vs_decision_table"]["m"] == 8
 
 
 def test_runs_without_a_comparable_flag_are_not_used_and_oe4_also_respects_the_policy():
@@ -267,7 +268,7 @@ def test_runs_without_a_comparable_flag_are_not_used_and_oe4_also_respects_the_p
     for r in recs:
         r.pop("comparable")
     res = o2.analyze([], recs)
-    assert res["families"]["primary:swarm_vs_decision_table"]["m"] == 0 and res["n_http_runs_not_comparable"] == len(recs)       # no se supone comparable
+    assert res["families"]["primary:swarm_vs_decision_table"]["m"] == 8 and res["families"]["primary:swarm_vs_decision_table"]["n_tested"] == 0 and res["n_http_runs_not_comparable"] == len(recs)       # no se supone comparable
     swarm = [{"status": "ok", "system": "swarm", "load": u, "swarm_N": n, "p95_ms": 500.0 + u, "throughput_http": 12.0, "error_rate": 0.0, "t_conv_ms_mean": 100.0, "comparable": u != 10}
              for u in (1, 10, 25) for n in (10, 20) for _ in range(3)]
     out = hc.analyze_oe4(swarm)
@@ -328,7 +329,7 @@ def test_http_decision_ms_reaches_the_analysis_only_as_exploratory():
     res = o2.analyze([], recs)
     prim = res["families"]["primary:swarm_vs_decision_table"]
     assert set(prim["pending_metric_validation"]["hypotheses"]) == {"decision_ms_http@u1", "decision_ms_http@u10", "decision_ms_http@u25"}
-    assert not any("decision_ms" in h for h in prim["hypotheses"]) and prim["m"] == 6                                            # fuera de Holm: solo L_resp y throughput
+    assert not any("decision_ms" in h for h in prim["hypotheses"]) and prim["m"] == 8 and prim["n_tested"] == 6                  # fuera de Holm: solo L_resp y throughput
     h = prim["pending_metric_validation"]["hypotheses"]["decision_ms_http@u10"]
     assert h["confirmatory"] is False and h["p_holm"] is None and h["result"]["unit"] == "run"
 

@@ -49,7 +49,7 @@ def test_confirmatory_module_computes_only_decision_ms_and_only_as_pending(monke
     res = o2.analyze(_oe2_obs(), [])
     assert set(asked) == {"decision_ms", "time_to_final_config_ms"}                                   # únicas métricas de tiempo calculadas entre sistemas (legacy + indicador común, ambas exploratorias)
     prim = res["families"]["primary:swarm_vs_decision_table"]
-    assert prim["m"] == 0 and prim["hypotheses"] == {} and prim["pending_metric_validation"]["excluded_from_holm"] is True
+    assert prim["m"] == 8 and prim["n_tested"] == 0 and len(prim["not_tested"]) == 8 and prim["pending_metric_validation"]["excluded_from_holm"] is True       # familia FIJA (F.2.3): m = 8 aunque no haya datos HTTP
     assert all(v["confirmatory"] is False and v["p_holm"] is None for v in prim["pending_metric_validation"]["hypotheses"].values())
 
 
@@ -91,7 +91,7 @@ def test_primary_confirmatory_family_contains_only_http_l_resp_and_throughput_an
         r["comparable"] = True
     res = hc.analyze_records("oe2", recs)
     prim = res["families"]["primary:swarm_vs_decision_table"]
-    assert {h.split("@")[0] for h in prim["hypotheses"]} == {"L_resp_P95_http", "throughput_http"} and prim["m"] == 4
+    assert {h.split("@")[0] for h in prim["hypotheses"]} == {"L_resp_P95_http", "throughput_http"} and prim["m"] == 8 and prim["n_tested"] == 4        # cargas 1 y 10 con datos; m fijo
     assert res["official"] is False and res["oe2_official"] is False and any("contrato de tiempo" in b for b in res["official_blocked_by"])
     assert [f for f in res["families"] if f.startswith("secondary")] == []
 

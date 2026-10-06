@@ -162,7 +162,7 @@ def test_the_indicator_is_only_contrasted_under_isolated_conditions_and_always_a
     assert busy["comparisons"]["c10|swarm_vs_decision_table"][TTFC]["status"] == "not_applicable_non_isolated_condition"            # con concurrencia no es este indicador
     fam = o2.analyze(_obs(True), [])["families"]["primary:swarm_vs_decision_table"]
     h = fam["pending_metric_validation"]["hypotheses"][f"{TTFC}@c1"]
-    assert h["confirmatory"] is False and h["p_holm"] is None and h["result"]["isolated_condition_only"] is True and fam["m"] == 0           # fuera de Holm
+    assert h["confirmatory"] is False and h["p_holm"] is None and h["result"]["isolated_condition_only"] is True and fam["m"] == 8 and fam["n_tested"] == 0           # fuera de Holm
     assert f"{TTFC}@c1" not in fam["hypotheses"] and not any("t_conv" in k.lower() for k in fam["pending_metric_validation"]["hypotheses"])
     busy_h = o2.analyze(_obs(False), [])["families"]["primary:swarm_vs_decision_table"]["pending_metric_validation"]["hypotheses"]
     assert f"{TTFC}@c10" in busy_h and busy_h[f"{TTFC}@c10"]["result"]["status"].startswith("not_testable")            # sin observaciones aisladas no se calcula nada
@@ -298,18 +298,18 @@ def test_runs_without_declared_persistence_or_role_fail_closed():
     for r in recs:
         r.pop("persist_policy")
     res = o2.analyze([], recs)
-    assert res["families"]["primary:swarm_vs_decision_table"]["m"] == 0 and len(res["http_runs_excluded_from_contrast"]) == len(recs)
+    assert res["families"]["primary:swarm_vs_decision_table"]["n_tested"] == 0 and len(res["http_runs_excluded_from_contrast"]) == len(recs)
     recs2 = _runs(with_on=False)
     for r in recs2:
         r.pop("comparison_role")
-    assert o2.analyze([], recs2)["families"]["primary:swarm_vs_decision_table"]["m"] == 0
+    assert o2.analyze([], recs2)["families"]["primary:swarm_vs_decision_table"]["n_tested"] == 0
 
 
 def test_analyze_records_passes_the_persistence_fields_through_so_on_runs_stay_apart():
     recs = [{**r, "p95_ms": r["latency_p95_ms"], "throughput_http": r["throughput_rps"]} for r in _runs()]
     res = hc.analyze_records("oe2", recs)
     assert res["n_http_runs_proposal_cost"] == 10 and res["proposal_persistence_cost"]["u10"]["n_runs_on"] == 5
-    assert res["families"]["primary:swarm_vs_decision_table"]["m"] == 4
+    assert res["families"]["primary:swarm_vs_decision_table"]["m"] == 8 and res["families"]["primary:swarm_vs_decision_table"]["n_tested"] == 4
 
 
 def test_l_resp_and_t_conv_definitions_are_not_redefined_and_the_spec_declares_off_is_not_the_approved_l_resp():
