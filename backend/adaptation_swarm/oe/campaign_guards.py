@@ -12,6 +12,8 @@ compatibles). Ningún guard decide cuestiones metodológicas: los marcados `froz
     B11  esquema de corrida/análisis HTTP sin integrar (campos requeridos, `inprocess_obs`)            (técnico)
     B12  provenance incompleta (solo con provenance)                                                    (técnico)
     B13  alcance del comparador pendiente de validación (OE2 dice «sistemas convencionales»)           (metodológico, congelado)
+    P6   hardware objetivo sin aprobación metodológica (`oe2.hardware_target_validation`)             (metodológico, congelado). `meets_target(hw)` es solo COMPATIBILIDAD TÉCNICA con el criterio operativo del código;
+         NO resuelve P6. Se resuelve SOLO con su estado de aprobación explícito.
     PEND decisiones metodológicas de D.5 sin resolver (hoy: estadístico de latencia y H1/L_resp literal; las demás tienen decisión INTERNA F.2.3, no aprobada por el asesor)   (metodológico, congelado)
     DEF  definiciones PENDING DE LAS DEPENDENCIAS DEL OBJETIVO (`definitions.blocked_for(experiment)`)  (definición; dependency-aware: las PENDING de OE1/OE5 que OE2 no necesita no bloquean)
 """
@@ -129,6 +131,11 @@ def evaluate(prov: Mapping | None = None, experiment: str | None = None) -> list
         out.append(Blocker("B13", "methodological", True, f"alcance del comparador pendiente de validación: solo {scope.get('implemented_conventional_systems')} implementado(s) como convencional independiente "
                            "(LMS real y LLM monolítico no implementados) y OE2 habla de «sistemas convencionales»; OE2 solo puede concluir sobre ese comparador", frozen=True))
 
+    hw_val = spec.get("hardware_target_validation", {})
+    if hw_val.get("status") != campaign_spec.APPROVED_STATUS:
+        out.append(Blocker("P6", "methodological", True, f"hardware objetivo (P6) sin aprobación metodológica (estado {hw_val.get('status')}): cumplir el criterio operativo del código (`meets_target`) es solo compatibilidad técnica, "
+                           "no aprobación del requisito; se resuelve con su aprobación explícita, no con el hardware medido", frozen=True))
+
     pending = pending_methodological_decisions()
     if pending:
         out.append(Blocker("PEND", "methodological", True, f"decisiones metodológicas de D.5 sin cerrar: {', '.join(pending)}. Se resuelven con una decisión explícita (`status = DECIDED` y `chosen` entre sus opciones); "
@@ -164,6 +171,21 @@ def evaluate(prov: Mapping | None = None, experiment: str | None = None) -> list
         if gaps:
             out.append(Blocker("B12", "technical", True, f"provenance incompleta: faltan {gaps}"))
     return sorted(out, key=lambda b: (b.id == "DEF", b.id))
+
+
+def methodological_blockers(experiment: str = "oe2") -> list[Blocker]:
+    """Bloqueos METODOLÓGICOS críticos (B1, B5, B13, P6, PEND): la fuente única de autorización metodológica que usan la campaña HTTP y el runner in-process. Las definiciones (DEF) y los técnicos quedan fuera."""
+    return [b for b in evaluate(None, experiment) if b.critical and b.kind == "methodological"]
+
+
+def hardware_state(hw: Mapping) -> dict:
+    """SEPARA la compatibilidad TÉCNICA del hardware con el criterio operativo del código de su aprobación METODOLÓGICA (P6). `environment_class` solo es OFFICIAL_TARGET si ambas se cumplen."""
+    from adaptation_swarm.analysis.baseline_bruteforce import meets_target
+    from adaptation_swarm.oe import campaign_spec
+    status = campaign_spec.SPEC["oe2"].get("hardware_target_validation", {}).get("status")
+    technical, approved = bool(meets_target(dict(hw))), status == campaign_spec.APPROVED_STATUS
+    return {"technically_compatible": technical, "methodological_status": status, "methodologically_approved": approved,
+            "environment_class": "OFFICIAL_TARGET" if technical and approved else ("TECHNICALLY_COMPATIBLE_P6_PENDING" if technical else "PILOT")}
 
 
 def critical_reasons(prov: Mapping | None = None) -> list[str]:

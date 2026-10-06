@@ -255,7 +255,7 @@ def provenance(args: argparse.Namespace, runs: list[dict]) -> dict:
     hw = hardware_profile()
     timeout = float(getattr(args, "client_timeout", CLIENT_TIMEOUT_S))
     prov = {"schema": SCHEMA, "campaign_id": args.campaign_id, "experiment": args.experiment, "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "campaign_spec": campaign_spec.identity(),
-            "code": _infra.code_version(), "environment": _infra.environment(), "hardware": hw, "environment_class": "OFFICIAL_TARGET" if meets_target(hw) else "PILOT", "official": bool(args.official), "oe2_official": False,
+            "code": _infra.code_version(), "environment": _infra.environment(), "hardware": hw, "hardware_state": campaign_guards.hardware_state(hw), "environment_class": campaign_guards.hardware_state(hw)["environment_class"], "official": bool(args.official), "oe2_official": False,
             "official_refusals": [], "definition_version": {"requirements": oe_defs.REQUIREMENTS_VERSION, "f1": oe_defs.f1_selection_record(None)},
             "design": {"runs_per_cell": args.runs, "users": args.users, "particles": args.particles, "systems": args.systems, "warmup_s": args.warmup, "window_s": args.window, "base_seed": args.base_seed,
                        "order": args.order, "n_planned_runs": len(runs), "seed_rule": "derive_seed(base_seed, 'http-campaign-run', run_index); distinta por corrida, compartida entre celdas (bloqueado)"},

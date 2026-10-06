@@ -59,7 +59,7 @@ def test_validity_requires_all_conditions_and_lists_reasons():
     full = oe2_systems(1)
     ok = runner.validity("oe2", hw=hw_ok, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
     assert not ok["reasons"] and ok["blocked_definitions"] == ["common_time_indicator_oe2", "statistical_unit_performance"]          # todo medido, pero hay definiciones PENDING
-    assert ok["status"] == "EXPLORATORY" and ok["official_execution"] == "BLOCKED_DEFINITION" and ok["environment_class"] == "OFFICIAL_TARGET"
+    assert ok["status"] == "EXPLORATORY" and ok["official_execution"] == "BLOCKED_DEFINITION" and ok["environment_class"] == "TECHNICALLY_COMPATIBLE_P6_PENDING" and ok["hardware_state"]["technically_compatible"] is True and ok["hardware_state"]["methodologically_approved"] is False
     assert runner.validity("oe3", hw=hw_ok, n_profiles=100, k=10, batches=1, warmup=10, conditions=[])["blocked_definitions"] == ["statistical_unit_performance"]
     bad = runner.validity("oe2", hw=hw_bad, n_profiles=100, k=10, batches=5, warmup=10, conditions=full)
     assert bad["status"] == "EXPLORATORY" and bad["reasons"] == ["no se cumple: hardware_cercano_al_objetivo"]

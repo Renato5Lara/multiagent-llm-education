@@ -65,6 +65,8 @@ SPEC: dict = {
         "comparator_scope_validation": {"status": "PENDING_METHODOLOGICAL_VALIDATION", "implemented_conventional_systems": ["decision_table"], "oe2_text_requires": "sistemas convencionales (plural)",
                                         "note": "no se implementa un LMS/LLM para satisfacer el plural; alcance = decision_table como baseline convencional operacional (decisión B13-A provisional, no aprobada por el asesor: la validación metodológica sigue PENDING)",
                                         "decision": "B13-A (provisional)"},
+        "hardware_target_validation": {"status": "PENDING_EXTERNAL_ANSWER", "advisor_approved": False, "technical_criterion_in_code": "baseline_bruteforce.TARGET_HARDWARE / meets_target (criterio OPERATIVO del código)",
+                                       "note": "P6: que el hardware cumpla el criterio operativo del código NO es aprobación metodológica del requisito de hardware; esa respuesta es externa y sigue pendiente. Se resuelve solo con status == ADVISOR_APPROVED"},
         "measurement": {"regions": time_contract.MEASUREMENT_REGIONS, "baseline_quality_in_request": False},
         "client_timeout": {"seconds": 30.0, "status": "PROVISIONAL_TECHNICAL", "same_for_all_systems": True, "recorded_in": "provenance.client_timeout_s y cada registro de corrida",
                            "note": "constante de campaña provisional (≫ 2 s del umbral de L_resp); no es un valor metodológico aprobado"},

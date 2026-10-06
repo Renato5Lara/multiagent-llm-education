@@ -413,6 +413,7 @@ def _green(monkeypatch):
     monkeypatch.setitem(time_contract.TTFC_CONTRACT, "status", time_contract.APPROVED_STATUS)                  # B1 se resuelve con la aprobación/validación del indicador común (NO con equivalencia con T_conv)
     monkeypatch.setattr(time_contract, "VALIDATION_STATUS", "VALIDATED")
     monkeypatch.setitem(campaign_spec.SPEC["oe2"]["comparator_scope_validation"], "status", "VALIDATED")
+    monkeypatch.setitem(campaign_spec.SPEC["oe2"]["hardware_target_validation"], "status", campaign_spec.APPROVED_STATUS)       # P6 se resuelve SOLO con su aprobación explícita (no con meets_target)
     monkeypatch.setitem(campaign_spec.SPEC["oe2"]["persist_policy"], "status", campaign_spec.APPROVED_STATUS)     # B5 se resuelve con la aprobación de B5-C (L_resp intacto, sin persistencia en el baseline)
     for k, d in campaign_spec.SPEC["oe2"]["methodological_decisions"].items():                                   # PEND: cada decisión de D.5 resuelta de forma EXPLÍCITA (solo para probar que el guard sigue al estado)
         monkeypatch.setitem(campaign_spec.SPEC["oe2"]["methodological_decisions"], k, {**d, "status": "DECIDED", "chosen": d["options"][0]})
@@ -426,9 +427,9 @@ def _green(monkeypatch):
 
 def test_the_default_state_is_fully_blocked_and_every_frozen_decision_is_represented():
     ids = {b.id for b in guards.evaluate(None) if b.critical}
-    assert {"B1", "B5", "B13", "DEF"} <= ids and not ids & {"B3", "B6", "B7", "B11", "B12"}                    # técnicos cerrados; metodológicos congelados
+    assert {"B1", "B5", "B13", "P6", "DEF"} <= ids and not ids & {"B3", "B6", "B7", "B11", "B12"}                    # técnicos cerrados; metodológicos congelados
     frozen = {b.id for b in guards.evaluate(None) if b.frozen}
-    assert frozen == {"B1", "B5", "B13", "PEND"} and all(b.kind == "methodological" for b in guards.evaluate(None) if b.frozen)
+    assert frozen == {"B1", "B5", "B13", "P6", "PEND"} and all(b.kind == "methodological" for b in guards.evaluate(None) if b.frozen)
     assert {b.id: b.critical for b in guards.evaluate(None) if b.id in ("B6", "B7")} == {"B6": False, "B7": False}     # provisionales: avisos
 
 
@@ -445,6 +446,7 @@ def test_with_every_state_resolved_nothing_blocks_proving_the_guards_are_state_d
     (lambda m: m.setattr(time_contract, "VALIDATION_STATUS", "PENDING_METHODOLOGICAL_VALIDATION"), "B1"),
     (lambda m: m.setitem(time_contract.TTFC_CONTRACT, "status", "FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED"), "B1"),
     (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["comparator_scope_validation"], "status", "PENDING_METHODOLOGICAL_VALIDATION"), "B13"),
+    (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["hardware_target_validation"], "status", "PENDING_EXTERNAL_ANSWER"), "P6"),
     (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["persist_policy"], "status", "FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED"), "B5"),
     (lambda m: m.setitem(defs.DEFINITIONS, "latency_l_resp", {**defs.DEFINITIONS["latency_l_resp"], "definition": "L_resp = petición HTTP → último byte, sin persistencia síncrona"}), "B5"),      # L_resp reformulada para que OFF parezca literal
     (lambda m: m.setitem(campaign_spec.SPEC["oe2"]["persist_policy"], "artificial_persistence_in_baseline", True), "B5"),
@@ -499,7 +501,7 @@ def test_the_dry_run_shows_the_dynamic_state_and_still_refuses_official(capsys, 
     text = capsys.readouterr().out
     d = json.loads(text[text.index("{"):])
     assert not out.exists() and d["official"] is False and d["oe2_official"] is False
-    assert d["frozen_methodological_decisions_pending"] == ["B1", "B13", "B5", "PEND"] and d["provenance_gaps"] == []
+    assert d["frozen_methodological_decisions_pending"] == ["B1", "B13", "B5", "P6", "PEND"] and d["provenance_gaps"] == []
     assert d["client_timeout"] == {"seconds": 30.0, "status": "PROVISIONAL_TECHNICAL"} and d["generator_policy"]["id"] == "generator-saturation-v1"
     assert d["persistence_status"]["status"] == "INCOMPATIBLE_WITH_APPROVED_L_RESP_DEFINITION" and d["server"]["uvicorn_workers"] == 1 and d["server"]["baseline_quality_in_request"] is False
     assert d["library"]["version"].startswith("lib-v") and d["dataset"]["n_profiles"] == 100 and d["software"]["locust"] != "unavailable"

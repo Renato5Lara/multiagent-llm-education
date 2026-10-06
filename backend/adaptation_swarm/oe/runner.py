@@ -39,7 +39,7 @@ from adaptation_swarm.fitness.fitness import FitnessWeights
 from adaptation_swarm.multimodal.library import LibraryStore
 from adaptation_swarm.oe import analysis as oe_analysis
 from adaptation_swarm.oe import definitions as oe_defs
-from adaptation_swarm.oe import campaign_spec, time_contract
+from adaptation_swarm.oe import campaign_guards, campaign_spec, time_contract
 from adaptation_swarm.oe import export as oe_export
 from adaptation_swarm.oe.conditions import Condition, oe2_systems, oe3_full_factorial, oe3_one_factor_at_a_time, oe4_grid
 from adaptation_swarm.profiles.generator import read_dataset
@@ -232,8 +232,9 @@ def validity(experiment: str, *, hw: dict, n_profiles: int, k: int, batches: int
     blocked = oe_defs.blocked_for(experiment)
     official_execution = ("PENDING_HARDWARE" if not conds["hardware_cercano_al_objetivo"] else
                           ("BLOCKED_DEFINITION" if blocked else ("READY" if not reasons else "NOT_READY")))
-    return {"conditions": conds, "status": "OFFICIAL_CANDIDATE" if not reasons and not blocked else "EXPLORATORY", "reasons": reasons, "blocked_definitions": blocked,
-            "official_execution": official_execution, "environment_class": "OFFICIAL_TARGET" if conds["hardware_cercano_al_objetivo"] else "PILOT",
+    hs = campaign_guards.hardware_state(hw)                                                    # compatibilidad TÉCNICA del hardware ≠ aprobación metodológica (P6)
+    return {"experiment": experiment, "conditions": conds, "status": "OFFICIAL_CANDIDATE" if not reasons and not blocked else "EXPLORATORY", "reasons": reasons, "blocked_definitions": blocked,
+            "official_execution": official_execution, "environment_class": hs["environment_class"], "hardware_state": hs,
             "target_hardware": TARGET_HARDWARE, "pending_decisions": PENDING_DECISIONS}
 
 
@@ -296,6 +297,8 @@ def official_gate(validity_: dict) -> list[str]:
         reasons.append(f"hardware: no cercano al objetivo {validity_['target_hardware']}")
     reasons += [r for r in validity_["reasons"] if "hardware" not in r]
     reasons += [f"definición bloqueada: {b}" for b in validity_["blocked_definitions"]]
+    if validity_.get("experiment") == "oe2":                                                    # MISMA fuente metodológica que la campaña HTTP (B1, B5, B13, P6, PEND); el runner no mantiene una lista propia
+        reasons += [f"bloqueo: {b}" for b in campaign_guards.methodological_blockers("oe2")]
     return reasons
 
 
