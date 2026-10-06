@@ -222,3 +222,13 @@ def test_export_sus_analysis_with_ten_responses_contrasts_against_75(repo, tmp_p
     a = res["analysis"]
     assert res["n_responses"] == 10 and a["n"] == 10 and a["mean"] == pytest.approx(86.25) and a["test"] and a["test_p"] is not None
     assert a["exceeds_threshold"] is True and res["responses_by_role"] == {"docente_programacion": 10}
+
+
+def test_sus_known_hand_computed_case_and_several_evaluators_TEST_VECTORS():
+    """Vectores TEST (no son respuestas de evaluadores). Caso calculado a mano: impares 4,5,4,5,4 → (r−1) = 3+4+3+4+3 = 17; pares 2,1,2,1,2 → (5−r) = 3+4+3+4+3 = 17; (17+17)×2,5 = 85."""
+    assert sus_score([4, 2, 5, 1, 4, 2, 5, 1, 4, 2]) == 85.0
+    scores = [sus_score(v) for v in ([5, 1, 5, 1, 5, 1, 5, 1, 5, 1], [3] * 10, [4, 2, 5, 1, 4, 2, 5, 1, 4, 2])]
+    assert scores == [100.0, 50.0, 85.0] and all(0.0 <= x <= 100.0 for x in scores) and sum(scores) / 3 == 78.33333333333333
+    for bad in ([1, 2, 3, 4, 5, 1, 2, 3, 4], [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1], [0] + [3] * 9, [3] * 9 + [6], ["3"] * 10, [None] * 10):
+        with pytest.raises(ValueError):
+            sus_score(bad)

@@ -117,6 +117,8 @@ def factorial_anova(rows: Sequence[Mapping], factors: Sequence[str], response: s
     rng = np.random.default_rng(PERM_SEED)
     terms: dict[str, dict] = {}
     for term, cols in spans.items():
+        if not cols:                                              # factor con UN solo nivel (p. ej. N fijo en OE4): sin columnas ⇒ gl = 0, no hay efecto que estimar; se omite en vez de dividir por cero
+            continue
         keep = [c for c in range(p) if c not in set(cols)]
         rss_red, fit_red, res_red = _rss(x[:, keep], y)
         df = len(cols)
@@ -134,7 +136,7 @@ def factorial_anova(rows: Sequence[Mapping], factors: Sequence[str], response: s
         entry["significant"] = bool((entry.get("p_permutation", entry["p_value"])) < alpha)
         terms[":".join(term)] = entry
     inter = [t for t, v in terms.items() if ":" in t and v["significant"]]
-    return {**base, "status": "ok", "terms": terms, "ms_residual": mse,
+    return {**base, "status": "ok", "single_level_factors": [f for f in factors if len(levels[f]) == 1], "terms": terms, "ms_residual": mse,
             "diagnostics": {"shapiro_residuals_p": shapiro_p, "residuals_normal": None if shapiro_p is None else bool(shapiro_p >= alpha),
                             "levene_p": None if levene is None else float(levene.pvalue), "homoscedastic": None if levene is None else bool(levene.pvalue >= alpha),
                             "residual_min": float(res.min()), "residual_max": float(res.max()), "residual_sd": float(res.std(ddof=p))},

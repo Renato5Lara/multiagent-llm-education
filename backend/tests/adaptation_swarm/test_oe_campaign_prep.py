@@ -154,3 +154,11 @@ def test_campaign_spec_is_hashed_internal_and_never_claims_advisor_approval():
     blockers = " | ".join(campaign_spec.open_blockers())
     assert "F1 v3" not in blockers and "LMS" in blockers and "t_conv_baselines" not in blockers and "common_time_indicator_oe2" in blockers       # F1 v3 es dependencia de OE5, no de OE2
     assert "contrato de tiempo oe2-time-contract-v2 sin validar" in blockers and "decisión del asesor" not in blockers          # GAP tecnico concreto, no una consulta al asesor
+
+
+def test_factorial_anova_skips_a_single_level_factor_instead_of_dividing_by_zero():
+    """Regresión N4: OE4 con N fijo (un solo nivel) producía df = 0 y ZeroDivisionError al final de la campaña."""
+    from adaptation_swarm.oe.factorial import factorial_anova
+    rows = [{"load": load, "swarm_N": 20, "y": 10.0 * load + (i % 3) * 0.1 + 0.01 * i} for load in (1, 5, 25) for i in range(6)]
+    res = factorial_anova(rows, ("load", "swarm_N"), "y")
+    assert res["status"] == "ok" and res["single_level_factors"] == ["swarm_N"] and set(res["terms"]) == {"load"} and res["terms"]["load"]["significant"] is True

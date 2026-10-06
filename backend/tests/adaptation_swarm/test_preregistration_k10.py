@@ -63,7 +63,10 @@ def test_the_preregistration_is_marked_not_executed_and_holds_no_results(prereg)
     assert prereg["master_seed"] == 26092601 and prereg["k"] == 10 and prereg["replica_indices"] == list(range(10)) and prereg["batch_seeds"] == rp.derive_batch_seeds(26092601, 10)
     assert not {"f1", "f1_adapt", "ci95", "results", "criterion", "replicas"} & set(prereg)
     assert "424242" in prereg["master_seed_note"]
-    assert not list((Path(__file__).resolve().parents[2] / "experiments").glob("replicas*")) and not list((Path(__file__).resolve().parents[2] / "experiments").rglob("replica_00.json"))
+    exp = Path(__file__).resolve().parents[2] / "experiments"
+    assert not list(exp.glob("replicas*"))
+    official = [p for p in exp.rglob("replica_00.json") if json.loads((p.parent / "plan.json").read_text(encoding="utf-8")).get("status") == "OFICIAL"]       # una ejecución PROVISIONAL declarada (plan.status = PROVISIONAL, p. ej. N5) no es la corrida oficial; sí lo es cualquier réplica de un plan OFICIAL
+    assert not official
 
 
 def test_the_preregistered_library_is_lib_v10_with_a_manifest_hash_taken_from_disk(prereg):
