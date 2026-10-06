@@ -59,14 +59,14 @@ SERVER_POLICIES = ("cold_per_run", "reuse")
 
 def raw_filename(run_id: str) -> str:
     """Nombre FÍSICO del CSV crudo de una corrida. El `run_id` lógico (p. ej. `swarm|u10|N20`) contiene caracteres inválidos en Windows (`|`): aquí se codifica de forma INYECTIVA (cada carácter no seguro →
-    `%XX`, y `%` → `%25`), de modo que dos `run_id` distintos nunca colisionan y el original se recupera con `run_id_from_filename`. El `run_id` lógico NO cambia en ningún registro."""
-    return "".join(c if c in _FILENAME_SAFE else (f"%{ord(c):02X}" if ord(c) < 256 else f"%u{ord(c):04X}") for c in run_id) + ".csv"
+    sus bytes UTF-8 en `%XX`, y `%` → `%25`; cubre todo Unicode, también fuera del plano básico), de modo que dos `run_id` distintos nunca colisionan y el original se recupera con `run_id_from_filename`. El `run_id` lógico NO cambia en ningún registro."""
+    return "".join(c if c in _FILENAME_SAFE else "".join(f"%{b:02X}" for b in c.encode("utf-8", "surrogatepass")) for c in run_id) + ".csv"
 
 
 def run_id_from_filename(name: str) -> str:
     import re
     stem = name[:-4] if name.endswith(".csv") else name
-    return re.sub(r"%u([0-9A-F]{4})|%([0-9A-F]{2})", lambda m: chr(int(m.group(1) or m.group(2), 16)), stem)
+    return re.sub(r"(?:%[0-9A-F]{2})+", lambda m: bytes.fromhex(m.group(0).replace("%", "")).decode("utf-8", "surrogatepass"), stem)
 
 
 def default_server_policy(experiment: str) -> str:

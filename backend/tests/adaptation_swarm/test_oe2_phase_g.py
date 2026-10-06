@@ -381,6 +381,17 @@ def test_raw_filenames_are_windows_safe_injective_and_the_logical_run_id_is_reco
     assert len(list(tmp_path.iterdir())) == len(ids)
 
 
+def test_raw_filename_is_reversible_and_injective_for_full_unicode_including_astral_characters(tmp_path):
+    ids = ["abc", "|", "%", "_", ":", "*", "?", "é", "😀", "run|😀|é|%|abc", "a|b", "a_b", "a%b", "a%7Cb", "a😀b", "a%u1F600b", "a%F0%9F%98%80b", "%u1F600", "u1F600"]
+    names = [hc.raw_filename(i) for i in ids]
+    assert len(set(names)) == len(ids)                                                                      # inyectiva (también `a😀b` vs `a%u1F600b` vs `a%F0%9F%98%80b`)
+    for i, n in zip(ids, names):
+        assert hc.run_id_from_filename(n) == i and not (set(n) & _FORBIDDEN) and n.isascii() and n.endswith(".csv")
+        (tmp_path / n).write_text(i, encoding="utf-8")
+        assert hc.run_id_from_filename((tmp_path / n).name) == i and (tmp_path / n).read_text(encoding="utf-8") == i          # se escribe y se recupera en este sistema de archivos
+    assert hc.raw_filename("😀") == "%F0%9F%98%80.csv" and hc.raw_filename("é") == "%C3%A9.csv"
+
+
 def test_the_locust_runner_writes_the_raw_log_under_the_safe_name_and_the_record_keeps_the_logical_run_id(monkeypatch, tmp_path):
     seen = {}
 
