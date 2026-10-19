@@ -24,3 +24,10 @@ Tras añadir la réplica N3-R (OE3), los cinco notebooks se **reejecutaron** en 
 - OE3 en `2c2ae3e`: manifiesto 1559/1559; cadena N3-R coincide; efectos que replican 21 de 21; 131 cifras (128 + 3 con diferencia explicada); sin discrepancias.
 - OE1: 16 desde datos y 2 no reproducibles; OE2: 240 coinciden; OE4: 491 (481 + 10); OE5: «Sin discrepancias». 0 discrepancias en los cinco.
 - El índice transversal `reproducibilidad_tesis` **no** se volvió a ejecutar en Colab; su última ejecución sigue siendo `439eb4c`.
+
+## Tercera ronda en Colab: commit `acaa19c` (2026-10-19)
+Tras añadir N3-S y la eficiencia del OE3, y recalcular la Tabla 6 «usuarios» y la Tabla 27 por perfil, se ejecutaron en Colab **los cinco notebooks por objetivo y el notebook transversal** sobre `acaa19c23e18410a2a0360a03f0397b8f47f866a` (transcripción manual de pantalla). Todos terminaron sin error.
+- OE1: 18 desde datos + 2 no reproducibles, 10 pruebas rápidas pasan, «Sin discrepancias». OE2: 240 coinciden. OE4: «Sin discrepancias» (491 en la ronda anterior; no leí el diccionario completo esta vez). OE5: 84 desde datos + 2 no reproducibles (+ derivados), «Sin discrepancias».
+- OE3: ejecutó las celdas de N3-R, N3-S y eficiencia (6 de 6 contrastes con el mismo veredicto) y terminó con «Sin discrepancias»; las aserciones de cadena de N3-R y N3-S (`coincide`) pasaron, pues de otro modo la celda habría fallado.
+- Notebook transversal: terminó sin error, tabla de trazabilidad con 5 elementos no reproducibles listados. Su texto introductorio estaba desactualizado («unas 870 cifras») y se corrigió **después** de esta ejecución (solo markdown; el código no cambió).
+- **Incidencia de Colab:** al abrir el sexto notebook Colab respondió «Demasiadas sesiones» (cuatro sesiones inactivas de las rondas anteriores); se finalizaron esas sesiones desde «Gestionar sesiones» y se ejecutó con normalidad.
