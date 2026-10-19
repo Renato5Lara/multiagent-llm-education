@@ -1,0 +1,1 @@
+Intento 1: 60/60 corridas ejecutadas; falló al escribir el análisis (ZeroDivisionError en factorial_anova con N de un solo nivel). Los registros de corrida no se escribieron, por eso se repitió la campaña completa tras corregir el error. Estos crudos NO se usan como resultado.

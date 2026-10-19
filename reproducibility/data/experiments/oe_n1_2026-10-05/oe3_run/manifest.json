@@ -1,0 +1,18 @@
+{
+  "environment_class": "TECHNICALLY_COMPATIBLE_P6_PENDING",
+  "experiment": "oe3",
+  "files": {
+    "analysis.json": "17bd546f797148b3c53c651468d1b947d7f0f78e93a69f6307d48e845726da0b",
+    "batches.json": "34ad5758cf24a2d44270a71a254fe282f899997a2a1b9d40c54b2ba061d4d88e",
+    "environment.json": "c1a08050b35da1c14c607e14a3bd2210386a9c7ebbc11cfe81e3798e1795dbee",
+    "logs/run.log": "3bf7e220e22926227ea220c8b615fff65049c06973c1e2272542095bf36c197d",
+    "observations.jsonl": "2e82c78418c5ae9eb9a26b3c91379d0478371d93aef3aa4087b1dac9848afba3",
+    "provenance.json": "add57160b236b4e4d3746baaa6be0b4b5c12055189b71364cf39865e4ba8b49f",
+    "raw_observations.csv": "f40db633de6cc3e41ba68f607fb9678d17ab79a63689ef3960b26bd56f687a3b",
+    "statistical_input.csv": "9a7c9a1dfef475f9a70f3a96b548f78c85eebf9ccae95a9391c569aaac2ef95a",
+    "summary.json": "b7b85b9e9db8366c182c4030b8f8f1c4451fe5e85b6412674b83e9a1637d5da9"
+  },
+  "official_execution": "BLOCKED_DEFINITION",
+  "schema": "oe-run-v2",
+  "validity": "EXPLORATORY"
+}

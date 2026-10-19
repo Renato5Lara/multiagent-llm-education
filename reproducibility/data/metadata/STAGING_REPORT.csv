@@ -6,9 +6,9 @@ backend/experiments/oe_n1_2026-10-05/oe1_report/oe1_report.md,2316,copiado,
 backend/experiments/oe_n1_2026-10-05/oe3_run/analysis.json,91562,excluido,observaciones N1 de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe3_run/batches.json,8479,excluido,observaciones N1 de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe3_run/checksums.txt,751,excluido,observaciones N1 de gran tamaño
-backend/experiments/oe_n1_2026-10-05/oe3_run/environment.json,1077,excluido,observaciones N1 de gran tamaño
+backend/experiments/oe_n1_2026-10-05/oe3_run/environment.json,1077,copiado,
 backend/experiments/oe_n1_2026-10-05/oe3_run/logs/run.log,2034,excluido,observaciones N1 de gran tamaño
-backend/experiments/oe_n1_2026-10-05/oe3_run/manifest.json,1042,excluido,observaciones N1 de gran tamaño
+backend/experiments/oe_n1_2026-10-05/oe3_run/manifest.json,1042,copiado,
 backend/experiments/oe_n1_2026-10-05/oe3_run/observations.jsonl,6691917,excluido,observaciones de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe3_run/provenance.json,21760,excluido,observaciones N1 de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe3_run/raw_observations.csv,2609968,copiado,
@@ -18,9 +18,9 @@ backend/experiments/oe_n1_2026-10-05/oe3_run.log,2175,copiado,
 backend/experiments/oe_n1_2026-10-05/oe4_run/analysis.json,124942,excluido,observaciones N1 de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe4_run/batches.json,12907,excluido,observaciones N1 de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe4_run/checksums.txt,751,excluido,observaciones N1 de gran tamaño
-backend/experiments/oe_n1_2026-10-05/oe4_run/environment.json,1077,excluido,observaciones N1 de gran tamaño
+backend/experiments/oe_n1_2026-10-05/oe4_run/environment.json,1077,copiado,
 backend/experiments/oe_n1_2026-10-05/oe4_run/logs/run.log,2886,excluido,observaciones N1 de gran tamaño
-backend/experiments/oe_n1_2026-10-05/oe4_run/manifest.json,1042,excluido,observaciones N1 de gran tamaño
+backend/experiments/oe_n1_2026-10-05/oe4_run/manifest.json,1042,copiado,
 backend/experiments/oe_n1_2026-10-05/oe4_run/observations.jsonl,3398507,excluido,observaciones de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe4_run/provenance.json,22921,excluido,observaciones N1 de gran tamaño
 backend/experiments/oe_n1_2026-10-05/oe4_run/raw_observations.csv,1322958,copiado,
@@ -487,7 +487,7 @@ backend/experiments/oe_n4_2026-10-06/failed_attempt1_zerodiv/campaign.tmp-raw/n4
 backend/experiments/oe_n4_2026-10-06/failed_attempt1_zerodiv/campaign.tmp-raw/n4-oe4-swarm%7Cu50%7CN20-r08.csv.cpu.csv,1437,excluido,ídem (campaña N9 abortada: se listan sus hashes en data/metadata/N9_tmp_raw_hashes.csv)
 backend/experiments/oe_n4_2026-10-06/failed_attempt1_zerodiv/campaign.tmp-raw/n4-oe4-swarm%7Cu50%7CN20-r09.csv,103312,excluido,ídem (campaña N9 abortada: se listan sus hashes en data/metadata/N9_tmp_raw_hashes.csv)
 backend/experiments/oe_n4_2026-10-06/failed_attempt1_zerodiv/campaign.tmp-raw/n4-oe4-swarm%7Cu50%7CN20-r09.csv.cpu.csv,1436,excluido,ídem (campaña N9 abortada: se listan sus hashes en data/metadata/N9_tmp_raw_hashes.csv)
-backend/experiments/oe_n4_2026-10-06/failed_attempt1_zerodiv/README.txt,282,excluido,intento fallido archivado localmente; no es entrada de ninguna tabla
+backend/experiments/oe_n4_2026-10-06/failed_attempt1_zerodiv/README.txt,282,copiado,
 backend/experiments/oe_n4_2026-10-06/inprocess/analysis.json,111282,excluido,observaciones in-process de gran tamaño (regenerables); no son entrada de las tablas HTTP del informe
 backend/experiments/oe_n4_2026-10-06/inprocess/batches.json,12113,excluido,observaciones in-process de gran tamaño (regenerables); no son entrada de las tablas HTTP del informe
 backend/experiments/oe_n4_2026-10-06/inprocess/checksums.txt,751,excluido,observaciones in-process de gran tamaño (regenerables); no son entrada de las tablas HTTP del informe
