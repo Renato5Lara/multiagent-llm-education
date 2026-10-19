@@ -60,3 +60,6 @@ Las del README (§4), más: el triaje automático de la fase anterior es heurís
 
 ## 6. Estado
 Documentalmente **no cerrado**: falta la decisión de privacidad, la revisión visual completa del DOCX en Word y la verificación de las afirmaciones restantes.
+
+## Actualización: comparación objetiva de las 267 páginas (original frente a copia corregida)
+Ambos DOCX se exportaron a PDF con Word (apertura en solo lectura; 267 páginas cada uno) y se compararon página a página: el **texto difiere solo en las páginas 105, 109 y 111** y únicamente en los dígitos corregidos (50→49; 1,51→1,50; 76,5→76,4), y los **bloques de maquetación (posición de cada bloque de texto) son idénticos en las 267 páginas**: no hay saltos de página ni desbordes introducidos por el cambio. Inspección visual de imagen: páginas 105, 109 (impresa 108) y 111. El resto del documento no se revisó visualmente; su equivalencia con el original se apoya en la comparación automática de texto y maquetación, no en una lectura página a página. `1. Formato del informe de tesis - Ingeniería - Nuevo.docx` (= D2.9.3) sigue sin sustituir a la referencia (ver `VERSION_CANONICA.md`).
