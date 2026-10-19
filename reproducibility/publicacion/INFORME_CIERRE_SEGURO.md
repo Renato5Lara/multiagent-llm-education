@@ -1,3 +1,5 @@
+> **Informe histórico (2026-10-19, antes de la decisión de publicar).** Fue sustituido por `PUBLICACION_Y_LICENCIA.md` y el README; sus cifras (328 comprobaciones, 214 archivos) corresponden a una versión anterior del paquete.
+
 # Informe de cierre seguro previo a la publicación
 
 Fecha: 2026-10-19. **No se publicó nada**: sin `git push`, sin cambio de visibilidad, sin subir datos a ningún servicio. El repositorio remoto es público y sin licencia.

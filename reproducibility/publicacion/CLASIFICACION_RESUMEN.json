@@ -1,18 +1,18 @@
 {
  "A": {
   "archivos": 30,
-  "bytes": 158872
+  "bytes": 188406
  },
  "B": {
   "archivos": 37,
-  "bytes": 283247
+  "bytes": 881685
  },
  "C": {
-  "archivos": 104,
-  "bytes": 9071523
+  "archivos": 1431,
+  "bytes": 246811320
  },
  "D": {
   "archivos": 71,
-  "bytes": 7008184
+  "bytes": 6840016
  }
 }
