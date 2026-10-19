@@ -1,0 +1,120 @@
+{
+  "nota": "exploratorio, no oficial; no sustituye al ANOVA publicado",
+  "n_corridas": 240,
+  "n_lotes": 5,
+  "t_conv_efectos_con_signo_consistente_en_los_5_lotes": [
+    {
+      "factor": "f_dispatch",
+      "contraste": "sequential − batch",
+      "razon_media_geometrica": 1.4738
+    },
+    {
+      "factor": "f_broadcast_gbest",
+      "contraste": "True − False",
+      "razon_media_geometrica": 1.195
+    },
+    {
+      "factor": "f_heuristic_seed",
+      "contraste": "True − False",
+      "razon_media_geometrica": 0.9418
+    },
+    {
+      "factor": "f_mechanism",
+      "contraste": "pso − cognitive",
+      "razon_media_geometrica": 1.2182
+    },
+    {
+      "factor": "f_mechanism",
+      "contraste": "social − cognitive",
+      "razon_media_geometrica": 1.2175
+    }
+  ],
+  "t_conv_efectos_sin_consistencia": [
+    {
+      "factor": "f_replicas",
+      "contraste": "2 − 1",
+      "lotes_con_mismo_signo": 4,
+      "razon_media_geometrica": 0.9954
+    },
+    {
+      "factor": "f_mechanism",
+      "contraste": "social − pso",
+      "lotes_con_mismo_signo": 3,
+      "razon_media_geometrica": 0.9994
+    }
+  ],
+  "significativos_holm": [
+    {
+      "respuesta": "t_conv_ms",
+      "factor": "f_dispatch",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "t_conv_ms",
+      "factor": "f_broadcast_gbest",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "t_conv_ms",
+      "factor": "f_heuristic_seed",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "t_conv_ms",
+      "factor": "f_replicas",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.002127
+    },
+    {
+      "respuesta": "t_conv_ms",
+      "factor": "f_mechanism",
+      "prueba": "Friedman",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "gap_vs_optimum",
+      "factor": "f_heuristic_seed",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "gap_vs_optimum",
+      "factor": "f_mechanism",
+      "prueba": "Friedman",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "k_stop",
+      "factor": "f_heuristic_seed",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "k_stop",
+      "factor": "f_mechanism",
+      "prueba": "Friedman",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "n_messages",
+      "factor": "f_broadcast_gbest",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "n_messages",
+      "factor": "f_heuristic_seed",
+      "prueba": "Wilcoxon pareado",
+      "p_holm_por_respuesta": 0.0
+    },
+    {
+      "respuesta": "n_messages",
+      "factor": "f_mechanism",
+      "prueba": "Friedman",
+      "p_holm_por_respuesta": 0.0
+    }
+  ]
+}

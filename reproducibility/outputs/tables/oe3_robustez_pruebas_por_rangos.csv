@@ -1,0 +1,21 @@
+respuesta,factor,prueba,bloques,estadistico,p,mediana_diferencia,prop_pares_b_mayor,p_holm_por_respuesta,alfa,significativo_holm
+t_conv_ms,f_dispatch,Wilcoxon pareado,120,0.0,1.9719517121524354e-21,0.47298948143073627,1.0,7.887806848609741e-21,0.05,True
+t_conv_ms,f_broadcast_gbest,Wilcoxon pareado,120,0.0,1.9719517121524354e-21,0.17425298253703358,1.0,7.887806848609741e-21,0.05,True
+t_conv_ms,f_heuristic_seed,Wilcoxon pareado,120,153.0,8.562677483596534e-20,-0.07071507984351522,0.09166666666666666,1.7125354967193068e-19,0.05,True
+t_conv_ms,f_replicas,Wilcoxon pareado,120,1868.0,3.9414266329992085e-06,-0.012286787717204817,0.30833333333333335,3.9414266329992085e-06,0.05,True
+t_conv_ms,f_mechanism,Friedman,80,120.625,6.406400129028257e-27,,,3.203200064514128e-26,0.05,True
+gap_vs_optimum,f_dispatch,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+gap_vs_optimum,f_broadcast_gbest,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+gap_vs_optimum,f_heuristic_seed,Wilcoxon pareado,120,0.0,1.8769174685113623e-21,-0.0061725033734502995,0.0,7.507669874045449e-21,0.05,True
+gap_vs_optimum,f_replicas,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+gap_vs_optimum,f_mechanism,Friedman,80,134.4000000000001,6.537486666326554e-30,,,3.268743333163277e-29,0.05,True
+k_stop,f_dispatch,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+k_stop,f_broadcast_gbest,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+k_stop,f_heuristic_seed,Wilcoxon pareado,120,0.0,7.287719545860707e-15,-0.5199999999999998,0.0,2.9150878183442826e-14,0.05,True
+k_stop,f_replicas,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+k_stop,f_mechanism,Friedman,80,126.40000000000009,3.5693467784777764e-28,,,1.7846733892388883e-27,0.05,True
+n_messages,f_dispatch,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+n_messages,f_broadcast_gbest,Wilcoxon pareado,120,0.0,1.2837496811771341e-21,11.04,1.0,5.1349987247085365e-21,0.05,True
+n_messages,f_heuristic_seed,Wilcoxon pareado,120,0.0,1.924627722575416e-21,-1.1199999999999974,0.0,5.773883167726248e-21,0.05,True
+n_messages,f_replicas,Wilcoxon pareado,120,0.0,1.0,0.0,0.0,1.0,0.05,False
+n_messages,f_mechanism,Friedman,80,122.43037974683553,2.5976511618332744e-27,,,1.2988255809166371e-26,0.05,True

@@ -4,7 +4,7 @@ Versión del informe: D2.9.7 (sha256 `a6bb2934de7fd512…`). Los valores sin red
 
 ## 1. Fuente y fórmulas
 - Fuente: `oe_n3_2026-10-06/runs_oe3.csv` (sha256 `ca97879bfcefd0df…`; 240 corridas = 48 condiciones × 5 lotes), que a su vez se **recalcula** desde las 24 000 observaciones de `run/raw_observations.csv` con `adaptation_swarm.oe.factorial.aggregate_runs` (diferencia máxima 1,4·10⁻¹⁴; ver `outputs/tables/cadena_peticiones_a_corridas.csv`, fila N3).
-- T_conv: **media geométrica** por nivel, `exp(media(ln t_conv_ms))`. `k_stop`, brecha y mensajes: media aritmética por nivel (n = 120 por nivel, o 80 por nivel del mecanismo). η² parcial y p: ANOVA factorial 2×2×2×2×3 tipo III con inferencia por permutación (Freedman–Lane, 1 000 permutaciones; determinista: dos ejecuciones dan resultados idénticos), `adaptation_swarm.oe.factorial.factorial_anova(..., "t_conv_ms", log=True)`.
+- T_conv: **media geométrica** por nivel, `exp(media(ln t_conv_ms))`. `k_stop`, brecha y mensajes: media aritmética por nivel (n = 120 por nivel, o 80 por nivel del mecanismo). η² parcial y p: ANOVA factorial 2×2×2×2×3 tipo III con inferencia por permutación (Freedman–Lane, 999 permutaciones (p = (exceso + 1)/1 000; `n_perm = 999` en `factorial_anova`); determinista: dos ejecuciones dan resultados idénticos), `adaptation_swarm.oe.factorial.factorial_anova(..., "t_conv_ms", log=True)`.
 
 ## 2. Cadena de redondeo observada
 1. Análisis del proyecto (`anova_oe3.md`, sha256 `45b80010bcb83f31…`): escribe **con más decimales que el informe**: T_conv a 2 decimales (`pso = 76.45`), `k_stop` a 3 (`True = 1.505`), η² a 3 (`0.495`).

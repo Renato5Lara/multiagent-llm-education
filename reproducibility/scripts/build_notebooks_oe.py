@@ -37,16 +37,16 @@ SPEC = {
         conclusion="Los datos publicados permiten reproducir que, en estas condiciones, la propuesta tiene mayor latencia P95 y menor throughput que `decision_table` y `rules`, y que no se distingue de `bruteforce` en P95. **No** permiten afirmar superioridad frente a sistemas convencionales externos ni validan un benchmark comparativo.",
         tabla_principal=8, extra="oe2"),
     "oe3": dict(
-        archivo="objetivo_3_configuracion_interna", titulo="Objetivo específico 3: efecto de la configuración interna de la arquitectura", tablas="13, 14, 15 y 40", camp="N3 (240 corridas) y K10 histórico (v2)",
+        archivo="objetivo_3_configuracion_interna", titulo="Objetivo específico 3: efecto de la configuración interna de la arquitectura", tablas="13, 14, 15 y 40", camp="N3 (240 corridas), N3-R (réplica independiente, 240 corridas) y K10 histórico (v2)",
         pregunta="¿Qué efecto tienen los roles de los agentes, los protocolos de comunicación y el mecanismo de enjambre sobre el tiempo de convergencia y la eficiencia de la adaptación?",
         hipotesis="El OE3 **no tiene hipótesis estadística formulada** (pendiente). La meta 3 es un modelo de 5 agentes con PSO discreto y una tasa de convergencia CR ≥ 98 %.",
-        datos=["oe_n3_2026-10-06/run/raw_observations.csv (24 000 ciclos en proceso) → runs_oe3.csv (240 corridas = 48 condiciones × 5 lotes)", "backend/official_runs/k10_official_2026-09-27/replica_00..09.json (resultado histórico con la especificación v2; Tabla 15)"],
-        scripts=["oe_n8_2026-10-13/scripts/oe3_reanalysis.py (Tabla 14)", "adaptation_swarm.oe.factorial (ANOVA tipo III con permutación Freedman–Lane; Tabla 13)", "scripts/reproduce_results.py (agregación de runs_oe3.csv, Tablas 13, 15 y 40)"],
-        limites=["Se ejecutó un **ANOVA factorial** sobre la corrida como unidad; las pruebas planeadas en el plan de análisis (p. ej. Friedman con Holm) **no se ejecutaron**.",
-                 "Mediciones **en proceso**, sin HTTP, en hardware local; campaña **no oficial**.",
+        datos=["oe_n3_2026-10-06/run/raw_observations.csv (24 000 ciclos en proceso) → runs_oe3.csv (240 corridas = 48 condiciones × 5 lotes)", "oe_n3r_2026-10-19/run/raw_observations.csv (24 000 ciclos en proceso de la réplica N3-R, semillas nuevas) → runs_oe3.csv (240 corridas)", "backend/official_runs/k10_official_2026-09-27/replica_00..09.json (resultado histórico con la especificación v2; Tabla 15)"],
+        scripts=["oe_n8_2026-10-13/scripts/oe3_reanalysis.py (Tabla 14)", "adaptation_swarm.oe.factorial (ANOVA tipo III con permutación Freedman–Lane; Tabla 13)", "scripts/reproduce_results.py (agregación de runs_oe3.csv, Tablas 13, 15 y 40)", "scripts/oe3_robustez.py (consistencia entre lotes y pruebas por rangos con Holm; exploratorio)", "scripts/oe3_replicacion.py (cadena y comparación de efectos N3 frente a N3-R; exploratorio)"],
+        limites=["Se ejecutó un **ANOVA factorial** sobre la corrida como unidad; las pruebas por rangos planeadas (Friedman/Wilcoxon con Holm) se ejecutaron después **solo como análisis de robustez exploratorio** (`oe3_robustez.py`), no como parte del análisis publicado en la tesis.",
+                 "Mediciones **en proceso**, sin HTTP, en hardware local; campañas **no oficiales** (N3 y la réplica N3-R, ambas exploratorias). N3-R se ejecutó el 2026-10-19 con código del commit `265a4f4` y semillas nuevas (`batch_seed` 26101901); su T_conv absoluto es ≈ 17 % menor que el de N3 (régimen del equipo, no atribuido). No hay un índice de eficiencia aprobado ni hipótesis estadística formulada.",
                  "En la Tabla 13, tres cifras (η² de la heurística, `k_stop` con heurística y T_conv de PSO) difieren una unidad del último decimal por **doble redondeo del informe**: ver `auditoria/AUDITORIA_REDONDEO_TABLA13.md` (valores correctos 0,49 · 1,50 · 76,4).",
                  "Las celdas «sin efecto» de la Tabla 13 no se verifican numéricamente. La Tabla 15 es un resultado **histórico (v2)**, no de N3."],
-        conclusion="Los registros de N3 reproducen los efectos marginales y el ANOVA factorial publicados (efecto grande de despacho, difusión de g_best, mecanismo y heurística sobre T_conv; el mecanismo y la heurística también sobre la brecha). **No** permiten inferir causalidad fuera del modelo en proceso ni estimar el desempeño en HTTP o en hardware objetivo.",
+        conclusion="Los registros de N3 reproducen los efectos marginales y el ANOVA factorial publicados (efecto grande de despacho, difusión de g_best, mecanismo y heurística sobre T_conv; el mecanismo y la heurística también sobre la brecha). Una réplica independiente (N3-R, semillas nuevas) reproduce el sentido y la magnitud aproximada de los 21 efectos principales evaluados. **No** permiten inferir causalidad fuera del modelo en proceso, ni estimar el desempeño en HTTP o en hardware objetivo, ni declarar el OE3 cumplido de forma confirmatoria: faltan un índice de eficiencia aprobado y la ejecución oficial.",
         tabla_principal=14, extra="oe3"),
     "oe4": dict(
         archivo="objetivo_4_carga_y_tamano_del_enjambre", titulo="Objetivo específico 4: desempeño computacional bajo distintas condiciones", tablas="17 a 25", camp="N4, N8, N8b (directorio oe_n10), N11 y la prueba de carga exploratoria de antecedente",
@@ -189,6 +189,17 @@ display(nr_df)"""))
         cells.append(md("**Auditoría del redondeo de la Tabla 13.** Valor sin redondear, valor intermedio y valor correcto de las tres cifras que difieren una unidad:"))
         cells.append(code("""x = comp[comp.estado == "DIFERENCIA_EXPLICABLE"]
 display(x[["id", "publicado", "valor_sin_redondear", "valor_intermedio", "detalle"]])"""))
+        cells.append(md("**Robustez y réplica (exploratorio, no oficial).** (1) Consistencia de cada efecto principal entre los 5 lotes de N3 y pruebas por rangos con Holm; (2) cadena y efectos de la réplica independiente **N3-R** (semillas nuevas), comparados con N3 con un criterio fijado antes de mirar los resultados."))
+        cells.append(code("""run_script("oe3_robustez.py", "oe_n3_2026-10-06")
+tb = pd.read_csv(ROOT / "outputs/tables/oe3_robustez_efectos_por_lote.csv")
+display(tb[tb.respuesta == "t_conv_ms"][["factor", "contraste", "razon_media_geometrica", "ic95_lotes_inf", "ic95_lotes_sup", "lotes_con_mismo_signo", "loo_min", "loo_max"]].round(4))
+rep_rc = run_script("oe3_replicacion.py")
+rep = json.loads((ROOT / "outputs/oe3_replicacion.json").read_text(encoding="utf-8"))
+print("Cadena N3-R (observaciones → corridas):", rep["cadena_N3R"])
+print("Efectos que replican:", rep["efectos_que_replican"], "de", rep["efectos_evaluados"], "| no replican:", rep["no_replican"])
+assert rep["cadena_N3R"]["coincide"], "la cadena de N3-R no coincide"
+rp = pd.read_csv(ROOT / "outputs/tables/oe3_replicacion_efectos.csv")
+display(rp[rp.respuesta == "t_conv_ms"][["factor", "contraste", "razon_N3", "razon_N3R", "lotes_mismo_signo_N3", "lotes_mismo_signo_N3R", "replica"]].round(4))"""))
     cells.append(md("## G. Verificación\nResumen de estados por cifra, **prueba negativa** del comparador (una cifra alterada a propósito debe detectarse) y pruebas unitarias rápidas."))
     cells.append(code(f"""cnt = ver["conteo_estado_cifra"]
 print("Cifras por estado:", cnt)

@@ -1,0 +1,2 @@
+campana,filas_runs_csv,recalculadas_desde_peticiones_y_coinciden,no_coinciden,sin_registro_crudo,diferencia_maxima,estado,nota
+N3,240,240,0,0,1.4210854715202004e-14,VERIFICADO_DESDE_DATOS,runs_oe3.csv recalculado con factorial.aggregate_runs desde las 24 000 observaciones (raw_observations.csv)

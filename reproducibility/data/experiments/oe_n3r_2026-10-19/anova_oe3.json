@@ -1,0 +1,2267 @@
+{
+  "anova": {
+    "F": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 192,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.35874633240773635,
+        "residual_max": 0.002275362386663593,
+        "residual_min": -0.0018950646675727767,
+        "residual_sd": 0.0010988593238567261,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 2.968751939488342e-07
+      },
+      "factors": [
+        "f_heuristic_seed",
+        "f_replicas",
+        "f_dispatch",
+        "f_broadcast_gbest",
+        "f_mechanism"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "f_heuristic_seed:f_mechanism"
+      ],
+      "levels": {
+        "f_broadcast_gbest": [
+          "False",
+          "True"
+        ],
+        "f_dispatch": [
+          "batch",
+          "sequential"
+        ],
+        "f_heuristic_seed": [
+          "False",
+          "True"
+        ],
+        "f_mechanism": [
+          "cognitive",
+          "pso",
+          "social"
+        ],
+        "f_replicas": [
+          "1",
+          "2"
+        ]
+      },
+      "log_transform": false,
+      "marginal_means": {
+        "f_broadcast_gbest": {
+          "False": {
+            "ci": [
+              0.4724301797624549,
+              0.472825888546971
+            ],
+            "mean": 0.47262803415471294,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              0.4724301797624549,
+              0.472825888546971
+            ],
+            "mean": 0.47262803415471294,
+            "n": 120
+          }
+        },
+        "f_dispatch": {
+          "batch": {
+            "ci": [
+              0.4724301797624549,
+              0.472825888546971
+            ],
+            "mean": 0.47262803415471294,
+            "n": 120
+          },
+          "sequential": {
+            "ci": [
+              0.4724301797624549,
+              0.472825888546971
+            ],
+            "mean": 0.47262803415471294,
+            "n": 120
+          }
+        },
+        "f_heuristic_seed": {
+          "False": {
+            "ci": [
+              0.46685432931493803,
+              0.46725003809945415
+            ],
+            "mean": 0.4670521837071961,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              0.4780060302099716,
+              0.47840173899448774
+            ],
+            "mean": 0.4782038846022297,
+            "n": 120
+          }
+        },
+        "f_mechanism": {
+          "cognitive": {
+            "ci": [
+              0.4606389811902224,
+              0.4611236234946231
+            ],
+            "mean": 0.46088130234242275,
+            "n": 80
+          },
+          "pso": {
+            "ci": [
+              0.4784378689567208,
+              0.4789225112611215
+            ],
+            "mean": 0.47868019010892116,
+            "n": 80
+          },
+          "social": {
+            "ci": [
+              0.4780802888605944,
+              0.4785649311649951
+            ],
+            "mean": 0.47832261001279475,
+            "n": 80
+          }
+        },
+        "f_replicas": {
+          "1": {
+            "ci": [
+              0.4724301797624548,
+              0.47282588854697094
+            ],
+            "mean": 0.4726280341547129,
+            "n": 120
+          },
+          "2": {
+            "ci": [
+              0.4724301797624548,
+              0.47282588854697094
+            ],
+            "mean": 0.4726280341547129,
+            "n": 120
+          }
+        }
+      },
+      "ms_residual": 1.2074918136268615e-06,
+      "n_params": 48,
+      "n_runs": 240,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "F",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "f_broadcast_gbest": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_dispatch": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_dispatch:f_broadcast_gbest": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed": {
+          "F": 6179.4422843543525,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 5.7067953468901404e-148,
+          "partial_eta_sq": 0.9698655357090069,
+          "significant": true,
+          "ss": 0.007461625971137553
+        },
+        "f_heuristic_seed:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_dispatch": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_mechanism": {
+          "F": 1389.8814827736992,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 6.13137675463678e-115,
+          "partial_eta_sq": 0.9353918861544754,
+          "significant": true,
+          "ss": 0.003356541024721611
+        },
+        "f_heuristic_seed:f_replicas": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_mechanism": {
+          "F": 1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 0.9999999999999888,
+          "partial_eta_sq": 1.1691355277323781e-16,
+          "significant": false,
+          "ss": 2.710505431213761e-20
+        },
+        "f_mechanism": {
+          "F": 6858.597030003819,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.7537796118089626e-179,
+          "partial_eta_sq": 0.986196180801586,
+          "significant": true,
+          "ss": 0.016563399533390234
+        },
+        "f_replicas": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_broadcast_gbest": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_dispatch": {
+          "F": -2.2447402132461663e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_dispatch:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_mechanism": {
+          "F": -1.1223701066230832e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323784e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        }
+      },
+      "unit": "run"
+    },
+    "gap_vs_optimum": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 192,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.3587463324077123,
+        "residual_max": 0.0018950646675714722,
+        "residual_min": -0.0022753623866635098,
+        "residual_sd": 0.001098859323856729,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 2.968751939467351e-07
+      },
+      "factors": [
+        "f_heuristic_seed",
+        "f_replicas",
+        "f_dispatch",
+        "f_broadcast_gbest",
+        "f_mechanism"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "f_heuristic_seed:f_mechanism"
+      ],
+      "levels": {
+        "f_broadcast_gbest": [
+          "False",
+          "True"
+        ],
+        "f_dispatch": [
+          "batch",
+          "sequential"
+        ],
+        "f_heuristic_seed": [
+          "False",
+          "True"
+        ],
+        "f_mechanism": [
+          "cognitive",
+          "pso",
+          "social"
+        ],
+        "f_replicas": [
+          "1",
+          "2"
+        ]
+      },
+      "log_transform": false,
+      "marginal_means": {
+        "f_broadcast_gbest": {
+          "False": {
+            "ci": [
+              0.020328123958493677,
+              0.020723832743009818
+            ],
+            "mean": 0.020525978350751747,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              0.020328123958493677,
+              0.020723832743009818
+            ],
+            "mean": 0.020525978350751747,
+            "n": 120
+          }
+        },
+        "f_dispatch": {
+          "batch": {
+            "ci": [
+              0.020328123958493677,
+              0.020723832743009818
+            ],
+            "mean": 0.020525978350751747,
+            "n": 120
+          },
+          "sequential": {
+            "ci": [
+              0.020328123958493677,
+              0.020723832743009818
+            ],
+            "mean": 0.020525978350751747,
+            "n": 120
+          }
+        },
+        "f_heuristic_seed": {
+          "False": {
+            "ci": [
+              0.025903974406010437,
+              0.026299683190526578
+            ],
+            "mean": 0.026101828798268507,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              0.014752273510976922,
+              0.015147982295493063
+            ],
+            "mean": 0.014950127903234993,
+            "n": 120
+          }
+        },
+        "f_mechanism": {
+          "cognitive": {
+            "ci": [
+              0.03203038901084155,
+              0.0325150313152423
+            ],
+            "mean": 0.03227271016304192,
+            "n": 80
+          },
+          "pso": {
+            "ci": [
+              0.014231501244343093,
+              0.014716143548743838
+            ],
+            "mean": 0.014473822396543466,
+            "n": 80
+          },
+          "social": {
+            "ci": [
+              0.014589081340469488,
+              0.015073723644870233
+            ],
+            "mean": 0.01483140249266986,
+            "n": 80
+          }
+        },
+        "f_replicas": {
+          "1": {
+            "ci": [
+              0.020328123958493677,
+              0.020723832743009818
+            ],
+            "mean": 0.020525978350751747,
+            "n": 120
+          },
+          "2": {
+            "ci": [
+              0.020328123958493677,
+              0.020723832743009818
+            ],
+            "mean": 0.020525978350751747,
+            "n": 120
+          }
+        }
+      },
+      "ms_residual": 1.2074918136268676e-06,
+      "n_params": 48,
+      "n_runs": 240,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "gap_vs_optimum",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch": {
+          "F": -2.244740213246155e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323725e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed": {
+          "F": 6179.442284354262,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 5.7067953468978624e-148,
+          "partial_eta_sq": 0.9698655357090064,
+          "significant": true,
+          "ss": 0.007461625971137481
+        },
+        "f_heuristic_seed:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_mechanism": {
+          "F": 1389.8814827736994,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 6.131376754636654e-115,
+          "partial_eta_sq": 0.9353918861544754,
+          "significant": true,
+          "ss": 0.0033565410247216286
+        },
+        "f_heuristic_seed:f_replicas": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest": {
+          "F": -2.244740213246155e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323725e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_mechanism": {
+          "F": 6858.597030003784,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.7537796118102914e-179,
+          "partial_eta_sq": 0.9861961808015858,
+          "significant": true,
+          "ss": 0.016563399533390234
+        },
+        "f_replicas": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": -1.1223701066230775e-14,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": -1.1691355277323725e-16,
+          "significant": false,
+          "ss": -2.710505431213761e-20
+        },
+        "f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        }
+      },
+      "unit": "run"
+    },
+    "k_stop": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 192,
+      "diagnostics": {
+        "homoscedastic": false,
+        "levene_p": 0.00014437530669287612,
+        "residual_max": 0.17200000000000193,
+        "residual_min": -0.17800000000000304,
+        "residual_sd": 0.07429670248402684,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 7.697869758012598e-12
+      },
+      "factors": [
+        "f_heuristic_seed",
+        "f_replicas",
+        "f_dispatch",
+        "f_broadcast_gbest",
+        "f_mechanism"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "f_heuristic_seed:f_mechanism"
+      ],
+      "levels": {
+        "f_broadcast_gbest": [
+          "False",
+          "True"
+        ],
+        "f_dispatch": [
+          "batch",
+          "sequential"
+        ],
+        "f_heuristic_seed": [
+          "False",
+          "True"
+        ],
+        "f_mechanism": [
+          "cognitive",
+          "pso",
+          "social"
+        ],
+        "f_replicas": [
+          "1",
+          "2"
+        ]
+      },
+      "log_transform": false,
+      "marginal_means": {
+        "f_broadcast_gbest": {
+          "False": {
+            "ci": [
+              1.7066225561383392,
+              1.7333774438616607
+            ],
+            "mean": 1.72,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              1.7066225561383392,
+              1.7333774438616607
+            ],
+            "mean": 1.72,
+            "n": 120
+          }
+        },
+        "f_dispatch": {
+          "batch": {
+            "ci": [
+              1.7066225561383392,
+              1.7333774438616607
+            ],
+            "mean": 1.72,
+            "n": 120
+          },
+          "sequential": {
+            "ci": [
+              1.7066225561383392,
+              1.7333774438616607
+            ],
+            "mean": 1.72,
+            "n": 120
+          }
+        },
+        "f_heuristic_seed": {
+          "False": {
+            "ci": [
+              1.8986225561383392,
+              1.9253774438616607
+            ],
+            "mean": 1.912,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              1.5146225561383393,
+              1.5413774438616608
+            ],
+            "mean": 1.528,
+            "n": 120
+          }
+        },
+        "f_mechanism": {
+          "cognitive": {
+            "ci": [
+              0.9836160442381021,
+              1.0163839557618979
+            ],
+            "mean": 1.0,
+            "n": 80
+          },
+          "pso": {
+            "ci": [
+              2.077616044238102,
+              2.1103839557618977
+            ],
+            "mean": 2.094,
+            "n": 80
+          },
+          "social": {
+            "ci": [
+              2.049616044238102,
+              2.0823839557618977
+            ],
+            "mean": 2.066,
+            "n": 80
+          }
+        },
+        "f_replicas": {
+          "1": {
+            "ci": [
+              1.706622556138339,
+              1.7333774438616605
+            ],
+            "mean": 1.7199999999999998,
+            "n": 120
+          },
+          "2": {
+            "ci": [
+              1.706622556138339,
+              1.7333774438616605
+            ],
+            "mean": 1.7199999999999998,
+            "n": 120
+          }
+        }
+      },
+      "ms_residual": 0.00552,
+      "n_params": 48,
+      "n_runs": 240,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "k_stop",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed": {
+          "F": 1602.7826086956522,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 3.942801578866903e-95,
+          "partial_eta_sq": 0.8930232558139536,
+          "significant": true,
+          "ss": 8.84736
+        },
+        "f_heuristic_seed:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_mechanism": {
+          "F": 404.40579710144925,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 1.455775728495686e-69,
+          "partial_eta_sq": 0.8081556997219649,
+          "significant": true,
+          "ss": 4.464639999999999
+        },
+        "f_heuristic_seed:f_replicas": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_mechanism": {
+          "F": 5637.623188405797,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 3.082053518182348e-171,
+          "partial_eta_sq": 0.9832566604317274,
+          "significant": true,
+          "ss": 62.23936
+        },
+        "f_replicas": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        }
+      },
+      "unit": "run"
+    },
+    "n_messages": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 192,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9999990396432679,
+        "residual_max": 1.0439999999999756,
+        "residual_min": -0.7700000000000813,
+        "residual_sd": 0.4739760894109882,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.4104080046460285e-07
+      },
+      "factors": [
+        "f_heuristic_seed",
+        "f_replicas",
+        "f_dispatch",
+        "f_broadcast_gbest",
+        "f_mechanism"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "f_heuristic_seed:f_broadcast_gbest",
+        "f_heuristic_seed:f_mechanism",
+        "f_broadcast_gbest:f_mechanism",
+        "f_heuristic_seed:f_broadcast_gbest:f_mechanism"
+      ],
+      "levels": {
+        "f_broadcast_gbest": [
+          "False",
+          "True"
+        ],
+        "f_dispatch": [
+          "batch",
+          "sequential"
+        ],
+        "f_heuristic_seed": [
+          "False",
+          "True"
+        ],
+        "f_mechanism": [
+          "cognitive",
+          "pso",
+          "social"
+        ],
+        "f_replicas": [
+          "1",
+          "2"
+        ]
+      },
+      "log_transform": false,
+      "marginal_means": {
+        "f_broadcast_gbest": {
+          "False": {
+            "ci": [
+              47.31132521387166,
+              47.482008119461675
+            ],
+            "mean": 47.39666666666667,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              58.191325213871664,
+              58.36200811946168
+            ],
+            "mean": 58.27666666666667,
+            "n": 120
+          }
+        },
+        "f_dispatch": {
+          "batch": {
+            "ci": [
+              52.75132521387166,
+              52.92200811946167
+            ],
+            "mean": 52.836666666666666,
+            "n": 120
+          },
+          "sequential": {
+            "ci": [
+              52.75132521387166,
+              52.92200811946167
+            ],
+            "mean": 52.836666666666666,
+            "n": 120
+          }
+        },
+        "f_heuristic_seed": {
+          "False": {
+            "ci": [
+              53.46799188053832,
+              53.638674786128334
+            ],
+            "mean": 53.55333333333333,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              52.03465854720499,
+              52.205341452795004
+            ],
+            "mean": 52.12,
+            "n": 120
+          }
+        },
+        "f_mechanism": {
+          "cognitive": {
+            "ci": [
+              49.89147849337221,
+              50.10052150662779
+            ],
+            "mean": 49.996,
+            "n": 80
+          },
+          "pso": {
+            "ci": [
+              54.16947849337221,
+              54.37852150662779
+            ],
+            "mean": 54.274,
+            "n": 80
+          },
+          "social": {
+            "ci": [
+              54.13547849337222,
+              54.3445215066278
+            ],
+            "mean": 54.24000000000001,
+            "n": 80
+          }
+        },
+        "f_replicas": {
+          "1": {
+            "ci": [
+              52.75132521387166,
+              52.92200811946167
+            ],
+            "mean": 52.836666666666666,
+            "n": 120
+          },
+          "2": {
+            "ci": [
+              52.75132521387166,
+              52.92200811946167
+            ],
+            "mean": 52.836666666666666,
+            "n": 120
+          }
+        }
+      },
+      "ms_residual": 0.22465333333333307,
+      "n_params": 48,
+      "n_runs": 240,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "n_messages",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "f_broadcast_gbest": {
+          "F": 31615.217520327653,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 5.193712448769368e-215,
+          "partial_eta_sq": 0.9939636342010334,
+          "significant": true,
+          "ss": 7102.464
+        },
+        "f_broadcast_gbest:f_mechanism": {
+          "F": 554.0924683957508,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 1.788238547328593e-80,
+          "partial_eta_sq": 0.8523286998895687,
+          "significant": true,
+          "ss": 248.95743999999985
+        },
+        "f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed": {
+          "F": 548.6972520624398,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 3.431670633237349e-58,
+          "partial_eta_sq": 0.7407847815482179,
+          "significant": true,
+          "ss": 123.26666666666716
+        },
+        "f_heuristic_seed:f_broadcast_gbest": {
+          "F": 157.52911151997117,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 8.966313052237644e-27,
+          "partial_eta_sq": 0.45068953150979635,
+          "significant": true,
+          "ss": 35.38943999999988
+        },
+        "f_heuristic_seed:f_broadcast_gbest:f_mechanism": {
+          "F": 39.74692860110447,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 3.597138949510121e-15,
+          "partial_eta_sq": 0.29280167890871217,
+          "significant": true,
+          "ss": 17.858560000000224
+        },
+        "f_heuristic_seed:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_mechanism": {
+          "F": 59.793222149682705,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 6.50693774973608e-21,
+          "partial_eta_sq": 0.38379861026453826,
+          "significant": true,
+          "ss": 26.865493333333404
+        },
+        "f_heuristic_seed:f_replicas": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch": {
+          "F": 3.162840832216011e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 0.9999998582858407,
+          "partial_eta_sq": 1.647312933445839e-16,
+          "significant": false,
+          "ss": 7.105427357601002e-15
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_heuristic_seed:f_replicas:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_mechanism": {
+          "F": 2155.2600154311854,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.9186042523332164e-132,
+          "partial_eta_sq": 0.9573572135861823,
+          "significant": true,
+          "ss": 968.3726933333334
+        },
+        "f_replicas": {
+          "F": 3.162840832216011e-14,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 0.9999998582858407,
+          "partial_eta_sq": 1.647312933445839e-16,
+          "significant": false,
+          "ss": 7.105427357601002e-15
+        },
+        "f_replicas:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.0,
+          "df": 1,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        },
+        "f_replicas:f_mechanism": {
+          "F": 0.0,
+          "df": 2,
+          "p_permutation": 1.0,
+          "p_value": 1.0,
+          "partial_eta_sq": 0.0,
+          "significant": false,
+          "ss": 0.0
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 192,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9250028426763846,
+        "residual_max": 0.0858165827729458,
+        "residual_min": -0.052958681865114876,
+        "residual_sd": 0.02109080603387659,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 0.00023036851075577912
+      },
+      "factors": [
+        "f_heuristic_seed",
+        "f_replicas",
+        "f_dispatch",
+        "f_broadcast_gbest",
+        "f_mechanism"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "f_heuristic_seed:f_dispatch",
+        "f_heuristic_seed:f_broadcast_gbest",
+        "f_heuristic_seed:f_mechanism",
+        "f_dispatch:f_broadcast_gbest",
+        "f_dispatch:f_mechanism",
+        "f_broadcast_gbest:f_mechanism",
+        "f_heuristic_seed:f_dispatch:f_mechanism"
+      ],
+      "levels": {
+        "f_broadcast_gbest": [
+          "False",
+          "True"
+        ],
+        "f_dispatch": [
+          "batch",
+          "sequential"
+        ],
+        "f_heuristic_seed": [
+          "False",
+          "True"
+        ],
+        "f_mechanism": [
+          "cognitive",
+          "pso",
+          "social"
+        ],
+        "f_replicas": [
+          "1",
+          "2"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "f_broadcast_gbest": {
+          "False": {
+            "ci": [
+              4.007592985859631,
+              4.015187968255411
+            ],
+            "geometric_ci": [
+              55.014290890804624,
+              55.43371420181089
+            ],
+            "geometric_mean": 55.223604357703344,
+            "mean": 4.011390477057521,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              4.1857201985596815,
+              4.193315180955461
+            ],
+            "geometric_ci": [
+              65.74083032271761,
+              66.2420316701454
+            ],
+            "geometric_mean": 65.99095517007702,
+            "mean": 4.189517689757571,
+            "n": 120
+          }
+        },
+        "f_dispatch": {
+          "batch": {
+            "ci": [
+              3.902721121744405,
+              3.9103161041401857
+            ],
+            "geometric_ci": [
+              49.53706225033384,
+              49.91472773197752
+            ],
+            "geometric_mean": 49.72553644625099,
+            "mean": 3.9065186129422953,
+            "n": 120
+          },
+          "sequential": {
+            "ci": [
+              4.290592062674908,
+              4.298187045070688
+            ],
+            "geometric_ci": [
+              73.00968201344325,
+              73.56630034060434
+            ],
+            "geometric_mean": 73.28746273935934,
+            "mean": 4.294389553872798,
+            "n": 120
+          }
+        },
+        "f_heuristic_seed": {
+          "False": {
+            "ci": [
+              4.126623438718875,
+              4.134218421114655
+            ],
+            "geometric_ci": [
+              61.968329419446974,
+              62.4407696069288
+            ],
+            "geometric_mean": 62.20410099186352,
+            "mean": 4.130420929916765,
+            "n": 120
+          },
+          "True": {
+            "ci": [
+              4.066689745700438,
+              4.074284728096218
+            ],
+            "geometric_ci": [
+              58.36344462824947,
+              58.808401543831614
+            ],
+            "geometric_mean": 58.5855006565556,
+            "mean": 4.070487236898328,
+            "n": 120
+          }
+        },
+        "f_mechanism": {
+          "cognitive": {
+            "ci": [
+              3.964416940527513,
+              3.9737188562650547
+            ],
+            "geometric_ci": [
+              52.68953929679406,
+              53.18193953390825
+            ],
+            "geometric_mean": 52.935166883193865,
+            "mean": 3.969067898396284,
+            "n": 80
+          },
+          "pso": {
+            "ci": [
+              4.1617750846408175,
+              4.171077000378359
+            ],
+            "geometric_ci": [
+              64.18535597766774,
+              64.78518821997746
+            ],
+            "geometric_mean": 64.484574651458,
+            "mean": 4.166426042509588,
+            "n": 80
+          },
+          "social": {
+            "ci": [
+              4.161217351447995,
+              4.1705192671855364
+            ],
+            "geometric_ci": [
+              64.14956765524124,
+              64.74906544447575
+            ],
+            "geometric_mean": 64.44861949137498,
+            "mean": 4.165868309316766,
+            "n": 80
+          }
+        },
+        "f_replicas": {
+          "1": {
+            "ci": [
+              4.098961085234509,
+              4.106556067630289
+            ],
+            "geometric_ci": [
+              60.27763173430935,
+              60.73718221605238
+            ],
+            "geometric_mean": 60.506970690977816,
+            "mean": 4.102758576432399,
+            "n": 120
+          },
+          "2": {
+            "ci": [
+              4.094352099184802,
+              4.101947081580582
+            ],
+            "geometric_ci": [
+              60.00045221946628,
+              60.457889513018095
+            ],
+            "geometric_mean": 60.22873658824012,
+            "mean": 4.098149590382692,
+            "n": 120
+          }
+        }
+      },
+      "ms_residual": 0.0004448220991586051,
+      "n_params": 48,
+      "n_runs": 240,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "t_conv_ms",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "f_broadcast_gbest": {
+          "F": 4279.819365670828,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 3.3081311943881533e-133,
+          "partial_eta_sq": 0.9570644553592792,
+          "significant": true,
+          "ss": 1.9037582342573476
+        },
+        "f_broadcast_gbest:f_mechanism": {
+          "F": 21.87223227113398,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.7703432021343327e-09,
+          "partial_eta_sq": 0.1855588194921318,
+          "significant": true,
+          "ss": 0.019458504544260805
+        },
+        "f_dispatch": {
+          "F": 20292.67886234283,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 1.152036596510696e-196,
+          "partial_eta_sq": 0.9906271413239991,
+          "significant": true,
+          "ss": 9.026632009098792
+        },
+        "f_dispatch:f_broadcast_gbest": {
+          "F": 179.0407310644522,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 2.8056642562170704e-29,
+          "partial_eta_sq": 0.4825365952433714,
+          "significant": true,
+          "ss": 0.0796412738269809
+        },
+        "f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.6979077270847213,
+          "df": 2,
+          "p_permutation": 0.487,
+          "p_value": 0.4988832864350731,
+          "partial_eta_sq": 0.00721740256319155,
+          "significant": false,
+          "ss": 0.0006208895603616732
+        },
+        "f_dispatch:f_mechanism": {
+          "F": 85.70471945630679,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.5054310405974006e-27,
+          "partial_eta_sq": 0.4716702995538626,
+          "significant": true,
+          "ss": 0.07624670643270746
+        },
+        "f_heuristic_seed": {
+          "F": 484.51471709108745,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 2.0971451627478523e-54,
+          "partial_eta_sq": 0.7161924269355567,
+          "significant": true,
+          "ss": 0.2155228535296952
+        },
+        "f_heuristic_seed:f_broadcast_gbest": {
+          "F": 6.088973175686728,
+          "df": 1,
+          "p_permutation": 0.017,
+          "p_value": 0.014478303241593861,
+          "partial_eta_sq": 0.030738577105381668,
+          "significant": true,
+          "ss": 0.002708509829729408
+        },
+        "f_heuristic_seed:f_broadcast_gbest:f_mechanism": {
+          "F": 2.041315721373296,
+          "df": 2,
+          "p_permutation": 0.136,
+          "p_value": 0.13266666355025325,
+          "partial_eta_sq": 0.020820974365282647,
+          "significant": false,
+          "ss": 0.0018160446884534637
+        },
+        "f_heuristic_seed:f_dispatch": {
+          "F": 9.635454052150543,
+          "df": 1,
+          "p_permutation": 0.004,
+          "p_value": 0.0021971008251053257,
+          "partial_eta_sq": 0.047786507077562115,
+          "significant": true,
+          "ss": 0.004286062897823892
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest": {
+          "F": 1.6072417797493734,
+          "df": 1,
+          "p_permutation": 0.219,
+          "p_value": 0.20641524323134133,
+          "partial_eta_sq": 0.008301558169904598,
+          "significant": false,
+          "ss": 0.0007149366623235287
+        },
+        "f_heuristic_seed:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.6328331160187011,
+          "df": 2,
+          "p_permutation": 0.558,
+          "p_value": 0.5321890924722967,
+          "partial_eta_sq": 0.00654884158533273,
+          "significant": false,
+          "ss": 0.0005629963101690394
+        },
+        "f_heuristic_seed:f_dispatch:f_mechanism": {
+          "F": 3.749646803694778,
+          "df": 2,
+          "p_permutation": 0.028,
+          "p_value": 0.02526662171344684,
+          "partial_eta_sq": 0.03759057724859923,
+          "significant": true,
+          "ss": 0.0033358515246457304
+        },
+        "f_heuristic_seed:f_mechanism": {
+          "F": 73.07138904705947,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.5310853041321955e-24,
+          "partial_eta_sq": 0.43219251618451376,
+          "significant": true,
+          "ss": 0.0650075373286962
+        },
+        "f_heuristic_seed:f_replicas": {
+          "F": 0.0680492237187265,
+          "df": 1,
+          "p_permutation": 0.79,
+          "p_value": 0.7944781539912,
+          "partial_eta_sq": 0.0003542974690155962,
+          "significant": false,
+          "ss": 3.026979854067746e-05
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest": {
+          "F": 0.47941297558147294,
+          "df": 1,
+          "p_permutation": 0.488,
+          "p_value": 0.4895248876478674,
+          "partial_eta_sq": 0.002490723387868461,
+          "significant": false,
+          "ss": 0.00021325348616202389
+        },
+        "f_heuristic_seed:f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.06779782902334418,
+          "df": 2,
+          "p_permutation": 0.929,
+          "p_value": 0.9344717338017343,
+          "partial_eta_sq": 0.0007057289805269333,
+          "significant": false,
+          "ss": 6.031594524912032e-05
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch": {
+          "F": 0.22146294077783407,
+          "df": 1,
+          "p_permutation": 0.653,
+          "p_value": 0.6384616516288228,
+          "partial_eta_sq": 0.0011521238959983637,
+          "significant": false,
+          "ss": 9.851161020263399e-05
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.3338954821556998,
+          "df": 1,
+          "p_permutation": 0.556,
+          "p_value": 0.564051293532799,
+          "partial_eta_sq": 0.0017360199631930079,
+          "significant": false,
+          "ss": 0.00014852408927207295
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.3608950931829018,
+          "df": 2,
+          "p_permutation": 0.697,
+          "p_value": 0.6975239508429514,
+          "partial_eta_sq": 0.003745244300957448,
+          "significant": false,
+          "ss": 0.00032106822585131756
+        },
+        "f_heuristic_seed:f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.092745177100343,
+          "df": 2,
+          "p_permutation": 0.923,
+          "p_value": 0.9114665296811694,
+          "partial_eta_sq": 0.0009651631549230096,
+          "significant": false,
+          "ss": 8.251020872922232e-05
+        },
+        "f_heuristic_seed:f_replicas:f_mechanism": {
+          "F": 0.023110549102706924,
+          "df": 2,
+          "p_permutation": 0.981,
+          "p_value": 0.9771571720285279,
+          "partial_eta_sq": 0.0002406769471489786,
+          "significant": false,
+          "ss": 2.0560165929148222e-05
+        },
+        "f_mechanism": {
+          "F": 2328.4499578466152,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.3722957233551454e-135,
+          "partial_eta_sq": 0.9604033897712343,
+          "significant": true,
+          "ss": 2.071491996070194
+        },
+        "f_replicas": {
+          "F": 2.8653368319476953,
+          "df": 1,
+          "p_permutation": 0.116,
+          "p_value": 0.09212873889054725,
+          "partial_eta_sq": 0.014704189459917994,
+          "significant": false,
+          "ss": 0.001274565144383441
+        },
+        "f_replicas:f_broadcast_gbest": {
+          "F": 1.542407261260254,
+          "df": 1,
+          "p_permutation": 0.201,
+          "p_value": 0.21577475466092091,
+          "partial_eta_sq": 0.007969350402768213,
+          "significant": false,
+          "ss": 0.0006860968357112612
+        },
+        "f_replicas:f_broadcast_gbest:f_mechanism": {
+          "F": 0.1982881713164887,
+          "df": 2,
+          "p_permutation": 0.84,
+          "p_value": 0.8203012151879535,
+          "partial_eta_sq": 0.002061244280806365,
+          "significant": false,
+          "ss": 0.00017640592120664322
+        },
+        "f_replicas:f_dispatch": {
+          "F": 0.2621836252898333,
+          "df": 1,
+          "p_permutation": 0.602,
+          "p_value": 0.6092123874901382,
+          "partial_eta_sq": 0.001363677559185623,
+          "significant": false,
+          "ss": 0.00011662507056643678
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest": {
+          "F": 0.44646242916741496,
+          "df": 1,
+          "p_permutation": 0.488,
+          "p_value": 0.5048221389609556,
+          "partial_eta_sq": 0.002319930559034005,
+          "significant": false,
+          "ss": 0.00019859635493769956
+        },
+        "f_replicas:f_dispatch:f_broadcast_gbest:f_mechanism": {
+          "F": 0.11650720830486778,
+          "df": 2,
+          "p_permutation": 0.912,
+          "p_value": 0.8900865552429651,
+          "partial_eta_sq": 0.0012121456728798096,
+          "significant": false,
+          "ss": 0.00010364996193056031
+        },
+        "f_replicas:f_dispatch:f_mechanism": {
+          "F": 0.03230157181568204,
+          "df": 2,
+          "p_permutation": 0.968,
+          "p_value": 0.9682198122596267,
+          "partial_eta_sq": 0.0003363615292665458,
+          "significant": false,
+          "ss": 2.8736905962348236e-05
+        },
+        "f_replicas:f_mechanism": {
+          "F": 1.783102073120722,
+          "df": 2,
+          "p_permutation": 0.17,
+          "p_value": 0.17088838416143493,
+          "partial_eta_sq": 0.01823527823639043,
+          "significant": false,
+          "ss": 0.0015863264143592404
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "factors": [
+    "f_heuristic_seed",
+    "f_replicas",
+    "f_dispatch",
+    "f_broadcast_gbest",
+    "f_mechanism"
+  ],
+  "n_obs": 24000,
+  "n_runs": 240
+}

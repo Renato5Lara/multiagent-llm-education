@@ -1,0 +1,19 @@
+{
+  "nota": "exploratorio, no oficial; N3-R no sustituye a N3",
+  "cadena_N3R": {
+    "observaciones": 24000,
+    "corridas_publicadas": 240,
+    "corridas_recalculadas": 240,
+    "diferencia_maxima": 7.105427357601002e-15,
+    "coincide": true,
+    "solo_ok": true
+  },
+  "nivel_absoluto": {
+    "T_conv_medio_N3": 74.35665322916665,
+    "T_conv_medio_N3R": 62.05047341666666,
+    "nota": "la diferencia del nivel absoluto de T_conv entre campañas refleja el régimen del equipo (mismo hardware, otro momento); no se atribuye una causa"
+  },
+  "efectos_que_replican": 21,
+  "efectos_evaluados": 21,
+  "no_replican": []
+}

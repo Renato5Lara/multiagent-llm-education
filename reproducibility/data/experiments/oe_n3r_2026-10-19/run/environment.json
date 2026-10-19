@@ -1,0 +1,37 @@
+{
+  "code": {
+    "commit": "265a4f46cec5f79f4b1a4e14e1973ed2423dc531",
+    "dirty": null,
+    "ref": "refs/heads/repro/auditoria-integral-2026-10-19"
+  },
+  "dataset": {
+    "file": "profiles-v1.jsonl",
+    "file_sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+    "manifest_file": "manifest-v1.json",
+    "manifest_sha256": "0b96fb159177f337e96b5a9f1c3fb35caf47d466b4ae0a6eb4a2694c024f96b2",
+    "n_profiles": 100,
+    "version": "v1"
+  },
+  "environment_class": "TECHNICALLY_COMPATIBLE_P6_PENDING",
+  "hardware": {
+    "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700K",
+    "numpy": "2.5.3",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.10",
+    "ram_gib": 31.75,
+    "vcpu": 20
+  },
+  "library_version": "lib-v10-5dd83cd4",
+  "official_execution": "BLOCKED_DEFINITION",
+  "redis": "redis://127.0.0.1:56379/0",
+  "software": {
+    "implementation": "CPython",
+    "numpy": "2.5.3",
+    "python": "3.12.10",
+    "scipy": "1.18.1"
+  },
+  "target_hardware": {
+    "ram_gib": 32.0,
+    "vcpu": 8
+  }
+}

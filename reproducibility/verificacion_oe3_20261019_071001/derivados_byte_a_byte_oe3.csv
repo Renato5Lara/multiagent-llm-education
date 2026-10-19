@@ -1,0 +1,5 @@
+archivo,sha256_publicado,sha256_recalculado,estado
+oe_n8_2026-10-13/oe3_reanalysis/oe3_anova.csv,d23cdbeaaa3dde93,d23cdbeaaa3dde93,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe3_reanalysis/oe3_marginales.csv,cdfc349e82b45c3f,cdfc349e82b45c3f,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe3_reanalysis/oe3_medias_por_condicion.csv,fd81b4e13b7e2c24,fd81b4e13b7e2c24,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe3_reanalysis/oe3_reanalysis.json,cde73865e93b32db,cde73865e93b32db,COINCIDE_BYTE_A_BYTE

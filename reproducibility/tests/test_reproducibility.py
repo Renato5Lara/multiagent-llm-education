@@ -342,3 +342,29 @@ def test_conciliacion_tiene_las_columnas_y_estados_pedidos():
     assert (d.estado == "DIFERENCIA_SIN_EXPLICAR").sum() == 0
     exp = d[d.estado == "DIFERENCIA_EXPLICADA"]
     assert len(exp) == 3 and exp.correccion_recomendada.str.startswith("→").all()
+
+
+# ---- OE3: réplica independiente N3-R
+def test_oe3_replica_n3r_cadena_y_efectos():
+    r = run("oe3_replicacion.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    out = json.loads((ROOT / "outputs" / "oe3_replicacion.json").read_text(encoding="utf-8"))
+    assert out["cadena_N3R"]["observaciones"] == 24000 and out["cadena_N3R"]["corridas_recalculadas"] == 240 and out["cadena_N3R"]["coincide"]
+    assert out["efectos_que_replican"] == out["efectos_evaluados"] == 21 and not out["no_replican"]
+
+
+def test_oe3_control_negativo_observacion_alterada_rompe_la_cadena_de_n3r(copia):
+    import pandas as pd
+    rel = "data/experiments/oe_n3r_2026-10-19/run/raw_observations.csv"
+
+    def alterar(b):
+        import io
+        d = pd.read_csv(io.BytesIO(b), low_memory=False)
+        d.loc[0, "t_conv_ms"] = d.loc[0, "t_conv_ms"] + 50.0
+        return d.to_csv(index=False).encode("utf-8")
+
+    with mutado(copia, rel, alterar):
+        r = run("oe3_replicacion.py", copia)
+        assert r.returncode == 0, r.stderr[-800:]
+        out = json.loads((copia / "outputs" / "oe3_replicacion.json").read_text(encoding="utf-8"))
+        assert out["cadena_N3R"]["coincide"] is False

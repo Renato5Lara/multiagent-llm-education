@@ -1,0 +1,483 @@
+destino de Redis: Redis 127.0.0.1:56379
+[1/240] swarm|sequential|bc1|h0|social|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 10.44 s, 9.6 req/s
+[2/240] swarm|sequential|bc1|h1|pso|r2|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.58 s, 10.4 req/s
+[3/240] swarm|batch|bc1|h0|pso|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.30 s, 12.0 req/s
+[4/240] swarm|batch|bc1|h1|social|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.98 s, 14.3 req/s
+[5/240] swarm|batch|bc1|h0|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.68 s, 13.0 req/s
+[6/240] swarm|sequential|bc1|h1|social|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.06 s, 11.0 req/s
+[7/240] swarm|batch|bc0|h0|cognitive|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.17 s, 19.4 req/s
+[8/240] swarm|batch|bc0|h0|social|r2|N20|c1 (lote 0)
+  swarm|batch|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.21 s, 16.1 req/s
+[9/240] swarm|sequential|bc1|h0|social|r2|N20|c1 (lote 0)
+  swarm|sequential|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.95 s, 10.1 req/s
+[10/240] swarm|sequential|bc0|h0|cognitive|r2|N20|c1 (lote 0)
+  swarm|sequential|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.41 s, 13.5 req/s
+[11/240] swarm|sequential|bc1|h1|cognitive|r2|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.92 s, 12.6 req/s
+[12/240] swarm|sequential|bc0|h0|cognitive|r1|N20|c1 (lote 0)
+  swarm|sequential|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.46 s, 13.4 req/s
+[13/240] swarm|batch|bc1|h1|social|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.87 s, 14.6 req/s
+[14/240] swarm|batch|bc0|h1|cognitive|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.00 s, 20.0 req/s
+[15/240] swarm|sequential|bc0|h1|social|r1|N20|c1 (lote 0)
+  swarm|sequential|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.00 s, 12.5 req/s
+[16/240] swarm|sequential|bc0|h0|social|r2|N20|c1 (lote 0)
+  swarm|sequential|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.69 s, 11.5 req/s
+[17/240] swarm|batch|bc0|h1|social|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 5.73 s, 17.5 req/s
+[18/240] swarm|batch|bc1|h1|cognitive|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.75 s, 17.4 req/s
+[19/240] swarm|sequential|bc0|h1|cognitive|r2|N20|c1 (lote 0)
+  swarm|sequential|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.06 s, 14.2 req/s
+[20/240] swarm|batch|bc0|h0|social|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.21 s, 16.1 req/s
+[21/240] swarm|sequential|bc1|h0|pso|r2|N20|c1 (lote 0)
+  swarm|sequential|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 10.01 s, 10.0 req/s
+[22/240] swarm|sequential|bc1|h1|cognitive|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.96 s, 12.6 req/s
+[23/240] swarm|sequential|bc1|h1|pso|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.08 s, 11.0 req/s
+[24/240] swarm|sequential|bc0|h0|social|r1|N20|c1 (lote 0)
+  swarm|sequential|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.50 s, 11.8 req/s
+[25/240] swarm|batch|bc1|h0|cognitive|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.74 s, 17.4 req/s
+[26/240] swarm|batch|bc1|h0|social|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.59 s, 13.2 req/s
+[27/240] swarm|batch|bc0|h1|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.64 s, 17.7 req/s
+[28/240] swarm|sequential|bc0|h1|pso|r1|N20|c1 (lote 0)
+  swarm|sequential|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.03 s, 12.5 req/s
+[29/240] swarm|batch|bc1|h0|cognitive|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.77 s, 17.3 req/s
+[30/240] swarm|batch|bc0|h0|cognitive|r2|N20|c1 (lote 0)
+  swarm|batch|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.01 s, 20.0 req/s
+[31/240] swarm|batch|bc0|h1|pso|r2|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.81 s, 17.2 req/s
+[32/240] swarm|batch|bc0|h1|cognitive|r2|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 4.70 s, 21.3 req/s
+[33/240] swarm|batch|bc0|h1|social|r2|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 5.54 s, 18.1 req/s
+[34/240] swarm|batch|bc0|h0|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.21 s, 16.1 req/s
+[35/240] swarm|sequential|bc1|h0|pso|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.86 s, 10.1 req/s
+[36/240] swarm|sequential|bc0|h1|pso|r2|N20|c1 (lote 0)
+  swarm|sequential|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.08 s, 12.4 req/s
+[37/240] swarm|sequential|bc1|h1|social|r2|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.15 s, 10.9 req/s
+[38/240] swarm|sequential|bc0|h1|social|r2|N20|c1 (lote 0)
+  swarm|sequential|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.07 s, 12.4 req/s
+[39/240] swarm|sequential|bc1|h0|cognitive|r2|N20|c1 (lote 0)
+  swarm|sequential|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 8.21 s, 12.2 req/s
+[40/240] swarm|sequential|bc0|h1|cognitive|r1|N20|c1 (lote 0)
+  swarm|sequential|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.21 s, 13.9 req/s
+[41/240] swarm|batch|bc0|h0|pso|r2|N20|c1 (lote 0)
+  swarm|batch|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 6.16 s, 16.2 req/s
+[42/240] swarm|sequential|bc0|h0|pso|r1|N20|c1 (lote 0)
+  swarm|sequential|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.53 s, 11.7 req/s
+[43/240] swarm|sequential|bc1|h0|cognitive|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 8.27 s, 12.1 req/s
+[44/240] swarm|batch|bc1|h1|pso|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.22 s, 13.8 req/s
+[45/240] swarm|batch|bc1|h1|cognitive|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.59 s, 17.9 req/s
+[46/240] swarm|batch|bc1|h0|social|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.93 s, 12.6 req/s
+[47/240] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.70 s, 14.9 req/s
+[48/240] swarm|sequential|bc0|h0|pso|r2|N20|c1 (lote 0)
+  swarm|sequential|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.62 s, 11.6 req/s
+[49/240] swarm|batch|bc0|h1|cognitive|r1|N20|c1 (lote 1)
+  swarm|batch|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 4.96 s, 20.2 req/s
+[50/240] swarm|sequential|bc0|h0|pso|r2|N20|c1 (lote 1)
+  swarm|sequential|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.59 s, 11.6 req/s
+[51/240] swarm|sequential|bc0|h0|cognitive|r2|N20|c1 (lote 1)
+  swarm|sequential|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.44 s, 13.4 req/s
+[52/240] swarm|batch|bc0|h0|cognitive|r2|N20|c1 (lote 1)
+  swarm|batch|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.08 s, 19.7 req/s
+[53/240] swarm|batch|bc0|h0|pso|r2|N20|c1 (lote 1)
+  swarm|batch|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.97 s, 16.7 req/s
+[54/240] swarm|batch|bc0|h1|pso|r1|N20|c1 (lote 1)
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.54 s, 18.0 req/s
+[55/240] swarm|batch|bc1|h0|cognitive|r2|N20|c1 (lote 1)
+  swarm|batch|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 6.05 s, 16.5 req/s
+[56/240] swarm|sequential|bc0|h1|social|r2|N20|c1 (lote 1)
+  swarm|sequential|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.77 s, 12.9 req/s
+[57/240] swarm|batch|bc0|h1|social|r2|N20|c1 (lote 1)
+  swarm|batch|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 5.62 s, 17.8 req/s
+[58/240] swarm|sequential|bc0|h1|cognitive|r2|N20|c1 (lote 1)
+  swarm|sequential|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.06 s, 14.2 req/s
+[59/240] swarm|sequential|bc1|h0|pso|r1|N20|c1 (lote 1)
+  swarm|sequential|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.96 s, 10.0 req/s
+[60/240] swarm|sequential|bc1|h0|social|r2|N20|c1 (lote 1)
+  swarm|sequential|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.81 s, 10.2 req/s
+[61/240] swarm|batch|bc1|h0|social|r2|N20|c1 (lote 1)
+  swarm|batch|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.49 s, 13.3 req/s
+[62/240] swarm|sequential|bc0|h1|pso|r1|N20|c1 (lote 1)
+  swarm|sequential|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.87 s, 12.7 req/s
+[63/240] swarm|batch|bc0|h1|cognitive|r2|N20|c1 (lote 1)
+  swarm|batch|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 4.86 s, 20.6 req/s
+[64/240] swarm|sequential|bc1|h1|cognitive|r2|N20|c1 (lote 1)
+  swarm|sequential|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.88 s, 12.7 req/s
+[65/240] swarm|batch|bc1|h0|pso|r2|N20|c1 (lote 1)
+  swarm|batch|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.56 s, 13.2 req/s
+[66/240] swarm|batch|bc1|h0|pso|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.43 s, 13.5 req/s
+[67/240] swarm|sequential|bc0|h0|social|r2|N20|c1 (lote 1)
+  swarm|sequential|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.46 s, 11.8 req/s
+[68/240] swarm|sequential|bc1|h0|cognitive|r2|N20|c1 (lote 1)
+  swarm|sequential|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 8.07 s, 12.4 req/s
+[69/240] swarm|batch|bc1|h1|pso|r2|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 6.69 s, 14.9 req/s
+[70/240] swarm|batch|bc0|h1|social|r1|N20|c1 (lote 1)
+  swarm|batch|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 5.59 s, 17.9 req/s
+[71/240] swarm|sequential|bc0|h1|pso|r2|N20|c1 (lote 1)
+  swarm|sequential|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.88 s, 12.7 req/s
+[72/240] swarm|batch|bc1|h1|social|r2|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.73 s, 14.9 req/s
+[73/240] swarm|batch|bc1|h0|cognitive|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.92 s, 16.9 req/s
+[74/240] swarm|batch|bc0|h0|social|r1|N20|c1 (lote 1)
+  swarm|batch|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.19 s, 16.1 req/s
+[75/240] swarm|batch|bc1|h1|cognitive|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.62 s, 17.8 req/s
+[76/240] swarm|batch|bc0|h1|pso|r2|N20|c1 (lote 1)
+  swarm|batch|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.60 s, 17.9 req/s
+[77/240] swarm|sequential|bc1|h0|cognitive|r1|N20|c1 (lote 1)
+  swarm|sequential|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 8.31 s, 12.0 req/s
+[78/240] swarm|batch|bc1|h1|social|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.68 s, 15.0 req/s
+[79/240] swarm|sequential|bc1|h1|cognitive|r1|N20|c1 (lote 1)
+  swarm|sequential|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.95 s, 12.6 req/s
+[80/240] swarm|batch|bc0|h0|social|r2|N20|c1 (lote 1)
+  swarm|batch|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.14 s, 16.3 req/s
+[81/240] swarm|sequential|bc1|h0|pso|r2|N20|c1 (lote 1)
+  swarm|sequential|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.89 s, 10.1 req/s
+[82/240] swarm|sequential|bc0|h0|cognitive|r1|N20|c1 (lote 1)
+  swarm|sequential|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.44 s, 13.4 req/s
+[83/240] swarm|sequential|bc1|h1|social|r2|N20|c1 (lote 1)
+  swarm|sequential|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.93 s, 11.2 req/s
+[84/240] swarm|sequential|bc0|h0|pso|r1|N20|c1 (lote 1)
+  swarm|sequential|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.57 s, 11.7 req/s
+[85/240] swarm|sequential|bc1|h1|pso|r2|N20|c1 (lote 1)
+  swarm|sequential|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.89 s, 11.3 req/s
+[86/240] swarm|batch|bc0|h0|pso|r1|N20|c1 (lote 1)
+  swarm|batch|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.07 s, 16.5 req/s
+[87/240] swarm|sequential|bc1|h0|social|r1|N20|c1 (lote 1)
+  swarm|sequential|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.63 s, 10.4 req/s
+[88/240] swarm|sequential|bc1|h1|pso|r1|N20|c1 (lote 1)
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.96 s, 11.2 req/s
+[89/240] swarm|sequential|bc1|h1|social|r1|N20|c1 (lote 1)
+  swarm|sequential|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.98 s, 11.1 req/s
+[90/240] swarm|sequential|bc0|h1|cognitive|r1|N20|c1 (lote 1)
+  swarm|sequential|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.20 s, 13.9 req/s
+[91/240] swarm|batch|bc1|h1|cognitive|r2|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.46 s, 18.3 req/s
+[92/240] swarm|batch|bc0|h0|cognitive|r1|N20|c1 (lote 1)
+  swarm|batch|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.07 s, 19.7 req/s
+[93/240] swarm|batch|bc1|h0|social|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.37 s, 13.6 req/s
+[94/240] swarm|sequential|bc0|h0|social|r1|N20|c1 (lote 1)
+  swarm|sequential|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.41 s, 11.9 req/s
+[95/240] swarm|sequential|bc0|h1|social|r1|N20|c1 (lote 1)
+  swarm|sequential|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.95 s, 12.6 req/s
+[96/240] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.67 s, 15.0 req/s
+[97/240] swarm|sequential|bc1|h0|cognitive|r2|N20|c1 (lote 2)
+  swarm|sequential|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 8.11 s, 12.3 req/s
+[98/240] swarm|batch|bc1|h1|cognitive|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.51 s, 18.2 req/s
+[99/240] swarm|sequential|bc0|h0|cognitive|r1|N20|c1 (lote 2)
+  swarm|sequential|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.25 s, 13.8 req/s
+[100/240] swarm|sequential|bc1|h0|pso|r1|N20|c1 (lote 2)
+  swarm|sequential|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.61 s, 10.4 req/s
+[101/240] swarm|sequential|bc0|h1|cognitive|r2|N20|c1 (lote 2)
+  swarm|sequential|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.01 s, 14.3 req/s
+[102/240] swarm|sequential|bc0|h1|pso|r2|N20|c1 (lote 2)
+  swarm|sequential|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.73 s, 12.9 req/s
+[103/240] swarm|sequential|bc0|h0|social|r1|N20|c1 (lote 2)
+  swarm|sequential|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.33 s, 12.0 req/s
+[104/240] swarm|sequential|bc0|h0|pso|r2|N20|c1 (lote 2)
+  swarm|sequential|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.17 s, 12.2 req/s
+[105/240] swarm|sequential|bc1|h0|pso|r2|N20|c1 (lote 2)
+  swarm|sequential|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.57 s, 10.5 req/s
+[106/240] swarm|sequential|bc1|h0|social|r2|N20|c1 (lote 2)
+  swarm|sequential|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.40 s, 10.6 req/s
+[107/240] swarm|batch|bc1|h0|cognitive|r2|N20|c1 (lote 2)
+  swarm|batch|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.70 s, 17.5 req/s
+[108/240] swarm|sequential|bc1|h1|pso|r1|N20|c1 (lote 2)
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.91 s, 11.2 req/s
+[109/240] swarm|sequential|bc1|h1|social|r1|N20|c1 (lote 2)
+  swarm|sequential|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.10 s, 11.0 req/s
+[110/240] swarm|batch|bc1|h0|pso|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.34 s, 13.6 req/s
+[111/240] swarm|batch|bc0|h1|social|r2|N20|c1 (lote 2)
+  swarm|batch|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 5.47 s, 18.3 req/s
+[112/240] swarm|batch|bc1|h1|pso|r2|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 6.57 s, 15.2 req/s
+[113/240] swarm|batch|bc1|h1|social|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.73 s, 14.9 req/s
+[114/240] swarm|batch|bc1|h1|social|r2|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.66 s, 15.0 req/s
+[115/240] swarm|sequential|bc0|h1|cognitive|r1|N20|c1 (lote 2)
+  swarm|sequential|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.11 s, 14.1 req/s
+[116/240] swarm|batch|bc0|h1|pso|r1|N20|c1 (lote 2)
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.47 s, 18.3 req/s
+[117/240] swarm|sequential|bc0|h1|social|r1|N20|c1 (lote 2)
+  swarm|sequential|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.88 s, 12.7 req/s
+[118/240] swarm|sequential|bc1|h0|social|r1|N20|c1 (lote 2)
+  swarm|sequential|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.67 s, 10.3 req/s
+[119/240] swarm|batch|bc0|h0|cognitive|r1|N20|c1 (lote 2)
+  swarm|batch|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 4.95 s, 20.2 req/s
+[120/240] swarm|batch|bc0|h1|social|r1|N20|c1 (lote 2)
+  swarm|batch|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 5.49 s, 18.2 req/s
+[121/240] swarm|batch|bc0|h1|cognitive|r1|N20|c1 (lote 2)
+  swarm|batch|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 4.76 s, 21.0 req/s
+[122/240] swarm|batch|bc1|h0|pso|r2|N20|c1 (lote 2)
+  swarm|batch|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.39 s, 13.5 req/s
+[123/240] swarm|batch|bc0|h0|pso|r1|N20|c1 (lote 2)
+  swarm|batch|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.95 s, 16.8 req/s
+[124/240] swarm|sequential|bc0|h0|pso|r1|N20|c1 (lote 2)
+  swarm|sequential|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.31 s, 12.0 req/s
+[125/240] swarm|batch|bc1|h1|cognitive|r2|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.60 s, 17.9 req/s
+[126/240] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.57 s, 15.2 req/s
+[127/240] swarm|sequential|bc1|h1|pso|r2|N20|c1 (lote 2)
+  swarm|sequential|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.95 s, 11.2 req/s
+[128/240] swarm|sequential|bc1|h1|cognitive|r2|N20|c1 (lote 2)
+  swarm|sequential|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.80 s, 12.8 req/s
+[129/240] swarm|batch|bc0|h0|cognitive|r2|N20|c1 (lote 2)
+  swarm|batch|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 4.98 s, 20.1 req/s
+[130/240] swarm|batch|bc0|h0|pso|r2|N20|c1 (lote 2)
+  swarm|batch|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.94 s, 16.8 req/s
+[131/240] swarm|batch|bc1|h0|social|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.44 s, 13.4 req/s
+[132/240] swarm|batch|bc0|h0|social|r1|N20|c1 (lote 2)
+  swarm|batch|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.05 s, 16.5 req/s
+[133/240] swarm|sequential|bc1|h0|cognitive|r1|N20|c1 (lote 2)
+  swarm|sequential|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 8.14 s, 12.3 req/s
+[134/240] swarm|sequential|bc0|h0|cognitive|r2|N20|c1 (lote 2)
+  swarm|sequential|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.41 s, 13.5 req/s
+[135/240] swarm|batch|bc0|h0|social|r2|N20|c1 (lote 2)
+  swarm|batch|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.01 s, 16.7 req/s
+[136/240] swarm|sequential|bc0|h0|social|r2|N20|c1 (lote 2)
+  swarm|sequential|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.40 s, 11.9 req/s
+[137/240] swarm|sequential|bc1|h1|social|r2|N20|c1 (lote 2)
+  swarm|sequential|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.91 s, 11.2 req/s
+[138/240] swarm|sequential|bc0|h1|social|r2|N20|c1 (lote 2)
+  swarm|sequential|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.81 s, 12.8 req/s
+[139/240] swarm|batch|bc1|h0|social|r2|N20|c1 (lote 2)
+  swarm|batch|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.36 s, 13.6 req/s
+[140/240] swarm|sequential|bc0|h1|pso|r1|N20|c1 (lote 2)
+  swarm|sequential|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.80 s, 12.8 req/s
+[141/240] swarm|batch|bc1|h0|cognitive|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.92 s, 16.9 req/s
+[142/240] swarm|batch|bc0|h1|cognitive|r2|N20|c1 (lote 2)
+  swarm|batch|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 4.79 s, 20.9 req/s
+[143/240] swarm|sequential|bc1|h1|cognitive|r1|N20|c1 (lote 2)
+  swarm|sequential|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.99 s, 12.5 req/s
+[144/240] swarm|batch|bc0|h1|pso|r2|N20|c1 (lote 2)
+  swarm|batch|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.47 s, 18.3 req/s
+[145/240] swarm|batch|bc0|h1|pso|r1|N20|c1 (lote 3)
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.70 s, 17.6 req/s
+[146/240] swarm|sequential|bc1|h0|pso|r2|N20|c1 (lote 3)
+  swarm|sequential|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.58 s, 10.4 req/s
+[147/240] swarm|sequential|bc1|h1|pso|r2|N20|c1 (lote 3)
+  swarm|sequential|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.00 s, 11.1 req/s
+[148/240] swarm|sequential|bc1|h0|social|r2|N20|c1 (lote 3)
+  swarm|sequential|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.78 s, 10.2 req/s
+[149/240] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.83 s, 14.6 req/s
+[150/240] swarm|sequential|bc0|h0|pso|r2|N20|c1 (lote 3)
+  swarm|sequential|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.63 s, 11.6 req/s
+[151/240] swarm|sequential|bc1|h0|cognitive|r2|N20|c1 (lote 3)
+  swarm|sequential|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 8.35 s, 12.0 req/s
+[152/240] swarm|sequential|bc0|h1|pso|r2|N20|c1 (lote 3)
+  swarm|sequential|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.05 s, 12.4 req/s
+[153/240] swarm|sequential|bc1|h1|social|r1|N20|c1 (lote 3)
+  swarm|sequential|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.24 s, 10.8 req/s
+[154/240] swarm|sequential|bc1|h0|cognitive|r1|N20|c1 (lote 3)
+  swarm|sequential|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 8.29 s, 12.1 req/s
+[155/240] swarm|batch|bc0|h0|cognitive|r2|N20|c1 (lote 3)
+  swarm|batch|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.00 s, 20.0 req/s
+[156/240] swarm|sequential|bc0|h0|cognitive|r2|N20|c1 (lote 3)
+  swarm|sequential|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.53 s, 13.3 req/s
+[157/240] swarm|batch|bc1|h0|cognitive|r2|N20|c1 (lote 3)
+  swarm|batch|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.86 s, 17.1 req/s
+[158/240] swarm|sequential|bc0|h0|cognitive|r1|N20|c1 (lote 3)
+  swarm|sequential|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.48 s, 13.4 req/s
+[159/240] swarm|batch|bc1|h0|social|r2|N20|c1 (lote 3)
+  swarm|batch|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.19 s, 13.9 req/s
+[160/240] swarm|batch|bc0|h0|cognitive|r1|N20|c1 (lote 3)
+  swarm|batch|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.13 s, 19.5 req/s
+[161/240] swarm|sequential|bc0|h1|cognitive|r1|N20|c1 (lote 3)
+  swarm|sequential|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.12 s, 14.1 req/s
+[162/240] swarm|batch|bc1|h0|pso|r2|N20|c1 (lote 3)
+  swarm|batch|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.24 s, 13.8 req/s
+[163/240] swarm|sequential|bc1|h0|pso|r1|N20|c1 (lote 3)
+  swarm|sequential|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.69 s, 10.3 req/s
+[164/240] swarm|batch|bc0|h0|social|r2|N20|c1 (lote 3)
+  swarm|batch|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 5.94 s, 16.8 req/s
+[165/240] swarm|sequential|bc0|h1|social|r2|N20|c1 (lote 3)
+  swarm|sequential|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.00 s, 12.5 req/s
+[166/240] swarm|batch|bc0|h0|pso|r1|N20|c1 (lote 3)
+  swarm|batch|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.96 s, 16.8 req/s
+[167/240] swarm|sequential|bc0|h1|pso|r1|N20|c1 (lote 3)
+  swarm|sequential|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.11 s, 12.3 req/s
+[168/240] swarm|sequential|bc0|h1|cognitive|r2|N20|c1 (lote 3)
+  swarm|sequential|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.13 s, 14.0 req/s
+[169/240] swarm|sequential|bc1|h1|pso|r1|N20|c1 (lote 3)
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.06 s, 11.0 req/s
+[170/240] swarm|sequential|bc1|h1|social|r2|N20|c1 (lote 3)
+  swarm|sequential|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.97 s, 11.2 req/s
+[171/240] swarm|batch|bc1|h1|social|r2|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.80 s, 14.7 req/s
+[172/240] swarm|batch|bc1|h0|cognitive|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.95 s, 16.8 req/s
+[173/240] swarm|sequential|bc1|h0|social|r1|N20|c1 (lote 3)
+  swarm|sequential|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.65 s, 10.4 req/s
+[174/240] swarm|sequential|bc0|h0|social|r2|N20|c1 (lote 3)
+  swarm|sequential|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.24 s, 12.1 req/s
+[175/240] swarm|sequential|bc0|h0|pso|r1|N20|c1 (lote 3)
+  swarm|sequential|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.35 s, 12.0 req/s
+[176/240] swarm|batch|bc1|h1|pso|r2|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 6.64 s, 15.1 req/s
+[177/240] swarm|batch|bc0|h1|cognitive|r2|N20|c1 (lote 3)
+  swarm|batch|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 4.85 s, 20.6 req/s
+[178/240] swarm|batch|bc0|h1|cognitive|r1|N20|c1 (lote 3)
+  swarm|batch|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 4.75 s, 21.0 req/s
+[179/240] swarm|batch|bc0|h1|social|r1|N20|c1 (lote 3)
+  swarm|batch|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 5.60 s, 17.9 req/s
+[180/240] swarm|batch|bc1|h0|pso|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.29 s, 13.7 req/s
+[181/240] swarm|sequential|bc1|h1|cognitive|r1|N20|c1 (lote 3)
+  swarm|sequential|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.98 s, 12.5 req/s
+[182/240] swarm|batch|bc0|h0|pso|r2|N20|c1 (lote 3)
+  swarm|batch|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.97 s, 16.8 req/s
+[183/240] swarm|batch|bc1|h1|social|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.76 s, 14.8 req/s
+[184/240] swarm|batch|bc0|h0|social|r1|N20|c1 (lote 3)
+  swarm|batch|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 5.99 s, 16.7 req/s
+[185/240] swarm|batch|bc0|h1|pso|r2|N20|c1 (lote 3)
+  swarm|batch|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.59 s, 17.9 req/s
+[186/240] swarm|batch|bc1|h0|social|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.23 s, 13.8 req/s
+[187/240] swarm|sequential|bc0|h1|social|r1|N20|c1 (lote 3)
+  swarm|sequential|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.12 s, 12.3 req/s
+[188/240] swarm|sequential|bc1|h1|cognitive|r2|N20|c1 (lote 3)
+  swarm|sequential|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 8.06 s, 12.4 req/s
+[189/240] swarm|batch|bc0|h1|social|r2|N20|c1 (lote 3)
+  swarm|batch|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 5.72 s, 17.5 req/s
+[190/240] swarm|batch|bc1|h1|cognitive|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.60 s, 17.9 req/s
+[191/240] swarm|batch|bc1|h1|cognitive|r2|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.65 s, 17.7 req/s
+[192/240] swarm|sequential|bc0|h0|social|r1|N20|c1 (lote 3)
+  swarm|sequential|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.35 s, 12.0 req/s
+[193/240] swarm|sequential|bc0|h0|pso|r1|N20|c1 (lote 4)
+  swarm|sequential|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.60 s, 11.6 req/s
+[194/240] swarm|sequential|bc0|h1|cognitive|r1|N20|c1 (lote 4)
+  swarm|sequential|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.08 s, 14.1 req/s
+[195/240] swarm|batch|bc0|h0|cognitive|r1|N20|c1 (lote 4)
+  swarm|batch|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.18 s, 19.3 req/s
+[196/240] swarm|batch|bc0|h0|cognitive|r2|N20|c1 (lote 4)
+  swarm|batch|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.04 s, 19.8 req/s
+[197/240] swarm|batch|bc0|h1|social|r2|N20|c1 (lote 4)
+  swarm|batch|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 5.70 s, 17.5 req/s
+[198/240] swarm|batch|bc0|h0|pso|r1|N20|c1 (lote 4)
+  swarm|batch|bc0|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.06 s, 16.5 req/s
+[199/240] swarm|sequential|bc0|h1|cognitive|r2|N20|c1 (lote 4)
+  swarm|sequential|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.06 s, 14.2 req/s
+[200/240] swarm|sequential|bc0|h0|pso|r2|N20|c1 (lote 4)
+  swarm|sequential|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.49 s, 11.8 req/s
+[201/240] swarm|sequential|bc1|h0|pso|r2|N20|c1 (lote 4)
+  swarm|sequential|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.75 s, 10.3 req/s
+[202/240] swarm|sequential|bc1|h0|social|r2|N20|c1 (lote 4)
+  swarm|sequential|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.84 s, 10.2 req/s
+[203/240] swarm|sequential|bc0|h0|cognitive|r1|N20|c1 (lote 4)
+  swarm|sequential|bc0|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 7.66 s, 13.1 req/s
+[204/240] swarm|batch|bc0|h1|social|r1|N20|c1 (lote 4)
+  swarm|batch|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 5.76 s, 17.4 req/s
+[205/240] swarm|batch|bc0|h1|pso|r1|N20|c1 (lote 4)
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 5.77 s, 17.3 req/s
+[206/240] swarm|batch|bc0|h0|social|r1|N20|c1 (lote 4)
+  swarm|batch|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.22 s, 16.1 req/s
+[207/240] swarm|batch|bc1|h1|cognitive|r2|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.60 s, 17.8 req/s
+[208/240] swarm|sequential|bc1|h1|social|r1|N20|c1 (lote 4)
+  swarm|sequential|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.09 s, 11.0 req/s
+[209/240] swarm|batch|bc1|h1|social|r2|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.77 s, 14.8 req/s
+[210/240] swarm|batch|bc0|h1|cognitive|r2|N20|c1 (lote 4)
+  swarm|batch|bc0|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 4.83 s, 20.7 req/s
+[211/240] swarm|sequential|bc0|h1|pso|r1|N20|c1 (lote 4)
+  swarm|sequential|bc0|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 8.13 s, 12.3 req/s
+[212/240] swarm|batch|bc1|h1|social|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 6.78 s, 14.8 req/s
+[213/240] swarm|batch|bc0|h1|cognitive|r1|N20|c1 (lote 4)
+  swarm|batch|bc0|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 4.83 s, 20.7 req/s
+[214/240] swarm|batch|bc1|h0|cognitive|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.96 s, 16.8 req/s
+[215/240] swarm|batch|bc1|h0|social|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 7.46 s, 13.4 req/s
+[216/240] swarm|batch|bc1|h0|pso|r2|N20|c1 (lote 4)
+  swarm|batch|bc1|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 7.62 s, 13.1 req/s
+[217/240] swarm|sequential|bc0|h1|social|r1|N20|c1 (lote 4)
+  swarm|sequential|bc0|h1|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.11 s, 12.3 req/s
+[218/240] swarm|sequential|bc0|h0|cognitive|r2|N20|c1 (lote 4)
+  swarm|sequential|bc0|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.42 s, 13.5 req/s
+[219/240] swarm|batch|bc0|h0|pso|r2|N20|c1 (lote 4)
+  swarm|batch|bc0|h0|pso|r2|N20|c1 lote 1/1: 100/100 ok, 6.04 s, 16.5 req/s
+[220/240] swarm|sequential|bc1|h1|pso|r1|N20|c1 (lote 4)
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.17 s, 10.9 req/s
+[221/240] swarm|sequential|bc0|h0|social|r2|N20|c1 (lote 4)
+  swarm|sequential|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 8.41 s, 11.9 req/s
+[222/240] swarm|batch|bc0|h1|pso|r2|N20|c1 (lote 4)
+  swarm|batch|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 5.64 s, 17.7 req/s
+[223/240] swarm|batch|bc1|h1|pso|r2|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 6.86 s, 14.6 req/s
+[224/240] swarm|batch|bc1|h0|pso|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.55 s, 13.2 req/s
+[225/240] swarm|sequential|bc1|h1|cognitive|r2|N20|c1 (lote 4)
+  swarm|sequential|bc1|h1|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 7.88 s, 12.7 req/s
+[226/240] swarm|sequential|bc0|h0|social|r1|N20|c1 (lote 4)
+  swarm|sequential|bc0|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 8.88 s, 11.3 req/s
+[227/240] swarm|sequential|bc1|h0|cognitive|r1|N20|c1 (lote 4)
+  swarm|sequential|bc1|h0|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 8.29 s, 12.1 req/s
+[228/240] swarm|batch|bc0|h0|social|r2|N20|c1 (lote 4)
+  swarm|batch|bc0|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 6.13 s, 16.3 req/s
+[229/240] swarm|sequential|bc1|h1|social|r2|N20|c1 (lote 4)
+  swarm|sequential|bc1|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 9.43 s, 10.6 req/s
+[230/240] swarm|sequential|bc1|h1|cognitive|r1|N20|c1 (lote 4)
+  swarm|sequential|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 8.01 s, 12.5 req/s
+[231/240] swarm|batch|bc1|h0|cognitive|r2|N20|c1 (lote 4)
+  swarm|batch|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 5.86 s, 17.1 req/s
+[232/240] swarm|sequential|bc0|h1|social|r2|N20|c1 (lote 4)
+  swarm|sequential|bc0|h1|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.91 s, 12.6 req/s
+[233/240] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 6.83 s, 14.6 req/s
+[234/240] swarm|sequential|bc0|h1|pso|r2|N20|c1 (lote 4)
+  swarm|sequential|bc0|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 8.05 s, 12.4 req/s
+[235/240] swarm|sequential|bc1|h1|pso|r2|N20|c1 (lote 4)
+  swarm|sequential|bc1|h1|pso|r2|N20|c1 lote 1/1: 100/100 ok, 9.30 s, 10.8 req/s
+[236/240] swarm|sequential|bc1|h0|social|r1|N20|c1 (lote 4)
+  swarm|sequential|bc1|h0|social|r1|N20|c1 lote 1/1: 100/100 ok, 9.97 s, 10.0 req/s
+[237/240] swarm|batch|bc1|h1|cognitive|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 1/1: 100/100 ok, 5.67 s, 17.6 req/s
+[238/240] swarm|sequential|bc1|h0|pso|r1|N20|c1 (lote 4)
+  swarm|sequential|bc1|h0|pso|r1|N20|c1 lote 1/1: 100/100 ok, 9.85 s, 10.1 req/s
+[239/240] swarm|batch|bc1|h0|social|r2|N20|c1 (lote 4)
+  swarm|batch|bc1|h0|social|r2|N20|c1 lote 1/1: 100/100 ok, 7.49 s, 13.3 req/s
+[240/240] swarm|sequential|bc1|h0|cognitive|r2|N20|c1 (lote 4)
+  swarm|sequential|bc1|h0|cognitive|r2|N20|c1 lote 1/1: 100/100 ok, 8.30 s, 12.0 req/s
+escrito: experiments\oe_n3r_2026-10-19\run (24000 observaciones; validez EXPLORATORY)
+{}
