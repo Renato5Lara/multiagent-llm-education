@@ -1,0 +1,40 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.1.1, pluggy-1.7.0 -- <RUTA_USUARIO>\AppData\Local\Temp\rp\venv_ext\Scripts\python.exe
+rootdir: <RAIZ_CLON>\reproducibility
+plugins: platformdirs-4.13.5
+collecting ... collected 26 items
+
+tests/test_reproducibility.py::test_hashes_del_manifiesto_coinciden PASSED [  3%]
+tests/test_reproducibility.py::test_archivo_alterado_es_error_de_integridad PASSED [  7%]
+tests/test_reproducibility.py::test_archivo_faltante_es_error_de_integridad PASSED [ 11%]
+tests/test_reproducibility.py::test_registro_crudo_alterado_es_error_de_integridad PASSED [ 15%]
+tests/test_reproducibility.py::test_las_copias_sanitizadas_no_se_presentan_como_identicas PASSED [ 19%]
+tests/test_reproducibility.py::test_no_quedan_rutas_locales_en_los_datos PASSED [ 23%]
+tests/test_reproducibility.py::test_validacion_ok_y_exclusion_de_n11_declarada PASSED [ 26%]
+tests/test_reproducibility.py::test_columna_obligatoria_ausente_es_error_de_esquema PASSED [ 30%]
+tests/test_reproducibility.py::test_run_id_duplicado_es_inconsistencia_de_datos PASSED [ 34%]
+tests/test_reproducibility.py::test_valor_no_finito_se_detecta PASSED    [ 38%]
+tests/test_reproducibility.py::test_parse_cifras_del_informe PASSED      [ 42%]
+tests/test_reproducibility.py::test_clasificacion_de_diferencias[119,9-119.94-COINCIDE] PASSED [ 46%]
+tests/test_reproducibility.py::test_clasificacion_de_diferencias[119,9-119.96-DIFERENCIA_EXPLICABLE] PASSED [ 50%]
+tests/test_reproducibility.py::test_clasificacion_de_diferencias[119,9-121.0-DISCREPANCIA] PASSED [ 53%]
+tests/test_reproducibility.py::test_clasificacion_de_diferencias[4,1 \xd7 10\u207b\xb9\xb2-4.143e-12-COINCIDE] PASSED [ 57%]
+tests/test_reproducibility.py::test_clasificacion_de_diferencias[4,1 \xd7 10\u207b\xb9\xb2-5e-12-DISCREPANCIA] PASSED [ 61%]
+tests/test_reproducibility.py::test_scripts_del_proyecto_corren_y_derivados_son_byte_a_byte PASSED [ 65%]
+tests/test_reproducibility.py::test_cadena_peticiones_a_corridas_en_todas_las_campanas PASSED [ 69%]
+tests/test_reproducibility.py::test_tabla_8_recalculada_desde_las_80_corridas PASSED [ 73%]
+tests/test_reproducibility.py::test_sin_discrepancias_y_pendientes_no_se_marcan_como_reproducidos PASSED [ 76%]
+tests/test_reproducibility.py::test_trazabilidad_consistente_con_el_informe_de_verificacion PASSED [ 80%]
+tests/test_reproducibility.py::test_control_negativo_un_valor_publicado_alterado_es_discrepancia PASSED [ 84%]
+tests/test_reproducibility.py::test_control_negativo_registro_crudo_alterado_rompe_la_cadena PASSED [ 88%]
+tests/test_reproducibility.py::test_n9_no_se_mezcla_con_n9b PASSED       [ 92%]
+tests/test_reproducibility.py::test_notebook_limpio_y_sin_errores_de_sintaxis PASSED [ 96%]
+tests/test_reproducibility.py::test_notebook_se_ejecuta_de_principio_a_fin PASSED [100%]
+
+============================== warnings summary ===============================
+tests/test_reproducibility.py::test_notebook_se_ejecuta_de_principio_a_fin
+  <RUTA_USUARIO>\AppData\Local\Temp\rp\venv_ext\Lib\site-packages\zmq\_future.py:718: RuntimeWarning: Proactor event loop does not implement add_reader family of methods required for zmq. Registering an additional selector thread for add_reader support via tornado. Use `asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())` to avoid this warning.
+    self._get_loop()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 26 passed, 1 warning in 228.62s (0:03:48) ==================

@@ -1,0 +1,18 @@
+[
+ {
+  "original(no_publicado)": "ejecutado_externo.ipynb",
+  "sha256_original": "396533d58b31e610b5bc365ba0e5309f4e49d88f96f59411093678c96070ff47",
+  "copia_sanitizada": "notebook_ejecutado_en_clon_limpio.sanitizado.ipynb",
+  "sha256_sanitizada": "e3ae2920fba81d413b26fa0fc63f2fc97fd9f1c9ff61aa19c2bae37568d9d3df",
+  "sustituciones": 5,
+  "identica_al_original": "NO"
+ },
+ {
+  "original(no_publicado)": "pytest_externo.txt",
+  "sha256_original": "79bf65ae201a80af2a8f12a2f1cebdd863c2544ea5f08ba25abc15131021cdfc",
+  "copia_sanitizada": "pytest_en_clon_limpio.sanitizado.txt",
+  "sha256_sanitizada": "9e4aef5da7bbd86922a98fa17c7b48ea9f70256cf2010f7411ab748faa904ebe",
+  "sustituciones": 3,
+  "identica_al_original": "NO"
+ }
+]
