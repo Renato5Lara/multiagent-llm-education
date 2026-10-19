@@ -40,8 +40,6 @@ HAY_CADENA = {}     # campaña -> la cadena petición->corrida se verificó comp
 
 def add(cid, tabla, desc, campana, fuente, pub, rec):
     c = compare(pub, float(rec))
-    if c["estado"] == "DIFERENCIA_EXPLICABLE":
-        c["nota"] = "el informe parece haber redondeado dos veces (valor de 3 decimales del archivo de resultados, redondeado después a la precisión del cuadro); diferencia de 1 unidad del último decimal"
     c["estado_cifra"] = "VERIFICADO_DESDE_DATOS" if c["estado"] in ("COINCIDE", "DIFERENCIA_EXPLICABLE") else "DISCREPANCIA"
     checks.append({"id": cid, "tabla": tabla, "descripcion": desc, "campana": campana, "fuente_evidencia": fuente, **c})
 
@@ -450,7 +448,7 @@ def main() -> int:
     print("derivados byte a byte:", {e: sum(1 for b in byte if b['estado'] == e) for e in sorted({b['estado'] for b in byte})})
     print("cadena peticiones->corridas:", [(r["campana"], r["estado"]) for r in raw_chain])
     print("estados:", cnt)
-    return EXIT_DIFERENCIA if cnt.get("DISCREPANCIA") else EXIT_OK
+    return EXIT_DIFERENCIA if cnt_cifra.get("DISCREPANCIA") else EXIT_OK
 
 
 if __name__ == "__main__":

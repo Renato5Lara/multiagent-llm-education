@@ -131,7 +131,7 @@ def test_parse_cifras_del_informe():
     assert abs(v - 4.1e-12) < 1e-24 and exp == -12
 
 
-@pytest.mark.parametrize("pub,rec,estado", [("119,9", 119.94, "COINCIDE"), ("119,9", 119.96, "DIFERENCIA_EXPLICABLE"), ("119,9", 121.0, "DISCREPANCIA"),
+@pytest.mark.parametrize("pub,rec,estado", [("119,9", 119.94, "COINCIDE"), ("119,9", 119.8496, "DIFERENCIA_EXPLICABLE"), ("119,9", 119.96, "DIFERENCIA_SIN_EXPLICAR"), ("119,9", 121.0, "DISCREPANCIA"),
                                               ("4,1 × 10⁻¹²", 4.143e-12, "COINCIDE"), ("4,1 × 10⁻¹²", 5.0e-12, "DISCREPANCIA")])
 def test_clasificacion_de_diferencias(pub, rec, estado):
     assert compare(pub, rec)["estado"] == estado
@@ -171,6 +171,8 @@ def test_sin_discrepancias_y_pendientes_no_se_marcan_como_reproducidos(reproducc
     assert nr and all(c["estado_cifra"] == "NO_REPRODUCIBLE" and c["motivo"] for c in nr)
     verificadas = [c for c in reproduccion["comprobaciones"] if c["estado_cifra"] == "VERIFICADO_DESDE_DATOS"]
     assert all(c["estado"] in ("COINCIDE", "DIFERENCIA_EXPLICABLE") for c in verificadas)
+    explicables = [c for c in verificadas if c["estado"] == "DIFERENCIA_EXPLICABLE"]
+    assert len(explicables) == 3 and all(c["explicacion"] == "DOBLE_REDONDEO_CONFIRMADO" for c in explicables)
 
 
 def test_trazabilidad_consistente_con_el_informe_de_verificacion(reproduccion):

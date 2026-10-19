@@ -44,6 +44,20 @@ def _plain(s: str):
     return float(s.replace(",", ".")), dec
 
 
+def doble_redondeo(pub_str, recomputed, dec, exp):
+    """¿Se obtiene el valor publicado redondeando primero a más decimales (p. ej. el de un archivo de resultados) y luego a su precisión (mitad hacia arriba)?
+    Devuelve (valor_intermedio, decimales_intermedios) o None. No aplica a la notación `a x 10^n`."""
+    from decimal import ROUND_HALF_UP, Decimal
+    if exp is not None:
+        return None
+    pub = Decimal(pub_str.replace("\u2212", "-").replace(" ", "").replace("\u00a0", "").replace(",", "."))
+    for extra in (1, 2, 3):
+        inter = Decimal(repr(recomputed)).quantize(Decimal(1).scaleb(-(dec + extra)), rounding=ROUND_HALF_UP)
+        if inter.quantize(Decimal(1).scaleb(-dec), rounding=ROUND_HALF_UP) == pub:
+            return str(inter), dec + extra
+    return None
+
+
 def compare(pub_str: str, recomputed: float):
     """Compara un valor publicado con el recalculado. Tolerancia = media unidad del último decimal publicado (redondeo).
     COINCIDE ≤ 0,5 u; DIFERENCIA_EXPLICABLE ≤ 1 u (redondeos encadenados); DISCREPANCIA > 1 u. Para `a × 10ⁿ` la unidad se aplica a la mantisa."""
@@ -52,7 +66,15 @@ def compare(pub_str: str, recomputed: float):
     diff = recomputed - pub
     ratio = abs(diff) / unit
     estado = "COINCIDE" if ratio <= 0.5 + 1e-9 else "DIFERENCIA_EXPLICABLE" if ratio <= 1.0 + 1e-9 else "DISCREPANCIA"
-    return dict(publicado=pub_str, publicado_num=pub, recalculado=recomputed, dif_abs=diff, dif_rel=(diff / pub if pub else None),
+    extra = {}
+    if estado == "DIFERENCIA_EXPLICABLE":
+        dr = doble_redondeo(pub_str, recomputed, dec, exp)
+        if dr:
+            extra = {"explicacion": "DOBLE_REDONDEO_CONFIRMADO", "valor_sin_redondear": recomputed, "valor_intermedio": dr[0],
+                     "detalle": f"{recomputed!r} -> {dr[1]} decimales: {dr[0]} -> {dec} decimales (mitad hacia arriba): {pub_str.strip()}"}
+        else:
+            estado = "DIFERENCIA_SIN_EXPLICAR"      # una unidad de diferencia que el doble redondeo NO explica: no se da por buena
+    return dict(**extra, publicado=pub_str, publicado_num=pub, recalculado=recomputed, dif_abs=diff, dif_rel=(diff / pub if pub else None),
                 tolerancia=0.5 * unit, estado=estado, precision_publicada=f"{dec} decimales" + (f", ×10^{exp}" if exp is not None else ""))
 
 
