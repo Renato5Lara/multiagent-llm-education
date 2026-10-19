@@ -368,3 +368,14 @@ def test_oe3_control_negativo_observacion_alterada_rompe_la_cadena_de_n3r(copia)
         assert r.returncode == 0, r.stderr[-800:]
         out = json.loads((copia / "outputs" / "oe3_replicacion.json").read_text(encoding="utf-8"))
         assert out["cadena_N3R"]["coincide"] is False
+
+
+def test_todo_archivo_del_manifiesto_esta_versionado_en_git():
+    """Un archivo ignorado por .gitignore (p. ej. logs/) existe en local pero faltaría en el clon de Colab."""
+    r = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    if r.returncode != 0:
+        pytest.skip("sin repositorio git")
+    tracked = set(r.stdout.split("\n"))
+    with open(ROOT / "EVIDENCE_MANIFEST.csv", encoding="utf-8", newline="") as fh:
+        faltan = [row["ruta"] for row in csv.DictReader(fh) if row["ruta"] not in tracked]
+    assert not faltan, f"archivos del manifiesto sin versionar (¿.gitignore?): {faltan[:5]}"
