@@ -8,7 +8,7 @@ Informe contrastado: `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (versión e
 
 ## Cadena que se comprueba
 1. **Peticiones → corrida:** cada fila de `runs.csv` se recalcula con el código del proyecto a partir de los registros por petición (`raw/*.csv`): N2, N3, N4, N8, N8b, N9b y N11, sin diferencias (máx. 3.6e-12).
-2. **Corridas → resultados derivados:** los 37 CSV/JSON que generan los scripts de análisis del proyecto (sin modificar) se regeneran tras borrar antes sus salidas: idénticos byte a byte en Windows y, en Linux/Colab, idénticos salvo los finales de línea (los publicados llevan CRLF).
+2. **Corridas → resultados derivados:** los 37 CSV/JSON que generan los scripts de análisis del proyecto (sin modificar) se regeneran tras borrar antes sus salidas: idénticos byte a byte en Windows; en Linux/Colab, idénticos salvo los finales de línea (los publicados llevan CRLF) o con diferencias de punto flotante dentro de 1e-6 relativo / 1e-12 absoluto (la ejecución real en Colab dio 17 y 20 archivos de esos dos tipos, 0 diferentes).
 3. **Derivados → tablas del informe:** se comparan las cifras del informe con lo recalculado.
 
 ## Resultado de la última ejecución (Python 3.13.5, entorno limpio, 28 pruebas)
@@ -34,7 +34,7 @@ Detalle por tabla: [`RESULTS_TRACEABILITY.csv`](RESULTS_TRACEABILITY.csv). Detal
 - No se combinan registros de N9 con N9b. El informe llama **N8b** al directorio `oe_n10_2026-10-14_n20`.
 
 ## Cómo ejecutar
-### Google Colab
+### Google Colab (ejecutado de verdad el 2026-10-19: ver `outputs/registro_ejecucion/COLAB_EJECUCION_REAL.md`)
 Abra `notebooks/reproducibilidad_tesis.ipynb` desde GitHub (rama `repro/publicable-2026-10-19`, repositorio `Renato5Lara/multiagent-llm-education`) y ejecute las celdas **en orden**. No requiere tokens ni claves. La celda C hace un clon parcial (`reproducibility/` y `backend/adaptation_swarm`) del repositorio público. Enlace de apertura:
 `https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/publicable-2026-10-19/reproducibility/notebooks/reproducibilidad_tesis.ipynb`
 
