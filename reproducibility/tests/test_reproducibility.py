@@ -504,3 +504,26 @@ def test_cambios_de_la_copia_de_revision_son_exactos_y_estan_justificados():
     clas = (ROOT / "auditoria" / "CLASIFICACION_CORRECCIONES.md").read_text(encoding="utf-8")
     for c in ("C1", "C2", "C4", "C5", "C10"):
         assert f"| {c} |" in clas and "no aplicada" in clas
+
+
+def test_estado_de_los_notebooks_coincide_con_los_archivos_actuales():
+    """El registro de ejecución de Colab no puede quedar desfasado respecto de los notebooks ni de sus entradas."""
+    import hashlib
+    with open(ROOT / "auditoria" / "ESTADO_NOTEBOOKS_COLAB.csv", encoding="utf-8", newline="") as fh:
+        filas = list(csv.DictReader(fh))
+    assert len(filas) == 6
+    for f in filas:
+        assert f["commit_completo_ejecutado"].startswith(f["commit_ejecutado"]) and len(f["commit_completo_ejecutado"]) == 40
+        actual = hashlib.sha256((ROOT / "notebooks" / f["notebook"]).read_bytes()).hexdigest()
+        assert f["sha256_notebook_actual"] == actual, f["notebook"]            # si cambia un notebook, hay que reejecutar y reregistrar
+        assert f["nivel_certeza"].startswith("PARCIAL") and f["commit_ejecutado_anterior_registrado"]
+    with open(ROOT / "auditoria" / "MATRIZ_CAMBIOS_POSTERIORES.csv", encoding="utf-8", newline="") as fh:
+        m = list(csv.DictReader(fh))
+    assert m and all(r["consumido_por_notebooks"] == "NO" and r["requiere_reejecucion"] == "NO" for r in m)
+
+
+def test_los_scripts_de_los_notebooks_no_leen_la_carpeta_de_auditoria():
+    for s in ("verify_hashes", "validate_data", "reproduce_results", "repro_lib", "oe3_robustez", "oe3_replicacion", "oe3_sesion", "oe3_eficiencia"):
+        codigo = (ROOT / "scripts" / f"{s}.py").read_text(encoding="utf-8")
+        for patron in ('/ "auditoria"', "/ 'auditoria'", 'Path("auditoria', "Path('auditoria"):
+            assert patron not in codigo, (s, patron)
