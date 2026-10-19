@@ -225,3 +225,25 @@ def test_n9_no_se_mezcla_con_n9b():
     assert not any(r["rol"] == "dato_original" for r in n9)
     rep = json.loads((ROOT / "outputs/verification_report.json").read_text(encoding="utf-8"))
     assert not any("oe_n9_2026" in c.get("fuente_evidencia", "") for c in rep["comprobaciones"])
+
+
+# ---- notebook
+def test_notebook_limpio_y_sin_errores_de_sintaxis():
+    import ast
+    nb = json.loads((ROOT / "notebooks/reproducibilidad_tesis.ipynb").read_text(encoding="utf-8"))
+    for i, c in enumerate(nb["cells"]):
+        if c["cell_type"] == "code":
+            assert not c["outputs"] and c["execution_count"] is None, f"celda {i} con salidas guardadas"
+            ast.parse("".join(c["source"]).replace("%pip", "#%pip"))
+
+
+def test_notebook_se_ejecuta_de_principio_a_fin(tmp_path, monkeypatch):
+    nbformat = pytest.importorskip("nbformat")
+    nbclient = pytest.importorskip("nbclient")
+    monkeypatch.setenv("REPRO_LOCAL_ROOT", str(ROOT))
+    monkeypatch.setenv("REPRO_BACKEND", str(ROOT.parent / "backend"))
+    nb = nbformat.read(ROOT / "notebooks/reproducibilidad_tesis.ipynb", 4)
+    nbclient.NotebookClient(nb, timeout=1500, kernel_name="python3", resources={"metadata": {"path": str(tmp_path)}}).execute()
+    salida = "".join(o.get("text", "") for c in nb.cells if c.cell_type == "code" for o in c.outputs)
+    assert "Integridad OK" in salida and "VERIFICADO_DESDE_DATOS" in salida
+    assert any(p.name.startswith("verificacion_") for p in tmp_path.iterdir())

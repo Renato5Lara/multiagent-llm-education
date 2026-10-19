@@ -11,7 +11,7 @@ Informe contrastado: `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (versión e
 2. **Corridas → resultados derivados:** los 37 CSV/JSON que generan los scripts de análisis del proyecto (sin modificar) se regeneran **byte a byte** tras borrar antes sus salidas.
 3. **Derivados → tablas del informe:** se comparan las cifras del informe con lo recalculado.
 
-## Resultado de la última ejecución (Python 3.13.5, entorno limpio, 24 pruebas)
+## Resultado de la última ejecución (Python 3.13.5, entorno limpio, 26 pruebas)
 | | |
 |---|---|
 | Archivos del manifiesto con SHA-256 coincidente | 1540 / 1540 |
