@@ -1,0 +1,125 @@
+{
+  "N3": {
+    "n_corridas": 240,
+    "n_pares": 120,
+    "R_media_geometrica": 1.596974364902291,
+    "reduccion_por_lotes_pct": 37.381587207808195,
+    "incremento_secuencial_pct": 59.697436490229094,
+    "R_media_aritmetica": 1.5843686326045165,
+    "reduccion_media_aritmetica_pct": 36.88337553387957,
+    "R_mediana": 1.6196343872057015,
+    "R_por_pares_media_log": 1.596974364902291,
+    "ic95_R_entre_lotes": [
+      1.5691553868098307,
+      1.6252865354144526
+    ],
+    "R_por_lote": [
+      1.6334808459374972,
+      1.5773837949937954,
+      1.5921284044736501,
+      1.5798572831200761,
+      1.6026635347720357
+    ],
+    "ic95_R_entre_pares": [
+      1.5778221323515191,
+      1.6163590748687091
+    ],
+    "reduccion_ic95_entre_lotes_pct": [
+      36.27144842340638,
+      38.4723875937976
+    ],
+    "R_por_par_min_max": [
+      1.4466297231098926,
+      1.7998861617129625
+    ],
+    "pares_con_secuencial_mas_lento_pct": 100.0
+  },
+  "N3R": {
+    "n_corridas": 240,
+    "n_pares": 120,
+    "R_media_geometrica": 1.4738395596511413,
+    "reduccion_por_lotes_pct": 32.150009581999505,
+    "incremento_secuencial_pct": 47.38395596511413,
+    "R_media_aritmetica": 1.4634369431716276,
+    "reduccion_media_aritmetica_pct": 31.66770835832844,
+    "R_mediana": 1.4719113286890777,
+    "R_por_pares_media_log": 1.4738395596511404,
+    "ic95_R_entre_lotes": [
+      1.4645910029349998,
+      1.4831465188845439
+    ],
+    "R_por_lote": [
+      1.463548083139188,
+      1.470971798401507,
+      1.473738144003492,
+      1.4836822860167007,
+      1.4773332384214368
+    ],
+    "ic95_R_entre_pares": [
+      1.4591982460764292,
+      1.4886277813404751
+    ],
+    "reduccion_ic95_entre_lotes_pct": [
+      31.721552433680955,
+      32.57577809965211
+    ],
+    "R_por_par_min_max": [
+      1.33898721422586,
+      1.6155627116697304
+    ],
+    "pares_con_secuencial_mas_lento_pct": 100.0
+  },
+  "N3S": {
+    "n_corridas": 240,
+    "n_pares": 120,
+    "R_media_geometrica": 1.4813415033740687,
+    "reduccion_por_lotes_pct": 32.49362164482069,
+    "incremento_secuencial_pct": 48.134150337406865,
+    "R_media_aritmetica": 1.4719607108004855,
+    "reduccion_media_aritmetica_pct": 32.06340409343008,
+    "R_mediana": 1.4832412849434715,
+    "R_por_pares_media_log": 1.4813415033740696,
+    "ic95_R_entre_lotes": [
+      1.4731717360612702,
+      1.48955657775889
+    ],
+    "R_por_lote": [
+      1.4924237836640626,
+      1.4787002072341562,
+      1.4759265484327984,
+      1.477474007937741,
+      1.4822418283471948
+    ],
+    "ic95_R_entre_pares": [
+      1.4678308760151595,
+      1.494976489100564
+    ],
+    "reduccion_ic95_entre_lotes_pct": [
+      32.11925157662614,
+      32.865927019398725
+    ],
+    "R_por_par_min_max": [
+      1.3728354691324514,
+      1.6237620982121652
+    ],
+    "pares_con_secuencial_mas_lento_pct": 100.0
+  },
+  "sesion_N3S_frente_a_N3": {
+    "cociente_de_razones": 0.9275925374448348,
+    "ic95_entre_lotes": [
+      0.9159114835365635,
+      0.9394225653782827
+    ],
+    "por_lote": [
+      0.9136463322332511,
+      0.9374384420121247,
+      0.927014771098649,
+      0.9351946050594284,
+      0.9248615172104918
+    ],
+    "lotes_con_razon_menor_en_N3S": 5,
+    "pares_con_razon_menor_en_N3S_pct": 98.33333333333333,
+    "lectura": "cociente < 1: con las mismas semillas, el efecto del despacho es menor en la sesión posterior"
+  },
+  "lectura": "37 % y 32 % son el mismo estadístico (1 − 1/R, R = GM secuencial/GM por lotes) en sesiones distintas: R = 1,60 en N3 y ≈ 1,47–1,48 en N3-R y N3-S. La dirección (el despacho por lotes es más rápido) se mantiene en el 100 % de los lotes y en todos los pares; la magnitud depende de la sesión. «Reducción» (denominador secuencial) e «incremento» (denominador por lotes) describen el mismo efecto: 37 % y 60 % en N3."
+}

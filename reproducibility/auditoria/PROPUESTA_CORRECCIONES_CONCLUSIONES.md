@@ -27,5 +27,14 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 ## C6 — Resumen, «cumplió los requerimientos funcionales y de confiabilidad» (A02)
 **Propuesta:** añadir la salvedad «según el informe del arnés para RF06 y REL-D, cuyos registros no se conservan entre los datos publicados».
 
+## C7 — §6.5.3, párrafo «Cautela sobre el mecanismo cognitivo» (A40, A42)
+**Original:** «su menor T_conv (65,7 ms frente a 78,8 ms con PSO) … el promedio marginal de la difusión de g_best (−16 %: 68,0 frente a 80,8 ms al omitirla)».
+**Problemas:** (a) la media aritmética de T_conv con PSO en N3 es 78,748 ms, que se redondea a **78,7** (no 78,8; una unidad del último decimal; posible doble redondeo no demostrado); (b) «68,0 frente a 80,8 ms al omitirla» puede leerse con el orden invertido (68,0 es el valor sin difusión).
+**Propuesta:** «(65,7 ms frente a 78,7 ms con PSO; medias aritméticas)» y «(−16 %: 68,0 ms sin difusión frente a 80,8 ms con difusión)».
+**Evidencia:** `runs_oe3.csv` de N3 (medias aritméticas por mecanismo y por nivel de difusión).
+
+## C8 — «PSO y social fueron equivalentes» (A47)
+**Propuesta:** como C3: «similares (no se ejecutó una prueba de equivalencia)».
+
 ## Hipótesis propuesta para el OE3 (pendiente de aprobación; no preregistrada)
 «Las configuraciones con despacho por lotes, sin difusión de g_best y con heurística de arranque reducen T_conv sin empeorar la brecha frente a sus alternativas.» No se usó en ningún análisis ni aparece en la tesis.

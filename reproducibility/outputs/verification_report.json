@@ -578,13 +578,13 @@
   }
  ],
  "conteo_estados": {
-  "COINCIDE": 1027,
-  "NO_REPRODUCIBLE": 8,
+  "COINCIDE": 1029,
+  "NO_REPRODUCIBLE": 7,
   "DIFERENCIA_EXPLICABLE": 3
  },
  "conteo_estado_cifra": {
-  "VERIFICADO_DESDE_DATOS": 1014,
-  "NO_REPRODUCIBLE": 8,
+  "VERIFICADO_DESDE_DATOS": 1016,
+  "NO_REPRODUCIBLE": 7,
   "VERIFICADO_DESDE_DERIVADO": 16
  },
  "comprobaciones": [
@@ -17361,6 +17361,50 @@
    "cadena_hasta_peticiones": null
   },
   {
+   "id": "T37-RNF04-valor",
+   "tabla": "Tabla 37",
+   "descripcion": "RNF04: mediana del throughput por lote (req/s)",
+   "campana": "N1",
+   "fuente_evidencia": "recálculo desde batches.json de N1 (53 lotes en proceso, oe3_run + oe4_run); mediana del throughput por lote y tasa de error; umbral de la Tabla 37",
+   "publicado": "14.98",
+   "publicado_num": 14.98,
+   "recalculado": 14.981426252467786,
+   "dif_abs": 0.0014262524677857158,
+   "dif_rel": 9.52104451125311e-05,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE",
+   "precision_publicada": "2 decimales",
+   "celda_fila": 11,
+   "celda_col": 4,
+   "encabezado": "Valor",
+   "etiqueta_fila": "RNF04",
+   "ubicacion": "exacta",
+   "estado_cifra": "VERIFICADO_DESDE_DATOS",
+   "cadena_hasta_peticiones": null
+  },
+  {
+   "id": "T37-RNF04-estado",
+   "tabla": "Tabla 37",
+   "descripcion": "RNF04: estado NOT_MET según el umbral «≥ 20 req/s ∧ error < 1%»",
+   "campana": "N1",
+   "fuente_evidencia": "recálculo desde batches.json de N1 (53 lotes en proceso, oe3_run + oe4_run); mediana del throughput por lote y tasa de error; umbral de la Tabla 37",
+   "publicado": "1",
+   "publicado_num": 1.0,
+   "recalculado": 1.0,
+   "dif_abs": 0.0,
+   "dif_rel": 0.0,
+   "tolerancia": 0.5,
+   "estado": "COINCIDE",
+   "precision_publicada": "0 decimales",
+   "celda_fila": null,
+   "celda_col": null,
+   "encabezado": "",
+   "etiqueta_fila": "",
+   "ubicacion": "inferida_por_texto",
+   "estado_cifra": "VERIFICADO_DESDE_DATOS",
+   "cadena_hasta_peticiones": null
+  },
+  {
    "id": "T37-RF06",
    "tabla": "Tabla 37",
    "descripcion": "RF06: estado",
@@ -17378,16 +17422,6 @@
    "estado": "NO_REPRODUCIBLE",
    "estado_cifra": "NO_REPRODUCIBLE",
    "motivo": "sonda de determinismo (20 pares) cuyo registro no está entre los datos publicados; solo consta en oe1_report.json del propio arnés",
-   "cadena_hasta_peticiones": null
-  },
-  {
-   "id": "T37-RNF04",
-   "tabla": "Tabla 37",
-   "descripcion": "RNF04: estado",
-   "campana": "N1",
-   "estado": "NO_REPRODUCIBLE",
-   "estado_cifra": "NO_REPRODUCIBLE",
-   "motivo": "la mediana del throughput por lote en proceso de N1 no está en los archivos publicados (sin batches.json de N1)",
    "cadena_hasta_peticiones": null
   },
   {

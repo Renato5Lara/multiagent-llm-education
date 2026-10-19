@@ -1,0 +1,43 @@
+{
+  "pregunta": "asociación monótona entre usuarios (carga) y puntaje de cumplimiento por condición",
+  "n_condiciones": 14,
+  "usuarios_distintos": [
+    1.0,
+    10.0,
+    25.0,
+    50.0
+  ],
+  "puntajes_distintos": [
+    0.7778,
+    0.875,
+    0.8889
+  ],
+  "empates": {
+    "en_usuarios": 10,
+    "en_puntaje": 11
+  },
+  "spearman": {
+    "rho": -0.608352058115994,
+    "p": 0.020974260221351713,
+    "definicion": "correlación de Pearson de los rangos (rangos medios en empates); p bilateral"
+  },
+  "kendall_tau_b": {
+    "tau": -0.506171068243531,
+    "p": 0.042769845656004515,
+    "definicion": "(concordantes − discordantes)/sqrt((n0 − n1)(n0 − n2)), corrige empates; p bilateral asintótico con empates",
+    "concordantes": 8,
+    "discordantes": 36
+  },
+  "medida_publicada_en_tabla_6": {
+    "fila": [
+      "Usuarios (carga) frente al propio puntaje de cumplimiento",
+      "−0,61 (p = 0,021)",
+      "no calculado"
+    ],
+    "spearman_publicado": "−0,61 (p = 0,021)",
+    "kendall_publicado": "no calculado",
+    "coincide_spearman_con_oe1_verify": true
+  },
+  "relacion_entre_medidas": "ρ y τb miden la misma asociación monótona en escalas distintas (con pocos puntajes distintos y empates ρ suele ser mayor en valor absoluto que τb; en las otras filas de la Tabla 6 ρ = −0,69 y τb = −0,51): no son contradictorios y no se sustituyen",
+  "conclusion_admisible": "en las 14 condiciones, a mayor número de usuarios menor puntaje de cumplimiento (asociación monótona negativa moderada: ρ = −0,61, τb = −0,51); la tesis publica ρ y marca τb como «no calculado». El puntaje carece de definición aprobada y solo hay 3 valores distintos, por lo que la asociación no es causal"
+}

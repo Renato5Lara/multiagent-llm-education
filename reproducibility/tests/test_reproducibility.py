@@ -433,9 +433,9 @@ def test_estados_de_requisitos_de_la_tabla_37_se_recalculan_y_detectan_alteracio
     assert r.returncode == 0, r.stderr[-800:]
     ver = json.loads((ROOT / "outputs" / "verification_report.json").read_text(encoding="utf-8"))
     est = {c["id"]: c["estado"] for c in ver["comprobaciones"] if c["id"].startswith("T37-")}
-    for rid in ("RF01", "RF02", "RF03", "RF04", "RF05", "REL-C", "RNF01", "RNF02", "RNF03"):
+    for rid in ("RF01", "RF02", "RF03", "RF04", "RF05", "REL-C", "RNF01", "RNF02", "RNF03", "RNF04"):
         assert est[f"T37-{rid}-valor"] == "COINCIDE" and est[f"T37-{rid}-estado"] == "COINCIDE", rid
-    assert all(est[f"T37-{k}"] == "NO_REPRODUCIBLE" for k in ("RF06", "REL-D", "RNF04", "RNF05"))
+    assert all(est[f"T37-{k}"] == "NO_REPRODUCIBLE" for k in ("RF06", "REL-D", "RNF05"))
 
     def alterar(b):
         d = pd.read_csv(io.BytesIO(b), low_memory=False)
@@ -445,3 +445,26 @@ def test_estados_de_requisitos_de_la_tabla_37_se_recalculan_y_detectan_alteracio
     with mutado(copia, "data/experiments/oe_n1_2026-10-05/oe3_run/raw_observations.csv", alterar):
         r2 = run("reproduce_results.py", copia)
         assert r2.returncode == 5, (r2.returncode, r2.stderr[-400:])   # 5 = hay discrepancia
+
+
+# ---- reconciliaciones estadísticas (usuarios: Spearman frente a Kendall; despacho: 37 % frente a 32 %)
+def test_ficha_usuarios_spearman_y_kendall_son_la_misma_pregunta_con_estadisticos_distintos():
+    r = run("oe1_usuarios_ficha.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    f = json.loads((ROOT / "outputs" / "oe1_usuarios_ficha.json").read_text(encoding="utf-8"))
+    assert f["n_condiciones"] == 14
+    assert abs(f["spearman"]["rho"] - (-0.6084)) < 5e-4 and abs(f["spearman"]["p"] - 0.0210) < 5e-4
+    assert abs(f["kendall_tau_b"]["tau"] - (-0.5062)) < 5e-4 and abs(f["kendall_tau_b"]["p"] - 0.0428) < 5e-4
+    assert f["medida_publicada_en_tabla_6"]["coincide_spearman_con_oe1_verify"] is True
+    assert f["medida_publicada_en_tabla_6"]["kendall_publicado"] == "no calculado"
+
+
+def test_efecto_del_despacho_misma_definicion_direccion_estable_y_magnitud_dependiente_de_la_sesion():
+    r = run("oe3_despacho.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    d = json.loads((ROOT / "outputs" / "oe3_despacho.json").read_text(encoding="utf-8"))
+    for c in ("N3", "N3R", "N3S"):
+        assert d[c]["pares_con_secuencial_mas_lento_pct"] == 100.0           # dirección estable en todos los pares
+        assert abs(d[c]["reduccion_por_lotes_pct"] - 100 * (1 - 1 / d[c]["R_media_geometrica"])) < 1e-9   # una sola definición
+    assert abs(d["N3"]["reduccion_por_lotes_pct"] - 37.4) < 0.1 and abs(d["N3R"]["reduccion_por_lotes_pct"] - 32.2) < 0.1 and abs(d["N3S"]["reduccion_por_lotes_pct"] - 32.5) < 0.1
+    assert d["sesion_N3S_frente_a_N3"]["lotes_con_razon_menor_en_N3S"] == 5

@@ -7,13 +7,13 @@
 ## Conteo actual (esta rama)
 | | |
 |---|---|
-| Comprobaciones totales | 1038 |
-| `VERIFICADO_DESDE_DATOS` | 1014 |
+| Comprobaciones totales | 1039 |
+| `VERIFICADO_DESDE_DATOS` | 1016 |
 | `VERIFICADO_DESDE_DERIVADO` | 16 |
 | `DISCREPANCIA` | 0 |
-| `NO_REPRODUCIBLE` (elementos, no celdas: algunos agrupan varias tablas) | 8 |
+| `NO_REPRODUCIBLE` (elementos, no celdas: algunos agrupan varias tablas) | 7 |
 | Celdas numéricas del informe (excluida la fila de encabezados) | 1665 |
-| Celdas cubiertas por al menos una comprobación | 628 |
+| Celdas cubiertas por al menos una comprobación | 629 |
 
 Las comprobaciones **no** deben dividirse por tablas sin cuidado: una celda numérica puede tener varias y algunas celdas son etiquetas de condición (carga, N) que no se calculan. El inventario por celda y por afirmación en prosa está en `CONCILIACION_TESIS_DATOS.csv`.
 
@@ -23,7 +23,6 @@ No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tab
 - T27-sus: no existen datos: 0 evaluadores reales; no se simulan
 - T37-RF06: sonda de persistencia (20 ciclos) que no se conserva entre los datos publicados
 - T37-REL-D: sonda de determinismo (20 pares) cuyo registro no está entre los datos publicados; solo consta en oe1_report.json del propio arnés
-- T37-RNF04: la mediana del throughput por lote en proceso de N1 no está en los archivos publicados (sin batches.json de N1)
 - T37-RNF05: sin evaluadores SUS (0 respuestas); no se simula
 - PEND-Tablas 32 y 44: síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista
 - PEND-Tabla 35: instrumento SUS sin aplicar: no hay datos; no se simulan
@@ -67,7 +66,7 @@ No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tab
 |      34 |                 23 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |      35 |                 10 |                  0 |                1 |                         0 |                            0 |              0 |                  1 |                           0 |
 |      36 |                149 |                  0 |               33 |                        33 |                            0 |              0 |                  0 |                          29 |
-|      37 |                 42 |                  9 |               22 |                        16 |                            2 |              0 |                  4 |                           5 |
+|      37 |                 42 |                 10 |               23 |                        18 |                            2 |              0 |                  3 |                           6 |
 |      38 |                 64 |                 56 |               56 |                        56 |                            0 |              0 |                  0 |                          34 |
 |      39 |                  2 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |      40 |                 56 |                 49 |               49 |                        49 |                            0 |              0 |                  0 |                          29 |

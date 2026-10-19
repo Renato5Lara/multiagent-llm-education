@@ -379,7 +379,7 @@ def n3_cadena():
 
 def tabla_37_estados(T):
     """Recalcula desde las 9 500 observaciones en proceso de N1 los valores y el ESTADO (MET/NOT_MET) de los requisitos de la Tabla 37 que se pueden calcular
-    con los registros publicados, aplicando los umbrales escritos en la propia tabla (no se inventa ninguna regla). RF06, REL-D, RNF04, RNF03 y RNF05 no se recalculan aquí."""
+    con los registros publicados, aplicando los umbrales escritos en la propia tabla (no se inventa ninguna regla). RF06, REL-D y RNF05 no se recalculan aquí."""
     d = pd.concat([pd.read_csv(EXP / f"oe_n1_2026-10-05/{r}/raw_observations.csv", low_memory=False) for r in ("oe3_run", "oe4_run")], ignore_index=True)
     n = len(d)
     ap = d.status.eq("completed")
@@ -402,8 +402,17 @@ def tabla_37_estados(T):
     rr3 = next(r for r in T[37][1:] if r[0] == "RNF03")
     add_der("T37-RNF03-valor", "Tabla 37", "RNF03: valor del indicador (F1 v2)", "K10", fd, rr3[4], h)
     add_der("T37-RNF03-estado", "Tabla 37", f"RNF03: estado {rr3[5].split(' ')[0]} según el umbral «{rr3[3]}»", "K10", fd, "1", 1.0 if ("MET" if h >= 0.85 else "NOT_MET") == rr3[5].split(" ")[0] else 0.0)
+    bt = []
+    for r_ in ("oe3_run", "oe4_run"):
+        bt += json.loads((EXP / f"oe_n1_2026-10-05/{r_}/batches.json").read_text(encoding="utf-8"))
+    mediana_thr = float(np.median([b_["throughput_rps"] for b_ in bt]))
+    err = float(sum(b_["n_failed"] for b_ in bt) / sum(b_["n_requests"] for b_ in bt))
+    fb = f"recálculo desde batches.json de N1 ({len(bt)} lotes en proceso, oe3_run + oe4_run); mediana del throughput por lote y tasa de error; umbral de la Tabla 37"
+    rr4 = next(r for r in T[37][1:] if r[0] == "RNF04")
+    add("T37-RNF04-valor", "Tabla 37", "RNF04: mediana del throughput por lote (req/s)", "N1", fb, rr4[4], mediana_thr)
+    add("T37-RNF04-estado", "Tabla 37", f"RNF04: estado {rr4[5].split(' ')[0]} según el umbral «{rr4[3]}»", "N1", fb, "1", 1.0 if ("MET" if (mediana_thr >= 20 and err < 0.01) else "NOT_MET") == rr4[5].split(" ")[0] else 0.0)
     for rid, why in (("RF06", "sonda de persistencia (20 ciclos) que no se conserva entre los datos publicados"), ("REL-D", "sonda de determinismo (20 pares) cuyo registro no está entre los datos publicados; solo consta en oe1_report.json del propio arnés"),
-                     ("RNF04", "la mediana del throughput por lote en proceso de N1 no está en los archivos publicados (sin batches.json de N1)"), ("RNF05", "sin evaluadores SUS (0 respuestas); no se simula")):
+("RNF05", "sin evaluadores SUS (0 respuestas); no se simula")):
         add_na(f"T37-{rid}", "Tabla 37", f"{rid}: estado", "N1", why)
 
 
