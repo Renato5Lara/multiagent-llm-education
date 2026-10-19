@@ -24,6 +24,11 @@ EXCL_FILES = {n: "script de búsqueda bibliográfica que incorpora el correo per
               for n in ("audit_referencias.py", "busqueda_estructurada.py", "crossref_search.py", "fetch_metadata.py", "openalex_numeric.py", "openalex_search.py", "build_conciliacion.py")}
 EXCL_FILES.update({n: "registro de pytest con rutas locales del equipo; no es entrada de ningún cálculo" for n in ("pytest_adaptation_swarm.log", "pytest_adaptation_swarm_continuacion.log", "pytest_adaptation_swarm_utf8.log")})
 MAX_BYTES = 3_000_000
+# Registros originales necesarios para auditar petición -> corrida -> tabla (se publican; anulan las exclusiones por tamaño/carpeta)
+INCLUDE = ("oe_n2_2026-10-05/campaign/raw/", "oe_n4_2026-10-06/campaign/raw/", "oe_n8_2026-10-13/campaign/raw/", "oe_n10_2026-10-14_n20/campaign/raw/",
+           "oe_n9b_2026-10-14/campaign/raw/", "oe_n9b_2026-10-14/campaign_final/raw/", "oe_n11_2026-10-14_3N/campaign/raw/",
+           "oe_n1_2026-10-05/oe3_run/raw_observations.csv", "oe_n1_2026-10-05/oe4_run/raw_observations.csv", "oe_n3_2026-10-06/run/raw_observations.csv",
+           "oe_n4_2026-10-06/inprocess/raw_observations.csv")
 only_log_n9 = {"oe_n9_2026-10-13": {"campaign.log"}}
 rows = []
 for camp in CAMPAIGNS:
@@ -53,7 +58,9 @@ for camp in CAMPAIGNS:
             why = "redundante con runs.csv (misma información anidada); hash en manifest.json"
         if p.suffix == ".jsonl" and p.name != "runs.journal.jsonl" and p.name != "runs.jsonl":
             why = "observaciones de gran tamaño"
-        if why is None and p.stat().st_size > MAX_BYTES:
+        if why and rel.as_posix().startswith(INCLUDE) and p.suffix != ".err" and p.name not in EXCL_FILES:
+            why = None
+        if why is None and p.stat().st_size > MAX_BYTES and not rel.as_posix().startswith(INCLUDE):
             why = f"supera {MAX_BYTES} bytes"
         if why is None:
             out = DST / rel

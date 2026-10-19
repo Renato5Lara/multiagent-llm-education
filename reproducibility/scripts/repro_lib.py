@@ -35,7 +35,12 @@ def parse_num(s: str):
 
 def _plain(s: str):
     s = s.replace(" ", "")
-    dec = len(s.split(",")[1]) if "," in s else 0
+    if "," in s:
+        dec = len(s.split(",")[1])
+    elif "." in s:                      # algunas tablas del anexo usan punto decimal
+        dec = len(s.split(".")[1])
+    else:
+        dec = 0
     return float(s.replace(",", ".")), dec
 
 

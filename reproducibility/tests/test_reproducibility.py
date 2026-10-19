@@ -1,5 +1,6 @@
 """Pruebas del paquete de reproducibilidad. Ejecutar desde `reproducibility/`:  python -m pytest tests -q
-Las pruebas que mutan datos trabajan sobre una copia temporal; nunca tocan la evidencia publicada."""
+Las pruebas que mutan datos trabajan sobre UNA copia temporal del paquete (se restaura cada archivo tras cada prueba); nunca tocan la evidencia publicada."""
+import contextlib
 import csv
 import json
 import shutil
@@ -15,14 +16,30 @@ from repro_lib import compare, parse_num  # noqa: E402
 
 
 def run(script, root=ROOT):
-    return subprocess.run([sys.executable, str(root / "scripts" / script)], cwd=root / "scripts", capture_output=True, text=True, encoding="utf-8", errors="replace")
+    import os
+    env = {**os.environ, "REPRO_BACKEND": str(ROOT.parent / "backend")}     # las copias temporales viven fuera del repositorio
+    return subprocess.run([sys.executable, str(root / "scripts" / script)], cwd=root / "scripts", capture_output=True, text=True, encoding="utf-8", errors="replace", env=env)
 
 
-@pytest.fixture()
-def copia(tmp_path):
-    dst = tmp_path / "reproducibility"
-    shutil.copytree(ROOT, dst, ignore=shutil.ignore_patterns("__pycache__", "outputs", ".pytest_cache"))
+@pytest.fixture(scope="module")
+def copia(tmp_path_factory):
+    dst = tmp_path_factory.mktemp("pkg") / "reproducibility"
+    shutil.copytree(ROOT, dst, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
     return dst
+
+
+@contextlib.contextmanager
+def mutado(copia, rel, nuevo_bytes=None, borrar=False):
+    p = copia / rel
+    original = p.read_bytes()
+    try:
+        if borrar:
+            p.unlink()
+        else:
+            p.write_bytes(nuevo_bytes(original))
+        yield p
+    finally:
+        p.write_bytes(original)
 
 
 # ---- integridad
@@ -32,15 +49,37 @@ def test_hashes_del_manifiesto_coinciden():
 
 
 def test_archivo_alterado_es_error_de_integridad(copia):
-    f = copia / "data/experiments/oe_n2_2026-10-05/campaign/runs.csv"
-    f.write_bytes(f.read_bytes() + b" ")
-    r = run("verify_hashes.py", copia)
+    with mutado(copia, "data/experiments/oe_n2_2026-10-05/campaign/runs.csv", lambda b: b + b" "):
+        r = run("verify_hashes.py", copia)
     assert r.returncode == 2 and "ERROR_INTEGRIDAD" in r.stdout
 
 
 def test_archivo_faltante_es_error_de_integridad(copia):
-    (copia / "data/experiments/oe_n4_2026-10-06/campaign/runs.csv").unlink()
-    assert run("verify_hashes.py", copia).returncode == 2
+    with mutado(copia, "data/experiments/oe_n4_2026-10-06/campaign/runs.csv", borrar=True):
+        assert run("verify_hashes.py", copia).returncode == 2
+
+
+def test_registro_crudo_alterado_es_error_de_integridad(copia):
+    raw = sorted((copia / "data/experiments/oe_n2_2026-10-05/campaign/raw").glob("*.csv"))[0].relative_to(copia).as_posix()
+    with mutado(copia, raw, lambda b: b.replace(b"1", b"2", 1)):
+        assert run("verify_hashes.py", copia).returncode == 2
+
+
+def test_las_copias_sanitizadas_no_se_presentan_como_identicas():
+    with open(ROOT / "data/metadata/SANITIZACION.csv", newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    assert rows and all(r["identica_al_original"] == "NO" and r["sha256_original"] != r["sha256_sanitizada"] for r in rows)
+    with open(ROOT / "EVIDENCE_MANIFEST.csv", newline="", encoding="utf-8") as fh:
+        man = {r["ruta"]: r for r in csv.DictReader(fh)}
+    assert all(man[r["copia_sanitizada"]]["sha256_original"] == r["sha256_original"] for r in rows)
+
+
+def test_no_quedan_rutas_locales_en_los_datos():
+    import re
+    pat = re.compile(r"[A-Za-z]:\\+Users")
+    malos = [p for p in (ROOT / "data").rglob("*") if p.is_file() and p.suffix in {".json", ".jsonl", ".log", ".md", ".csv", ".txt", ".py"} and p.stat().st_size < 6_000_000
+             and pat.search(p.read_text(encoding="utf-8", errors="ignore"))]
+    assert not malos, malos[:3]
 
 
 # ---- esquema y datos
@@ -53,35 +92,41 @@ def test_validacion_ok_y_exclusion_de_n11_declarada():
 
 
 def _mutar_csv(copia, fn):
-    p = copia / "data/experiments/oe_n2_2026-10-05/campaign/runs.csv"
     import pandas as pd
-    d = pd.read_csv(p, low_memory=False)
-    fn(d).to_csv(p, index=False)
+    rel = "data/experiments/oe_n2_2026-10-05/campaign/runs.csv"
+    p = copia / rel
+
+    def f(b):
+        d = pd.read_csv(p, low_memory=False)
+        fn(d).to_csv(p, index=False)
+        return p.read_bytes()
+    return mutado(copia, rel, lambda b: (f(b)))
 
 
 def test_columna_obligatoria_ausente_es_error_de_esquema(copia):
-    _mutar_csv(copia, lambda d: d.drop(columns=["p95_ms"]))
-    assert run("validate_data.py", copia).returncode == 3
+    with _mutar_csv(copia, lambda d: d.drop(columns=["p95_ms"])):
+        assert run("validate_data.py", copia).returncode == 3
 
 
 def test_run_id_duplicado_es_inconsistencia_de_datos(copia):
     import pandas as pd
-    _mutar_csv(copia, lambda d: pd.concat([d, d.iloc[[0]]], ignore_index=True))
-    assert run("validate_data.py", copia).returncode == 4
+    with _mutar_csv(copia, lambda d: pd.concat([d, d.iloc[[0]]], ignore_index=True)):
+        assert run("validate_data.py", copia).returncode == 4
 
 
 def test_valor_no_finito_se_detecta(copia):
     def f(d):
         d.loc[0, "p95_ms"] = float("inf")
         return d
-    _mutar_csv(copia, f)
-    assert run("validate_data.py", copia).returncode == 4
+    with _mutar_csv(copia, f):
+        assert run("validate_data.py", copia).returncode == 4
 
 
 # ---- comparación numérica
 def test_parse_cifras_del_informe():
     assert parse_num("1 401,4")[:2] == (1401.4, 1)
     assert parse_num("−56,7")[0] == -56.7
+    assert parse_num("44.42")[:2] == (44.42, 2)
     v, dec, exp = parse_num("4,1 × 10⁻¹²")
     assert abs(v - 4.1e-12) < 1e-24 and exp == -12
 
@@ -101,8 +146,16 @@ def reproduccion():
 
 
 def test_scripts_del_proyecto_corren_y_derivados_son_byte_a_byte(reproduccion):
-    assert all(v == 0 for v in reproduccion["scripts_del_proyecto_ejecutados"].values())
+    assert all(v["codigo"] == 0 for v in reproduccion["scripts_del_proyecto_ejecutados"].values())
+    assert len(reproduccion["derivados_byte_a_byte"]) >= 30
     assert {b["estado"] for b in reproduccion["derivados_byte_a_byte"]} == {"COINCIDE_BYTE_A_BYTE"}
+
+
+def test_cadena_peticiones_a_corridas_en_todas_las_campanas(reproduccion):
+    cad = {c["campana"]: c for c in reproduccion["cadena_peticiones_a_corridas"]}
+    assert set(cad) == {"N2", "N4", "N8", "N8b", "N9b", "N11", "N3"}
+    assert all(c["estado"] == "VERIFICADO_DESDE_DATOS" and c["no_coinciden"] == 0 and c["sin_registro_crudo"] == 0 for c in cad.values())
+    assert cad["N2"]["filas_runs_csv"] == 80 and cad["N9b"]["filas_runs_csv"] == 160
 
 
 def test_tabla_8_recalculada_desde_las_80_corridas(reproduccion):
@@ -113,19 +166,55 @@ def test_tabla_8_recalculada_desde_las_80_corridas(reproduccion):
 
 def test_sin_discrepancias_y_pendientes_no_se_marcan_como_reproducidos(reproduccion):
     assert reproduccion["conteo_estados"].get("DISCREPANCIA", 0) == 0
-    pend = [c for c in reproduccion["comprobaciones"] if c["id"].startswith("PEND-") or c["id"].endswith("k_stop")]
-    assert pend and all(c["estado"] == "NO_REPRODUCIBLE" and c["motivo"] for c in pend)
+    assert reproduccion["conteo_estado_cifra"].get("VERIFICADO_DESDE_DATOS", 0) >= 800
+    nr = [c for c in reproduccion["comprobaciones"] if c["estado"] == "NO_REPRODUCIBLE"]
+    assert nr and all(c["estado_cifra"] == "NO_REPRODUCIBLE" and c["motivo"] for c in nr)
+    verificadas = [c for c in reproduccion["comprobaciones"] if c["estado_cifra"] == "VERIFICADO_DESDE_DATOS"]
+    assert all(c["estado"] in ("COINCIDE", "DIFERENCIA_EXPLICABLE") for c in verificadas)
+
+
+def test_trazabilidad_consistente_con_el_informe_de_verificacion(reproduccion):
+    with open(ROOT / "RESULTS_TRACEABILITY.csv", newline="", encoding="utf-8") as fh:
+        tr = list(csv.DictReader(fh))
+    est = {r["tabla_informe"]: r for r in tr}
+    for tabla, esperado in (("Tabla 8", "VERIFICADO_DESDE_DATOS"), ("Tabla 11", "VERIFICADO_DESDE_DATOS"), ("Tabla 6", "PARCIAL"), ("Tabla 27", "PARCIAL")):
+        assert est[tabla]["estado"] == esperado
+    for r in tr:
+        if r["estado"] == "VERIFICADO_DESDE_DATOS":
+            assert int(r["no_reproducibles"]) == 0 and int(r["discrepantes"]) == 0 and int(r["verificadas_desde_datos"]) > 0
 
 
 def test_control_negativo_un_valor_publicado_alterado_es_discrepancia(copia):
-    p = copia / "data/metadata/informe_D2.9.7_tablas.json"
-    d = json.loads(p.read_text(encoding="utf-8"))
-    for t in d["tables"]:
-        if t["caption_prev"].startswith("Tabla 8."):
-            t["rows"][2][4] = "999,9"  # P95 de decision_table con 1 usuario... valor falso a propósito
-    p.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
-    r = run("reproduce_results.py", copia)
+    rel = "data/metadata/informe_D2.9.7_tablas.json"
+
+    def alterar(b):
+        d = json.loads(b.decode("utf-8"))
+        for t in d["tables"]:
+            if t["caption_prev"].startswith("Tabla 8."):
+                t["rows"][2][4] = "999,9"
+        return json.dumps(d, ensure_ascii=False).encode("utf-8")
+    with mutado(copia, rel, alterar):
+        r = run("reproduce_results.py", copia)
     assert r.returncode == 5, r.stdout + r.stderr
+
+
+def test_control_negativo_registro_crudo_alterado_rompe_la_cadena(copia):
+    raw = sorted((copia / "data/experiments/oe_n2_2026-10-05/campaign/raw").glob("*.csv"))
+    raw = [p for p in raw if not p.name.endswith(".cpu.csv")][0].relative_to(copia).as_posix()
+
+    def alterar(b):
+        lines = b.decode("utf-8").splitlines()
+        out = [lines[0]]
+        for ln in lines[1:]:
+            c = ln.split(",")
+            c[1] = str(float(c[1]) * 2)
+            out.append(",".join(c))
+        return ("\n".join(out) + "\n").encode("utf-8")
+    with mutado(copia, raw, alterar):
+        run("reproduce_results.py", copia)
+        rep = json.loads((copia / "outputs/verification_report.json").read_text(encoding="utf-8"))
+    n2 = [c for c in rep["cadena_peticiones_a_corridas"] if c["campana"] == "N2"][0]
+    assert n2["estado"] != "VERIFICADO_DESDE_DATOS" and n2["no_coinciden"] >= 1
 
 
 def test_n9_no_se_mezcla_con_n9b():
@@ -134,4 +223,5 @@ def test_n9_no_se_mezcla_con_n9b():
     n9 = [r for r in rows if r["campana"] == "N9"]
     assert n9 and all("ABORTADA" in r["estado_campana"] for r in n9)
     assert not any(r["rol"] == "dato_original" for r in n9)
-    assert not any("oe_n9_2026" in c["fuente_evidencia"] for c in json.loads((ROOT / "outputs/verification_report.json").read_text(encoding="utf-8"))["comprobaciones"] if "fuente_evidencia" in c)
+    rep = json.loads((ROOT / "outputs/verification_report.json").read_text(encoding="utf-8"))
+    assert not any("oe_n9_2026" in c.get("fuente_evidencia", "") for c in rep["comprobaciones"])

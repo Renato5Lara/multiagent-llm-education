@@ -14,10 +14,10 @@ cells.append(md("""# Verificación reproducible de las cifras de la tesis
 **Informe contrastado:** `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (versión editorial de cierre de brechas; no es la fuente de los datos).
 
 ## Qué hace este notebook
-Descarga el paquete de evidencia, comprueba la **integridad** de sus archivos (SHA-256), **valida** los datos, **recalcula** las cifras de las Tablas 8–11 y 17–20 con los scripts del proyecto y las **compara** con los valores publicados en el informe.
+Descarga el paquete de evidencia, comprueba la **integridad** de sus archivos (SHA-256), **valida** los datos, **recalcula** las corridas desde los registros por petición, **regenera** los resultados derivados con los scripts del proyecto (sin modificarlos) y **compara** unas 870 cifras con los valores publicados en el informe.
 
 ## Alcance y límites
-- Campañas con datos aquí: **N2, N4, N8, N8b** (directorio `oe_n10`), **N9b** y **N11** (solo validación). N1, N3, N5, N6 y N7 contribuyen con archivos pero **sus tablas no se recalculan celda a celda** (ver sección G).
+- Campañas con datos aquí: **N1, N2, N3, N4, N5, N8, N8b** (directorio `oe_n10`), **N9b** y **N11**. Cubre las Tablas 6, 8–11, 13, 14, 17–24, 27–29, 40 y 41. **No** se recalculan las Tablas 5/37 (estados categóricos), 15/30 (K10 histórico), 25 (antecedente), 32/44 (síntesis bibliográfica) ni lo que requiere evaluadores humanos (ver sección H).
 - **N9 fue una campaña abortada y descartada** (38 de 160 iniciadas). No se usa en ningún cálculo; N9b es la réplica integrada de 160/160 corridas.
 - **Todas las campañas son experimentales y no oficiales.** Publicarlas no las vuelve oficiales.
 - **Reproducir una cifra no demuestra que una hipótesis sea cierta.** Solo muestra que, con estos archivos y estos scripts, el cálculo da el valor del informe.
@@ -41,7 +41,7 @@ cells.append(code("""import os, subprocess, shutil
 from pathlib import Path
 
 REPO_URL = "https://github.com/Renato5Lara/multiagent-llm-education.git"
-REF = "repro/publicacion-reproducible-2026-10-19"   # rama o etiqueta con el paquete; cámbiela por la etiqueta de la versión congelada
+REF = "repro/publicable-2026-10-19"   # rama o etiqueta con el paquete; cámbiela por la etiqueta de la versión congelada
 
 def localizar():
     env = os.environ.get("REPRO_LOCAL_ROOT")
@@ -53,7 +53,10 @@ def localizar():
     dest = Path("/content/tesis_repo") if Path("/content").exists() else Path.cwd() / "tesis_repo"
     if dest.exists():
         shutil.rmtree(dest)
-    r = subprocess.run(["git", "clone", "--depth", "1", "--branch", REF, REPO_URL, str(dest)], capture_output=True, text=True)
+    # clon parcial: solo reproducibility/ y el código del proyecto necesario (backend/adaptation_swarm); el repositorio completo es mucho mayor
+    r = subprocess.run(["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse", "--branch", REF, REPO_URL, str(dest)], capture_output=True, text=True)
+    if r.returncode == 0:
+        r = subprocess.run(["git", "-C", str(dest), "sparse-checkout", "set", "reproducibility", "backend/adaptation_swarm"], capture_output=True, text=True)
     if r.returncode:
         raise RuntimeError(f"No se pudo clonar {REPO_URL} en la referencia {REF!r}.\\n{r.stderr.strip()}\\n"
                            "Compruebe que la rama/etiqueta existe en el remoto o copie reproducibility/ a mano.")
@@ -98,14 +101,20 @@ if rc != 0:
     raise RuntimeError(f"Validación fallida: {val['estado']}")"""))
 
 cells.append(md("""## F. Reproducción de resultados
-`reproduce_results.py` ejecuta **sin modificar** los scripts de análisis del proyecto (`oe2_reanalysis`, `oe3_reanalysis`, `oe4_nvar_analysis`, `oe2_aux_analysis`) sobre una copia temporal de los datos, y además recalcula directamente con pandas las Tablas 8, 17 y 20 desde los `runs.csv`.
-Se verifica primero que los CSV regenerados sean **idénticos byte a byte** a los publicados.
+`reproduce_results.py` comprueba tres eslabones:
+1. **Peticiones → corrida.** Cada fila de `runs.csv` se recalcula con el código del proyecto (`http_window.summarize_run`) a partir de los registros por petición `raw/*.csv`.
+2. **Corridas → derivados.** Se ejecutan **sin modificar** los scripts de análisis del proyecto sobre una copia temporal **en la que antes se han borrado todas las salidas**, y se comprueba que lo regenerado sea **idéntico byte a byte** a lo publicado.
+3. **Derivados → tablas.** Se comparan las cifras del informe con lo recalculado.
 
 **Ejemplo guiado, Tabla 8 (campaña N2):** las 80 corridas originales (`oe_n2_2026-10-05/campaign/runs.csv`: 2 sistemas × 4 cargas × 10 corridas) → media por sistema y carga → comparación con las 8 filas × 4 métricas del informe."""))
 cells.append(code("""rc = run_script("reproduce_results.py")
 ver = json.loads((ROOT / "outputs" / "verification_report.json").read_text(encoding="utf-8"))
 print("Entorno:", ver["entorno"])
-display(pd.DataFrame(ver["derivados_byte_a_byte"]))"""))
+print("\nEslabón 1 (peticiones -> corrida):")
+display(pd.DataFrame(ver["cadena_peticiones_a_corridas"])[["campana", "filas_runs_csv", "recalculadas_desde_peticiones_y_coinciden", "no_coinciden", "sin_registro_crudo", "diferencia_maxima", "estado"]])
+b = pd.DataFrame(ver["derivados_byte_a_byte"])
+print("\nEslabón 2 (derivados regenerados vs publicados):", b.estado.value_counts().to_dict())
+display(b.head(8))"""))
 cells.append(code("""# Tabla 8 recalculada desde las 80 corridas de N2 (aquí, a la vista)
 n2 = pd.read_csv(ROOT / "data/experiments/oe_n2_2026-10-05/campaign/runs.csv", low_memory=False)
 print("Corridas en N2:", len(n2), "| status ok:", int((n2.status == "ok").sum()), "| sistemas:", sorted(n2.system.unique()), "| cargas:", sorted(n2.load.unique()))
@@ -128,13 +137,13 @@ display(comp[comp.estado == "NO_REPRODUCIBLE"][["id", "campana", "motivo"]])""")
 cells.append(md("""## H. Limitaciones y conclusión"""))
 cells.append(code("""c = ver["conteo_estados"]
 tr = pd.read_csv(ROOT / "RESULTS_TRACEABILITY.csv")
-print(f"Comprobaciones numéricas: {sum(v for k, v in c.items() if k != 'NO_REPRODUCIBLE')} coincidentes o explicables; "
-      f"{c.get('DISCREPANCIA', 0)} discrepantes; {c.get('NO_REPRODUCIBLE', 0)} no reproducibles.")
+print("Cifras por estado:", ver["conteo_estado_cifra"])
+print(f"  (de ellas, {c.get('DIFERENCIA_EXPLICABLE', 0)} difieren una unidad del último decimal por doble redondeo del informe)")
 print("Tablas del informe por estado:", tr.estado.value_counts().to_dict())
-display(tr[["tabla_informe", "campana", "estado", "comprobaciones", "observacion"]])"""))
+display(tr[["tabla_informe", "campana", "estado", "cifras_comprobadas", "verificadas_desde_datos", "no_reproducibles", "observacion"]])"""))
 cells.append(md("""**Qué sí y qué no demuestra esta ejecución**
-- Con estos archivos y estos scripts, las cifras de las Tablas 8–11 y 18–20 y la mayor parte de la 17 **se recalculan** a la precisión publicada. Lo que queda sin comprobar está en la tabla anterior (estado `PARCIAL` o `NO_REPRODUCIBLE`): N1, N3, N5, N11 (Tablas 21–24), K10, el estado del arte y `k_stop`.
-- La reproducibilidad computacional **no equivale a autenticidad experimental**: un hash acredita la identidad de un archivo frente a una referencia, no que su contenido sea verdadero. Los registros por petición que originan los `runs.csv` no se publican.
+- Con estos archivos y estos scripts, las cifras de las tablas marcadas `VERIFICADO_DESDE_DATOS` **se recalculan** a la precisión publicada desde `runs.csv`, `raw_observations.csv` o las réplicas guardadas, y para N2, N3, N4, N8, N8b, N9b y N11 también se comprobó que `runs.csv` sale de los registros por petición. Lo que queda sin comprobar está en la tabla anterior (`PARCIAL`, `NO_REPRODUCIBLE`): estados categóricos de N1, K10 histórico, pruebas de carga exploratorias, síntesis bibliográfica, SUS y expertos.
+- La reproducibilidad computacional **no equivale a autenticidad experimental**: un hash acredita la identidad de un archivo frente a una referencia, no que su contenido sea verdadero. Que los registros por petición sean reales (y no fabricados) no se puede demostrar con este cómputo: solo que las métricas salen de ellos.
 - Los resultados son **experimentales y no oficiales**; los de N5 usan la especificación v3 provisional del F1; los de K10 son históricos (v2).
 - La métrica de usabilidad y la validación con expertos requieren evaluadores humanos y **no existen**; no se simulan.
 - Esta ejecución no prueba causalidad ni confirma hipótesis."""))
