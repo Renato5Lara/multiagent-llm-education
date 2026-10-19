@@ -497,10 +497,10 @@ def test_medias_aritmeticas_frente_a_geometricas_explican_la_diferencia_de_la_se
 def test_cambios_de_la_copia_de_revision_son_exactos_y_estan_justificados():
     with open(ROOT / "auditoria" / "REGISTRO_CAMBIOS_REVISION_FACTUAL.csv", encoding="utf-8", newline="") as fh:
         filas = list(csv.DictReader(fh))
-    assert len(filas) == 8 and len({f["id_cambio"] for f in filas}) == 8
+    assert len(filas) == 12 and len({f["id_cambio"] for f in filas}) == 12
     for f in filas:
         assert f["texto_original_exacto"] != f["texto_corregido_exacto"] and f["evidencia"].strip()
-    assert {f["propuesta"] for f in filas} == {"C3", "C6", "C7", "C8", "C9"}       # solo correcciones factuales (clase A)
+    assert {f["propuesta"] for f in filas} == {"C3", "C6", "C7", "C8", "C9", "C11", "C12"}       # solo correcciones factuales (clase A)
     clas = (ROOT / "auditoria" / "CLASIFICACION_CORRECCIONES.md").read_text(encoding="utf-8")
-    for c in ("C1", "C2", "C4", "C5", "C10", "C11"):
+    for c in ("C1", "C2", "C4", "C5", "C10"):
         assert f"| {c} |" in clas and "no aplicada" in clas

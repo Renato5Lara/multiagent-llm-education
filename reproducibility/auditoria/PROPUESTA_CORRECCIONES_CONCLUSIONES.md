@@ -37,7 +37,12 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 ## C8 — «PSO y social fueron equivalentes» (A47)
 **Propuesta:** como C3: «similares (no se ejecutó una prueba de equivalencia)».
 
-## C11 — «análisis independiente» (A97, A98, A100)
+## C12 — «prerregistro y sellado» (§5.8; A101, A104, INVENTARIO_PRERREGISTRO.csv)
+**Hallazgo:** ninguna corrida oficial se ha ejecutado; las campañas N1–N11 tienen especificación versionada (hash en `provenance.json`, fecha en Git) pero registrada como decisión interna no aprobada por el asesor, y la regla v3 no está sellada. La semilla 26092601 se fijó en Git (2026-09-27) antes de K = 10 v2 y se reutilizó después. Las frases sobre el procedimiento de las corridas oficiales son correctas (son prospectivas); la de §5.8 («la validez del estudio se resguarda mediante el prerregistro y el sellado de cada especificación antes de su ejecución») parece describir lo ejecutado.
+**Propuesta (aplicada a la copia de revisión como R9):** «…mediante la especificación versionada de cada campaña (identificada por hash y fecha en el control de versiones) y, para las corridas oficiales, mediante el prerregistro y el sellado de la especificación antes de su ejecución».
+**Distinción que debe mantenerse:** planificación interna previa con fecha en Git ≠ especificación documentada y versionada ≠ prerregistro independiente (ninguno existe).
+
+## C11 — «análisis independiente» (A97, A98) — aplicada a la copia de revisión (R10, R11, R12)
 **Hallazgo:** el resumen (párr. 55), §5.8 (724) y §6.6 (2031, 2043) hablan de reproducción/análisis «independiente»; fue hecho por el propio proyecto (independiente del código del artefacto, no de terceros), y §5.8 afirma «prerregistro y sellado de cada especificación» mientras las campañas registran decisiones internas no aprobadas por el asesor y la regla v3 no está sellada.
 **Propuesta:** «reproducidas con un análisis independiente del código del artefacto, realizado por el propio proyecto» y precisar qué especificaciones están selladas.
 
