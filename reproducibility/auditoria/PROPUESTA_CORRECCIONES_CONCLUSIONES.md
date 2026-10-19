@@ -17,7 +17,8 @@ Son **propuestas** para el autor/asesor, no cambios aprobados; el documento can�
 **Propuesta:** «frente a rules, ablación del propio sistema, el resultado fue similar (mismas diferencias significativas y razones de magnitud comparable; no se ejecutó una prueba de equivalencia).»
 
 ## C4 — Resumen y §6.5.4, «el despacho concurrente redujo el tiempo de convergencia en torno a 37 %» (A05)
-**Propuesta:** añadir «en N3» y una nota: «en réplicas posteriores (N3-R y N3-S) la reducción fue de ≈ 32 %».
+**Alcance:** la cifra aparece en **10 lugares** (resumen, abstract en inglés, §6.5.4, §6.5.5, §6.5.6, §6.7 ×3, §7.1 y un anexo): inventario en [`EFECTO_DESPACHO_MENCIONES.csv`](EFECTO_DESPACHO_MENCIONES.csv).
+**Propuesta (resumen):** «El despacho concurrente redujo el tiempo de convergencia en torno a 37 % en la campaña N3; en dos campañas posteriores con el mismo diseño la reducción fue de ≈ 32 %, de modo que su sentido es estable y su magnitud depende de la sesión de ejecución.» En los demás lugares, añadir «en N3» (o «(N3)» en tablas y anexos). No se promedian las campañas.
 **Evidencia:** N3 37,4 %; N3-R 32,2 %; N3-S 32,5 % (`outputs/oe3_replicacion.json`, `oe3_sesion.json`).
 
 ## C5 — Apartado complementario «Réplica exploratoria del OE3» (si el formato lo permite)
@@ -29,7 +30,7 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 
 ## C7 — §6.5.3, párrafo «Cautela sobre el mecanismo cognitivo» (A40, A42)
 **Original:** «su menor T_conv (65,7 ms frente a 78,8 ms con PSO) … el promedio marginal de la difusión de g_best (−16 %: 68,0 frente a 80,8 ms al omitirla)».
-**Problemas:** (a) la media aritmética de T_conv con PSO en N3 es 78,748 ms, que se redondea a **78,7** (no 78,8; una unidad del último decimal; posible doble redondeo no demostrado); (b) «68,0 frente a 80,8 ms al omitirla» puede leerse con el orden invertido (68,0 es el valor sin difusión).
+**Problemas:** (a) la media aritmética de T_conv con PSO en N3 es 78,74832635 ms (`oe3_marginales.csv`), que se redondea a **78,7**; el «78,8» ya figura en el informe del propio proyecto (`INFORME_RESULTADOS_OE3.md`), de donde la tesis lo transcribió; una causa de doble redondeo es plausible pero **no demostrable** (no existe el intermedio 78,75 en ningún archivo): discrepancia abierta; (b) «68,0 frente a 80,8 ms al omitirla» puede leerse con el orden invertido (68,0 es el valor sin difusión).
 **Propuesta:** «(65,7 ms frente a 78,7 ms con PSO; medias aritméticas)» y «(−16 %: 68,0 ms sin difusión frente a 80,8 ms con difusión)».
 **Evidencia:** `runs_oe3.csv` de N3 (medias aritméticas por mecanismo y por nivel de difusión).
 

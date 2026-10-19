@@ -468,3 +468,17 @@ def test_efecto_del_despacho_misma_definicion_direccion_estable_y_magnitud_depen
         assert abs(d[c]["reduccion_por_lotes_pct"] - 100 * (1 - 1 / d[c]["R_media_geometrica"])) < 1e-9   # una sola definición
     assert abs(d["N3"]["reduccion_por_lotes_pct"] - 37.4) < 0.1 and abs(d["N3R"]["reduccion_por_lotes_pct"] - 32.2) < 0.1 and abs(d["N3S"]["reduccion_por_lotes_pct"] - 32.5) < 0.1
     assert d["sesion_N3S_frente_a_N3"]["lotes_con_razon_menor_en_N3S"] == 5
+
+
+def test_registro_de_afirmaciones_prioritarias_es_consistente():
+    with open(ROOT / "auditoria" / "REGISTRO_AFIRMACIONES_PRIORITARIAS.csv", encoding="utf-8", newline="") as fh:
+        filas = list(csv.DictReader(fh))
+    ids = [f["id"] for f in filas]
+    assert len(ids) == len(set(ids)) and len(ids) >= 59                        # identificadores estables y sin duplicados
+    validos = {"COINCIDE_EXACTAMENTE", "COINCIDE_CON_REDONDEO", "DISCREPANCIA", "NO_REPRODUCIBLE", "PENDIENTE_DE_REVISION", "NO_APLICA"}
+    assert all(f["estado"] in validos for f in filas)
+    assert all(f["fuente_y_metodo"].strip() and f["texto_minimo"].strip() for f in filas)
+    assert all(f["limitacion"].strip() for f in filas if f["estado"] != "COINCIDE_EXACTAMENTE")   # toda no-exacta declara su limitación
+    with open(ROOT / "auditoria" / "EFECTO_DESPACHO_MENCIONES.csv", encoding="utf-8", newline="") as fh:
+        m = list(csv.DictReader(fh))
+    assert len(m) == 10 and all("N3-R" in r["efecto_por_campana"] and "N3-S" in r["efecto_por_campana"] for r in m)
