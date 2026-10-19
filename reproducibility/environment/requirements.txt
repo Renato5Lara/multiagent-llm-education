@@ -1,0 +1,6 @@
+# Dependencias para reproducir (verificadas con Python 3.13.5; las mismas versiones que cita el informe D2.9.7, Tabla 45)
+numpy==2.5.4
+pandas==3.0.6
+scipy==1.18.1
+statsmodels==0.15.0
+matplotlib==3.11.2
