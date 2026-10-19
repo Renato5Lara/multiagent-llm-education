@@ -2,13 +2,13 @@
 
 Son **propuestas** para el autor/asesor, no cambios aprobados; el documento canónico (copia corregida de D2.9.7) y el original no se han tocado. Cada una cita el texto original, el texto propuesto y la evidencia. Ninguna modifica objetivos, hipótesis, umbrales ni resultados. Los identificadores A## remiten a `REGISTRO_AFIRMACIONES_PRIORITARIAS.csv`.
 
-## C1 — §7.1, Conclusión del OE3 (A21)
+## C1 — Conclusión del OE3 «demostrado» (A21, A93, A94, A95) — aparece en 4 lugares: resumen (párr. 57), abstract en inglés (párr. 65), §6.7 (párr. 2066) y §7.1 (párr. 2093)
 **Original:** «El OE3 queda demostrado experimentalmente bajo las condiciones ejecutadas (diseño factorial de 48 condiciones; 1 usuario; N = 20; 5 corridas por condición).»
 **Problema:** «demostrado» excede la evidencia: campaña exploratoria y no oficial, un solo equipo, sin hipótesis estadística aprobada y sin ejecución oficial.
 **Propuesta:** «Los resultados de la campaña exploratoria N3 permiten caracterizar el efecto de la configuración interna sobre el tiempo de convergencia y la calidad en las condiciones ejecutadas (diseño factorial de 48 condiciones; 1 usuario; N = 20; 5 corridas por condición); el OE3 permanece pendiente de la ejecución oficial.»
 **Evidencia:** N3 (Tablas 13–14) y, en el apartado complementario, N3-R y N3-S (ver C5).
 
-## C2 — §7.1, Conclusión del OE4 (A27)
+## C2 — Conclusión del OE4 «demostrado»/«se cumplió» (A27, A71, A93, A94, A96) — aparece en 5 lugares: resumen (57), abstract en inglés (65), §6.5.4 (1758), §6.7 (2072) y §7.1 (2095)
 **Original:** «El OE4 queda demostrado experimentalmente bajo las condiciones ejecutadas (seis cargas de 1 a 100 usuarios; N = 10, 20 y 30; 419 corridas HTTP válidas, sin errores ni timeouts).»
 **Propuesta:** «Los resultados de las campañas exploratorias N4, N8, N8b y N11 caracterizan el desempeño computacional en el equipo local bajo las condiciones ejecutadas (seis cargas de 1 a 100 usuarios; N = 10, 20 y 30; 419 corridas HTTP válidas, sin errores ni timeouts); no permiten afirmar el cumplimiento de las metas en el hardware objetivo, que no se ejecutó.»
 
@@ -37,9 +37,14 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 ## C8 — «PSO y social fueron equivalentes» (A47)
 **Propuesta:** como C3: «similares (no se ejecutó una prueba de equivalencia)».
 
+## C11 — «análisis independiente» (A97, A98, A100)
+**Hallazgo:** el resumen (párr. 55), §5.8 (724) y §6.6 (2031, 2043) hablan de reproducción/análisis «independiente»; fue hecho por el propio proyecto (independiente del código del artefacto, no de terceros), y §5.8 afirma «prerregistro y sellado de cada especificación» mientras las campañas registran decisiones internas no aprobadas por el asesor y la regla v3 no está sellada.
+**Propuesta:** «reproducidas con un análisis independiente del código del artefacto, realizado por el propio proyecto» y precisar qué especificaciones están selladas.
+
 ## C9 — §6.5.5, «Sus medias difieren de las de la Tabla 13 en menos de 1,3 %… una diferencia cuyo origen no se identificó» (A59, D4)
 **Hallazgo:** el origen sí es identificable: las medias del reanálisis (ANOVA tipo II y de rangos) son **medias aritméticas** de T_conv y la Tabla 13 informa **medias geométricas**. La diferencia relativa va del 0,6 % al 3,8 % (despacho: 1,4 % y 0,6 %; difusión, heurística, réplicas y mecanismo: 2,9–3,8 %), de modo que «menos de 1,3 %» no se cumple para 10 de los 11 niveles.
-**Propuesta:** «Las medias del reanálisis son medias aritméticas de T_conv y las de la Tabla 13 son medias geométricas; difieren entre el 0,6 % y el 3,8 % según el nivel (despacho por lotes 57,5 frente a 56,8 ms; secuencial 91,2 frente a 90,6 ms), diferencia esperable porque los tiempos son positivos y asimétricos; no afecta a ninguna conclusión.»
+**Propuesta:** «Las medias del reanálisis son medias aritméticas de T_conv y las de la Tabla 13 son medias geométricas; difieren entre el 0,6 % y el 3,8 % según el nivel (despacho por lotes 57,5 frente a 56,8 ms; secuencial 91,2 frente a 90,6 ms), diferencia esperable porque los tiempos son positivos y asimétricos; no cambia el sentido ni el orden de ningún contraste (los efectos relativos difieren en menos de 1,3 puntos porcentuales).»
+**Verificación de «no afecta a ninguna conclusión»:** con ambos estadísticos el signo y el orden de los 6 contrastes principales coinciden; la mayor diferencia en un efecto relativo es 1,26 puntos (despacho secuencial +58,4 % con medias aritméticas frente a +59,7 % con geométricas); la significación de los contrastes se conserva según la tesis (reanálisis de rangos; no se recalculó aquí salvo el caso límite de las réplicas).
 **Evidencia:** `outputs/tables/oe3_medias_aritmeticas_vs_geometricas.csv`, `scripts/oe3_medias_aritmeticas_vs_geometricas.py`.
 
 ## C10 — §6.7, «a cambio de una pérdida pequeña de aptitud» (A51, D5)

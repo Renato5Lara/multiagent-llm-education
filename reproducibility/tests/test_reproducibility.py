@@ -474,7 +474,7 @@ def test_registro_de_afirmaciones_prioritarias_es_consistente():
     with open(ROOT / "auditoria" / "REGISTRO_AFIRMACIONES_PRIORITARIAS.csv", encoding="utf-8", newline="") as fh:
         filas = list(csv.DictReader(fh))
     ids = [f["id"] for f in filas]
-    assert len(ids) == len(set(ids)) and len(ids) >= 75                        # identificadores estables y sin duplicados
+    assert len(ids) == len(set(ids)) and len(ids) >= 100                        # identificadores estables y sin duplicados
     validos = {"COINCIDE_EXACTAMENTE", "COINCIDE_CON_REDONDEO", "DISCREPANCIA", "NO_REPRODUCIBLE", "PENDIENTE_DE_REVISION", "NO_APLICA"}
     assert all(f["estado"] in validos for f in filas)
     assert all(f["fuente_y_metodo"].strip() and f["texto_minimo"].strip() for f in filas)
@@ -492,3 +492,15 @@ def test_medias_aritmeticas_frente_a_geometricas_explican_la_diferencia_de_la_se
     assert d["niveles"] == 11 and d["niveles_que_superan_1_3_pct"] == 10 and 3.7 < d["maximo_dif_rel_sin_redondear_pct"] < 3.9
     desp = {r_["nivel"]: r_["dif_rel_sin_redondear_pct"] for r_ in d["despacho"]}
     assert abs(desp["despacho por lotes"] - 1.388) < 0.01 and abs(desp["despacho secuencial"] - 0.587) < 0.01
+
+
+def test_cambios_de_la_copia_de_revision_son_exactos_y_estan_justificados():
+    with open(ROOT / "auditoria" / "REGISTRO_CAMBIOS_REVISION_FACTUAL.csv", encoding="utf-8", newline="") as fh:
+        filas = list(csv.DictReader(fh))
+    assert len(filas) == 8 and len({f["id_cambio"] for f in filas}) == 8
+    for f in filas:
+        assert f["texto_original_exacto"] != f["texto_corregido_exacto"] and f["evidencia"].strip()
+    assert {f["propuesta"] for f in filas} == {"C3", "C6", "C7", "C8", "C9"}       # solo correcciones factuales (clase A)
+    clas = (ROOT / "auditoria" / "CLASIFICACION_CORRECCIONES.md").read_text(encoding="utf-8")
+    for c in ("C1", "C2", "C4", "C5", "C10", "C11"):
+        assert f"| {c} |" in clas and "no aplicada" in clas
