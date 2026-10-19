@@ -7,6 +7,41 @@
     "diferencia_maxima": 7.105427357601002e-15,
     "coincide": true
   },
+  "sensibilidad": {
+    "cociente_por_condicion": {
+      "n": 48,
+      "minimo": 0.7938053133676083,
+      "mediana": 0.8396517049560838,
+      "maximo": 0.8911359202689481
+    },
+    "cociente_por_lote": [
+      0.8689624969645303,
+      0.8454642334165825,
+      0.8297418347736043,
+      0.82978888788121,
+      0.8298329415706817
+    ],
+    "lotes_con_cociente_menor_que_1": 5,
+    "p_permutacion_de_signos_entre_lotes_bilateral": 0.0625,
+    "nota_potencia": "con 5 lotes la permutación de signos no puede dar p < 0,0625 (bilateral); el IC t de 4 gl supone normalidad aproximada de las medias por lote",
+    "media_T_conv_por_lote": {
+      "N3": {
+        "0": 71.43177822916667,
+        "1": 72.70640320833333,
+        "2": 75.41918508333333,
+        "3": 75.8422883125,
+        "4": 76.3836113125
+      },
+      "N3S": {
+        "0": 61.472560375,
+        "1": 60.9827065625,
+        "2": 62.1081678125,
+        "3": 62.48566208333333,
+        "4": 62.84404241666667
+      }
+    },
+    "lectura": "el cociente es menor que 1 en los 5 lotes. T_conv aumenta con el número de lote en ambas campañas (N3 ≈ +7 % del lote 0 al 4; N3-S ≈ +2 %), más en N3: una deriva dentro de la sesión, de causa no identificada, que explica que el cociente por lote vaya de 0,87 a 0,83"
+  },
   "t_conv_media_geometrica": {
     "N3": 71.72313798590496,
     "N3R": 60.3676933425427,
@@ -57,6 +92,8 @@
   "limitaciones": [
     "no separa sesión/estado del equipo de versión del código (fingerprints idénticos y ruta en proceso sin cambios, pero no es una prueba)",
     "la carga del sistema durante N3 (6 oct) no se registró: la causa de su mayor lentitud no es recuperable",
-    "un solo equipo; los lotes son bloques, no repeticiones independientes del fenómeno"
+    "un solo equipo; los lotes son bloques, no repeticiones independientes del fenómeno",
+    "el pre-registro es un archivo creado 15 s antes de lanzar N3-S y sin sello externo (no se hizo commit antes de ejecutar): es una pre-especificación local, no un registro con marca de tiempo independiente",
+    "los resultados no identifican la causa de la diferencia: no se atribuye a la carga del equipo (la de N3 no se registró) ni se descarta un cambio de código"
   ]
 }

@@ -67,14 +67,32 @@ def main():
     if p.exists():
         cs = pd.read_csv(p)
         carga = dict(muestras=len(cs), cpu_total_media=float(cs.cpu_pct_total.mean()), cpu_total_max=float(cs.cpu_pct_total.max()), memoria_libre_min_mb=float(cs.mem_avail_mb.min()))
-    out = dict(nota="exploratorio, no oficial; criterios en auditoria/PRE_REGISTRO_N3S.md", cadena_N3S=ch,
+    # sensibilidad: ¿el cociente depende de la unidad de análisis? (lotes = bloques, n = 5; condiciones, n = 48; permutación de signos entre lotes)
+    mm = a.merge(s, on=["condition", "batch"], suffixes=("_x", "_y"))
+    mm["lr"] = np.log(mm.t_conv_ms_y / mm.t_conv_ms_x)
+    por_cond = np.exp(mm.groupby("condition").lr.mean())
+    lotes_lr = mm.groupby("batch").lr.mean().values
+    import itertools
+    obs = abs(lotes_lr.mean())
+    perm = [abs(np.mean(np.array(sg) * lotes_lr)) for sg in itertools.product([-1, 1], repeat=len(lotes_lr))]
+    p_perm = float(np.mean([x >= obs - 1e-15 for x in perm]))
+    deriva_n3 = float(stats.spearmanr(a.sort_values(["batch"]).batch, a.sort_values(["batch"]).t_conv_ms)[0])
+    sens = dict(cociente_por_condicion=dict(n=int(len(por_cond)), minimo=float(por_cond.min()), mediana=float(por_cond.median()), maximo=float(por_cond.max())),
+                cociente_por_lote=[float(v) for v in np.exp(lotes_lr)], lotes_con_cociente_menor_que_1=int((lotes_lr < 0).sum()),
+                p_permutacion_de_signos_entre_lotes_bilateral=p_perm,
+                nota_potencia="con 5 lotes la permutación de signos no puede dar p < 0,0625 (bilateral); el IC t de 4 gl supone normalidad aproximada de las medias por lote",
+                media_T_conv_por_lote={"N3": {int(k): float(v) for k, v in a.groupby("batch").t_conv_ms.mean().items()}, "N3S": {int(k): float(v) for k, v in s.groupby("batch").t_conv_ms.mean().items()}},
+                lectura="el cociente es menor que 1 en los 5 lotes. T_conv aumenta con el número de lote en ambas campañas (N3 ≈ +7 % del lote 0 al 4; N3-S ≈ +2 %), más en N3: una deriva dentro de la sesión, de causa no identificada, que explica que el cociente por lote vaya de 0,87 a 0,83")
+    out = dict(nota="exploratorio, no oficial; criterios en auditoria/PRE_REGISTRO_N3S.md", cadena_N3S=ch, sensibilidad=sens,
                t_conv_media_geometrica={n: float(np.exp(np.log(d.t_conv_ms).mean())) for n, d in (("N3", a), ("N3R", r), ("N3S", s))},
                cociente_N3S_sobre_N3=dict(valor=q_s_n3, ic95=ci_s_n3, por_lote=lotes), cociente_N3S_sobre_N3R=dict(valor=q_s_r, ic95=ci_s_r),
                cociente_N3R_sobre_N3=dict(valor=q_r_n3, ic95=ci_r_n3), diferencia_maxima_calidad_N3S_frente_a_N3=determinismo, calidad_identica_con_mismas_semillas=ident,
                carga_sistema_N3S=carga, veredicto_preregistrado=veredicto,
                limitaciones=["no separa sesión/estado del equipo de versión del código (fingerprints idénticos y ruta en proceso sin cambios, pero no es una prueba)",
                              "la carga del sistema durante N3 (6 oct) no se registró: la causa de su mayor lentitud no es recuperable",
-                             "un solo equipo; los lotes son bloques, no repeticiones independientes del fenómeno"])
+                             "un solo equipo; los lotes son bloques, no repeticiones independientes del fenómeno",
+                             "el pre-registro es un archivo creado 15 s antes de lanzar N3-S y sin sello externo (no se hizo commit antes de ejecutar): es una pre-especificación local, no un registro con marca de tiempo independiente",
+                             "los resultados no identifican la causa de la diferencia: no se atribuye a la carga del equipo (la de N3 no se registró) ni se descarta un cambio de código"])
     (ROOT / "outputs/oe3_sesion.json").write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps({k: out[k] for k in ("cadena_N3S", "t_conv_media_geometrica", "cociente_N3S_sobre_N3", "cociente_N3S_sobre_N3R", "calidad_identica_con_mismas_semillas", "veredicto_preregistrado")}, ensure_ascii=False, indent=1))
 

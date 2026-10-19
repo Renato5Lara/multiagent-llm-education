@@ -424,3 +424,24 @@ def test_tabla6_usuarios_y_tabla27_por_perfil_se_recalculan():
     ids = {c["id"]: c["estado"] for c in ver["comprobaciones"]}
     for i in ("T6-usuarios-rho", "T6-usuarios-rho_p", "T27-perfil-media", "T27-perfil-mediana", "T27-perfil-sd", "T27-perfil-min", "T27-perfil-max"):
         assert ids.get(i) == "COINCIDE", (i, ids.get(i))
+
+
+def test_estados_de_requisitos_de_la_tabla_37_se_recalculan_y_detectan_alteraciones(copia):
+    import io
+    import pandas as pd
+    r = run("reproduce_results.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    ver = json.loads((ROOT / "outputs" / "verification_report.json").read_text(encoding="utf-8"))
+    est = {c["id"]: c["estado"] for c in ver["comprobaciones"] if c["id"].startswith("T37-")}
+    for rid in ("RF01", "RF02", "RF03", "RF04", "RF05", "REL-C", "RNF01", "RNF02", "RNF03"):
+        assert est[f"T37-{rid}-valor"] == "COINCIDE" and est[f"T37-{rid}-estado"] == "COINCIDE", rid
+    assert all(est[f"T37-{k}"] == "NO_REPRODUCIBLE" for k in ("RF06", "REL-D", "RNF04", "RNF05"))
+
+    def alterar(b):
+        d = pd.read_csv(io.BytesIO(b), low_memory=False)
+        d.loc[d.index[:3000], "w_valid"] = False                 # RF02 pasaría de 100 % a < 100 %: el estado MET ya no se sostiene
+        return d.to_csv(index=False).encode("utf-8")
+
+    with mutado(copia, "data/experiments/oe_n1_2026-10-05/oe3_run/raw_observations.csv", alterar):
+        r2 = run("reproduce_results.py", copia)
+        assert r2.returncode == 5, (r2.returncode, r2.stderr[-400:])   # 5 = hay discrepancia

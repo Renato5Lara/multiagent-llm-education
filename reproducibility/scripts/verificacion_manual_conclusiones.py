@@ -109,6 +109,41 @@ def main():
         "started_utc de runs.csv de N2, N4, N8, N8b, N9b, N11", "mínimo y máximo de started_utc", f"{lo_f.date()} a {hi_f.date()} (UTC)", "dentro del intervalo declarado",
         lo_f.date().isoformat() >= "2026-10-05" and hi_f.date().isoformat() <= "2026-10-15",
         "solo cubre las campañas con runs.csv HTTP; N1, N3, N5–N7 no tienen started_utc comparable; fechas UTC; los datos son registros del propio arnés (no prueba externa)")
+    # M11–M14: rangos del OE2 en el resumen y las conclusiones, recalculados a partir de las razones de las Tablas 9 (N2) y 11 (N9b) ya recalculadas desde datos
+    import re as _re
+    vr = json.loads((ROOT / "outputs/verification_report.json").read_text(encoding="utf-8"))
+    def razones(tabla, met, comp=None):
+        out_ = {}
+        for c in vr["comprobaciones"]:
+            if c["tabla"] != tabla or not c["id"].endswith("-razon") or f"-{met}-" not in c["id"]:
+                continue
+            if comp and f"-{comp}-" not in c["id"]:
+                continue
+            out_[c["id"]] = float(c["recalculado"])
+        return out_
+    p95_dt = list(razones("Tabla 9", "p95_ms").values()) + list(razones("Tabla 11", "p95_ms", "decision_table").values())
+    th_dt = list(razones("Tabla 9", "throughput_rps").values()) + list(razones("Tabla 11", "throughput_rps", "decision_table").values())
+    add("M11", [56, 64, 2091], ["3,9", "21,7"], "frente a decision_table el P95 fue de 3,9 a 21,7 veces mayor (dos sesiones: N2 y N9b)",
+        "Tablas 9 (N2) y 11 (N9b) recalculadas", "mínimo y máximo de la razón de P95 propuesta/decision_table sobre las cargas de N2 y N9b", f"{min(p95_dt):.2f} a {max(p95_dt):.2f}", "redondeo a 1 decimal",
+        round(min(p95_dt), 1) == 3.9 and round(max(p95_dt), 1) == 21.7, "son razones de medias geométricas por carga; «en dos sesiones» se entiende como la unión de N2 y N9b, que son campañas distintas y no se combinan estadísticamente")
+    add("M12", [2091], ["0,058", "0,213"], "throughput de 0,058 a 0,213 veces el del comparador en dos sesiones",
+        "Tablas 9 y 11 recalculadas", "mínimo y máximo de la razón de throughput propuesta/decision_table", f"{min(th_dt):.3f} a {max(th_dt):.3f}", "redondeo a 3 decimales",
+        round(min(th_dt), 3) == 0.058 and round(max(th_dt), 3) == 0.213, "ídem")
+    bf_th = razones("Tabla 11", "throughput_rps", "bruteforce")
+    bf_p95 = razones("Tabla 11", "p95_ms", "bruteforce")
+    ph = {c["id"]: float(c["recalculado"]) for c in vr["comprobaciones"] if c["tabla"] == "Tabla 11" and "bruteforce" in c["id"] and c["id"].endswith("throughput_rps-p_holm")}
+    ic = {}
+    for c in vr["comprobaciones"]:
+        if c["tabla"] == "Tabla 11" and "bruteforce" in c["id"] and "p95_ms-ic" in c["id"]:
+            ic[c["id"]] = float(c["recalculado"])
+    p95_ic_incluye_1 = all(ic[k.replace("-razon", "-ic_inf")] <= 1 <= ic[k.replace("-razon", "-ic_sup")] for k in bf_p95)
+    sig_users = sorted(int(_re.search(r"-u(\d+)-", k).group(1)) for k, v_ in ph.items() if v_ < 0.05)
+    add("M13", [56, 64, 2091], ["1,13", "1,51"], "frente a bruteforce el P95 fue indistinguible y el throughput de 1,13 a 1,51 veces mayor",
+        "Tabla 11 (N9b) recalculada", "razón de throughput propuesta/bruteforce por carga; IC95 % de la razón de P95", f"throughput {min(bf_th.values()):.2f} a {max(bf_th.values()):.2f}; IC95 % del P95 incluye 1 en todas las cargas: {p95_ic_incluye_1}", "redondeo a 2 decimales",
+        round(min(bf_th.values()), 2) == 1.13 and round(max(bf_th.values()), 2) == 1.51 and p95_ic_incluye_1, "«indistinguible» significa que el IC95 % incluye 1, no que se demuestre equivalencia; el enjambre no incorpora la calidad de la solución en esta comparación")
+    add("M14", [2091], ["5", "10", "25 usuarios"], "throughput significativo (Holm) con 5, 10 y 25 usuarios frente a bruteforce",
+        "Tabla 11 (N9b) recalculada", "cargas con p de Holm < 0,05 en el contraste de throughput propuesta/bruteforce", f"cargas significativas: {sig_users}", "p de Holm < 0,05", sig_users == [5, 10, 25],
+        "la significación estadística no implica relevancia práctica; análisis exploratorio con campaña no oficial")
     out = pd.DataFrame(filas)
     # M10: el mínimo observado en runs.csv es 6 oct (N1, que no tiene started_utc comparable, no se ve): solo el final (15 oct) está respaldado
     out.loc[out.id == "M10", "resultado"] = "PARCIAL"

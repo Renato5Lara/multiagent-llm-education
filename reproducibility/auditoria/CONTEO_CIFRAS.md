@@ -2,18 +2,18 @@
 
 **Definición.** Una *comprobación* (lo que antes se llamó «cifra») es **un valor numérico comparado** con su recálculo: en una celda «5,05 (4,57 a 5,58)» la razón, el límite inferior y el superior cuentan por separado (3 comprobaciones en 1 celda). Por tanto **861 no eran 861 celdas, ni 861 valores únicos**: eran 861 comprobaciones sobre 20 tablas.
 
-**Reproducción del 861 anterior.** El informe del commit `21c7380` contiene 869 comprobaciones, de las cuales 861 `VERIFICADO_DESDE_DATOS`, 8 `NO_REPRODUCIBLE` y 0 discrepantes. El cálculo es reproducible con `git show 21c7380:reproducibility/outputs/verification_report.json`. Todas las comprobaciones antiguas siguen presentes: 864 de 869 (faltan 5: ['PEND-Tabla 25', 'PEND-Tabla 36', 'PEND-Tablas 15 y 30', 'T27-perfil', 'T6-Usuarios (carga) fre']).
+**Reproducción del 861 anterior.** El informe del commit `21c7380` contiene 869 comprobaciones, de las cuales 861 `VERIFICADO_DESDE_DATOS`, 8 `NO_REPRODUCIBLE` y 0 discrepantes. El cálculo es reproducible con `git show 21c7380:reproducibility/outputs/verification_report.json`. Todas las comprobaciones antiguas siguen presentes: 863 de 869 (faltan 6: ['PEND-Tabla 25', 'PEND-Tabla 36', 'PEND-Tablas 15 y 30', 'PEND-Tablas 5 y 37', 'T27-perfil']).
 
 ## Conteo actual (esta rama)
 | | |
 |---|---|
-| Comprobaciones totales | 1017 |
-| `VERIFICADO_DESDE_DATOS` | 998 |
-| `VERIFICADO_DESDE_DERIVADO` | 14 |
+| Comprobaciones totales | 1038 |
+| `VERIFICADO_DESDE_DATOS` | 1014 |
+| `VERIFICADO_DESDE_DERIVADO` | 16 |
 | `DISCREPANCIA` | 0 |
-| `NO_REPRODUCIBLE` (elementos, no celdas: algunos agrupan varias tablas) | 5 |
+| `NO_REPRODUCIBLE` (elementos, no celdas: algunos agrupan varias tablas) | 8 |
 | Celdas numéricas del informe (excluida la fila de encabezados) | 1665 |
-| Celdas cubiertas por al menos una comprobación | 619 |
+| Celdas cubiertas por al menos una comprobación | 628 |
 
 Las comprobaciones **no** deben dividirse por tablas sin cuidado: una celda numérica puede tener varias y algunas celdas son etiquetas de condición (carga, N) que no se calculan. El inventario por celda y por afirmación en prosa está en `CONCILIACION_TESIS_DATOS.csv`.
 
@@ -21,7 +21,10 @@ Las comprobaciones **no** deben dividirse por tablas sin cuidado: una celda num�
 No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tablas enteras. Estado actual de cada uno (ver `CONCILIACION_TESIS_DATOS.csv`, estado `NO_REPRODUCIBLE`/`PENDIENTE_DE_EVIDENCIA`):
 - T6-usuarios-tau: la tesis publica «no calculado»; no hay cifra que comparar
 - T27-sus: no existen datos: 0 evaluadores reales; no se simulan
-- PEND-Tablas 5 y 37: estados MET/NOT_MET: texto categórico del informe de N1 (oe1_report.json); no hay cálculo numérico que recomputar aquí
+- T37-RF06: sonda de persistencia (20 ciclos) que no se conserva entre los datos publicados
+- T37-REL-D: sonda de determinismo (20 pares) cuyo registro no está entre los datos publicados; solo consta en oe1_report.json del propio arnés
+- T37-RNF04: la mediana del throughput por lote en proceso de N1 no está en los archivos publicados (sin batches.json de N1)
+- T37-RNF05: sin evaluadores SUS (0 respuestas); no se simula
 - PEND-Tablas 32 y 44: síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista
 - PEND-Tabla 35: instrumento SUS sin aplicar: no hay datos; no se simulan
 
@@ -64,7 +67,7 @@ No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tab
 |      34 |                 23 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |      35 |                 10 |                  0 |                1 |                         0 |                            0 |              0 |                  1 |                           0 |
 |      36 |                149 |                  0 |               33 |                        33 |                            0 |              0 |                  0 |                          29 |
-|      37 |                 42 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
+|      37 |                 42 |                  9 |               22 |                        16 |                            2 |              0 |                  4 |                           5 |
 |      38 |                 64 |                 56 |               56 |                        56 |                            0 |              0 |                  0 |                          34 |
 |      39 |                  2 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |      40 |                 56 |                 49 |               49 |                        49 |                            0 |              0 |                  0 |                          29 |

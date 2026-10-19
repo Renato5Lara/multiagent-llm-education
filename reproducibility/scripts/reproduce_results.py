@@ -377,6 +377,36 @@ def n3_cadena():
         raw_chain.append({"campana": "N3", "estado": "NO_REPRODUCIBLE", "motivo": f"{type(e).__name__}: {str(e)[:120]}"})
 
 
+def tabla_37_estados(T):
+    """Recalcula desde las 9 500 observaciones en proceso de N1 los valores y el ESTADO (MET/NOT_MET) de los requisitos de la Tabla 37 que se pueden calcular
+    con los registros publicados, aplicando los umbrales escritos en la propia tabla (no se inventa ninguna regla). RF06, REL-D, RNF04, RNF03 y RNF05 no se recalculan aquí."""
+    d = pd.concat([pd.read_csv(EXP / f"oe_n1_2026-10-05/{r}/raw_observations.csv", low_memory=False) for r in ("oe3_run", "oe4_run")], ignore_index=True)
+    n = len(d)
+    ap = d.status.eq("completed")
+    vals = {"RF01": float((d.error_code.astype(str) != "ProfileError").mean()), "RF02": float(d.w_valid.astype(bool).mean()), "RF03": float(d.inflight_overlap.astype(bool).mean()),
+            "RF04": float(d.iterations_logged.astype(bool).mean()), "RF05": float(d.package_valid.astype(bool).mean()), "REL-C": float(ap.mean()),
+            "RNF01": float(np.percentile(d[d.f_concurrency <= 25].latency_ms, 95)), "RNF02": float(d.k_stop.max())}
+    cr = float(((d.stop_reason == "epsilon") & (d.k_stop <= 15)).mean())
+    regla = {"RF01": lambda v: v == 1, "RF02": lambda v: v == 1, "RF03": lambda v: v == 1, "RF04": lambda v: v == 1, "RF05": lambda v: v == 1, "REL-C": lambda v: v >= 0.99,
+             "RNF01": lambda v: v < 2000, "RNF02": lambda v: v <= 15 and cr >= 0.98}
+    f = f"recálculo desde las {n} observaciones en proceso de N1 (oe3_run + oe4_run); umbral de la propia Tabla 37. RF02–RF05 usan las banderas por ciclo que registró el arnés (w_valid, inflight_overlap, iterations_logged, package_valid); su contenido (paquetes, iteraciones) no se conserva y no se recomputa"
+    for rr in T[37][1:]:
+        rid = rr[0]
+        if rid not in vals:
+            continue
+        add(f"T37-{rid}-valor", "Tabla 37", f"{rid}: valor del indicador", "N1", f, rr[4], vals[rid])
+        estado = "MET" if regla[rid](vals[rid]) else "NOT_MET"
+        add(f"T37-{rid}-estado", "Tabla 37", f"{rid}: estado {rr[5].split(' ')[0]} según el umbral «{rr[3]}»", "N1", f, "1", 1.0 if estado == rr[5].split(" ")[0] else 0.0)
+    h = json.loads((EXP / "oe_n1_2026-10-05/f1_k10_v2_historical.json").read_text(encoding="utf-8"))["f1_adapt"]
+    fd = "resumen histórico del proyecto f1_k10_v2_historical.json (F1 v2, K = 10); su origen, las réplicas K10 rastreadas en Git, se verifica en la Tabla 30; umbral de la Tabla 37"
+    rr3 = next(r for r in T[37][1:] if r[0] == "RNF03")
+    add_der("T37-RNF03-valor", "Tabla 37", "RNF03: valor del indicador (F1 v2)", "K10", fd, rr3[4], h)
+    add_der("T37-RNF03-estado", "Tabla 37", f"RNF03: estado {rr3[5].split(' ')[0]} según el umbral «{rr3[3]}»", "K10", fd, "1", 1.0 if ("MET" if h >= 0.85 else "NOT_MET") == rr3[5].split(" ")[0] else 0.0)
+    for rid, why in (("RF06", "sonda de persistencia (20 ciclos) que no se conserva entre los datos publicados"), ("REL-D", "sonda de determinismo (20 pares) cuyo registro no está entre los datos publicados; solo consta en oe1_report.json del propio arnés"),
+                     ("RNF04", "la mediana del throughput por lote en proceso de N1 no está en los archivos publicados (sin batches.json de N1)"), ("RNF05", "sin evaluadores SUS (0 respuestas); no se simula")):
+        add_na(f"T37-{rid}", "Tabla 37", f"{rid}: estado", "N1", why)
+
+
 def tablas_5_6_27_28_29_41(T, w):
     n8 = w / N8
     o = json.loads((n8 / "oe1_verify/oe1_verify.json").read_text(encoding="utf-8"))["asociacion_condiciones"]["resultados"]
@@ -665,6 +695,7 @@ def main() -> int:
     tablas_17_18_19_20(T, work)
     tablas_21_24(T, work)
     tablas_5_6_27_28_29_41(T, work)
+    tabla_37_estados(T)
     tabla_38(T)
     tablas_15_30(T)
     tabla_25(T)
@@ -675,8 +706,7 @@ def main() -> int:
     if todo or oe == "oe3":
         tablas_13_14_40(T, work)
         n3_cadena()
-    for t_, camp, why in [("Tablas 5 y 37", "N1", "estados MET/NOT_MET: texto categórico del informe de N1 (oe1_report.json); no hay cálculo numérico que recomputar aquí"),
-                          ("Tablas 32 y 44", "transversal", "síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista"),
+    for t_, camp, why in [("Tablas 32 y 44", "transversal", "síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista"),
                           ("Tabla 35", "N5", "instrumento SUS sin aplicar: no hay datos; no se simulan")]:
         add_na(f"PEND-{t_}", t_, "", camp, why)
     if not todo:
