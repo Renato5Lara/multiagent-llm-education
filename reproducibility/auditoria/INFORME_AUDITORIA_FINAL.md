@@ -50,3 +50,6 @@ Error de transcripción de una unidad que no cambia ninguna conclusión. Registr
 6. **¿Condiciones objetivo?** No: hardware local, un único equipo, campañas no oficiales; la nube 8 vCPU/32 GB no se ejecutó.
 7. **¿Validación independiente?** No: la hizo el propio proyecto.
 8. **¿Qué demuestra este paquete?** Que con estos archivos y estos scripts el cálculo da el valor publicado, o muestra por qué no puede. No demuestra causalidad ni que las campañas se ejecutaran como se declara.
+
+## G. Fase de cierre de cobertura (posterior a Colab)
+Detalle en `INFORME_CIERRE_COBERTURA.md`. Resumen: las 45 comprobaciones fuera de los notebooks son transversales (Tablas 36 y 45 de hashes y 32/44), 966 + 45 = 1 011; la prosa pendiente baja de 812 a 595 y la parcial sube de 670 a 887 **solo** porque 217 valores de diseño existen en registros del paquete (verificación débil, no de la oración completa); ninguna afirmación pasó a `COINCIDE`. Los commits `2fb5c04` → `2d06690` no cambian notebooks, scripts ni datos, por lo que la ejecución en Colab sigue siendo válida para ellos, pero el commit final **no** se ejecutó en Colab. La tesis **no** queda verificada por completo.

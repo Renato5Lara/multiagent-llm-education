@@ -1,0 +1,50 @@
+{
+  "estados_prosa": {
+    "VERIFICACION_PARCIAL": 887,
+    "PENDIENTE_DE_EVIDENCIA": 595,
+    "NO_APLICA": 347,
+    "COINCIDE_EXACTAMENTE": 23,
+    "COINCIDE_CON_REDONDEO_JUSTIFICADO": 11
+  },
+  "estados_celdas_no_cubiertas": {
+    "NO_APLICA": 982,
+    "VERIFICACION_PARCIAL": 65,
+    "PENDIENTE_DE_EVIDENCIA": 6,
+    "NO_REPRODUCIBLE": 4
+  },
+  "prosa_subida_a_parcial_por_este_script": 217,
+  "categorias_prosa_abiertas": {
+    "RESULTADO_CUANTITATIVO": 447,
+    "OTRO_REVISAR": 428,
+    "PARAMETRO_DE_DISENO": 381,
+    "EXTRACTO_DE_REGISTRO": 226
+  },
+  "hechos_de_especificacion": {
+    "vcpu_medido": 20,
+    "ram_gib_medida": 31.75,
+    "python_campanas": "3.12.10",
+    "perfiles_n1": 100,
+    "espacio_configuraciones": 6561,
+    "condiciones_n3": 48,
+    "lotes_n3": 5,
+    "usuarios_en_runs": [
+      1,
+      5,
+      10,
+      25,
+      50,
+      100
+    ],
+    "warmup_s_en_runs": [
+      10.0
+    ],
+    "timeout_s_en_runs": [
+      30.0
+    ],
+    "swarm_N_en_runs": [
+      10.0,
+      20.0,
+      30.0
+    ]
+  }
+}
