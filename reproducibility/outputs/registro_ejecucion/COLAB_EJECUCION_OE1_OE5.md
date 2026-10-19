@@ -17,3 +17,10 @@ Fecha: 2026-10-19. Cada notebook se abrió desde `https://colab.research.google.
 - OE1 y OE5 no se reprodujeron enteros: quedan los `NO_REPRODUCIBLE` listados en `CONTEO_CIFRAS.md`.
 - OE1: el final de las celdas H/I (línea `RESUMEN_COLAB`) no se leyó en pantalla; sí las celdas D–G. En OE2–OE5 la celda I contiene `files.download`, que descarga un ZIP en el navegador.
 - El cuaderno índice `reproducibilidad_tesis.ipynb` **no** se volvió a ejecutar en Colab en este commit; su última ejecución en Colab fue en `439eb4c` (ver `COLAB_EJECUCION_REAL.md`).
+
+## Segunda ronda en Colab: commit `2c2ae3e` (2026-10-19)
+Tras añadir la réplica N3-R (OE3), los cinco notebooks se **reejecutaron** en Colab sobre `2c2ae3e402cac5dd2aa5a388fea30c954b678e7b` (transcripción manual de pantalla, igual que la primera ronda).
+- **Un fallo real, detectado por la propia integridad del paquete:** la ejecución del OE3 en `36a3380` se detuvo en la celda C con `manifiesto: 1559/1560 coinciden; faltan=1`. El archivo ausente era `data/experiments/oe_n3r_2026-10-19/run/logs/run.log`, ignorado por `.gitignore` (`logs/`): existía en local pero no en el clon. Se eliminó (su contenido ya está en `run.log`), se regeneró el manifiesto (1 559 archivos) y se añadió la prueba `test_todo_archivo_del_manifiesto_esta_versionado_en_git`.
+- OE3 en `2c2ae3e`: manifiesto 1559/1559; cadena N3-R coincide; efectos que replican 21 de 21; 131 cifras (128 + 3 con diferencia explicada); sin discrepancias.
+- OE1: 16 desde datos y 2 no reproducibles; OE2: 240 coinciden; OE4: 491 (481 + 10); OE5: «Sin discrepancias». 0 discrepancias en los cinco.
+- El índice transversal `reproducibilidad_tesis` **no** se volvió a ejecutar en Colab; su última ejecución sigue siendo `439eb4c`.
