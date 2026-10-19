@@ -42,7 +42,7 @@ Original D2.9.7 `a6bb2934de7fd512…` intacto; copia corregida `1bd0894c9586e433
 ## 5. Commits y ejecuciones
 - Commit de código y datos de esta fase: `d986b75bc722759ad6c25a77be722133dbb3625c`. Los commits posteriores (`42dd0b9` y el que incorpora este texto) solo cambian documentación en `auditoria/` y `outputs/registro_ejecucion/`.
 - **Colab:** los cinco notebooks por objetivo y el transversal se ejecutaron sobre `d986b75` y terminaron sin error (transcripción manual de capturas de pantalla; ver `COLAB_EJECUCION_OE1_OE5.md`, cuarta ronda). Entre `acaa19c` y `d986b75` cambiaron `reproduce_results.py` y `oe3_sesion.py`, por eso se repitieron. Una primera lectura automática del texto de la página dio un falso positivo en OE4 (la ejecución había sido bloqueada por el límite de sesiones de Colab); se repitió y se confirmó por captura.
-- **Pruebas locales:** 45 pruebas pasan (venv del proyecto, sobre el árbol previo a `d986b75`, con los cambios ya incluidos); los commits posteriores no tocan código.
+- **Pruebas locales:** 45 pruebas pasan sobre el HEAD `9612bb5` (venv del proyecto, 7 min 47 s). Revisado el diff de `d986b75` a `9612bb5` (`git diff --stat` por commit): solo `auditoria/ESTADO_NOTEBOOKS_COLAB.csv`, `auditoria/INFORME_CIERRE_FINAL.md` y `outputs/registro_ejecucion/COLAB_EJECUCION_OE1_OE5.md`; ni código, ni datos, ni notebooks.
 
 ## 6. Pendientes priorizados
 **Bloqueos técnicos:** `batches.json` y sondas de N1 (RF06, REL-D, RNF04); revisión oración por oración de ≈ 1 440 afirmaciones en prosa (trabajo manual extenso); acceso a las fuentes de las Tablas 32/44.
@@ -59,3 +59,13 @@ Original D2.9.7 `a6bb2934de7fd512…` intacto; copia corregida `1bd0894c9586e433
 | Tabla 37: valores y estados desde N1 | `scripts/reproduce_results.py` | `test_estados_de_requisitos_de_la_tabla_37_…` (incluye alteración de N1) |
 | Rangos del OE2 (M11–M14) | `scripts/verificacion_manual_conclusiones.py` | `VERIFICACION_MANUAL.csv` |
 | Regeneración de conciliación, conteo, trazabilidad y mapa | `auditoria/*`, `RESULTS_TRACEABILITY.csv` | scripts de generación y pruebas |
+
+## 8. Revisión de las afirmaciones prioritarias (fase de cierre de conclusiones)
+Se revisaron, una por una y contra los resultados recalculados, **37 afirmaciones atómicas** del resumen, de §7.1 (conclusiones general y de OE1–OE5) y de §8: [`REGISTRO_AFIRMACIONES_PRIORITARIAS.csv`](REGISTRO_AFIRMACIONES_PRIORITARIAS.csv) (identificador, ubicación, texto mínimo, tipo, fuente y método, estado, limitación y acción). Resultado: **21 coinciden exactamente, 10 con redondeo, 3 pendientes de revisión, 1 no reproducible y 2 con discrepancia de alcance.** Esto cubre una fracción pequeña de las ≈ 1 440 afirmaciones abiertas; el resto sigue pendiente.
+- **Discrepancias de alcance (no numéricas):** «el OE3 queda demostrado experimentalmente» (A21) y «el OE4 queda demostrado experimentalmente» (A27) exceden la evidencia exploratoria, no oficial y local. Propuestas de redacción en [`PROPUESTA_CORRECCIONES_CONCLUSIONES.md`](PROPUESTA_CORRECCIONES_CONCLUSIONES.md) (C1, C2), **sin aplicar** al DOCX.
+- **Hallazgo nuevo sobre una cifra del resumen (A05):** «el despacho concurrente redujo el T_conv en torno a 37 %» es la cifra de N3; con las mismas semillas, en la sesión posterior (N3-S) y en N3-R la reducción es ≈ 32 %. El sentido y la dominancia se mantienen, la magnitud depende de la sesión. Propuesta C4.
+- **Pendientes de revisión:** «equivalente» frente a `rules` (A19: no hay prueba de equivalencia; propuesta C3), RF06/REL-D en «cumplió los requerimientos» (A02; propuesta C6) y las cifras de terceros de las Tablas 32/44 (A37).
+- **No reproducible:** el 14,98 req/s de RNF04 en proceso (A15; falta `batches.json` de N1).
+- **Ocho elementos no reproducibles:** resolución individual en [`RESOLUCION_NO_REPRODUCIBLES.md`](RESOLUCION_NO_REPRODUCIBLES.md). Dos categorías de cierre posible: localizar y publicar archivos de N1 (RF06, REL-D, RNF04) y obtener fuentes externas (Tablas 32/44); SUS requiere evaluadores humanos reales.
+- **Hipótesis del OE3:** sigue como propuesta pendiente de aprobación (no preregistrada); no se usó en ningún análisis.
+- **«Cero discrepancias» ≠ tesis verificada:** significa sin diferencias numéricas no explicadas en el alcance de 1 038 comprobaciones de tablas y 37 afirmaciones; el universo de afirmaciones en prosa sigue en gran parte sin revisar.
