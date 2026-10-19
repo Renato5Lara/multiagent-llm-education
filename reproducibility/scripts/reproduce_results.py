@@ -28,7 +28,7 @@ import scipy
 import statsmodels
 from scipy import stats
 
-from repro_lib import EXIT_DIFERENCIA, EXIT_OK, EXP, OUT, ROOT, compare, report_tables, sha256
+from repro_lib import EXIT_DIFERENCIA, EXIT_OK, EXP, OUT, ROOT, compare, comparar_archivos, report_tables, sha256
 
 N8 = "oe_n8_2026-10-13"
 import os
@@ -94,7 +94,7 @@ def run_project_scripts(work):
                 rel = f.relative_to(EXP / N8).as_posix()
                 g = n8 / rel
                 byte.append({"archivo": f"{N8}/{rel}", "sha256_publicado": sha256(f)[:16], "sha256_recalculado": sha256(g)[:16] if g.exists() else None,
-                             "estado": "COINCIDE_BYTE_A_BYTE" if g.exists() and sha256(g) == sha256(f) else "DIFIERE" if g.exists() else "NO_GENERADO"})
+                             "estado": comparar_archivos(g, f)})
     return rc, byte
 
 

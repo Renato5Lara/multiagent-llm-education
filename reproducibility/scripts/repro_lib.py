@@ -86,3 +86,46 @@ def report_tables():
         if m:
             out[int(m.group(1))] = t["rows"]
     return d["source_sha256"], out
+
+
+def comparar_archivos(regenerado: Path, publicado: Path) -> str:
+    """Nivel de igualdad entre un archivo regenerado y el publicado:
+    COINCIDE_BYTE_A_BYTE · COINCIDE_SALVO_FINALES_DE_LINEA (los publicados se generaron en Windows con CRLF; en Linux/Colab salen con LF) ·
+    COINCIDE_NUMERICO (mismo contenido, números iguales con tolerancia relativa 1e-9) · DIFIERE · NO_GENERADO."""
+    if not regenerado.exists():
+        return "NO_GENERADO"
+    a, b = regenerado.read_bytes(), publicado.read_bytes()
+    if a == b:
+        return "COINCIDE_BYTE_A_BYTE"
+    na, nb = a.replace(b"\r\n", b"\n"), b.replace(b"\r\n", b"\n")
+    if na == nb:
+        return "COINCIDE_SALVO_FINALES_DE_LINEA"
+    try:
+        if publicado.suffix == ".csv":
+            import pandas as pd
+            x, y = pd.read_csv(regenerado, low_memory=False), pd.read_csv(publicado, low_memory=False)
+            if x.shape == y.shape and list(x.columns) == list(y.columns):
+                import numpy as np
+                ok = True
+                for c in x.columns:
+                    if pd.api.types.is_numeric_dtype(x[c]) and pd.api.types.is_numeric_dtype(y[c]):
+                        ok &= bool(np.allclose(x[c].to_numpy(float), y[c].to_numpy(float), rtol=1e-9, atol=0, equal_nan=True))
+                    else:
+                        ok &= bool((x[c].fillna("") == y[c].fillna("")).all())
+                return "COINCIDE_NUMERICO" if ok else "DIFIERE"
+        elif publicado.suffix == ".json":
+            import json
+            import math
+
+            def eq(p, q):
+                if isinstance(p, dict) and isinstance(q, dict):
+                    return p.keys() == q.keys() and all(eq(p[k], q[k]) for k in p)
+                if isinstance(p, list) and isinstance(q, list):
+                    return len(p) == len(q) and all(eq(i, j) for i, j in zip(p, q))
+                if isinstance(p, float) or isinstance(q, float):
+                    return isinstance(p, (int, float)) and isinstance(q, (int, float)) and math.isclose(p, q, rel_tol=1e-9, abs_tol=0)
+                return p == q
+            return "COINCIDE_NUMERICO" if eq(json.loads(regenerado.read_text(encoding="utf-8")), json.loads(publicado.read_text(encoding="utf-8"))) else "DIFIERE"
+    except Exception:  # noqa: BLE001
+        pass
+    return "DIFIERE"

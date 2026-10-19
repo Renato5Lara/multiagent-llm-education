@@ -26,10 +26,13 @@ Descarga el paquete de evidencia, comprueba la **integridad** de sus archivos (S
 
 cells.append(md("## B. Preparación del entorno\nSe instalan **solo** las dependencias fijadas (las mismas versiones que cita el informe). No se necesitan tokens, claves ni archivos privados."))
 cells.append(code("""%pip install -q numpy==2.5.4 pandas==3.0.6 scipy==1.18.1 statsmodels==0.15.0 matplotlib==3.11.2
-import sys, platform, importlib
-for m in ("numpy", "pandas", "scipy", "statsmodels", "matplotlib"):
-    print(f"{m:12s}", importlib.import_module(m).__version__)
-print("Python      ", platform.python_version())"""))
+import sys, platform, subprocess
+# Los scripts se ejecutan en procesos nuevos: estas son las versiones que realmente usan (el kernel de Colab puede tener cargadas otras, p. ej. numpy preinstalado).
+print(subprocess.run([sys.executable, "-c", "import platform, numpy, pandas, scipy, statsmodels, matplotlib as m; "
+      "print('Python      ', platform.python_version()); "
+      "[print(f'{n:12s}', mod.__version__) for n, mod in (('numpy', numpy), ('pandas', pandas), ('scipy', scipy), ('statsmodels', statsmodels), ('matplotlib', m))]"],
+      capture_output=True, text=True).stdout)
+# Nota: pip puede avisar de conflictos con paquetes preinstalados de Colab (google-colab, numba). No afectan a este análisis."""))
 
 cells.append(md("""## C. Acceso a los datos
 Por defecto el notebook **clona el repositorio público** `https://github.com/Renato5Lara/multiagent-llm-education` en la referencia `REF`.
@@ -103,7 +106,7 @@ if rc != 0:
 cells.append(md("""## F. Reproducción de resultados
 `reproduce_results.py` comprueba tres eslabones:
 1. **Peticiones → corrida.** Cada fila de `runs.csv` se recalcula con el código del proyecto (`http_window.summarize_run`) a partir de los registros por petición `raw/*.csv`.
-2. **Corridas → derivados.** Se ejecutan **sin modificar** los scripts de análisis del proyecto sobre una copia temporal **en la que antes se han borrado todas las salidas**, y se comprueba que lo regenerado sea **idéntico byte a byte** a lo publicado.
+2. **Corridas → derivados.** Se ejecutan **sin modificar** los scripts de análisis del proyecto sobre una copia temporal **en la que antes se han borrado todas las salidas**, y se comprueba que lo regenerado sea idéntico a lo publicado (byte a byte; en Linux/Colab, salvo los finales de línea, porque los archivos publicados se generaron en Windows con CRLF).
 3. **Derivados → tablas.** Se comparan las cifras del informe con lo recalculado.
 
 **Ejemplo guiado, Tabla 8 (campaña N2):** las 80 corridas originales (`oe_n2_2026-10-05/campaign/runs.csv`: 2 sistemas × 4 cargas × 10 corridas) → media por sistema y carga → comparación con las 8 filas × 4 métricas del informe."""))

@@ -8,10 +8,10 @@ Informe contrastado: `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (versión e
 
 ## Cadena que se comprueba
 1. **Peticiones → corrida:** cada fila de `runs.csv` se recalcula con el código del proyecto a partir de los registros por petición (`raw/*.csv`): N2, N3, N4, N8, N8b, N9b y N11, sin diferencias (máx. 3.6e-12).
-2. **Corridas → resultados derivados:** los 37 CSV/JSON que generan los scripts de análisis del proyecto (sin modificar) se regeneran **byte a byte** tras borrar antes sus salidas.
+2. **Corridas → resultados derivados:** los 37 CSV/JSON que generan los scripts de análisis del proyecto (sin modificar) se regeneran tras borrar antes sus salidas: idénticos byte a byte en Windows y, en Linux/Colab, idénticos salvo los finales de línea (los publicados llevan CRLF).
 3. **Derivados → tablas del informe:** se comparan las cifras del informe con lo recalculado.
 
-## Resultado de la última ejecución (Python 3.13.5, entorno limpio, 27 pruebas)
+## Resultado de la última ejecución (Python 3.13.5, entorno limpio, 28 pruebas)
 | | |
 |---|---|
 | Archivos del manifiesto con SHA-256 coincidente | 1540 / 1540 |

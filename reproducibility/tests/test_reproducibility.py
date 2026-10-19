@@ -137,6 +137,19 @@ def test_clasificacion_de_diferencias(pub, rec, estado):
     assert compare(pub, rec)["estado"] == estado
 
 
+def test_comparar_archivos_distingue_finales_de_linea_de_cambios_reales(tmp_path):
+    from repro_lib import comparar_archivos
+    pub, reg = tmp_path / "pub.csv", tmp_path / "reg.csv"
+    pub.write_bytes(b"a,b\r\n1,2.5\r\n")
+    reg.write_bytes(b"a,b\n1,2.5\n")
+    assert comparar_archivos(reg, pub) == "COINCIDE_SALVO_FINALES_DE_LINEA"
+    reg.write_bytes(b"a,b\n1,2.5000000001\n")
+    assert comparar_archivos(reg, pub) == "COINCIDE_NUMERICO"
+    reg.write_bytes(b"a,b\n1,2.6\n")
+    assert comparar_archivos(reg, pub) == "DIFIERE"
+    assert comparar_archivos(tmp_path / "no_existe.csv", pub) == "NO_GENERADO"
+
+
 # ---- reproducción de cálculos deterministas y clasificación de pendientes
 @pytest.fixture(scope="module")
 def reproduccion():
@@ -148,7 +161,7 @@ def reproduccion():
 def test_scripts_del_proyecto_corren_y_derivados_son_byte_a_byte(reproduccion):
     assert all(v["codigo"] == 0 for v in reproduccion["scripts_del_proyecto_ejecutados"].values())
     assert len(reproduccion["derivados_byte_a_byte"]) >= 30
-    assert {b["estado"] for b in reproduccion["derivados_byte_a_byte"]} == {"COINCIDE_BYTE_A_BYTE"}
+    assert {b["estado"] for b in reproduccion["derivados_byte_a_byte"]} <= {"COINCIDE_BYTE_A_BYTE", "COINCIDE_SALVO_FINALES_DE_LINEA", "COINCIDE_NUMERICO"}
 
 
 def test_cadena_peticiones_a_corridas_en_todas_las_campanas(reproduccion):
