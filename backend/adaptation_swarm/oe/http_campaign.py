@@ -257,7 +257,7 @@ def provenance(args: argparse.Namespace, runs: list[dict]) -> dict:
     prov = {"schema": SCHEMA, "campaign_id": args.campaign_id, "experiment": args.experiment, "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "campaign_spec": campaign_spec.identity(),
             "code": _infra.code_version(), "environment": _infra.environment(), "hardware": hw, "hardware_state": campaign_guards.hardware_state(hw), "environment_class": campaign_guards.hardware_state(hw)["environment_class"], "official": bool(args.official), "oe2_official": False,
             "official_refusals": [], "definition_version": {"requirements": oe_defs.REQUIREMENTS_VERSION, "f1": oe_defs.f1_selection_record(None)},
-            "design": {"runs_per_cell": args.runs, "users": args.users, "particles": args.particles, "systems": args.systems, "warmup_s": args.warmup, "window_s": args.window, "base_seed": args.base_seed,
+            "design": {"runs_per_cell": args.runs, "users": args.users, "particles": args.particles, "systems": args.systems, "warmup_s": args.warmup, "window_s": args.window, "start_margin_s": getattr(args, "start_margin", START_MARGIN_S), "base_seed": args.base_seed,
                        "order": args.order, "n_planned_runs": len(runs), "seed_rule": "derive_seed(base_seed, 'http-campaign-run', run_index); distinta por corrida, compartida entre celdas (bloqueado)"},
             "persist_policy": args.persist_policy, "api_persist_env_forced": "0" if args.persist_policy == "off" else None, "generator_shares_host_with_server": True,
             "persistence_conditions": {"comparison": campaign_spec.COMPARISON_PERSISTENCE, "proposal_cost": campaign_spec.PROPOSAL_COST_PERSISTENCE if any(r["persist_policy"] == campaign_spec.PROPOSAL_COST_PERSISTENCE for r in runs) else None,
@@ -295,11 +295,11 @@ def provenance(args: argparse.Namespace, runs: list[dict]) -> dict:
 
 
 # ── ejecución (E/S real; inyectable en pruebas) ─────────────────────────────────────────────────────────────────
-def locust_runner(host: str, locustfile: Path, plugin: Path, raw_dir: Path, python: str, timeout_s: float = CLIENT_TIMEOUT_S) -> Callable[[dict, float, float], tuple[list[dict], list[dict]]]:
+def locust_runner(host: str, locustfile: Path, plugin: Path, raw_dir: Path, python: str, timeout_s: float = CLIENT_TIMEOUT_S, start_margin_s: float = START_MARGIN_S) -> Callable[[dict, float, float], tuple[list[dict], list[dict]]]:
     def run(r: dict, warmup: float, window: float) -> tuple[list[dict], list[dict]]:
         raw = raw_dir / raw_filename(r["run_id"])                                       # nombre físico seguro en Windows; el run_id lógico no cambia
         env = {**os.environ, "SWARM_LOAD_RAW_CSV": str(raw), "SWARM_LOAD_BATCH_SEED": str(r["seed"]), "SWARM_LOAD_SYSTEM": r["system"], "SWARM_LOAD_WORKER_INDEX": "0", "SWARM_LOAD_TIMEOUT_S": str(timeout_s)}
-        total = int(warmup + window + START_MARGIN_S)
+        total = int(warmup + window + start_margin_s)
         subprocess.run([python, "-m", "locust", "-f", f"{locustfile},{plugin}", "--headless", "-u", str(r["load"]), "-r", str(r["load"]), "-t", f"{total}s", "--host", host], env=env, check=True,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return http_window.read_raw(raw), http_window.read_cpu(Path(str(raw) + ".cpu.csv"))
@@ -362,8 +362,61 @@ class ServerPerN:
         self.proc, self.n, self.persist = None, None, None
 
 
+JOURNAL_STATES = ("completed", "invalid", "failed", "interrupted")        # completed: ventana válida; invalid: ejecutada sin ventana analizable; failed: la carga falló; interrupted: se abortó la campaña en esa corrida
+JOURNAL_REUSABLE = ("completed", "invalid")                                # estados que una reanudación NO re-ejecuta (la medición existe y se conserva tal cual)
+
+
+class RunJournal:
+    """Diario incremental de la campaña: UNA línea JSON por corrida terminada (estado + registro), añadida y sincronizada a disco (flush + fsync) antes de pasar a la siguiente.
+    Un corte del proceso pierde, como máximo, la corrida en curso; una línea final truncada se ignora al leer. Vive fuera del directorio de salida (que debe ser nuevo).
+    Al reanudar no se duplica ninguna corrida con medición."""
+
+    def __init__(self, directory: Path, campaign_id: str):
+        self.dir, self.campaign_id = Path(directory), campaign_id
+        self.path = self.dir / "runs.journal.jsonl"
+
+    def append(self, state: str, run_id: str, payload: dict | None = None, **extra) -> None:
+        if state not in JOURNAL_STATES:
+            raise ValueError(f"estado de diario desconocido: {state!r}")
+        self.dir.mkdir(parents=True, exist_ok=True)
+        line = json.dumps({"campaign_id": self.campaign_id, "state": state, "run_id": run_id, "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "record": payload, **extra},
+                          sort_keys=True, default=str, ensure_ascii=False)
+        with self.path.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write(line + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+
+    def entries(self) -> list[dict]:
+        if not self.path.exists():
+            return []
+        out = []
+        for ln in self.path.read_text(encoding="utf-8").splitlines():
+            try:
+                out.append(json.loads(ln))
+            except json.JSONDecodeError:                                   # línea final truncada por un corte: no es una corrida terminada
+                continue
+        return out
+
+    def _final(self) -> dict[str, dict]:
+        last: dict[str, dict] = {}
+        for e in self.entries():                                           # la ÚLTIMA entrada de cada run_id manda
+            last[e["run_id"]] = e
+        return last
+
+    def reusable(self) -> dict[str, dict]:
+        """run_id → registro de las corridas con medición (completed/invalid)."""
+        return {k: e["record"] for k, e in self._final().items() if e["state"] in JOURNAL_REUSABLE and e.get("record")}
+
+    def summary(self) -> dict:
+        last = self._final()
+        return {"campaign_id": self.campaign_id, "journal": str(self.path), "entries_total": len(self.entries()), "runs_with_final_state": len(last),
+                "final_state_counts": {st: sum(1 for e in last.values() if e["state"] == st) for st in JOURNAL_STATES},
+                "failed_run_ids": sorted(k for k, e in last.items() if e["state"] in ("failed", "interrupted"))}
+
+
 def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_run: Callable, ensure_server: Callable[[int, str], object], log: Callable[[str], None] = print,
-            profile_ids: Sequence[str] | None = None, isolate: Callable[[dict], dict] | None = None, observe: Callable[[dict], int | None] | None = None) -> list[dict]:
+            profile_ids: Sequence[str] | None = None, isolate: Callable[[dict], dict] | None = None, observe: Callable[[dict], int | None] | None = None,
+            journal: RunJournal | None = None, done: dict[str, dict] | None = None) -> list[dict]:
     """`ensure_server(N, persistencia)` devuelve el /health verificado (o None si no se verifica). `isolate(run)` limpia el estado por ciclo de Redis ANTES de la corrida y devuelve su registro; si falla, la campaña se detiene.
     `observe(run)` (solo lectura) devuelve cuántos ciclos hay persistidos en PostgreSQL con la etiqueta de la campaña; se consulta antes y después de la carga para comprobar que ON escribió y OFF no."""
     ids = list(profile_ids) if profile_ids is not None else [p.profile_id for p in read_dataset(DEFAULT_PROFILES)]
@@ -372,14 +425,33 @@ def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_ru
     for r in runs:                                                                                    # sistema que ocurre primero en cada par (ronda, carga): el orden del plan ES el orden de ejecución
         first_of_pair.setdefault((r["run_index"], r["load"]), r["system"])
     for k, r in enumerate(runs, 1):
-        effective = ensure_server(r["swarm_N"], r["persist_policy"])
+        if done and r["run_id"] in done:                                                              # reanudación: la medición existe en el diario; no se repite ni se duplica
+            out.append(done[r["run_id"]])
+            log(f"[{k}/{len(runs)}] {r['run_id']} ya medida (diario): se conserva")
+            continue
+        try:
+            effective = ensure_server(r["swarm_N"], r["persist_policy"])
+        except BaseException as exc:
+            if journal is not None:
+                journal.append("interrupted", r["run_id"], None, error=repr(exc), execution_index=k)
+            raise
         iso = isolate(r) if isolate is not None else None
         if isinstance(effective, dict) and effective.get("pre_restart_clean") is not None:
             iso = {**(iso or {}), "pre_restart_clean": effective["pre_restart_clean"]}
         before = observe(r) if observe is not None else None
         log(f"[{k}/{len(runs)}] {r['run_id']} seed={r['seed']}")
         started_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        raw, cpu = do_run(r, warmup, window)
+        try:
+            raw, cpu = do_run(r, warmup, window)
+        except Exception as exc:                                                                      # la carga de ESTA corrida falló: se registra y la campaña sigue (no se pierde lo ya medido)
+            log(f"    FAILED: {type(exc).__name__}: {str(exc)[:160]}")
+            if journal is not None:
+                journal.append("failed", r["run_id"], None, error=repr(exc), execution_index=k)
+            continue
+        except BaseException as exc:                                                                  # Ctrl-C u otra interrupción: se anota y se propaga
+            if journal is not None:
+                journal.append("interrupted", r["run_id"], None, error=repr(exc), execution_index=k)
+            raise
         after = observe(r) if observe is not None else None
         summary = http_window.summarize_run(raw, cpu, users=r["load"], system=r["system"], run_id=r["run_id"], warmup_s=warmup, min_window_s=window,
                                          batch_seed=r["seed"], profile_ids=ids)
@@ -392,6 +464,8 @@ def execute(runs: list[dict], prov: dict, *, warmup: float, window: float, do_ru
             rec["server_instance"], rec["server_restarted_before_run"], rec["server_runs_served_before"] = (effective.get(x) for x in ("server_instance", "server_restarted_before_run", "server_runs_served_before"))
         rec["postgres_observation"] = postgres_observation(rec["persist_policy_effective"] or r["persist_policy"], before, after) if observe is not None else None
         out.append(rec)
+        if journal is not None:
+            journal.append("completed" if summary["status"] == "ok" else "invalid", r["run_id"], rec, execution_index=k)
         log(f"    {summary['status']}: " + (f"P95 {summary['latency_p95_ms']:.0f} ms · {summary['throughput_rps']:.2f} req/s · error {summary['error_rate']:.2%}" if summary["status"] == "ok" else ""))
     return out
 
@@ -554,6 +628,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--proposal-persistence-cost", action="store_true", help="OE2: añade corridas de la PROPUESTA con persistencia ON (costo de la persistencia síncrona); NO entran al contraste contra decision_table")
     ap.add_argument("--client-timeout", type=float, default=CLIENT_TIMEOUT_S, help=f"timeout de cliente por petición, igual para todos los sistemas ({CLIENT_TIMEOUT_STATUS}); queda en la provenance")
     ap.add_argument("--inprocess-run", type=Path, help="analyze: directorio de una corrida de `oe/runner.py oe2` cuyas observaciones in-process (decision_ms por perfil) se unen al análisis HTTP")
+    ap.add_argument("--start-margin", type=float, default=START_MARGIN_S, help="segundos extra de ejecución de Locust sobre warmup+window; amplía el tiempo TOTAL (no el umbral de ventana ni el calentamiento). Si la primera respuesta tarda más que el margen, la ventana mínima no cabe y la corrida sale inválida (carga alta o N grande)")
+    ap.add_argument("--resume", action="store_true", help="reanuda una campaña interrumpida: reutiliza las corridas con medición del diario `<out-dir>.journal/` (completed/invalid) y ejecuta solo las faltantes o fallidas; mismo --campaign-id, plan y semillas")
     ap.add_argument("--warmup", type=float, default=http_window.WARMUP_S_MIN)
     ap.add_argument("--window", type=float, default=http_window.WINDOW_S_MIN)
     ap.add_argument("--base-seed", type=int, default=DEFAULT_BASE_SEED)
@@ -573,6 +649,11 @@ def main(argv: list[str] | None = None) -> None:
         raise SystemExit("--campaign-id es obligatorio")
     if out_dir.exists():
         raise SystemExit(f"{out_dir} ya existe: no se sobrescribe evidencia")
+    journal = RunJournal(out_dir.with_name(out_dir.name + ".journal"), args.campaign_id)
+    if journal.path.exists() and not args.resume:
+        raise SystemExit(f"{journal.path} ya existe (campaña interrumpida): use --resume con el mismo --campaign-id o un --out-dir nuevo; no se sobrescribe evidencia")
+    if args.resume and not journal.path.exists():
+        raise SystemExit(f"--resume sin diario previo en {journal.path}")
     runs = plan(args.experiment, runs=args.runs, base_seed=args.base_seed, users=args.users, particles=args.particles, systems=args.systems, order=args.order, campaign_id=args.campaign_id, proposal_persistence_cost=args.proposal_persistence_cost)
     prov = provenance(args, runs)
     if args.official and prov["official_refusals"]:
@@ -589,7 +670,7 @@ def main(argv: list[str] | None = None) -> None:
         raise SystemExit("definir SWARM_API_KEY")
     back = Path(__file__).resolve().parents[2]
     raw_dir = out_dir.with_name(out_dir.name + ".tmp-raw")          # fuera de out_dir: write_campaign exige un directorio NUEVO
-    raw_dir.mkdir(parents=True)
+    raw_dir.mkdir(parents=True, exist_ok=bool(args.resume))
     isolation = run_isolation.RedisRunIsolation(prov["redis_isolation"]["prefix"])
     server = ServerPerN(sys.executable, args.port, key, redis_prefix=isolation.prefix, run_label=args.campaign_id)
     probe = run_isolation.PostgresRunProbe(args.campaign_id) if any(r["persist_policy"] == campaign_spec.PROPOSAL_COST_PERSISTENCE for r in runs) else None     # PostgreSQL solo interviene si hay celdas ON
@@ -600,10 +681,10 @@ def main(argv: list[str] | None = None) -> None:
         print(m, flush=True)
     try:
         records = execute(runs, prov, warmup=args.warmup, window=args.window,
-                          do_run=locust_runner(f"http://localhost:{args.port}", back / "loadtest" / "locustfile.py", Path(__file__).with_name("locust_raw_log.py"), raw_dir, sys.executable, args.client_timeout),
+                          do_run=locust_runner(f"http://localhost:{args.port}", back / "loadtest" / "locustfile.py", Path(__file__).with_name("locust_raw_log.py"), raw_dir, sys.executable, args.client_timeout, args.start_margin),
                           ensure_server=make_ensure_server(server, args.server_policy or default_server_policy(args.experiment), clean=lambda: isolation.reset("pre-restart")), log=log,
                           isolate=lambda r: isolation.reset(r["run_id"]),
-                          observe=(lambda r: probe.cycles()) if probe is not None else None)
+                          observe=(lambda r: probe.cycles()) if probe is not None else None, journal=journal, done=(journal.reusable() if args.resume else None))
     finally:
         server.stop()
     record_effective_server(prov, server.health_log)
@@ -613,7 +694,9 @@ def main(argv: list[str] | None = None) -> None:
     prov["integrity_violations"] = integrity_violations(records)
     if prov["integrity_violations"] or prov["provenance_completion_gaps"]:
         log(f"ATENCIÓN: {len(prov['integrity_violations'])} violación(es) de invariantes y {len(prov['provenance_completion_gaps'])} hueco(s) de provenance al terminar: la campaña NO es válida como oficial (`official_valid = false` en el manifiesto)")
+    prov["journal_summary"] = journal.summary()
     write_campaign(out_dir, prov, runs, records, lines, raw_dir=raw_dir)
+    (out_dir / "journal_summary.json").write_text(json.dumps(prov["journal_summary"], indent=1, sort_keys=True), encoding="utf-8")
     raw_dir.rename(out_dir / "raw")
     print(f"escrito: {out_dir} ({len(records)} corridas; clase {prov['environment_class']}; oficial={prov['official']})")
 
