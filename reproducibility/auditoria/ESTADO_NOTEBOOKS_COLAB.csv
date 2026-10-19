@@ -1,0 +1,6 @@
+objetivo,notebook,preparado,ejecutado_localmente,estado_colab,todas_las_celdas_ejecutadas_en_colab,salidas_conservadas,commit_ejecutado,cifras_recalculadas,cifras_coincidentes,diferencias_explicadas,diferencias_sin_explicar,no_reproducibles,observaciones
+OE1,objetivo_1_requisitos_y_desempeno.ipynb,SI,SI (nbclient),NO_EJECUTADO_EN_COLAB,NO,NO,,,,,,,pendiente de ejecución en Colab
+OE2,objetivo_2_enjambre_vs_convencional.ipynb,SI,SI (nbclient),NO_EJECUTADO_EN_COLAB,NO,NO,,,,,,,pendiente de ejecución en Colab
+OE3,objetivo_3_configuracion_interna.ipynb,SI,SI (nbclient),NO_EJECUTADO_EN_COLAB,NO,NO,,,,,,,pendiente de ejecución en Colab
+OE4,objetivo_4_carga_y_tamano_del_enjambre.ipynb,SI,SI (nbclient),NO_EJECUTADO_EN_COLAB,NO,NO,,,,,,,pendiente de ejecución en Colab
+OE5,objetivo_5_precision_y_usabilidad.ipynb,SI,SI (nbclient),NO_EJECUTADO_EN_COLAB,NO,NO,,,,,,,pendiente de ejecución en Colab

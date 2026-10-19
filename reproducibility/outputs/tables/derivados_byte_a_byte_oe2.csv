@@ -1,0 +1,8 @@
+archivo,sha256_publicado,sha256_recalculado,estado
+oe_n8_2026-10-13/oe2_aux/oe2_aux.json,dbc4e2e45c0dfbb0,dbc4e2e45c0dfbb0,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_aux/oe2_aux_contrastes.csv,49cd49475304b613,49cd49475304b613,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_aux/oe2_aux_descriptivos.csv,9bc978aea41fb4ef,9bc978aea41fb4ef,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_aux/oe2_consistencia_N9b_vs_N2.csv,4d20b436548dc3ab,4d20b436548dc3ab,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_reanalysis/oe2_contrastes.csv,56f3972a28727c0a,56f3972a28727c0a,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_reanalysis/oe2_descriptivos.csv,b774a6571873c7b7,b774a6571873c7b7,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_reanalysis/oe2_reanalysis.json,07372b571b9a5dda,07372b571b9a5dda,COINCIDE_BYTE_A_BYTE

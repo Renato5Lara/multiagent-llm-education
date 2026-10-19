@@ -1,71 +1,47 @@
-# Paquete de evidencia reproducible
+# Evidencia reproducible de la tesis, por objetivo específico
 
 Tesis: *Validación de una arquitectura multiagente basada en inteligencia de enjambre para la adaptación multimodal en Programación.*
-Informe contrastado: `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (versión editorial; los datos provienen de `backend/experiments/`).
+**Versión auditada:** informe `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (sha256 `a6bb2934de7fd512…`). La versión vigente de la tesis formula **cinco** objetivos específicos (OE1–OE5), idénticos en el proyecto V7.1 (2026-10-17); un borrador antiguo (2026-09-21) tenía cuatro. Textos literales: [`auditoria/OBJETIVOS_LITERALES.json`](auditoria/OBJETIVOS_LITERALES.json).
 
-**Objetivo:** que una persona ajena al proyecto pueda elegir una cifra de una tabla del informe, encontrar el archivo que la respalda, ejecutar el cálculo y obtener el mismo resultado, o ver por qué no puede.
-**No es** una demostración de que las hipótesis se cumplan, ni una prueba de que cada experimento se hizo en las condiciones declaradas: demuestra que *con estos archivos y estos scripts* las cifras salen. Todas las campañas (N1–N11) son **experimentales y no oficiales**.
+**Objetivo del paquete:** que un asesor elija una cifra del informe, encuentre el archivo que la respalda, ejecute el cálculo y obtenga el mismo resultado, o vea por qué no puede. **No** prueba que las hipótesis se cumplan, ni que los experimentos se hicieran en las condiciones declaradas, ni que los registros sean auténticos (un hash prueba identidad frente a una referencia, no veracidad). Todas las campañas son **experimentales y no oficiales**, en un único equipo local.
 
-## Cadena que se comprueba
-1. **Peticiones → corrida:** cada fila de `runs.csv` se recalcula con el código del proyecto a partir de los registros por petición (`raw/*.csv`): N2, N3, N4, N8, N8b, N9b y N11, sin diferencias (máx. 3.6e-12).
-2. **Corridas → resultados derivados:** los 37 CSV/JSON que generan los scripts de análisis del proyecto (sin modificar) se regeneran tras borrar antes sus salidas: idénticos byte a byte en Windows; en Linux/Colab, idénticos salvo los finales de línea (los publicados llevan CRLF) o con diferencias de punto flotante dentro de 1e-6 relativo / 1e-12 absoluto (la ejecución real en Colab dio 17 y 20 archivos de esos dos tipos, 0 diferentes).
-3. **Derivados → tablas del informe:** se comparan las cifras del informe con lo recalculado.
+## 1. Un notebook por objetivo (Google Colab, independientes entre sí)
+Rama publicada: `repro/auditoria-integral-2026-10-19` del repositorio `Renato5Lara/multiagent-llm-education`. Abra el enlace, «Ejecutar todas» y confirme el aviso estándar de Colab para cuadernos de GitHub.
 
-## Resultado de la última ejecución (Python 3.13.5, entorno limpio, 28 pruebas)
-| | |
-|---|---|
-| Archivos del manifiesto con SHA-256 coincidente | 1540 / 1540 |
-| Cifras del informe comprobadas | 869 |
-| ↳ `VERIFICADO_DESDE_DATOS` (recalculadas; 3 de la Tabla 13 difieren 1 unidad del último decimal por **doble redondeo demostrado**: `publicacion/AUDITORIA_REDONDEO_TABLA13.md`) | **861** |
-| ↳ `VERIFICADO_DESDE_DERIVADO` | 0 |
-| ↳ `DISCREPANCIA` | **0** |
-| ↳ `NO_REPRODUCIBLE` (con motivo) | 8 |
-| Tablas del informe verificadas desde datos | 18: 8–11, 13, 14, 17–24, 28, 29, 40 y 41. Parciales: 6 y 27 |
+| Objetivo | Notebook | Tablas que concilia | Campañas |
+|---|---|---|---|
+| OE1 requisitos y desempeño | [`objetivo_1_requisitos_y_desempeno`](https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/auditoria-integral-2026-10-19/reproducibility/notebooks/objetivo_1_requisitos_y_desempeno.ipynb) | 5, 6, 37 y cifras en prosa | N1 |
+| OE2 enjambre vs convencional | [`objetivo_2_enjambre_vs_convencional`](https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/auditoria-integral-2026-10-19/reproducibility/notebooks/objetivo_2_enjambre_vs_convencional.ipynb) | 8–11, 38 | N2, N9b |
+| OE3 configuración interna | [`objetivo_3_configuracion_interna`](https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/auditoria-integral-2026-10-19/reproducibility/notebooks/objetivo_3_configuracion_interna.ipynb) | 13, 14, 15, 40 | N3, K10 (v2) |
+| OE4 carga y tamaño del enjambre | [`objetivo_4_carga_y_tamano_del_enjambre`](https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/auditoria-integral-2026-10-19/reproducibility/notebooks/objetivo_4_carga_y_tamano_del_enjambre.ipynb) | 17–25 | N4, N8, N8b, N11 |
+| OE5 precisión y usabilidad | [`objetivo_5_precision_y_usabilidad`](https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/auditoria-integral-2026-10-19/reproducibility/notebooks/objetivo_5_precision_y_usabilidad.ipynb) | 27–30, 35, 41 | N5, K10 (v2) |
+| Índice transversal (todo el informe) | [`reproducibilidad_tesis`](https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/auditoria-integral-2026-10-19/reproducibility/notebooks/reproducibilidad_tesis.ipynb) | todas las recalculables + hashes de las Tablas 36 y 45 | todas |
 
-Detalle por tabla: [`RESULTS_TRACEABILITY.csv`](RESULTS_TRACEABILITY.csv). Detalle por cifra: `outputs/tables/comparacion_con_informe.csv` y `outputs/verification_report.json`.
+Cada notebook: (A) objetivo literal, meta y limitaciones · (B) entorno · (C) clona el repositorio y verifica el SHA-256 de cada archivo · (D) valida los datos · (E) recalcula · (F) compara con el informe, cifra por cifra · (G) prueba negativa del comparador y pruebas rápidas · (H) conclusión limitada a la evidencia · (I) exportación. El estado de ejecución real en Colab de cada uno está en [`auditoria/ESTADO_NOTEBOOKS_COLAB.csv`](auditoria/ESTADO_NOTEBOOKS_COLAB.csv).
 
-**Lo que NO está verificado** (estado `PARCIAL`/`NO_REPRODUCIBLE`/`NO_APLICA` en la matriz): estados categóricos de N1 (Tablas 5, 37); K10 histórico (15, 30); pruebas de carga exploratorias (25); síntesis bibliográfica (32, 44); la última fila de la Tabla 6 y las estadísticas por perfil de la 27; SUS y panel de expertos (**no hay datos: 0 evaluadores reales; no se simulan**). Las celdas «sin efecto» de la Tabla 13 no se comprueban.
+## 2. Cómo localizar la fuente de una cifra
+1. Busque la tabla y la celda en [`auditoria/CONCILIACION_TESIS_DATOS.csv`](auditoria/CONCILIACION_TESIS_DATOS.csv): trae el valor publicado y el recalculado sin redondear, la fuente, su hash, el script, la fórmula, la política de redondeo, la tolerancia y el estado.
+2. El archivo de datos está en `data/experiments/<campaña>/…` (manifiesto con SHA-256: [`EVIDENCE_MANIFEST.csv`](EVIDENCE_MANIFEST.csv)). Mapa objetivo → indicador → campaña → tabla: [`auditoria/MAPA_OBJETIVOS_EVIDENCIAS.csv`](auditoria/MAPA_OBJETIVOS_EVIDENCIAS.csv). Estado por tabla: [`RESULTS_TRACEABILITY.csv`](RESULTS_TRACEABILITY.csv).
 
-> «Coincide» significa que el valor recalculado, redondeado a la precisión del informe, iguala al publicado. Un hash prueba la identidad de un archivo frente a una referencia, no que su contenido sea verdadero. Que los registros por petición sean reales (y no fabricados) **no puede demostrarse con cómputo**: solo que las métricas salen de ellos.
+## 3. Qué está verificado y qué no
+Detalle y método de conteo: [`auditoria/CONTEO_CIFRAS.md`](auditoria/CONTEO_CIFRAS.md) e [`auditoria/INFORME_AUDITORIA_FINAL.md`](auditoria/INFORME_AUDITORIA_FINAL.md).
+- **1 011 comprobaciones numéricas** de tablas (un «valor comparado»; una celda «5,05 (4,57 a 5,58)» son 3): 1 002 coinciden a su precisión publicada, **3 difieren una unidad por doble redondeo del informe** (Tabla 13: ver [`auditoria/AUDITORIA_REDONDEO_TABLA13.md`](auditoria/AUDITORIA_REDONDEO_TABLA13.md); corrección propuesta en [`auditoria/REGISTRO_CAMBIOS_TESIS.csv`](auditoria/REGISTRO_CAMBIOS_TESIS.csv)), **0 discrepancias** y 6 no reproducibles. De las que coinciden, 14 lo hacen con un resultado *derivado* publicado (Tablas 25 y 30) y el resto desde datos originales.
+- La cadena **registro por petición → `runs.csv`** se recalcula en 7 campañas (N2, N3, N4, N8, N8b, N9b, N11) y los 37 archivos que generan los scripts del proyecto se regeneran idénticos (byte a byte, o salvo finales de línea/ruido de punto flotante en Linux).
+- **Cifras en prosa del OE1** (8) recalculadas desde los 9 500 ciclos de N1.
+- **Todavía sin verificar:** 812 afirmaciones numéricas en prosa (en su mayoría enteros pequeños y parámetros de diseño) y 6 celdas de tablas están `PENDIENTE_DE_EVIDENCIA`; 670 afirmaciones en prosa tienen `VERIFICACION_PARCIAL` (el valor existe en los datos recalculados, no la oración completa); estados categóricos de las Tablas 5 y 37; síntesis bibliográfica (32, 44); última fila de la Tabla 6 y estadísticas por perfil de la 27.
+- **Sin datos, por diseño:** SUS y panel de expertos (**0 evaluadores reales**; no se simulan). El OE5 está evidenciado solo parcialmente: la meta F1_adapt ≥ 0,85 **no se alcanza** con v3 provisional (≈ 0,816) ni con v2 histórico (≈ 0,641).
 
-## N9 y N9b
-- **N9** (`oe_n9_2026-10-13`): campaña **abortada y descartada** (38 de 160 iniciadas; falló Locust). Solo se publica una copia sanitizada de su `campaign.log`. No respalda ninguna cifra (`data/metadata/N9_ABORTADA.md`).
-- **N9b** (`oe_n9b_2026-10-14`): réplica integrada, 160/160 corridas válidas; respalda la Tabla 11. Se reanudó con `--resume`: 159 corridas proceden del intento `campaign/` y la corrida `bruteforce|u5|N20-r08` se reejecutó en `campaign_final/raw`.
-- No se combinan registros de N9 con N9b. El informe llama **N8b** al directorio `oe_n10_2026-10-14_n20`.
+## 4. Limitaciones científicas que se mantienen
+`decision_table` es un sistema convencional **definido operacionalmente en el estudio**, no un baseline externo validado; `rules` es una **ablación** y `bruteforce` una **referencia de optimalidad**. `T_conv` es una medición exploratoria propuesta, distinta de TTFC. En el OE3 se ejecutó un ANOVA factorial; las pruebas planeadas (p. ej. Friedman con Holm) no se ejecutaron. Los experimentos son en **hardware local**; las condiciones objetivo (8 vCPU / 32 GB en la nube) **no se ejecutaron**. N11 tiene dos tramos con régimen de rendimiento distinto. N9 fue **abortada y descartada** (38 de 160) y no se combina con N9b. La verificación D2.7 la hizo el propio proyecto, no un tercero. Los OE1–OE3 no tienen hipótesis estadística formulada en la tesis.
 
-## Cómo ejecutar
-### Google Colab (ejecutado de verdad el 2026-10-19: ver `outputs/registro_ejecucion/COLAB_EJECUCION_REAL.md`)
-Abra `notebooks/reproducibilidad_tesis.ipynb` desde GitHub (rama `repro/publicable-2026-10-19`, repositorio `Renato5Lara/multiagent-llm-education`) y ejecute las celdas **en orden**. No requiere tokens ni claves. La celda C hace un clon parcial (`reproducibility/` y `backend/adaptation_swarm`) del repositorio público. Enlace de apertura:
-`https://colab.research.google.com/github/Renato5Lara/multiagent-llm-education/blob/repro/publicable-2026-10-19/reproducibility/notebooks/reproducibilidad_tesis.ipynb`
-
-### Local (desde un clon del repositorio)
-```bash
-cd reproducibility
-python -m venv .venv && source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r environment/requirements-dev.txt
-cd scripts
-python verify_hashes.py      # integridad (código 2 si hay error)
-python validate_data.py      # esquema y datos (3 = esquema, 4 = datos)
-python reproduce_results.py  # recálculo y comparación (5 = discrepancia); ~1,5 min
-python build_traceability.py
-cd .. && python -m pytest tests -q
+## 5. Contenido
 ```
-`reproduce_results.py` usa el código del proyecto (`../backend/adaptation_swarm`); si trabaja con una copia aislada de `reproducibility/`, defina `REPRO_BACKEND` con la ruta a `backend/`. Los scripts escriben en `outputs/`, no modifican `data/`.
-
-## Contenido
+auditoria/     inventario, mapa objetivo→evidencia, conciliación tesis↔datos, redondeo, correcciones, comparador, conteo, estado de Colab, informe final
+notebooks/     objetivo_1…objetivo_5 (+ índice reproducibilidad_tesis); sin salidas guardadas
+data/          evidencia (≈ 253 MB; STAGING_REPORT.csv lista lo copiado y lo excluido) y transcripción de las tablas del informe
+scripts/ tests/ environment/ outputs/ publicacion/ outputs/registro_ejecucion/
 ```
-README.md  PROVENANCE.md  DATA_DICTIONARY.md  LICENSE-DATA.md  CITATION.cff
-EVIDENCE_MANIFEST.csv      SHA-256 recalculado de cada archivo publicado (1540)
-RESULTS_TRACEABILITY.csv   tabla del informe → campaña → archivo → script → estado
-environment/               dependencias fijadas
-data/experiments/          evidencia copiada de backend/experiments (≈250 MB; ver data/metadata/STAGING_REPORT.csv)
-data/metadata/             transcripción de las tablas del informe, N9, sanitización, exclusiones
-scripts/  tests/  notebooks/  outputs/  publicacion/
-```
-Los scripts de análisis del proyecto (sin modificar) están en `data/experiments/oe_n8_2026-10-13/scripts/`.
+Ejecución local: `pip install -r environment/requirements-dev.txt`; `cd scripts && python reproduce_results.py [--oe oe1..oe5]`; `python -m pytest tests -q` (el código del proyecto se toma de `../backend`; con una copia aislada defina `REPRO_BACKEND`).
 
-## Limitaciones y exclusiones
-- **Copias sanitizadas:** 14 archivos de texto (logs, diarios, `provenance.json`) tenían rutas locales con el nombre de usuario; se publican con la ruta sustituida y **no son idénticos** a los originales (`data/metadata/SANITIZACION.csv`: hash de ambos). Sus hashes dentro de los `SHA256SUMS`/`manifest.json` internos de cada campaña ya no coinciden por esa razón.
-- **No publicados:** observaciones in-process de N1/N2/N4 de gran tamaño y `statistical_input.csv` (regenerables), registros del intento N9 (solo sus hashes), `.err`, scripts con correo personal, metadatos bibliográficos de terceros. Lista y motivos: `STAGING_REPORT.csv`.
-- **Licencia:** el repositorio no declara ninguna; véase `LICENSE-DATA.md` y `publicacion/PUBLICACION_Y_LICENCIA.md`.
-- Verificación D2.7 hecha por el propio proyecto, no por un tercero; un solo equipo con régimen de rendimiento variable entre tramos (N11); sin evaluaciones humanas ni hardware objetivo (`PROVENANCE.md`).
+## 6. Exclusiones y tratamiento de datos
+14 archivos de texto con rutas locales se publican como **copias sanitizadas** que **no** son idénticas a los originales ([`data/metadata/SANITIZACION.csv`](data/metadata/SANITIZACION.csv): hash de ambos). No se publican: el texto de la tesis (solo fragmentos de ±35 caracteres alrededor de cada cifra), observaciones in-process de gran tamaño regenerables, los registros por petición de la campaña N9 abortada (solo hashes), scripts con el correo personal del autor ni metadatos de terceros con correos. **Licencia:** el repositorio no declara ninguna y no se atribuye ninguna; véase [`LICENSE-DATA.md`](LICENSE-DATA.md).

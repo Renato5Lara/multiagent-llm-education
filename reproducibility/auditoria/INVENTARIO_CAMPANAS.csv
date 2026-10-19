@@ -1,0 +1,13 @@
+campana,directorio,objetivos_a_los_que_aporta,cargas,semillas_distintas,nota,sistemas,filas_ok,persistencia,runs_por_celda,filas_no_ok,codigo_sucio_registrado,filas_planificadas,creada_utc,oficial,filas_registradas,clase_entorno,tamanos_enjambre,start_margin_s,commit_registrado
+N1,oe_n1_2026-10-05,OE1,,,campaña sin runs.csv HTTP (otro diseño o abortada): ver PROVENANCE.md,,,,,,,,,,,,,,
+N2,oe_n2_2026-10-05,OE2,1;5;10;25,10,,decision_table;swarm,80,off,10,0,None,80,2026-10-06T03:44:25+00:00,False,80,TECHNICALLY_COMPATIBLE_P6_PENDING,20,,cec0e067
+N3,oe_n3_2026-10-06,OE3,,,campaña sin runs.csv HTTP (otro diseño o abortada): ver PROVENANCE.md,,,,,,,,,,,,,,
+N4,oe_n4_2026-10-06,OE4,1;5;10;25;50;100,10,,swarm,60,off,10,0,None,60,2026-10-06T08:09:57+00:00,False,60,TECHNICALLY_COMPATIBLE_P6_PENDING,20,,cec0e067
+N5,oe_n5_2026-10-06,OE5,,,campaña sin runs.csv HTTP (otro diseño o abortada): ver PROVENANCE.md,,,,,,,,,,,,,,
+N6,oe_n6_2026-10-06,integración,,,campaña sin runs.csv HTTP (otro diseño o abortada): ver PROVENANCE.md,,,,,,,,,,,,,,
+N7,oe_n7_2026-10-06,suite de pruebas,,,campaña sin runs.csv HTTP (otro diseño o abortada): ver PROVENANCE.md,,,,,,,,,,,,,,
+N8,oe_n8_2026-10-13,OE4,1;5;10;25;50;100,10,,swarm,120,off,10,0,None,120,2026-10-13T22:32:04+00:00,False,120,TECHNICALLY_COMPATIBLE_P6_PENDING,10;30,20.0,65e8c97d
+N9,oe_n9_2026-10-13,OE2 (abortada),,,campaña sin runs.csv HTTP (otro diseño o abortada): ver PROVENANCE.md,,,,,,,,,,,,,,
+N9b,oe_n9b_2026-10-14,OE2,1;5;10;25,10,,bruteforce;decision_table;rules;swarm,160,off,10,0,None,160,2026-10-14T12:35:49+00:00,False,160,TECHNICALLY_COMPATIBLE_P6_PENDING,20,20.0,65e8c97d
+N8b,oe_n10_2026-10-14_n20,OE4,1;5;10;25;50;100,10,,swarm,60,off,10,0,None,60,2026-10-14T05:55:38+00:00,False,60,TECHNICALLY_COMPATIBLE_P6_PENDING,20,20.0,65e8c97d
+N11,oe_n11_2026-10-14_3N,OE4,1;5;10;25;50;100,10,,swarm,179,off,10,1,None,180,2026-10-15T01:15:08+00:00,False,180,TECHNICALLY_COMPATIBLE_P6_PENDING,10;20;30,20.0,65e8c97d

@@ -1,7 +1,7 @@
 {
  "manifiesto": {
-  "entradas": 1540,
-  "coinciden": 1540,
+  "entradas": 1545,
+  "coinciden": 1545,
   "difieren": [],
   "faltan": []
  },
@@ -25,9 +25,9 @@
   {
    "archivo": "data/experiments/oe_n1_2026-10-05/SHA256SUMS",
    "entradas": 11,
-   "coinciden": 5,
+   "coinciden": 7,
    "difieren": [],
-   "no_publicado": 6,
+   "no_publicado": 4,
    "sanitizado": 0
   },
   {

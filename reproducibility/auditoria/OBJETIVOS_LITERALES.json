@@ -1,0 +1,18 @@
+{
+ "objetivos": {
+  "OE1": "Determinar la relación entre el cumplimiento de los requerimientos funcionales y no funcionales de la arquitectura multiagente y el desempeño del proceso de adaptación de contenido multimodal, mediante indicadores cuantificables de funcionalidad, confiabilidad, eficiencia y calidad de adaptación.",
+  "OE2": "Comparar estadísticamente el desempeño técnico de la propuesta basada en inteligencia de enjambre frente a sistemas convencionales de adaptación de contenidos, considerando como indicadores el tiempo de convergencia, la latencia y el throughput bajo condiciones experimentales equivalentes.",
+  "OE3": "Determinar el efecto de la configuración de los roles de los agentes, los protocolos de comunicación y los mecanismos de inteligencia de enjambre sobre el tiempo de convergencia y la eficiencia de la adaptación de contenidos multimodales.",
+  "OE4": "Medir y comparar el desempeño computacional del artefacto tecnológico desarrollado bajo diferentes condiciones de simulación, utilizando como indicadores el tiempo de convergencia, la latencia y el throughput.",
+  "OE5": "Determinar el nivel de precisión de la adaptación multimodal y el nivel de usabilidad técnica del artefacto desarrollado mediante la evaluación de expertos y docentes del área de programación, contrastando la puntuación de usabilidad obtenida mediante la escala SUS con el valor de referencia establecido de 75 puntos."
+ },
+ "metas": {
+  "OE1": "Meta 1 (↔ OE1): Especificación formal de 6 RF y 5 RNF validados mediante matriz de rastreabilidad.",
+  "OE2": "Meta 2 (↔ OE2): Demostración formal del GAP tecnológico en latencia, convergencia y soporte multimodal.",
+  "OE3": "Meta 3 (↔ OE3): Modelo arquitectónico de 5 agentes con algoritmo PSO discreto y función de aptitud F; indicador: tasa de convergencia CR ≥ 98 %.",
+  "OE4": "Meta 4 (↔ OE4): Convergencia T_conv ≤ 15 iteraciones, latencia L_resp < 2,0 s y throughput ≥ 20 req/s.",
+  "OE5": "Meta 5 (↔ OE5): Precisión F1_adapt ≥ 0,85 y usabilidad percibida SUS > 75,0/100."
+ },
+ "hipotesis_general": "H1: La arquitectura multiagente basada en inteligencia de enjambre permite adaptar contenido multimodal con un F1_adapt ≥ 0,85, una latencia L_resp < 2,0 s y un puntaje SUS > 75,0.",
+ "version": "a6bb2934de7fd512"
+}
