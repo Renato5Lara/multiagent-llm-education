@@ -44,7 +44,7 @@ cells.append(code("""import os, subprocess, shutil
 from pathlib import Path
 
 REPO_URL = "https://github.com/Renato5Lara/multiagent-llm-education.git"
-REF = "repro/publicable-2026-10-19"   # rama o etiqueta con el paquete; cámbiela por la etiqueta de la versión congelada
+REF = "repro/auditoria-integral-2026-10-19"   # rama o etiqueta con el paquete; cámbiela por la etiqueta de la versión congelada
 
 def localizar():
     env = os.environ.get("REPRO_LOCAL_ROOT")
@@ -59,7 +59,7 @@ def localizar():
     # clon parcial: solo reproducibility/ y el código del proyecto necesario (backend/adaptation_swarm); el repositorio completo es mucho mayor
     r = subprocess.run(["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse", "--branch", REF, REPO_URL, str(dest)], capture_output=True, text=True)
     if r.returncode == 0:
-        r = subprocess.run(["git", "-C", str(dest), "sparse-checkout", "set", "reproducibility", "backend/adaptation_swarm"], capture_output=True, text=True)
+        r = subprocess.run(["git", "-C", str(dest), "sparse-checkout", "set", "reproducibility", "backend/adaptation_swarm", "backend/official_runs", "backend/loadtest"], capture_output=True, text=True)
     if r.returncode:
         raise RuntimeError(f"No se pudo clonar {REPO_URL} en la referencia {REF!r}.\\n{r.stderr.strip()}\\n"
                            "Compruebe que la rama/etiqueta existe en el remoto o copie reproducibility/ a mano.")

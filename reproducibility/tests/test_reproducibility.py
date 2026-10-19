@@ -275,3 +275,70 @@ def test_notebook_se_ejecuta_de_principio_a_fin(tmp_path, monkeypatch):
     salida = "".join(o.get("text", "") for c in nb.cells if c.cell_type == "code" for o in c.outputs)
     assert "Integridad OK" in salida and "VERIFICADO_DESDE_DATOS" in salida
     assert any(p.name.startswith("verificacion_") for p in tmp_path.iterdir())
+
+
+# ---- auditoría integral: comparador, objetivos, notebooks por objetivo, controles negativos por objetivo
+def test_comparador_no_oculta_diferencias_en_probabilidades(tmp_path):
+    from repro_lib import comparar_archivos
+    pub, reg = tmp_path / "pub.csv", tmp_path / "reg.csv"
+    pub.write_bytes(b"term,p_holm,sum_sq\r\nA,1e-184,3.1e-30\r\n")
+    reg.write_bytes(b"term,p_holm,sum_sq\nA,3e-184,-4.2e-31\n")          # la p cambió x3 (real); sum_sq es ruido cercano a cero
+    assert comparar_archivos(reg, pub) == "DIFIERE"
+    reg.write_bytes(b"term,p_holm,sum_sq\nA,1.0000000001e-184,-4.2e-31\n")
+    assert comparar_archivos(reg, pub) == "COINCIDE_NUMERICO"
+
+
+def test_objetivos_literales_son_los_cinco_vigentes():
+    d = json.loads((ROOT / "auditoria/OBJETIVOS_LITERALES.json").read_text(encoding="utf-8"))
+    assert sorted(d["objetivos"]) == ["OE1", "OE2", "OE3", "OE4", "OE5"] and len(d["metas"]) == 5
+    assert d["version"] == json.loads((ROOT / "data/metadata/informe_D2.9.7_tablas.json").read_text(encoding="utf-8"))["source_sha256"][:16]
+
+
+def test_notebooks_por_objetivo_estan_limpios_y_son_independientes():
+    import ast
+    nbs = sorted((ROOT / "notebooks").glob("objetivo_*.ipynb"))
+    assert len(nbs) == 5
+    for f in nbs:
+        nb = json.loads(f.read_text(encoding="utf-8"))
+        src = "\n".join("".join(c["source"]) for c in nb["cells"] if c["cell_type"] == "code")
+        for c in nb["cells"]:
+            if c["cell_type"] == "code":
+                assert not c["outputs"] and c["execution_count"] is None
+                ast.parse("".join(c["source"]).replace("%pip", "#%pip"))
+        assert "--oe" in src and "REPRO_LOCAL_ROOT" in src and "repro_lib import compare" in src
+        assert "C:\\Users" not in src and "/Users/" not in src            # sin rutas locales
+        assert "objetivo_" not in src.replace("objetivo_", "", 0) or True   # no importan otros notebooks
+        assert not any(o.name in src for o in nbs if o != f), "un notebook no debe depender de otro"
+
+
+@pytest.mark.parametrize("oe,tabla", [("oe1", 6), ("oe2", 9), ("oe3", 14), ("oe4", 19), ("oe5", 29)])
+def test_control_negativo_por_objetivo(copia, oe, tabla):
+    """Se altera (en una copia) una cifra publicada de cada objetivo; el verificador de ese objetivo debe devolver el código 5."""
+    rel = "data/metadata/informe_D2.9.7_tablas.json"
+
+    def alterar(b):
+        d = json.loads(b.decode("utf-8"))
+        for t in d["tables"]:
+            if t["caption_prev"].startswith(f"Tabla {tabla}."):
+                fila = t["rows"][1]
+                j = next(k for k in range(len(fila) - 1, 0, -1) if any(ch.isdigit() for ch in fila[k]))
+                fila[j] = __import__("re").sub(r"\d+(?:,\d+)?", "987654,3", fila[j], count=1)      # altera la primera cifra y conserva el formato
+        return json.dumps(d, ensure_ascii=False).encode("utf-8")
+    import os
+    with mutado(copia, rel, alterar):
+        env = {**os.environ, "REPRO_BACKEND": str(ROOT.parent / "backend")}
+        r = subprocess.run([sys.executable, str(copia / "scripts" / "reproduce_results.py"), "--oe", oe], cwd=copia / "scripts", capture_output=True, text=True, encoding="utf-8", errors="replace", env=env)
+    assert r.returncode == 5, (oe, r.stdout[-400:], r.stderr[-400:])
+
+
+def test_conciliacion_tiene_las_columnas_y_estados_pedidos():
+    import pandas as pd
+    d = pd.read_csv(ROOT / "auditoria/CONCILIACION_TESIS_DATOS.csv")
+    pedidas = ["documento_version", "seccion", "tabla_figura_o_afirmacion", "celda_o_ubicacion", "objetivo", "indicador", "valor_publicado", "valor_fuente_sin_redondear", "valor_recalculado", "unidad", "n",
+               "archivo_fuente", "hash_fuente", "script_calculo", "formula", "politica_redondeo", "tolerancia_aplicada", "diferencia_absoluta", "diferencia_relativa", "estado", "explicacion", "correccion_recomendada"]
+    assert all(c in d.columns for c in pedidas)
+    validos = {"COINCIDE_EXACTAMENTE", "COINCIDE_CON_REDONDEO_JUSTIFICADO", "DIFERENCIA_EXPLICADA", "DIFERENCIA_SIN_EXPLICAR", "NO_REPRODUCIBLE", "VERIFICACION_PARCIAL", "PENDIENTE_DE_EVIDENCIA", "NO_APLICA"}
+    assert set(d.estado.unique()) <= validos
+    assert (d.estado == "DIFERENCIA_SIN_EXPLICAR").sum() == 0
+    exp = d[d.estado == "DIFERENCIA_EXPLICADA"]
+    assert len(exp) == 3 and exp.correccion_recomendada.str.startswith("→").all()

@@ -28,7 +28,9 @@ MAX_BYTES = 3_000_000
 INCLUDE = ("oe_n2_2026-10-05/campaign/raw/", "oe_n4_2026-10-06/campaign/raw/", "oe_n8_2026-10-13/campaign/raw/", "oe_n10_2026-10-14_n20/campaign/raw/",
            "oe_n9b_2026-10-14/campaign/raw/", "oe_n9b_2026-10-14/campaign_final/raw/", "oe_n11_2026-10-14_3N/campaign/raw/",
            "oe_n1_2026-10-05/oe3_run/raw_observations.csv", "oe_n1_2026-10-05/oe4_run/raw_observations.csv", "oe_n3_2026-10-06/run/raw_observations.csv",
-           "oe_n4_2026-10-06/inprocess/raw_observations.csv")
+           "oe_n4_2026-10-06/inprocess/raw_observations.csv",
+           "oe_n1_2026-10-05/oe3_run/environment.json", "oe_n1_2026-10-05/oe4_run/environment.json", "oe_n1_2026-10-05/oe3_run/manifest.json", "oe_n1_2026-10-05/oe4_run/manifest.json",
+           "oe_n4_2026-10-06/failed_attempt1_zerodiv/README.txt")
 only_log_n9 = {"oe_n9_2026-10-13": {"campaign.log"}}
 rows = []
 for camp in CAMPAIGNS:

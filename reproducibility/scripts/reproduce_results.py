@@ -28,7 +28,7 @@ import scipy
 import statsmodels
 from scipy import stats
 
-from repro_lib import EXIT_DIFERENCIA, EXIT_OK, EXP, OUT, ROOT, compare, comparar_archivos, report_tables, sha256
+from repro_lib import EXIT_DIFERENCIA, EXIT_OK, EXP, OUT, ROOT, compare, comparar_archivos, like, report_tables, sha256
 
 N8 = "oe_n8_2026-10-13"
 import os
@@ -40,14 +40,23 @@ HAY_CADENA = {}     # campaña -> la cadena petición->corrida se verificó comp
 
 def add(cid, tabla, desc, campana, fuente, pub, rec):
     c = compare(pub, float(rec))
+    c.update(_celda(pub, tabla))
     c["estado_cifra"] = "VERIFICADO_DESDE_DATOS" if c["estado"] in ("COINCIDE", "DIFERENCIA_EXPLICABLE") else "DISCREPANCIA"
     checks.append({"id": cid, "tabla": tabla, "descripcion": desc, "campana": campana, "fuente_evidencia": fuente, **c})
+
+
+def _celda(pub, tabla):
+    """Ubicación de la cifra en el informe: exacta si la cadena conserva su metadato; si no, inferida por búsqueda de texto (y marcada)."""
+    m = getattr(pub, "meta", None)
+    if m:
+        return {"celda_fila": m["fila"], "celda_col": m["col"], "encabezado": m["encabezado"], "etiqueta_fila": m["etiqueta_fila"], "ubicacion": "exacta"}
+    return {"celda_fila": None, "celda_col": None, "encabezado": "", "etiqueta_fila": "", "ubicacion": "inferida_por_texto"}
 
 
 def add_eq(cid, tabla, desc, campana, fuente, pub, rec):
     ok = str(pub).strip() == str(rec).strip()
     checks.append({"id": cid, "tabla": tabla, "descripcion": desc, "campana": campana, "fuente_evidencia": fuente, "publicado": pub, "recalculado": rec,
-                   "estado": "COINCIDE" if ok else "DISCREPANCIA", "estado_cifra": "VERIFICADO_DESDE_DATOS" if ok else "DISCREPANCIA"})
+                   "estado": "COINCIDE" if ok else "DISCREPANCIA", "estado_cifra": "VERIFICADO_DESDE_DATOS" if ok else "DISCREPANCIA", **_celda(pub, tabla)})
 
 
 def add_na(cid, tabla, desc, campana, motivo):
@@ -57,13 +66,13 @@ def add_na(cid, tabla, desc, campana, motivo):
 def lead(s):
     """'5,05 (4,57 a 5,58)' -> ('5,05', '4,57', '5,58')"""
     m = re.match(r"(.+?)\s*\((.+?) a (.+?)\)$", s.strip())
-    return m.group(1), m.group(2), m.group(3)
+    return like(s, m.group(1)), like(s, m.group(2)), like(s, m.group(3))
 
 
 def pval(s):
     """'−0,69 (p = 6,1 × 10⁻³)' -> ('−0,69', '6,1 × 10⁻³')"""
     m = re.match(r"(.+?)\s*\(p = (.+)\)$", s.strip())
-    return m.group(1), m.group(2)
+    return like(s, m.group(1)), like(s, m.group(2))
 
 
 def runs(rel, d=EXP):
@@ -72,9 +81,13 @@ def runs(rel, d=EXP):
 
 
 # ------------------------------------------------------------------ (2) scripts del proyecto sobre copia temporal con salidas borradas
-def run_project_scripts(work):
+def run_project_scripts(work, only=None):
     n8 = work / N8
-    for w in WIPE:
+    DIRS = {"oe1_verify": ["oe1_verify"], "oe2_reanalysis": ["oe2_reanalysis"], "oe3_reanalysis": ["oe3_reanalysis"], "oe4_nvar_analysis": ["oe4_nvar"], "oe2_aux_analysis": ["oe2_aux"],
+            "oe4_n11_analysis": ["oe4_n11"], "verif_d27": ["d27_verificacion"], "alineacion_aptitud_f1": ["oe5_f1_repro"], "reproduce_f1_v3_independent": ["oe5_f1_repro"]}
+    sel = [s for s in DIRS if only is None or s in only]
+    wipe = sorted({d for s in sel for d in DIRS[s]})
+    for w in wipe:
         if (n8 / w).exists():
             shutil.rmtree(n8 / w)
     (n8 / "oe5_f1_repro").mkdir(exist_ok=True)
@@ -84,11 +97,12 @@ def run_project_scripts(work):
             ("alineacion_aptitud_f1", n8, ["scripts/alineacion_aptitud_f1.py"]),
             ("reproduce_f1_v3_independent", n8, ["scripts/reproduce_f1_v3_independent.py", "../oe_n5_2026-10-06/f1_v3_provisional", "oe5_f1_repro/f1_v3_independent.json"])]
     rc = {}
+    jobs = [j for j in jobs if j[0] in sel]
     for name, cwd, argv in jobs:
         r = subprocess.run([sys.executable, *argv], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
         rc[name] = {"codigo": r.returncode, "stderr_final": r.stderr.strip()[-300:] if r.returncode else ""}
     byte = []
-    for w in WIPE:
+    for w in wipe:
         for f in sorted((EXP / N8 / w).rglob("*")):
             if f.is_file() and f.suffix not in (".png",) and f.name not in ("_salida.txt", "SHA256SUMS"):   # SHA256SUMS lo escribió a mano el proyecto: se verifica en verify_hashes.py
                 rel = f.relative_to(EXP / N8).as_posix()
@@ -103,9 +117,11 @@ def raw_name(run_id):
     return "".join(c if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.-" else "".join(f"%{b:02X}" for b in c.encode("utf-8")) for c in run_id) + ".csv"
 
 
-def chain_from_requests():
+def chain_from_requests(camps=None):
     if not (BACK / "adaptation_swarm" / "oe" / "http_window.py").exists():
         for c in ("N2", "N4", "N8", "N8b", "N9b", "N11"):
+            if camps is not None and c not in camps:
+                continue
             raw_chain.append({"campana": c, "estado": "NO_REPRODUCIBLE", "motivo": "falta backend/adaptation_swarm (clone solo reproducibility/)"})
         return
     sys.path.insert(0, str(BACK))
@@ -114,6 +130,8 @@ def chain_from_requests():
             ("N8b", "oe_n10_2026-10-14_n20/campaign", ["campaign"]), ("N9b", "oe_n9b_2026-10-14/campaign_final", ["../campaign", "raw"]),
             ("N11", "oe_n11_2026-10-14_3N/campaign", ["campaign"])]
     for camp, d, rawdirs in spec:
+        if camps is not None and camp not in camps:
+            continue
         base = EXP / d
         df = pd.read_csv(base / "runs.csv", low_memory=False)
         prov = json.loads((base / "provenance.json").read_text(encoding="utf-8"))
@@ -231,7 +249,7 @@ def tablas_21_24(T, w):
         u = int(rr[0])
         for j, N in ((1, 10), (2, 20), (3, 30)):
             parts = [x.strip() for x in rr[j].split("·")]
-            tc, ncount = re.match(r"(.+?)\s*\((\d+)\)", parts[2]).groups()
+            tc, ncount = (like(parts[2], g) for g in re.match(r"(.+?)\s*\((\d+)\)", parts[2]).groups())
             x = d[(d.N == N) & (d.load == u)].iloc[0]
             add(f"T21-u{u}-N{N}-p95", "Tabla 21", f"N11 tramo B, N={N}, {u} usuarios: P95", "N11", f, parts[0], x.p95_latency_ms_mean)
             add(f"T21-u{u}-N{N}-thr", "Tabla 21", "throughput", "N11", f, parts[1], x.throughput_http_mean)
@@ -254,7 +272,7 @@ def tablas_21_24(T, w):
         ra, pp = pval(rr[1])
         add(f"T23-{key}-todos-razon", "Tabla 23", "razón tramo B / tramo A, todos los N", "N11", "verif_d27.py -> verificacion_independiente.json", ra, ind[key]["razon_B_sobre_A"])
         add(f"T23-{key}-todos-p", "Tabla 23", "valor p, todos los N", "N11", "verif_d27.py -> verificacion_independiente.json", pp, ind[key]["p"])
-        for N, pub in zip((10, 20, 30), [x.strip() for x in rr[2].split("/")]):
+        for N, pub in zip((10, 20, 30), [like(rr[2], x.strip()) for x in rr[2].split("/")]):
             add(f"T23-{key}-N{N}", "Tabla 23", f"razón B/A, N={N}", "N11", "oe4_n11_cambio_regimen_A_B.csv", pub, cr[(cr.metric == met) & (cr.N == N)].iloc[0].ratio_B_over_A)
     um = pd.read_csv(n8 / "d27_verificacion/umbrales_resumen_por_campania_N.csv")
     f = "verif_d27.py -> umbrales_resumen_por_campania_N.csv"
@@ -263,13 +281,13 @@ def tablas_21_24(T, w):
         x = um[(um.ambito == amb) & (um.N == N)].iloc[0]
         add(f"T24-{amb}-N{N}-corridas", "Tabla 24", "corridas HTTP válidas", "N4/N8/N8b/N11", f, rr[1], x.corridas)
         mm = re.match(r"(\d+) \(máx\. (.+?)\)", rr[2])
-        add(f"T24-{amb}-N{N}-thr_ge20", "Tabla 24", "corridas con >= 20 req/s", "N4/N8/N8b/N11", f, mm.group(1), x.thr_ge_20)
-        add(f"T24-{amb}-N{N}-thr_max", "Tabla 24", "throughput máximo", "N4/N8/N8b/N11", f, mm.group(2), x.thr_max)
+        add(f"T24-{amb}-N{N}-thr_ge20", "Tabla 24", "corridas con >= 20 req/s", "N4/N8/N8b/N11", f, like(rr[2], mm.group(1)), x.thr_ge_20)
+        add(f"T24-{amb}-N{N}-thr_max", "Tabla 24", "throughput máximo", "N4/N8/N8b/N11", f, like(rr[2], mm.group(2)), x.thr_max)
         m3 = re.match(r"(\d+) de (\d+) \(cargas: (.+)\)", rr[3])
-        add(f"T24-{amb}-N{N}-p95_lt2", "Tabla 24", "corridas con P95 < 2 s", "N4/N8/N8b/N11", f, m3.group(1), x.p95_lt_2000)
-        add_eq(f"T24-{amb}-N{N}-cargas_p95", "Tabla 24", "cargas cuya media cumple P95 < 2 s", "N4/N8/N8b/N11", f, re.sub(r"\s*y\s*", ",", m3.group(3)).replace(" ", ""), str(x.cargas_media_p95_lt_2000).replace(" ", ""))
+        add(f"T24-{amb}-N{N}-p95_lt2", "Tabla 24", "corridas con P95 < 2 s", "N4/N8/N8b/N11", f, like(rr[3], m3.group(1)), x.p95_lt_2000)
+        add_eq(f"T24-{amb}-N{N}-cargas_p95", "Tabla 24", "cargas cuya media cumple P95 < 2 s", "N4/N8/N8b/N11", f, like(rr[3], re.sub(r"\s*y\s*", ",", m3.group(3)).replace(" ", "")), str(x.cargas_media_p95_lt_2000).replace(" ", ""))
         pubc = "" if rr[4].strip() in ("—", "-") else re.sub(r"\s*y\s*", ",", rr[4]).replace(" ", "")
-        add_eq(f"T24-{amb}-N{N}-cargas_thr", "Tabla 24", "cargas cuya media alcanza 20 req/s", "N4/N8/N8b/N11", f, pubc, "" if pd.isna(x.cargas_media_thr_ge_20) else str(x.cargas_media_thr_ge_20).replace(" ", ""))
+        add_eq(f"T24-{amb}-N{N}-cargas_thr", "Tabla 24", "cargas cuya media alcanza 20 req/s", "N4/N8/N8b/N11", f, like(rr[4], pubc), "" if pd.isna(x.cargas_media_thr_ge_20) else str(x.cargas_media_thr_ge_20).replace(" ", ""))
 
 
 def tablas_13_14_40(T, w):
@@ -298,7 +316,7 @@ def tablas_13_14_40(T, w):
         g = r2.groupby(fct)
         tcell = row[2]
         nums = re.match(r"(.+?)\s*\(p = ([^;)]+)(?:; η² = ([^)]+))?\)", tcell)
-        vals = [x.strip() for x in nums.group(1).split("/")]
+        vals = [like(tcell, x.strip()) for x in nums.group(1).split("/")]
         for lvl, pub in zip(lv, vals):
             gm = float(np.exp(np.log(r2[r2[fct] == lvl].t_conv_ms).mean()))
             add(f"T13-{fct}-{lvl}-t_conv", "Tabla 13", f"T_conv (media geométrica) con {fct}={lvl}", "N3", fuente, pub, gm)
@@ -306,14 +324,14 @@ def tablas_13_14_40(T, w):
             add_na(f"T13-{fct}-p_eta2", "Tabla 13", "p por permutación y η² parcial", "N3", "falta backend/adaptation_swarm (módulo factorial del proyecto); defina REPRO_BACKEND o use el repositorio completo")
         else:
             tm = a["terms"][fct]
-            add(f"T13-{fct}-p", "Tabla 13", "p por permutación", "N3", fuente, nums.group(2), tm["p_permutation"])
+            add(f"T13-{fct}-p", "Tabla 13", "p por permutación", "N3", fuente, like(tcell, nums.group(2)), tm["p_permutation"])
             if nums.group(3):
-                add(f"T13-{fct}-eta2", "Tabla 13", "η² parcial", "N3", fuente, nums.group(3), tm["partial_eta_sq"])
+                add(f"T13-{fct}-eta2", "Tabla 13", "η² parcial", "N3", fuente, like(tcell, nums.group(3)), tm["partial_eta_sq"])
         for ci, col in ((3, "k_stop"), (4, "gap_vs_optimum"), (5, "n_messages")):
             cell = row[ci].strip()
             if cell.lower() == "sin efecto":
                 continue
-            for lvl, pub in zip(lv, [x.strip() for x in cell.split("/")]):
+            for lvl, pub in zip(lv, [like(row[ci], x.strip()) for x in cell.split("/")]):
                 add(f"T13-{fct}-{lvl}-{col}", "Tabla 13", f"{col} con {fct}={lvl}", "N3", fuente, pub, r2[r2[fct] == lvl][col].mean())
     an = pd.read_csv(w / N8 / "oe3_reanalysis/oe3_anova.csv")
     names = {"Despacho": "C(disp)", "Difusión de g_best": "C(bcast)", "Mecanismo": "C(mech)", "Heurística de arranque": "C(heur)", "Réplicas de consumidores": "C(rep)"}
@@ -379,11 +397,11 @@ def tablas_5_6_27_28_29_41(T, w):
     add("T27-f1_mean", "Tabla 27", "F1_adapt medio", "N5", f, T[27][1][1], ind["f1_adapt_mean"])
     t = stats.t.ppf(0.975, len(mm) - 1) * ind["replica_sd"] / math.sqrt(len(mm))
     m2 = re.match(r"(.+?) a (.+?) \(desviación estándar de (.+?); mínimo de (.+?) y máximo de (.+?)\)", T[27][2][1])
-    for lab, pub, val in zip(("ic_inf", "ic_sup", "sd", "min", "max"), m2.groups(), (ind["f1_adapt_mean"] - t, ind["f1_adapt_mean"] + t, ind["replica_sd"], min(mm), max(mm))):
+    for lab, pub, val in zip(("ic_inf", "ic_sup", "sd", "min", "max"), (like(T[27][2][1], g) for g in m2.groups()), (ind["f1_adapt_mean"] - t, ind["f1_adapt_mean"] + t, ind["replica_sd"], min(mm), max(mm))):
         add(f"T27-{lab}", "Tabla 27", f"réplicas: {lab}", "N5", f, pub, val)
     arch = {"Balanced-Multimodal": "balanced_multimodal", "Visual-Dominant": "visual_dominant", "Explanatory-Conceptual": "explanatory_conceptual", "Logical-Syntactic": "logical_syntactic"}
     for nm, pub in re.findall(r"([A-Za-z\-]+) (\d,\d+)", T[27][5][1]):
-        add(f"T27-arq-{nm}", "Tabla 27", f"F1 por arquetipo {nm}", "N5", f, pub, ind["by_archetype"][arch[nm]])
+        add(f"T27-arq-{nm}", "Tabla 27", f"F1 por arquetipo {nm}", "N5", f, like(T[27][5][1], pub), ind["by_archetype"][arch[nm]])
     add_na("T27-perfil", "Tabla 27", "estadísticos por perfil (n = 100)", "N5", "la mediana, desviación y rango por perfil no se recalculan en esta entrega")
     add_na("T27-sus", "Tabla 27", "Puntuación SUS", "N5", "no existen datos: 0 evaluadores reales; no se simulan")
     mods = {"Código": "code", "Diagrama": "diagram", "Texto": "text", "Audio": "audio"}
@@ -391,6 +409,10 @@ def tablas_5_6_27_28_29_41(T, w):
         s = ind["by_modality"][mods[rr[0]]]; p, rc = s["precision"], s["recall"]
         for lab, j, v in (("precision", 1, p), ("recall", 2, rc), ("f1", 3, 2 * p * rc / (p + rc))):
             add(f"T28-{rr[0]}-{lab}", "Tabla 28", f"{rr[0]} {lab}", "N5", f, rr[j], v)
+    for rr in T[28][1:]:      # columna «Errores principales»: «112 falsos negativos» / «277 falsos positivos»
+        s = ind["by_modality"][mods[rr[0]]]
+        mm = re.match(r"(\d+) (falsos negativos|falsos positivos)", str(rr[4]))
+        add(f"T28-{rr[0]}-errores", "Tabla 28", f"{rr[0]}: {mm.group(2)}", "N5", f, like(rr[4], mm.group(1)), s["fn"] if mm.group(2) == "falsos negativos" else s["fp"])
     for rr in T[41][1:]:
         s = ind["by_modality"][mods[rr[0]]]; p, rc = s["precision"], s["recall"]
         tn = ind["cases"] - s["tp"] - s["fp"] - s["fn"]
@@ -406,26 +428,239 @@ def tablas_5_6_27_28_29_41(T, w):
         add(f"T29-{rr[0]}-rho", "Tabla 29", "Spearman ρ", "N5", f, rr[1], rho); add(f"T29-{rr[0]}-p", "Tabla 29", "p", "N5", f, rr[2], p)
 
 
+def tabla_38(T):
+    """Tabla 38 (anexo): resumen por sistema y carga de N2, recalculado desde runs.csv."""
+    n2 = runs("oe_n2_2026-10-05/campaign/runs.csv")
+    for rr in T[38][1:]:
+        g = n2[(n2.system == str(rr[0])) & (n2.load == int(rr[1]))]
+        f = "oe_n2_2026-10-05/campaign/runs.csv (80 corridas)"
+        for j, (lab, v) in enumerate([("n_runs", len(g)), ("p50_ms", g.p50_ms.mean()), ("mean_ms", g.mean_ms.mean()), ("p95_ms", g.p95_ms.mean()), ("throughput_rps", g.throughput_rps.mean()),
+                                      ("errors_total", g.errors.sum()), ("timeouts_total", g.timeouts.sum())], 2):
+            add(f"T38-{rr[0]}-u{rr[1]}-{lab}", "Tabla 38", f"{rr[0]}, {rr[1]} usuarios: {lab}", "N2", f, rr[j], v)
+
+
+def _hallar(rel):
+    for base in (EXP, EXP / N8, BACK):
+        q = (base / rel).resolve()
+        if q.is_file():
+            return q
+    return None
+
+
+def tablas_36_45(T):
+    """Hashes SHA-256 (prefijo) citados en el informe frente al archivo real publicado. Un hash verifica identidad del archivo, no veracidad de su contenido."""
+    for rr in T[36][1:]:
+        for j, cell in enumerate(rr):
+            txt = str(cell).replace("\u200b", "")
+            for m in re.finditer(r"(?:Archivo:\s*|;\s*)([\w./\-]+?)\s*\(SHA-256:\s*([0-9a-f]{8,12})\)", txt):
+                rel, h = m.group(1), m.group(2)
+                q = _hallar(rel)
+                pub = like(cell, h)
+                if q is None:
+                    add_na(f"T36-{rr[0]}-{rel}", "Tabla 36", f"hash de {rel}", "transversal", "archivo citado no publicado en el paquete (o fuera de data/experiments y backend publicado)")
+                    checks[-1].update(_celda(pub, "Tabla 36"))
+                else:
+                    add_eq(f"T36-{rr[0]}-{rel}", "Tabla 36", f"SHA-256 (prefijo) de {rel}", "transversal", rel, pub, sha256(q)[:len(h)])
+    for rr in T[45][1:]:
+        arch = [a.strip() for a in str(rr[1]).replace("\u200b", "").split(";") if a.strip()]
+        h = str(rr[3]).strip()
+        cand = {a: (sha256(q)[:len(h)] if (q := _hallar(a)) else None) for a in arch}
+        hit = next((a for a, v in cand.items() if v == h), None)
+        if hit:
+            add_eq(f"T45-{rr[0][:30]}", "Tabla 45", f"SHA-256 (12) de {hit}", "transversal", hit, rr[3], h)
+        else:
+            add_na(f"T45-{rr[0][:30]}", "Tabla 45", "SHA-256 (12) no coincide con ninguno de los archivos listados", "transversal",
+                   "el hash citado no corresponde a un único archivo listado (o a un archivo no publicado): " + ", ".join(f"{a}={'no hallado' if v is None else v}" for a, v in cand.items())[:200])
+            checks[-1].update(_celda(rr[3], "Tabla 45"))
+
+
+def add_der(cid, tabla, desc, campana, fuente, pub, rec):
+    """Cifra que coincide con un resultado DERIVADO publicado (no recalculado desde datos de menor nivel)."""
+    add(cid, tabla, desc, campana, fuente, pub, rec)
+    if checks[-1]["estado_cifra"] == "VERIFICADO_DESDE_DATOS":
+        checks[-1]["estado_cifra"] = "VERIFICADO_DESDE_DERIVADO"
+
+
+def tablas_15_30(T):
+    """Tablas 15 y 30: resultados HISTÓRICOS con la especificación v2 (K10, 2026-09-27). Fuente: backend/official_runs (rastreado en Git, no copiado al paquete)."""
+    base = BACK / "official_runs"
+    reps = [base / "k10_official_2026-09-27" / f"replica_{i:02d}.json" for i in range(10)]
+    if not all(r.is_file() for r in reps):
+        add_na("T15-30-sin-backend", "Tablas 15 y 30", "resultados K10 v2", "K10", "falta backend/official_runs (clone solo reproducibility/; defina REPRO_BACKEND)")
+        return
+    R = [json.loads(r.read_text(encoding="utf-8"))["cases"] for r in reps]
+    f1m = np.array([np.mean([c["f1"] for c in cs]) for cs in R])
+    ks = np.array([np.mean([c["k_stop"] for c in cs]) for cs in R])
+    kmax = np.array([max(c["k_stop"] for c in cs) for cs in R])
+    cr = np.array([np.mean([c["stop_reason"] == "epsilon" for c in cs]) for cs in R])
+    f = "backend/official_runs/k10_official_2026-09-27/replica_00..09.json (10 réplicas × 100 casos)"
+    r2 = T[15]
+    add("T15-CR", "Tabla 15", "tasa de convergencia por réplica (mínimo de las 10)", "K10", f, r2[1][1].replace(" en cada réplica; resultado histórico v2", ""), cr.min())
+    m = re.match(r"(\S+) \(rango entre réplicas: (\S+) a (\S+)\)", str(r2[2][1]))
+    add("T15-kstop-media", "Tabla 15", "iteraciones hasta la parada (media de las medias por réplica)", "K10", f, like(r2[2][1], m.group(1)), ks.mean())
+    add("T15-kstop-min", "Tabla 15", "mínimo entre réplicas", "K10", f, like(r2[2][1], m.group(2)), ks.min())
+    add("T15-kstop-max", "Tabla 15", "máximo entre réplicas", "K10", f, like(r2[2][1], m.group(3)), ks.max())
+    m = re.match(r"(\d+) a (\d+) \(media (\S+)\)", str(r2[3][1]))
+    add("T15-kmax-min", "Tabla 15", "iteraciones máximas por réplica: mínimo", "K10", f, like(r2[3][1], m.group(1)), kmax.min())
+    add("T15-kmax-max", "Tabla 15", "iteraciones máximas por réplica: máximo", "K10", f, like(r2[3][1], m.group(2)), kmax.max())
+    add("T15-kmax-media", "Tabla 15", "iteraciones máximas por réplica: media", "K10", f, like(r2[3][1], m.group(3)), kmax.mean())
+    # Tabla 30
+    r3 = T[30]
+    sd = f1m.std(ddof=1)
+    tc = stats.t.ppf(0.975, 9) * sd / math.sqrt(10)
+    cell = r3[1][1]
+    m = re.match(r"(\S+); IC95 % \[(\S+); (\S+)\]", str(cell))
+    add("T30-F1-media", "Tabla 30", "F1_adapt medio por réplica", "K10", f, like(cell, m.group(1)), f1m.mean())
+    add("T30-F1-ic-inf", "Tabla 30", "IC95 inferior (t, 9 gl)", "K10", f, like(cell, m.group(2)), f1m.mean() - tc)
+    add("T30-F1-ic-sup", "Tabla 30", "IC95 superior (t, 9 gl)", "K10", f, like(cell, m.group(3)), f1m.mean() + tc)
+    prof = {}
+    for cs in R:
+        for c in cs:
+            prof.setdefault(c["profile_id"], []).append(c["f1"])
+    pm = np.array([np.mean(v) for v in prof.values()])
+    cell = r3[2][1]
+    m = re.match(r"(\S+) \(Q1 (\S+); Q3 (\S+); mínimo (\S+); máximo (\S+)\)", str(cell))
+    for lab, g, v in zip(("mediana", "Q1", "Q3", "min", "max"), m.groups(), (np.median(pm), np.percentile(pm, 25), np.percentile(pm, 75), pm.min(), pm.max())):
+        add(f"T30-perfil-{lab}", "Tabla 30", f"medias por perfil (n = {len(pm)}): {lab}", "K10", f, like(cell, g), v)
+    w, pw = stats.shapiro(pm)
+    cell = r3[3][1]
+    m = re.match(r"W = (\S+); p = (.+)$", str(cell))
+    add("T30-shapiro-W", "Tabla 30", "Shapiro-Wilk W", "K10", f, like(cell, m.group(1)), w)
+    add("T30-shapiro-p", "Tabla 30", "Shapiro-Wilk p", "K10", f, like(cell, m.group(2)), pw)
+    pwil = stats.wilcoxon(pm - 0.85, alternative="greater").pvalue
+    cell = r3[4][1]
+    add("T30-wilcoxon-p", "Tabla 30", "Wilcoxon unilateral H1: μ > 0,85", "K10", f, like(cell, re.match(r"p ≈ (\S+)", str(cell)).group(1)), pwil)
+    arq = {"Balanced-Multimodal": "balanced_multimodal", "Logical-Syntactic": "logical_syntactic", "Visual-Dominant": "visual_dominant", "Explanatory-Conceptual": "explanatory_conceptual"}
+    cell = r3[5][1]
+    for nm, val in re.findall(r"([A-Za-z\-]+) (\d,\d+)", str(cell)):
+        v = np.mean([c["f1"] for cs in R for c in cs if c["archetype"] == arq[nm]])
+        add(f"T30-arq-{nm}", "Tabla 30", f"F1 por arquetipo {nm}", "K10", f, like(cell, val), v)
+    der = json.loads((base / "k10_analysis_2026-09-27" / "10_descriptives_modality_archetype.json").read_text(encoding="utf-8"))["by_modality"]
+    cell = r3[6][1]
+    mods = {"Código": "code", "diagrama": "diagram", "texto": "text", "audio": "audio"}
+    for nm, val in re.findall(r"([A-Za-zó]+) (\d,\d+)", str(cell)):
+        add_der(f"T30-mod-{nm}", "Tabla 30", f"F1 por modalidad {nm}", "K10", "backend/official_runs/k10_analysis_2026-09-27/10_descriptives_modality_archetype.json (derivado)", like(cell, val), der[mods[nm]]["f1_across_replicas"]["mean"])
+
+
+def tabla_25(T):
+    """Tabla 25 (antecedente, 2026-09-23): pruebas de carga exploratorias con Locust y JMeter. Fuente: backend/loadtest/results (rastreado en Git).
+    Locust: u*_stats.csv (fila Aggregated; los percentiles de Locust vienen redondeados a 100 ms). JMeter: summary.md (resumen del propio proyecto: verificación DESDE DERIVADO)."""
+    base = BACK / "loadtest" / "results"
+    dl = {"w1": next(iter(sorted(base.glob("2026*_w1"))), None), "w4": next(iter(sorted(base.glob("2026*_w4"))), None)}
+    dj = {"w1": next(iter(sorted(base.glob("jmeter_*_w1"))), None), "w4": next(iter(sorted(base.glob("jmeter_*_w4"))), None)}
+    if None in dl.values() or None in dj.values():
+        add_na("T25-sin-backend", "Tabla 25", "pruebas de carga exploratorias", "antecedente", "falta backend/loadtest/results (clone solo reproducibility/; defina REPRO_BACKEND)")
+        return
+
+    def locust(d, u):
+        a = pd.read_csv(d / f"u{u}_stats.csv")
+        a = a[a.Name == "Aggregated"].iloc[0]
+        return {"p95": float(a["95%"]) / 1000, "rps": float(a["Requests/s"]), "fail": int(a["Failure Count"]), "n": int(a["Request Count"])}
+
+    def jmeter(d, u):
+        rows = [ln.split("|") for ln in (d / "summary.md").read_text(encoding="utf-8").splitlines() if ln.startswith("|") and ln.split("|")[1].strip().isdigit()]
+        r = next(x for x in rows if int(x[1]) == u)
+        return {"p95": float(r[8]) / 1000, "rps": float(r[5]), "fail": int(r[3])}
+    L = {(w, u): locust(dl[w], u) for w in dl for u in (10, 25, 50, 100)}
+    J = {(w, u): jmeter(dj[w], u) for w in dj for u in (10, 25, 50, 100)}
+    fl, fj = "backend/loadtest/results/2026…/u*_stats.csv (Locust)", "backend/loadtest/results/jmeter_…/summary.md (JMeter, derivado)"
+    r = T[25]
+    for ri, w, lab in ((1, "w4", "cuatro procesos"), (2, "w1", "un proceso")):
+        c1 = r[ri][1]
+        m = re.match(r"(\S+) s \(Locust\); (\S+) s \(JMeter\)", str(c1))
+        add(f"T25-{lab}-p95-locust", "Tabla 25", f"{lab}, 25 usuarios: P95 Locust (s)", "antecedente", fl, like(c1, m.group(1)), L[(w, 25)]["p95"])
+        add_der(f"T25-{lab}-p95-jmeter", "Tabla 25", f"{lab}, 25 usuarios: P95 JMeter (s)", "antecedente", fj, like(c1, m.group(2)), J[(w, 25)]["p95"])
+        c2 = r[ri][2]
+        m = re.match(r"(\S+) a (\S+) req/s", str(c2))
+        vals = [L[(w, u)]["rps"] for u in (10, 25, 50, 100)] + [J[(w, u)]["rps"] for u in (10, 25, 50, 100)]
+        add_der(f"T25-{lab}-rps-min", "Tabla 25", f"{lab}: throughput mínimo (Locust y JMeter, 10 a 100 usuarios)", "antecedente", fl + " + " + fj, like(c2, m.group(1)), min(vals))
+        add_der(f"T25-{lab}-rps-max", "Tabla 25", f"{lab}: throughput máximo (Locust y JMeter, 10 a 100 usuarios)", "antecedente", fl + " + " + fj, like(c2, m.group(2)), max(vals))
+        c3 = r[ri][3]
+        tot_fail = sum(L[(w, u)]["fail"] + J[(w, u)]["fail"] for u in (10, 25, 50, 100))
+        add_eq(f"T25-{lab}-errores", "Tabla 25", f"{lab}: errores (%)", "antecedente", fl + " + " + fj, c3, "0 %" if tot_fail == 0 else f"{tot_fail} fallos")
+    for ri, u in ((3, 50), (4, 100)):
+        c = r[ri][1]
+        m = re.match(r"(\S+) a (\S+) s", str(c))
+        v = [L[("w4", u)]["p95"], J[("w4", u)]["p95"]]
+        add_der(f"T25-u{u}-p95-min", "Tabla 25", f"{u} usuarios (cuatro procesos): P95 mínimo entre Locust y JMeter (s)", "antecedente", fl + " + " + fj, like(c, m.group(1)), min(v))
+        add_der(f"T25-u{u}-p95-max", "Tabla 25", f"{u} usuarios (cuatro procesos): P95 máximo entre Locust y JMeter (s)", "antecedente", fl + " + " + fj, like(c, m.group(2)), max(v))
+
+
+PROSA = []   # cifras que el informe escribe en PROSA y que se recalculan aquí (se asocian después a cada aparición del mismo valor)
+
+
+def add_prosa(pub, unidad, desc, campana, fuente, formula, rec, n=""):
+    c = compare(pub, float(rec))
+    PROSA.append({"pub": pub, "unidad": unidad, "descripcion": desc, "campana": campana, "fuente": fuente, "formula": formula, "n": n, "recalculado": float(rec),
+                  "estado": c["estado"], "dif_abs": c["dif_abs"], "tolerancia": c["tolerancia"], "explicacion": c.get("explicacion", "")})
+
+
+def prosa_oe1():
+    """Afirmaciones en prosa del OE1 (§6.5.3, §6.7, §7, resumen) que proceden de los registros en proceso de N1 (9 500 ciclos)."""
+    a = pd.read_csv(EXP / "oe_n1_2026-10-05/oe3_run/raw_observations.csv", low_memory=False)
+    b = pd.read_csv(EXP / "oe_n1_2026-10-05/oe4_run/raw_observations.csv", low_memory=False)
+    d = pd.concat([a.assign(src="oe3"), b.assign(src="oe4")])
+    f = "oe_n1_2026-10-05/oe3_run|oe4_run/raw_observations.csv"
+    le = d[d.f_concurrency <= 25]
+    p95 = np.percentile(le.latency_ms.dropna(), 95)
+    add_prosa("1 319", "ms", "RNF01: P95 de la latencia por petición en proceso, cargas 1 a 25 usuarios (agregado)", "N1", f, "percentil 95 (interpolación lineal) de latency_ms con f_concurrency ≤ 25", p95, f"{len(le)} observaciones")
+    add_prosa("8 700", "observaciones", "observaciones con 1 a 25 usuarios", "N1", f, "recuento de filas con f_concurrency ≤ 25", len(le))
+    add_prosa("2 214,8", "ms", "P95 de la latencia por petición con 25 usuarios", "N1", f, "percentil 95 de latency_ms con f_concurrency = 25", np.percentile(d[d.f_concurrency == 25].latency_ms.dropna(), 95), "800 observaciones")
+    add_prosa("82", "%", "porcentaje del agregado obtenido con 1 usuario", "N1", f, "100 × observaciones con 1 usuario / observaciones con ≤ 25 usuarios", 100 * (le.f_concurrency == 1).mean())
+    add_prosa("72", "%", "porcentaje del agregado que procede de la ejecución del OE3 (1 usuario)", "N1", f, "100 × observaciones de oe3_run / observaciones con ≤ 25 usuarios", 100 * (le.src == "oe3").mean())
+    add_prosa("9 500", "ciclos", "ciclos en proceso de N1", "N1", f, "filas de raw_observations (oe3_run + oe4_run)", len(d))
+    rf3 = d.inflight_overlap.astype(str).str.lower().isin(["1", "true", "1.0"])
+    add_prosa("90,5", "%", "RF03: proporción de ciclos con peticiones en vuelo solapadas", "N1", f, "100 × ciclos con inflight_overlap / ciclos totales", 100 * rf3.mean(), f"{len(d)} ciclos")
+    conc = d[d.f_dispatch.astype(str).str.lower().isin(["batch"])]
+    add_prosa("8 600", "ciclos", "ciclos con despacho concurrente (batch) con solape (RF03)", "N1", f, "ciclos con f_dispatch = batch e inflight_overlap", int((conc.inflight_overlap.astype(str).str.lower().isin(["1", "true", "1.0"])).sum()))
+
+
+OE_TABLAS = {"oe1": {5, 6, 37}, "oe2": {8, 9, 10, 11, 38}, "oe3": {13, 14, 15, 40}, "oe4": {17, 18, 19, 20, 21, 22, 23, 24, 25}, "oe5": {27, 28, 29, 30, 35, 41}}
+OE_SCRIPTS = {"oe1": ["oe1_verify"], "oe2": ["oe2_reanalysis", "oe2_aux_analysis"], "oe3": ["oe3_reanalysis"], "oe4": ["oe4_nvar_analysis", "oe4_n11_analysis", "verif_d27"],
+              "oe5": ["alineacion_aptitud_f1", "reproduce_f1_v3_independent"]}
+OE_CAMP = {"oe1": [], "oe2": ["N2", "N9b"], "oe3": [], "oe4": ["N4", "N8", "N8b", "N11"], "oe5": []}
+
+
+def _tablas_de(c):
+    return {int(x) for x in re.findall(r"\d+", c["tabla"])}
+
+
 def main() -> int:
+    oe = "all"
+    if "--oe" in sys.argv:
+        oe = sys.argv[sys.argv.index("--oe") + 1].lower().replace("objetivo_", "oe")
+        assert oe in OE_TABLAS, f"--oe debe ser uno de {sorted(OE_TABLAS)} o 'all'"
+    todo = oe == "all"
     src_sha, T = report_tables()
     tmp = Path(tempfile.mkdtemp(prefix="repro_"))
     work = tmp / "experiments"
     shutil.copytree(EXP, work)
-    rc, byte = run_project_scripts(work)
-    chain_from_requests()
+    rc, byte = run_project_scripts(work, None if todo else OE_SCRIPTS[oe])
+    chain_from_requests(None if todo else OE_CAMP[oe])
     tabla8(T)
     tablas_9_10_11(T, work)
     tablas_17_18_19_20(T, work)
     tablas_21_24(T, work)
     tablas_5_6_27_28_29_41(T, work)
-    tablas_13_14_40(T, work)
-    n3_cadena()
-    for t, camp, why in [("Tablas 5 y 37", "N1", "estados MET/NOT_MET: texto categórico del informe de N1 (oe1_report.json); no hay cálculo numérico que recomputar aquí"),
-                         ("Tablas 15 y 30", "K10 (v2 histórico)", "resultados históricos de la especificación v2 (K10) en backend/official_runs; no recalculados en esta entrega"),
-                         ("Tabla 25", "antecedente", "pruebas exploratorias de carga (backend/loadtest/results, ya en Git); no recalculadas en esta entrega"),
-                         ("Tablas 32 y 44", "transversal", "síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista"),
-                         ("Tabla 36", "N5", "instrumento SUS sin aplicar: no hay datos; no se simulan")]:
-        add_na(f"PEND-{t}", t, "", camp, why)
+    tabla_38(T)
+    tablas_15_30(T)
+    tabla_25(T)
+    if todo or oe == "oe1":
+        prosa_oe1()
+    if todo:
+        tablas_36_45(T)
+    if todo or oe == "oe3":
+        tablas_13_14_40(T, work)
+        n3_cadena()
+    for t_, camp, why in [("Tablas 5 y 37", "N1", "estados MET/NOT_MET: texto categórico del informe de N1 (oe1_report.json); no hay cálculo numérico que recomputar aquí"),
+                          ("Tablas 32 y 44", "transversal", "síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista"),
+                          ("Tabla 35", "N5", "instrumento SUS sin aplicar: no hay datos; no se simulan")]:
+        add_na(f"PEND-{t_}", t_, "", camp, why)
+    if not todo:
+        keep = OE_TABLAS[oe]
+        checks[:] = [c for c in checks if _tablas_de(c) & keep]
+        if oe != "oe1":
+            PROSA.clear()
     cnt, cnt_cifra = {}, {}
     for c in checks:
         cnt[c["estado"]] = cnt.get(c["estado"], 0) + 1
@@ -435,14 +670,16 @@ def main() -> int:
     rep = {"informe_fuente_sha256": src_sha,
            "entorno": {"python": platform.python_version(), "scipy": scipy.__version__, "pandas": pd.__version__, "numpy": np.__version__, "statsmodels": statsmodels.__version__},
            "scripts_del_proyecto_ejecutados": rc, "derivados_byte_a_byte": byte, "cadena_peticiones_a_corridas": raw_chain, "anova_n3_recalculado": anova_rep,
-           "conteo_estados": cnt, "conteo_estado_cifra": cnt_cifra, "comprobaciones": checks,
+           "prosa_recalculada": PROSA, "conteo_estados": cnt, "conteo_estado_cifra": cnt_cifra, "comprobaciones": checks,
            "nota": "COINCIDE: el valor recalculado, redondeado a la precisión publicada, iguala al publicado. No demuestra la validez de la hipótesis ni la autenticidad de los datos."}
     OUT.mkdir(exist_ok=True)
     (OUT / "tables").mkdir(exist_ok=True)
-    (OUT / "verification_report.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
-    pd.DataFrame(checks).to_csv(OUT / "tables" / "comparacion_con_informe.csv", index=False, encoding="utf-8")
-    pd.DataFrame(byte).to_csv(OUT / "tables" / "derivados_byte_a_byte.csv", index=False, encoding="utf-8")
-    pd.DataFrame(raw_chain).to_csv(OUT / "tables" / "cadena_peticiones_a_corridas.csv", index=False, encoding="utf-8")
+    suf = "" if todo else f"_{oe}"
+    rep["objetivo"] = oe
+    (OUT / f"verification_report{suf}.json").write_text(json.dumps(rep, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
+    pd.DataFrame(checks).to_csv(OUT / "tables" / f"comparacion_con_informe{suf}.csv", index=False, encoding="utf-8")
+    pd.DataFrame(byte).to_csv(OUT / "tables" / f"derivados_byte_a_byte{suf}.csv", index=False, encoding="utf-8")
+    pd.DataFrame(raw_chain).to_csv(OUT / "tables" / f"cadena_peticiones_a_corridas{suf}.csv", index=False, encoding="utf-8")
     shutil.rmtree(tmp, ignore_errors=True)
     print("scripts del proyecto:", {k: v["codigo"] for k, v in rc.items()})
     print("derivados byte a byte:", {e: sum(1 for b in byte if b['estado'] == e) for e in sorted({b['estado'] for b in byte})})

@@ -78,14 +78,65 @@ def compare(pub_str: str, recomputed: float):
                 tolerancia=0.5 * unit, estado=estado, precision_publicada=f"{dec} decimales" + (f", ×10^{exp}" if exp is not None else ""))
 
 
+class Pub(str):
+    """Cifra tal como aparece en el informe, con su ubicación exacta (tabla, fila, columna, encabezado). Las operaciones de texto habituales conservan la ubicación."""
+
+    def __new__(cls, s, **meta):
+        o = str.__new__(cls, s)
+        o.meta = meta
+        return o
+
+    def _w(self, s):
+        return Pub(s, **self.meta)
+
+    def strip(self, *a):
+        return self._w(str.strip(self, *a))
+
+    def replace(self, *a):
+        return self._w(str.replace(self, *a))
+
+    def split(self, *a, **k):
+        return [self._w(x) for x in str.split(self, *a, **k)]
+
+
+class Row(list):
+    """Fila de una tabla del informe; indexar devuelve `Pub` con la ubicación."""
+
+    def __init__(self, cells, tabla, fila, header):
+        super().__init__(cells)
+        self.tabla, self.fila, self.header = tabla, fila, header
+
+    def __getitem__(self, i):
+        v = super().__getitem__(i)
+        if isinstance(i, int):
+            return Pub(v, tabla=self.tabla, fila=self.fila, col=i % len(self), encabezado=(self.header[i % len(self)] if self.header and len(self.header) == len(self) else ""),
+                       etiqueta_fila=str.strip(super().__getitem__(0)) if len(self) else "")
+        return v
+
+
+def like(orig, s):
+    """Devuelve `s` con la ubicación de `orig` (para cadenas derivadas por expresiones regulares)."""
+    return Pub(s, **orig.meta) if hasattr(orig, "meta") else s
+
+
 def report_tables():
-    d = json.loads((META / "informe_D2.9.7_tablas.json").read_text(encoding="utf-8"))
+    import os
+    alt = os.environ.get("REPRO_INFORME_JSON")      # p. ej. las tablas de una versión corregida del informe
+    d = json.loads((Path(alt) if alt else META / "informe_D2.9.7_tablas.json").read_text(encoding="utf-8"))
     out = {}
     for t in d["tables"]:
         m = re.match(r"Tabla (\d+)\.", t["caption_prev"])
         if m:
-            out[int(m.group(1))] = t["rows"]
+            n = int(m.group(1))
+            hdr = t["rows"][0]
+            out[n] = [Row(r, n, k, hdr) for k, r in enumerate(t["rows"])]
     return d["source_sha256"], out
+
+
+def es_probabilidad(nombre) -> bool:
+    """Columnas o claves que contienen valores p (se comparan solo en relativo; el ruido absoluto cercano a cero no aplica a probabilidades)."""
+    s = str(nombre).lower()
+    return s.startswith("p") and (len(s) <= 2 or s[1] in "_(-") or "p_" in s or "pr(" in s or s.endswith("_p") or s == "p"
 
 
 def comparar_archivos(regenerado: Path, publicado: Path) -> str:
@@ -110,7 +161,8 @@ def comparar_archivos(regenerado: Path, publicado: Path) -> str:
                 ok = True
                 for c in x.columns:
                     if pd.api.types.is_numeric_dtype(x[c]) and pd.api.types.is_numeric_dtype(y[c]):
-                        ok &= bool(np.allclose(x[c].to_numpy(float), y[c].to_numpy(float), rtol=1e-6, atol=1e-12, equal_nan=True))
+                        atol = 0.0 if es_probabilidad(c) else 1e-12      # una probabilidad se compara siempre en relativo: 1e-184 y 3e-184 NO son iguales
+                        ok &= bool(np.allclose(x[c].to_numpy(float), y[c].to_numpy(float), rtol=1e-6, atol=atol, equal_nan=True))
                     else:
                         ok &= bool((x[c].fillna("") == y[c].fillna("")).all())
                 return "COINCIDE_NUMERICO" if ok else "DIFIERE"
@@ -118,13 +170,13 @@ def comparar_archivos(regenerado: Path, publicado: Path) -> str:
             import json
             import math
 
-            def eq(p, q):
+            def eq(p, q, key=""):
                 if isinstance(p, dict) and isinstance(q, dict):
-                    return p.keys() == q.keys() and all(eq(p[k], q[k]) for k in p)
+                    return p.keys() == q.keys() and all(eq(p[k], q[k], k) for k in p)
                 if isinstance(p, list) and isinstance(q, list):
-                    return len(p) == len(q) and all(eq(i, j) for i, j in zip(p, q))
+                    return len(p) == len(q) and all(eq(i, j, key) for i, j in zip(p, q))
                 if isinstance(p, float) or isinstance(q, float):
-                    return isinstance(p, (int, float)) and isinstance(q, (int, float)) and (math.isclose(p, q, rel_tol=1e-6, abs_tol=1e-12) or (math.isnan(p) and math.isnan(q)))
+                    return isinstance(p, (int, float)) and isinstance(q, (int, float)) and (math.isclose(p, q, rel_tol=1e-6, abs_tol=0.0 if es_probabilidad(key) else 1e-12) or (math.isnan(p) and math.isnan(q)))
                 if isinstance(p, str) and isinstance(q, str):
                     return p.replace("\\", "/") == q.replace("\\", "/")
                 return p == q
