@@ -383,6 +383,13 @@ def tablas_5_6_27_28_29_41(T, w):
     keys = {"T_conv mediano": "t_conv_ms_median", "Latencia P95": "latency_p95_ms", "Brecha": "gap_vs_optimum", "Throughput mediano": "throughput_median_rps"}
     for rr in T[6][1:]:
         key = next((v for k, v in keys.items() if rr[0].startswith(k)), None)
+        if key is None and rr[0].startswith("Usuarios"):
+            xu = json.loads((n8 / "oe1_verify/oe1_verify.json").read_text(encoding="utf-8"))["asociacion_carga_vs_puntaje"]
+            rho, p1 = pval(rr[1])
+            fu = "oe1_verify.py (asociacion_carga_vs_puntaje: Spearman de usuarios frente al puntaje de cumplimiento, n = 14 condiciones)"
+            add("T6-usuarios-rho", "Tabla 6", "Spearman ρ usuarios–puntaje", "N1", fu, rho, xu["spearman_rho"]); add("T6-usuarios-rho_p", "Tabla 6", "p Spearman usuarios–puntaje", "N1", fu, p1, xu["p"])
+            add_na("T6-usuarios-tau", "Tabla 6", "Kendall τb usuarios–puntaje", "N1", "la tesis publica «no calculado»; no hay cifra que comparar")
+            continue
         if key is None:
             add_na(f"T6-{rr[0][:20]}", "Tabla 6", rr[0], "N1", "variable no incluida en oe1_verify.json (cálculo no localizado)")
             continue
@@ -402,7 +409,23 @@ def tablas_5_6_27_28_29_41(T, w):
     arch = {"Balanced-Multimodal": "balanced_multimodal", "Visual-Dominant": "visual_dominant", "Explanatory-Conceptual": "explanatory_conceptual", "Logical-Syntactic": "logical_syntactic"}
     for nm, pub in re.findall(r"([A-Za-z\-]+) (\d,\d+)", T[27][5][1]):
         add(f"T27-arq-{nm}", "Tabla 27", f"F1 por arquetipo {nm}", "N5", f, like(T[27][5][1], pub), ind["by_archetype"][arch[nm]])
-    add_na("T27-perfil", "Tabla 27", "estadísticos por perfil (n = 100)", "N5", "la mediana, desviación y rango por perfil no se recalculan en esta entrega")
+    import statistics as _st, glob as _g
+    from collections import defaultdict as _dd
+    _MOD = ("code", "diagram", "text", "audio")
+    _GOLD = {"visual_dominant": {"diagram", "code"}, "logical_syntactic": {"code", "diagram"}, "explanatory_conceptual": {"text", "diagram", "code"}, "balanced_multimodal": set(_MOD)}
+    def _pred(e):
+        tt = sum(e)
+        return set() if tt == 0 else {m for m, x in zip(_MOD, e) if x >= 1 and 5 * x >= tt}
+    byp = _dd(list)
+    for fl in sorted(_g.glob(str(EXP / "oe_n5_2026-10-06/f1_v3_provisional/replica_*.json"))):
+        for c in json.loads(Path(fl).read_text(encoding="utf-8"))["cases"]:
+            pr, gd = _pred(c["S"][0::2]), _GOLD[c["archetype"]]
+            byp[c["profile_id"]].append(1.0 if not pr and not gd else 2 * len(pr & gd) / (len(pr) + len(gd)))
+    pm = [sum(v) / len(v) for v in byp.values()]
+    m3 = re.match(r"media (.+?); mediana (.+?); desviación estándar (.+?); mínimo (.+?); máximo (.+)$", T[27][3][1])
+    fpf = "recálculo desde las réplicas guardadas de N5: F1 (Dice) por caso con la regla v3, media por perfil sobre 10 réplicas (100 perfiles)"
+    for lab, g, val in zip(("media", "mediana", "sd", "min", "max"), m3.groups(), (sum(pm) / len(pm), _st.median(pm), _st.stdev(pm), min(pm), max(pm))):
+        add(f"T27-perfil-{lab}", "Tabla 27", f"medias por perfil: {lab}", "N5", fpf, like(T[27][3][1], g), val)
     add_na("T27-sus", "Tabla 27", "Puntuación SUS", "N5", "no existen datos: 0 evaluadores reales; no se simulan")
     mods = {"Código": "code", "Diagrama": "diagram", "Texto": "text", "Audio": "audio"}
     for rr in T[28][1:]:

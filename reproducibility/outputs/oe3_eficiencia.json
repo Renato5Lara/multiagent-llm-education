@@ -1,0 +1,76 @@
+{
+  "nota": "exploratorio, no oficial; sin índice compuesto; ver docstring de scripts/oe3_eficiencia.py",
+  "umbral_relevancia": 0.05,
+  "convergencia": [
+    {
+      "campana": "N3",
+      "ciclos": 24000,
+      "CR": 1.0,
+      "k_stop_medio": 1.7083333333333333,
+      "k_stop_max": 8,
+      "meta_CR_98": true,
+      "meta_k_15": true,
+      "stop_reason": {
+        "epsilon": 24000
+      }
+    },
+    {
+      "campana": "N3R",
+      "ciclos": 24000,
+      "CR": 1.0,
+      "k_stop_medio": 1.72,
+      "k_stop_max": 7,
+      "meta_CR_98": true,
+      "meta_k_15": true,
+      "stop_reason": {
+        "epsilon": 24000
+      }
+    },
+    {
+      "campana": "N3S",
+      "ciclos": 24000,
+      "CR": 1.0,
+      "k_stop_medio": 1.7083333333333333,
+      "k_stop_max": 8,
+      "meta_CR_98": true,
+      "meta_k_15": true,
+      "stop_reason": {
+        "epsilon": 24000
+      }
+    }
+  ],
+  "veredictos": {
+    "f_broadcast_gbest: False frente a True": {
+      "N3": "domina",
+      "N3R": "domina",
+      "N3S": "domina"
+    },
+    "f_dispatch: batch frente a sequential": {
+      "N3": "domina",
+      "N3R": "domina",
+      "N3S": "domina"
+    },
+    "f_heuristic_seed: True frente a False": {
+      "N3": "domina",
+      "N3R": "domina",
+      "N3S": "domina"
+    },
+    "f_mechanism: cognitive frente a pso": {
+      "N3": "compromiso",
+      "N3R": "compromiso",
+      "N3S": "compromiso"
+    },
+    "f_mechanism: social frente a pso": {
+      "N3": "sin diferencia relevante",
+      "N3R": "sin diferencia relevante",
+      "N3S": "sin diferencia relevante"
+    },
+    "f_replicas: 2 frente a 1": {
+      "N3": "sin diferencia relevante",
+      "N3R": "sin diferencia relevante",
+      "N3S": "sin diferencia relevante"
+    }
+  },
+  "contrastes_con_veredicto_igual_en_las_3_campanas": 6,
+  "contrastes": 6
+}

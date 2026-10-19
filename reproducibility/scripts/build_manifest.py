@@ -5,7 +5,7 @@ SAN = {}
 from repro_lib import ROOT, EXP, META, MANIFEST, sha256
 
 CAMP = {  # directorio → (campaña, objetivo, nota de estado)
-    "oe_n1_2026-10-05": ("N1", "OE1", "no oficial"), "oe_n2_2026-10-05": ("N2", "OE2", "no oficial"), "oe_n3_2026-10-06": ("N3", "OE3", "no oficial"), "oe_n3r_2026-10-19": ("N3-R", "OE3", "réplica independiente de N3 (semillas nuevas), 2026-10-19; exploratoria, no oficial"),
+    "oe_n1_2026-10-05": ("N1", "OE1", "no oficial"), "oe_n2_2026-10-05": ("N2", "OE2", "no oficial"), "oe_n3_2026-10-06": ("N3", "OE3", "no oficial"), "oe_n3s_2026-10-19": ("N3-S", "OE3", "control de sesión: repite N3 con las mismas semillas (2026-10-19); exploratoria, no oficial"), "oe_n3r_2026-10-19": ("N3-R", "OE3", "réplica independiente de N3 (semillas nuevas), 2026-10-19; exploratoria, no oficial"),
     "oe_n4_2026-10-06": ("N4", "OE4", "no oficial"), "oe_n5_2026-10-06": ("N5", "OE5", "provisional (especificación v3; official=False)"),
     "oe_n6_2026-10-06": ("N6", "transversal", "consolidación; no oficial"), "oe_n7_2026-10-06": ("N7", "transversal", "estudio final / pruebas; no oficial"),
     "oe_n8_2026-10-13": ("N8", "OE4", "no oficial; contiene además los scripts y salidas de re-análisis (D2.7)"),

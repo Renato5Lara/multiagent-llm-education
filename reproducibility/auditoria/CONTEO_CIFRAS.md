@@ -2,25 +2,24 @@
 
 **Definición.** Una *comprobación* (lo que antes se llamó «cifra») es **un valor numérico comparado** con su recálculo: en una celda «5,05 (4,57 a 5,58)» la razón, el límite inferior y el superior cuentan por separado (3 comprobaciones en 1 celda). Por tanto **861 no eran 861 celdas, ni 861 valores únicos**: eran 861 comprobaciones sobre 20 tablas.
 
-**Reproducción del 861 anterior.** El informe del commit `21c7380` contiene 869 comprobaciones, de las cuales 861 `VERIFICADO_DESDE_DATOS`, 8 `NO_REPRODUCIBLE` y 0 discrepantes. El cálculo es reproducible con `git show 21c7380:reproducibility/outputs/verification_report.json`. Todas las comprobaciones antiguas siguen presentes: 866 de 869 (faltan 3: ['PEND-Tabla 25', 'PEND-Tabla 36', 'PEND-Tablas 15 y 30']).
+**Reproducción del 861 anterior.** El informe del commit `21c7380` contiene 869 comprobaciones, de las cuales 861 `VERIFICADO_DESDE_DATOS`, 8 `NO_REPRODUCIBLE` y 0 discrepantes. El cálculo es reproducible con `git show 21c7380:reproducibility/outputs/verification_report.json`. Todas las comprobaciones antiguas siguen presentes: 864 de 869 (faltan 5: ['PEND-Tabla 25', 'PEND-Tabla 36', 'PEND-Tablas 15 y 30', 'T27-perfil', 'T6-Usuarios (carga) fre']).
 
 ## Conteo actual (esta rama)
 | | |
 |---|---|
-| Comprobaciones totales | 1011 |
-| `VERIFICADO_DESDE_DATOS` | 991 |
+| Comprobaciones totales | 1017 |
+| `VERIFICADO_DESDE_DATOS` | 998 |
 | `VERIFICADO_DESDE_DERIVADO` | 14 |
 | `DISCREPANCIA` | 0 |
-| `NO_REPRODUCIBLE` (elementos, no celdas: algunos agrupan varias tablas) | 6 |
+| `NO_REPRODUCIBLE` (elementos, no celdas: algunos agrupan varias tablas) | 5 |
 | Celdas numéricas del informe (excluida la fila de encabezados) | 1665 |
-| Celdas cubiertas por al menos una comprobación | 617 |
+| Celdas cubiertas por al menos una comprobación | 619 |
 
 Las comprobaciones **no** deben dividirse por tablas sin cuidado: una celda numérica puede tener varias y algunas celdas son etiquetas de condición (carga, N) que no se calculan. El inventario por celda y por afirmación en prosa está en `CONCILIACION_TESIS_DATOS.csv`.
 
 ## Las «8 cifras no reproducibles»
 No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tablas enteras. Estado actual de cada uno (ver `CONCILIACION_TESIS_DATOS.csv`, estado `NO_REPRODUCIBLE`/`PENDIENTE_DE_EVIDENCIA`):
-- T6-Usuarios (carga) fre: variable no incluida en oe1_verify.json (cálculo no localizado)
-- T27-perfil: la mediana, desviación y rango por perfil no se recalculan en esta entrega
+- T6-usuarios-tau: la tesis publica «no calculado»; no hay cifra que comparar
 - T27-sus: no existen datos: 0 evaluadores reales; no se simulan
 - PEND-Tablas 5 y 37: estados MET/NOT_MET: texto categórico del informe de N1 (oe1_report.json); no hay cálculo numérico que recomputar aquí
 - PEND-Tablas 32 y 44: síntesis bibliográfica: depende de consultas externas (Crossref/OpenAlex); no verificable por cómputo determinista
@@ -34,7 +33,7 @@ No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tab
 |       3 |                 32 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |       4 |                 22 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |       5 |                 47 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
-|       6 |                 10 |                  8 |               17 |                        16 |                            0 |              0 |                  1 |                          11 |
+|       6 |                 10 |                  9 |               19 |                        18 |                            0 |              0 |                  1 |                          13 |
 |       7 |                 13 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
 |       8 |                 40 |                 32 |               32 |                        32 |                            0 |              0 |                  0 |                          31 |
 |       9 |                 28 |                 16 |               32 |                        32 |                            0 |              0 |                  0 |                          31 |
@@ -55,7 +54,7 @@ No eran 8 cifras: son **8 elementos** del informe anterior, y varios agrupan tab
 |      24 |                 41 |                 40 |               60 |                        60 |                            0 |              0 |                  0 |                          25 |
 |      25 |                 12 |                  8 |               14 |                         4 |                           10 |              0 |                  0 |                          13 |
 |      26 |                 16 |                  0 |                0 |                         0 |                            0 |              0 |                  0 |                           0 |
-|      27 |                 10 |                  3 |               12 |                        10 |                            0 |              0 |                  2 |                          10 |
+|      27 |                 10 |                  4 |               16 |                        15 |                            0 |              0 |                  1 |                          14 |
 |      28 |                 16 |                 16 |               16 |                        16 |                            0 |              0 |                  0 |                          15 |
 |      29 |                 11 |                 10 |               10 |                        10 |                            0 |              0 |                  0 |                          10 |
 |      30 |                 15 |                  6 |               19 |                        15 |                            4 |              0 |                  0 |                          18 |

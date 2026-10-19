@@ -1,0 +1,4 @@
+campana,ciclos,CR,k_stop_medio,k_stop_max,meta_CR_98,meta_k_15,stop_reason
+N3,24000,1.0,1.7083333333333333,8,True,True,{'epsilon': 24000}
+N3R,24000,1.0,1.72,7,True,True,{'epsilon': 24000}
+N3S,24000,1.0,1.7083333333333333,8,True,True,{'epsilon': 24000}

@@ -61,3 +61,7 @@ Revisión de los archivos publicados: sin correos, rutas locales ni claves/token
 - Aplicar las 5 correcciones de la Tabla 13 a la copia del DOCX y revisarla visualmente en Word (no se renderizó).
 
 **No se declara la tesis verificada por completo.**
+
+
+## Actualización (fase siguiente): recuentos tras recalcular la Tabla 6 «usuarios» y la Tabla 27 por perfil
+Eran vacíos del verificador, no falta de datos: el ρ de «usuarios frente al puntaje» (−0,608; p = 0,021) ya estaba en `oe1_verify.json` y las estadísticas por perfil se recalculan desde las 10 réplicas de N5 (media 0,8156; mediana 0,8062; sd 0,1416; mín 0,40; máx 1,00). Recuento actual: **1 017 comprobaciones** (998 desde datos + 14 desde derivado + 5 no reproducibles), 0 discrepancias; prosa: 574 pendientes, 878 parciales, 64 coinciden, 347 no aplica; celdas: 6 pendientes, 65 parciales, 2 no reproducibles.

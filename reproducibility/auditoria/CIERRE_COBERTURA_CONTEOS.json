@@ -1,7 +1,7 @@
 {
   "estados_prosa": {
-    "VERIFICACION_PARCIAL": 887,
-    "PENDIENTE_DE_EVIDENCIA": 595,
+    "VERIFICACION_PARCIAL": 889,
+    "PENDIENTE_DE_EVIDENCIA": 593,
     "NO_APLICA": 347,
     "COINCIDE_EXACTAMENTE": 23,
     "COINCIDE_CON_REDONDEO_JUSTIFICADO": 11
@@ -10,9 +10,9 @@
     "NO_APLICA": 982,
     "VERIFICACION_PARCIAL": 65,
     "PENDIENTE_DE_EVIDENCIA": 6,
-    "NO_REPRODUCIBLE": 4
+    "NO_REPRODUCIBLE": 2
   },
-  "prosa_subida_a_parcial_por_este_script": 0,
+  "prosa_subida_a_parcial_por_este_script": 217,
   "categorias_prosa_abiertas": {
     "RESULTADO_CUANTITATIVO": 447,
     "OTRO_REVISAR": 428,

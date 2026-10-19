@@ -1,0 +1,62 @@
+{
+  "nota": "exploratorio, no oficial; criterios en auditoria/PRE_REGISTRO_N3S.md",
+  "cadena_N3S": {
+    "observaciones": 24000,
+    "corridas_publicadas": 240,
+    "corridas_recalculadas": 240,
+    "diferencia_maxima": 7.105427357601002e-15,
+    "coincide": true
+  },
+  "t_conv_media_geometrica": {
+    "N3": 71.72313798590496,
+    "N3R": 60.3676933425427,
+    "N3S": 60.29187520064087
+  },
+  "cociente_N3S_sobre_N3": {
+    "valor": 0.840619594927504,
+    "ic95": [
+      0.8197656245479472,
+      0.8620040682551824
+    ],
+    "por_lote": [
+      0.8689624969645303,
+      0.8454642334165825,
+      0.8297418347736043,
+      0.82978888788121,
+      0.8298329415706817
+    ]
+  },
+  "cociente_N3S_sobre_N3R": {
+    "valor": 0.9987440609752711,
+    "ic95": [
+      0.976178028151944,
+      1.0218317464302884
+    ]
+  },
+  "cociente_N3R_sobre_N3": {
+    "valor": 0.8416766895280869,
+    "ic95": [
+      0.8028875127615579,
+      0.8823398526380453
+    ]
+  },
+  "diferencia_maxima_calidad_N3S_frente_a_N3": {
+    "k_stop": 0.0,
+    "gap_vs_optimum": 0.0,
+    "n_messages": 0.0,
+    "F": 0.0
+  },
+  "calidad_identica_con_mismas_semillas": true,
+  "carga_sistema_N3S": {
+    "muestras": 412,
+    "cpu_total_media": 16.618932038834952,
+    "cpu_total_max": 23.0,
+    "memoria_libre_min_mb": 8136.0
+  },
+  "veredicto_preregistrado": "H_sesión (la velocidad depende de la sesión/momento o del código actual, no de las semillas)",
+  "limitaciones": [
+    "no separa sesión/estado del equipo de versión del código (fingerprints idénticos y ruta en proceso sin cambios, pero no es una prueba)",
+    "la carga del sistema durante N3 (6 oct) no se registró: la causa de su mayor lentitud no es recuperable",
+    "un solo equipo; los lotes son bloques, no repeticiones independientes del fenómeno"
+  ]
+}

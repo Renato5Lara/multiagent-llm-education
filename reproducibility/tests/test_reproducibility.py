@@ -379,3 +379,48 @@ def test_todo_archivo_del_manifiesto_esta_versionado_en_git():
     with open(ROOT / "EVIDENCE_MANIFEST.csv", encoding="utf-8", newline="") as fh:
         faltan = [row["ruta"] for row in csv.DictReader(fh) if row["ruta"] not in tracked]
     assert not faltan, f"archivos del manifiesto sin versionar (¿.gitignore?): {faltan[:5]}"
+
+
+# ---- OE3: control de sesión preregistrado (N3-S) y eficiencia con los indicadores de la tesis
+def test_oe3_sesion_n3s_cadena_determinismo_y_veredicto_preregistrado():
+    r = run("oe3_sesion.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    out = json.loads((ROOT / "outputs" / "oe3_sesion.json").read_text(encoding="utf-8"))
+    assert out["cadena_N3S"]["coincide"] and out["cadena_N3S"]["observaciones"] == 24000
+    assert out["calidad_identica_con_mismas_semillas"] is True          # mismas semillas ⇒ brecha, k_stop, mensajes y F idénticos a N3
+    assert out["veredicto_preregistrado"].startswith("H_sesión")        # intervalo [0,79; 0,89] fijado antes de ejecutar
+    assert 0.79 <= out["cociente_N3S_sobre_N3"]["valor"] <= 0.89
+
+
+def test_oe3_eficiencia_indicadores_de_la_tesis_y_veredictos_consistentes():
+    r = run("oe3_eficiencia.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    out = json.loads((ROOT / "outputs" / "oe3_eficiencia.json").read_text(encoding="utf-8"))
+    assert all(c["CR"] >= 0.98 and c["k_stop_max"] <= 15 for c in out["convergencia"])
+    assert out["contrastes_con_veredicto_igual_en_las_3_campanas"] == out["contrastes"] == 6
+
+
+def test_oe3_control_negativo_semillas_cambiadas_no_dan_calidad_identica(copia):
+    import pandas as pd
+    rel = "data/experiments/oe_n3s_2026-10-19/runs_oe3.csv"
+
+    def alterar(b):
+        import io
+        d = pd.read_csv(io.BytesIO(b))
+        d.loc[0, "gap_vs_optimum"] = d.loc[0, "gap_vs_optimum"] + 0.01
+        return d.to_csv(index=False).encode("utf-8")
+
+    with mutado(copia, rel, alterar):
+        r = run("oe3_sesion.py", copia)
+        assert r.returncode == 0, r.stderr[-800:]
+        out = json.loads((copia / "outputs" / "oe3_sesion.json").read_text(encoding="utf-8"))
+        assert out["calidad_identica_con_mismas_semillas"] is False and out["cadena_N3S"]["coincide"] is False
+
+
+def test_tabla6_usuarios_y_tabla27_por_perfil_se_recalculan():
+    r = run("reproduce_results.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    ver = json.loads((ROOT / "outputs" / "verification_report.json").read_text(encoding="utf-8"))
+    ids = {c["id"]: c["estado"] for c in ver["comprobaciones"]}
+    for i in ("T6-usuarios-rho", "T6-usuarios-rho_p", "T27-perfil-media", "T27-perfil-mediana", "T27-perfil-sd", "T27-perfil-min", "T27-perfil-max"):
+        assert ids.get(i) == "COINCIDE", (i, ids.get(i))
