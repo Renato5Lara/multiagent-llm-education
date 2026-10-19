@@ -147,6 +147,19 @@ def test_comparar_archivos_distingue_finales_de_linea_de_cambios_reales(tmp_path
     assert comparar_archivos(reg, pub) == "COINCIDE_NUMERICO"
     reg.write_bytes(b"a,b\n1,2.6\n")
     assert comparar_archivos(reg, pub) == "DIFIERE"
+    # ruido de punto flotante cercano a cero (p. ej. sum_sq teóricamente 0) no es una diferencia
+    pub.write_bytes(b"a,b\r\n1,3.1e-30\r\n")
+    reg.write_bytes(b"a,b\n1,-4.2e-31\n")
+    assert comparar_archivos(reg, pub) == "COINCIDE_NUMERICO"
+    # JSON: rutas con barras de Windows frente a Linux
+    pj, rj = tmp_path / "pub.json", tmp_path / "reg.json"
+    pj.write_bytes(b'{"source": "..\\\\oe_n2\\\\runs.csv", "x": 1.5}\r\n')
+    rj.write_bytes(b'{"source": "../oe_n2/runs.csv", "x": 1.5}\n')
+    assert comparar_archivos(rj, pj) == "COINCIDE_NUMERICO"
+    rj.write_bytes(b'{"source": "../otra/runs.csv", "x": 1.5}\n')
+    assert comparar_archivos(rj, pj) == "DIFIERE"
+    reg.write_bytes(b"a,b\n1,2.6\n")
+    pub.write_bytes(b"a,b\r\n1,2.5\r\n")
     assert comparar_archivos(tmp_path / "no_existe.csv", pub) == "NO_GENERADO"
 
 

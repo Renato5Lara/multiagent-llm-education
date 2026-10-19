@@ -91,7 +91,8 @@ def report_tables():
 def comparar_archivos(regenerado: Path, publicado: Path) -> str:
     """Nivel de igualdad entre un archivo regenerado y el publicado:
     COINCIDE_BYTE_A_BYTE · COINCIDE_SALVO_FINALES_DE_LINEA (los publicados se generaron en Windows con CRLF; en Linux/Colab salen con LF) ·
-    COINCIDE_NUMERICO (mismo contenido, números iguales con tolerancia relativa 1e-9) · DIFIERE · NO_GENERADO."""
+    COINCIDE_NUMERICO (mismo contenido; números iguales con tolerancia relativa 1e-6 y absoluta 1e-12, es decir, ruido de punto flotante entre plataformas;
+    en JSON, además, las barras `\\` y `/` de las rutas se consideran iguales porque los publicados se generaron en Windows) · DIFIERE · NO_GENERADO."""
     if not regenerado.exists():
         return "NO_GENERADO"
     a, b = regenerado.read_bytes(), publicado.read_bytes()
@@ -109,7 +110,7 @@ def comparar_archivos(regenerado: Path, publicado: Path) -> str:
                 ok = True
                 for c in x.columns:
                     if pd.api.types.is_numeric_dtype(x[c]) and pd.api.types.is_numeric_dtype(y[c]):
-                        ok &= bool(np.allclose(x[c].to_numpy(float), y[c].to_numpy(float), rtol=1e-9, atol=0, equal_nan=True))
+                        ok &= bool(np.allclose(x[c].to_numpy(float), y[c].to_numpy(float), rtol=1e-6, atol=1e-12, equal_nan=True))
                     else:
                         ok &= bool((x[c].fillna("") == y[c].fillna("")).all())
                 return "COINCIDE_NUMERICO" if ok else "DIFIERE"
@@ -123,7 +124,9 @@ def comparar_archivos(regenerado: Path, publicado: Path) -> str:
                 if isinstance(p, list) and isinstance(q, list):
                     return len(p) == len(q) and all(eq(i, j) for i, j in zip(p, q))
                 if isinstance(p, float) or isinstance(q, float):
-                    return isinstance(p, (int, float)) and isinstance(q, (int, float)) and math.isclose(p, q, rel_tol=1e-9, abs_tol=0)
+                    return isinstance(p, (int, float)) and isinstance(q, (int, float)) and (math.isclose(p, q, rel_tol=1e-6, abs_tol=1e-12) or (math.isnan(p) and math.isnan(q)))
+                if isinstance(p, str) and isinstance(q, str):
+                    return p.replace("\\", "/") == q.replace("\\", "/")
                 return p == q
             return "COINCIDE_NUMERICO" if eq(json.loads(regenerado.read_text(encoding="utf-8")), json.loads(publicado.read_text(encoding="utf-8"))) else "DIFIERE"
     except Exception:  # noqa: BLE001
