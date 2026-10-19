@@ -1,0 +1,162 @@
+[1/80] n2-oe2-swarm|u10|N20-r00 seed=6721326557288052103
+    ok: P95 900 ms · 17.06 req/s · error 0.00%
+[2/80] n2-oe2-decision_table|u5|N20-r00 seed=6721326557288052103
+    ok: P95 23 ms · 260.26 req/s · error 0.00%
+[3/80] n2-oe2-decision_table|u10|N20-r00 seed=6721326557288052103
+    ok: P95 42 ms · 282.19 req/s · error 0.00%
+[4/80] n2-oe2-swarm|u1|N20-r00 seed=6721326557288052103
+    ok: P95 112 ms · 11.11 req/s · error 0.00%
+[5/80] n2-oe2-swarm|u5|N20-r00 seed=6721326557288052103
+    ok: P95 418 ms · 17.25 req/s · error 0.00%
+[6/80] n2-oe2-swarm|u25|N20-r00 seed=6721326557288052103
+    ok: P95 2241 ms · 16.99 req/s · error 0.00%
+[7/80] n2-oe2-decision_table|u1|N20-r00 seed=6721326557288052103
+    ok: P95 25 ms · 65.86 req/s · error 0.00%
+[8/80] n2-oe2-decision_table|u25|N20-r00 seed=6721326557288052103
+    ok: P95 180 ms · 274.14 req/s · error 0.00%
+[9/80] n2-oe2-decision_table|u10|N20-r01 seed=537306628830295662
+    ok: P95 42 ms · 285.66 req/s · error 0.00%
+[10/80] n2-oe2-swarm|u1|N20-r01 seed=537306628830295662
+    ok: P95 121 ms · 10.75 req/s · error 0.00%
+[11/80] n2-oe2-swarm|u5|N20-r01 seed=537306628830295662
+    ok: P95 460 ms · 16.18 req/s · error 0.00%
+[12/80] n2-oe2-decision_table|u1|N20-r01 seed=537306628830295662
+    ok: P95 25 ms · 66.70 req/s · error 0.00%
+[13/80] n2-oe2-swarm|u25|N20-r01 seed=537306628830295662
+    ok: P95 2404 ms · 16.06 req/s · error 0.00%
+[14/80] n2-oe2-decision_table|u5|N20-r01 seed=537306628830295662
+    ok: P95 26 ms · 243.59 req/s · error 0.00%
+[15/80] n2-oe2-swarm|u10|N20-r01 seed=537306628830295662
+    ok: P95 942 ms · 15.92 req/s · error 0.00%
+[16/80] n2-oe2-decision_table|u25|N20-r01 seed=537306628830295662
+    ok: P95 186 ms · 266.96 req/s · error 0.00%
+[17/80] n2-oe2-decision_table|u10|N20-r02 seed=4286300988819483214
+    ok: P95 44 ms · 277.71 req/s · error 0.00%
+[18/80] n2-oe2-decision_table|u25|N20-r02 seed=4286300988819483214
+    ok: P95 184 ms · 273.56 req/s · error 0.00%
+[19/80] n2-oe2-swarm|u10|N20-r02 seed=4286300988819483214
+    ok: P95 919 ms · 16.33 req/s · error 0.00%
+[20/80] n2-oe2-swarm|u1|N20-r02 seed=4286300988819483214
+    ok: P95 120 ms · 10.71 req/s · error 0.00%
+[21/80] n2-oe2-decision_table|u5|N20-r02 seed=4286300988819483214
+    ok: P95 26 ms · 246.34 req/s · error 0.00%
+[22/80] n2-oe2-swarm|u25|N20-r02 seed=4286300988819483214
+    ok: P95 2317 ms · 16.29 req/s · error 0.00%
+[23/80] n2-oe2-decision_table|u1|N20-r02 seed=4286300988819483214
+    ok: P95 25 ms · 66.47 req/s · error 0.00%
+[24/80] n2-oe2-swarm|u5|N20-r02 seed=4286300988819483214
+    ok: P95 459 ms · 16.36 req/s · error 0.00%
+[25/80] n2-oe2-decision_table|u10|N20-r03 seed=7607324206460521009
+    ok: P95 51 ms · 265.49 req/s · error 0.00%
+[26/80] n2-oe2-decision_table|u5|N20-r03 seed=7607324206460521009
+    ok: P95 26 ms · 241.82 req/s · error 0.00%
+[27/80] n2-oe2-swarm|u1|N20-r03 seed=7607324206460521009
+    ok: P95 122 ms · 10.38 req/s · error 0.00%
+[28/80] n2-oe2-decision_table|u25|N20-r03 seed=7607324206460521009
+    ok: P95 195 ms · 207.13 req/s · error 0.00%
+[29/80] n2-oe2-decision_table|u1|N20-r03 seed=7607324206460521009
+    ok: P95 17 ms · 68.40 req/s · error 0.00%
+[30/80] n2-oe2-swarm|u10|N20-r03 seed=7607324206460521009
+    ok: P95 905 ms · 16.90 req/s · error 0.00%
+[31/80] n2-oe2-swarm|u25|N20-r03 seed=7607324206460521009
+    ok: P95 2215 ms · 17.18 req/s · error 0.00%
+[32/80] n2-oe2-swarm|u5|N20-r03 seed=7607324206460521009
+    ok: P95 436 ms · 16.94 req/s · error 0.00%
+[33/80] n2-oe2-swarm|u10|N20-r04 seed=10588581650949032804
+    ok: P95 955 ms · 16.10 req/s · error 0.00%
+[34/80] n2-oe2-swarm|u1|N20-r04 seed=10588581650949032804
+    ok: P95 116 ms · 10.84 req/s · error 0.00%
+[35/80] n2-oe2-decision_table|u1|N20-r04 seed=10588581650949032804
+    ok: P95 24 ms · 69.69 req/s · error 0.00%
+[36/80] n2-oe2-swarm|u25|N20-r04 seed=10588581650949032804
+    ok: P95 2324 ms · 16.45 req/s · error 0.00%
+[37/80] n2-oe2-decision_table|u25|N20-r04 seed=10588581650949032804
+    ok: P95 180 ms · 269.92 req/s · error 0.00%
+[38/80] n2-oe2-swarm|u5|N20-r04 seed=10588581650949032804
+    ok: P95 431 ms · 16.70 req/s · error 0.00%
+[39/80] n2-oe2-decision_table|u10|N20-r04 seed=10588581650949032804
+    ok: P95 40 ms · 289.41 req/s · error 0.00%
+[40/80] n2-oe2-decision_table|u5|N20-r04 seed=10588581650949032804
+    ok: P95 24 ms · 264.06 req/s · error 0.00%
+[41/80] n2-oe2-decision_table|u25|N20-r05 seed=17712857808947585027
+    ok: P95 175 ms · 278.60 req/s · error 0.00%
+[42/80] n2-oe2-decision_table|u5|N20-r05 seed=17712857808947585027
+    ok: P95 24 ms · 266.33 req/s · error 0.00%
+[43/80] n2-oe2-decision_table|u1|N20-r05 seed=17712857808947585027
+    ok: P95 21 ms · 71.35 req/s · error 0.00%
+[44/80] n2-oe2-swarm|u1|N20-r05 seed=17712857808947585027
+    ok: P95 115 ms · 11.07 req/s · error 0.00%
+[45/80] n2-oe2-decision_table|u10|N20-r05 seed=17712857808947585027
+    ok: P95 42 ms · 284.59 req/s · error 0.00%
+[46/80] n2-oe2-swarm|u5|N20-r05 seed=17712857808947585027
+    ok: P95 461 ms · 15.89 req/s · error 0.00%
+[47/80] n2-oe2-swarm|u10|N20-r05 seed=17712857808947585027
+    ok: P95 975 ms · 15.77 req/s · error 0.00%
+[48/80] n2-oe2-swarm|u25|N20-r05 seed=17712857808947585027
+    ok: P95 2417 ms · 15.68 req/s · error 0.00%
+[49/80] n2-oe2-swarm|u1|N20-r06 seed=4063990892209885983
+    ok: P95 121 ms · 10.52 req/s · error 0.00%
+[50/80] n2-oe2-swarm|u10|N20-r06 seed=4063990892209885983
+    ok: P95 946 ms · 15.88 req/s · error 0.00%
+[51/80] n2-oe2-swarm|u5|N20-r06 seed=4063990892209885983
+    ok: P95 448 ms · 16.36 req/s · error 0.00%
+[52/80] n2-oe2-decision_table|u10|N20-r06 seed=4063990892209885983
+    ok: P95 42 ms · 282.77 req/s · error 0.00%
+[53/80] n2-oe2-decision_table|u5|N20-r06 seed=4063990892209885983
+    ok: P95 26 ms · 248.90 req/s · error 0.00%
+[54/80] n2-oe2-decision_table|u1|N20-r06 seed=4063990892209885983
+    ok: P95 24 ms · 66.92 req/s · error 0.00%
+[55/80] n2-oe2-swarm|u25|N20-r06 seed=4063990892209885983
+    ok: P95 2396 ms · 15.91 req/s · error 0.00%
+[56/80] n2-oe2-decision_table|u25|N20-r06 seed=4063990892209885983
+    ok: P95 187 ms · 271.57 req/s · error 0.00%
+[57/80] n2-oe2-decision_table|u5|N20-r07 seed=3546516592530791069
+    ok: P95 24 ms · 264.52 req/s · error 0.00%
+[58/80] n2-oe2-swarm|u25|N20-r07 seed=3546516592530791069
+    ok: P95 2304 ms · 16.64 req/s · error 0.00%
+[59/80] n2-oe2-swarm|u5|N20-r07 seed=3546516592530791069
+    ok: P95 425 ms · 17.17 req/s · error 0.00%
+[60/80] n2-oe2-decision_table|u1|N20-r07 seed=3546516592530791069
+    ok: P95 25 ms · 67.04 req/s · error 0.00%
+[61/80] n2-oe2-swarm|u10|N20-r07 seed=3546516592530791069
+    ok: P95 892 ms · 17.15 req/s · error 0.00%
+[62/80] n2-oe2-swarm|u1|N20-r07 seed=3546516592530791069
+    ok: P95 128 ms · 10.36 req/s · error 0.00%
+[63/80] n2-oe2-decision_table|u25|N20-r07 seed=3546516592530791069
+    ok: P95 173 ms · 279.02 req/s · error 0.00%
+[64/80] n2-oe2-decision_table|u10|N20-r07 seed=3546516592530791069
+    ok: P95 41 ms · 289.89 req/s · error 0.00%
+[65/80] n2-oe2-swarm|u5|N20-r08 seed=14733893125204041442
+    ok: P95 412 ms · 17.54 req/s · error 0.00%
+[66/80] n2-oe2-decision_table|u5|N20-r08 seed=14733893125204041442
+    ok: P95 22 ms · 275.75 req/s · error 0.00%
+[67/80] n2-oe2-decision_table|u1|N20-r08 seed=14733893125204041442
+    ok: P95 26 ms · 67.28 req/s · error 0.00%
+[68/80] n2-oe2-decision_table|u25|N20-r08 seed=14733893125204041442
+    ok: P95 175 ms · 276.40 req/s · error 0.00%
+[69/80] n2-oe2-decision_table|u10|N20-r08 seed=14733893125204041442
+    ok: P95 41 ms · 286.97 req/s · error 0.00%
+[70/80] n2-oe2-swarm|u10|N20-r08 seed=14733893125204041442
+    ok: P95 866 ms · 17.33 req/s · error 0.00%
+[71/80] n2-oe2-swarm|u25|N20-r08 seed=14733893125204041442
+    ok: P95 2202 ms · 17.21 req/s · error 0.00%
+[72/80] n2-oe2-swarm|u1|N20-r08 seed=14733893125204041442
+    ok: P95 122 ms · 10.69 req/s · error 0.00%
+[73/80] n2-oe2-swarm|u5|N20-r09 seed=1849955992485212920
+    ok: P95 417 ms · 17.24 req/s · error 0.00%
+[74/80] n2-oe2-swarm|u1|N20-r09 seed=1849955992485212920
+    ok: P95 122 ms · 10.70 req/s · error 0.00%
+[75/80] n2-oe2-decision_table|u25|N20-r09 seed=1849955992485212920
+    ok: P95 175 ms · 282.13 req/s · error 0.00%
+[76/80] n2-oe2-decision_table|u10|N20-r09 seed=1849955992485212920
+    ok: P95 41 ms · 287.64 req/s · error 0.00%
+[77/80] n2-oe2-decision_table|u1|N20-r09 seed=1849955992485212920
+    ok: P95 26 ms · 64.23 req/s · error 0.00%
+[78/80] n2-oe2-swarm|u25|N20-r09 seed=1849955992485212920
+    ok: P95 2344 ms · 16.13 req/s · error 0.00%
+[79/80] n2-oe2-swarm|u10|N20-r09 seed=1849955992485212920
+    ok: P95 920 ms · 16.52 req/s · error 0.00%
+[80/80] n2-oe2-decision_table|u5|N20-r09 seed=1849955992485212920
+    ok: P95 24 ms · 258.94 req/s · error 0.00%
+escrito: experiments\oe_n2_2026-10-05\campaign (80 corridas; clase TECHNICALLY_COMPATIBLE_P6_PENDING; oficial=False)
+exit=0

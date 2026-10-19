@@ -1,0 +1,91 @@
+[1/160] n9-oe2-aux-rules|u1|N20-r00 seed=6721326557288052103
+    ok: P95 36 ms · 44.40 req/s · error 0.00%
+[2/160] n9-oe2-aux-bruteforce|u5|N20-r00 seed=6721326557288052103
+    ok: P95 1100 ms · 6.15 req/s · error 0.00%
+[3/160] n9-oe2-aux-bruteforce|u10|N20-r00 seed=6721326557288052103
+    ok: P95 2284 ms · 6.05 req/s · error 0.00%
+[4/160] n9-oe2-aux-rules|u10|N20-r00 seed=6721326557288052103
+    ok: P95 83 ms · 141.68 req/s · error 0.00%
+[5/160] n9-oe2-aux-decision_table|u25|N20-r00 seed=6721326557288052103
+    ok: P95 300 ms · 132.75 req/s · error 0.00%
+[6/160] n9-oe2-aux-rules|u25|N20-r00 seed=6721326557288052103
+    ok: P95 299 ms · 132.53 req/s · error 0.00%
+[7/160] n9-oe2-aux-decision_table|u1|N20-r00 seed=6721326557288052103
+    ok: P95 43 ms · 41.20 req/s · error 0.00%
+[8/160] n9-oe2-aux-swarm|u10|N20-r00 seed=6721326557288052103
+    ok: P95 920 ms · 17.57 req/s · error 0.00%
+[9/160] n9-oe2-aux-bruteforce|u1|N20-r00 seed=6721326557288052103
+    ok: P95 115 ms · 10.34 req/s · error 0.00%
+[10/160] n9-oe2-aux-swarm|u1|N20-r00 seed=6721326557288052103
+    ok: P95 109 ms · 11.36 req/s · error 0.00%
+[11/160] n9-oe2-aux-decision_table|u5|N20-r00 seed=6721326557288052103
+    ok: P95 30 ms · 201.80 req/s · error 0.00%
+[12/160] n9-oe2-aux-swarm|u5|N20-r00 seed=6721326557288052103
+    ok: P95 397 ms · 18.17 req/s · error 0.00%
+[13/160] n9-oe2-aux-swarm|u25|N20-r00 seed=6721326557288052103
+    ok: P95 2143 ms · 17.74 req/s · error 0.00%
+[14/160] n9-oe2-aux-decision_table|u10|N20-r00 seed=6721326557288052103
+    ok: P95 60 ms · 201.53 req/s · error 0.00%
+[15/160] n9-oe2-aux-rules|u5|N20-r00 seed=6721326557288052103
+    ok: P95 30 ms · 201.12 req/s · error 0.00%
+[16/160] n9-oe2-aux-bruteforce|u25|N20-r00 seed=6721326557288052103
+    ok: P95 2061 ms · 12.75 req/s · error 0.00%
+[17/160] n9-oe2-aux-rules|u5|N20-r01 seed=537306628830295662
+    ok: P95 31 ms · 199.21 req/s · error 0.00%
+[18/160] n9-oe2-aux-swarm|u1|N20-r01 seed=537306628830295662
+    ok: P95 108 ms · 11.54 req/s · error 0.00%
+[19/160] n9-oe2-aux-decision_table|u1|N20-r01 seed=537306628830295662
+    ok: P95 33 ms · 50.02 req/s · error 0.00%
+[20/160] n9-oe2-aux-bruteforce|u10|N20-r01 seed=537306628830295662
+    ok: P95 864 ms · 12.62 req/s · error 0.00%
+[21/160] n9-oe2-aux-swarm|u10|N20-r01 seed=537306628830295662
+    ok: P95 845 ms · 17.95 req/s · error 0.00%
+[22/160] n9-oe2-aux-bruteforce|u1|N20-r01 seed=537306628830295662
+    ok: P95 115 ms · 10.29 req/s · error 0.00%
+[23/160] n9-oe2-aux-swarm|u25|N20-r01 seed=537306628830295662
+    ok: P95 2120 ms · 17.85 req/s · error 0.00%
+[24/160] n9-oe2-aux-rules|u1|N20-r01 seed=537306628830295662
+    ok: P95 35 ms · 48.68 req/s · error 0.00%
+[25/160] n9-oe2-aux-swarm|u5|N20-r01 seed=537306628830295662
+    ok: P95 412 ms · 17.88 req/s · error 0.00%
+[26/160] n9-oe2-aux-rules|u25|N20-r01 seed=537306628830295662
+    ok: P95 188 ms · 196.28 req/s · error 0.00%
+[27/160] n9-oe2-aux-decision_table|u10|N20-r01 seed=537306628830295662
+    ok: P95 59 ms · 203.07 req/s · error 0.00%
+[28/160] n9-oe2-aux-bruteforce|u5|N20-r01 seed=537306628830295662
+    ok: P95 494 ms · 12.54 req/s · error 0.00%
+[29/160] n9-oe2-aux-decision_table|u25|N20-r01 seed=537306628830295662
+    ok: P95 192 ms · 199.68 req/s · error 0.00%
+[30/160] n9-oe2-aux-rules|u10|N20-r01 seed=537306628830295662
+    ok: P95 59 ms · 202.38 req/s · error 0.00%
+[31/160] n9-oe2-aux-decision_table|u5|N20-r01 seed=537306628830295662
+    ok: P95 30 ms · 202.47 req/s · error 0.00%
+[32/160] n9-oe2-aux-bruteforce|u25|N20-r01 seed=537306628830295662
+    ok: P95 2085 ms · 12.52 req/s · error 0.00%
+[33/160] n9-oe2-aux-bruteforce|u25|N20-r02 seed=4286300988819483214
+    ok: P95 2060 ms · 12.77 req/s · error 0.00%
+[34/160] n9-oe2-aux-bruteforce|u10|N20-r02 seed=4286300988819483214
+    ok: P95 868 ms · 12.70 req/s · error 0.00%
+[35/160] n9-oe2-aux-rules|u10|N20-r02 seed=4286300988819483214
+    ok: P95 58 ms · 202.50 req/s · error 0.00%
+[36/160] n9-oe2-aux-swarm|u1|N20-r02 seed=4286300988819483214
+    ok: P95 109 ms · 11.61 req/s · error 0.00%
+[37/160] n9-oe2-aux-rules|u25|N20-r02 seed=4286300988819483214
+    ok: P95 192 ms · 200.47 req/s · error 0.00%
+[38/160] n9-oe2-aux-decision_table|u5|N20-r02 seed=4286300988819483214
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "<RAIZ_REPO>\backend\adaptation_swarm\oe\http_campaign.py", line 623, in <module>
+    main()
+  File "<RAIZ_REPO>\backend\adaptation_swarm\oe\http_campaign.py", line 603, in main
+    records = execute(runs, prov, warmup=args.warmup, window=args.window,
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<RAIZ_REPO>\backend\adaptation_swarm\oe\http_campaign.py", line 382, in execute
+    raw, cpu = do_run(r, warmup, window)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<RAIZ_REPO>\backend\adaptation_swarm\oe\http_campaign.py", line 303, in run
+    subprocess.run([python, "-m", "locust", "-f", f"{locustfile},{plugin}", "--headless", "-u", str(r["load"]), "-r", str(r["load"]), "-t", f"{total}s", "--host", host], env=env, check=True,
+  File "<RUTA_USUARIO>\AppData\Local\Programs\Python\Python312\Lib\subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['<RAIZ_REPO>\\.venv\\Scripts\\python.exe', '-m', 'locust', '-f', '<RAIZ_REPO>\\backend\\loadtest\\locustfile.py,<RAIZ_REPO>\\backend\\adaptation_swarm\\oe\\locust_raw_log.py', '--headless', '-u', '5', '-r', '5', '-t', '90s', '--host', 'http://localhost:8000']' returned non-zero exit status 1.

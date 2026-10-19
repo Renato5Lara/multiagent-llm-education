@@ -1,0 +1,24 @@
+{
+  "phase": "N7",
+  "official": false,
+  "note": "consolidaci\u00f3n; N1\u2013N6 se referencian por ruta (relativa a backend/experiments) y hash, sin duplicar",
+  "code_commit_base": "cec0e06",
+  "tests": {
+    "passed": 1100,
+    "failed": 18,
+    "errors": 5,
+    "skipped": 6,
+    "preexisting_failures": 23
+  },
+  "referenced": {
+    "oe_n6_2026-10-06/MATRIZ_CUMPLIMIENTO.md": "edb73c6671e6f5a53ba2867b0755117e68b2c6906d136323390141b488b9458e",
+    "oe_n6_2026-10-06/RESULTADO_OBJETIVO_GENERAL.md": "302c6f3fc95ed37ce24d1e0ca8102a1097c7b79da193ecb76705f22007e062ed",
+    "oe_n6_2026-10-06/tabla_consolidada.csv": "6bb6711470640c527a50dd95959d7d4c3f0fdd900922e07339e7974a6b0eb46b",
+    "oe_n6_2026-10-06/manifest.json": "88d81b0ac3053de3132795ebc79ff3ae480fb0c939ff6c92332328c412f65b15",
+    "oe_n5_2026-10-06/RESULTADO_OE5.md": "e2dece4930ae90f304da30589f8472d3907f174969c15d6ce5118b9258bb8ed9",
+    "oe_n4_2026-10-06/RESULTADO_OE4.md": "2edf12a9dc37572b29ba461bcf9b77426f7ce80485e22b997e346e40e1bc3a36",
+    "oe_n3_2026-10-06/RESULTADO_OE3.md": "15e228062f7892cdd90e5205669334995d3303b17ce12a1b8846e1cd700e5eed",
+    "oe_n2_2026-10-05/RESULTADO_OE2.md": "02176fd876820e0e800701c03a0dcdc20db22c2313ed5a61bebfe370ba1b5233",
+    "oe_n1_2026-10-05/RESULTADO_OE1.md": "939aaac3af00633d1b9a03d9cc10be3549ff8a33b746204c1a8d7587c44504a2"
+  }
+}

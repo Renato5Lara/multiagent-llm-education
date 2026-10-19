@@ -1,0 +1,5 @@
+# El .gitignore de la raíz ignora *.log; aquí los logs de campaña SON evidencia y se publican.
+!*.log
+__pycache__/
+.pytest_cache/
+*.pyc

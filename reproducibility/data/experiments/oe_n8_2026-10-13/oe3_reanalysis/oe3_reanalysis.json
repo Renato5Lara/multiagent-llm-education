@@ -1,0 +1,59 @@
+{
+ "t_conv_ms": {
+  "log_scale": true,
+  "residual_df": 219,
+  "r2": 0.9842539839061512,
+  "shapiro_W": 0.9794788480844343,
+  "shapiro_p": 0.001497898504722717,
+  "levene_p": 0.9998924211056479,
+  "skew": -0.019951512160866977,
+  "kurtosis_excess": -0.4467859735877169
+ },
+ "k_stop": {
+  "log_scale": false,
+  "residual_df": 219,
+  "r2": 0.9766538985462344,
+  "shapiro_W": 0.835267353044622,
+  "shapiro_p": 2.9883618129544994e-15,
+  "levene_p": 1.3433513416508148e-08,
+  "skew": -0.025961483706606975,
+  "kurtosis_excess": 2.266515178379197
+ },
+ "gap_vs_optimum": {
+  "log_scale": false,
+  "residual_df": 219,
+  "r2": 0.9833231372443355,
+  "shapiro_W": 0.8258399775501168,
+  "shapiro_p": 1.0639431351216233e-15,
+  "levene_p": 0.48066304214824473,
+  "skew": -0.1526430110032648,
+  "kurtosis_excess": 2.7888405822146094
+ },
+ "n_messages": {
+  "log_scale": false,
+  "residual_df": 219,
+  "r2": 0.9878536070624464,
+  "shapiro_W": 0.9757982254784515,
+  "shapiro_p": 0.00040228628478773416,
+  "levene_p": 0.9985805756795588,
+  "skew": 0.016395870998755824,
+  "kurtosis_excess": -0.682017224659972
+ },
+ "F": {
+  "log_scale": false,
+  "residual_df": 219,
+  "r2": 0.9833231372443353,
+  "shapiro_W": 0.8258399775501348,
+  "shapiro_p": 1.063943135123669e-15,
+  "levene_p": 0.4806630421481426,
+  "skew": 0.1526430110029816,
+  "kurtosis_excess": 2.7888405822147107
+ },
+ "_design": {
+  "runs": 240,
+  "cells": 48,
+  "reps_per_cell": 5,
+  "residual_df_expected": 223,
+  "nota": "con 3 niveles de mecanismo los t\u00e9rminos con mech tienen 2 gl"
+ }
+}

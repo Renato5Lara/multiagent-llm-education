@@ -1,0 +1,13 @@
+campania_previa,N,tramo_N11,metric,ratio_previa_sobre_N11,n_previa,n_N11
+N8,10,A,p95_latency_ms,1.069489567860912,60,6
+N8,10,A,throughput_http,0.9323261990513328,60,6
+N8,10,B,p95_latency_ms,1.7317954207618218,60,53
+N8,10,B,throughput_http,0.5782193499060232,60,53
+N8,30,A,p95_latency_ms,1.059110056994529,60,5
+N8,30,A,throughput_http,0.9301602673867183,60,5
+N8,30,B,p95_latency_ms,1.7436176074168535,60,55
+N8,30,B,throughput_http,0.5709591567361018,60,55
+N8b,20,A,p95_latency_ms,0.6101751518029354,60,6
+N8b,20,A,throughput_http,1.650351291436637,60,6
+N8b,20,B,p95_latency_ms,0.9842229458383479,60,54
+N8b,20,B,throughput_http,1.01599014432742,60,54

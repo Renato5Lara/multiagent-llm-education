@@ -1,0 +1,20 @@
+{
+  "campaign_id": "n9b-oe2-aux",
+  "environment_class": "TECHNICALLY_COMPATIBLE_P6_PENDING",
+  "files": {
+    "analysis.json": "82770336e5f63a78446225d876b62d2865de0f87318f8a08f584e36a9f2688d8",
+    "plan.json": "fe52607ebaf1133f9c108c6cf3dae47c2d188213411a69ac12aa62eb3e604531",
+    "provenance.json": "23a7339b6a09c3e86aa5ad835ecee25854846dcb674a5f6989fd2b1cb9348d73",
+    "run.log": "9eb34ed9f6619df45afbec840f3931d0ab60b36216be0c4835a16e42e32b4635",
+    "runs.csv": "b027f76d8df853e634604716037b079ccc6c071a12fc1f25f2aa824d5ab99e10",
+    "runs.jsonl": "c40d9aa16cd2830e5d5d390035d56276a861d1da1c4768fc26f732836850c480"
+  },
+  "oe2_official": false,
+  "official": false,
+  "official_valid": false,
+  "raw_files": {
+    "n9b-oe2-aux-bruteforce%7Cu5%7CN20-r08.csv": "a49ba93e94b89af88309ea03462c714091e0a7d88ae1dc57a0f30eb28103555b",
+    "n9b-oe2-aux-bruteforce%7Cu5%7CN20-r08.csv.cpu.csv": "da7655589a90133dc7e71f0420fa5db3bbc8d43ea1dee3bd6c88e87329afec32"
+  },
+  "schema": "oe-http-campaign-v1"
+}

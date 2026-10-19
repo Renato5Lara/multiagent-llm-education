@@ -1,0 +1,121 @@
+[1/60] n10-oe4-n20-swarm|u5|N20-r00 seed=6721326557288052103
+    ok: P95 568 ms · 12.85 req/s · error 0.00%
+[2/60] n10-oe4-n20-swarm|u10|N20-r00 seed=6721326557288052103
+    ok: P95 1044 ms · 14.23 req/s · error 0.00%
+[3/60] n10-oe4-n20-swarm|u1|N20-r00 seed=6721326557288052103
+    ok: P95 125 ms · 10.16 req/s · error 0.00%
+[4/60] n10-oe4-n20-swarm|u100|N20-r00 seed=6721326557288052103
+    ok: P95 10131 ms · 15.14 req/s · error 0.00%
+[5/60] n10-oe4-n20-swarm|u25|N20-r00 seed=6721326557288052103
+    ok: P95 2425 ms · 15.69 req/s · error 0.00%
+[6/60] n10-oe4-n20-swarm|u50|N20-r00 seed=6721326557288052103
+    ok: P95 4997 ms · 15.34 req/s · error 0.00%
+[7/60] n10-oe4-n20-swarm|u1|N20-r01 seed=537306628830295662
+    ok: P95 118 ms · 10.71 req/s · error 0.00%
+[8/60] n10-oe4-n20-swarm|u5|N20-r01 seed=537306628830295662
+    ok: P95 474 ms · 15.64 req/s · error 0.00%
+[9/60] n10-oe4-n20-swarm|u50|N20-r01 seed=537306628830295662
+    ok: P95 4947 ms · 15.46 req/s · error 0.00%
+[10/60] n10-oe4-n20-swarm|u100|N20-r01 seed=537306628830295662
+    ok: P95 10182 ms · 15.07 req/s · error 0.00%
+[11/60] n10-oe4-n20-swarm|u10|N20-r01 seed=537306628830295662
+    ok: P95 989 ms · 15.44 req/s · error 0.00%
+[12/60] n10-oe4-n20-swarm|u25|N20-r01 seed=537306628830295662
+    ok: P95 2459 ms · 15.54 req/s · error 0.00%
+[13/60] n10-oe4-n20-swarm|u10|N20-r02 seed=4286300988819483214
+    ok: P95 954 ms · 15.99 req/s · error 0.00%
+[14/60] n10-oe4-n20-swarm|u100|N20-r02 seed=4286300988819483214
+    ok: P95 10156 ms · 15.36 req/s · error 0.00%
+[15/60] n10-oe4-n20-swarm|u5|N20-r02 seed=4286300988819483214
+    ok: P95 459 ms · 15.93 req/s · error 0.00%
+[16/60] n10-oe4-n20-swarm|u25|N20-r02 seed=4286300988819483214
+    ok: P95 2365 ms · 15.84 req/s · error 0.00%
+[17/60] n10-oe4-n20-swarm|u50|N20-r02 seed=4286300988819483214
+    ok: P95 5014 ms · 15.54 req/s · error 0.00%
+[18/60] n10-oe4-n20-swarm|u1|N20-r02 seed=4286300988819483214
+    ok: P95 123 ms · 10.42 req/s · error 0.00%
+[19/60] n10-oe4-n20-swarm|u5|N20-r03 seed=7607324206460521009
+    ok: P95 485 ms · 15.62 req/s · error 0.00%
+[20/60] n10-oe4-n20-swarm|u100|N20-r03 seed=7607324206460521009
+    ok: P95 9623 ms · 15.71 req/s · error 0.00%
+[21/60] n10-oe4-n20-swarm|u50|N20-r03 seed=7607324206460521009
+    ok: P95 4701 ms · 16.11 req/s · error 0.00%
+[22/60] n10-oe4-n20-swarm|u10|N20-r03 seed=7607324206460521009
+    ok: P95 964 ms · 15.68 req/s · error 0.00%
+[23/60] n10-oe4-n20-swarm|u25|N20-r03 seed=7607324206460521009
+    ok: P95 2478 ms · 15.26 req/s · error 0.00%
+[24/60] n10-oe4-n20-swarm|u1|N20-r03 seed=7607324206460521009
+    ok: P95 120 ms · 10.47 req/s · error 0.00%
+[25/60] n10-oe4-n20-swarm|u1|N20-r04 seed=10588581650949032804
+    ok: P95 120 ms · 10.43 req/s · error 0.00%
+[26/60] n10-oe4-n20-swarm|u100|N20-r04 seed=10588581650949032804
+    ok: P95 10115 ms · 15.17 req/s · error 0.00%
+[27/60] n10-oe4-n20-swarm|u25|N20-r04 seed=10588581650949032804
+    ok: P95 2501 ms · 15.34 req/s · error 0.00%
+[28/60] n10-oe4-n20-swarm|u50|N20-r04 seed=10588581650949032804
+    ok: P95 5025 ms · 15.36 req/s · error 0.00%
+[29/60] n10-oe4-n20-swarm|u5|N20-r04 seed=10588581650949032804
+    ok: P95 472 ms · 15.63 req/s · error 0.00%
+[30/60] n10-oe4-n20-swarm|u10|N20-r04 seed=10588581650949032804
+    ok: P95 1028 ms · 15.34 req/s · error 0.00%
+[31/60] n10-oe4-n20-swarm|u50|N20-r05 seed=17712857808947585027
+    ok: P95 5007 ms · 15.34 req/s · error 0.00%
+[32/60] n10-oe4-n20-swarm|u1|N20-r05 seed=17712857808947585027
+    ok: P95 117 ms · 10.64 req/s · error 0.00%
+[33/60] n10-oe4-n20-swarm|u25|N20-r05 seed=17712857808947585027
+    ok: P95 2527 ms · 15.32 req/s · error 0.00%
+[34/60] n10-oe4-n20-swarm|u100|N20-r05 seed=17712857808947585027
+    ok: P95 10212 ms · 15.28 req/s · error 0.00%
+[35/60] n10-oe4-n20-swarm|u10|N20-r05 seed=17712857808947585027
+    ok: P95 941 ms · 16.54 req/s · error 0.00%
+[36/60] n10-oe4-n20-swarm|u5|N20-r05 seed=17712857808947585027
+    ok: P95 453 ms · 16.62 req/s · error 0.00%
+[37/60] n10-oe4-n20-swarm|u1|N20-r06 seed=4063990892209885983
+    ok: P95 114 ms · 10.74 req/s · error 0.00%
+[38/60] n10-oe4-n20-swarm|u10|N20-r06 seed=4063990892209885983
+    ok: P95 926 ms · 16.42 req/s · error 0.00%
+[39/60] n10-oe4-n20-swarm|u5|N20-r06 seed=4063990892209885983
+    ok: P95 458 ms · 16.80 req/s · error 0.00%
+[40/60] n10-oe4-n20-swarm|u50|N20-r06 seed=4063990892209885983
+    ok: P95 4682 ms · 16.33 req/s · error 0.00%
+[41/60] n10-oe4-n20-swarm|u100|N20-r06 seed=4063990892209885983
+    ok: P95 9501 ms · 16.26 req/s · error 0.00%
+[42/60] n10-oe4-n20-swarm|u25|N20-r06 seed=4063990892209885983
+    ok: P95 2365 ms · 16.42 req/s · error 0.00%
+[43/60] n10-oe4-n20-swarm|u50|N20-r07 seed=3546516592530791069
+    ok: P95 4747 ms · 16.34 req/s · error 0.00%
+[44/60] n10-oe4-n20-swarm|u100|N20-r07 seed=3546516592530791069
+    ok: P95 9593 ms · 16.22 req/s · error 0.00%
+[45/60] n10-oe4-n20-swarm|u5|N20-r07 seed=3546516592530791069
+    ok: P95 451 ms · 16.77 req/s · error 0.00%
+[46/60] n10-oe4-n20-swarm|u10|N20-r07 seed=3546516592530791069
+    ok: P95 951 ms · 16.51 req/s · error 0.00%
+[47/60] n10-oe4-n20-swarm|u1|N20-r07 seed=3546516592530791069
+    ok: P95 114 ms · 10.76 req/s · error 0.00%
+[48/60] n10-oe4-n20-swarm|u25|N20-r07 seed=3546516592530791069
+    ok: P95 2326 ms · 16.37 req/s · error 0.00%
+[49/60] n10-oe4-n20-swarm|u100|N20-r08 seed=14733893125204041442
+    ok: P95 9698 ms · 15.88 req/s · error 0.00%
+[50/60] n10-oe4-n20-swarm|u10|N20-r08 seed=14733893125204041442
+    ok: P95 936 ms · 16.40 req/s · error 0.00%
+[51/60] n10-oe4-n20-swarm|u5|N20-r08 seed=14733893125204041442
+    ok: P95 458 ms · 16.45 req/s · error 0.00%
+[52/60] n10-oe4-n20-swarm|u25|N20-r08 seed=14733893125204041442
+    ok: P95 2359 ms · 16.11 req/s · error 0.00%
+[53/60] n10-oe4-n20-swarm|u1|N20-r08 seed=14733893125204041442
+    ok: P95 116 ms · 10.73 req/s · error 0.00%
+[54/60] n10-oe4-n20-swarm|u50|N20-r08 seed=14733893125204041442
+    ok: P95 4770 ms · 16.31 req/s · error 0.00%
+[55/60] n10-oe4-n20-swarm|u1|N20-r09 seed=1849955992485212920
+    ok: P95 117 ms · 10.65 req/s · error 0.00%
+[56/60] n10-oe4-n20-swarm|u25|N20-r09 seed=1849955992485212920
+    ok: P95 2379 ms · 15.98 req/s · error 0.00%
+[57/60] n10-oe4-n20-swarm|u5|N20-r09 seed=1849955992485212920
+    ok: P95 452 ms · 16.64 req/s · error 0.00%
+[58/60] n10-oe4-n20-swarm|u100|N20-r09 seed=1849955992485212920
+    ok: P95 9741 ms · 15.93 req/s · error 0.00%
+[59/60] n10-oe4-n20-swarm|u10|N20-r09 seed=1849955992485212920
+    ok: P95 965 ms · 16.21 req/s · error 0.00%
+[60/60] n10-oe4-n20-swarm|u50|N20-r09 seed=1849955992485212920
+    ok: P95 4853 ms · 16.03 req/s · error 0.00%
+ATENCIÓN: 0 violación(es) de invariantes y 1 hueco(s) de provenance al terminar: la campaña NO es válida como oficial (`official_valid = false` en el manifiesto)

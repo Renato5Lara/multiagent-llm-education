@@ -1,0 +1,6 @@
+numpy
+scipy==1.18.1
+pandas==3.0.6
+statsmodels==0.15.0
+matplotlib==3.11.2
+# Python 3.12; entorno de analisis separado del .venv del experimento

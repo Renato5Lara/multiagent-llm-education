@@ -1,0 +1,35 @@
+{
+  "phase": "N6",
+  "note": "integraci\u00f3n; los archivos de N1\u2013N5 se referencian por ruta (relativa a backend/experiments) y no se duplican",
+  "official": false,
+  "referenced": {
+    "oe_n1_2026-10-05/RESULTADO_OE1.md": "939aaac3af00633d1b9a03d9cc10be3549ff8a33b746204c1a8d7587c44504a2",
+    "oe_n1_2026-10-05/oe1_report/oe1_report.json": "ba7230ffcff38b9c660501b361b499d13475aed1241109bbf97663f7e33c397d",
+    "oe_n1_2026-10-05/f1_k10_v2_historical.json": "701d9b394cad0794c55b0a60913bebcc57bb48560010f3fab2ebd550bfab91fa",
+    "oe_n2_2026-10-05/RESULTADO_OE2.md": "02176fd876820e0e800701c03a0dcdc20db22c2313ed5a61bebfe370ba1b5233",
+    "oe_n2_2026-10-05/contrastes_primarios_resumen.json": "79071e34832ac2a8a68fd85114700f9aa8abfba4eb49d37b15c1747f11c067ab",
+    "oe_n2_2026-10-05/analysis_with_inprocess.json": "dd30da2ff18b7df87d3507999349b951428aa3549a40a9b4d90289ff748de08e",
+    "oe_n2_2026-10-05/campaign/runs.csv": "d33bea747d32fef041f5c181d3607c114f782e7cf6904875fbd5994206c1c096",
+    "oe_n2_2026-10-05/oe2_latencia_throughput.png": "c8a4c6cb7b8492bd43cd92e65aeee160c19d29ef9bcb0f5beb4ba460b799441b",
+    "oe_n3_2026-10-06/RESULTADO_OE3.md": "15e228062f7892cdd90e5205669334995d3303b17ce12a1b8846e1cd700e5eed",
+    "oe_n3_2026-10-06/anova_oe3.json": "766361748ad930acb345ec30a612217fd7d6469e248cceb63da6f34d0620bef2",
+    "oe_n3_2026-10-06/runs_oe3.csv": "ca97879bfcefd0df7fc12fff54e5dbda9c466342a3a3ae2a6bcf77a89910526c",
+    "oe_n3_2026-10-06/oe3_efectos_marginales.png": "71bfae2ad2e9f693ac096433c755c26c16a10ae56686e6c93f7a814960304884",
+    "oe_n4_2026-10-06/RESULTADO_OE4.md": "2edf12a9dc37572b29ba461bcf9b77426f7ce80485e22b997e346e40e1bc3a36",
+    "oe_n4_2026-10-06/tabla_por_carga.csv": "f91b6e7dcb7fabc7c4f2e647c574c4300ee879c5cc639c0c0a6aa707a08bc0dd",
+    "oe_n4_2026-10-06/resumen_oe4.json": "affb2ebb98520c7f84e1ca5b82ca56c90e6a3fb2327324b4bbce53d05132c294",
+    "oe_n4_2026-10-06/campaign/runs.csv": "47a81c52e1cff52912f8f17cf97b865d5ced56cd9ed31fe2032e9d9f8608f8be",
+    "oe_n4_2026-10-06/oe4_usuarios_vs_tconv.png": "4cfc82c3b9d7372db1b1fa6aff8a2476f177fc7ef09abb347e642a6d55e0141a",
+    "oe_n4_2026-10-06/oe4_usuarios_vs_p95.png": "b106fa1d859c7fd6e59faa8566a48c84b3d04d6f4298a3182016f94aed7cbbec",
+    "oe_n4_2026-10-06/oe4_usuarios_vs_throughput.png": "1174486617b83992476d96a8317e2acef32eb649de5c8268132a09c9205d3581",
+    "oe_n5_2026-10-06/RESULTADO_OE5.md": "e2dece4930ae90f304da30589f8472d3907f174969c15d6ce5118b9258bb8ed9",
+    "oe_n5_2026-10-06/f1_v3_summary.json": "68d107ee4a7311d9ec56d460feeff90c865c275ac2e07d5136259865aaf2ac8c",
+    "oe_n5_2026-10-06/f1_v3_provisional_evaluation.json": "2cf8b5787eb294ba02f602b28999a3a634e4ae17744b7ceb98fb2a625c8b88c2"
+  },
+  "own": {
+    "MATRIZ_CUMPLIMIENTO.md": "edb73c6671e6f5a53ba2867b0755117e68b2c6906d136323390141b488b9458e",
+    "RESULTADO_OBJETIVO_GENERAL.md": "302c6f3fc95ed37ce24d1e0ca8102a1097c7b79da193ecb76705f22007e062ed",
+    "RESUMEN_POR_OE.md": "849841db4fe29d419db847fe6b7938faf10d3d4adc62469ee3b4e381e3c68f49",
+    "tabla_consolidada.csv": "6bb6711470640c527a50dd95959d7d4c3f0fdd900922e07339e7974a6b0eb46b"
+  }
+}

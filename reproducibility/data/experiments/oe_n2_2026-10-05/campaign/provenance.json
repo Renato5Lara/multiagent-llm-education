@@ -1,0 +1,752 @@
+{
+  "analysis_primary": {
+    "alpha": 0.05,
+    "alternative": "two-sided",
+    "complement": "mann_whitney_u (predeclarado; fuera de Holm; no cambia el resultado primario)",
+    "conditional_on": "la unidad estad\u00edstica y el estad\u00edstico de latencia (P95 o media) que fije el asesor",
+    "descriptive_companions": [
+      "diferencias absolutas en escala original (ms, req/s)",
+      "tasas de error/timeout por corrida y celda"
+    ],
+    "estimand": "raz\u00f3n de medias geom\u00e9tricas de los valores por corrida (swarm / decision_table)",
+    "scale": "log",
+    "sensitivity": "oe/paired_runs.py (B): descriptiva, fuera de Holm",
+    "status": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED",
+    "structure": "independent_runs",
+    "test": "welch_t",
+    "test_selection": "FIJA: Shapiro es solo diagn\u00f3stico y NUNCA selecciona la prueba",
+    "unit": "run"
+  },
+  "api_persist_env_forced": "0",
+  "blockers": [
+    {
+      "critical": true,
+      "frozen": true,
+      "id": "B1",
+      "kind": "methodological",
+      "reason": "contrato de tiempo oe2-time-contract-v2 sin validar: el indicador com\u00fan `time_to_final_config_ms` es una decisi\u00f3n provisional (estado FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED, validaci\u00f3n PENDING_METHODOLOGICAL_VALIDATION); se resuelve con su aprobaci\u00f3n/validaci\u00f3n expl\u00edcita, NO con equivalencia con T_conv (NOT_ESTABLISHED); `decision_ms` es LEGACY; ninguno puede sustituir a T_conv en un contraste confirmatorio"
+    },
+    {
+      "critical": true,
+      "frozen": true,
+      "id": "B13",
+      "kind": "methodological",
+      "reason": "alcance del comparador pendiente de validaci\u00f3n: solo ['decision_table'] implementado(s) como convencional independiente (LMS real y LLM monol\u00edtico no implementados) y OE2 habla de \u00absistemas convencionales\u00bb; OE2 solo puede concluir sobre ese comparador"
+    },
+    {
+      "critical": true,
+      "frozen": true,
+      "id": "B5",
+      "kind": "methodological",
+      "reason": "decisi\u00f3n B5-C de persistencia ('off') sin resolver: sin aprobaci\u00f3n del asesor (estado FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED). Se resuelve con su aprobaci\u00f3n expl\u00edcita (comparaci\u00f3n OFF com\u00fan aceptada, costo ON de la propuesta aparte, sin persistencia en el baseline, L_resp aprobado intacto); no modificando L_resp ni activando persistencia en el baseline"
+    },
+    {
+      "critical": false,
+      "frozen": false,
+      "id": "B6",
+      "kind": "technical",
+      "reason": "timeout de cliente 30.0 s configurado pero PROVISIONAL_TECHNICAL"
+    },
+    {
+      "critical": false,
+      "frozen": false,
+      "id": "B7",
+      "kind": "technical",
+      "reason": "pol\u00edtica del generador generator-saturation-v1 definida pero PROVISIONAL_TECHNICAL"
+    },
+    {
+      "critical": true,
+      "frozen": true,
+      "id": "P6",
+      "kind": "methodological",
+      "reason": "hardware objetivo (P6) sin aprobaci\u00f3n metodol\u00f3gica (estado PENDING_EXTERNAL_ANSWER): cumplir el criterio operativo del c\u00f3digo (`meets_target`) es solo compatibilidad t\u00e9cnica, no aprobaci\u00f3n del requisito; se resuelve con su aprobaci\u00f3n expl\u00edcita, no con el hardware medido"
+    },
+    {
+      "critical": true,
+      "frozen": true,
+      "id": "PEND",
+      "kind": "methodological",
+      "reason": "decisiones metodol\u00f3gicas de D.5 sin cerrar: l_resp_literal_hypothesis_h1, latency_statistic. Se resuelven con una decisi\u00f3n expl\u00edcita (`status = DECIDED` y `chosen` entre sus opciones); ning\u00fan c\u00f3digo las decide por defecto"
+    },
+    {
+      "critical": true,
+      "frozen": false,
+      "id": "DEF",
+      "kind": "definition",
+      "reason": "definici\u00f3n PENDING (dependencia de oe2): common_time_indicator_oe2"
+    },
+    {
+      "critical": true,
+      "frozen": false,
+      "id": "DEF",
+      "kind": "definition",
+      "reason": "definici\u00f3n PENDING (dependencia de oe2): statistical_unit_performance"
+    }
+  ],
+  "campaign_id": "n2-oe2",
+  "campaign_source_fingerprints": {
+    "adaptation_swarm/api/router.py": "15eaabb3036eb96e5836bf7979da054102ce86d14faa756ee2d719b9b657332f",
+    "adaptation_swarm/baselines/conventional.py": "1dcb29e806f3cbc05519019f1f96a6108998d8310f29dc20b70d3fc64e7142be",
+    "adaptation_swarm/baselines/decision_table.py": "3e1aa6c44b2ff8901e2cd492ce94bccc77407be30e6b80d18c47b101687249ba",
+    "adaptation_swarm/metrics/performance.py": "dfb4dd56465d5d7b7d7c6f2c443e647de03b1f53ca4b8b5f45243f684f94c4f2",
+    "adaptation_swarm/oe/campaign_guards.py": "561184035fefce3964185dc0ebe66e43dc4289aa2a7a5efd64d606e0c4470c91",
+    "adaptation_swarm/oe/campaign_spec.py": "1d672542e61b9bdea737a2e04a3cadba954e97dd58535785d57aedad998a1794",
+    "adaptation_swarm/oe/code_state.py": "067ca72b9d3be88f2e2bd55cca67df7e023e11065de81e98459e5b15430cf2a8",
+    "adaptation_swarm/oe/factorial.py": "db5c4ed45f7a29e2dd09e848fa790b7c55735b1b53eb7122456b6939eb2d9d88",
+    "adaptation_swarm/oe/http_campaign.py": "3664e7e8b804ec48bd28e7068463726aab7186c1fb0562d04da676abfab58fb8",
+    "adaptation_swarm/oe/http_window.py": "b54a1d8ff64ab4572503cf7f3a1e659b2f923e349f5e0398b0ba2ece62a6b862",
+    "adaptation_swarm/oe/locust_raw_log.py": "99812f54bd6f01c94c8bca833df3fcd333190bbb76094e5ab9fd7d1f37faa863",
+    "adaptation_swarm/oe/oe2_confirmatory.py": "a0d2042e47eb7f64d4afd0b2e526ab478ad7035fa4c8a82c2b73a75e7270dbb9",
+    "adaptation_swarm/oe/profile_sequence.py": "27a3cf98404ff59504ccfa1c178768cd9fe0d3f5c87dd1c2d7cde4b3f5d8e32c",
+    "adaptation_swarm/oe/time_contract.py": "87e360b01a36250644bba12fd75e990d78ed8ef7f794e4710c2e1b39870d6c4a",
+    "loadtest/locustfile.py": "e8bcc93a568f310fd4651ac207d0902a0ec7bc36e6deb9f212a6a76187b60e28"
+  },
+  "campaign_source_fingerprints_final": {
+    "adaptation_swarm/api/router.py": "15eaabb3036eb96e5836bf7979da054102ce86d14faa756ee2d719b9b657332f",
+    "adaptation_swarm/baselines/conventional.py": "1dcb29e806f3cbc05519019f1f96a6108998d8310f29dc20b70d3fc64e7142be",
+    "adaptation_swarm/baselines/decision_table.py": "3e1aa6c44b2ff8901e2cd492ce94bccc77407be30e6b80d18c47b101687249ba",
+    "adaptation_swarm/metrics/performance.py": "dfb4dd56465d5d7b7d7c6f2c443e647de03b1f53ca4b8b5f45243f684f94c4f2",
+    "adaptation_swarm/oe/campaign_guards.py": "561184035fefce3964185dc0ebe66e43dc4289aa2a7a5efd64d606e0c4470c91",
+    "adaptation_swarm/oe/campaign_spec.py": "1d672542e61b9bdea737a2e04a3cadba954e97dd58535785d57aedad998a1794",
+    "adaptation_swarm/oe/code_state.py": "067ca72b9d3be88f2e2bd55cca67df7e023e11065de81e98459e5b15430cf2a8",
+    "adaptation_swarm/oe/factorial.py": "db5c4ed45f7a29e2dd09e848fa790b7c55735b1b53eb7122456b6939eb2d9d88",
+    "adaptation_swarm/oe/http_campaign.py": "3664e7e8b804ec48bd28e7068463726aab7186c1fb0562d04da676abfab58fb8",
+    "adaptation_swarm/oe/http_window.py": "b54a1d8ff64ab4572503cf7f3a1e659b2f923e349f5e0398b0ba2ece62a6b862",
+    "adaptation_swarm/oe/locust_raw_log.py": "99812f54bd6f01c94c8bca833df3fcd333190bbb76094e5ab9fd7d1f37faa863",
+    "adaptation_swarm/oe/oe2_confirmatory.py": "a0d2042e47eb7f64d4afd0b2e526ab478ad7035fa4c8a82c2b73a75e7270dbb9",
+    "adaptation_swarm/oe/profile_sequence.py": "27a3cf98404ff59504ccfa1c178768cd9fe0d3f5c87dd1c2d7cde4b3f5d8e32c",
+    "adaptation_swarm/oe/time_contract.py": "87e360b01a36250644bba12fd75e990d78ed8ef7f794e4710c2e1b39870d6c4a",
+    "loadtest/locustfile.py": "e8bcc93a568f310fd4651ac207d0902a0ec7bc36e6deb9f212a6a76187b60e28"
+  },
+  "campaign_spec": {
+    "advisor_approved": false,
+    "sha256": "efc891a5c98d40b85ba20d8b7b4eb5ec2bf33318a44858676c7e67b3fbdc79b8",
+    "status": "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED",
+    "version": "oe-campaign-spec-v1"
+  },
+  "client_timeout_s": 30.0,
+  "client_timeout_status": "PROVISIONAL_TECHNICAL",
+  "code": {
+    "commit": "cec0e067147c352f9eb2ded86e543139431f562b",
+    "dirty": null,
+    "ref": "refs/heads/feat/adaptation-swarm-poc"
+  },
+  "code_state": {
+    "dirty": true,
+    "files_sha256": "4ecc73d3360d13d64181bcd4f08ad2c7aea3acebe931aed9759d39b12826a4c3",
+    "method": "git status --porcelain",
+    "modified_paths": [
+      "backend/experiments/oe2_g_smoke2_2026-10-05/",
+      "backend/experiments/oe2_pilot_f21_2026-10-05/",
+      "backend/experiments/oe2_pilot_f22_2026-10-05/",
+      "backend/experiments/oe2_pilots_d1_2026-10-05/",
+      "backend/experiments/oe_n1_2026-10-05/",
+      "backend/experiments/oe_n2_2026-10-05/"
+    ],
+    "n_files": 259,
+    "n_modified_or_untracked": 6
+  },
+  "code_state_final": {
+    "dirty": true,
+    "files_sha256": "dee8c68e54a73a4def27cbb17b393b2e3960f5cc28e70b5f8f1130633e165ff1",
+    "files_sha256_excluding_campaign_output": "4ecc73d3360d13d64181bcd4f08ad2c7aea3acebe931aed9759d39b12826a4c3",
+    "ignored_campaign_output_paths": [
+      "backend/experiments/oe_n2_2026-10-05/campaign",
+      "backend/experiments/oe_n2_2026-10-05/campaign.tmp-raw"
+    ],
+    "method": "git status --porcelain",
+    "modified_paths": [
+      "backend/experiments/oe2_g_smoke2_2026-10-05/",
+      "backend/experiments/oe2_pilot_f21_2026-10-05/",
+      "backend/experiments/oe2_pilot_f22_2026-10-05/",
+      "backend/experiments/oe2_pilots_d1_2026-10-05/",
+      "backend/experiments/oe_n1_2026-10-05/",
+      "backend/experiments/oe_n2_2026-10-05/"
+    ],
+    "n_files": 419,
+    "n_modified_or_untracked": 6,
+    "unchanged_since_start": true
+  },
+  "cold_warm": {
+    "decision": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED (campaign_spec.oe2.methodological_decisions.cold_warm_policy; F.2.3)",
+    "n_runs": 80,
+    "planned_server_starts": 80,
+    "policy": "cold_per_run",
+    "recorded_per_run": [
+      "server_instance",
+      "server_restarted_before_run",
+      "server_runs_served_before",
+      "execution_index",
+      "started_utc",
+      "pair_first_system"
+    ],
+    "statement": "Se adopta el reinicio completo del servidor antes de cada corrida como condici\u00f3n experimental controlada para reducir la variabilidad asociada al estado previo del servidor.",
+    "universal_claim": false
+  },
+  "created_utc": "2026-10-06T03:44:25+00:00",
+  "dataset": {
+    "file": "profiles-v1.jsonl",
+    "manifest_file": "manifest-v1.json",
+    "manifest_sha256": "0b96fb159177f337e96b5a9f1c3fb35caf47d466b4ae0a6eb4a2694c024f96b2",
+    "n_profiles": 100,
+    "sha256": "005b5a82ae85b4e83e1b9a931578fd60e9c6789a6e407928fdba6674fc1ccd15",
+    "version": "v1"
+  },
+  "definition_version": {
+    "f1": {
+      "available": [
+        "v2",
+        "v3"
+      ],
+      "note": "no se seleccion\u00f3 ninguna versi\u00f3n: este ejecutor no calcula F1; la clave hist\u00f3rica `quality_f1_adapt` del registro es v2",
+      "selected": null
+    },
+    "requirements": "RF01-RF06+RNF01-RNF05 (MS \u00a7RF/RNF, 2026-09-23) + REL-C/REL-D (oe1, propias de este estudio)"
+  },
+  "design": {
+    "base_seed": 26100501,
+    "n_planned_runs": 80,
+    "order": "randomized-blocks",
+    "particles": [
+      10,
+      20,
+      30
+    ],
+    "runs_per_cell": 10,
+    "seed_rule": "derive_seed(base_seed, 'http-campaign-run', run_index); distinta por corrida, compartida entre celdas (bloqueado)",
+    "systems": [
+      "swarm",
+      "decision_table"
+    ],
+    "users": [
+      1,
+      5,
+      10,
+      25
+    ],
+    "warmup_s": 10.0,
+    "window_s": 60.0
+  },
+  "environment": {
+    "implementation": "CPython",
+    "numpy": "2.5.3",
+    "python": "3.12.10",
+    "scipy": "1.18.1"
+  },
+  "environment_class": "TECHNICALLY_COMPATIBLE_P6_PENDING",
+  "experiment": "oe2",
+  "generator_policy": {
+    "id": "generator-saturation-v1",
+    "level_rule": "si ALGUNA corrida de ALG\u00daN sistema en una carga es no comparable, esa carga queda `generator_limited` y sale de la familia confirmatoria para AMBOS sistemas (simetr\u00eda); se reporta, no se borra",
+    "manual_exclusions": "prohibidas: ninguna corrida se excluye a mano ni despu\u00e9s de ver resultados; solo esta regla",
+    "metric": "loadgen_cpu_percent: CPU del proceso de Locust, 100 = un n\u00facleo (muestras de 1 s)",
+    "on_missing_cpu_samples": "no verificable \u21d2 `comparable = False` (`generator_cpu_unavailable`): no se supone que el generador est\u00e9 bien",
+    "on_saturation": "la corrida se CONSERVA con todos sus datos pero queda `comparable = False` (`non_comparable_reason = generator_saturated`)",
+    "saturated_means": "alg\u00fan segundo de la ventana con CPU \u2265 umbral: el generador pudo limitar la carga ofrecida, as\u00ed que la corrida mide al generador y no al sistema",
+    "scope": "todos los sistemas y todas las cargas por igual",
+    "statistic": "m\u00e1ximo de las muestras de CPU dentro de la ventana estacionaria",
+    "status": "PROVISIONAL_TECHNICAL",
+    "threshold_percent": 90.0
+  },
+  "generator_shares_host_with_server": true,
+  "hardware": {
+    "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700K",
+    "numpy": "2.5.3",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "python": "3.12.10",
+    "ram_gib": 31.75,
+    "vcpu": 20
+  },
+  "hardware_state": {
+    "environment_class": "TECHNICALLY_COMPATIBLE_P6_PENDING",
+    "methodological_status": "PENDING_EXTERNAL_ANSWER",
+    "methodologically_approved": false,
+    "technically_compatible": true
+  },
+  "holm_design": {
+    "advisor_backing": "NONE",
+    "alpha": 0.05,
+    "alternative": "two-sided",
+    "applies": true,
+    "excluded": [
+      "time_to_final_config_ms",
+      "t_conv",
+      "proposal_persistence_on",
+      "loads_50_100",
+      "auxiliary_contrasts(rules,bruteforce)"
+    ],
+    "hypotheses": [
+      "L_resp_P95_http@u1",
+      "L_resp_P95_http@u5",
+      "L_resp_P95_http@u10",
+      "L_resp_P95_http@u25",
+      "throughput_http@u1",
+      "throughput_http@u5",
+      "throughput_http@u10",
+      "throughput_http@u25"
+    ],
+    "loads": [
+      1,
+      5,
+      10,
+      25
+    ],
+    "m_fixed": 8,
+    "metrics": [
+      "L_resp_P95_http",
+      "throughput_http"
+    ],
+    "source": "internal_decision_F2.3",
+    "untested_hypothesis_rule": "se registra como no testada y sigue contando en m (conservador)"
+  },
+  "integrity_violations": [],
+  "internal_decisions_not_advisor_approved": [
+    "cold_warm_policy",
+    "common_indicator_asymmetry",
+    "errors_timeouts_in_l_resp",
+    "execution_order",
+    "holm_family_size",
+    "http_pairing"
+  ],
+  "library": {
+    "root": "<RAIZ_REPO>\\datasets\\adaptation_library",
+    "version": "lib-v10-5dd83cd4"
+  },
+  "methodological_decisions": {
+    "cold_warm_policy": {
+      "advisor_approved": false,
+      "chosen": "cold_per_run",
+      "decided_in": "F.2.3",
+      "decision_level": "INTERNAL_STUDY_DECISION",
+      "implemented_today": "cold_per_run",
+      "options": [
+        "cold_per_run",
+        "controlled_warm",
+        "mixed_registered"
+      ],
+      "question_source": "D.5 decisi\u00f3n 5",
+      "rationale": "reinicio completo del servidor antes de cada corrida; F.2.2: CV del P95 de 1,5 % (decision_table) y 2,0 % (swarm) frente a 74 % con servidor reutilizado; transitorio inicial eliminado; 20/20 reinicios operativos (\u2248 8 s entre corridas)",
+      "source": "internal_decision_F2.3",
+      "statement": "Se adopta el reinicio completo del servidor antes de cada corrida como condici\u00f3n experimental controlada para reducir la variabilidad asociada al estado previo del servidor.",
+      "status": "DECIDED",
+      "universal_claim": false
+    },
+    "common_indicator_asymmetry": {
+      "advisor_approved": false,
+      "chosen": "keep_documented",
+      "decided_in": "F.2.3",
+      "decision_level": "INTERNAL_STUDY_DECISION",
+      "implemented_today": "keep_documented",
+      "options": [
+        "keep_documented",
+        "extend_baseline",
+        "reduce_swarm_scope",
+        "drop_common_indicator",
+        "use_total_ms"
+      ],
+      "question_source": "D.5 decisi\u00f3n 6",
+      "rationale": "se mantiene time_to_final_config_ms como indicador operacional separado, fuera de Holm, con la asimetr\u00eda declarada; no se modifica AG0 ni ning\u00fan sistema; su aprobaci\u00f3n depende de B1 (asesor)",
+      "source": "internal_decision_F2.3",
+      "status": "DECIDED"
+    },
+    "errors_timeouts_in_l_resp": {
+      "advisor_approved": false,
+      "chosen": "separate_indicators",
+      "decided_in": "F.2.3",
+      "decision_level": "INTERNAL_STUDY_DECISION",
+      "implemented_today": "separate_indicators",
+      "options": [
+        "exclude_with_validity_rule",
+        "penalize",
+        "separate_indicators"
+      ],
+      "question_source": "D.5 decisi\u00f3n 3",
+      "rationale": "P95 de las respuestas correctas; errores y timeouts contados y reportados por corrida y celda como indicadores aparte; sin invalidar por tasa y sin umbral nuevo (el 1 % de RNF04 es criterio de throughput, no de validez de L_resp)",
+      "source": "internal_decision_F2.3",
+      "status": "DECIDED"
+    },
+    "execution_order": {
+      "advisor_approved": false,
+      "chosen": "randomized_blocks",
+      "decided_in": "F.2.3",
+      "decision_level": "INTERNAL_STUDY_DECISION",
+      "implemented_today": "randomized_blocks",
+      "options": [
+        "sequential",
+        "randomized_blocks"
+      ],
+      "question_source": "tesis 01/10: aleatorizaci\u00f3n \u00abpendiente de decisi\u00f3n\u00bb",
+      "rationale": "randomized-blocks por ronda; no se afirma que elimine el efecto del orden; se registran execution_index, started_utc, sistema que ocurri\u00f3 primero y reinicio",
+      "source": "internal_decision_F2.3",
+      "status": "DECIDED"
+    },
+    "holm_family_size": {
+      "advisor_approved": false,
+      "advisor_backing": "NONE: la tesis prev\u00e9 Holm en OE3/OE4, no en OE2; decisi\u00f3n interna del estudio",
+      "chosen": "fixed_m_declared_before_data",
+      "decided_in": "F.2.3",
+      "decision_level": "INTERNAL_STUDY_DECISION",
+      "implemented_today": "fixed_m_declared_before_data",
+      "options": [
+        "fixed_m_declared_before_data",
+        "dynamic_m",
+        "other"
+      ],
+      "question_source": "D.5 decisi\u00f3n 2",
+      "rationale": "Holm aplicado a OE2 con familia FIJA de 8 hip\u00f3tesis (L_resp P95 y throughput \u00d7 cargas 1, 5, 10, 25), bilateral, FWER 0,05; una hip\u00f3tesis no testada se registra y sigue contando en m",
+      "source": "internal_decision_F2.3",
+      "status": "DECIDED"
+    },
+    "http_pairing": {
+      "advisor_approved": false,
+      "chosen": "independent_runs",
+      "condition": "CONDICIONADA a que la unidad estad\u00edstica que fije el asesor no contradiga esta estructura (REQUIERE RESPALDO DEL ASESOR)",
+      "decided_in": "F.2.3",
+      "decision_level": "INTERNAL_STUDY_DECISION",
+      "implemented_today": "independent_runs",
+      "options": [
+        "independent_runs",
+        "paired_by_run_index_and_load",
+        "paired_by_profile"
+      ],
+      "question_source": "D.5 decisi\u00f3n 1",
+      "rationale": "A (grupos independientes por corrida) como an\u00e1lisis primario: con reinicio por corrida y Redis aislado las corridas son procesos nuevos; F.2.2 mostr\u00f3 correlaci\u00f3n d\u00e9bil entre miembros de pares (r \u2248 0,2; SE B/A \u2248 0,9) y F.2.1 resultados inconsistentes entre cargas",
+      "source": "internal_decision_F2.3",
+      "status": "DECIDED",
+      "technical_capability": {
+        "paired_by_run_index_and_load": {
+          "approved_by_advisor": false,
+          "connected_to_confirmatory_output": false,
+          "estimand_and_test": "se piden expl\u00edcitamente; no entra en Holm ni modifica A",
+          "module": "oe/paired_runs.py",
+          "role": "descriptive_sensitivity_outside_holm",
+          "selected_as_primary": false,
+          "status": "IMPLEMENTED_TECHNICALLY_NOT_METHODOLOGICALLY_APPROVED"
+        }
+      }
+    },
+    "l_resp_literal_hypothesis_h1": {
+      "advisor_approved": false,
+      "chosen": null,
+      "decision_level": "REQUIERE_RESPALDO_DEL_ASESOR",
+      "implemented_today": "descriptive_only",
+      "options": [
+        "not_part_of_oe2",
+        "descriptive_only",
+        "confirmatory_contrast"
+      ],
+      "question_source": "D.5 decisi\u00f3n 4",
+      "source": "D.5 decisi\u00f3n 4",
+      "status": "PENDING"
+    },
+    "latency_statistic": {
+      "advisor_approved": false,
+      "chosen": null,
+      "decision_level": "REQUIERE_RESPALDO_DEL_ASESOR",
+      "implemented_today": "p95",
+      "options": [
+        "p95",
+        "mean"
+      ],
+      "question_source": "D11b (addendum 26/09)",
+      "source": "D11b (addendum 26/09): P95 o media pendiente del asesor",
+      "status": "PENDING"
+    }
+  },
+  "oe2_official": false,
+  "official": false,
+  "official_refusals": [
+    "c\u00f3digo: \u00e1rbol de Git con cambios sin commit: el commit no identifica el c\u00f3digo que produce la campa\u00f1a",
+    "bloqueo: [B1] contrato de tiempo oe2-time-contract-v2 sin validar: el indicador com\u00fan `time_to_final_config_ms` es una decisi\u00f3n provisional (estado FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED, validaci\u00f3n PENDING_METHODOLOGICAL_VALIDATION); se resuelve con su aprobaci\u00f3n/validaci\u00f3n expl\u00edcita, NO con equivalencia con T_conv (NOT_ESTABLISHED); `decision_ms` es LEGACY; ninguno puede sustituir a T_conv en un contraste confirmatorio",
+    "bloqueo: [B13] alcance del comparador pendiente de validaci\u00f3n: solo ['decision_table'] implementado(s) como convencional independiente (LMS real y LLM monol\u00edtico no implementados) y OE2 habla de \u00absistemas convencionales\u00bb; OE2 solo puede concluir sobre ese comparador",
+    "bloqueo: [B5] decisi\u00f3n B5-C de persistencia ('off') sin resolver: sin aprobaci\u00f3n del asesor (estado FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED). Se resuelve con su aprobaci\u00f3n expl\u00edcita (comparaci\u00f3n OFF com\u00fan aceptada, costo ON de la propuesta aparte, sin persistencia en el baseline, L_resp aprobado intacto); no modificando L_resp ni activando persistencia en el baseline",
+    "bloqueo: [P6] hardware objetivo (P6) sin aprobaci\u00f3n metodol\u00f3gica (estado PENDING_EXTERNAL_ANSWER): cumplir el criterio operativo del c\u00f3digo (`meets_target`) es solo compatibilidad t\u00e9cnica, no aprobaci\u00f3n del requisito; se resuelve con su aprobaci\u00f3n expl\u00edcita, no con el hardware medido",
+    "bloqueo: [PEND] decisiones metodol\u00f3gicas de D.5 sin cerrar: l_resp_literal_hypothesis_h1, latency_statistic. Se resuelven con una decisi\u00f3n expl\u00edcita (`status = DECIDED` y `chosen` entre sus opciones); ning\u00fan c\u00f3digo las decide por defecto",
+    "bloqueo: [DEF] definici\u00f3n PENDING (dependencia de oe2): common_time_indicator_oe2",
+    "bloqueo: [DEF] definici\u00f3n PENDING (dependencia de oe2): statistical_unit_performance"
+  ],
+  "pending_methodological_decisions": [
+    "estad\u00edstico de latencia: P95 o media (D11b) \u2014 REQUIERE RESPALDO DEL ASESOR",
+    "unidad estad\u00edstica definitiva del rendimiento (condiciona la estructura de A) \u2014 REQUIERE RESPALDO DEL ASESOR",
+    "hip\u00f3tesis estad\u00edstica formal de OE2 y uso del L_resp literal (2,0 s) \u2014 REQUIERE RESPALDO DEL ASESOR",
+    "aprobaci\u00f3n de B1 (indicador com\u00fan), B5-C (persistencia) y B13 (alcance) \u2014 REQUIERE RESPALDO DEL ASESOR",
+    "hardware objetivo (P6) \u2014 REQUIERE RESPUESTA EXTERNA"
+  ],
+  "persist_policy": "off",
+  "persistence_conditions": {
+    "comparison": "off",
+    "comparison_off_is_literal_l_resp": false,
+    "n_runs_by_condition": {
+      "comparison_off": 80
+    },
+    "proposal_cost": null,
+    "proposal_on_in_contrast": false,
+    "roles": {
+      "auxiliary": "auxiliary_contrast",
+      "comparison": "swarm_vs_decision_table_contrast",
+      "proposal_cost": "proposal_persistence_cost"
+    },
+    "server_env": {
+      "comparison_off": {
+        "SWARM_API_PERSIST": "0"
+      },
+      "proposal_cost_on": {
+        "SWARM_API_PERSIST": "1"
+      }
+    }
+  },
+  "persistence_status": {
+    "baseline_supports_persistence": false,
+    "l_resp_definition_requires_sync_persistence": true,
+    "policy": "off",
+    "status": "INCOMPATIBLE_WITH_APPROVED_L_RESP_DEFINITION"
+  },
+  "profile_sequence": {
+    "algorithm": "profile-sequence-v1",
+    "preview_requests_per_user": 50,
+    "sha256_by_run_index_and_load": {
+      "r00|u1": "e0f0e49e8dfc5053cd37caf27e16b65f6e1073c470727624431e97a8f2dcb747",
+      "r00|u10": "1a01f1c8dd3bd6c46892d7f5801013c6097d947038f7f6ee5b2ea08fe2f7df24",
+      "r00|u25": "9ecdad0901f7d06f2ba04a017627f40571b4f913fe9a1f499b95b3403b54d60d",
+      "r00|u5": "bc192566e80f36ba8a10fed49add495f2798e988dbc2ad0d433e6bcd53a3ff90",
+      "r01|u1": "9298bd0e9421bb63e9abac51a109055720ac7d8fa7e6bfb490168f1b618aca7e",
+      "r01|u10": "a878f366816f4c580b9cac481901c4fc4d6139b6a20ada359cba8311ce41d0af",
+      "r01|u25": "f343a1ab1443f0784c2ae266a8c72481be0579b231576b70343ea51b5fd876af",
+      "r01|u5": "2270cbb85dcfce3fa478655151510f38186afcea4e029f71660758d204ecaef5",
+      "r02|u1": "32122aa0b585a7a074d81c856377e9c283ec229618a36209628cd43defc55c5c",
+      "r02|u10": "d44d16bd44578dec949edb49aec097bd6c354e24b47e31f5444390ca636d83e7",
+      "r02|u25": "9e4c6e7925e67dff677716b6c4ce9d5a5850988a44baeeb678d8036613f36023",
+      "r02|u5": "1464d6607b60e873cfc3632a35fb09c2097a22dcff7cdde0ba337aa68eb171f7",
+      "r03|u1": "6e928403da5748d58dd868d75cb55cdb19b2916b331bc03490416640b569bf1f",
+      "r03|u10": "502ae7b25baf368dcd1a3304c6b62a486da51fbd9f224f2cfca75ded807abb6e",
+      "r03|u25": "116ac8c6266eeb0f97c1b9e952c428b66be7b495e8342593354dffc5d97ed3dd",
+      "r03|u5": "532010e91c2e34610f8d19ac0e4d7b96d3b4055fa32eb63a82259493b239dd57",
+      "r04|u1": "5524054f40bf3fe2cc09916534c11c4d9f37760a28c009ccc6faf6b24e61c58f",
+      "r04|u10": "8001690713a73bd3543ae109a475e28cd8653b71664dff64d7551f42b0d33c89",
+      "r04|u25": "0531bb6163b71edd9bccad86d367365c31a2cb9d3769db41ad71deb3ac6c3319",
+      "r04|u5": "c6ef847e767ade133ac0217807382a529957f45588361b83559d8dbb648bdc37",
+      "r05|u1": "9a2ea99ef803e51dac41cf763093668feb48e7c2a2ab57d635454b8522e4ae10",
+      "r05|u10": "82758679c3420cf6e601d2e590e0f3bf0d0b29ee37e36922aed1efce84d1a112",
+      "r05|u25": "1509cc8091d8ab954e0b59b33b4191fb215fb56d8f8d350a758d57429f1c925a",
+      "r05|u5": "bb787f5abcf37f315cc39de85b32e743fe2da10dba6fac9d89366ebb470e9516",
+      "r06|u1": "74dcbfdcab7a11268698db51cbb7b0095e371f37e798dea28a82325ebad1b7b1",
+      "r06|u10": "8e51ac137f3e20e0faf83134212ca6fb64c53ead247444ebba121e5a7ff260d4",
+      "r06|u25": "82329488586f0d597eb89c57213d8fad4dd5c53a7a3803f8320cfb1dfaa597d4",
+      "r06|u5": "5032f4ca59a52cd2c13a90d561635691bc4cc896e90f93e94f1e1bca5d92119b",
+      "r07|u1": "3a4b34ed61918919567c27fc9944c0c85ad84bf1338e3e358f162b3d1bc17992",
+      "r07|u10": "617fdd2222b36c529e8789916cc37837b9934df16fc0a3441b20391d43ad0898",
+      "r07|u25": "ed4ce96aab442d388456e9647661318e2adeda60bde189b7d8ece1a4bcccd4a7",
+      "r07|u5": "71a6d09c2eda2e858f6564d475992e50b167167e24a6f6d4827093840118c206",
+      "r08|u1": "85f826efa36dad4a976c46210cffbe98676292de7798b5290c441d609a2e301b",
+      "r08|u10": "0b8da84f25abab40f6645e9fc3ceab201a064d34b6e875e16526268cf7b5e6c3",
+      "r08|u25": "bb348016d498023e417dfaa36a5663b7e0b8069f0a7636212f8511e7a5a8d3d8",
+      "r08|u5": "0d5a2697be46e4185b891d83ad424b295e17f658ff0aac81e7c7458246f6d2d2",
+      "r09|u1": "8b9518e546921d428be8b56349d1b85ac53a07a43bd5ceff2f40cbcb0b1907b7",
+      "r09|u10": "08bb3855603cc9265471ac6ecf26efe191994c604021ea91f6ae7119a3b2aae5",
+      "r09|u25": "bc794a77c116e5e6e77cb6fba55e29990da2ad00b0608db6e920988980449558",
+      "r09|u5": "89c1c0e3e4af06d296a1ca9ed0dbb023c89a68254588ee9a9497243c62c13010"
+    },
+    "worker_index": 0
+  },
+  "provenance_completion_gaps": [],
+  "redis_isolation": {
+    "final": {
+      "keys_deleted": 85,
+      "keys_found": 85,
+      "prefix": "oe2c:n2-oe2:"
+    },
+    "mechanism": "prefijo de campa\u00f1a `oe2c:<campaign_id>:` + eliminaci\u00f3n verificada de las claves por ciclo (log/state/seen) antes de cada corrida; streams de agentes intactos; purga del namespace de la campa\u00f1a al terminar",
+    "pending": "PENDING_METHODOLOGICAL_DECISION: pol\u00edtica cold/warm de cach\u00e9s en memoria del servidor (el proceso no se reinicia entre corridas del mismo N y persistencia)",
+    "prefix": "oe2c:n2-oe2:"
+  },
+  "run_roles": {
+    "decision_table|u10|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "decision_table",
+      "system_role": "conventional_independent"
+    },
+    "decision_table|u1|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "decision_table",
+      "system_role": "conventional_independent"
+    },
+    "decision_table|u25|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "decision_table",
+      "system_role": "conventional_independent"
+    },
+    "decision_table|u5|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "decision_table",
+      "system_role": "conventional_independent"
+    },
+    "swarm|u10|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "swarm",
+      "system_role": "proposal"
+    },
+    "swarm|u1|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "swarm",
+      "system_role": "proposal"
+    },
+    "swarm|u25|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "swarm",
+      "system_role": "proposal"
+    },
+    "swarm|u5|N20": {
+      "comparison_role": "swarm_vs_decision_table_contrast",
+      "confirmatory_role": "confirmatory_family_candidate",
+      "persist_policy": "off",
+      "persistence_condition": "comparison_off",
+      "system": "swarm",
+      "system_role": "proposal"
+    }
+  },
+  "schema": "oe-http-campaign-v1",
+  "server": {
+    "baseline_quality_in_request": false,
+    "effective": {
+      "baseline_quality_in_request": false,
+      "library_version": "lib-v10-5dd83cd4",
+      "persist_policy": "off"
+    },
+    "effective_by_policy": {
+      "off": {
+        "baseline_quality_in_request": false,
+        "library_version": "lib-v10-5dd83cd4",
+        "persist_policy": "off"
+      }
+    },
+    "library_version_matches": true,
+    "n_particles_by_system": "swarm: --particles / referencia; decision_table: no aplica",
+    "port": 8000,
+    "uvicorn_workers": 1
+  },
+  "software": {
+    "app_version": "1.0.0",
+    "fastapi": "0.136.1",
+    "implementation": "CPython",
+    "locust": "2.46.6",
+    "os": "Windows-11-10.0.26300-SP0",
+    "postgresql": "not_used_persistence_off",
+    "python": "3.12.10",
+    "redis_client": "8.1.0",
+    "redis_server": "7.4.11",
+    "uvicorn": "0.46.0"
+  },
+  "systems": {
+    "decision_table": "conventional_independent",
+    "swarm": "proposal"
+  },
+  "time_contract": {
+    "candidate_common_metric": "time_to_final_config_ms",
+    "common_indicator": {
+      "condition": {
+        "concurrency": 1,
+        "http": false,
+        "id": "isolated_inprocess",
+        "note": "una observaci\u00f3n con concurrencia > 1 o por HTTP NO es este indicador (mezclar\u00eda tiempo algor\u00edtmico con cola del event loop/servidor)"
+      },
+      "definition": "tiempo hasta obtener la configuraci\u00f3n final S: del perfil validado en poder del sistema a la S final decidida; sin ensamblado/validaci\u00f3n del paquete, sin HTTP, sin persistencia, sin \ud835\udcd5 de reporte",
+      "excludes": [
+        "ensamblado y validaci\u00f3n del paquete",
+        "\ud835\udcd5 de reporte",
+        "HTTP y cola del servidor",
+        "persistencia",
+        "descarga de audio"
+      ],
+      "experimental_unit": "perfil: media de las K r\u00e9plicas; dise\u00f1o pareado swarm vs decision_table sobre los mismos perfiles",
+      "includes": {
+        "conventional": [
+          "W solo en los sistemas que lo usan para decidir",
+          "la decisi\u00f3n"
+        ],
+        "swarm": [
+          "petici\u00f3n a AG1 (W) por el bus",
+          "engine.initialize + semilla heur\u00edstica",
+          "b\u00fasqueda iterativa completa (T_conv)"
+        ]
+      },
+      "is_t_conv": false,
+      "known_asymmetries": [
+        "obtenci\u00f3n y evaluaci\u00f3n de artefactos candidatos: dentro del indicador en el swarm, fuera en el convencional (se hace en el ensamblado). Limitaci\u00f3n DOCUMENTADA; la frontera no se modifica ni se a\u00f1ade trabajo al convencional."
+      ],
+      "name": "time_to_final_config_ms",
+      "provenance": [
+        "time_contract.CONTRACT_VERSION",
+        "campaign_spec.oe2.time_contract.common_indicator",
+        "condici\u00f3n de medici\u00f3n por observaci\u00f3n (`ttfc_isolated`)"
+      ],
+      "separate_from": {
+        "L_resp": "latencia HTTP extremo a extremo",
+        "decision_ms": "campo hist\u00f3rico/legacy (frontera distinta)",
+        "t_conv_ms": "m\u00e9trica propia de la propuesta (DEC-10), definici\u00f3n intacta",
+        "total_ms": "perfil \u2192 paquete validado listo (incluye ensamblado)"
+      },
+      "start": {
+        "decision_table": "perfil ya validado (`ProfileRequest`), antes de calcular cualquier insumo que el sistema necesite para decidir",
+        "swarm": "fin de `step_receive` de AG0 (RF01 validado y ciclo registrado): `t_start_ns`"
+      },
+      "statistical_treatment": {
+        "confirmatory": false,
+        "family": "PENDING: pertenencia a una familia de Holm no decidida; se calcula como EXPLORATORIO, fuera de Holm",
+        "plan": "Shapiro-Wilk sobre diferencias \u2192 t pareada sobre log(tiempo) si razonable; si no Wilcoxon signed-rank (como el resto de contrastes pareados de OE2)",
+        "status": "PROVISIONAL"
+      },
+      "status": "FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED",
+      "stop": {
+        "decision_table": "configuraci\u00f3n S devuelta por la decisi\u00f3n",
+        "swarm": "entrada de `step_finalize` de AG0 (g_best final): `t_search_ns + t_conv_ms`: el MISMO instante en que AG0 cierra T_conv"
+      },
+      "swarm_formula": "(t_search_ns \u2212 t_start_ns)/1e6 + t_conv_ms   [incluye AG1 (W) por el bus, `engine.initialize` y toda la b\u00fasqueda; t_conv_ms no cambia]",
+      "t_conv_equivalence_claimed": false,
+      "unit": "ms",
+      "validation": "PENDING_METHODOLOGICAL_VALIDATION"
+    },
+    "definitions": {
+      "L_resp": "latencia HTTP extremo a extremo; P95 por corrida; misma metodolog\u00eda en ambos lados.",
+      "decision_ms": "campo HIST\u00d3RICO (LEGACY/exploratorio): propuesta = t_conv_ms de AG0 (copiado); convencional = medido alrededor de `_decide`. Frontera distinta de la del indicador com\u00fan; NO es T_conv.",
+      "t_conv_ms": "T_conv REAL de la propuesta (AG0): tras engine.initialize -> convergencia de g_best (step_finalize); incluye el bus. Solo propuesta; None en el resto.",
+      "time_to_final_config_ms": "tiempo hasta obtener la configuraci\u00f3n final S: del perfil validado en poder del sistema a la S final decidida; sin ensamblado/validaci\u00f3n del paquete, sin HTTP, sin persistencia, sin \ud835\udcd5 de reporte (condici\u00f3n aislada; propuesta: (t_search_ns \u2212 t_start_ns)/1e6 + t_conv_ms). NO es T_conv.",
+      "total_ms": "perfil recibido -> paquete validado listo, en proceso (sin HTTP); mismas fronteras en ambos lados."
+    },
+    "known_limits": [
+      "decision_ms (legacy) no comparte frontera entre sistemas: la inicializaci\u00f3n de part\u00edculas y AG1 quedan fuera de la propuesta y W fuera del convencional; por eso no se reutiliza",
+      "el intervalo del indicador com\u00fan de la propuesta incluye el bus Redis y los agentes (coste de la arquitectura)",
+      "el convencional decide sin iterar: el indicador com\u00fan es tiempo hasta la configuraci\u00f3n final, no convergencia en sentido estricto",
+      "no se afirma equivalencia entre el indicador com\u00fan y T_conv; la decisi\u00f3n de usarlo es provisional y no est\u00e1 aprobada por el asesor",
+      "ASIMETR\u00cdA CONOCIDA (D.4, pendiente metodol\u00f3gico, frontera sin cambios): el swarm obtiene y eval\u00faa los artefactos candidatos (AG2\u2013AG4 por el bus, lectura de biblioteca, scoring) DURANTE la b\u00fasqueda, dentro del indicador; el convencional decide primero y obtiene/ensambla los artefactos despu\u00e9s, fuera del indicador"
+    ],
+    "legacy_metric": {
+      "name": "decision_ms",
+      "status": "LEGACY_EXPLORATORY"
+    },
+    "status": "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED_UNVALIDATED",
+    "t_conv_equivalence": "NOT_ESTABLISHED",
+    "validation": "PENDING_METHODOLOGICAL_VALIDATION",
+    "version": "oe2-time-contract-v2"
+  }
+}

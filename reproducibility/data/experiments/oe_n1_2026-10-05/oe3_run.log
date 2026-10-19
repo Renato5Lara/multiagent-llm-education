@@ -1,0 +1,32 @@
+destino de Redis: Redis 127.0.0.1:56379
+[1/7] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/3: 300/300 ok, 22.69 s, 13.2 req/s
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 2/3: 300/300 ok, 22.55 s, 13.3 req/s
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 3/3: 300/300 ok, 22.85 s, 13.1 req/s
+[2/7] swarm|batch|bc1|h0|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 1/3: 300/300 ok, 26.12 s, 11.5 req/s
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 2/3: 300/300 ok, 26.19 s, 11.5 req/s
+  swarm|batch|bc1|h0|pso|r1|N20|c1 lote 3/3: 300/300 ok, 25.03 s, 12.0 req/s
+[3/7] swarm|batch|bc1|h1|pso|r2|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 1/3: 300/300 ok, 22.43 s, 13.4 req/s
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 2/3: 300/300 ok, 22.53 s, 13.3 req/s
+  swarm|batch|bc1|h1|pso|r2|N20|c1 lote 3/3: 300/300 ok, 22.73 s, 13.2 req/s
+[4/7] swarm|sequential|bc1|h1|pso|r1|N20|c1 (lote 0)
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 1/3: 300/300 ok, 34.25 s, 8.8 req/s
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 2/3: 300/300 ok, 34.28 s, 8.8 req/s
+  swarm|sequential|bc1|h1|pso|r1|N20|c1 lote 3/3: 300/300 ok, 34.81 s, 8.6 req/s
+[5/7] swarm|batch|bc0|h1|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 1/3: 300/300 ok, 18.66 s, 16.1 req/s
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 2/3: 300/300 ok, 18.72 s, 16.0 req/s
+  swarm|batch|bc0|h1|pso|r1|N20|c1 lote 3/3: 300/300 ok, 18.79 s, 16.0 req/s
+[6/7] swarm|batch|bc1|h1|cognitive|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 1/3: 300/300 ok, 18.94 s, 15.8 req/s
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 2/3: 300/300 ok, 19.03 s, 15.8 req/s
+  swarm|batch|bc1|h1|cognitive|r1|N20|c1 lote 3/3: 300/300 ok, 18.98 s, 15.8 req/s
+[7/7] swarm|batch|bc1|h1|social|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 1/3: 300/300 ok, 22.94 s, 13.1 req/s
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 2/3: 300/300 ok, 22.91 s, 13.1 req/s
+  swarm|batch|bc1|h1|social|r1|N20|c1 lote 3/3: 300/300 ok, 22.99 s, 13.0 req/s
+escrito: experiments\oe_n1_2026-10-05\oe3_run (6300 observaciones; validez EXPLORATORY)
+{}
+exit=0

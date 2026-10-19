@@ -1,0 +1,26 @@
+objetivo,indicador,medida,valor,estado,fuente
+OE1,"RF01,RF02,RF04,RF05,RF06",proporción de ciclos/peticiones,1.0 (RF06 20/20),MET,oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,RF03,ciclos con solape (todas las condiciones),0.9053 (0/900 en la ablación sequential; 8200/8200 con batch),NOT_MET (ablación),oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,REL-C,ciclos completados,1.0,MET,oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,REL-D,pares idénticos misma semilla,20/20,MET,oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,RNF01,"P95 en proceso, cargas ≤25 agregadas (ms)",1319,MET agregado; no a carga 25,oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,RNF02,k_stop máximo,8,MET,oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,RNF04,throughput mediano en proceso (req/s),14.98,NOT_MET,oe_n1_2026-10-05/oe1_report/oe1_report.json
+OE1,RNF03,F1 v2 histórico K=10,0.6407,NOT_MET (definición v2),oe_n1_2026-10-05/f1_k10_v2_historical.json
+OE1,RNF05,SUS,sin evaluadores,NOT_MEASURED,oe_n5_2026-10-06/RESULTADO_OE5.md
+OE2,"P95 swarm/decision_table (u=1,5,10,25)",razón geométrica,"5.05, 17.8, 21.7, 12.8",significativas (Holm),oe_n2_2026-10-05/contrastes_primarios_resumen.json
+OE2,"throughput swarm/decision_table (u=1,5,10,25)",razón geométrica,"0.159, 0.065, 0.058, 0.062",significativas (Holm),oe_n2_2026-10-05/contrastes_primarios_resumen.json
+OE2,"tiempo hasta configuración final (TTFC, no T_conv)",razón geométrica (n=100 perfiles),7668,exploratorio; excluido de Holm,oe_n2_2026-10-05/analysis_with_inprocess.json
+OE2,"T_conv del swarm (mediana, ms)",descriptivo,62.8,solo propuesta,oe_n2_2026-10-05/RESULTADO_OE2.md
+OE3,T_conv despacho batch vs sequential (ms),media marginal,56.8 vs 90.6,significativo,oe_n3_2026-10-06/anova_oe3.json
+OE3,T_conv sin vs con difusión g_best (ms),media marginal,65.5 vs 78.5,significativo; sin efecto en calidad,oe_n3_2026-10-06/anova_oe3.json
+OE3,brecha vs óptimo con vs sin heurística,media marginal,0.0150 vs 0.0258,significativo,oe_n3_2026-10-06/anova_oe3.json
+OE3,brecha vs óptimo pso/social/cognitive,media marginal,0.0143/0.0147/0.0320,significativo,oe_n3_2026-10-06/anova_oe3.json
+OE4,1 usuarios,T_conv HTTP / P50 / P95 (ms) / throughput (req/s),66.0 / 91.1 / 120.6 / 10.6,"0 errores, 0 timeouts",oe_n4_2026-10-06/tabla_por_carga.csv
+OE4,5 usuarios,T_conv HTTP / P50 / P95 (ms) / throughput (req/s),217.3 / 297.0 / 476.9 / 15.9,"0 errores, 0 timeouts",oe_n4_2026-10-06/tabla_por_carga.csv
+OE4,10 usuarios,T_conv HTTP / P50 / P95 (ms) / throughput (req/s),425.5 / 604.3 / 971.8 / 15.7,"0 errores, 0 timeouts",oe_n4_2026-10-06/tabla_por_carga.csv
+OE4,25 usuarios,T_conv HTTP / P50 / P95 (ms) / throughput (req/s),1015.7 / 1514.4 / 2456.6 / 15.6,"0 errores, 0 timeouts",oe_n4_2026-10-06/tabla_por_carga.csv
+OE4,50 usuarios,T_conv HTTP / P50 / P95 (ms) / throughput (req/s),2031.2 / 2946.8 / 4986.5 / 15.4,"0 errores, 0 timeouts",oe_n4_2026-10-06/tabla_por_carga.csv
+OE4,100 usuarios,T_conv HTTP / P50 / P95 (ms) / throughput (req/s),4035.1 / 5574.6 / 10113.9 / 15.3,"0 errores, 0 timeouts",oe_n4_2026-10-06/tabla_por_carga.csv
+OE5,"F1_adapt v3 (K=10, 100 perfiles)",media; IC95,0.8156; 0.8111–0.8201,PROVISIONAL (regla v3 no aprobada),oe_n5_2026-10-06/f1_v3_summary.json
+OE5,SUS,media; contraste vs 75,sin datos (0 evaluadores),PENDIENTE,oe_n5_2026-10-06/RESULTADO_OE5.md

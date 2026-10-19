@@ -1,0 +1,63 @@
+destino de Redis: Redis 127.0.0.1:56379
+[1/20] rules|c1 (lote 0)
+  rules|c1 lote 1/1: 1000/1000 ok, 0.30 s, 3299.0 req/s
+[2/20] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 1000/1000 ok, 76.31 s, 13.1 req/s
+[3/20] bruteforce|c1 (lote 0)
+  bruteforce|c1 lote 1/1: 1000/1000 ok, 80.93 s, 12.4 req/s
+[4/20] decision_table|c1 (lote 0)
+  decision_table|c1 lote 1/1: 1000/1000 ok, 0.34 s, 2921.8 req/s
+[5/20] bruteforce|c1 (lote 1)
+  bruteforce|c1 lote 1/1: 1000/1000 ok, 80.09 s, 12.5 req/s
+[6/20] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 1000/1000 ok, 75.98 s, 13.2 req/s
+[7/20] decision_table|c1 (lote 1)
+  decision_table|c1 lote 1/1: 1000/1000 ok, 0.27 s, 3637.4 req/s
+[8/20] rules|c1 (lote 1)
+  rules|c1 lote 1/1: 1000/1000 ok, 0.23 s, 4337.1 req/s
+[9/20] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 1000/1000 ok, 75.22 s, 13.3 req/s
+[10/20] rules|c1 (lote 2)
+  rules|c1 lote 1/1: 1000/1000 ok, 0.31 s, 3230.5 req/s
+[11/20] bruteforce|c1 (lote 2)
+  bruteforce|c1 lote 1/1: 1000/1000 ok, 79.93 s, 12.5 req/s
+[12/20] decision_table|c1 (lote 2)
+  decision_table|c1 lote 1/1: 1000/1000 ok, 0.35 s, 2882.0 req/s
+[13/20] rules|c1 (lote 3)
+  rules|c1 lote 1/1: 1000/1000 ok, 0.24 s, 4132.2 req/s
+[14/20] bruteforce|c1 (lote 3)
+  bruteforce|c1 lote 1/1: 1000/1000 ok, 81.32 s, 12.3 req/s
+[15/20] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 1000/1000 ok, 77.82 s, 12.8 req/s
+[16/20] decision_table|c1 (lote 3)
+  decision_table|c1 lote 1/1: 1000/1000 ok, 0.32 s, 3094.5 req/s
+[17/20] decision_table|c1 (lote 4)
+  decision_table|c1 lote 1/1: 1000/1000 ok, 0.30 s, 3339.7 req/s
+[18/20] bruteforce|c1 (lote 4)
+  bruteforce|c1 lote 1/1: 1000/1000 ok, 80.51 s, 12.4 req/s
+[19/20] rules|c1 (lote 4)
+  rules|c1 lote 1/1: 1000/1000 ok, 0.24 s, 4192.2 req/s
+[20/20] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 1000/1000 ok, 76.35 s, 13.1 req/s
+escrito: experiments\oe_n2_2026-10-05\inprocess (20000 observaciones; validez EXPLORATORY)
+{
+  "c1|swarm_vs_rules": {
+    "latency_ms": [
+      3.896559845095909e-18,
+      76.06479072026559
+    ]
+  },
+  "c1|swarm_vs_bruteforce": {
+    "latency_ms": [
+      1.0325598543830596e-06,
+      -4.215022319945274
+    ]
+  },
+  "c1|swarm_vs_decision_table": {
+    "latency_ms": [
+      3.896559845095909e-18,
+      76.01191379996598
+    ]
+  }
+}
+exit=0

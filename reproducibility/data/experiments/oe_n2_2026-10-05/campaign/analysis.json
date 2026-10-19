@@ -1,0 +1,2320 @@
+{
+  "auxiliary_contrasts": [
+    "rules",
+    "bruteforce"
+  ],
+  "benchmark_2_1_open": "LMS tradicional y LLM monol\u00edtico no implementados; D11c abierta: las conclusiones se limitan al baseline `decision_table` (D.3, provisional) y no generalizan a otros sistemas convencionales",
+  "campaign_spec": {
+    "advisor_approved": false,
+    "sha256": "efc891a5c98d40b85ba20d8b7b4eb5ec2bf33318a44858676c7e67b3fbdc79b8",
+    "status": "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED",
+    "version": "oe-campaign-spec-v1"
+  },
+  "candidate_time_metric": "time_to_final_config_ms",
+  "comparator_primary": "decision_table",
+  "error_report": {
+    "cells": {
+      "decision_table|u1": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          24.8138,
+          24.780449999999977,
+          25.0186,
+          16.643,
+          24.46,
+          21.434199999999997,
+          23.9378,
+          25.396,
+          26.468799999999998,
+          26.43314999999999
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r00",
+            "successful_requests": 4119,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4119
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r01",
+            "successful_requests": 4178,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4178
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r02",
+            "successful_requests": 4157,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4157
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r03",
+            "successful_requests": 4282,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4282
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r04",
+            "successful_requests": 4366,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4366
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r05",
+            "successful_requests": 4462,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4462
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r06",
+            "successful_requests": 4192,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4192
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r07",
+            "successful_requests": 4201,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4201
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r08",
+            "successful_requests": 4209,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4209
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u1|N20-r09",
+            "successful_requests": 4020,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 4020
+          }
+        ],
+        "successful_requests": 42186,
+        "system": "decision_table",
+        "throughput_successful_rps": [
+          65.85868923989159,
+          66.69753033695723,
+          66.4673338927998,
+          68.40474131134758,
+          69.69430922386964,
+          71.35204275806836,
+          66.92209465094291,
+          67.04008677547493,
+          67.28156261544244,
+          64.22546011487088
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 42186,
+        "users": 1
+      },
+      "decision_table|u10": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          41.67374999999999,
+          42.032250000000005,
+          43.61339999999999,
+          51.092,
+          40.334,
+          42.1664,
+          41.6834,
+          40.5702,
+          40.76309999999998,
+          40.92979999999999
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r00",
+            "successful_requests": 17658,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17658
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r01",
+            "successful_requests": 17886,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17886
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r02",
+            "successful_requests": 17405,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17405
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r03",
+            "successful_requests": 16645,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16645
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r04",
+            "successful_requests": 18131,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 18131
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r05",
+            "successful_requests": 17827,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17827
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r06",
+            "successful_requests": 17713,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17713
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r07",
+            "successful_requests": 18157,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 18157
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r08",
+            "successful_requests": 17963,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17963
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u10|N20-r09",
+            "successful_requests": 17985,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17985
+          }
+        ],
+        "successful_requests": 177370,
+        "system": "decision_table",
+        "throughput_successful_rps": [
+          282.1893736128382,
+          285.6640900030212,
+          277.71129470403037,
+          265.49166628476723,
+          289.4106755115565,
+          284.59450782479,
+          282.7745844561904,
+          289.88584661554347,
+          286.97180272848743,
+          287.63574158786065
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 177370,
+        "users": 10
+      },
+      "decision_table|u25": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          180.4267999999999,
+          185.64804999999996,
+          183.824,
+          194.70759999999999,
+          180.2708999999998,
+          174.94459999999964,
+          186.5433999999999,
+          173.097,
+          175.1094,
+          175.43099999999995
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r00",
+            "successful_requests": 17174,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17174
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r01",
+            "successful_requests": 16708,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16708
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r02",
+            "successful_requests": 17121,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17121
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r03",
+            "successful_requests": 12953,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 12953
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r04",
+            "successful_requests": 16912,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16912
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r05",
+            "successful_requests": 17433,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17433
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r06",
+            "successful_requests": 16993,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16993
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r07",
+            "successful_requests": 17461,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17461
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r08",
+            "successful_requests": 17304,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17304
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u25|N20-r09",
+            "successful_requests": 17338,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17338
+          }
+        ],
+        "successful_requests": 167397,
+        "system": "decision_table",
+        "throughput_successful_rps": [
+          274.1392252616662,
+          266.9649275356091,
+          273.55958216521145,
+          207.12869382810754,
+          269.91828337162224,
+          278.6025923761593,
+          271.56646581829926,
+          279.0233145474423,
+          276.40406428653625,
+          282.12972306239203
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 167397,
+        "users": 25
+      },
+      "decision_table|u5": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          23.35,
+          26.24835,
+          25.780099999999994,
+          26.0106,
+          24.166,
+          23.841,
+          25.60275,
+          23.957,
+          22.234,
+          24.47545
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r00",
+            "successful_requests": 16291,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16291
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r01",
+            "successful_requests": 15274,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 15274
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r02",
+            "successful_requests": 15427,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 15427
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r03",
+            "successful_requests": 15155,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 15155
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r04",
+            "successful_requests": 16535,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16535
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r05",
+            "successful_requests": 16633,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16633
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r06",
+            "successful_requests": 15586,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 15586
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r07",
+            "successful_requests": 16562,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16562
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r08",
+            "successful_requests": 17270,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 17270
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-decision_table|u5|N20-r09",
+            "successful_requests": 16212,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 16212
+          }
+        ],
+        "successful_requests": 160945,
+        "system": "decision_table",
+        "throughput_successful_rps": [
+          260.26456266961526,
+          243.5928112108011,
+          246.34325563486897,
+          241.8183848841974,
+          264.0614528553873,
+          266.3325438081637,
+          248.89811512523465,
+          264.5222082997372,
+          275.74644793527705,
+          258.936272594849
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 160945,
+        "users": 5
+      },
+      "swarm|u1": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          112.19369999999999,
+          121.28224999999999,
+          120.235,
+          121.8358,
+          116.40319999999998,
+          115.0688,
+          121.1161,
+          127.70454999999994,
+          121.8812,
+          122.1166
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r00",
+            "successful_requests": 695,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 695
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r01",
+            "successful_requests": 672,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 672
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r02",
+            "successful_requests": 669,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 669
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r03",
+            "successful_requests": 649,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 649
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r04",
+            "successful_requests": 678,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 678
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r05",
+            "successful_requests": 693,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 693
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r06",
+            "successful_requests": 658,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 658
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r07",
+            "successful_requests": 648,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 648
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r08",
+            "successful_requests": 669,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 669
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u1|N20-r09",
+            "successful_requests": 669,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 669
+          }
+        ],
+        "successful_requests": 6700,
+        "system": "swarm",
+        "throughput_successful_rps": [
+          11.113954023256529,
+          10.747357150238663,
+          10.708797520373507,
+          10.380678186148364,
+          10.837595917840988,
+          11.07187932950499,
+          10.52076171882706,
+          10.362197155362685,
+          10.691170587138718,
+          10.697666991261647
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 6700,
+        "users": 1
+      },
+      "swarm|u10": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          899.7102999999998,
+          942.2344499999999,
+          918.63075,
+          904.8922999999998,
+          955.0796499999996,
+          974.9940499999997,
+          945.7359,
+          892.1272999999999,
+          866.1265500000001,
+          919.5182999999997
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r00",
+            "successful_requests": 1058,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1058
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r01",
+            "successful_requests": 992,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 992
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r02",
+            "successful_requests": 1016,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1016
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r03",
+            "successful_requests": 1052,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1052
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r04",
+            "successful_requests": 1000,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1000
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r05",
+            "successful_requests": 982,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 982
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r06",
+            "successful_requests": 987,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 987
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r07",
+            "successful_requests": 1067,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1067
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r08",
+            "successful_requests": 1078,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1078
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u10|N20-r09",
+            "successful_requests": 1027,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1027
+          }
+        ],
+        "successful_requests": 10259,
+        "system": "swarm",
+        "throughput_successful_rps": [
+          17.06424091928845,
+          15.91988701089789,
+          16.3346677283747,
+          16.90204207939874,
+          16.09865251608883,
+          15.769780498848043,
+          15.884255735985647,
+          17.15213478891361,
+          17.327011128443427,
+          16.515502375980855
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 10259,
+        "users": 10
+      },
+      "swarm|u25": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          2240.5953999999997,
+          2404.147,
+          2316.9521999999997,
+          2214.5104,
+          2323.9488499999998,
+          2416.7278,
+          2396.076,
+          2304.0733999999998,
+          2202.1983,
+          2344.3172
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r00",
+            "successful_requests": 1049,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1049
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r01",
+            "successful_requests": 993,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 993
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r02",
+            "successful_requests": 1005,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1005
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r03",
+            "successful_requests": 1064,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1064
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r04",
+            "successful_requests": 1014,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1014
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r05",
+            "successful_requests": 970,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 970
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r06",
+            "successful_requests": 981,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 981
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r07",
+            "successful_requests": 1025,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1025
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r08",
+            "successful_requests": 1063,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1063
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u25|N20-r09",
+            "successful_requests": 997,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 997
+          }
+        ],
+        "successful_requests": 10161,
+        "system": "swarm",
+        "throughput_successful_rps": [
+          16.99225711197999,
+          16.05860664582652,
+          16.287436796028324,
+          17.178191476575236,
+          16.44715494865251,
+          15.677527804643903,
+          15.91215064858315,
+          16.636369541491725,
+          17.2120662400076,
+          16.13164199080918
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 10161,
+        "users": 25
+      },
+      "swarm|u5": {
+        "error_rate": 0.0,
+        "errors": 0,
+        "latency_p95_successful_ms": [
+          418.42975,
+          459.87315,
+          458.5043999999998,
+          436.02295,
+          430.73209999999983,
+          461.11055,
+          448.04319999999996,
+          425.2389999999999,
+          412.47939999999994,
+          416.8192
+        ],
+        "n_runs": 10,
+        "per_run": [
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r00",
+            "successful_requests": 1076,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1076
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r01",
+            "successful_requests": 1010,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1010
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r02",
+            "successful_requests": 1019,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1019
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r03",
+            "successful_requests": 1058,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1058
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r04",
+            "successful_requests": 1042,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1042
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r05",
+            "successful_requests": 992,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 992
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r06",
+            "successful_requests": 1020,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1020
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r07",
+            "successful_requests": 1069,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1069
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r08",
+            "successful_requests": 1093,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1093
+          },
+          {
+            "analyzable": true,
+            "errors": 0,
+            "run_id": "n2-oe2-swarm|u5|N20-r09",
+            "successful_requests": 1077,
+            "timeouts": 0,
+            "total_failure_rate": 0.0,
+            "total_requests": 1077
+          }
+        ],
+        "successful_requests": 10456,
+        "system": "swarm",
+        "throughput_successful_rps": [
+          17.248288759184497,
+          16.181748298355,
+          16.361330064596157,
+          16.938569676782947,
+          16.69925318068125,
+          15.893106030743272,
+          16.35716352744919,
+          17.1699325435873,
+          17.538229528440826,
+          17.23999937180935
+        ],
+        "timeout_rate": 0.0,
+        "timeouts": 0,
+        "total_failure_rate": 0.0,
+        "total_requests": 10456,
+        "users": 5
+      }
+    },
+    "definition": "error_rate = errores no timeout / peticiones totales; timeout_rate = timeouts / peticiones totales; total_failure_rate = (errores + timeouts) / peticiones totales",
+    "validity_threshold": "NONE",
+    "warnings": []
+  },
+  "experiment": "oe2",
+  "families": {
+    "auxiliary:swarm_vs_bruteforce": {
+      "alpha": 0.05,
+      "alternative": "two-sided",
+      "confirmatory": false,
+      "decision_level": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED",
+      "family": "auxiliary:swarm_vs_bruteforce",
+      "hypotheses": {
+        "L_resp_P95_http@u1": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "L_resp_P95_http@u10": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "L_resp_P95_http@u25": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "L_resp_P95_http@u5": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u1": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u10": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u25": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u5": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        }
+      },
+      "m": 8,
+      "m_fixed": true,
+      "method": "Holm-Bonferroni",
+      "n_tested": 0,
+      "not_tested": [
+        "L_resp_P95_http@u1",
+        "L_resp_P95_http@u10",
+        "L_resp_P95_http@u25",
+        "L_resp_P95_http@u5",
+        "throughput_http@u1",
+        "throughput_http@u10",
+        "throughput_http@u25",
+        "throughput_http@u5"
+      ],
+      "outside_fixed_family": []
+    },
+    "auxiliary:swarm_vs_rules": {
+      "alpha": 0.05,
+      "alternative": "two-sided",
+      "confirmatory": false,
+      "decision_level": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED",
+      "family": "auxiliary:swarm_vs_rules",
+      "hypotheses": {
+        "L_resp_P95_http@u1": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "L_resp_P95_http@u10": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "L_resp_P95_http@u25": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "L_resp_P95_http@u5": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u1": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u10": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u25": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        },
+        "throughput_http@u5": {
+          "p_holm": null,
+          "p_raw": null,
+          "result": {
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "in_holm": false,
+              "n_runs_conventional": 0,
+              "n_runs_swarm": 10,
+              "p_value": null,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "not_testable",
+              "test": "mann_whitney_u"
+            },
+            "metric": "throughput_rps",
+            "n_runs_conventional": 0,
+            "n_runs_swarm": 10,
+            "p_value": null,
+            "scale": "log",
+            "status": "not_testable_fewer_than_3_runs_per_group",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": null
+        }
+      },
+      "m": 8,
+      "m_fixed": true,
+      "method": "Holm-Bonferroni",
+      "n_tested": 0,
+      "not_tested": [
+        "L_resp_P95_http@u1",
+        "L_resp_P95_http@u10",
+        "L_resp_P95_http@u25",
+        "L_resp_P95_http@u5",
+        "throughput_http@u1",
+        "throughput_http@u10",
+        "throughput_http@u25",
+        "throughput_http@u5"
+      ],
+      "outside_fixed_family": []
+    },
+    "primary:swarm_vs_decision_table": {
+      "alpha": 0.05,
+      "alternative": "two-sided",
+      "confirmatory": true,
+      "decision_level": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED",
+      "family": "primary:swarm_vs_decision_table",
+      "hypotheses": {
+        "L_resp_P95_http@u1": {
+          "p_holm": 4.143289902655913e-12,
+          "p_raw": 4.143289902655913e-12,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 23.938579999999995,
+              "mean_diff_raw": 96.04514,
+              "mean_swarm": 119.98371999999999,
+              "median_diff_raw": 96.40205,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 10.255612897542612,
+            "diff_ci95_log": [
+              1.5187517309581289,
+              1.7196132376653608
+            ],
+            "geometric_ratio": 5.048961024066583,
+            "geometric_ratio_ci95": [
+              4.566521388661753,
+              5.582368996636643
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 100.0
+            },
+            "mean_diff": 1.6191824843117448,
+            "mean_diff_log": 1.6191824843117448,
+            "mean_log_conventional": 3.167572721512183,
+            "mean_log_swarm": 4.786755205823928,
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.0013303247743455219,
+              "shapiro_p_swarm": 0.36500289211713033,
+              "used_for_selection": false
+            },
+            "p_value": 4.143289902655913e-12,
+            "scale": "log",
+            "se_diff_log": 0.04522615979419952,
+            "statistic": 35.80190075124205,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "L_resp_P95_http@u10": {
+          "p_holm": 1.7333183203776734e-21,
+          "p_raw": 5.777727734592244e-22,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 42.48583,
+              "mean_diff_raw": 879.4191249999998,
+              "mean_swarm": 921.9049549999997,
+              "median_diff_raw": 877.3959499999999,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 13.427950146184955,
+            "diff_ci95_log": [
+              3.0257751985602,
+              3.1321877005609013
+            ],
+            "geometric_ratio": 21.736251648616573,
+            "geometric_ratio_ci95": [
+              20.609975343402677,
+              22.924075738073324
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 100.0
+            },
+            "mean_diff": 3.0789814495605508,
+            "mean_diff_log": 3.0789814495605508,
+            "mean_log_conventional": 3.7468891907304047,
+            "mean_log_swarm": 6.8258706402909555,
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.00032420388787503967,
+              "shapiro_p_swarm": 0.9794891542033548,
+              "used_for_selection": false
+            },
+            "p_value": 5.777727734592244e-22,
+            "scale": "log",
+            "se_diff_log": 0.024708128768518738,
+            "statistic": 124.61410891963459,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "L_resp_P95_http@u25": {
+          "p_holm": 8.168841482826287e-29,
+          "p_raw": 1.1669773546894696e-29,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 181.00027499999993,
+              "mean_diff_raw": 2135.35438,
+              "mean_swarm": 2316.354655,
+              "median_diff_raw": 2140.101675,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 17.833978325771568,
+            "diff_ci95_log": [
+              2.516083004386408,
+              2.5826487394838824
+            ],
+            "geometric_ratio": 12.798985013166792,
+            "geometric_ratio_ci95": [
+              12.380009125672245,
+              13.232140275855645
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 100.0
+            },
+            "mean_diff": 2.5493658719351453,
+            "mean_diff_log": 2.5493658719351453,
+            "mean_log_conventional": 5.197875840377302,
+            "mean_log_swarm": 7.747241712312447,
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.39416604161007673,
+              "shapiro_p_swarm": 0.3836453689073016,
+              "used_for_selection": false
+            },
+            "p_value": 1.1669773546894696e-29,
+            "scale": "log",
+            "se_diff_log": 0.015831458127965065,
+            "statistic": 161.03165301191586,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "L_resp_P95_http@u5": {
+          "p_holm": 1.0532885535195432e-26,
+          "p_raw": 2.633221383798858e-27,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 24.566525000000002,
+              "mean_diff_raw": 412.1588449999999,
+              "mean_swarm": 436.72536999999994,
+              "median_diff_raw": 409.0567999999999,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 17.2058594926677,
+            "diff_ci95_log": [
+              2.832394403568617,
+              2.9243484546972156
+            ],
+            "geometric_ratio": 17.785284984365724,
+            "geometric_ratio_ci95": [
+              16.98608371079491,
+              18.622088961805897
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 100.0
+            },
+            "mean_diff": 2.8783714291329163,
+            "mean_diff_log": 2.8783714291329163,
+            "mean_log_conventional": 3.2000914159475373,
+            "mean_log_swarm": 6.078462845080454,
+            "metric": "latency_p95_ms",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.5259010319407644,
+              "shapiro_p_swarm": 0.2025525377315695,
+              "used_for_selection": false
+            },
+            "p_value": 2.633221383798858e-27,
+            "scale": "log",
+            "se_diff_log": 0.021811826803439162,
+            "statistic": 131.96379446214343,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "throughput_http@u1": {
+          "p_holm": 1.2410740190850452e-27,
+          "p_raw": 2.0684566984750753e-28,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 67.39438509196654,
+              "mean_diff_raw": -56.68117923397123,
+              "mean_swarm": 10.713205857995314,
+              "median_diff_raw": -56.27785845739134,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 17.173730577414638,
+            "diff_ci95_log": [
+              -1.8641308833381631,
+              -1.8137533034324986
+            ],
+            "geometric_ratio": 0.15898552901543545,
+            "geometric_ratio_ci95": [
+              0.15503089128021796,
+              0.16304104444984988
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": -1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 0.0
+            },
+            "mean_diff": -1.8389420933853309,
+            "mean_diff_log": -1.8389420933853309,
+            "mean_log_conventional": 4.210168256366825,
+            "mean_log_swarm": 2.371226162981494,
+            "metric": "throughput_rps",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.6757607032867442,
+              "shapiro_p_swarm": 0.48644752946911485,
+              "used_for_selection": false
+            },
+            "p_value": 2.0684566984750753e-28,
+            "scale": "log",
+            "se_diff_log": 0.01194805923220483,
+            "statistic": -153.91136398358668,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "throughput_http@u10": {
+          "p_holm": 8.099204042338556e-29,
+          "p_raw": 1.0124005052923195e-29,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 283.2329583329086,
+              "mean_diff_raw": -266.7361408546866,
+              "mean_swarm": 16.49681747822202,
+              "median_diff_raw": -268.7042138617278,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 16.601879670867497,
+            "diff_ci95_log": [
+              -2.8725608468440385,
+              -2.814151589723645
+            ],
+            "geometric_ratio": 0.058229905367549704,
+            "geometric_ratio_ci95": [
+              0.056553915068038745,
+              0.05995556408490009
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": -1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 0.0
+            },
+            "mean_diff": -2.8433562182838417,
+            "mean_diff_log": -2.8433562182838417,
+            "mean_log_conventional": 5.645968872812373,
+            "mean_log_swarm": 2.8026126545285317,
+            "metric": "throughput_rps",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.016686488816170058,
+              "shapiro_p_swarm": 0.3014771898535905,
+              "used_for_selection": false
+            },
+            "p_value": 1.0124005052923195e-29,
+            "scale": "log",
+            "se_diff_log": 0.013816982874561498,
+            "statistic": -205.7870552563799,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "throughput_http@u25": {
+          "p_holm": 2.95339262405065e-17,
+          "p_raw": 1.476696312025325e-17,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 267.94368722530453,
+              "mean_diff_raw": -251.49034690484473,
+              "mean_swarm": 16.453340320459812,
+              "median_diff_raw": -257.4821078410984,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 11.288364318632492,
+            "diff_ci95_log": [
+              -2.8542010644242595,
+              -2.720352124288051
+            ],
+            "geometric_ratio": 0.061588716781223796,
+            "geometric_ratio_ci95": [
+              0.057601822887751626,
+              0.06585156240887599
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": -1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 0.0
+            },
+            "mean_diff": -2.7872765943561553,
+            "mean_diff_log": -2.7872765943561553,
+            "mean_log_conventional": 5.587325180876148,
+            "mean_log_swarm": 2.8000485865199924,
+            "metric": "throughput_rps",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 1.2031116602975351e-05,
+              "shapiro_p_swarm": 0.5827171184467663,
+              "used_for_selection": false
+            },
+            "p_value": 1.476696312025325e-17,
+            "scale": "log",
+            "se_diff_log": 0.030501391853171175,
+            "statistic": -91.38194767549165,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        },
+        "throughput_http@u5": {
+          "p_holm": 4.038220124220671e-27,
+          "p_raw": 8.076440248441342e-28,
+          "result": {
+            "absolute_descriptive": {
+              "mean_conventional": 257.0516055018132,
+              "mean_diff_raw": -240.28884340365022,
+              "mean_swarm": 16.76276209816298,
+              "median_diff_raw": -242.78150620350007,
+              "role": "complemento DESCRIPTIVO en escala original (ms o req/s); no es el contraste primario"
+            },
+            "alternative": "two-sided",
+            "delta": "swarm - conventional",
+            "df": 16.61882087453965,
+            "diff_ci95_log": [
+              -2.766347883983841,
+              -2.6931058272023134
+            ],
+            "geometric_ratio": 0.06523710638548143,
+            "geometric_ratio_ci95": [
+              0.0628912720538575,
+              0.06767043996035031
+            ],
+            "mann_whitney_companion": {
+              "alternative": "two-sided",
+              "cliffs_delta": -1.0,
+              "in_holm": false,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "p_value": 0.00018267179110955002,
+              "role": "complementary_predeclared",
+              "selects_primary": false,
+              "status": "ok",
+              "test": "mann_whitney_u",
+              "u_statistic": 0.0
+            },
+            "mean_diff": -2.729726855593077,
+            "mean_diff_log": -2.729726855593077,
+            "mean_log_conventional": 5.548406971590511,
+            "mean_log_swarm": 2.818680115997434,
+            "metric": "throughput_rps",
+            "n_runs_conventional": 10,
+            "n_runs_swarm": 10,
+            "normality_diagnostic": {
+              "shapiro_p_conventional": 0.4752459133625723,
+              "shapiro_p_swarm": 0.597242557277267,
+              "used_for_selection": false
+            },
+            "p_value": 8.076440248441342e-28,
+            "scale": "log",
+            "se_diff_log": 0.017327130861217555,
+            "statistic": -157.54061520380662,
+            "status": "ok",
+            "test": "welch_t",
+            "test_selection": "fixed",
+            "unit": "run"
+          },
+          "significant_holm": true
+        }
+      },
+      "m": 8,
+      "m_fixed": true,
+      "method": "Holm-Bonferroni",
+      "n_tested": 8,
+      "not_tested": [],
+      "outside_fixed_family": [],
+      "pending_metric_validation": {
+        "excluded_from_holm": true,
+        "hypotheses": {
+          "decision_ms_http@u1": {
+            "confirmatory": false,
+            "p_holm": null,
+            "p_raw": 4.355480338453642e-33,
+            "result": {
+              "alpha": 0.05,
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "delta": "swarm - conventional",
+              "diff_ci95_bootstrap": [
+                8.070517974712166,
+                8.13617945362199
+              ],
+              "geometric_ratio": 3301.888804532871,
+              "geometric_ratio_ci95": [
+                3198.7582759387933,
+                3415.8425216354226
+              ],
+              "legacy": true,
+              "mean_a": 4.186622369192058,
+              "mean_b": -3.9156275795340973,
+              "mean_diff": 8.102249948726156,
+              "median_a": 4.183111048992398,
+              "median_b": -3.9064576513318503,
+              "metric": "decision_ms_mean",
+              "metric_validation": "LEGACY_EXPLORATORY",
+              "n_a": 10,
+              "n_b": 10,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "normal": true,
+              "note": "decision_ms es un campo HIST\u00d3RICO (sem\u00e1ntica distinta de la del indicador com\u00fan): exploratorio, no confirmatorio, excluido de Holm; no se reutiliza como indicador com\u00fan ni como T_conv",
+              "p_value": 4.355480338453642e-33,
+              "scale": "log",
+              "shapiro_p_a": 0.43499434596370135,
+              "shapiro_p_b": 0.4454435881715696,
+              "significant": true,
+              "statistic": 463.71211787238815,
+              "status": "ok",
+              "test": "welch_t",
+              "unit": "run"
+            }
+          },
+          "decision_ms_http@u10": {
+            "confirmatory": false,
+            "p_holm": null,
+            "p_raw": 4.2899764339227784e-34,
+            "result": {
+              "alpha": 0.05,
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "delta": "swarm - conventional",
+              "diff_ci95_bootstrap": [
+                9.983167640093097,
+                10.038300060923028
+              ],
+              "geometric_ratio": 22276.727896961977,
+              "geometric_ratio_ci95": [
+                21658.811321813475,
+                22886.444268382354
+              ],
+              "legacy": true,
+              "mean_a": 6.006238587072554,
+              "mean_b": -4.005059233389822,
+              "mean_diff": 10.011297820462376,
+              "median_a": 6.000887862566142,
+              "median_b": -4.007083609924204,
+              "metric": "decision_ms_mean",
+              "metric_validation": "LEGACY_EXPLORATORY",
+              "n_a": 10,
+              "n_b": 10,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "normal": true,
+              "note": "decision_ms es un campo HIST\u00d3RICO (sem\u00e1ntica distinta de la del indicador com\u00fan): exploratorio, no confirmatorio, excluido de Holm; no se reutiliza como indicador com\u00fan ni como T_conv",
+              "p_value": 4.2899764339227784e-34,
+              "scale": "log",
+              "shapiro_p_a": 0.3430541596060681,
+              "shapiro_p_b": 0.476526740966118,
+              "significant": true,
+              "statistic": 689.379229233228,
+              "status": "ok",
+              "test": "welch_t",
+              "unit": "run"
+            }
+          },
+          "decision_ms_http@u25": {
+            "confirmatory": false,
+            "p_holm": null,
+            "p_raw": 2.202945265020144e-40,
+            "result": {
+              "alpha": 0.05,
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "delta": "swarm - conventional",
+              "diff_ci95_bootstrap": [
+                10.904403418585606,
+                10.953586467269878
+              ],
+              "geometric_ratio": 55783.01724778361,
+              "geometric_ratio_ci95": [
+                54415.45101817208,
+                57158.67591685848
+              ],
+              "legacy": true,
+              "mean_a": 6.8710378516096045,
+              "mean_b": -4.058186900037673,
+              "mean_diff": 10.929224751647277,
+              "median_a": 6.870373682264262,
+              "median_b": -4.061969548882661,
+              "metric": "decision_ms_mean",
+              "metric_validation": "LEGACY_EXPLORATORY",
+              "n_a": 10,
+              "n_b": 10,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "normal": true,
+              "note": "decision_ms es un campo HIST\u00d3RICO (sem\u00e1ntica distinta de la del indicador com\u00fan): exploratorio, no confirmatorio, excluido de Holm; no se reutiliza como indicador com\u00fan ni como T_conv",
+              "p_value": 2.202945265020144e-40,
+              "scale": "log",
+              "shapiro_p_a": 0.735578900055301,
+              "shapiro_p_b": 0.9592375242690583,
+              "significant": true,
+              "statistic": 829.0969958186857,
+              "status": "ok",
+              "test": "welch_t",
+              "unit": "run"
+            }
+          },
+          "decision_ms_http@u5": {
+            "confirmatory": false,
+            "p_holm": null,
+            "p_raw": 1.298732155636997e-25,
+            "result": {
+              "alpha": 0.05,
+              "alternative": "two-sided",
+              "cliffs_delta": 1.0,
+              "delta": "swarm - conventional",
+              "diff_ci95_bootstrap": [
+                9.24091342998984,
+                9.342501937677511
+              ],
+              "geometric_ratio": 10849.514964565135,
+              "geometric_ratio_ci95": [
+                10310.452134125426,
+                11412.92698127378
+              ],
+              "legacy": true,
+              "mean_a": 5.3317050552956715,
+              "mean_b": -3.960170598946978,
+              "mean_diff": 9.291875654242649,
+              "median_a": 5.330800866259348,
+              "median_b": -3.9802108480598837,
+              "metric": "decision_ms_mean",
+              "metric_validation": "LEGACY_EXPLORATORY",
+              "n_a": 10,
+              "n_b": 10,
+              "n_runs_conventional": 10,
+              "n_runs_swarm": 10,
+              "normal": true,
+              "note": "decision_ms es un campo HIST\u00d3RICO (sem\u00e1ntica distinta de la del indicador com\u00fan): exploratorio, no confirmatorio, excluido de Holm; no se reutiliza como indicador com\u00fan ni como T_conv",
+              "p_value": 1.298732155636997e-25,
+              "scale": "log",
+              "shapiro_p_a": 0.7660219567170432,
+              "shapiro_p_b": 0.746945446209803,
+              "significant": true,
+              "statistic": 339.62130056182633,
+              "status": "ok",
+              "test": "welch_t",
+              "unit": "run"
+            }
+          }
+        },
+        "note": "el indicador com\u00fan (time_to_final_config_ms) es operacional y NO es T_conv: su validaci\u00f3n metodol\u00f3gica est\u00e1 pendiente (decisi\u00f3n provisional, no aprobada por el asesor): resultado exploratorio, no confirmatorio, excluido de Holm",
+        "status": "PENDING_METHODOLOGICAL_VALIDATION"
+      }
+    }
+  },
+  "generator_limited_levels": {},
+  "generator_policy": "generator-saturation-v1",
+  "holm_design": {
+    "advisor_backing": "NONE",
+    "alpha": 0.05,
+    "alternative": "two-sided",
+    "applies": true,
+    "excluded": [
+      "time_to_final_config_ms",
+      "t_conv",
+      "proposal_persistence_on",
+      "loads_50_100",
+      "auxiliary_contrasts(rules,bruteforce)"
+    ],
+    "hypotheses": [
+      "L_resp_P95_http@u1",
+      "L_resp_P95_http@u5",
+      "L_resp_P95_http@u10",
+      "L_resp_P95_http@u25",
+      "throughput_http@u1",
+      "throughput_http@u5",
+      "throughput_http@u10",
+      "throughput_http@u25"
+    ],
+    "loads": [
+      1,
+      5,
+      10,
+      25
+    ],
+    "m_fixed": 8,
+    "metrics": [
+      "L_resp_P95_http",
+      "throughput_http"
+    ],
+    "source": "internal_decision_F2.3",
+    "untested_hypothesis_rule": "se registra como no testada y sigue contando en m (conservador)"
+  },
+  "http_runs_excluded_from_contrast": [],
+  "legacy_time_metric": "decision_ms",
+  "n_http_runs_invalid": 0,
+  "n_http_runs_not_comparable": 0,
+  "n_http_runs_proposal_cost": 0,
+  "n_http_runs_used": 80,
+  "oe2_official": false,
+  "official": false,
+  "official_blocked_by": [
+    "[B1] contrato de tiempo oe2-time-contract-v2 sin validar: el indicador com\u00fan `time_to_final_config_ms` es una decisi\u00f3n provisional (estado FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED, validaci\u00f3n PENDING_METHODOLOGICAL_VALIDATION); se resuelve con su aprobaci\u00f3n/validaci\u00f3n expl\u00edcita, NO con equivalencia con T_conv (NOT_ESTABLISHED); `decision_ms` es LEGACY; ninguno puede sustituir a T_conv en un contraste confirmatorio",
+    "[B13] alcance del comparador pendiente de validaci\u00f3n: solo ['decision_table'] implementado(s) como convencional independiente (LMS real y LLM monol\u00edtico no implementados) y OE2 habla de \u00absistemas convencionales\u00bb; OE2 solo puede concluir sobre ese comparador",
+    "[B5] decisi\u00f3n B5-C de persistencia ('off') sin resolver: sin aprobaci\u00f3n del asesor (estado FROZEN_PROVISIONAL_NOT_ADVISOR_APPROVED). Se resuelve con su aprobaci\u00f3n expl\u00edcita (comparaci\u00f3n OFF com\u00fan aceptada, costo ON de la propuesta aparte, sin persistencia en el baseline, L_resp aprobado intacto); no modificando L_resp ni activando persistencia en el baseline",
+    "[P6] hardware objetivo (P6) sin aprobaci\u00f3n metodol\u00f3gica (estado PENDING_EXTERNAL_ANSWER): cumplir el criterio operativo del c\u00f3digo (`meets_target`) es solo compatibilidad t\u00e9cnica, no aprobaci\u00f3n del requisito; se resuelve con su aprobaci\u00f3n expl\u00edcita, no con el hardware medido",
+    "[PEND] decisiones metodol\u00f3gicas de D.5 sin cerrar: l_resp_literal_hypothesis_h1, latency_statistic. Se resuelven con una decisi\u00f3n expl\u00edcita (`status = DECIDED` y `chosen` entre sus opciones); ning\u00fan c\u00f3digo las decide por defecto",
+    "[DEF] definici\u00f3n PENDING (dependencia de oe2): common_time_indicator_oe2",
+    "[DEF] definici\u00f3n PENDING (dependencia de oe2): statistical_unit_performance"
+  ],
+  "persistence_conditions": {
+    "comparison": "off",
+    "comparison_off_is_literal_l_resp": false,
+    "note": "el contraste usa persistencia com\u00fan OFF (NO es literalmente el L_resp aprobado); la condici\u00f3n ON de la propuesta se reporta aparte",
+    "proposal_cost": "on"
+  },
+  "primary_analysis": {
+    "alpha": 0.05,
+    "alternative": "two-sided",
+    "complement": "mann_whitney_u (predeclarado; fuera de Holm; no cambia el resultado primario)",
+    "conditional_on": "la unidad estad\u00edstica y el estad\u00edstico de latencia (P95 o media) que fije el asesor",
+    "descriptive_companions": [
+      "diferencias absolutas en escala original (ms, req/s)",
+      "tasas de error/timeout por corrida y celda"
+    ],
+    "estimand": "raz\u00f3n de medias geom\u00e9tricas de los valores por corrida (swarm / decision_table)",
+    "scale": "log",
+    "sensitivity": "oe/paired_runs.py (B): descriptiva, fuera de Holm",
+    "status": "INTERNAL_STUDY_DECISION_NOT_ADVISOR_APPROVED",
+    "structure": "independent_runs",
+    "test": "welch_t",
+    "test_selection": "FIJA: Shapiro es solo diagn\u00f3stico y NUNCA selecciona la prueba",
+    "unit": "run"
+  },
+  "proposal_persistence_cost": {
+    "confirmatory": false,
+    "family": "PENDING_METHODOLOGICAL_DECISION",
+    "in_swarm_vs_decision_table_contrast": false,
+    "l_resp_literal": true,
+    "note": "medici\u00f3n complementaria de la propuesta con persistencia s\u00edncrona m\u00ednima; no se compara contra decision_table",
+    "role": "proposal_persistence_cost"
+  },
+  "proposal_system": "swarm",
+  "runs_not_analyzable": [],
+  "stress_note": "> 25 usuarios: medido y conservado; fuera del contraste del umbral de 2 s y de la familia confirmatoria",
+  "stress_regime_descriptive_only": {},
+  "t_conv_contrast": "not_performed_t_conv_is_proposal_only",
+  "time_metric_validation": "PENDING_METHODOLOGICAL_VALIDATION"
+}

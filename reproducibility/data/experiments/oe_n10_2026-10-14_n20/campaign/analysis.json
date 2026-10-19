@@ -1,0 +1,943 @@
+{
+  "all_loads_including_stress": {
+    "error_rate": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 54,
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": false,
+      "n_params": 6,
+      "n_runs": 60,
+      "response": "error_rate",
+      "status": "undefined_zero_residual_variance",
+      "unit": "run"
+    },
+    "p95_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 54,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9199521054520483,
+        "residual_max": 0.18449052145144584,
+        "residual_min": -0.04577648222437425,
+        "residual_sd": 0.040432766416078215,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.5497444875089049e-06
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.749158889279252,
+              4.800427515670157
+            ],
+            "geometric_ci": [
+              115.48710622090863,
+              121.5623762321022
+            ],
+            "geometric_mean": 118.48580951482268,
+            "mean": 4.774793202474704,
+            "n": 10
+          },
+          "10": {
+            "ci": [
+              6.850754598348761,
+              6.902023224739667
+            ],
+            "geometric_ci": [
+              944.5934264444917,
+              994.2843426362235
+            ],
+            "geometric_mean": 969.1204538502216,
+            "mean": 6.876388911544214,
+            "n": 10
+          },
+          "100": {
+            "ci": [
+              9.173798061446696,
+              9.225066687837604
+            ],
+            "geometric_ci": [
+              9641.173007198591,
+              10148.352822851122
+            ],
+            "geometric_mean": 9891.512791438925,
+            "mean": 9.19943237464215,
+            "n": 10
+          },
+          "25": {
+            "ci": [
+              7.7648651371095365,
+              7.816133763500442
+            ],
+            "geometric_ci": [
+              2356.3406841780347,
+              2480.2974302009115
+            ],
+            "geometric_mean": 2417.524714174529,
+            "mean": 7.790499450304989,
+            "n": 10
+          },
+          "5": {
+            "ci": [
+              6.131413315414604,
+              6.18268194180551
+            ],
+            "geometric_ci": [
+              460.0859479568767,
+              484.28905126130365
+            ],
+            "geometric_mean": 472.03240061959025,
+            "mean": 6.157047628610057,
+            "n": 10
+          },
+          "50": {
+            "ci": [
+              8.465731202253945,
+              8.516999828644852
+            ],
+            "geometric_ci": [
+              4749.198767403753,
+              4999.033279609955
+            ],
+            "geometric_mean": 4872.5150271429575,
+            "mean": 8.491365515449399,
+            "n": 10
+          }
+        },
+        "swarm_N": {
+          "20": {
+            "ci": [
+              7.204456015964995,
+              7.225386345043512
+            ],
+            "geometric_ci": [
+              1345.4126069595588,
+              1373.8693007035758
+            ],
+            "geometric_mean": 1359.5665035154786,
+            "mean": 7.214921180504254,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.0016348086000571424,
+      "n_params": 6,
+      "n_runs": 60,
+      "reading_rule": "sin interacciones significativas",
+      "response": "p95_ms",
+      "single_level_factors": [
+        "swarm_N"
+      ],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 16010.20481806692,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 2.6806708034374055e-84,
+          "partial_eta_sq": 0.9993258849789609,
+          "significant": true,
+          "ss": 130.86810262626048
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms_mean": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 54,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.45289477171937986,
+        "residual_max": 0.2056642460673288,
+        "residual_min": -0.061839842524722854,
+        "residual_sd": 0.04431769460273426,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 6.834436525332076e-07
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.098201772771385,
+              4.154396476436044
+            ],
+            "geometric_ci": [
+              60.23187954958614,
+              63.713500343154266
+            ],
+            "geometric_mean": 61.94823547407451,
+            "mean": 4.126299124603714,
+            "n": 10
+          },
+          "10": {
+            "ci": [
+              6.016570082047201,
+              6.072764785711859
+            ],
+            "geometric_ci": [
+              410.1693331213365,
+              433.8786061800257
+            ],
+            "geometric_mean": 421.85743865964497,
+            "mean": 6.04466743387953,
+            "n": 10
+          },
+          "100": {
+            "ci": [
+              8.253777361239534,
+              8.309972064904192
+            ],
+            "geometric_ci": [
+              3842.111488431757,
+              4064.199448318822
+            ],
+            "geometric_mean": 3951.5955501118474,
+            "mean": 8.281874713071863,
+            "n": 10
+          },
+          "25": {
+            "ci": [
+              6.882729849048414,
+              6.938924552713073
+            ],
+            "geometric_ci": [
+              975.2851102772653,
+              1031.66012206489
+            ],
+            "geometric_mean": 1003.0766450858644,
+            "mean": 6.910827200880743,
+            "n": 10
+          },
+          "5": {
+            "ci": [
+              5.341000639914665,
+              5.397195343579323
+            ],
+            "geometric_ci": [
+              208.72146085438223,
+              220.78631726611488
+            ],
+            "geometric_mean": 214.66914700637028,
+            "mean": 5.369097991746994,
+            "n": 10
+          },
+          "50": {
+            "ci": [
+              7.558916187287281,
+              7.615110890951939
+            ],
+            "geometric_ci": [
+              1917.765887565722,
+              2028.6197018792477
+            ],
+            "geometric_mean": 1972.4141712905448,
+            "mean": 7.58701353911961,
+            "n": 10
+          }
+        },
+        "swarm_N": {
+          "20": {
+            "ci": [
+              6.3751593046982995,
+              6.39810069640252
+            ],
+            "geometric_ci": [
+              587.0789479273411,
+              600.7030362736986
+            ],
+            "geometric_mean": 593.8519230854796,
+            "mean": 6.38663000055041,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.0019640580549012223,
+      "n_params": 6,
+      "n_runs": 60,
+      "reading_rule": "sin interacciones significativas",
+      "response": "t_conv_ms_mean",
+      "single_level_factors": [
+        "swarm_N"
+      ],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 11780.773272637354,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 1.0526340101336868e-80,
+          "partial_eta_sq": 0.9990840916856225,
+          "significant": true,
+          "ss": 115.69061319544215
+        }
+      },
+      "unit": "run"
+    },
+    "throughput_http": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 54,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.19915977101674295,
+        "residual_max": 0.058321573798414406,
+        "residual_min": -0.21011246596377786,
+        "residual_sd": 0.04342211245793768,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.8202141523887783e-07
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              2.3303596423156567,
+              2.3854187505102584
+            ],
+            "geometric_ci": [
+              10.281638580504081,
+              10.863610855164412
+            ],
+            "geometric_mean": 10.568619611474404,
+            "mean": 2.3578891964129576,
+            "n": 10
+          },
+          "10": {
+            "ci": [
+              2.736304691353527,
+              2.7913637995481286
+            ],
+            "geometric_ci": [
+              15.429861516039049,
+              16.303238997057534
+            ],
+            "geometric_mean": 15.860539712994797,
+            "mean": 2.763834245450828,
+            "n": 10
+          },
+          "100": {
+            "ci": [
+              2.7194819614420536,
+              2.7745410696366553
+            ],
+            "geometric_ci": [
+              15.172460289282869,
+              16.031268071487034
+            ],
+            "geometric_mean": 15.595953904826898,
+            "mean": 2.7470115155393544,
+            "n": 10
+          },
+          "25": {
+            "ci": [
+              2.7313345761840986,
+              2.7863936843787003
+            ],
+            "geometric_ci": [
+              15.35336358648726,
+              16.22241105009466
+            ],
+            "geometric_mean": 15.781906573717635,
+            "mean": 2.7588641302813994,
+            "n": 10
+          },
+          "5": {
+            "ci": [
+              2.735772711736903,
+              2.7908318199315048
+            ],
+            "geometric_ci": [
+              15.421655327181318,
+              16.294568312744293
+            ],
+            "geometric_mean": 15.85210447304562,
+            "mean": 2.763302265834204,
+            "n": 10
+          },
+          "50": {
+            "ci": [
+              2.7330354273644493,
+              2.788094535559051
+            ],
+            "geometric_ci": [
+              15.379499593494147,
+              16.2500264352502
+            ],
+            "geometric_mean": 15.808772088786643,
+            "mean": 2.76056498146175,
+            "n": 10
+          }
+        },
+        "swarm_N": {
+          "20": {
+            "ci": [
+              2.6806721624326264,
+              2.7031499492275377
+            ],
+            "geometric_ci": [
+              14.594900143198577,
+              14.926676021585342
+            ],
+            "geometric_mean": 14.759855893771952,
+            "mean": 2.691911055830082,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.001885479850309786,
+      "n_params": 6,
+      "n_runs": 60,
+      "reading_rule": "sin interacciones significativas",
+      "response": "throughput_http",
+      "single_level_factors": [
+        "swarm_N"
+      ],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 142.21566882384343,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 8.34648827939693e-30,
+          "partial_eta_sq": 0.9294189929501057,
+          "significant": true,
+          "ss": 1.3407238898284322
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "campaign_spec": {
+    "advisor_approved": false,
+    "sha256": "efc891a5c98d40b85ba20d8b7b4eb5ec2bf33318a44858676c7e67b3fbdc79b8",
+    "status": "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED",
+    "version": "oe-campaign-spec-v1"
+  },
+  "contrast_regime_le_25": {
+    "error_rate": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 36,
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": false,
+      "n_params": 4,
+      "n_runs": 40,
+      "response": "error_rate",
+      "status": "undefined_zero_residual_variance",
+      "unit": "run"
+    },
+    "p95_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 36,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.8265301512100649,
+        "residual_max": 0.18449052145144762,
+        "residual_min": -0.04577648222437425,
+        "residual_sd": 0.045127494578417984,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.3397299989485329e-05
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.745851151564192,
+              4.8037352533852165
+            ],
+            "geometric_ci": [
+              115.10573624769867,
+              121.96513843734289
+            ],
+            "geometric_mean": 118.48580951482268,
+            "mean": 4.774793202474704,
+            "n": 10
+          },
+          "10": {
+            "ci": [
+              6.847446860633702,
+              6.905330962454726
+            ],
+            "geometric_ci": [
+              941.4741209087866,
+              997.5786197545964
+            ],
+            "geometric_mean": 969.1204538502216,
+            "mean": 6.876388911544214,
+            "n": 10
+          },
+          "25": {
+            "ci": [
+              7.761557399394477,
+              7.819441501215501
+            ],
+            "geometric_ci": [
+              2348.559403539835,
+              2488.51518715503
+            ],
+            "geometric_mean": 2417.524714174529,
+            "mean": 7.790499450304989,
+            "n": 10
+          },
+          "5": {
+            "ci": [
+              6.128105577699545,
+              6.185989679520569
+            ],
+            "geometric_ci": [
+              458.56661847163565,
+              485.8936046791103
+            ],
+            "geometric_mean": 472.03240061959025,
+            "mean": 6.157047628610057,
+            "n": 10
+          }
+        },
+        "swarm_N": {
+          "20": {
+            "ci": [
+              6.3852112727782355,
+              6.414153323688748
+            ],
+            "geometric_ci": [
+              593.0100062362637,
+              610.4237106662748
+            ],
+            "geometric_mean": 601.6538610106071,
+            "mean": 6.3996822982334916,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.0020364907669251434,
+      "n_params": 4,
+      "n_runs": 40,
+      "reading_rule": "sin interacciones significativas",
+      "response": "p95_ms",
+      "single_level_factors": [
+        "swarm_N"
+      ],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 7956.100728163694,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 7.754266148230771e-51,
+          "partial_eta_sq": 0.9984939949419082,
+          "significant": true,
+          "ss": 48.60757702089531
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms_mean": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 36,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.4536606837496906,
+        "residual_max": 0.20566424606733325,
+        "residual_min": -0.061839842524718414,
+        "residual_sd": 0.050596241227866275,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.490528256454598e-05
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.0938497497120325,
+              4.158748499495396
+            ],
+            "geometric_ci": [
+              59.97031859336717,
+              63.99138721227049
+            ],
+            "geometric_mean": 61.94823547407451,
+            "mean": 4.126299124603714,
+            "n": 10
+          },
+          "10": {
+            "ci": [
+              6.012218058987848,
+              6.077116808771212
+            ],
+            "geometric_ci": [
+              408.38814542164675,
+              435.7709706992956
+            ],
+            "geometric_mean": 421.85743865964497,
+            "mean": 6.04466743387953,
+            "n": 10
+          },
+          "25": {
+            "ci": [
+              6.8783778259890616,
+              6.943276575772425
+            ],
+            "geometric_ci": [
+              971.0498696050854,
+              1036.1597147692403
+            ],
+            "geometric_mean": 1003.0766450858644,
+            "mean": 6.910827200880743,
+            "n": 10
+          },
+          "5": {
+            "ci": [
+              5.336648616855312,
+              5.401547366638676
+            ],
+            "geometric_ci": [
+              207.81507398263355,
+              221.74927830448723
+            ],
+            "geometric_mean": 214.66914700637028,
+            "mean": 5.369097991746994,
+            "n": 10
+          }
+        },
+        "swarm_N": {
+          "20": {
+            "ci": [
+              5.596498250331904,
+              5.628947625223586
+            ],
+            "geometric_ci": [
+              269.4810979282822,
+              278.36901490331144
+            ],
+            "geometric_mean": 273.88900628787337,
+            "mean": 5.612722937777745,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.002559979626388434,
+      "n_params": 4,
+      "n_runs": 40,
+      "reading_rule": "sin interacciones significativas",
+      "response": "t_conv_ms_mean",
+      "single_level_factors": [
+        "swarm_N"
+      ],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 5391.266333552024,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 8.432673985928884e-48,
+          "partial_eta_sq": 0.9977791211353982,
+          "significant": true,
+          "ss": 41.40459592298116
+        }
+      },
+      "unit": "run"
+    },
+    "throughput_http": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 36,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.1877450814968519,
+        "residual_max": 0.05832157379841618,
+        "residual_min": -0.21011246596377608,
+        "residual_sd": 0.04917978251162412,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 2.9328108232909343e-06
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "20"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              2.326348252637629,
+              2.3894301401882863
+            ],
+            "geometric_ci": [
+              10.2404775333233,
+              10.907276553127028
+            ],
+            "geometric_mean": 10.568619611474404,
+            "mean": 2.3578891964129576,
+            "n": 10
+          },
+          "10": {
+            "ci": [
+              2.732293301675499,
+              2.7953751892261565
+            ],
+            "geometric_ci": [
+              15.368090305848984,
+              16.368768986979756
+            ],
+            "geometric_mean": 15.860539712994797,
+            "mean": 2.763834245450828,
+            "n": 10
+          },
+          "25": {
+            "ci": [
+              2.7273231865060708,
+              2.790405074056728
+            ],
+            "geometric_ci": [
+              15.291898624650788,
+              16.287616156443082
+            ],
+            "geometric_mean": 15.781906573717635,
+            "mean": 2.7588641302813994,
+            "n": 10
+          },
+          "5": {
+            "ci": [
+              2.7317613220588752,
+              2.7948432096095326
+            ],
+            "geometric_ci": [
+              15.35991696927682,
+              16.360063451318528
+            ],
+            "geometric_mean": 15.85210447304562,
+            "mean": 2.763302265834204,
+            "n": 10
+          }
+        },
+        "swarm_N": {
+          "20": {
+            "ci": [
+              2.6452019876071833,
+              2.676742931382512
+            ],
+            "geometric_ci": [
+              14.086290051812187,
+              14.537665925251632
+            ],
+            "geometric_mean": 14.3101984227837,
+            "mean": 2.6609724594948476,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.002418651007890649,
+      "n_params": 4,
+      "n_runs": 40,
+      "reading_rule": "sin interacciones significativas",
+      "response": "throughput_http",
+      "single_level_factors": [
+        "swarm_N"
+      ],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 168.81887113329685,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 2.949501782841423e-21,
+          "partial_eta_sq": 0.9336352454542546,
+          "significant": true,
+          "ss": 1.22494179845253
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "experiment": "oe4",
+  "factors": [
+    "load",
+    "swarm_N"
+  ],
+  "p95_by_load_median_ms": {
+    "1": 118.37279999999998,
+    "10": 964.2599499999999,
+    "100": 10115.2161,
+    "25": 2424.5625,
+    "5": 459.4223999999999,
+    "50": 4947.0205
+  },
+  "rnf04": {
+    "u1": {
+      "runs": 10,
+      "runs_meeting_rnf04": 0
+    },
+    "u10": {
+      "runs": 10,
+      "runs_meeting_rnf04": 0
+    },
+    "u100": {
+      "runs": 10,
+      "runs_meeting_rnf04": 0
+    },
+    "u25": {
+      "runs": 10,
+      "runs_meeting_rnf04": 0
+    },
+    "u5": {
+      "runs": 10,
+      "runs_meeting_rnf04": 0
+    },
+    "u50": {
+      "runs": 10,
+      "runs_meeting_rnf04": 0
+    }
+  },
+  "runs_per_cell": [
+    10
+  ],
+  "spearman_load_vs_p95": {
+    "n": 60,
+    "p_value": 5.866157006691738e-47,
+    "rho": 0.9861502720116282,
+    "status": "ok"
+  },
+  "unit": "run"
+}

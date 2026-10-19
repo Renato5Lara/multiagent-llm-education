@@ -1,0 +1,13 @@
+{
+ "campaign_id": "n9b-oe2-aux",
+ "entries_total": 161,
+ "failed_run_ids": [],
+ "final_state_counts": {
+  "completed": 160,
+  "failed": 0,
+  "interrupted": 0,
+  "invalid": 0
+ },
+ "journal": "experiments\\oe_n9b_2026-10-14\\campaign_final.journal\\runs.journal.jsonl",
+ "runs_with_final_state": 160
+}

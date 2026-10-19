@@ -1,0 +1,770 @@
+{
+  "OE1_COMPLIANCE_SCORE": "BLOCKED_DEFINITION",
+  "determinism": {
+    "batch_seed": 26093001,
+    "identical": 20,
+    "mismatches": [],
+    "n": 20,
+    "rate": 1.0
+  },
+  "dimensions": {
+    "calidad": {
+      "met": 0,
+      "not_measured": 1,
+      "not_met": 1,
+      "requirements": [
+        "RNF03",
+        "RNF05"
+      ]
+    },
+    "confiabilidad": {
+      "met": 2,
+      "not_measured": 0,
+      "not_met": 0,
+      "requirements": [
+        "REL-C",
+        "REL-D"
+      ]
+    },
+    "eficiencia": {
+      "met": 2,
+      "not_measured": 0,
+      "not_met": 1,
+      "requirements": [
+        "RNF01",
+        "RNF02",
+        "RNF04"
+      ]
+    },
+    "funcionalidad": {
+      "met": 5,
+      "not_measured": 0,
+      "not_met": 1,
+      "requirements": [
+        "RF01",
+        "RF02",
+        "RF03",
+        "RF04",
+        "RF05",
+        "RF06"
+      ]
+    }
+  },
+  "evaluated_ids": [
+    "RF01",
+    "RF02",
+    "RF03",
+    "RF04",
+    "RF05",
+    "RF06",
+    "REL-C",
+    "REL-D",
+    "RNF01",
+    "RNF02",
+    "RNF04",
+    "RNF03"
+  ],
+  "evidence_by_requirement": {
+    "REL-C": {
+      "denominator": null,
+      "kind": "automated",
+      "numerator": null,
+      "source": "observaciones (status)",
+      "status": "MET"
+    },
+    "REL-D": {
+      "denominator": null,
+      "kind": "probe",
+      "numerator": null,
+      "source": "sonda de determinismo",
+      "status": "MET"
+    },
+    "RF01": {
+      "denominator": 9500,
+      "kind": "automated",
+      "numerator": 9500,
+      "source": "observaciones (error_code \u2260 ProfileError)",
+      "status": "MET"
+    },
+    "RF02": {
+      "denominator": 9500,
+      "kind": "automated",
+      "numerator": 9500,
+      "source": "observaciones (w_valid)",
+      "status": "MET"
+    },
+    "RF03": {
+      "denominator": 9500,
+      "kind": "automated",
+      "numerator": 8600,
+      "source": "observaciones (inflight_overlap)",
+      "status": "NOT_MET"
+    },
+    "RF04": {
+      "denominator": 9500,
+      "kind": "automated",
+      "numerator": 9500,
+      "source": "observaciones (iterations_logged)",
+      "status": "MET"
+    },
+    "RF05": {
+      "denominator": 9500,
+      "kind": "automated",
+      "numerator": 9500,
+      "source": "observaciones (package_valid)",
+      "status": "MET"
+    },
+    "RF06": {
+      "denominator": null,
+      "kind": "probe",
+      "numerator": null,
+      "source": "sonda de persistencia",
+      "status": "MET"
+    },
+    "RNF01": {
+      "denominator": null,
+      "kind": "automated",
+      "numerator": null,
+      "source": "observaciones (latency_ms)",
+      "status": "MET"
+    },
+    "RNF02": {
+      "denominator": null,
+      "kind": "automated",
+      "numerator": null,
+      "source": "observaciones (k_stop, stop_reason)",
+      "status": "MET"
+    },
+    "RNF03": {
+      "denominator": null,
+      "kind": "external",
+      "numerator": null,
+      "source": "resultado oficial de F1",
+      "status": "NOT_MET"
+    },
+    "RNF04": {
+      "denominator": null,
+      "kind": "benchmark",
+      "numerator": null,
+      "source": "lotes (throughput_rps)",
+      "status": "NOT_MET"
+    },
+    "RNF05": {
+      "denominator": null,
+      "kind": "external",
+      "numerator": null,
+      "source": "SUS (panel humano)",
+      "status": "NOT_MEASURED"
+    }
+  },
+  "f1_definition": {
+    "formula": "P_i = {m : e_m \u2265 1}",
+    "full_rule_version": "gold-v2-cand-A+incl-ge1+samples+panel-arq-ac1-maj-tie0-v2",
+    "official": true,
+    "panel_protocol_version": "panel-arq-ac1-maj-tie0-v2",
+    "rule_version": "gold-v2-cand-A+incl-ge1",
+    "selected": "v2",
+    "status": "HISTORICAL_OFFICIAL_V2"
+  },
+  "pending_decisions": [
+    "Agregaci\u00f3n de los requisitos en un \u00abpuntaje de cumplimiento\u00bb por condici\u00f3n y mapa requisito\u2192dimensi\u00f3n: definici\u00f3n operativa de este estudio, por confirmar con el asesor.",
+    "Latencia en proceso (sin HTTP): sustituto exploratorio de RNF01; la medici\u00f3n oficial es HTTP (Locust/JMeter) en el hardware objetivo.",
+    "RNF03 (F1_adapt) depende de la regla v3, cuyo pre-registro no est\u00e1 sellado (PENDING_ADVISOR); RNF05 depende del panel humano."
+  ],
+  "persistence": {
+    "complete": 20,
+    "failures": [],
+    "n": 20,
+    "rate": 1.0
+  },
+  "relationship": {
+    "OE1_COMPLIANCE_SCORE": "BLOCKED_DEFINITION",
+    "compliance_score_note": "No existe una definici\u00f3n aprobada del \u00abpuntaje de cumplimiento\u00bb (ver `oe/definitions.py`: compliance_score_oe1 PENDING). `compliance_score` por condici\u00f3n es una raz\u00f3n EXPLORATORIA (requisitos cumplidos / aplicables, con numerador, denominador e ids) y NO se usa para declarar ning\u00fan resultado oficial de OE1.",
+    "n_conditions": 14,
+    "per_condition": {
+      "swarm|batch|bc0|h1|pso|r1|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011639493275790787,
+        "latency_p95_ms": 80.05441500718007,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 50.2619,
+        "throughput_median_rps": 16.024008066225406
+      },
+      "swarm|batch|bc1|h0|pso|r1|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.01656337985093268,
+        "latency_p95_ms": 114.84093999752076,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 72.9286,
+        "throughput_median_rps": 11.48548183793937
+      },
+      "swarm|batch|bc1|h1|cognitive|r1|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.0211536460671076,
+        "latency_p95_ms": 75.96976999338948,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 51.9546,
+        "throughput_median_rps": 15.809688867699839
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011722526795544726,
+        "latency_p95_ms": 102.42765001021326,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 62.3347,
+        "throughput_median_rps": 13.223339304936438
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c10": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011909352214991089,
+        "latency_p95_ms": 876.7216800100867,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 370.772,
+        "throughput_median_rps": 17.452020077499984
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c25": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011909352214991089,
+        "latency_p95_ms": 2143.2097200144194,
+        "n_applicable": 9,
+        "n_met": 7,
+        "not_met": [
+          "RNF01",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 838.4758,
+        "throughput_median_rps": 17.616373587776792
+      },
+      "swarm|batch|bc1|h1|pso|r1|N20|c50": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.875,
+        "gap_vs_optimum": 0.011909352214991089,
+        "latency_p95_ms": 4584.4450899909125,
+        "n_applicable": 8,
+        "n_met": 7,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 1732.7093,
+        "throughput_median_rps": 16.58340085817949
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.008950703953195655,
+        "latency_p95_ms": 109.16502501058856,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 70.2029,
+        "throughput_median_rps": 12.122701523676545
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c10": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.008950703953195655,
+        "latency_p95_ms": 956.7188250017347,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 403.3763,
+        "throughput_median_rps": 15.673784654731397
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c25": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.008950703953195655,
+        "latency_p95_ms": 2335.2769500212157,
+        "n_applicable": 9,
+        "n_met": 7,
+        "not_met": [
+          "RNF01",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 857.9688,
+        "throughput_median_rps": 15.526141418621238
+      },
+      "swarm|batch|bc1|h1|pso|r1|N30|c50": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.875,
+        "gap_vs_optimum": 0.008950703953195655,
+        "latency_p95_ms": 4184.322060002887,
+        "n_applicable": 8,
+        "n_met": 7,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 1765.0693,
+        "throughput_median_rps": 15.266840168181561
+      },
+      "swarm|batch|bc1|h1|pso|r2|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011639493275790787,
+        "latency_p95_ms": 101.56302998511818,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 61.7398,
+        "throughput_median_rps": 13.317148440564605
+      },
+      "swarm|batch|bc1|h1|social|r1|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.8888888888888888,
+        "gap_vs_optimum": 0.011702213129227642,
+        "latency_p95_ms": 101.5367449945188,
+        "n_applicable": 9,
+        "n_met": 8,
+        "not_met": [
+          "RNF04"
+        ],
+        "t_conv_ms_median": 62.3542,
+        "throughput_median_rps": 13.07775728023352
+      },
+      "swarm|sequential|bc1|h1|pso|r1|N20|c1": {
+        "applicable_ids": [
+          "RF01",
+          "RF02",
+          "RF03",
+          "RF04",
+          "RF05",
+          "REL-C",
+          "RNF01",
+          "RNF02",
+          "RNF04"
+        ],
+        "compliance_score": 0.7777777777777778,
+        "gap_vs_optimum": 0.011639493275790787,
+        "latency_p95_ms": 143.83851500751913,
+        "n_applicable": 9,
+        "n_met": 7,
+        "not_met": [
+          "RF03",
+          "RNF04"
+        ],
+        "t_conv_ms_median": 101.4816,
+        "throughput_median_rps": 8.751383163399966
+      }
+    },
+    "request_level_functional_compliance_vs_gap": {
+      "alpha": 0.05,
+      "alternative": "two-sided",
+      "cliffs_delta": 0.02807248062015504,
+      "mean_a": 0.012706981029799424,
+      "mean_b": 0.011639493275790787,
+      "median_a": 0.00833629666684485,
+      "median_b": 0.007792650437786042,
+      "n_a": 8600,
+      "n_b": 900,
+      "n_compliant": 8600,
+      "n_non_compliant": 900,
+      "normal": false,
+      "p_value": 0.16424068166262829,
+      "shapiro_p_a": 1.1882490297304783e-66,
+      "shapiro_p_b": 9.341491407659005e-26,
+      "significant": false,
+      "statistic": 3978640.5,
+      "status": "ok",
+      "test": "mann_whitney_u"
+    },
+    "spearman_compliance_vs_performance": {
+      "gap_vs_optimum": {
+        "n": 14,
+        "p_value": 0.5615716777321904,
+        "rho": 0.16984862140095108,
+        "status": "ok"
+      },
+      "latency_p95_ms": {
+        "n": 14,
+        "p_value": 0.006141875650196149,
+        "rho": -0.6916272972839623,
+        "status": "ok"
+      },
+      "t_conv_ms_median": {
+        "n": 14,
+        "p_value": 0.006141875650196149,
+        "rho": -0.6916272972839623,
+        "status": "ok"
+      },
+      "throughput_median_rps": {
+        "n": 14,
+        "p_value": 0.647397145222614,
+        "rho": -0.1341963412640524,
+        "status": "ok"
+      }
+    }
+  },
+  "requirements_universe": [
+    "RF01",
+    "RF02",
+    "RF03",
+    "RF04",
+    "RF05",
+    "RF06",
+    "REL-C",
+    "REL-D",
+    "RNF01",
+    "RNF02",
+    "RNF04",
+    "RNF03",
+    "RNF05"
+  ],
+  "requirements_version": "RF01-RF06+RNF01-RNF05 (MS \u00a7RF/RNF, 2026-09-23) + REL-C/REL-D (oe1, propias de este estudio)",
+  "run_labels": [
+    "n1-oe3",
+    "n1-oe4"
+  ],
+  "runs": [
+    "experiments\\oe_n1_2026-10-05\\oe3_run",
+    "experiments\\oe_n1_2026-10-05\\oe4_run"
+  ],
+  "schema": "oe1-report-v2",
+  "table": [
+    {
+      "denominator": 9500,
+      "dimension": "funcionalidad",
+      "evidence_kind": "automated",
+      "id": "RF01",
+      "indicator": "proporci\u00f3n de peticiones cuyo perfil es aceptado y validado",
+      "kind": "RF",
+      "n": 9500,
+      "numerator": 9500,
+      "source": "observaciones (error_code \u2260 ProfileError)",
+      "statement": "Perfil JSON estandarizado",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "denominator": 9500,
+      "dimension": "funcionalidad",
+      "evidence_kind": "automated",
+      "id": "RF02",
+      "indicator": "proporci\u00f3n de ciclos con W normalizada (\u03a3 = 1)",
+      "kind": "RF",
+      "n": 9500,
+      "numerator": 9500,
+      "source": "observaciones (w_valid)",
+      "statement": "AG1 asigna el vector W",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "denominator": 9500,
+      "dimension": "funcionalidad",
+      "evidence_kind": "automated",
+      "id": "RF03",
+      "indicator": "proporci\u00f3n de ciclos con peticiones en vuelo solapadas (inflight_overlap)",
+      "kind": "RF",
+      "n": 9500,
+      "numerator": 8600,
+      "source": "observaciones (inflight_overlap)",
+      "statement": "Despacho concurrente a AG2\u2013AG4 con trazas",
+      "status": "NOT_MET",
+      "threshold": "= 100 %",
+      "value": 0.9052631578947369
+    },
+    {
+      "denominator": 9500,
+      "dimension": "funcionalidad",
+      "evidence_kind": "automated",
+      "id": "RF04",
+      "indicator": "proporci\u00f3n de ciclos con iteraciones registradas = k_stop + 1",
+      "kind": "RF",
+      "n": 9500,
+      "numerator": 9500,
+      "source": "observaciones (iterations_logged)",
+      "statement": "AG0 ejecuta PSO y \ud835\udcd5 con log de iteraciones",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "denominator": 9500,
+      "dimension": "funcionalidad",
+      "evidence_kind": "automated",
+      "id": "RF05",
+      "indicator": "proporci\u00f3n de peticiones con paquete v\u00e1lido y cadena de hashes \u00edntegra",
+      "kind": "RF",
+      "n": 9500,
+      "numerator": 9500,
+      "source": "observaciones (package_valid)",
+      "statement": "Paquete con las 4 modalidades v\u00e1lidas",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "funcionalidad",
+      "evidence_kind": "probe",
+      "id": "RF06",
+      "indicator": "proporci\u00f3n de ciclos persistidos completos (ciclo, iteraciones, mensajes, paquete)",
+      "kind": "RF",
+      "n": 20,
+      "reason": null,
+      "source": "sonda de persistencia",
+      "statement": "M\u00e9tricas de cada ciclo en PostgreSQL",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "confiabilidad",
+      "evidence_kind": "automated",
+      "id": "REL-C",
+      "indicator": "tasa de ciclos completados",
+      "kind": "RNF",
+      "n": 9500,
+      "source": "observaciones (status)",
+      "statement": "Los ciclos terminan sin error",
+      "status": "MET",
+      "threshold": "\u2265 99%",
+      "value": 1.0
+    },
+    {
+      "dimension": "confiabilidad",
+      "evidence_kind": "probe",
+      "id": "REL-D",
+      "indicator": "proporci\u00f3n de pares id\u00e9nticos (S, \ud835\udcd5, k_stop, motivo)",
+      "kind": "RNF",
+      "n": 20,
+      "reason": null,
+      "source": "sonda de determinismo",
+      "statement": "Reproducibilidad: misma semilla \u21d2 mismo resultado",
+      "status": "MET",
+      "threshold": "= 100 %",
+      "value": 1.0
+    },
+    {
+      "dimension": "eficiencia",
+      "evidence_kind": "automated",
+      "id": "RNF01",
+      "indicator": "P95 de la latencia por petici\u00f3n (EN PROCESO, sin HTTP)",
+      "kind": "RNF",
+      "n": 8700,
+      "scope": "en proceso, sin HTTP; \u2264 25 usuarios",
+      "source": "observaciones (latency_ms)",
+      "statement": "Latencia L_resp < 2.0 s (P95, \u2264 25 usuarios)",
+      "status": "MET",
+      "threshold": "< 2000 ms",
+      "value": 1318.930804995761
+    },
+    {
+      "CR": 1.0,
+      "dimension": "eficiencia",
+      "evidence_kind": "automated",
+      "id": "RNF02",
+      "indicator": "m\u00e1x. k_stop y proporci\u00f3n de paradas por \u03b5",
+      "kind": "RNF",
+      "n": 9500,
+      "source": "observaciones (k_stop, stop_reason)",
+      "statement": "Convergencia: T_conv \u2264 15 iteraciones y CR \u2265 98 %",
+      "status": "MET",
+      "threshold": "k_stop \u2264 15 \u2227 CR \u2265 98%",
+      "value": 8
+    },
+    {
+      "dimension": "eficiencia",
+      "error_rate": 0.0,
+      "evidence_kind": "benchmark",
+      "id": "RNF04",
+      "indicator": "mediana del throughput por lote y tasa de error",
+      "kind": "RNF",
+      "n": 53,
+      "note": "mediana sobre todos los lotes de todas las condiciones de la propuesta (incluye cargas bajas); ver la relaci\u00f3n por condici\u00f3n",
+      "source": "lotes (throughput_rps)",
+      "statement": "Throughput \u2265 20 req/s con error < 1 %",
+      "status": "NOT_MET",
+      "threshold": "\u2265 20 req/s \u2227 error < 1%",
+      "value": 14.981426252467786
+    },
+    {
+      "dimension": "calidad",
+      "evidence_kind": "external",
+      "id": "RNF03",
+      "indicator": "F1_adapt oficial (regla v3, K = 10)",
+      "kind": "RNF",
+      "reason": null,
+      "source": "resultado oficial de F1",
+      "statement": "F1_adapt \u2265 0.85",
+      "status": "NOT_MET",
+      "threshold": "\u2265 0.85",
+      "value": 0.6407047619047619
+    },
+    {
+      "dimension": "calidad",
+      "evidence_kind": "external",
+      "id": "RNF05",
+      "indicator": "media SUS y contraste contra 75",
+      "kind": "RNF",
+      "n": 0,
+      "reason": "sin SUS con n \u2265 10 (panel humano pendiente)",
+      "source": "SUS (panel humano)",
+      "statement": "Usabilidad SUS > 75 (n \u2265 10)",
+      "status": "NOT_MEASURED",
+      "threshold": "media > 75 \u2227 p < 0.05 \u2227 n \u2265 10",
+      "value": null
+    }
+  ]
+}

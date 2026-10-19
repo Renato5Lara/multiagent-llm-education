@@ -1,0 +1,60 @@
+{
+ "n_observaciones_total": 9500,
+ "n_oe3_run": 6300,
+ "n_oe4_run": 3200,
+ "ciclos_con_solape_total": 8600,
+ "ciclos_batch": 8600,
+ "ciclos_batch_con_solape": 8600,
+ "ciclos_sequential": 900,
+ "ciclos_sequential_con_solape": 0,
+ "ciclos_batch_oe3": 5400,
+ "ciclos_batch_oe4": 3200,
+ "RF03_fraccion_total": 0.9052631578947369,
+ "RF03_fraccion_solo_batch": 1.0,
+ "status_valores": [
+  "completed"
+ ],
+ "REL_C_completados": 1.0,
+ "t_conv_mediana_ms": {
+  "batch": 68.55645,
+  "sequential": 101.4756
+ },
+ "asociacion_condiciones": {
+  "n_condiciones": 14,
+  "valores_distintos_del_puntaje": [
+   0.7778,
+   0.875,
+   0.8889
+  ],
+  "resultados": {
+   "t_conv_ms_median": {
+    "spearman_rho": -0.6916272972839623,
+    "spearman_p": 0.006141875650196149,
+    "kendall_tau_b": -0.5137623327375896,
+    "kendall_p": 0.022996408711504844
+   },
+   "latency_p95_ms": {
+    "spearman_rho": -0.6916272972839623,
+    "spearman_p": 0.006141875650196149,
+    "kendall_tau_b": -0.5137623327375896,
+    "kendall_p": 0.022996408711504844
+   },
+   "gap_vs_optimum": {
+    "spearman_rho": 0.16984862140095108,
+    "spearman_p": 0.5615716777321904,
+    "kendall_tau_b": 0.1417894362402831,
+    "kendall_p": 0.5504563384640309
+   },
+   "throughput_median_rps": {
+    "spearman_rho": -0.1341963412640524,
+    "spearman_p": 0.647397145222614,
+    "kendall_tau_b": -0.13211031413252305,
+    "kendall_p": 0.5588080840709164
+   }
+  }
+ },
+ "asociacion_carga_vs_puntaje": {
+  "spearman_rho": -0.608352058115994,
+  "p": 0.020974260221351713
+ }
+}

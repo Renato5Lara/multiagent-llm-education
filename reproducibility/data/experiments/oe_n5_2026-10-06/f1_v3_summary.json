@@ -1,0 +1,121 @@
+{
+  "definition": {
+    "f1": "v3 (4\u00d74 con audio, agregaci\u00f3n samples)",
+    "rule_version": "gold-v3-multimodal+incl-rel20",
+    "status": "PROVISIONAL",
+    "metric_version": "f1-multilabel-v2",
+    "k": 10,
+    "n_profiles": 100,
+    "n_cases": 1000
+  },
+  "f1_adapt_by_replica": [
+    0.8186666666666668,
+    0.8068095238095238,
+    0.8204761904761905,
+    0.8222380952380952,
+    0.8116666666666668,
+    0.8120000000000002,
+    0.8059999999999999,
+    0.8216190476190477,
+    0.8220000000000001,
+    0.8146190476190476
+  ],
+  "replicas_ci95": {
+    "confidence": 0.95,
+    "df": 9,
+    "k": 10,
+    "lower": 0.8111277630675136,
+    "mean": 0.8156095238095238,
+    "method": "student_t_one_sample",
+    "sd": 0.006265069512300193,
+    "se": 0.0019811889358148905,
+    "t_critical": 2.262157162798205,
+    "upper": 0.820091284551534
+  },
+  "profile_means": {
+    "n": 100,
+    "mean": 0.8156095238095238,
+    "median": 0.8061904761904761,
+    "sd": 0.14162179644380776,
+    "min": 0.4,
+    "max": 1.0
+  },
+  "by_archetype": {
+    "balanced_multimodal": {
+      "n_cases": 250,
+      "mean_f1": 0.878095238095238
+    },
+    "explanatory_conceptual": {
+      "n_cases": 250,
+      "mean_f1": 0.8036761904761904
+    },
+    "logical_syntactic": {
+      "n_cases": 250,
+      "mean_f1": 0.7621333333333333
+    },
+    "visual_dominant": {
+      "n_cases": 250,
+      "mean_f1": 0.8185333333333333
+    }
+  },
+  "by_difficulty": {
+    "arrays_vectors": {
+      "n_cases": 200,
+      "mean_f1": 0.7983095238095238
+    },
+    "conditional": {
+      "n_cases": 200,
+      "mean_f1": 0.8828333333333334
+    },
+    "functions": {
+      "n_cases": 200,
+      "mean_f1": 0.7932142857142858
+    },
+    "repetitive": {
+      "n_cases": 200,
+      "mean_f1": 0.785
+    },
+    "sequential": {
+      "n_cases": 200,
+      "mean_f1": 0.8186904761904762
+    }
+  },
+  "by_modality_ovr": {
+    "audio": {
+      "precision": 0.37524177949709864,
+      "recall": 0.776,
+      "f1": 0.5058670143415906,
+      "tp": 194,
+      "fp": 323,
+      "fn": 56,
+      "tn": 427
+    },
+    "code": {
+      "precision": 1.0,
+      "recall": 0.888,
+      "f1": 0.940677966101695,
+      "tp": 888,
+      "fp": 0,
+      "fn": 112,
+      "tn": 0
+    },
+    "diagram": {
+      "precision": 1.0,
+      "recall": 0.833,
+      "f1": 0.9088925259138025,
+      "tp": 833,
+      "fp": 0,
+      "fn": 167,
+      "tn": 0
+    },
+    "text": {
+      "precision": 0.6131284916201117,
+      "recall": 0.878,
+      "f1": 0.7220394736842105,
+      "tp": 439,
+      "fp": 277,
+      "fn": 61,
+      "tn": 223
+    }
+  }
+}

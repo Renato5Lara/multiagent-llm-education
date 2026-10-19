@@ -1,0 +1,1212 @@
+{
+  "all_loads_including_stress": {
+    "error_rate": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 161,
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": false,
+      "n_params": 18,
+      "n_runs": 179,
+      "response": "error_rate",
+      "status": "undefined_zero_residual_variance",
+      "unit": "run"
+    },
+    "p95_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 161,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9949308000772558,
+        "residual_max": 0.5133590266772332,
+        "residual_min": -0.20369518377967122,
+        "residual_sd": 0.17772871815279181,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 8.553721558733162e-18
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.731315930372164,
+              4.859475746299225
+            ],
+            "geometric_ci": [
+              113.4447495586476,
+              128.956578419467
+            ],
+            "geometric_mean": 120.95224984569957,
+            "mean": 4.795395838335694,
+            "n": 30
+          },
+          "10": {
+            "ci": [
+              6.830241497911193,
+              6.958401313838254
+            ],
+            "geometric_ci": [
+              925.4142711090375,
+              1051.9504735745581
+            ],
+            "geometric_mean": 986.6559586531703,
+            "mean": 6.894321405874724,
+            "n": 30
+          },
+          "100": {
+            "ci": [
+              9.141568569338286,
+              9.271919310054638
+            ],
+            "geometric_ci": [
+              9335.396870674687,
+              10635.144450020887
+            ],
+            "geometric_mean": 9964.100271369125,
+            "mean": 9.206743939696462,
+            "n": 29
+          },
+          "25": {
+            "ci": [
+              7.7372252260323355,
+              7.865385041959397
+            ],
+            "geometric_ci": [
+              2292.103482005136,
+              2605.5134642429757
+            ],
+            "geometric_mean": 2443.7893697703553,
+            "mean": 7.801305133995866,
+            "n": 30
+          },
+          "5": {
+            "ci": [
+              6.06640541105318,
+              6.194565226980242
+            ],
+            "geometric_ci": [
+              431.12816438123906,
+              490.0783258385017
+            ],
+            "geometric_mean": 459.65918790097516,
+            "mean": 6.130485319016711,
+            "n": 30
+          },
+          "50": {
+            "ci": [
+              8.402189311722955,
+              8.530349127650014
+            ],
+            "geometric_ci": [
+              4456.813428431495,
+              5066.214281581514
+            ],
+            "geometric_mean": 4751.754606612584,
+            "mean": 8.466269219686485,
+            "n": 30
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              6.972461686589899,
+              7.063849123377489
+            ],
+            "geometric_ci": [
+              1066.8457606015068,
+              1168.9358960251225
+            ],
+            "geometric_mean": 1116.7248117102645,
+            "mean": 7.018155404983694,
+            "n": 59
+          },
+          "20": {
+            "ci": [
+              7.233323318895459,
+              7.323945993813104
+            ],
+            "geometric_ci": [
+              1384.8170539633443,
+              1516.1749983575799
+            ],
+            "geometric_mean": 1449.0082796583401,
+            "mean": 7.278634656354281,
+            "n": 60
+          },
+          "30": {
+            "ci": [
+              7.2686825539276265,
+              7.359305228845272
+            ],
+            "geometric_ci": [
+              1434.659121421746,
+              1570.7448755342086
+            ],
+            "geometric_mean": 1501.1607052916145,
+            "mean": 7.313993891386449,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.0315874972562345,
+      "n_params": 18,
+      "n_runs": 179,
+      "reading_rule": "sin interacciones significativas",
+      "response": "p95_ms",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 2439.1396237036215,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 9.727227842113867e-150,
+          "partial_eta_sq": 0.9869706293335175,
+          "significant": true,
+          "ss": 385.23158085655496
+        },
+        "load:swarm_N": {
+          "F": 0.6412857986552458,
+          "df": 10,
+          "p_permutation": 0.768,
+          "p_value": 0.7767542143582395,
+          "partial_eta_sq": 0.03830564786766602,
+          "significant": false,
+          "ss": 0.20256613405484725
+        },
+        "swarm_N": {
+          "F": 38.17127456360564,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.7023837403312517e-14,
+          "partial_eta_sq": 0.32165555399968787,
+          "significant": true,
+          "ss": 2.4114700610897337
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms_mean": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 161,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9994494676157285,
+        "residual_max": 0.5179489822957368,
+        "residual_min": -0.19391472026569456,
+        "residual_sd": 0.17871703348767554,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 8.21960520949715e-19
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.045889633130694,
+              4.174762121228652
+            ],
+            "geometric_ci": [
+              57.16201664431909,
+              65.0243699039061
+            ],
+            "geometric_mean": 60.96658195055257,
+            "mean": 4.110325877179673,
+            "n": 30
+          },
+          "10": {
+            "ci": [
+              6.004171468373774,
+              6.133043956471732
+            ],
+            "geometric_ci": [
+              405.1151988938093,
+              460.83679500806284
+            ],
+            "geometric_mean": 432.0786848101593,
+            "mean": 6.068607712422753,
+            "n": 30
+          },
+          "100": {
+            "ci": [
+              8.26276110817813,
+              8.39383670437818
+            ],
+            "geometric_ci": [
+              3876.7835550984814,
+              4419.742451038295
+            ],
+            "geometric_mean": 4139.370103283339,
+            "mean": 8.328298906278155,
+            "n": 29
+          },
+          "25": {
+            "ci": [
+              6.876407031959577,
+              7.005279520057535
+            ],
+            "geometric_ci": [
+              969.138014874488,
+              1102.4381655261077
+            ],
+            "geometric_mean": 1033.6414926171667,
+            "mean": 6.940843276008556,
+            "n": 30
+          },
+          "5": {
+            "ci": [
+              5.293246833347485,
+              5.422119321445443
+            ],
+            "geometric_ci": [
+              198.98846005058758,
+              226.3583405996571
+            ],
+            "geometric_mean": 212.23264973969523,
+            "mean": 5.357683077396464,
+            "n": 30
+          },
+          "50": {
+            "ci": [
+              7.539753581033019,
+              7.668626069130977
+            ],
+            "geometric_ci": [
+              1881.3663636816937,
+              2140.1390213017116
+            ],
+            "geometric_mean": 2006.5855497037,
+            "mean": 7.604189825081998,
+            "n": 30
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              6.15433502144194,
+              6.246230646248505
+            ],
+            "geometric_ci": [
+              470.75369724014627,
+              516.0639264352884
+            ],
+            "geometric_mean": 492.8884269098625,
+            "mean": 6.200282833845223,
+            "n": 59
+          },
+          "20": {
+            "ci": [
+              6.407078398671461,
+              6.498205008913908
+            ],
+            "geometric_ci": [
+              606.1202499660603,
+              663.9487806420535
+            ],
+            "geometric_mean": 634.3759144918905,
+            "mean": 6.452641703792684,
+            "n": 60
+          },
+          "30": {
+            "ci": [
+              6.471019559884118,
+              6.5621461701265655
+            ],
+            "geometric_ci": [
+              646.1421718839008,
+              707.7891015318266
+            ],
+            "geometric_mean": 676.2635486994175,
+            "mean": 6.516582865005342,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.03193977805863493,
+      "n_params": 18,
+      "n_runs": 179,
+      "reading_rule": "sin interacciones significativas",
+      "response": "t_conv_ms_mean",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 2206.800744505162,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 2.7466405611495904e-146,
+          "partial_eta_sq": 0.9856185845051532,
+          "significant": true,
+          "ss": 352.4236299956261
+        },
+        "load:swarm_N": {
+          "F": 0.4158276759906252,
+          "df": 10,
+          "p_permutation": 0.941,
+          "p_value": 0.9375435036995193,
+          "partial_eta_sq": 0.025177525713417432,
+          "significant": false,
+          "ss": 0.13281443681778526
+        },
+        "swarm_N": {
+          "F": 41.012790164135076,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 4.0225172633677216e-15,
+          "partial_eta_sq": 0.33751829835144503,
+          "significant": true,
+          "ss": 2.61987883081568
+        }
+      },
+      "unit": "run"
+    },
+    "throughput_http": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 161,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.997616930581702,
+        "residual_max": 0.19251497883772162,
+        "residual_min": -0.5015694726905715,
+        "residual_sd": 0.17142583546112525,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.0666580396700864e-18
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              2.3092420705383754,
+              2.432856890620255
+            ],
+            "geometric_ci": [
+              10.066791844689938,
+              11.39137956244556
+            ],
+            "geometric_mean": 10.708624882728621,
+            "mean": 2.371049480579315,
+            "n": 30
+          },
+          "10": {
+            "ci": [
+              2.6662867806638633,
+              2.789901600745743
+            ],
+            "geometric_ci": [
+              14.386449846013331,
+              16.279417840398583
+            ],
+            "geometric_mean": 15.303693288980567,
+            "mean": 2.728094190704803,
+            "n": 30
+          },
+          "100": {
+            "ci": [
+              2.6349656481251005,
+              2.760693695131364
+            ],
+            "geometric_ci": [
+              13.942833492464262,
+              15.81080702481351
+            ],
+            "geometric_mean": 14.847472839795298,
+            "mean": 2.697829671628232,
+            "n": 29
+          },
+          "25": {
+            "ci": [
+              2.6588346711961615,
+              2.782449491278041
+            ],
+            "geometric_ci": [
+              14.279638924550891,
+              16.1585527458814
+            ],
+            "geometric_mean": 15.190072374893306,
+            "mean": 2.7206420812371013,
+            "n": 30
+          },
+          "5": {
+            "ci": [
+              2.697617218542156,
+              2.8212320386240357
+            ],
+            "geometric_ci": [
+              14.84431878342642,
+              16.797533138340036
+            ],
+            "geometric_mean": 15.790754785021795,
+            "mean": 2.759424628583096,
+            "n": 30
+          },
+          "50": {
+            "ci": [
+              2.6731296240976326,
+              2.796744444179512
+            ],
+            "geometric_ci": [
+              14.485231658665917,
+              16.39119735656942
+            ],
+            "geometric_mean": 15.40877317870636,
+            "mean": 2.7349370341385724,
+            "n": 30
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              2.803051005986367,
+              2.891197524257519
+            ],
+            "geometric_ci": [
+              16.494896103366745,
+              18.01486993320473
+            ],
+            "geometric_mean": 17.23813817858174,
+            "mean": 2.847124265121943,
+            "n": 59
+          },
+          "20": {
+            "ci": [
+              2.5838305163675988,
+              2.6712393939026513
+            ],
+            "geometric_ci": [
+              13.247786956977764,
+              14.457877097756661
+            ],
+            "geometric_mean": 13.839612553870438,
+            "mean": 2.627534955135125,
+            "n": 60
+          },
+          "30": {
+            "ci": [
+              2.4901131276358606,
+              2.577522005170913
+            ],
+            "geometric_ci": [
+              12.06264066127987,
+              13.164476204331462
+            ],
+            "geometric_mean": 12.601521572683989,
+            "mean": 2.533817566403387,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.02938681706354479,
+      "n_params": 18,
+      "n_runs": 179,
+      "reading_rule": "sin interacciones significativas",
+      "response": "throughput_http",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 22.188848542815617,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 7.021454703389628e-17,
+          "partial_eta_sq": 0.40796687441081353,
+          "significant": true,
+          "ss": 3.2602981648921245
+        },
+        "load:swarm_N": {
+          "F": 0.31200264017528,
+          "df": 10,
+          "p_permutation": 0.981,
+          "p_value": 0.9772331923258177,
+          "partial_eta_sq": 0.019010637946859837,
+          "significant": false,
+          "ss": 0.09168764510173943
+        },
+        "swarm_N": {
+          "F": 52.52951649348456,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 2.7463340078441722e-18,
+          "partial_eta_sq": 0.3948711374596127,
+          "significant": true,
+          "ss": 3.087350583260979
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "campaign_spec": {
+    "advisor_approved": false,
+    "sha256": "efc891a5c98d40b85ba20d8b7b4eb5ec2bf33318a44858676c7e67b3fbdc79b8",
+    "status": "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED",
+    "version": "oe-campaign-spec-v1"
+  },
+  "contrast_regime_le_25": {
+    "error_rate": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": false,
+      "n_params": 12,
+      "n_runs": 120,
+      "response": "error_rate",
+      "status": "undefined_zero_residual_variance",
+      "unit": "run"
+    },
+    "p95_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9857539843148433,
+        "residual_max": 0.5133590266772217,
+        "residual_min": -0.20369518377968276,
+        "residual_sd": 0.1769574859698454,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 1.2654194583187978e-14
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.731356037243712,
+              4.8594356394276765
+            ],
+            "geometric_ci": [
+              113.4492995638886,
+              128.9514064782569
+            ],
+            "geometric_mean": 120.95224984569957,
+            "mean": 4.795395838335694,
+            "n": 30
+          },
+          "10": {
+            "ci": [
+              6.8302816047827415,
+              6.958361206966706
+            ],
+            "geometric_ci": [
+              925.4513873246405,
+              1051.9082839780913
+            ],
+            "geometric_mean": 986.6559586531703,
+            "mean": 6.894321405874724,
+            "n": 30
+          },
+          "25": {
+            "ci": [
+              7.737265332903884,
+              7.865344935087848
+            ],
+            "geometric_ci": [
+              2292.1954129485835,
+              2605.408967344684
+            ],
+            "geometric_mean": 2443.7893697703553,
+            "mean": 7.801305133995866,
+            "n": 30
+          },
+          "5": {
+            "ci": [
+              6.066445517924729,
+              6.194525120108693
+            ],
+            "geometric_ci": [
+              431.1454559299014,
+              490.05867072419386
+            ],
+            "geometric_mean": 459.65918790097516,
+            "mean": 6.130485319016711,
+            "n": 30
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              6.19394522197858,
+              6.304865411176498
+            ],
+            "geometric_ci": [
+              489.7745690003857,
+              547.227932464754
+            ],
+            "geometric_mean": 517.7048626079313,
+            "mean": 6.249405316577539,
+            "n": 40
+          },
+          "20": {
+            "ci": [
+              6.392804037149618,
+              6.503724226347536
+            ],
+            "geometric_ci": [
+              597.5297283625483,
+              667.6233894818778
+            ],
+            "geometric_mean": 631.6049576797116,
+            "mean": 6.448264131748577,
+            "n": 40
+          },
+          "30": {
+            "ci": [
+              6.463001229992173,
+              6.573921419190091
+            ],
+            "geometric_ci": [
+              640.9819067941925,
+              716.1727574345031
+            ],
+            "geometric_mean": 677.5350763277297,
+            "mean": 6.518461324591132,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.03131395184076803,
+      "n_params": 12,
+      "n_runs": 120,
+      "reading_rule": "sin interacciones significativas",
+      "response": "p95_ms",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 1550.5186918579684,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 1.3584746537491045e-88,
+          "partial_eta_sq": 0.9773088081566561,
+          "significant": true,
+          "ss": 145.65860293515323
+        },
+        "load:swarm_N": {
+          "F": 0.5421513557818451,
+          "df": 6,
+          "p_permutation": 0.754,
+          "p_value": 0.7750925104958352,
+          "partial_eta_sq": 0.029238859363144538,
+          "significant": false,
+          "ss": 0.10186140867215876
+        },
+        "swarm_N": {
+          "F": 24.87998753115281,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 1.2973406708654595e-09,
+          "partial_eta_sq": 0.3154157132862974,
+          "significant": true,
+          "ss": 1.5581814626988564
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms_mean": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9909917327538313,
+        "residual_max": 0.5179489822957297,
+        "residual_min": -0.19391472026570433,
+        "residual_sd": 0.1831927261381475,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 2.9582817743766805e-15
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.044029581891074,
+              4.176622172468273
+            ],
+            "geometric_ci": [
+              57.0557911874235,
+              65.14543111887902
+            ],
+            "geometric_mean": 60.96658195055257,
+            "mean": 4.110325877179673,
+            "n": 30
+          },
+          "10": {
+            "ci": [
+              6.002311417134154,
+              6.134904007711352
+            ],
+            "geometric_ci": [
+              404.36236423848896,
+              461.69477275379637
+            ],
+            "geometric_mean": 432.0786848101593,
+            "mean": 6.068607712422753,
+            "n": 30
+          },
+          "25": {
+            "ci": [
+              6.874546980719957,
+              7.007139571297154
+            ],
+            "geometric_ci": [
+              967.3370439768822,
+              1104.4906652880934
+            ],
+            "geometric_mean": 1033.6414926171667,
+            "mean": 6.940843276008556,
+            "n": 30
+          },
+          "5": {
+            "ci": [
+              5.291386782107866,
+              5.4239793726850625
+            ],
+            "geometric_ci": [
+              198.61867533467492,
+              226.7797705308157
+            ],
+            "geometric_mean": 212.23264973969523,
+            "mean": 5.357683077396464,
+            "n": 30
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              5.380938253287211,
+              5.495766805080653
+            ],
+            "geometric_ci": [
+              217.22599284258666,
+              243.65829296163878
+            ],
+            "geometric_mean": 230.06284924542214,
+            "mean": 5.438352529183932,
+            "n": 40
+          },
+          "20": {
+            "ci": [
+              5.607166572908912,
+              5.721995124702354
+            ],
+            "geometric_ci": [
+              272.37139912937175,
+              305.5138535448097
+            ],
+            "geometric_mean": 288.4670444667914,
+            "mean": 5.664580848805633,
+            "n": 40
+          },
+          "30": {
+            "ci": [
+              5.6977473033693,
+              5.812575855162742
+            ],
+            "geometric_ci": [
+              298.19490113332176,
+              334.47958795916924
+            ],
+            "geometric_mean": 315.8165728118122,
+            "mean": 5.755161579266021,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.03355957490992631,
+      "n_params": 12,
+      "n_runs": 120,
+      "reading_rule": "sin interacciones significativas",
+      "response": "t_conv_ms_mean",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 1279.4561203387866,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 3.356960481535259e-84,
+          "partial_eta_sq": 0.9726330666273167,
+          "significant": true,
+          "ss": 128.8140105434196
+        },
+        "load:swarm_N": {
+          "F": 0.27397707894982326,
+          "df": 6,
+          "p_permutation": 0.946,
+          "p_value": 0.948057008541828,
+          "partial_eta_sq": 0.014992745025680435,
+          "significant": false,
+          "ss": 0.05516732582771633
+        },
+        "swarm_N": {
+          "F": 31.735025641670717,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 1.4411719416979017e-11,
+          "partial_eta_sq": 0.3701524015903041,
+          "significant": true,
+          "ss": 2.1300279405801614
+        }
+      },
+      "unit": "run"
+    },
+    "throughput_http": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.9679794777544138,
+        "residual_max": 0.19251497883771718,
+        "residual_min": -0.501569472690576,
+        "residual_sd": 0.17464200154088802,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 3.335675089564944e-15
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "20",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              2.307847638737541,
+              2.4342513224210895
+            ],
+            "geometric_ci": [
+              10.052764172598344,
+              11.407275144439655
+            ],
+            "geometric_mean": 10.708624882728621,
+            "mean": 2.371049480579315,
+            "n": 30
+          },
+          "10": {
+            "ci": [
+              2.6648923488630287,
+              2.7912960325465774
+            ],
+            "geometric_ci": [
+              14.366402903142603,
+              16.302134212869507
+            ],
+            "geometric_mean": 15.303693288980567,
+            "mean": 2.728094190704803,
+            "n": 30
+          },
+          "25": {
+            "ci": [
+              2.657440239395327,
+              2.7838439230788756
+            ],
+            "geometric_ci": [
+              14.259740818430261,
+              16.181100462658822
+            ],
+            "geometric_mean": 15.190072374893306,
+            "mean": 2.7206420812371013,
+            "n": 30
+          },
+          "5": {
+            "ci": [
+              2.6962227867413215,
+              2.8226264704248702
+            ],
+            "geometric_ci": [
+              14.82363381849126,
+              16.820972491215194
+            ],
+            "geometric_mean": 15.790754785021795,
+            "mean": 2.759424628583096,
+            "n": 30
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              2.7639891060225468,
+              2.8734579072244317
+            ],
+            "geometric_ci": [
+              15.86299607543446,
+              17.698110938124078
+            ],
+            "geometric_mean": 16.755448795960852,
+            "mean": 2.8187235066234892,
+            "n": 40
+          },
+          "20": {
+            "ci": [
+              2.556863683932112,
+              2.666332485133997
+            ],
+            "geometric_ci": [
+              12.895310058829184,
+              14.387107386106797
+            ],
+            "geometric_mean": 13.62080065904786,
+            "mean": 2.6115980845330546,
+            "n": 40
+          },
+          "30": {
+            "ci": [
+              2.4493517940707514,
+              2.5588205952726364
+            ],
+            "geometric_ci": [
+              11.580837518187048,
+              12.920569744744794
+            ],
+            "geometric_mean": 12.23237584675573,
+            "mean": 2.504086194671694,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.030499828702207535,
+      "n_params": 12,
+      "n_runs": 120,
+      "reading_rule": "sin interacciones significativas",
+      "response": "throughput_http",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 33.03890549989063,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 3.126945637151098e-15,
+          "partial_eta_sq": 0.47855488525876144,
+          "significant": true,
+          "ss": 3.0230428747652605
+        },
+        "load:swarm_N": {
+          "F": 0.4024954670964642,
+          "df": 6,
+          "p_permutation": 0.875,
+          "p_value": 0.8759718347137689,
+          "partial_eta_sq": 0.02187178732450299,
+          "significant": false,
+          "ss": 0.073656256799143
+        },
+        "swarm_N": {
+          "F": 33.5425676229774,
+          "df": 2,
+          "p_permutation": 0.001,
+          "p_value": 4.671129345476984e-12,
+          "partial_eta_sq": 0.383157228920179,
+          "significant": true,
+          "ss": 2.046085133466047
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "experiment": "oe4",
+  "factors": [
+    "load",
+    "swarm_N"
+  ],
+  "p95_by_load_median_ms": {
+    "1": 121.87434999999999,
+    "10": 965.9042499999998,
+    "100": 9881.81545,
+    "25": 2474.9519999999998,
+    "5": 461.26715000000013,
+    "50": 4890.3118
+  },
+  "rnf04": {
+    "u1": {
+      "runs": 30,
+      "runs_meeting_rnf04": 0
+    },
+    "u10": {
+      "runs": 30,
+      "runs_meeting_rnf04": 5
+    },
+    "u100": {
+      "runs": 29,
+      "runs_meeting_rnf04": 2
+    },
+    "u25": {
+      "runs": 30,
+      "runs_meeting_rnf04": 5
+    },
+    "u5": {
+      "runs": 30,
+      "runs_meeting_rnf04": 5
+    },
+    "u50": {
+      "runs": 30,
+      "runs_meeting_rnf04": 1
+    }
+  },
+  "runs_per_cell": [
+    9,
+    10
+  ],
+  "spearman_load_vs_p95": {
+    "n": 179,
+    "p_value": 3.556722579724268e-132,
+    "rho": 0.9829738602615845,
+    "status": "ok"
+  },
+  "unit": "run"
+}

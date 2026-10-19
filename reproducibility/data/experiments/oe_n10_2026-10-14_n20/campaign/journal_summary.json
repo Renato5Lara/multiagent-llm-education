@@ -1,0 +1,13 @@
+{
+ "campaign_id": "n10-oe4-n20",
+ "entries_total": 60,
+ "failed_run_ids": [],
+ "final_state_counts": {
+  "completed": 60,
+  "failed": 0,
+  "interrupted": 0,
+  "invalid": 0
+ },
+ "journal": "experiments\\oe_n10_2026-10-14_n20\\campaign.journal\\runs.journal.jsonl",
+ "runs_with_final_state": 60
+}

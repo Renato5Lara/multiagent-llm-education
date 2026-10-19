@@ -1,0 +1,214 @@
+{
+ "runs_total": 180,
+ "runs_valid": 179,
+ "runs_invalid": [
+  "n11-oe4-3n-swarm|u100|N10-r01"
+ ],
+ "errors": 0,
+ "timeouts": 0,
+ "valid_per_tramo": {
+  "A": 17,
+  "B": 162
+ },
+ "valid_per_N_tramo": {
+  "10": {
+   "A": 6,
+   "B": 53
+  },
+  "20": {
+   "A": 6,
+   "B": 54
+  },
+  "30": {
+   "A": 5,
+   "B": 55
+  }
+ },
+ "tramo_A_ends": "2026-10-14 13:03:34+00:00",
+ "tramo_B_starts": "2026-10-14 13:50:40+00:00",
+ "n_per_cell": {
+  "1": {
+   "10": 10,
+   "20": 10,
+   "30": 10
+  },
+  "5": {
+   "10": 10,
+   "20": 10,
+   "30": 10
+  },
+  "10": {
+   "10": 10,
+   "20": 10,
+   "30": 10
+  },
+  "25": {
+   "10": 10,
+   "20": 10,
+   "30": 10
+  },
+  "50": {
+   "10": 10,
+   "20": 10,
+   "30": 10
+  },
+  "100": {
+   "10": 9,
+   "20": 10,
+   "30": 10
+  }
+ }
+}
+         p95_latency_ms_mean  throughput_http_mean  t_conv_ms_mean_mean
+N  load                                                                
+10 1                104.6277               12.5779              48.0812
+   5                366.8432               20.0975             164.7748
+   10               841.6032               18.9757             367.1990
+   25              1889.7912               20.0480             812.9630
+   50              3863.8471               19.4102            1664.4969
+   100             7658.3540               19.3340            3352.6888
+20 1                121.7661               10.7076              61.6394
+   5                451.8014               16.1685             209.7868
+   10               947.2596               16.0453             416.5186
+   25              2615.7766               15.2145            1081.6716
+   50              5033.1799               15.2880            2038.5907
+   100            10465.0710               14.8897            4145.0939
+30 1                127.2443                9.9130              68.4897
+   5                499.2067               14.3573             234.0443
+   10              1057.9205               13.9750             462.3990
+   25              2597.9508               13.6558            1102.3088
+   50              5002.5424               13.7408            2147.1211
+   100            10484.7007               13.7853            4255.4584
+            metric               modelo          term             F         PR(>F)  eta2_partial
+0   p95_latency_ms               tramoB          C(N)    118.433673   3.858249e-31      0.621916
+1   p95_latency_ms               tramoB       C(load)   7269.991931  3.919377e-171      0.996054
+2   p95_latency_ms               tramoB  C(N):C(load)      1.668397   9.356745e-02      0.103831
+3   p95_latency_ms               tramoB      Residual           NaN            NaN      0.500000
+0   p95_latency_ms  todo_ajustado_tramo          C(N)    135.145057   4.252938e-35      0.628158
+1   p95_latency_ms  todo_ajustado_tramo       C(load)   8306.010907  2.921604e-191      0.996162
+2   p95_latency_ms  todo_ajustado_tramo      C(tramo)    386.355861   1.602848e-44      0.707151
+3   p95_latency_ms  todo_ajustado_tramo  C(N):C(load)      1.831984   5.893622e-02      0.102736
+4   p95_latency_ms  todo_ajustado_tramo      Residual           NaN            NaN      0.500000
+0   p95_latency_ms      todo_bloque_rep          C(N)    193.070875   2.460633e-42      0.718882
+1   p95_latency_ms      todo_bloque_rep       C(load)  11701.048032  1.611960e-193      0.997426
+2   p95_latency_ms      todo_bloque_rep      C(tramo)     41.499370   1.491041e-09      0.215582
+3   p95_latency_ms      todo_bloque_rep        C(rep)      8.380983   4.332300e-10      0.333124
+4   p95_latency_ms      todo_bloque_rep  C(N):C(load)      2.589058   6.341222e-03      0.146365
+5   p95_latency_ms      todo_bloque_rep      Residual           NaN            NaN      0.500000
+0  throughput_http               tramoB          C(N)    207.790971   3.596778e-43      0.742665
+1  throughput_http               tramoB       C(load)     94.324109   1.186495e-43      0.766090
+2  throughput_http               tramoB  C(N):C(load)      1.323362   2.232739e-01      0.084165
+3  throughput_http               tramoB      Residual           NaN            NaN      0.500000
+0  throughput_http  todo_ajustado_tramo          C(N)    222.216415   6.633688e-47      0.735289
+1  throughput_http  todo_ajustado_tramo       C(load)     88.150605   3.768601e-44      0.733668
+2  throughput_http  todo_ajustado_tramo      C(tramo)    490.402538   1.363535e-50      0.753998
+3  throughput_http  todo_ajustado_tramo  C(N):C(load)      1.204238   2.919771e-01      0.069997
+4  throughput_http  todo_ajustado_tramo      Residual           NaN            NaN      0.500000
+0  throughput_http      todo_bloque_rep          C(N)    300.645524   2.216280e-53      0.799280
+1  throughput_http      todo_bloque_rep       C(load)    118.434162   2.012564e-50      0.796817
+2  throughput_http      todo_bloque_rep      C(tramo)     53.235379   1.562628e-11      0.260657
+3  throughput_http      todo_bloque_rep        C(rep)      7.169992   1.255989e-08      0.299401
+4  throughput_http      todo_bloque_rep  C(N):C(load)      1.679591   9.027287e-02      0.100097
+5  throughput_http      todo_bloque_rep      Residual           NaN            NaN      0.500000
+0   t_conv_ms_mean               tramoB          C(N)    166.183680   3.892921e-38      0.697712
+1   t_conv_ms_mean               tramoB       C(load)   8498.806077  5.346888e-176      0.996623
+2   t_conv_ms_mean               tramoB  C(N):C(load)      1.193674   2.999096e-01      0.076549
+3   t_conv_ms_mean               tramoB      Residual           NaN            NaN      0.500000
+0   t_conv_ms_mean  todo_ajustado_tramo          C(N)    192.801333   2.395962e-43      0.706746
+1   t_conv_ms_mean  todo_ajustado_tramo       C(load)   9852.348308  3.590562e-197      0.996763
+2   t_conv_ms_mean  todo_ajustado_tramo      C(tramo)    556.517384   5.817925e-54      0.776698
+3   t_conv_ms_mean  todo_ajustado_tramo  C(N):C(load)      1.303808   2.325566e-01      0.075348
+4   t_conv_ms_mean  todo_ajustado_tramo      Residual           NaN            NaN      0.500000
+0   t_conv_ms_mean      todo_bloque_rep          C(N)    275.566806   4.055714e-51      0.784941
+1   t_conv_ms_mean      todo_bloque_rep       C(load)  13892.037075  3.918071e-199      0.997831
+2   t_conv_ms_mean      todo_bloque_rep      C(tramo)     61.798509   6.678478e-13      0.290409
+3   t_conv_ms_mean      todo_bloque_rep        C(rep)      8.402235   4.087837e-10      0.333687
+4   t_conv_ms_mean      todo_bloque_rep  C(N):C(load)      1.734228   7.787012e-02      0.103018
+5   t_conv_ms_mean      todo_bloque_rep      Residual           NaN            NaN      0.500000
+             metric  load    contrast     ratio    ci_low   ci_high  hedges_g        p_holm
+0    p95_latency_ms     1  N20_vs_N10  1.163082  1.106215  1.222873  3.030618  1.307978e-04
+1    p95_latency_ms     1  N30_vs_N10  1.216001  1.163454  1.270921  4.426541  1.037692e-06
+2    p95_latency_ms     1  N30_vs_N20  1.045498  0.992984  1.100790  0.865673  3.693107e-01
+3    p95_latency_ms     5  N20_vs_N10  1.231845  1.168901  1.298180  3.975010  3.803368e-06
+4    p95_latency_ms     5  N30_vs_N10  1.361537  1.296618  1.429706  6.347542  1.602028e-08
+5    p95_latency_ms     5  N30_vs_N20  1.105282  1.055243  1.157694  2.164961  3.251948e-03
+6    p95_latency_ms    10  N20_vs_N10  1.145923  0.984071  1.334395  0.949314  3.693107e-01
+7    p95_latency_ms    10  N30_vs_N10  1.279130  1.097241  1.491170  1.690411  3.072640e-02
+8    p95_latency_ms    10  N30_vs_N20  1.116244  1.050032  1.186632  1.801251  1.257822e-02
+9    p95_latency_ms    25  N20_vs_N10  1.353301  1.143027  1.602256  1.902586  1.947604e-02
+10   p95_latency_ms    25  N30_vs_N10  1.375147  1.297714  1.457201  5.497514  5.587694e-08
+11   p95_latency_ms    25  N30_vs_N20  1.016143  0.858697  1.202458  0.101396  1.000000e+00
+12   p95_latency_ms    50  N20_vs_N10  1.303092  1.246948  1.361763  6.029223  2.379059e-08
+13   p95_latency_ms    50  N30_vs_N10  1.293014  1.219156  1.371346  4.171303  1.171111e-06
+14   p95_latency_ms    50  N30_vs_N20  0.992266  0.938439  1.049181 -0.132936  1.000000e+00
+15   p95_latency_ms   100  N20_vs_N10  1.363271  1.255321  1.480503  3.821731  1.504710e-05
+16   p95_latency_ms   100  N30_vs_N10  1.346799  1.159388  1.564504  2.048119  1.165419e-02
+17   p95_latency_ms   100  N30_vs_N20  0.987917  0.846453  1.153024 -0.081020  1.000000e+00
+18  throughput_http     1  N20_vs_N10  0.851305  0.821602  0.882081 -4.530000  5.721856e-07
+19  throughput_http     1  N30_vs_N10  0.788303  0.763496  0.813915 -7.473752  1.462067e-09
+20  throughput_http     1  N30_vs_N20  0.925994  0.896966  0.955960 -2.424683  8.284142e-04
+21  throughput_http     5  N20_vs_N10  0.804769  0.762660  0.849203 -4.044708  2.787819e-06
+22  throughput_http     5  N30_vs_N10  0.714854  0.679550  0.751993 -6.669280  8.344754e-09
+23  throughput_http     5  N30_vs_N20  0.888273  0.848017  0.930440 -2.558406  4.900986e-04
+24  throughput_http    10  N20_vs_N10  0.857681  0.735264  1.000480 -1.064462  1.225888e-01
+25  throughput_http    10  N30_vs_N10  0.746639  0.639481  0.871755 -1.998912  9.913298e-03
+26  throughput_http    10  N30_vs_N20  0.870532  0.825241  0.918310 -2.601601  4.830585e-04
+27  throughput_http    25  N20_vs_N10  0.747065  0.634120  0.880126 -1.895482  1.191667e-02
+28  throughput_http    25  N30_vs_N10  0.681582  0.649980  0.714722 -8.136793  8.045167e-10
+29  throughput_http    25  N30_vs_N20  0.912347  0.775200  1.073758 -0.605457  2.327463e-01
+30  throughput_http    50  N20_vs_N10  0.787618  0.755531  0.821067 -5.736437  2.359728e-08
+31  throughput_http    50  N30_vs_N10  0.707072  0.670285  0.745879 -6.190586  8.125054e-09
+32  throughput_http    50  N30_vs_N20  0.897735  0.850830  0.947225 -1.918448  3.782264e-03
+33  throughput_http   100  N20_vs_N10  0.769089  0.717536  0.824346 -3.852209  1.042455e-05
+34  throughput_http   100  N30_vs_N10  0.712538  0.669221  0.758658 -5.529850  1.038722e-07
+35  throughput_http   100  N30_vs_N20  0.926470  0.861441  0.996408 -1.050875  1.225888e-01
+            metric   N  ratio_B_over_A    ci_low   ci_high             p  nA  nB
+0   p95_latency_ms  10        0.617479  0.569653  0.669321  1.508376e-16   6  53
+1   p95_latency_ms  20        0.619956  0.566934  0.677937  7.611892e-15   6  54
+2   p95_latency_ms  30        0.608522  0.557292  0.664463  1.000076e-15   5  55
+3  throughput_http  10        1.612625  1.485357  1.750798  4.448913e-16   6  53
+4  throughput_http  20        1.624377  1.492260  1.768192  6.252197e-16   6  54
+5  throughput_http  30        1.627020  1.541148  1.717678  3.473615e-24   5  55
+6   t_conv_ms_mean  10        0.604101  0.556131  0.656208  7.393734e-17   6  53
+7   t_conv_ms_mean  20        0.596511  0.548940  0.648205  2.436238e-17   6  54
+8   t_conv_ms_mean  30        0.598720  0.567228  0.631960  2.646137e-25   5  55
+{
+ "p95_latency_ms": {
+  "spearman_rho": -0.08943337270891286,
+  "p": 0.2577370470252239
+ },
+ "throughput_http": {
+  "spearman_rho": 0.13303441764364676,
+  "p": 0.09147848897359154
+ },
+ "t_conv_ms_mean": {
+  "spearman_rho": -0.1202733427326652,
+  "p": 0.12738006259653326
+ }
+}
+             metric  load  N10_over_N20_cross_session_N8_vs_N8b  N10_over_N20_misma_campania_N11_tramoB  N30_over_N10_N8  N30_over_N10_N11_tramoB
+0    p95_latency_ms     1                                 1.460                                   0.860            1.206                    1.216
+1    p95_latency_ms     5                                 1.392                                   0.812            1.343                    1.362
+2    p95_latency_ms    10                                 1.407                                   0.873            1.373                    1.279
+3    p95_latency_ms    25                                 1.402                                   0.739            1.364                    1.375
+4    p95_latency_ms    50                                 1.372                                   0.767            1.313                    1.293
+5    p95_latency_ms   100                                 1.369                                   0.734            1.325                    1.347
+6   throughput_http     1                                 0.743                                   1.175            0.770                    0.788
+7   throughput_http     5                                 0.706                                   1.243            0.721                    0.715
+8   throughput_http    10                                 0.710                                   1.166            0.694                    0.747
+9   throughput_http    25                                 0.703                                   1.339            0.691                    0.682
+10  throughput_http    50                                 0.698                                   1.270            0.705                    0.707
+11  throughput_http   100                                 0.698                                   1.300            0.715                    0.713
+   campania_previa   N tramo_N11           metric  ratio_previa_sobre_N11  n_previa  n_N11
+0               N8  10         A   p95_latency_ms                   1.069        60      6
+1               N8  10         A  throughput_http                   0.932        60      6
+2               N8  10         B   p95_latency_ms                   1.732        60     53
+3               N8  10         B  throughput_http                   0.578        60     53
+4               N8  30         A   p95_latency_ms                   1.059        60      5
+5               N8  30         A  throughput_http                   0.930        60      5
+6               N8  30         B   p95_latency_ms                   1.744        60     55
+7               N8  30         B  throughput_http                   0.571        60     55
+8              N8b  20         A   p95_latency_ms                   0.610        60      6
+9              N8b  20         A  throughput_http                   1.650        60      6
+10             N8b  20         B   p95_latency_ms                   0.984        60     54
+11             N8b  20         B  throughput_http                   1.016        60     54

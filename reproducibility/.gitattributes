@@ -1,0 +1,4 @@
+# Evidencia fijada por SHA-256: Git NO debe convertir finales de línea (core.autocrlf=true en Windows cambiaría los hashes al clonar).
+data/** -text
+EVIDENCE_MANIFEST.csv -text
+RESULTS_TRACEABILITY.csv -text

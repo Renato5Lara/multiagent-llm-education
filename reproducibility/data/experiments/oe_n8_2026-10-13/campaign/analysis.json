@@ -1,0 +1,1135 @@
+{
+  "all_loads_including_stress": {
+    "error_rate": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": false,
+      "n_params": 12,
+      "n_runs": 120,
+      "response": "error_rate",
+      "status": "undefined_zero_residual_variance",
+      "unit": "run"
+    },
+    "p95_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.10396323536819353,
+        "residual_max": 0.18164200718323364,
+        "residual_min": -0.09168531193640828,
+        "residual_sd": 0.036538489862189466,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 2.510009989241945e-06
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "load:swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              5.230321287140588,
+              5.262711011627373
+            ],
+            "geometric_ci": [
+              186.85282728780945,
+              193.00401882728144
+            ],
+            "geometric_mean": 189.9035191769419,
+            "mean": 5.2465161493839805,
+            "n": 20
+          },
+          "10": {
+            "ci": [
+              7.359952904629239,
+              7.392342629116024
+            ],
+            "geometric_ci": [
+              1571.76253847513,
+              1623.5049315074561
+            ],
+            "geometric_mean": 1597.4242493379934,
+            "mean": 7.376147766872632,
+            "n": 20
+          },
+          "100": {
+            "ci": [
+              9.637948939543877,
+              9.67033866403066
+            ],
+            "geometric_ci": [
+              15335.856682964595,
+              15840.712794847232
+            ],
+            "geometric_mean": 15586.240764782913,
+            "mean": 9.654143801787269,
+            "n": 20
+          },
+          "25": {
+            "ci": [
+              8.267315731485496,
+              8.29970545597228
+            ],
+            "geometric_ci": [
+              3894.481116104015,
+              4022.6873607711727
+            ],
+            "geometric_mean": 3958.0651791643895,
+            "mean": 8.283510593728888,
+            "n": 20
+          },
+          "5": {
+            "ci": [
+              6.619352816910839,
+              6.651742541397624
+            ],
+            "geometric_ci": [
+              749.45990234909,
+              774.1321081562963
+            ],
+            "geometric_mean": 761.6961166922889,
+            "mean": 6.635547679154231,
+            "n": 20
+          },
+          "50": {
+            "ci": [
+              8.927545955014402,
+              8.959935679501186
+            ],
+            "geometric_ci": [
+              7536.747146716805,
+              7784.856720208102
+            ],
+            "geometric_mean": 7659.79743032592,
+            "mean": 8.943740817257794,
+            "n": 20
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              7.542035805273144,
+              7.560736021424567
+            ],
+            "geometric_ci": [
+              1885.6649669239137,
+              1921.2590809474582
+            ],
+            "geometric_mean": 1903.3788223385952,
+            "mean": 7.551385913348856,
+            "n": 60
+          },
+          "30": {
+            "ci": [
+              7.81913291463703,
+              7.837833130788453
+            ],
+            "geometric_ci": [
+              2487.7473832410355,
+              2534.7065014163636
+            ],
+            "geometric_mean": 2511.1171749208756,
+            "mean": 7.828483022712741,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.0013350612414093227,
+      "n_params": 12,
+      "n_runs": 120,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "p95_ms",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 38838.571767008114,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 5.208868598625272e-174,
+          "partial_eta_sq": 0.9994441609746475,
+          "significant": true,
+          "ss": 259.2593591891346
+        },
+        "load:swarm_N": {
+          "F": 8.351139630085717,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 1.0526415946444809e-06,
+          "partial_eta_sq": 0.2788254381378214,
+          "significant": true,
+          "ss": 0.05574641420862414
+        },
+        "swarm_N": {
+          "F": 1725.377210488855,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 3.0650956599369414e-68,
+          "partial_eta_sq": 0.9410923189280821,
+          "significant": true,
+          "ss": 2.303484240534605
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms_mean": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.10963239506359944,
+        "residual_max": 0.15103389740615203,
+        "residual_min": -0.11460755323075578,
+        "residual_sd": 0.03346753253721295,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 6.497339641477141e-06
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "load:swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.642522227921572,
+              4.67218968714666
+            ],
+            "geometric_ci": [
+              103.80583966055944,
+              106.9316330878602
+            ],
+            "geometric_mean": 105.35714479312824,
+            "mean": 4.657355957534116,
+            "n": 20
+          },
+          "10": {
+            "ci": [
+              6.554584202866312,
+              6.5842516620914004
+            ],
+            "geometric_ci": [
+              702.4570094805218,
+              723.6093407017279
+            ],
+            "geometric_mean": 712.9547345389522,
+            "mean": 6.569417932478856,
+            "n": 20
+          },
+          "100": {
+            "ci": [
+              8.796964988047824,
+              8.826632447272912
+            ],
+            "geometric_ci": [
+              6614.139520534805,
+              6813.303978990538
+            ],
+            "geometric_mean": 6712.983175374296,
+            "mean": 8.811798717660368,
+            "n": 20
+          },
+          "25": {
+            "ci": [
+              7.427963051185165,
+              7.457630510410253
+            ],
+            "geometric_ci": [
+              1682.3771645977006,
+              1733.0367758540258
+            ],
+            "geometric_mean": 1707.519105926735,
+            "mean": 7.442796780797709,
+            "n": 20
+          },
+          "5": {
+            "ci": [
+              5.870144259039816,
+              5.899811718264904
+            ],
+            "geometric_ci": [
+              354.3000875717713,
+              364.9687444473893
+            ],
+            "geometric_mean": 359.59485274217906,
+            "mean": 5.88497798865236,
+            "n": 20
+          },
+          "50": {
+            "ci": [
+              8.098863167996525,
+              8.128530627221613
+            ],
+            "geometric_ci": [
+              3290.7249465988034,
+              3389.8150020597327
+            ],
+            "geometric_mean": 3339.9025122947583,
+            "mean": 8.113696897609069,
+            "n": 20
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              6.755226381609806,
+              6.772354897179583
+            ],
+            "geometric_ci": [
+              858.5340842188381,
+              873.3661617578186
+            ],
+            "geometric_mean": 865.9183667485465,
+            "mean": 6.763790639394695,
+            "n": 60
+          },
+          "30": {
+            "ci": [
+              7.054326527731244,
+              7.071455043301021
+            ],
+            "geometric_ci": [
+              1157.8574237727498,
+              1177.8606262129972
+            ],
+            "geometric_mean": 1167.8161971090908,
+            "mean": 7.0628907855161325,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.0011200757341294073,
+      "n_params": 12,
+      "n_runs": 120,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "t_conv_ms_mean",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 41392.206361147815,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 1.675644838132434e-175,
+          "partial_eta_sq": 0.9994784348047693,
+          "significant": true,
+          "ss": 231.81202963599281
+        },
+        "load:swarm_N": {
+          "F": 7.160612781679922,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 8.029412079805551e-06,
+          "partial_eta_sq": 0.24897288649708899,
+          "significant": true,
+          "ss": 0.04010214309128278
+        },
+        "swarm_N": {
+          "F": 2396.1120132488136,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 1.4831962950423014e-75,
+          "partial_eta_sq": 0.9568709389082474,
+          "significant": true,
+          "ss": 2.683826922295957
+        }
+      },
+      "unit": "run"
+    },
+    "throughput_http": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 108,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.30698811991214975,
+        "residual_max": 0.11347383868910832,
+        "residual_min": -0.1451795175280599,
+        "residual_sd": 0.03046706806840431,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 2.648822381489108e-07
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "load:swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "100",
+          "25",
+          "5",
+          "50"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              1.9172232010172134,
+              1.944230883720513
+            ],
+            "geometric_ci": [
+              6.802044311312222,
+              6.988255006896292
+            ],
+            "geometric_mean": 6.894521028734199,
+            "mean": 1.9307270423688632,
+            "n": 20
+          },
+          "10": {
+            "ci": [
+              2.2251681932866587,
+              2.252175875989958
+            ],
+            "geometric_ci": [
+              9.255039308485863,
+              9.5084024488031
+            ],
+            "geometric_mean": 9.380865547729375,
+            "mean": 2.2386720346383084,
+            "n": 20
+          },
+          "100": {
+            "ci": [
+              2.2053912769764614,
+              2.232398959679761
+            ],
+            "geometric_ci": [
+              9.073801242873392,
+              9.32220286504705
+            ],
+            "geometric_mean": 9.197163472679053,
+            "mean": 2.218895118328111,
+            "n": 20
+          },
+          "25": {
+            "ci": [
+              2.208285782922825,
+              2.2352934656261243
+            ],
+            "geometric_ci": [
+              9.100103462128336,
+              9.34922512585402
+            ],
+            "geometric_mean": 9.223823281915228,
+            "mean": 2.2217896242744746,
+            "n": 20
+          },
+          "5": {
+            "ci": [
+              2.2378549411514634,
+              2.264862623854763
+            ],
+            "geometric_ci": [
+              9.373203634265435,
+              9.629801605214405
+            ],
+            "geometric_mean": 9.500636368330849,
+            "mean": 2.251358782503113,
+            "n": 20
+          },
+          "50": {
+            "ci": [
+              2.2132907257262873,
+              2.2402984084295867
+            ],
+            "geometric_ci": [
+              9.145763126152888,
+              9.39613475494922
+            ],
+            "geometric_mean": 9.270103708706726,
+            "mean": 2.226794567077937,
+            "n": 20
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              2.340950251322787,
+              2.3565431442017246
+            ],
+            "geometric_ci": [
+              10.391106035004626,
+              10.554403267793619
+            ],
+            "geometric_mean": 10.472436368479057,
+            "mean": 2.3487466977622558,
+            "n": 60
+          },
+          "30": {
+            "ci": [
+              2.0062025788618776,
+              2.0217954717408153
+            ],
+            "geometric_ci": [
+              7.435029732250908,
+              7.551871941048551
+            ],
+            "geometric_mean": 7.493223099297615,
+            "mean": 2.0139990253013464,
+            "n": 60
+          }
+        }
+      },
+      "ms_residual": 0.0009282422366847816,
+      "n_params": 12,
+      "n_runs": 120,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "throughput_http",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 327.970927541423,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 1.4410431496113845e-63,
+          "partial_eta_sq": 0.9382099645645147,
+          "significant": true,
+          "ss": 1.5221823367431648
+        },
+        "load:swarm_N": {
+          "F": 8.418981112334205,
+          "df": 5,
+          "p_permutation": 0.001,
+          "p_value": 9.392399660956245e-07,
+          "partial_eta_sq": 0.280455258652167,
+          "significant": true,
+          "ss": 0.03907426929160017
+        },
+        "swarm_N": {
+          "F": 3621.554798611756,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 6.697170947528998e-85,
+          "partial_eta_sq": 0.9710421200835552,
+          "significant": true,
+          "ss": 3.36168012653988
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "campaign_spec": {
+    "advisor_approved": false,
+    "sha256": "efc891a5c98d40b85ba20d8b7b4eb5ec2bf33318a44858676c7e67b3fbdc79b8",
+    "status": "TECHNICAL_INTERNAL_DECISION_NOT_ADVISOR_APPROVED",
+    "version": "oe-campaign-spec-v1"
+  },
+  "contrast_regime_le_25": {
+    "error_rate": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 72,
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": false,
+      "n_params": 8,
+      "n_runs": 80,
+      "response": "error_rate",
+      "status": "undefined_zero_residual_variance",
+      "unit": "run"
+    },
+    "p95_ms": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 72,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.4486458545392673,
+        "residual_max": 0.1816420071832372,
+        "residual_min": -0.09168531193640206,
+        "residual_sd": 0.04312917477064294,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 0.00048254510284857153
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "load:swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              5.227291233274408,
+              5.265741065493553
+            ],
+            "geometric_ci": [
+              186.28751005943153,
+              193.58971830307792
+            ],
+            "geometric_mean": 189.9035191769419,
+            "mean": 5.2465161493839805,
+            "n": 20
+          },
+          "10": {
+            "ci": [
+              7.356922850763059,
+              7.395372682982204
+            ],
+            "geometric_ci": [
+              1567.0072213904684,
+              1628.4316993183788
+            ],
+            "geometric_mean": 1597.4242493379934,
+            "mean": 7.376147766872632,
+            "n": 20
+          },
+          "25": {
+            "ci": [
+              8.264285677619316,
+              8.30273550983846
+            ],
+            "geometric_ci": [
+              3882.698488554393,
+              4034.894805428609
+            ],
+            "geometric_mean": 3958.0651791643895,
+            "mean": 8.283510593728888,
+            "n": 20
+          },
+          "5": {
+            "ci": [
+              6.616322763044659,
+              6.654772595263804
+            ],
+            "geometric_ci": [
+              747.1924354826466,
+              776.4813274766988
+            ],
+            "geometric_mean": 761.6961166922889,
+            "mean": 6.635547679154231,
+            "n": 20
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              6.733218561529207,
+              6.760406698626849
+            ],
+            "geometric_ci": [
+              839.8460166564903,
+              862.9931025375366
+            ],
+            "geometric_mean": 851.3408950403923,
+            "mean": 6.746812630078028,
+            "n": 40
+          },
+          "30": {
+            "ci": [
+              7.0104543959430154,
+              7.037642533040658
+            ],
+            "geometric_ci": [
+              1108.1579329831702,
+              1138.699992284281
+            ],
+            "geometric_mean": 1123.3251665202292,
+            "mean": 7.024048464491837,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.0018601257163966638,
+      "n_params": 8,
+      "n_runs": 80,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "p95_ms",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 17718.920872631366,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 3.609967692427734e-103,
+          "partial_eta_sq": 0.9986473478536997,
+          "significant": true,
+          "ss": 98.87826114593766
+        },
+        "load:swarm_N": {
+          "F": 9.953383023808856,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 1.438709732118598e-05,
+          "partial_eta_sq": 0.2931484917667652,
+          "significant": true,
+          "ss": 0.05554363118319852
+        },
+        "swarm_N": {
+          "F": 826.3926164303399,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 3.37740777980993e-41,
+          "partial_eta_sq": 0.919856865825452,
+          "significant": true,
+          "ss": 1.5371941576623993
+        }
+      },
+      "unit": "run"
+    },
+    "t_conv_ms_mean": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 72,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.5885871960662357,
+        "residual_max": 0.1510338974061538,
+        "residual_min": -0.11460755323075578,
+        "residual_sd": 0.03963908474876853,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 0.0064329619997455685
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              4.639686756047933,
+              4.675025159020299
+            ],
+            "geometric_ci": [
+              103.51191802207698,
+              107.23526499231478
+            ],
+            "geometric_mean": 105.35714479312824,
+            "mean": 4.657355957534116,
+            "n": 20
+          },
+          "10": {
+            "ci": [
+              6.551748730992673,
+              6.587087133965039
+            ],
+            "geometric_ci": [
+              700.4680335629323,
+              725.6640262597223
+            ],
+            "geometric_mean": 712.9547345389522,
+            "mean": 6.569417932478856,
+            "n": 20
+          },
+          "25": {
+            "ci": [
+              7.425127579311526,
+              7.460465982283892
+            ],
+            "geometric_ci": [
+              1677.613588151703,
+              1737.9577261990937
+            ],
+            "geometric_mean": 1707.519105926735,
+            "mean": 7.442796780797709,
+            "n": 20
+          },
+          "5": {
+            "ci": [
+              5.867308787166177,
+              5.902647190138543
+            ],
+            "geometric_ci": [
+              353.2969025621986,
+              366.0050716009446
+            ],
+            "geometric_mean": 359.59485274217906,
+            "mean": 5.88497798865236,
+            "n": 20
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              5.965405539725589,
+              5.990393564103652
+            ],
+            "geometric_ci": [
+              389.7110393367037,
+              399.57183611731415
+            ],
+            "geometric_mean": 394.6106378988706,
+            "mean": 5.9778995519146205,
+            "n": 40
+          },
+          "30": {
+            "ci": [
+              6.286880765627868,
+              6.3118687900059305
+            ],
+            "geometric_ci": [
+              537.4742036430467,
+              551.0738283956971
+            ],
+            "geometric_mean": 544.2315381025821,
+            "mean": 6.299374777816899,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.0015712570397200538,
+      "n_params": 8,
+      "n_runs": 80,
+      "reading_rule": "sin interacciones significativas",
+      "response": "t_conv_ms_mean",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 17586.51942007205,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 4.727236914479969e-103,
+          "partial_eta_sq": 0.9986371781872234,
+          "significant": true,
+          "ss": 82.89882732888495
+        },
+        "load:swarm_N": {
+          "F": 2.1301582835760207,
+          "df": 3,
+          "p_permutation": 0.121,
+          "p_value": 0.10387159531414457,
+          "partial_eta_sq": 0.08152106315080844,
+          "significant": false,
+          "ss": 0.010041078596360428
+        },
+        "swarm_N": {
+          "F": 1315.4604021673463,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 5.333901878865001e-48,
+          "partial_eta_sq": 0.9481066271242559,
+          "significant": true,
+          "ss": 2.066926417378416
+        }
+      },
+      "unit": "run"
+    },
+    "throughput_http": {
+      "alpha": 0.05,
+      "coding": "sum-to-zero; Type III SS",
+      "df_residual": 72,
+      "diagnostics": {
+        "homoscedastic": true,
+        "levene_p": 0.6988023857197746,
+        "residual_max": 0.1134738386891101,
+        "residual_min": -0.14517951752805858,
+        "residual_sd": 0.036128021464421955,
+        "residuals_normal": false,
+        "shapiro_residuals_p": 0.00035366081700779475
+      },
+      "factors": [
+        "load",
+        "swarm_N"
+      ],
+      "inference": "permutation (Freedman\u2013Lane)",
+      "interaction_significant": [
+        "load:swarm_N"
+      ],
+      "levels": {
+        "load": [
+          "1",
+          "10",
+          "25",
+          "5"
+        ],
+        "swarm_N": [
+          "10",
+          "30"
+        ]
+      },
+      "log_transform": true,
+      "marginal_means": {
+        "load": {
+          "1": {
+            "ci": [
+              1.9146229043798584,
+              1.946831180357868
+            ],
+            "geometric_ci": [
+              6.784379954599248,
+              7.006450189074932
+            ],
+            "geometric_mean": 6.894521028734199,
+            "mean": 1.9307270423688632,
+            "n": 20
+          },
+          "10": {
+            "ci": [
+              2.2225678966493034,
+              2.2547761726273134
+            ],
+            "geometric_ci": [
+              9.231004722961947,
+              9.5331592893324
+            ],
+            "geometric_mean": 9.380865547729375,
+            "mean": 2.2386720346383084,
+            "n": 20
+          },
+          "25": {
+            "ci": [
+              2.2056854862854696,
+              2.2378937622634796
+            ],
+            "geometric_ci": [
+              9.076471232415766,
+              9.37356751951684
+            ],
+            "geometric_mean": 9.223823281915228,
+            "mean": 2.2217896242744746,
+            "n": 20
+          },
+          "5": {
+            "ci": [
+              2.235254644514108,
+              2.267462920492118
+            ],
+            "geometric_ci": [
+              9.348862185583064,
+              9.654874530340653
+            ],
+            "geometric_mean": 9.500636368330849,
+            "mean": 2.251358782503113,
+            "n": 20
+          }
+        },
+        "swarm_N": {
+          "10": {
+            "ci": [
+              2.314570244179383,
+              2.3373449345337614
+            ],
+            "geometric_ci": [
+              10.120572609038094,
+              10.35371025827773
+            ],
+            "geometric_mean": 10.236477736108368,
+            "mean": 2.3259575893565723,
+            "n": 40
+          },
+          "30": {
+            "ci": [
+              1.9839288073586177,
+              2.006703497712996
+            ],
+            "geometric_ci": [
+              7.271254298151911,
+              7.438755011755888
+            ],
+            "geometric_mean": 7.35452781299582,
+            "mean": 1.995316152535807,
+            "n": 40
+          }
+        }
+      },
+      "ms_residual": 0.0013052339349337336,
+      "n_params": 8,
+      "n_runs": 80,
+      "reading_rule": "con interacci\u00f3n significativa, interpretar los efectos principales de forma condicional",
+      "response": "throughput_http",
+      "single_level_factors": [],
+      "status": "ok",
+      "terms": {
+        "load": {
+          "F": 362.2244188162044,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 2.4150191363149563e-43,
+          "partial_eta_sq": 0.9378599621599247,
+          "significant": true,
+          "ss": 1.4183628105016775
+        },
+        "load:swarm_N": {
+          "F": 9.599505688821814,
+          "df": 3,
+          "p_permutation": 0.001,
+          "p_value": 2.0733368749605066e-05,
+          "partial_eta_sq": 0.28570377724382606,
+          "significant": true,
+          "ss": 0.03758880175091897
+        },
+        "swarm_N": {
+          "F": 1675.159629502749,
+          "df": 1,
+          "p_permutation": 0.001,
+          "p_value": 1.3202280723919829e-51,
+          "partial_eta_sq": 0.9587902566060941,
+          "significant": true,
+          "ss": 2.1864751948580086
+        }
+      },
+      "unit": "run"
+    }
+  },
+  "experiment": "oe4",
+  "factors": [
+    "load",
+    "swarm_N"
+  ],
+  "p95_by_load_median_ms": {
+    "1": 196.15545,
+    "10": 1769.7268,
+    "100": 17459.050049999998,
+    "25": 4337.621149999999,
+    "5": 848.3408,
+    "50": 8529.703150000001
+  },
+  "rnf04": {
+    "u1": {
+      "runs": 20,
+      "runs_meeting_rnf04": 0
+    },
+    "u10": {
+      "runs": 20,
+      "runs_meeting_rnf04": 0
+    },
+    "u100": {
+      "runs": 20,
+      "runs_meeting_rnf04": 0
+    },
+    "u25": {
+      "runs": 20,
+      "runs_meeting_rnf04": 0
+    },
+    "u5": {
+      "runs": 20,
+      "runs_meeting_rnf04": 0
+    },
+    "u50": {
+      "runs": 20,
+      "runs_meeting_rnf04": 0
+    }
+  },
+  "runs_per_cell": [
+    10
+  ],
+  "spearman_load_vs_p95": {
+    "n": 120,
+    "p_value": 9.702223865405197e-94,
+    "rho": 0.9860475355393463,
+    "status": "ok"
+  },
+  "unit": "run"
+}

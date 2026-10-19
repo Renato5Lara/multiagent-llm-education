@@ -1,0 +1,24 @@
+{
+ "integridad": {
+  "runs": 160,
+  "per_cell": [
+   10
+  ],
+  "comparable": 160,
+  "errors": 0,
+  "timeouts": 0,
+  "generator_saturated": 0,
+  "servers_restarted": 160,
+  "status": {
+   "ok": 160
+  }
+ },
+ "familias_holm_m": 8,
+ "significativas_holm": {
+  "auxiliar_bruteforce": 3,
+  "auxiliar_rules": 8,
+  "primaria_replica": 8
+ },
+ "consistencia_significativas_holm": 7,
+ "consistencia_n": 16
+}

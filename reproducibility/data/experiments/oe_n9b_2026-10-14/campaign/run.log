@@ -1,0 +1,321 @@
+[1/160] n9b-oe2-aux-rules|u1|N20-r00 seed=6721326557288052103
+    ok: P95 27 ms · 50.37 req/s · error 0.00%
+[2/160] n9b-oe2-aux-bruteforce|u5|N20-r00 seed=6721326557288052103
+    ok: P95 504 ms · 12.23 req/s · error 0.00%
+[3/160] n9b-oe2-aux-bruteforce|u10|N20-r00 seed=6721326557288052103
+    ok: P95 855 ms · 12.42 req/s · error 0.00%
+[4/160] n9b-oe2-aux-rules|u10|N20-r00 seed=6721326557288052103
+    ok: P95 62 ms · 195.51 req/s · error 0.00%
+[5/160] n9b-oe2-aux-decision_table|u25|N20-r00 seed=6721326557288052103
+    ok: P95 203 ms · 189.42 req/s · error 0.00%
+[6/160] n9b-oe2-aux-rules|u25|N20-r00 seed=6721326557288052103
+    ok: P95 201 ms · 192.33 req/s · error 0.00%
+[7/160] n9b-oe2-aux-decision_table|u1|N20-r00 seed=6721326557288052103
+    ok: P95 29 ms · 51.44 req/s · error 0.00%
+[8/160] n9b-oe2-aux-swarm|u10|N20-r00 seed=6721326557288052103
+    ok: P95 896 ms · 16.80 req/s · error 0.00%
+[9/160] n9b-oe2-aux-bruteforce|u1|N20-r00 seed=6721326557288052103
+    ok: P95 116 ms · 10.15 req/s · error 0.00%
+[10/160] n9b-oe2-aux-swarm|u1|N20-r00 seed=6721326557288052103
+    ok: P95 115 ms · 10.81 req/s · error 0.00%
+[11/160] n9b-oe2-aux-decision_table|u5|N20-r00 seed=6721326557288052103
+    ok: P95 32 ms · 189.83 req/s · error 0.00%
+[12/160] n9b-oe2-aux-swarm|u5|N20-r00 seed=6721326557288052103
+    ok: P95 420 ms · 17.09 req/s · error 0.00%
+[13/160] n9b-oe2-aux-swarm|u25|N20-r00 seed=6721326557288052103
+    ok: P95 2287 ms · 16.66 req/s · error 0.00%
+[14/160] n9b-oe2-aux-decision_table|u10|N20-r00 seed=6721326557288052103
+    ok: P95 62 ms · 195.75 req/s · error 0.00%
+[15/160] n9b-oe2-aux-rules|u5|N20-r00 seed=6721326557288052103
+    ok: P95 32 ms · 188.83 req/s · error 0.00%
+[16/160] n9b-oe2-aux-bruteforce|u25|N20-r00 seed=6721326557288052103
+    ok: P95 2136 ms · 12.33 req/s · error 0.00%
+[17/160] n9b-oe2-aux-rules|u5|N20-r01 seed=537306628830295662
+    ok: P95 33 ms · 185.65 req/s · error 0.00%
+[18/160] n9b-oe2-aux-swarm|u1|N20-r01 seed=537306628830295662
+    ok: P95 115 ms · 10.84 req/s · error 0.00%
+[19/160] n9b-oe2-aux-decision_table|u1|N20-r01 seed=537306628830295662
+    ok: P95 29 ms · 50.14 req/s · error 0.00%
+[20/160] n9b-oe2-aux-bruteforce|u10|N20-r01 seed=537306628830295662
+    ok: P95 1964 ms · 7.87 req/s · error 0.00%
+[21/160] n9b-oe2-aux-swarm|u10|N20-r01 seed=537306628830295662
+    ok: P95 1681 ms · 8.80 req/s · error 0.00%
+[22/160] n9b-oe2-aux-bruteforce|u1|N20-r01 seed=537306628830295662
+    ok: P95 221 ms · 5.58 req/s · error 0.00%
+[23/160] n9b-oe2-aux-swarm|u25|N20-r01 seed=537306628830295662
+    ok: P95 4241 ms · 8.80 req/s · error 0.00%
+[24/160] n9b-oe2-aux-rules|u1|N20-r01 seed=537306628830295662
+    ok: P95 33 ms · 45.41 req/s · error 0.00%
+[25/160] n9b-oe2-aux-swarm|u5|N20-r01 seed=537306628830295662
+    ok: P95 812 ms · 8.79 req/s · error 0.00%
+[26/160] n9b-oe2-aux-rules|u25|N20-r01 seed=537306628830295662
+    ok: P95 302 ms · 127.10 req/s · error 0.00%
+[27/160] n9b-oe2-aux-decision_table|u10|N20-r01 seed=537306628830295662
+    ok: P95 85 ms · 136.83 req/s · error 0.00%
+[28/160] n9b-oe2-aux-bruteforce|u5|N20-r01 seed=537306628830295662
+    ok: P95 1174 ms · 5.93 req/s · error 0.00%
+[29/160] n9b-oe2-aux-decision_table|u25|N20-r01 seed=537306628830295662
+    ok: P95 302 ms · 127.27 req/s · error 0.00%
+[30/160] n9b-oe2-aux-rules|u10|N20-r01 seed=537306628830295662
+    ok: P95 86 ms · 136.82 req/s · error 0.00%
+[31/160] n9b-oe2-aux-decision_table|u5|N20-r01 seed=537306628830295662
+    ok: P95 45 ms · 134.12 req/s · error 0.00%
+[32/160] n9b-oe2-aux-bruteforce|u25|N20-r01 seed=537306628830295662
+    ok: P95 4645 ms · 5.93 req/s · error 0.00%
+[33/160] n9b-oe2-aux-bruteforce|u25|N20-r02 seed=4286300988819483214
+    ok: P95 2159 ms · 12.28 req/s · error 0.00%
+[34/160] n9b-oe2-aux-bruteforce|u10|N20-r02 seed=4286300988819483214
+    ok: P95 885 ms · 12.24 req/s · error 0.00%
+[35/160] n9b-oe2-aux-rules|u10|N20-r02 seed=4286300988819483214
+    ok: P95 62 ms · 194.71 req/s · error 0.00%
+[36/160] n9b-oe2-aux-swarm|u1|N20-r02 seed=4286300988819483214
+    ok: P95 114 ms · 10.85 req/s · error 0.00%
+[37/160] n9b-oe2-aux-rules|u25|N20-r02 seed=4286300988819483214
+    ok: P95 198 ms · 190.96 req/s · error 0.00%
+[38/160] n9b-oe2-aux-decision_table|u5|N20-r02 seed=4286300988819483214
+    ok: P95 31 ms · 191.09 req/s · error 0.00%
+[39/160] n9b-oe2-aux-decision_table|u25|N20-r02 seed=4286300988819483214
+    ok: P95 203 ms · 193.11 req/s · error 0.00%
+[40/160] n9b-oe2-aux-bruteforce|u1|N20-r02 seed=4286300988819483214
+    ok: P95 113 ms · 10.16 req/s · error 0.00%
+[41/160] n9b-oe2-aux-rules|u1|N20-r02 seed=4286300988819483214
+    ok: P95 28 ms · 51.21 req/s · error 0.00%
+[42/160] n9b-oe2-aux-swarm|u25|N20-r02 seed=4286300988819483214
+    ok: P95 2270 ms · 16.83 req/s · error 0.00%
+[43/160] n9b-oe2-aux-decision_table|u1|N20-r02 seed=4286300988819483214
+    ok: P95 28 ms · 51.81 req/s · error 0.00%
+[44/160] n9b-oe2-aux-swarm|u5|N20-r02 seed=4286300988819483214
+    ok: P95 420 ms · 17.09 req/s · error 0.00%
+[45/160] n9b-oe2-aux-bruteforce|u5|N20-r02 seed=4286300988819483214
+    ok: P95 519 ms · 12.02 req/s · error 0.00%
+[46/160] n9b-oe2-aux-decision_table|u10|N20-r02 seed=4286300988819483214
+    ok: P95 64 ms · 192.70 req/s · error 0.00%
+[47/160] n9b-oe2-aux-rules|u5|N20-r02 seed=4286300988819483214
+    ok: P95 33 ms · 184.99 req/s · error 0.00%
+[48/160] n9b-oe2-aux-swarm|u10|N20-r02 seed=4286300988819483214
+    ok: P95 956 ms · 15.88 req/s · error 0.00%
+[49/160] n9b-oe2-aux-bruteforce|u5|N20-r03 seed=7607324206460521009
+    ok: P95 542 ms · 11.88 req/s · error 0.00%
+[50/160] n9b-oe2-aux-rules|u10|N20-r03 seed=7607324206460521009
+    ok: P95 64 ms · 191.54 req/s · error 0.00%
+[51/160] n9b-oe2-aux-decision_table|u25|N20-r03 seed=7607324206460521009
+    ok: P95 200 ms · 193.39 req/s · error 0.00%
+[52/160] n9b-oe2-aux-bruteforce|u10|N20-r03 seed=7607324206460521009
+    ok: P95 911 ms · 12.05 req/s · error 0.00%
+[53/160] n9b-oe2-aux-rules|u25|N20-r03 seed=7607324206460521009
+    ok: P95 203 ms · 190.79 req/s · error 0.00%
+[54/160] n9b-oe2-aux-decision_table|u5|N20-r03 seed=7607324206460521009
+    ok: P95 33 ms · 186.43 req/s · error 0.00%
+[55/160] n9b-oe2-aux-rules|u5|N20-r03 seed=7607324206460521009
+    ok: P95 33 ms · 184.99 req/s · error 0.00%
+[56/160] n9b-oe2-aux-swarm|u1|N20-r03 seed=7607324206460521009
+    ok: P95 123 ms · 10.43 req/s · error 0.00%
+[57/160] n9b-oe2-aux-bruteforce|u1|N20-r03 seed=7607324206460521009
+    ok: P95 119 ms · 9.94 req/s · error 0.00%
+[58/160] n9b-oe2-aux-swarm|u5|N20-r03 seed=7607324206460521009
+    ok: P95 452 ms · 16.26 req/s · error 0.00%
+[59/160] n9b-oe2-aux-bruteforce|u25|N20-r03 seed=7607324206460521009
+    ok: P95 2223 ms · 12.24 req/s · error 0.00%
+[60/160] n9b-oe2-aux-swarm|u25|N20-r03 seed=7607324206460521009
+    ok: P95 2282 ms · 16.57 req/s · error 0.00%
+[61/160] n9b-oe2-aux-rules|u1|N20-r03 seed=7607324206460521009
+    ok: P95 29 ms · 50.68 req/s · error 0.00%
+[62/160] n9b-oe2-aux-decision_table|u1|N20-r03 seed=7607324206460521009
+    ok: P95 29 ms · 50.46 req/s · error 0.00%
+[63/160] n9b-oe2-aux-decision_table|u10|N20-r03 seed=7607324206460521009
+    ok: P95 60 ms · 195.67 req/s · error 0.00%
+[64/160] n9b-oe2-aux-swarm|u10|N20-r03 seed=7607324206460521009
+    ok: P95 904 ms · 16.64 req/s · error 0.00%
+[65/160] n9b-oe2-aux-swarm|u5|N20-r04 seed=10588581650949032804
+    ok: P95 416 ms · 17.19 req/s · error 0.00%
+[66/160] n9b-oe2-aux-rules|u5|N20-r04 seed=10588581650949032804
+    ok: P95 33 ms · 186.19 req/s · error 0.00%
+[67/160] n9b-oe2-aux-swarm|u25|N20-r04 seed=10588581650949032804
+    ok: P95 2544 ms · 15.13 req/s · error 0.00%
+[68/160] n9b-oe2-aux-rules|u25|N20-r04 seed=10588581650949032804
+    ok: P95 205 ms · 188.77 req/s · error 0.00%
+[69/160] n9b-oe2-aux-bruteforce|u25|N20-r04 seed=10588581650949032804
+    ok: P95 2226 ms · 11.87 req/s · error 0.00%
+[70/160] n9b-oe2-aux-decision_table|u1|N20-r04 seed=10588581650949032804
+    ok: P95 27 ms · 50.72 req/s · error 0.00%
+[71/160] n9b-oe2-aux-rules|u1|N20-r04 seed=10588581650949032804
+    ok: P95 27 ms · 50.32 req/s · error 0.00%
+[72/160] n9b-oe2-aux-decision_table|u10|N20-r04 seed=10588581650949032804
+    ok: P95 64 ms · 192.96 req/s · error 0.00%
+[73/160] n9b-oe2-aux-bruteforce|u10|N20-r04 seed=10588581650949032804
+    ok: P95 915 ms · 12.19 req/s · error 0.00%
+[74/160] n9b-oe2-aux-swarm|u1|N20-r04 seed=10588581650949032804
+    ok: P95 115 ms · 10.78 req/s · error 0.00%
+[75/160] n9b-oe2-aux-decision_table|u5|N20-r04 seed=10588581650949032804
+    ok: P95 32 ms · 188.59 req/s · error 0.00%
+[76/160] n9b-oe2-aux-decision_table|u25|N20-r04 seed=10588581650949032804
+    ok: P95 196 ms · 192.56 req/s · error 0.00%
+[77/160] n9b-oe2-aux-bruteforce|u5|N20-r04 seed=10588581650949032804
+    ok: P95 505 ms · 12.18 req/s · error 0.00%
+[78/160] n9b-oe2-aux-swarm|u10|N20-r04 seed=10588581650949032804
+    ok: P95 906 ms · 16.71 req/s · error 0.00%
+[79/160] n9b-oe2-aux-bruteforce|u1|N20-r04 seed=10588581650949032804
+    ok: P95 114 ms · 10.13 req/s · error 0.00%
+[80/160] n9b-oe2-aux-rules|u10|N20-r04 seed=10588581650949032804
+    ok: P95 64 ms · 191.65 req/s · error 0.00%
+[81/160] n9b-oe2-aux-rules|u5|N20-r05 seed=17712857808947585027
+    ok: P95 31 ms · 188.30 req/s · error 0.00%
+[82/160] n9b-oe2-aux-swarm|u5|N20-r05 seed=17712857808947585027
+    ok: P95 435 ms · 16.93 req/s · error 0.00%
+[83/160] n9b-oe2-aux-bruteforce|u1|N20-r05 seed=17712857808947585027
+    ok: P95 114 ms · 10.19 req/s · error 0.00%
+[84/160] n9b-oe2-aux-rules|u10|N20-r05 seed=17712857808947585027
+    ok: P95 65 ms · 191.07 req/s · error 0.00%
+[85/160] n9b-oe2-aux-rules|u25|N20-r05 seed=17712857808947585027
+    ok: P95 198 ms · 191.73 req/s · error 0.00%
+[86/160] n9b-oe2-aux-swarm|u10|N20-r05 seed=17712857808947585027
+    ok: P95 885 ms · 16.82 req/s · error 0.00%
+[87/160] n9b-oe2-aux-bruteforce|u5|N20-r05 seed=17712857808947585027
+    ok: P95 495 ms · 12.12 req/s · error 0.00%
+[88/160] n9b-oe2-aux-decision_table|u10|N20-r05 seed=17712857808947585027
+    ok: P95 62 ms · 193.86 req/s · error 0.00%
+[89/160] n9b-oe2-aux-rules|u1|N20-r05 seed=17712857808947585027
+    ok: P95 31 ms · 52.02 req/s · error 0.00%
+[90/160] n9b-oe2-aux-decision_table|u1|N20-r05 seed=17712857808947585027
+    ok: P95 32 ms · 52.06 req/s · error 0.00%
+[91/160] n9b-oe2-aux-bruteforce|u25|N20-r05 seed=17712857808947585027
+    ok: P95 2114 ms · 12.43 req/s · error 0.00%
+[92/160] n9b-oe2-aux-swarm|u1|N20-r05 seed=17712857808947585027
+    ok: P95 112 ms · 11.26 req/s · error 0.00%
+[93/160] n9b-oe2-aux-bruteforce|u10|N20-r05 seed=17712857808947585027
+    ok: P95 876 ms · 12.58 req/s · error 0.00%
+[94/160] n9b-oe2-aux-swarm|u25|N20-r05 seed=17712857808947585027
+    ok: P95 2282 ms · 17.14 req/s · error 0.00%
+[95/160] n9b-oe2-aux-decision_table|u5|N20-r05 seed=17712857808947585027
+    ok: P95 31 ms · 193.04 req/s · error 0.00%
+[96/160] n9b-oe2-aux-decision_table|u25|N20-r05 seed=17712857808947585027
+    ok: P95 198 ms · 196.10 req/s · error 0.00%
+[97/160] n9b-oe2-aux-bruteforce|u5|N20-r06 seed=4063990892209885983
+    ok: P95 472 ms · 12.37 req/s · error 0.00%
+[98/160] n9b-oe2-aux-rules|u10|N20-r06 seed=4063990892209885983
+    ok: P95 64 ms · 193.87 req/s · error 0.00%
+[99/160] n9b-oe2-aux-swarm|u10|N20-r06 seed=4063990892209885983
+    ok: P95 884 ms · 17.04 req/s · error 0.00%
+[100/160] n9b-oe2-aux-swarm|u5|N20-r06 seed=4063990892209885983
+    ok: P95 433 ms · 17.23 req/s · error 0.00%
+[101/160] n9b-oe2-aux-decision_table|u5|N20-r06 seed=4063990892209885983
+    ok: P95 31 ms · 192.14 req/s · error 0.00%
+[102/160] n9b-oe2-aux-swarm|u25|N20-r06 seed=4063990892209885983
+    ok: P95 2284 ms · 16.80 req/s · error 0.00%
+[103/160] n9b-oe2-aux-decision_table|u10|N20-r06 seed=4063990892209885983
+    ok: P95 61 ms · 195.90 req/s · error 0.00%
+[104/160] n9b-oe2-aux-swarm|u1|N20-r06 seed=4063990892209885983
+    ok: P95 115 ms · 10.96 req/s · error 0.00%
+[105/160] n9b-oe2-aux-rules|u25|N20-r06 seed=4063990892209885983
+    ok: P95 198 ms · 192.36 req/s · error 0.00%
+[106/160] n9b-oe2-aux-decision_table|u1|N20-r06 seed=4063990892209885983
+    ok: P95 31 ms · 51.13 req/s · error 0.00%
+[107/160] n9b-oe2-aux-bruteforce|u25|N20-r06 seed=4063990892209885983
+    ok: P95 2119 ms · 12.43 req/s · error 0.00%
+[108/160] n9b-oe2-aux-bruteforce|u1|N20-r06 seed=4063990892209885983
+    ok: P95 112 ms · 10.33 req/s · error 0.00%
+[109/160] n9b-oe2-aux-rules|u5|N20-r06 seed=4063990892209885983
+    ok: P95 31 ms · 190.82 req/s · error 0.00%
+[110/160] n9b-oe2-aux-rules|u1|N20-r06 seed=4063990892209885983
+    ok: P95 30 ms · 51.25 req/s · error 0.00%
+[111/160] n9b-oe2-aux-decision_table|u25|N20-r06 seed=4063990892209885983
+    ok: P95 196 ms · 191.81 req/s · error 0.00%
+[112/160] n9b-oe2-aux-bruteforce|u10|N20-r06 seed=4063990892209885983
+    ok: P95 856 ms · 12.33 req/s · error 0.00%
+[113/160] n9b-oe2-aux-rules|u5|N20-r07 seed=3546516592530791069
+    ok: P95 31 ms · 191.34 req/s · error 0.00%
+[114/160] n9b-oe2-aux-decision_table|u25|N20-r07 seed=3546516592530791069
+    ok: P95 199 ms · 193.63 req/s · error 0.00%
+[115/160] n9b-oe2-aux-swarm|u25|N20-r07 seed=3546516592530791069
+    ok: P95 2244 ms · 16.99 req/s · error 0.00%
+[116/160] n9b-oe2-aux-bruteforce|u1|N20-r07 seed=3546516592530791069
+    ok: P95 112 ms · 10.39 req/s · error 0.00%
+[117/160] n9b-oe2-aux-bruteforce|u10|N20-r07 seed=3546516592530791069
+    ok: P95 874 ms · 12.26 req/s · error 0.00%
+[118/160] n9b-oe2-aux-rules|u25|N20-r07 seed=3546516592530791069
+    ok: P95 199 ms · 192.45 req/s · error 0.00%
+[119/160] n9b-oe2-aux-swarm|u5|N20-r07 seed=3546516592530791069
+    ok: P95 425 ms · 17.24 req/s · error 0.00%
+[120/160] n9b-oe2-aux-rules|u1|N20-r07 seed=3546516592530791069
+    ok: P95 31 ms · 50.72 req/s · error 0.00%
+[121/160] n9b-oe2-aux-swarm|u10|N20-r07 seed=3546516592530791069
+    ok: P95 870 ms · 17.08 req/s · error 0.00%
+[122/160] n9b-oe2-aux-rules|u10|N20-r07 seed=3546516592530791069
+    ok: P95 62 ms · 195.35 req/s · error 0.00%
+[123/160] n9b-oe2-aux-decision_table|u10|N20-r07 seed=3546516592530791069
+    ok: P95 62 ms · 195.47 req/s · error 0.00%
+[124/160] n9b-oe2-aux-decision_table|u1|N20-r07 seed=3546516592530791069
+    ok: P95 30 ms · 51.94 req/s · error 0.00%
+[125/160] n9b-oe2-aux-decision_table|u5|N20-r07 seed=3546516592530791069
+    ok: P95 31 ms · 189.78 req/s · error 0.00%
+[126/160] n9b-oe2-aux-swarm|u1|N20-r07 seed=3546516592530791069
+    ok: P95 114 ms · 11.03 req/s · error 0.00%
+[127/160] n9b-oe2-aux-bruteforce|u25|N20-r07 seed=3546516592530791069
+    ok: P95 2136 ms · 12.42 req/s · error 0.00%
+[128/160] n9b-oe2-aux-bruteforce|u5|N20-r07 seed=3546516592530791069
+    ok: P95 483 ms · 12.31 req/s · error 0.00%
+[129/160] n9b-oe2-aux-bruteforce|u5|N20-r08 seed=14733893125204041442
+    FAILED: CalledProcessError: Command '['<RAIZ_REPO>\\.venv\\Scripts\\python.exe', '-m', 
+[130/160] n9b-oe2-aux-bruteforce|u1|N20-r08 seed=14733893125204041442
+    ok: P95 112 ms · 10.41 req/s · error 0.00%
+[131/160] n9b-oe2-aux-swarm|u10|N20-r08 seed=14733893125204041442
+    ok: P95 878 ms · 17.00 req/s · error 0.00%
+[132/160] n9b-oe2-aux-rules|u25|N20-r08 seed=14733893125204041442
+    ok: P95 198 ms · 193.74 req/s · error 0.00%
+[133/160] n9b-oe2-aux-rules|u1|N20-r08 seed=14733893125204041442
+    ok: P95 31 ms · 50.40 req/s · error 0.00%
+[134/160] n9b-oe2-aux-decision_table|u10|N20-r08 seed=14733893125204041442
+    ok: P95 60 ms · 197.34 req/s · error 0.00%
+[135/160] n9b-oe2-aux-rules|u5|N20-r08 seed=14733893125204041442
+    ok: P95 31 ms · 190.66 req/s · error 0.00%
+[136/160] n9b-oe2-aux-decision_table|u5|N20-r08 seed=14733893125204041442
+    ok: P95 32 ms · 187.39 req/s · error 0.00%
+[137/160] n9b-oe2-aux-swarm|u1|N20-r08 seed=14733893125204041442
+    ok: P95 113 ms · 10.99 req/s · error 0.00%
+[138/160] n9b-oe2-aux-rules|u10|N20-r08 seed=14733893125204041442
+    ok: P95 62 ms · 195.67 req/s · error 0.00%
+[139/160] n9b-oe2-aux-swarm|u25|N20-r08 seed=14733893125204041442
+    ok: P95 2261 ms · 16.86 req/s · error 0.00%
+[140/160] n9b-oe2-aux-bruteforce|u25|N20-r08 seed=14733893125204041442
+    ok: P95 2124 ms · 12.53 req/s · error 0.00%
+[141/160] n9b-oe2-aux-bruteforce|u10|N20-r08 seed=14733893125204041442
+    ok: P95 871 ms · 12.30 req/s · error 0.00%
+[142/160] n9b-oe2-aux-decision_table|u1|N20-r08 seed=14733893125204041442
+    ok: P95 29 ms · 50.83 req/s · error 0.00%
+[143/160] n9b-oe2-aux-decision_table|u25|N20-r08 seed=14733893125204041442
+    ok: P95 196 ms · 189.97 req/s · error 0.00%
+[144/160] n9b-oe2-aux-swarm|u5|N20-r08 seed=14733893125204041442
+    ok: P95 416 ms · 17.20 req/s · error 0.00%
+[145/160] n9b-oe2-aux-swarm|u25|N20-r09 seed=1849955992485212920
+    ok: P95 2256 ms · 16.79 req/s · error 0.00%
+[146/160] n9b-oe2-aux-rules|u10|N20-r09 seed=1849955992485212920
+    ok: P95 68 ms · 190.60 req/s · error 0.00%
+[147/160] n9b-oe2-aux-swarm|u5|N20-r09 seed=1849955992485212920
+    ok: P95 423 ms · 17.08 req/s · error 0.00%
+[148/160] n9b-oe2-aux-bruteforce|u25|N20-r09 seed=1849955992485212920
+    ok: P95 2156 ms · 12.28 req/s · error 0.00%
+[149/160] n9b-oe2-aux-bruteforce|u10|N20-r09 seed=1849955992485212920
+    ok: P95 875 ms · 12.36 req/s · error 0.00%
+[150/160] n9b-oe2-aux-decision_table|u10|N20-r09 seed=1849955992485212920
+    ok: P95 81 ms · 178.41 req/s · error 0.00%
+[151/160] n9b-oe2-aux-bruteforce|u1|N20-r09 seed=1849955992485212920
+    ok: P95 120 ms · 9.96 req/s · error 0.00%
+[152/160] n9b-oe2-aux-swarm|u1|N20-r09 seed=1849955992485212920
+    ok: P95 121 ms · 10.65 req/s · error 0.00%
+[153/160] n9b-oe2-aux-swarm|u10|N20-r09 seed=1849955992485212920
+    ok: P95 972 ms · 15.67 req/s · error 0.00%
+[154/160] n9b-oe2-aux-decision_table|u1|N20-r09 seed=1849955992485212920
+    ok: P95 32 ms · 49.49 req/s · error 0.00%
+[155/160] n9b-oe2-aux-rules|u1|N20-r09 seed=1849955992485212920
+    ok: P95 31 ms · 49.77 req/s · error 0.00%
+[156/160] n9b-oe2-aux-rules|u5|N20-r09 seed=1849955992485212920
+    ok: P95 33 ms · 184.59 req/s · error 0.00%
+[157/160] n9b-oe2-aux-decision_table|u25|N20-r09 seed=1849955992485212920
+    ok: P95 209 ms · 190.36 req/s · error 0.00%
+[158/160] n9b-oe2-aux-bruteforce|u5|N20-r09 seed=1849955992485212920
+    ok: P95 532 ms · 12.02 req/s · error 0.00%
+[159/160] n9b-oe2-aux-decision_table|u5|N20-r09 seed=1849955992485212920
+    ok: P95 33 ms · 184.81 req/s · error 0.00%
+[160/160] n9b-oe2-aux-rules|u25|N20-r09 seed=1849955992485212920
+    ok: P95 205 ms · 187.26 req/s · error 0.00%
+ATENCIÓN: 0 violación(es) de invariantes y 1 hueco(s) de provenance al terminar: la campaña NO es válida como oficial (`official_valid = false` en el manifiesto)

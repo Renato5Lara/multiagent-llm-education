@@ -1,0 +1,12 @@
+{
+  "f1_adapt": 0.6407047619047619,
+  "ci95": [
+    0.6371053643465779,
+    0.6443041594629458
+  ],
+  "k": 10,
+  "definition": "v2 (histórica/certificada; superada por la redefinición 4x4 con audio, K=10 v3 NO ejecutado)",
+  "source": "official_runs/k10_analysis_2026-09-27/03_summary_k10_ci95.json",
+  "source_sha256": "1389cfa2a85728d0ba40a9a303cfc262df1d93ce80589e2c3dcb2d934a6b95c6",
+  "ci_pass_vs_0.85": false
+}

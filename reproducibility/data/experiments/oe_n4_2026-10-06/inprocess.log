@@ -1,0 +1,95 @@
+destino de Redis: Redis 127.0.0.1:56379
+[1/30] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.51 s, 13.3 req/s
+[2/30] swarm|batch|bc1|h1|pso|r1|N20|c50 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c50 lote 1/1: 100/100 ok, 6.65 s, 15.0 req/s
+[3/30] swarm|batch|bc1|h1|pso|r1|N20|c100 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c100 lote 1/1: 100/100 ok, 6.15 s, 16.3 req/s
+[4/30] swarm|batch|bc1|h1|pso|r1|N20|c10 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c10 lote 1/1: 100/100 ok, 6.09 s, 16.4 req/s
+[5/30] swarm|batch|bc1|h1|pso|r1|N20|c5 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c5 lote 1/1: 100/100 ok, 5.87 s, 17.0 req/s
+[6/30] swarm|batch|bc1|h1|pso|r1|N20|c25 (lote 0)
+  swarm|batch|bc1|h1|pso|r1|N20|c25 lote 1/1: 100/100 ok, 5.88 s, 17.0 req/s
+[7/30] swarm|batch|bc1|h1|pso|r1|N20|c10 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c10 lote 1/1: 100/100 ok, 5.90 s, 16.9 req/s
+[8/30] swarm|batch|bc1|h1|pso|r1|N20|c100 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c100 lote 1/1: 100/100 ok, 6.19 s, 16.2 req/s
+[9/30] swarm|batch|bc1|h1|pso|r1|N20|c50 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c50 lote 1/1: 100/100 ok, 6.03 s, 16.6 req/s
+[10/30] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.64 s, 13.1 req/s
+[11/30] swarm|batch|bc1|h1|pso|r1|N20|c25 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c25 lote 1/1: 100/100 ok, 5.99 s, 16.7 req/s
+[12/30] swarm|batch|bc1|h1|pso|r1|N20|c5 (lote 1)
+  swarm|batch|bc1|h1|pso|r1|N20|c5 lote 1/1: 100/100 ok, 6.65 s, 15.0 req/s
+[13/30] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.78 s, 12.9 req/s
+[14/30] swarm|batch|bc1|h1|pso|r1|N20|c5 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c5 lote 1/1: 100/100 ok, 5.96 s, 16.8 req/s
+[15/30] swarm|batch|bc1|h1|pso|r1|N20|c100 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c100 lote 1/1: 100/100 ok, 6.13 s, 16.3 req/s
+[16/30] swarm|batch|bc1|h1|pso|r1|N20|c50 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c50 lote 1/1: 100/100 ok, 6.13 s, 16.3 req/s
+[17/30] swarm|batch|bc1|h1|pso|r1|N20|c10 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c10 lote 1/1: 100/100 ok, 5.85 s, 17.1 req/s
+[18/30] swarm|batch|bc1|h1|pso|r1|N20|c25 (lote 2)
+  swarm|batch|bc1|h1|pso|r1|N20|c25 lote 1/1: 100/100 ok, 6.10 s, 16.4 req/s
+[19/30] swarm|batch|bc1|h1|pso|r1|N20|c5 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c5 lote 1/1: 100/100 ok, 6.02 s, 16.6 req/s
+[20/30] swarm|batch|bc1|h1|pso|r1|N20|c100 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c100 lote 1/1: 100/100 ok, 6.66 s, 15.0 req/s
+[21/30] swarm|batch|bc1|h1|pso|r1|N20|c10 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c10 lote 1/1: 100/100 ok, 5.93 s, 16.9 req/s
+[22/30] swarm|batch|bc1|h1|pso|r1|N20|c50 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c50 lote 1/1: 100/100 ok, 6.32 s, 15.8 req/s
+[23/30] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.74 s, 12.9 req/s
+[24/30] swarm|batch|bc1|h1|pso|r1|N20|c25 (lote 3)
+  swarm|batch|bc1|h1|pso|r1|N20|c25 lote 1/1: 100/100 ok, 5.99 s, 16.7 req/s
+[25/30] swarm|batch|bc1|h1|pso|r1|N20|c5 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c5 lote 1/1: 100/100 ok, 5.97 s, 16.7 req/s
+[26/30] swarm|batch|bc1|h1|pso|r1|N20|c25 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c25 lote 1/1: 100/100 ok, 6.17 s, 16.2 req/s
+[27/30] swarm|batch|bc1|h1|pso|r1|N20|c100 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c100 lote 1/1: 100/100 ok, 6.54 s, 15.3 req/s
+[28/30] swarm|batch|bc1|h1|pso|r1|N20|c50 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c50 lote 1/1: 100/100 ok, 6.30 s, 15.9 req/s
+[29/30] swarm|batch|bc1|h1|pso|r1|N20|c10 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c10 lote 1/1: 100/100 ok, 6.24 s, 16.0 req/s
+[30/30] swarm|batch|bc1|h1|pso|r1|N20|c1 (lote 4)
+  swarm|batch|bc1|h1|pso|r1|N20|c1 lote 1/1: 100/100 ok, 7.83 s, 12.8 req/s
+escrito: experiments\oe_n4_2026-10-06\inprocess (3000 observaciones; validez EXPLORATORY)
+{
+  "swarm|batch|bc1|h1|pso|r1|N20|c1": {
+    "p95_ms": 104.0919899882283,
+    "throughput_median": 12.923723331925725,
+    "error_rate": 0.0
+  },
+  "swarm|batch|bc1|h1|pso|r1|N20|c50": {
+    "p95_ms": 4288.629469994338,
+    "throughput_median": 15.884817283695526,
+    "error_rate": 0.0
+  },
+  "swarm|batch|bc1|h1|pso|r1|N20|c100": {
+    "p95_ms": 6428.704704991833,
+    "throughput_median": 16.160972856993734,
+    "error_rate": 0.0
+  },
+  "swarm|batch|bc1|h1|pso|r1|N20|c10": {
+    "p95_ms": 927.6448849996085,
+    "throughput_median": 16.871920326215285,
+    "error_rate": 0.0
+  },
+  "swarm|batch|bc1|h1|pso|r1|N20|c5": {
+    "p95_ms": 452.8059649834176,
+    "throughput_median": 16.744105643657,
+    "error_rate": 0.0
+  },
+  "swarm|batch|bc1|h1|pso|r1|N20|c25": {
+    "p95_ms": 2203.7523649923965,
+    "throughput_median": 16.695413107284075,
+    "error_rate": 0.0
+  }
+}
+exit=0

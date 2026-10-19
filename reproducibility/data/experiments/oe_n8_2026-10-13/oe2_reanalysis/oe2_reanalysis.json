@@ -1,0 +1,27 @@
+{
+ "source": "..\\oe_n2_2026-10-05\\campaign\\runs.csv",
+ "n_runs": 80,
+ "cells": 8,
+ "all_comparable": true,
+ "errors_total": 0,
+ "timeouts_total": 0,
+ "holm_m": 8,
+ "significant_after_holm": 8,
+ "significant_mw_after_holm": 8,
+ "min_possible_mw_p_n10_vs_10": 1.082508822446903e-05,
+ "decision_ms_mean_by_system": {
+  "decision_table": {
+   "mean": 0.018643665777163327,
+   "median": 0.01844854390648725,
+   "std": 0.0013523313867419226,
+   "count": 40
+  },
+  "swarm": {
+   "mean": 410.8469764282025,
+   "median": 301.6981179218535,
+   "std": 346.519618620279,
+   "count": 40
+  }
+ },
+ "nota_pareamiento": "las corridas comparten semilla por run_index (dise\u00f1o bloqueado); la sensibilidad pareada es descriptiva y no sustituye al contraste primario independiente"
+}

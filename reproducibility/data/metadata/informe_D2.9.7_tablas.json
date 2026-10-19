@@ -1,0 +1,3882 @@
+{
+ "source_sha256": "a6bb2934de7fd5123ca18229cfc02acf17a555aaa87f509706fd98ab3c396edf",
+ "tables": [
+  {
+   "idx": 1,
+   "caption_prev": "A ustedes miembros del jurado, mostramos nuestro especial y mayor reconocimiento por el dictamen que se haga merecedor y correspondiente del presente trabajo.",
+   "n_rows": 3,
+   "rows": [
+    [
+     "",
+     "",
+     ""
+    ],
+    [
+     "Rodriguez Lara, Franklin Renato",
+     "",
+     ""
+    ],
+    [
+     "DNI: ORCID:",
+     "",
+     ""
+    ]
+   ]
+  },
+  {
+   "idx": 2,
+   "caption_prev": "Tabla 1. Operacionalización de variables",
+   "n_rows": 13,
+   "rows": [
+    [
+     "Variables",
+     "Definición conceptual",
+     "Definición operacional",
+     "Dimensiones y/o Indicadores",
+     "Escala de Medición"
+    ],
+    [
+     "VI",
+     "Arquitectura multiagente basada en inteligencia de enjambre. Dimensión: Roles de agentes",
+     "Funciones especializadas que cumplen los agentes autónomos de la arquitectura (Wooldridge, 2009).",
+     "Modelo de cinco agentes: AG0 orquestador, AG1 perfilador, AG2 código, AG3 diagramas y AG4 texto y audio.",
+     "Agentes especificados e implementados según el modelo de 5 roles (Meta 3)",
+     "Razón (conteo)"
+    ],
+    [
+     "",
+     "Dimensión: Algoritmo PSO",
+     "Mecanismo de optimización por enjambre de partículas con el que el enjambre converge hacia la combinación de mayor aptitud (Kennedy y Eberhart, 1995).",
+     "PSO discreto con N = 20; w = 0,729; c1 = c2 = 1,494; φ(x) = min(2, max(0, round(x))); función de aptitud F(S); parada con |ΔF| < 0,001 o k = 15.",
+     "Tasa de convergencia CR dentro de k_max = 15 (meta ≥ 98 %)",
+     "Razón (%)"
+    ],
+    [
+     "",
+     "Dimensión: Reglas de comunicación",
+     "Protocolo de intercambio de mensajes estructurados entre agentes (Wooldridge, 2009).",
+     "Mensajes asíncronos por Redis Streams, con despacho concurrente a AG2, AG3 y AG4 y correlación por cycle_id.",
+     "Trazabilidad de logs de mensajes inter-agente (RF-03)",
+     "Nominal (cumple o no cumple)"
+    ],
+    [
+     "VD",
+     "Adaptación de contenido multimodal. Dimensión: Eficiencia",
+     "Iteraciones o tiempo que requiere el enjambre para alcanzar la combinación de contenidos estable.",
+     "Iteraciones y milisegundos desde el inicio de la búsqueda hasta la convergencia de g_best.",
+     "T_conv en iteraciones (meta ≤ 15)",
+     "Razón"
+    ],
+    [
+     "",
+     "",
+     "",
+     "",
+     "T_conv en milisegundos (descriptivo)",
+     "Razón (ms)"
+    ],
+    [
+     "",
+     "",
+     "",
+     "",
+     "Sobrecosto de comunicación comm_overhead_ms (descriptivo y de diagnóstico)",
+     "Razón (ms)"
+    ],
+    [
+     "",
+     "Dimensión: Calidad",
+     "Coincidencia entre las modalidades seleccionadas y la regla de oro (gold standard) del perfil (Tsoumakas y Katakis, 2007).",
+     "F1 por caso = 2|S ∩ G| / (|S| + |G|); F1_adapt por réplica = media de 100 casos.",
+     "F1_adapt (meta ≥ 0,85: límite inferior del IC95 y prueba unilateral superada)",
+     "Razón [0, 1]"
+    ],
+    [
+     "",
+     "",
+     "",
+     "",
+     "Coherencia temática (término Coher de la función de aptitud; descriptivo)",
+     "Razón"
+    ],
+    [
+     "",
+     "Dimensión: Rendimiento",
+     "Capacidad de la arquitectura completa para responder bajo carga concurrente.",
+     "Pruebas de carga con 1, 5, 10, 25, 50 y 100 usuarios (según el experimento) y estrés progresivo de 1 a 50 hilos en cloud de 8 vCPU y 32 GB.",
+     "L_resp en el percentil 95 con hasta 25 peticiones simultáneas (meta < 2,0 s)",
+     "Razón (s)"
+    ],
+    [
+     "",
+     "",
+     "",
+     "",
+     "Throughput (meta ≥ 20 req/s) con tasa de error < 1 %",
+     "Razón (req/s)"
+    ],
+    [
+     "",
+     "",
+     "",
+     "",
+     "Consumo de CPU, memoria RAM y memoria Redis (descriptivo)",
+     "Razón"
+    ],
+    [
+     "",
+     "Dimensión: Usabilidad",
+     "Usabilidad técnica percibida del artefacto por docentes y expertos (Brooke, 1996).",
+     "Cuestionario SUS de 10 ítems con escala Likert de 1 a 5, aplicado a al menos 10 evaluadores.",
+     "Media SUS (meta > 75)",
+     "Intervalo (0–100)"
+    ]
+   ]
+  },
+  {
+   "idx": 3,
+   "caption_prev": "Tabla 2. Matriz de consistencia de la investigación",
+   "n_rows": 9,
+   "rows": [
+    [
+     "Título de la investigación: Validación de una arquitectura multiagente basada en inteligencia de enjambre para la adaptación multimodal en Programación"
+    ],
+    [
+     "Problema general",
+     "Objetivo General",
+     "Hipótesis general",
+     "Variables",
+     "Indicadores",
+     "Metodología"
+    ],
+    [
+     "¿Cuál es el efecto de una arquitectura de software multiagente basada en inteligencia de enjambre sobre la eficiencia computacional, la precisión de adaptación y la usabilidad técnica en la adaptación de contenido multimodal, en un entorno controlado?",
+     "Determinar el efecto de una arquitectura de software multiagente basada en inteligencia de enjambre sobre la eficiencia computacional, la precisión de adaptación y la usabilidad técnica en la adaptación de contenido multimodal, mediante simulaciones controladas y evaluación de usuarios expertos.",
+     "H1: La arquitectura multiagente basada en inteligencia de enjambre permite adaptar contenido multimodal con un F1_adapt ≥ 0,85, una latencia L_resp < 2,0 s y un puntaje SUS > 75,0.",
+     "VI / VD",
+     "VI: arquitectura multiagente basada en inteligencia de enjambre (roles de agentes, algoritmo PSO, reglas de comunicación). VD: adaptación de contenido multimodal (eficiencia, calidad, rendimiento, usabilidad).",
+     "T_conv; F1_adapt; L_resp (P95); throughput; SUS.",
+     "Enfoque: Cuantitativo Tipo de investigación: Tecnológica Diseño de investigación: Prueba de concepto (PoC) bajo Design Science Research (DSRM) Población y muestra: n = 100 casos sintéticos; n ≥ 10 evaluadores expertos Condiciones de ejecución: Entorno controlado; especificación sellada antes de cada corrida oficial"
+    ],
+    [
+     "Problemas específicos",
+     "Objetivos específicos",
+     "Metas de desempeño",
+     "",
+     "",
+     "",
+     ""
+    ],
+    [
+     "¿Cuál es la relación entre el cumplimiento de los requerimientos funcionales y no funcionales de la arquitectura multiagente y el desempeño del proceso de adaptación de contenido multimodal, medida mediante indicadores de funcionalidad, confiabilidad, eficiencia y calidad de adaptación?",
+     "Determinar la relación entre el cumplimiento de los requerimientos funcionales y no funcionales de la arquitectura multiagente y el desempeño del proceso de adaptación de contenido multimodal, mediante indicadores cuantificables de funcionalidad, confiabilidad, eficiencia y calidad de adaptación.",
+     "Meta 1 (↔ OE1): Especificación formal de 6 RF y 5 RNF validados mediante matriz de rastreabilidad.",
+     "",
+     "Requerimientos de ingeniería",
+     "Estado de cada requerimiento (cumplido, no cumplido, no medido); desempeño por condición; puntaje de cumplimiento y confiabilidad (pendientes de definición metodológica)",
+     "Ficha de especificación de requerimientos IEEE-830; análisis de logs de sistema y Docker. Datos: estado por requerimiento y desempeño por condición. Análisis: Spearman o Mann-Whitney (candidatas)"
+    ],
+    [
+     "¿Cómo difiere el desempeño técnico, en tiempo de convergencia, latencia y throughput, de la propuesta basada en inteligencia de enjambre frente a sistemas convencionales de adaptación de contenidos bajo condiciones experimentales equivalentes?",
+     "Comparar estadísticamente el desempeño técnico de la propuesta basada en inteligencia de enjambre frente a sistemas convencionales de adaptación de contenidos, considerando como indicadores el tiempo de convergencia, la latencia y el throughput bajo condiciones experimentales equivalentes.",
+     "Meta 2 (↔ OE2): Demostración formal del GAP tecnológico en latencia, convergencia y soporte multimodal. (se conserva como antecedente y no como criterio de cumplimiento del objetivo)",
+     "",
+     "Benchmark tecnológico",
+     "Latencia (P95), throughput y tiempo hasta la configuración final (indicador operativo); el T_conv es solo de la propuesta.",
+     "Análisis documental computacional; matriz de características comparativas. Datos: latencia P95 y throughput por corrida; tiempo hasta la configuración final por perfil. Análisis: contrastes estadísticos definidos para la campaña N2; en la campaña N2 se utilizó Welch sobre logaritmos con Holm, aún fuera del protocolo oficial."
+    ],
+    [
+     "¿Cuál es el efecto de la configuración de los roles de los agentes, los protocolos de comunicación y los mecanismos de inteligencia de enjambre sobre el tiempo de convergencia y la eficiencia de la adaptación de contenidos multimodales?",
+     "Determinar el efecto de la configuración de los roles de los agentes, los protocolos de comunicación y los mecanismos de inteligencia de enjambre sobre el tiempo de convergencia y la eficiencia de la adaptación de contenidos multimodales.",
+     "Meta 3 (↔ OE3): Modelo arquitectónico de 5 agentes con algoritmo PSO discreto y función de aptitud F. (se conserva como antecedente y no como criterio de cumplimiento del objetivo)",
+     "",
+     "Diseño de arquitectura",
+     "T_conv (ms y k_stop); complementarios: mensajes y brecha al óptimo",
+     "Diagramas UML / ArchiMate; framework LangGraph / FastAgent; diseño factorial de 48 condiciones. Datos: T_conv por corrida y condición. Análisis: en la campaña N3 se utilizó ANOVA factorial por corrida, aún fuera del protocolo oficial."
+    ],
+    [
+     "¿Cuál es el desempeño computacional del artefacto bajo diferentes condiciones de simulación, en términos de tiempo de convergencia, latencia y throughput?",
+     "Medir y comparar el desempeño computacional del artefacto tecnológico desarrollado bajo diferentes condiciones de simulación, utilizando como indicadores el tiempo de convergencia, la latencia y el throughput.",
+     "Meta 4 (↔ OE4): Convergencia T_conv ≤ 15 iteraciones, latencia L_resp < 2,0 s y throughput ≥ 20 req/s.",
+     "",
+     "Rendimiento computacional",
+     "T_conv; latencia (P50 a P99); throughput por lote",
+     "Pruebas de carga con Apache JMeter / Locust; scripting de métricas en Python. Datos: T_conv, latencia y throughput por condición. Análisis: Kruskal-Wallis, Friedman y Spearman con Holm (candidatas)"
+    ],
+    [
+     "¿Cuál es el nivel de precisión de la adaptación multimodal y el nivel de usabilidad técnica del artefacto, evaluados por expertos y docentes del área de programación, frente al valor de referencia de 75 puntos de la escala SUS?",
+     "Determinar el nivel de precisión de la adaptación multimodal y el nivel de usabilidad técnica del artefacto desarrollado mediante la evaluación de expertos y docentes del área de programación, contrastando la puntuación de usabilidad obtenida mediante la escala SUS con el valor de referencia establecido de 75 puntos.",
+     "Meta 5 (↔ OE5): Precisión F1_adapt ≥ 0,85 y usabilidad percibida SUS > 75,0/100.",
+     "",
+     "Calidad y usabilidad",
+     "F1-Score; puntaje SUS (0-100) frente a 75",
+     "Cuestionario System Usability Scale (SUS); pruebas inferenciales (Shapiro-Wilk, t de Student / Wilcoxon). Datos: F1 por perfil; SUS por evaluador. Análisis: una muestra contra 0,85 y contra 75"
+    ]
+   ]
+  },
+  {
+   "idx": 4,
+   "caption_prev": "Tabla 3. Requisitos funcionales y no funcionales del artefacto",
+   "n_rows": 14,
+   "rows": [
+    [
+     "Código",
+     "Requisito",
+     "Tipo",
+     "Indicador y criterio de aceptación",
+     "Estado en la prueba de concepto, antes de las campañas (25 a 30/09/2026)"
+    ],
+    [
+     "RF01",
+     "Procesamiento del perfil del estudiante en formato JSON",
+     "Funcional",
+     "Proporción de peticiones cuyo perfil es aceptado y validado = 100 %",
+     "Funcionalidad comprobada en la prueba de concepto"
+    ],
+    [
+     "RF02",
+     "Asignación del vector de pesos por modalidad W",
+     "Funcional",
+     "Proporción de ciclos con W normalizada (Σ = 1) = 100 %",
+     "Implementado; comprobación parcial (el vector W no se conservó en los registros exportados)"
+    ],
+    [
+     "RF03",
+     "Búsqueda y ensamblaje de componentes multimodales",
+     "Funcional",
+     "Proporción de ciclos con peticiones en vuelo solapadas (despacho concurrente) = 100 %",
+     "Funcionalidad comprobada en la prueba de concepto (despacho concurrente)"
+    ],
+    [
+     "RF04",
+     "Ejecución del algoritmo de convergencia del enjambre y de la función de aptitud",
+     "Funcional",
+     "Proporción de ciclos con iteraciones registradas = k_stop + 1 = 100 %",
+     "Implementado; comprobación parcial (el registro de iteraciones por caso no se conservó)"
+    ],
+    [
+     "RF05",
+     "Entrega del paquete con las cuatro modalidades",
+     "Funcional",
+     "Proporción de peticiones con paquete válido y cadena de hashes íntegra = 100 %",
+     "Funcionalidad comprobada en la prueba de concepto"
+    ],
+    [
+     "RF06",
+     "Registro de las métricas de cada ciclo",
+     "Funcional",
+     "Proporción de ciclos persistidos completos (ciclo, iteraciones, mensajes y paquete) = 100 %",
+     "Implementado; comprobación parcial (persistencia probada en un entorno aislado)"
+    ],
+    [
+     "RF07",
+     "Definición del gold standard (requisito derivado)",
+     "Especificación derivada",
+     "Sin indicador cuantitativo propio; el gold v3 es la referencia con que se calcula el F1_adapt (RNF03)",
+     "Especificado (gold v3); sin validación por expertos"
+    ],
+    [
+     "RF08",
+     "Discretización de la posición de las partículas (requisito derivado)",
+     "Especificación derivada",
+     "Sin indicador cuantitativo propio; la función φ interviene en todos los ciclos",
+     "Implementado (función φ)"
+    ],
+    [
+     "RNF01",
+     "Latencia de respuesta menor que 2,0 s en el percentil 95 con hasta 25 peticiones simultáneas",
+     "No funcional",
+     "P95 de la latencia por petición < 2 000 ms con hasta 25 usuarios",
+     "Comprobación exploratoria parcial; sin validación oficial"
+    ],
+    [
+     "RNF02",
+     "Convergencia dentro de k_max = 15 iteraciones con una tasa de convergencia mayor o igual que 98 %",
+     "No funcional",
+     "k_stop ≤ 15 y proporción de paradas por tolerancia ≥ 98 %",
+     "Comprobación exploratoria parcial; sin validación oficial"
+    ],
+    [
+     "RNF03",
+     "F1_adapt mayor o igual que 0,85 (límite inferior del IC95 y prueba unilateral superada)",
+     "No funcional",
+     "F1_adapt oficial (especificación v3, K = 10) ≥ 0,85",
+     "No alcanzado en la prueba de concepto (especificación v1); sin validación oficial"
+    ],
+    [
+     "RNF04",
+     "Throughput mayor o igual que 20 solicitudes por segundo con menos de 1 % de error",
+     "No funcional",
+     "Mediana del throughput por lote ≥ 20 req/s y tasa de error < 1 %",
+     "Comprobación exploratoria parcial; sin validación oficial"
+    ],
+    [
+     "RNF05",
+     "Puntaje SUS medio mayor que 75 con al menos 10 evaluadores",
+     "No funcional",
+     "Media SUS > 75, p < 0,05 y n ≥ 10 evaluadores",
+     "No evaluado (sin evaluadores)"
+    ]
+   ]
+  },
+  {
+   "idx": 5,
+   "caption_prev": "Tabla 4. Procedimientos de evaluación por objetivo específico",
+   "n_rows": 6,
+   "rows": [
+    [
+     "OE",
+     "Fase DSRM",
+     "Procedimiento",
+     "Indicadores",
+     "Estado"
+    ],
+    [
+     "OE1",
+     "Fases 2 y 5",
+     "Registro del estado de cada requerimiento y de su relación con el desempeño, sobre las corridas de OE3 y OE4",
+     "Estado por requerimiento; desempeño por condición; puntaje y confiabilidad por definir",
+     "Implementado; campaña experimental N1 (no oficial); oficial pendiente."
+    ],
+    [
+     "OE2",
+     "Fase 5",
+     "Comparación de la propuesta con el sistema convencional operativo decision_table, en condiciones equivalentes; contrastes auxiliares con rules (ablación del enjambre) y con la búsqueda exhaustiva (referencia de optimalidad).",
+     "Latencia (P95); throughput; tiempo hasta la configuración final (indicador operativo; T_conv solo de la propuesta).",
+     "Implementado; campaña experimental N2 (no oficial); oficial pendiente."
+    ],
+    [
+     "OE3",
+     "Fases 3 y 5",
+     "Diseño factorial de 48 condiciones de roles, protocolo de comunicación y mecanismo de enjambre",
+     "T_conv (ms y k_stop); mensajes; brecha al óptimo",
+     "Implementado; campaña experimental N3 (no oficial); oficial pendiente."
+    ],
+    [
+     "OE4",
+     "Fases 4 y 5",
+     "6 niveles de carga × 3 tamaños de enjambre (18 condiciones) con lotes repetidos, en cloud de 8 vCPU y 32 GB",
+     "T_conv; latencia P50 a P99; throughput",
+     "Implementado; campañas experimentales N4 (N = 20), N8 (N = 10 y N = 30), N8b (N = 20) y N11 (tres N en una campaña) (no oficiales); oficial pendiente."
+    ],
+    [
+     "OE5",
+     "Fase 5",
+     "Ejecución oficial K = 10 bajo la especificación v3; panel de al menos 10 expertos; cuestionario SUS",
+     "F1_adapt; AC1; SUS frente a 75",
+     "F1 v3 provisional (campaña N5); SUS y panel pendientes; resultados históricos v1 y v2."
+    ]
+   ]
+  },
+  {
+   "idx": 6,
+   "caption_prev": "Tabla 5. Estado experimental de los requerimientos y de los indicadores del OE1 (campaña N1; no oficial)",
+   "n_rows": 16,
+   "rows": [
+    [
+     "Código",
+     "Indicador y umbral",
+     "Valor medido (campaña N1)",
+     "Estado"
+    ],
+    [
+     "RF01",
+     "Proporción de peticiones con perfil aceptado y validado; = 100 %",
+     "100 % (9 500 de 9 500 ciclos)",
+     "Cumplido"
+    ],
+    [
+     "RF02",
+     "Proporción de ciclos con W normalizada (Σ = 1); = 100 %",
+     "100 % (9 500 de 9 500 ciclos)",
+     "Cumplido"
+    ],
+    [
+     "RF03",
+     "Proporción de ciclos con peticiones en vuelo solapadas; = 100 %",
+     "90,5 % (8 600 de 9 500 ciclos): 0 de 900 en la ablación con despacho secuencial y 8 600 de 8 600 con despacho concurrente",
+     "No cumplido en el conjunto (cumplido con despacho concurrente)"
+    ],
+    [
+     "RF04",
+     "Proporción de ciclos con iteraciones registradas = k_stop + 1; = 100 %",
+     "100 % (9 500 de 9 500 ciclos)",
+     "Cumplido"
+    ],
+    [
+     "RF05",
+     "Proporción de peticiones con paquete válido y cadena de hashes íntegra; = 100 %",
+     "100 % (9 500 de 9 500 peticiones)",
+     "Cumplido"
+    ],
+    [
+     "RF06",
+     "Proporción de ciclos persistidos completos (ciclo, iteraciones, mensajes y paquete); = 100 %",
+     "100 % (20 de 20 ciclos de la sonda de persistencia)",
+     "Cumplido"
+    ],
+    [
+     "RF07",
+     "Especificación derivada (gold standard v3); sin indicador cuantitativo propio",
+     "No medido como requisito en N1; el gold interviene en el cálculo del F1_adapt (RNF03)",
+     "No evaluado como requisito; gold v3 pendiente de validación del panel"
+    ],
+    [
+     "RF08",
+     "Especificación derivada (discretización φ); sin indicador cuantitativo propio",
+     "No medido como requisito en N1; φ interviene en todos los ciclos ejecutados",
+     "No evaluado como requisito (implementado)"
+    ],
+    [
+     "REL-C",
+     "Confiabilidad: tasa de ciclos completados; ≥ 99 %",
+     "100 % de ciclos completados",
+     "Cumplido"
+    ],
+    [
+     "REL-D",
+     "Confiabilidad: pares idénticos con la misma semilla; = 100 %",
+     "20 de 20 pares idénticos con la misma semilla",
+     "Cumplido"
+    ],
+    [
+     "RNF01",
+     "P95 de la latencia por petición < 2 000 ms (en proceso, sin HTTP)",
+     "P95 de 1 319 ms en el agregado de las cargas 1 a 25 (8 700 observaciones; el 82 %, con 1 usuario); con 25 usuarios, P95 de 2 214,8 ms",
+     "Cumplido solo en el agregado; no cumplido con 25 usuarios (HTTP: ver Tabla 24)"
+    ],
+    [
+     "RNF02",
+     "k_stop ≤ 15 y tasa de convergencia ≥ 98 %",
+     "k_stop máximo de 8 (límite de 15)",
+     "Cumplido en N1 (k_stop máximo de 8, sin llegar a k_max); la regla de agregación de la tasa de convergencia sigue pendiente"
+    ],
+    [
+     "RNF04",
+     "Mediana del throughput por lote ≥ 20 req/s y error < 1 % (en proceso)",
+     "14,98 req/s (mediana por lote); error de 0 %",
+     "No cumplido (< 20 req/s) en proceso; en HTTP solo 18 de 419 corridas alcanzan 20 req/s (Tabla 24)"
+    ],
+    [
+     "RNF03",
+     "F1_adapt ≥ 0,85",
+     "F1 histórico de la especificación v2 = 0,6407 (IC95 %: 0,637 a 0,644); el F1 de la especificación v3 (0,8156, provisional) se reporta en la campaña N5",
+     "No cumplido (con la especificación v2); la v3 es provisional"
+    ],
+    [
+     "RNF05",
+     "Media SUS > 75, p < 0,05 y n ≥ 10",
+     "Sin evaluadores (0 respuestas)",
+     "No medido"
+    ]
+   ]
+  },
+  {
+   "idx": 7,
+   "caption_prev": "Tabla 6. Asociación entre el puntaje de cumplimiento y el desempeño por condición (n = 14; no oficial)",
+   "n_rows": 6,
+   "rows": [
+    [
+     "Variable de desempeño",
+     "Spearman ρ (p)",
+     "Kendall τb (p)"
+    ],
+    [
+     "T_conv mediano por condición (ms)",
+     "−0,69 (p = 6,1 × 10⁻³)",
+     "−0,51 (p = 0,023)"
+    ],
+    [
+     "Latencia P95 por condición (ms)",
+     "−0,69 (p = 6,1 × 10⁻³)",
+     "−0,51 (p = 0,023)"
+    ],
+    [
+     "Brecha respecto del óptimo",
+     "0,17 (p = 0,562)",
+     "0,14 (p = 0,550)"
+    ],
+    [
+     "Throughput mediano (req/s)",
+     "−0,13 (p = 0,647)",
+     "−0,13 (p = 0,559)"
+    ],
+    [
+     "Usuarios (carga) frente al propio puntaje de cumplimiento",
+     "−0,61 (p = 0,021)",
+     "no calculado"
+    ]
+   ]
+  },
+  {
+   "idx": 8,
+   "caption_prev": "Tabla 7. Estructura del análisis estadístico del OE1",
+   "n_rows": 13,
+   "rows": [
+    [
+     "Elemento del análisis",
+     "Planificación (diseño oficial)",
+     "Resultado experimental (campaña N1; no oficial)",
+     "Resultado oficial y estado"
+    ],
+    [
+     "Descripción de los datos",
+     "Estado de cada requerimiento por condición y por petición; indicadores de desempeño por condición",
+     "Estado de cada requerimiento (RF01 a RF06, REL-C, REL-D y RNF01 a RNF05) por petición (9 500 ciclos) y por condición (14 condiciones); indicadores de desempeño por condición (T_conv, P95, throughput y brecha respecto del óptimo).",
+     "Pendiente de ejecución oficial. Implementado"
+    ],
+    [
+     "Unidad experimental",
+     "Condición experimental (puntaje de cumplimiento); petición (requerimiento)",
+     "Condición experimental (n = 14) para la correlación; petición para los requerimientos funcionales. Decisión de las campañas experimentales, aún no incorporada al protocolo oficial.",
+     "No aplica. Propuesta técnica pendiente de confirmación"
+    ],
+    [
+     "Tamaño de muestra",
+     "48 condiciones del OE3 y 18 condiciones del OE4",
+     "14 condiciones (7 del diseño de un factor por vez del OE3 y 7 del diseño del OE4) y 9 500 ciclos.",
+     "No aplica. Diseño oficial"
+    ],
+    [
+     "Distribución o normalidad",
+     "No aplica al puntaje de cumplimiento",
+     "No se evaluó la normalidad: se usó una correlación de rangos.",
+     "Pendiente de ejecución oficial. Planificado"
+    ],
+    [
+     "Prueba estadística",
+     "Candidatas: correlación de Spearman por condición; Mann-Whitney por petición",
+     "Correlación de Spearman por condición entre el puntaje de cumplimiento y cada indicador de desempeño.",
+     "Pendiente de ejecución oficial. Por fijar en el diseño final"
+    ],
+    [
+     "Hipótesis estadística (H0 y H1)",
+     "Por definir (hipótesis estadística aún no formulada)",
+     "No formulada: pendiente de definición metodológica (puntaje de cumplimiento e indicador de confiabilidad).",
+     "No aplica. Depende del puntaje de cumplimiento y del indicador de confiabilidad"
+    ],
+    [
+     "Nivel de significancia (α)",
+     "0,05",
+     "0,05 (referencia).",
+     "No aplica. Fijado en el plan de análisis (§5.8)"
+    ],
+    [
+     "Estadístico",
+     "Según la prueba que se fije",
+     "ρ = −0,69 con T_conv; ρ = −0,69 con P95; ρ = 0,17 con la brecha; ρ = −0,13 con el throughput (n = 14).",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "p-valor",
+     "Según la prueba que se fije",
+     "p = 0,006 (T_conv); 0,006 (P95); 0,56 (brecha); 0,65 (throughput).",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Tamaño del efecto",
+     "Según la prueba que se fije",
+     "ρ como medida de asociación; el puntaje de cumplimiento varió solo entre 0,78 y 0,89.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Intervalo de confianza",
+     "Cuando corresponda",
+     "No calculado.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Decisión e interpretación",
+     "Sobre H0 y H1 una vez definidas",
+     "Asociación negativa moderada con T_conv y P95, que refleja la carga de las condiciones; sin asociación con la brecha ni con el throughput. No se establece relación causal.",
+     "Pendiente de ejecución oficial. No aplica"
+    ]
+   ]
+  },
+  {
+   "idx": 9,
+   "caption_prev": "Tabla 8. Latencia y throughput HTTP de la propuesta y de decision_table (campaña N2; media de 10 corridas por celda; no oficial)",
+   "n_rows": 9,
+   "rows": [
+    [
+     "Sistema",
+     "Usuarios",
+     "P50 (ms)",
+     "Media (ms)",
+     "P95 (ms)",
+     "Throughput (req/s)"
+    ],
+    [
+     "decision_table",
+     "1",
+     "13,3",
+     "14,7",
+     "23,9",
+     "67,4"
+    ],
+    [
+     "Propuesta (enjambre)",
+     "1",
+     "90,7",
+     "93,2",
+     "120,0",
+     "10,7"
+    ],
+    [
+     "decision_table",
+     "5",
+     "18,5",
+     "19,3",
+     "24,6",
+     "257,1"
+    ],
+    [
+     "Propuesta (enjambre)",
+     "5",
+     "284,7",
+     "298,4",
+     "436,7",
+     "16,8"
+    ],
+    [
+     "decision_table",
+     "10",
+     "33,2",
+     "35,1",
+     "42,5",
+     "283,2"
+    ],
+    [
+     "Propuesta (enjambre)",
+     "10",
+     "577,9",
+     "606,7",
+     "921,9",
+     "16,5"
+    ],
+    [
+     "decision_table",
+     "25",
+     "85,8",
+     "94,0",
+     "181,0",
+     "267,9"
+    ],
+    [
+     "Propuesta (enjambre)",
+     "25",
+     "1 401,4",
+     "1 523,5",
+     "2 316,4",
+     "16,5"
+    ]
+   ]
+  },
+  {
+   "idx": 10,
+   "caption_prev": "Tabla 9. Contrastes de latencia (P95) y de throughput entre la propuesta y decision_table (campaña N2; no oficial)",
+   "n_rows": 9,
+   "rows": [
+    [
+     "Indicador",
+     "Usuarios",
+     "Razón geométrica propuesta / decision_table (IC95 %)",
+     "p ajustado (Holm, m = 8)"
+    ],
+    [
+     "P95",
+     "1",
+     "5,05 (4,57 a 5,58)",
+     "4,1 × 10⁻¹²"
+    ],
+    [
+     "P95",
+     "5",
+     "17,8 (17,0 a 18,6)",
+     "1,1 × 10⁻²⁶"
+    ],
+    [
+     "P95",
+     "10",
+     "21,7 (20,6 a 22,9)",
+     "1,7 × 10⁻²¹"
+    ],
+    [
+     "P95",
+     "25",
+     "12,8 (12,4 a 13,2)",
+     "8,2 × 10⁻²⁹"
+    ],
+    [
+     "Throughput",
+     "1",
+     "0,159 (0,155 a 0,163)",
+     "1,2 × 10⁻²⁷"
+    ],
+    [
+     "Throughput",
+     "5",
+     "0,065 (0,063 a 0,068)",
+     "4,0 × 10⁻²⁷"
+    ],
+    [
+     "Throughput",
+     "10",
+     "0,058 (0,057 a 0,060)",
+     "8,1 × 10⁻²⁹"
+    ],
+    [
+     "Throughput",
+     "25",
+     "0,062 (0,058 a 0,066)",
+     "3,0 × 10⁻¹⁷"
+    ]
+   ]
+  },
+  {
+   "idx": 11,
+   "caption_prev": "Tabla 10. Diferencias absolutas, tamaño del efecto y prueba de Mann-Whitney: propuesta frente a decision_table (campaña N2; no oficial)",
+   "n_rows": 9,
+   "rows": [
+    [
+     "Indicador",
+     "Usuarios",
+     "Diferencia absoluta (propuesta − decision_table)",
+     "g de Hedges (escala log)",
+     "p de Holm (Mann-Whitney, m = 8)"
+    ],
+    [
+     "P95",
+     "1",
+     "96,0 ms",
+     "15,3",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "P95",
+     "5",
+     "412,2 ms",
+     "56,5",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "P95",
+     "10",
+     "879,4 ms",
+     "53,4",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "P95",
+     "25",
+     "2 135,4 ms",
+     "69,0",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "Throughput",
+     "1",
+     "−56,7 req/s",
+     "−65,9",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "Throughput",
+     "5",
+     "−240,3 req/s",
+     "−67,5",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "Throughput",
+     "10",
+     "−266,7 req/s",
+     "−88,1",
+     "1,5 × 10⁻³"
+    ],
+    [
+     "Throughput",
+     "25",
+     "−251,5 req/s",
+     "−39,1",
+     "1,5 × 10⁻³"
+    ]
+   ]
+  },
+  {
+   "idx": 12,
+   "caption_prev": "Tabla 11. Razones de medias geométricas entre el enjambre y cada comparador: P95 y throughput (campaña N9b; no oficial)",
+   "n_rows": 13,
+   "rows": [
+    [
+     "Comparador y carga",
+     "Razón de P95 enjambre/comparador (IC95 %)",
+     "p de Holm (P95; m = 8)",
+     "Razón de throughput (IC95 %)",
+     "p de Holm (throughput; m = 8)"
+    ],
+    [
+     "decision_table, 1 usuarios",
+     "3,92 (3,76 a 4,08)",
+     "1,7 × 10⁻¹⁸",
+     "0,213 (0,209 a 0,217)",
+     "8,4 × 10⁻²⁹"
+    ],
+    [
+     "decision_table, 5 usuarios",
+     "13,83 (11,79 a 16,21)",
+     "1,1 × 10⁻¹⁴",
+     "0,087 (0,074 a 0,102)",
+     "2,8 × 10⁻¹⁴"
+    ],
+    [
+     "decision_table, 10 usuarios",
+     "14,68 (12,52 a 17,22)",
+     "1,9 × 10⁻¹⁵",
+     "0,084 (0,071 a 0,098)",
+     "1,5 × 10⁻¹⁴"
+    ],
+    [
+     "decision_table, 25 usuarios",
+     "11,73 (10,01 a 13,76)",
+     "3,2 × 10⁻¹⁵",
+     "0,085 (0,072 a 0,100)",
+     "6,8 × 10⁻¹⁵"
+    ],
+    [
+     "rules, 1 usuarios",
+     "3,87 (3,68 a 4,08)",
+     "4,2 × 10⁻¹⁵",
+     "0,216 (0,210 a 0,223)",
+     "2,3 × 10⁻²¹"
+    ],
+    [
+     "rules, 5 usuarios",
+     "14,23 (12,28 a 16,48)",
+     "1,8 × 10⁻¹¹",
+     "0,085 (0,073 a 0,099)",
+     "3,2 × 10⁻¹¹"
+    ],
+    [
+     "rules, 10 usuarios",
+     "14,71 (12,64 a 17,13)",
+     "2,4 × 10⁻¹⁴",
+     "0,084 (0,071 a 0,098)",
+     "2,9 × 10⁻¹⁴"
+    ],
+    [
+     "rules, 25 usuarios",
+     "11,71 (9,99 a 13,72)",
+     "4,6 × 10⁻¹⁵",
+     "0,085 (0,072 a 0,100)",
+     "9,8 × 10⁻¹⁵"
+    ],
+    [
+     "bruteforce, 1 usuarios",
+     "0,94 (0,81 a 1,10)",
+     "1,000",
+     "1,132 (0,987 a 1,299)",
+     "0,283"
+    ],
+    [
+     "bruteforce, 5 usuarios",
+     "0,76 (0,57 a 1,00)",
+     "0,265",
+     "1,513 (1,185 a 1,933)",
+     "0,019"
+    ],
+    [
+     "bruteforce, 10 usuarios",
+     "1,01 (0,81 a 1,25)",
+     "1,000",
+     "1,325 (1,123 a 1,565)",
+     "0,019"
+    ],
+    [
+     "bruteforce, 25 usuarios",
+     "1,05 (0,85 a 1,29)",
+     "1,000",
+     "1,364 (1,111 a 1,675)",
+     "0,032"
+    ]
+   ]
+  },
+  {
+   "idx": 13,
+   "caption_prev": "Tabla 12. Estructura del análisis estadístico del OE2",
+   "n_rows": 13,
+   "rows": [
+    [
+     "Elemento del análisis",
+     "Planificación (diseño oficial)",
+     "Resultado experimental (campaña N2; no oficial)",
+     "Resultado oficial y estado"
+    ],
+    [
+     "Descripción de los datos",
+     "T_conv y latencia por petición; throughput por lote; para la propuesta y cada sistema convencional",
+     "80 corridas HTTP (2 sistemas × 4 cargas × 10 corridas), sin errores ni timeouts; P95 y throughput por corrida; T_conv solo de la propuesta (mediana de 62,8 ms; k_stop mediano de 2); tiempo hasta la configuración final en proceso (20 000 ciclos). N9b: 160 corridas HTTP adicionales (4 sistemas × 4 cargas × 10), sin errores ni timeouts.",
+     "Pendiente de ejecución oficial. Implementado; el T_conv de los sistemas convencionales (tiempo de decisión) está pendiente de definición"
+    ],
+    [
+     "Unidad experimental",
+     "Perfil (media de réplicas o lotes) para T_conv y latencia; lote para throughput",
+     "Corrida (decisión de las campañas experimentales, aún no incorporada al protocolo oficial).",
+     "No aplica. Propuesta técnica pendiente de confirmación"
+    ],
+    [
+     "Tamaño de muestra",
+     "100 perfiles; al menos 5 lotes por condición",
+     "10 corridas por sistema y carga (n = 10 + 10 por contraste); 100 perfiles × 5 lotes × K = 10 por sistema en el complemento en proceso.",
+     "No aplica. Diseño oficial"
+    ],
+    [
+     "Distribución o normalidad",
+     "Shapiro-Wilk sobre las diferencias pareadas",
+     "No se reporta una prueba de normalidad en la campaña; el contraste se hizo sobre el logaritmo de cada indicador.",
+     "Pendiente de ejecución oficial. Planificado"
+    ],
+    [
+     "Prueba estadística",
+     "Candidatas: t pareada o Wilcoxon (T_conv y latencia); Welch o Mann-Whitney (throughput); tamaño de efecto dz o δ de Cliff",
+     "Welch bilateral sobre el logaritmo por corrida, con Mann-Whitney complementario y corrección de Holm (m = 8); Wilcoxon pareado por perfil (n = 100) para el tiempo hasta la configuración final. N9b: mismo análisis (Welch sobre el logaritmo; Holm con m = 8 por comparador) para decision_table, rules y bruteforce, y consistencia N9b frente a N2 (Holm con m = 16).",
+     "Pendiente de ejecución oficial. Por fijar en el diseño final"
+    ],
+    [
+     "Hipótesis estadística (H0 y H1)",
+     "Por definir (hipótesis estadística aún no formulada)",
+     "No formulada: pendiente de definición metodológica; se contrastó la igualdad de las medias geométricas.",
+     "No aplica. Depende de la línea base oficial"
+    ],
+    [
+     "Nivel de significancia (α)",
+     "0,05",
+     "0,05 bilateral, con corrección de Holm.",
+     "No aplica. Fijado en el plan de análisis (§5.8)"
+    ],
+    [
+     "Estadístico",
+     "Según la prueba que se fije",
+     "Razón geométrica propuesta/decision_table. P95: 5,05 (1 usuario), 17,8 (5), 21,7 (10) y 12,8 (25). Throughput: 0,159, 0,065, 0,058 y 0,062. Tiempo hasta la configuración final: 7 668.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "p-valor",
+     "Según la prueba que se fije",
+     "p de Holm entre 4,1 × 10⁻¹² y 8,2 × 10⁻²⁹ (P95) y entre 8,1 × 10⁻²⁹ y 3,0 × 10⁻¹⁷ (throughput); Mann-Whitney p = 1,8 × 10⁻⁴ en los ocho contrastes; Wilcoxon p = 3,9 × 10⁻¹⁸.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Tamaño del efecto",
+     "Según la prueba que se fije",
+     "δ de Cliff = ±1 (separación total de las distribuciones); razones geométricas como tamaño del efecto.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Intervalo de confianza",
+     "Cuando corresponda",
+     "IC95 de las razones: P95, 4,57 a 5,58; 17,0 a 18,6; 20,6 a 22,9 y 12,4 a 13,2. Throughput, 0,155 a 0,163; 0,063 a 0,068; 0,057 a 0,060 y 0,058 a 0,066.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Decisión e interpretación",
+     "Sobre H0 y H1 una vez definidas",
+     "Las ocho hipótesis son significativas tras Holm y en un mismo sentido: decision_table fue más rápida y rindió más. No se muestra ventaja de eficiencia de la propuesta sobre este comparador.",
+     "Pendiente de ejecución oficial. No aplica"
+    ]
+   ]
+  },
+  {
+   "idx": 14,
+   "caption_prev": "Tabla 13. Efectos marginales de la configuración interna sobre el tiempo de convergencia y los indicadores complementarios (campaña N3; no oficial)",
+   "n_rows": 6,
+   "rows": [
+    [
+     "Factor",
+     "Niveles",
+     "T_conv en ms (p; η²)",
+     "k_stop",
+     "Brecha respecto del óptimo",
+     "Mensajes"
+    ],
+    [
+     "Despacho",
+     "por lotes / secuencial",
+     "56,8 / 90,6 (p = 0,001; η² = 0,98)",
+     "1,71 / 1,71",
+     "sin efecto",
+     "sin efecto"
+    ],
+    [
+     "Difusión de g_best",
+     "sin / con",
+     "65,5 / 78,5 (p = 0,001; η² = 0,88)",
+     "sin efecto",
+     "sin efecto",
+     "47,2 / 58,0"
+    ],
+    [
+     "Heurística de arranque (AG1)",
+     "con / sin",
+     "69,4 / 74,1 (p = 0,001; η² = 0,50)",
+     "1,51 / 1,91",
+     "0,0150 / 0,0258",
+     "51,7 / 53,5"
+    ],
+    [
+     "Réplicas de consumidores",
+     "1 / 2",
+     "72,2 / 71,3 (p = 0,015; η² = 0,03)",
+     "sin efecto",
+     "sin efecto",
+     "sin efecto"
+    ],
+    [
+     "Mecanismo de enjambre",
+     "pso / social / cognitivo",
+     "76,5 / 76,3 / 63,3 (p = 0,001)",
+     "2,08 / 2,05 / 1,00",
+     "0,0143 / 0,0147 / 0,0320",
+     "54,0 / 53,9 / 49,9"
+    ]
+   ]
+  },
+  {
+   "idx": 15,
+   "caption_prev": "Tabla 14. ANOVA factorial del T_conv y de la brecha respecto del óptimo: η² parcial y p de Holm por término (campaña N3; no oficial)",
+   "n_rows": 10,
+   "rows": [
+    [
+     "Término",
+     "η² parcial (T_conv)",
+     "p de Holm (T_conv)",
+     "η² parcial (brecha)",
+     "p de Holm (brecha)"
+    ],
+    [
+     "Despacho",
+     "0,979",
+     "1,1 × 10⁻¹⁸⁴",
+     "0,000",
+     "1,000"
+    ],
+    [
+     "Difusión de g_best",
+     "0,874",
+     "2,6 × 10⁻⁹⁹",
+     "0,000",
+     "1,000"
+    ],
+    [
+     "Mecanismo",
+     "0,871",
+     "5,7 × 10⁻⁹⁷",
+     "0,973",
+     "4,2 × 10⁻¹⁷¹"
+    ],
+    [
+     "Heurística de arranque",
+     "0,483",
+     "3,6 × 10⁻³²",
+     "0,939",
+     "1,0 × 10⁻¹³³"
+    ],
+    [
+     "Réplicas de consumidores",
+     "0,031",
+     "0,058",
+     "0,000",
+     "1,000"
+    ],
+    [
+     "Despacho × Difusión de g_best",
+     "0,270",
+     "1,2 × 10⁻¹⁵",
+     "0,000",
+     "1,000"
+    ],
+    [
+     "Despacho × Mecanismo",
+     "0,261",
+     "4,2 × 10⁻¹⁴",
+     "0,000",
+     "1,000"
+    ],
+    [
+     "Heurística de arranque × Mecanismo",
+     "0,216",
+     "2,6 × 10⁻¹¹",
+     "0,886",
+     "1,1 × 10⁻¹⁰²"
+    ],
+    [
+     "Difusión de g_best × Mecanismo",
+     "0,059",
+     "9,9 × 10⁻³",
+     "0,000",
+     "1,000"
+    ]
+   ]
+  },
+  {
+   "idx": 16,
+   "caption_prev": "Tabla 15. Convergencia del enjambre en la configuración de referencia con la especificación v2 (resultado histórico)",
+   "n_rows": 5,
+   "rows": [
+    [
+     "Indicador",
+     "Valor",
+     "Criterio",
+     "Interpretación"
+    ],
+    [
+     "Tasa de convergencia dentro de k_max = 15",
+     "1,00 en cada réplica; resultado histórico v2",
+     "Mayor o igual que 98 % (Meta 3)",
+     "Respaldo descriptivo; la regla de agregación sobre las réplicas no está definida"
+    ],
+    [
+     "Iteraciones hasta la parada (media)",
+     "1,758 (rango entre réplicas: 1,66 a 1,91); resultado histórico v2",
+     "Menor o igual que 15 (Meta 4)",
+     "Se cumple por construcción de la regla de parada"
+    ],
+    [
+     "Iteraciones máximas por réplica",
+     "4 a 6 (media 4,8); resultado histórico v2",
+     "Descriptivo",
+     "Estabilización temprana del mejor candidato"
+    ],
+    [
+     "T_conv en milisegundos",
+     "No reportado en el análisis oficial histórico",
+     "Descriptivo",
+     "Sin datos"
+    ]
+   ]
+  },
+  {
+   "idx": 17,
+   "caption_prev": "Tabla 16. Estructura del análisis estadístico del OE3",
+   "n_rows": 13,
+   "rows": [
+    [
+     "Elemento del análisis",
+     "Planificación (diseño oficial)",
+     "Resultado experimental (campaña N3; no oficial)",
+     "Resultado oficial y estado"
+    ],
+    [
+     "Descripción de los datos",
+     "T_conv en milisegundos y en iteraciones (k_stop) por petición; complementarios: mensajes y brecha al óptimo",
+     "240 corridas (48 condiciones × 5 lotes; 24 000 ciclos), sin errores; T_conv en milisegundos y k_stop; complementarios: mensajes y brecha respecto del óptimo.",
+     "Pendiente de ejecución oficial. Implementado"
+    ],
+    [
+     "Unidad experimental",
+     "Perfil (media de K réplicas)",
+     "Corrida (cada una agrega 100 perfiles). Decisión de las campañas experimentales, aún no incorporada al protocolo oficial.",
+     "No aplica. Propuesta técnica pendiente de confirmación"
+    ],
+    [
+     "Tamaño de muestra",
+     "100 perfiles × K ≥ 10 réplicas × 48 condiciones",
+     "240 corridas: 5 por condición, a 1 usuario, N = 20 partículas y K = 1.",
+     "No aplica. Diseño oficial"
+    ],
+    [
+     "Distribución o normalidad",
+     "Shapiro-Wilk por condición sobre las medias por perfil",
+     "Los residuos no son normales; por ello el valor p se obtuvo por permutación.",
+     "Pendiente de ejecución oficial. Planificado"
+    ],
+    [
+     "Prueba estadística",
+     "Candidata: Friedman con corrección de Holm para los efectos principales; las interacciones no se estiman en el diseño actual",
+     "ANOVA factorial con todas las interacciones, sobre el logaritmo del T_conv y sobre la escala original de k_stop, brecha y mensajes; valores p por permutación (Freedman-Lane, 999).",
+     "Pendiente de ejecución oficial. Por fijar en el diseño final"
+    ],
+    [
+     "Hipótesis estadística (H0 y H1)",
+     "Por definir (hipótesis estadística aún no formulada)",
+     "No formulada: pendiente de definición metodológica.",
+     "No aplica. Depende de la unidad estadística"
+    ],
+    [
+     "Nivel de significancia (α)",
+     "0,05",
+     "0,05 (referencia).",
+     "No aplica. Fijado en el plan de análisis (§5.8)"
+    ],
+    [
+     "Estadístico",
+     "Según la prueba que se fije",
+     "Efectos principales sobre T_conv (ms): despacho por lotes 56,8 frente a secuencial 90,6; difusión de g_best sin 65,5 frente a con 78,5; heurística de arranque con 69,4 frente a sin 74,1; réplicas 72,2 frente a 71,3; mecanismo PSO 76,5, social 76,3 y cognitivo 63,3.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "p-valor",
+     "Según la prueba que se fije",
+     "p = 0,001 (valor mínimo posible con 999 permutaciones) para despacho, difusión de g_best, heurística de arranque y mecanismo; p = 0,015 para las réplicas. Interacciones significativas (p entre 0,001 y 0,003).",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Tamaño del efecto",
+     "Según la prueba que se fije",
+     "η² parcial sobre T_conv: despacho 0,980; difusión de g_best 0,879; mecanismo 0,876; heurística 0,495; réplicas 0,033. Sobre k_stop y brecha: mecanismo y heurística (η² entre 0,847 y 0,973); despacho, difusión y réplicas sin efecto (η² = 0).",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Intervalo de confianza",
+     "Cuando corresponda",
+     "No se calcularon intervalos de confianza (inferencia por permutación).",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Decisión e interpretación",
+     "Sobre H0 y H1 una vez definidas",
+     "El protocolo, el mecanismo y la heurística de arranque modificaron el tiempo de convergencia; la heurística y el mecanismo modificaron también las iteraciones y la brecha; duplicar las réplicas tuvo un efecto mínimo. Los efectos principales se leen de forma condicional por las interacciones.",
+     "Pendiente de ejecución oficial. No aplica"
+    ]
+   ]
+  },
+  {
+   "idx": 18,
+   "caption_prev": "Tabla 17. Desempeño HTTP de la propuesta por nivel de carga con N = 20 (campaña N4; media de 10 corridas; no oficial)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Usuarios",
+     "T_conv HTTP (ms)",
+     "k_stop",
+     "P50 (ms)",
+     "Media (ms)",
+     "P95 (ms)",
+     "Throughput (req/s)"
+    ],
+    [
+     "1",
+     "66,0",
+     "1,76",
+     "91,1",
+     "93,9",
+     "120,6",
+     "10,6"
+    ],
+    [
+     "5",
+     "217,3",
+     "1,76",
+     "297,0",
+     "313,9",
+     "476,9",
+     "15,9"
+    ],
+    [
+     "10",
+     "425,5",
+     "1,76",
+     "604,3",
+     "635,6",
+     "971,8",
+     "15,7"
+    ],
+    [
+     "25",
+     "1 015,7",
+     "1,76",
+     "1 514,4",
+     "1 603,0",
+     "2 456,6",
+     "15,6"
+    ],
+    [
+     "50",
+     "2 031,2",
+     "1,76",
+     "2 946,8",
+     "3 256,7",
+     "4 986,5",
+     "15,4"
+    ],
+    [
+     "100",
+     "4 035,1",
+     "1,76",
+     "5 574,6",
+     "6 535,5",
+     "10 113,9",
+     "15,3"
+    ]
+   ]
+  },
+  {
+   "idx": 19,
+   "caption_prev": "Tabla 18. Desempeño HTTP con N = 10 y N = 30 por nivel de carga (campaña N8; media de 10 corridas por celda; no oficial)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Usuarios",
+     "N = 10: P95 (ms)",
+     "N = 10: req/s",
+     "N = 10: T_conv (ms)",
+     "N = 30: P95 (ms)",
+     "N = 30: req/s",
+     "N = 30: T_conv (ms)"
+    ],
+    [
+     "1",
+     "173",
+     "7,9",
+     "88",
+     "209",
+     "6,1",
+     "126"
+    ],
+    [
+     "5",
+     "658",
+     "11,2",
+     "305",
+     "883",
+     "8,1",
+     "425"
+    ],
+    [
+     "10",
+     "1 364",
+     "11,3",
+     "609",
+     "1 873",
+     "7,8",
+     "835"
+    ],
+    [
+     "25",
+     "3 391",
+     "11,1",
+     "1 478",
+     "4 637",
+     "7,7",
+     "1 976"
+    ],
+    [
+     "50",
+     "6 686",
+     "11,0",
+     "2 939",
+     "8 779",
+     "7,8",
+     "3 796"
+    ],
+    [
+     "100",
+     "13 542",
+     "10,9",
+     "5 916",
+     "17 943",
+     "7,8",
+     "7 618"
+    ]
+   ]
+  },
+  {
+   "idx": 20,
+   "caption_prev": "Tabla 19. Contraste del tamaño del enjambre, N = 30 frente a N = 10 (campaña N8; no oficial)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Usuarios",
+     "Razón de P95 (IC95 %)",
+     "Razón de throughput (IC95 %)",
+     "Razón de T_conv HTTP (IC95 %)",
+     "Mayor p de Holm (m = 6 por métrica)"
+    ],
+    [
+     "1",
+     "1,21 (1,16 a 1,25)",
+     "0,77 (0,75 a 0,79)",
+     "1,42 (1,37 a 1,47)",
+     "6,9 × 10⁻⁹"
+    ],
+    [
+     "5",
+     "1,34 (1,30 a 1,38)",
+     "0,72 (0,69 a 0,75)",
+     "1,39 (1,33 a 1,46)",
+     "1,5 × 10⁻¹⁰"
+    ],
+    [
+     "10",
+     "1,37 (1,33 a 1,42)",
+     "0,69 (0,68 a 0,71)",
+     "1,37 (1,34 a 1,41)",
+     "1,8 × 10⁻¹³"
+    ],
+    [
+     "25",
+     "1,36 (1,28 a 1,45)",
+     "0,69 (0,66 a 0,72)",
+     "1,34 (1,28 a 1,39)",
+     "2,1 × 10⁻⁷"
+    ],
+    [
+     "50",
+     "1,31 (1,29 a 1,34)",
+     "0,70 (0,70 a 0,71)",
+     "1,29 (1,27 a 1,31)",
+     "4,4 × 10⁻¹⁵"
+    ],
+    [
+     "100",
+     "1,32 (1,31 a 1,34)",
+     "0,71 (0,71 a 0,72)",
+     "1,29 (1,27 a 1,30)",
+     "2,3 × 10⁻¹⁷"
+    ]
+   ]
+  },
+  {
+   "idx": 21,
+   "caption_prev": "Tabla 20. Desempeño HTTP con N = 20 y el protocolo de N8 (campaña N8b; media de 10 corridas por celda; no oficial)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Usuarios",
+     "P95 (ms)",
+     "Throughput (req/s)",
+     "T_conv HTTP (ms)"
+    ],
+    [
+     "1",
+     "119",
+     "10,6",
+     "62"
+    ],
+    [
+     "5",
+     "473",
+     "15,9",
+     "215"
+    ],
+    [
+     "10",
+     "970",
+     "15,9",
+     "422"
+    ],
+    [
+     "25",
+     "2 418",
+     "15,8",
+     "1 003"
+    ],
+    [
+     "50",
+     "4 874",
+     "15,8",
+     "1 973"
+    ],
+    [
+     "100",
+     "9 895",
+     "15,6",
+     "3 953"
+    ]
+   ]
+  },
+  {
+   "idx": 22,
+   "caption_prev": "Tabla 21. Desempeño HTTP por nivel de carga y tamaño del enjambre (campaña N11, tramo B; no oficial)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Usuarios",
+     "N = 10",
+     "N = 20",
+     "N = 30"
+    ],
+    [
+     "1",
+     "105 · 12,6 · 48 (9)",
+     "122 · 10,7 · 62 (9)",
+     "127 · 9,9 · 68 (9)"
+    ],
+    [
+     "5",
+     "367 · 20,1 · 165 (9)",
+     "452 · 16,2 · 210 (9)",
+     "499 · 14,4 · 234 (9)"
+    ],
+    [
+     "10",
+     "842 · 19,0 · 367 (9)",
+     "947 · 16,0 · 417 (9)",
+     "1 058 · 14,0 · 462 (9)"
+    ],
+    [
+     "25",
+     "1 890 · 20,0 · 813 (9)",
+     "2 616 · 15,2 · 1 082 (9)",
+     "2 598 · 13,7 · 1 102 (9)"
+    ],
+    [
+     "50",
+     "3 864 · 19,4 · 1 664 (9)",
+     "5 033 · 15,3 · 2 039 (9)",
+     "5 003 · 13,7 · 2 147 (10)"
+    ],
+    [
+     "100",
+     "7 658 · 19,3 · 3 353 (8)",
+     "10 465 · 14,9 · 4 145 (9)",
+     "10 485 · 13,8 · 4 255 (9)"
+    ]
+   ]
+  },
+  {
+   "idx": 23,
+   "caption_prev": "Tabla 22. Contrastes entre tamaños de enjambre (campaña N11, tramo B; no oficial)",
+   "n_rows": 19,
+   "rows": [
+    [
+     "Contraste y carga",
+     "Razón de P95 (IC95 %)",
+     "Razón de throughput (IC95 %)",
+     "Razón de T_conv HTTP (IC95 %)",
+     "Mayor p de Holm (m = 18 por métrica)"
+    ],
+    [
+     "N = 20 / N = 10, 1 usuarios",
+     "1,16 (1,11 a 1,22)",
+     "0,85 (0,82 a 0,88)",
+     "1,28 (1,23 a 1,34)",
+     "1,3 × 10⁻⁴"
+    ],
+    [
+     "N = 20 / N = 10, 5 usuarios",
+     "1,23 (1,17 a 1,30)",
+     "0,80 (0,76 a 0,85)",
+     "1,27 (1,20 a 1,35)",
+     "3,8 × 10⁻⁶"
+    ],
+    [
+     "N = 20 / N = 10, 10 usuarios",
+     "1,15 (0,98 a 1,33)",
+     "0,86 (0,74 a 1,00)",
+     "1,16 (0,99 a 1,36)",
+     "0,369"
+    ],
+    [
+     "N = 20 / N = 10, 25 usuarios",
+     "1,35 (1,14 a 1,60)",
+     "0,75 (0,63 a 0,88)",
+     "1,30 (1,10 a 1,54)",
+     "0,035"
+    ],
+    [
+     "N = 20 / N = 10, 50 usuarios",
+     "1,30 (1,25 a 1,36)",
+     "0,79 (0,76 a 0,82)",
+     "1,22 (1,18 a 1,27)",
+     "1,2 × 10⁻⁷"
+    ],
+    [
+     "N = 20 / N = 10, 100 usuarios",
+     "1,36 (1,26 a 1,48)",
+     "0,77 (0,72 a 0,82)",
+     "1,24 (1,16 a 1,32)",
+     "4,5 × 10⁻⁵"
+    ],
+    [
+     "N = 30 / N = 10, 1 usuarios",
+     "1,22 (1,16 a 1,27)",
+     "0,79 (0,76 a 0,81)",
+     "1,42 (1,37 a 1,48)",
+     "1,0 × 10⁻⁶"
+    ],
+    [
+     "N = 30 / N = 10, 5 usuarios",
+     "1,36 (1,30 a 1,43)",
+     "0,71 (0,68 a 0,75)",
+     "1,42 (1,35 a 1,50)",
+     "1,6 × 10⁻⁸"
+    ],
+    [
+     "N = 30 / N = 10, 10 usuarios",
+     "1,28 (1,10 a 1,49)",
+     "0,75 (0,64 a 0,87)",
+     "1,29 (1,09 a 1,51)",
+     "0,035"
+    ],
+    [
+     "N = 30 / N = 10, 25 usuarios",
+     "1,38 (1,30 a 1,46)",
+     "0,68 (0,65 a 0,71)",
+     "1,36 (1,29 a 1,42)",
+     "5,6 × 10⁻⁸"
+    ],
+    [
+     "N = 30 / N = 10, 50 usuarios",
+     "1,29 (1,22 a 1,37)",
+     "0,71 (0,67 a 0,75)",
+     "1,29 (1,22 a 1,36)",
+     "1,2 × 10⁻⁶"
+    ],
+    [
+     "N = 30 / N = 10, 100 usuarios",
+     "1,35 (1,16 a 1,56)",
+     "0,71 (0,67 a 0,76)",
+     "1,27 (1,18 a 1,36)",
+     "0,012"
+    ],
+    [
+     "N = 30 / N = 20, 1 usuarios",
+     "1,05 (0,99 a 1,10)",
+     "0,93 (0,90 a 0,96)",
+     "1,11 (1,07 a 1,16)",
+     "0,369"
+    ],
+    [
+     "N = 30 / N = 20, 5 usuarios",
+     "1,11 (1,06 a 1,16)",
+     "0,89 (0,85 a 0,93)",
+     "1,12 (1,06 a 1,17)",
+     "3,3 × 10⁻³"
+    ],
+    [
+     "N = 30 / N = 20, 10 usuarios",
+     "1,12 (1,05 a 1,19)",
+     "0,87 (0,83 a 0,92)",
+     "1,11 (1,05 a 1,17)",
+     "0,013"
+    ],
+    [
+     "N = 30 / N = 20, 25 usuarios",
+     "1,02 (0,86 a 1,20)",
+     "0,91 (0,78 a 1,07)",
+     "1,04 (0,88 a 1,23)",
+     "1,000"
+    ],
+    [
+     "N = 30 / N = 20, 50 usuarios",
+     "0,99 (0,94 a 1,05)",
+     "0,90 (0,85 a 0,95)",
+     "1,05 (1,00 a 1,11)",
+     "1,000"
+    ],
+    [
+     "N = 30 / N = 20, 100 usuarios",
+     "0,99 (0,85 a 1,15)",
+     "0,93 (0,86 a 1,00)",
+     "1,03 (0,95 a 1,10)",
+     "1,000"
+    ]
+   ]
+  },
+  {
+   "idx": 24,
+   "caption_prev": "Tabla 23. Cambio de régimen del equipo: tramo B frente a tramo A (campaña N11; no oficial)",
+   "n_rows": 4,
+   "rows": [
+    [
+     "Métrica",
+     "Todos los N (valor p)",
+     "Por N: 10 / 20 / 30"
+    ],
+    [
+     "P95",
+     "0,61 (p = 1,2 × 10⁻⁴⁴)",
+     "0,62 / 0,62 / 0,61"
+    ],
+    [
+     "Throughput",
+     "1,62 (p = 1,1 × 10⁻⁵¹)",
+     "1,61 / 1,62 / 1,63"
+    ],
+    [
+     "T_conv HTTP",
+     "0,60 (p = 2,8 × 10⁻⁵⁵)",
+     "0,60 / 0,60 / 0,60"
+    ]
+   ]
+  },
+  {
+   "idx": 25,
+   "caption_prev": "Tabla 24. Cumplimiento de RNF01 y RNF04 por campaña, tamaño del enjambre y tramo (corridas HTTP válidas; no oficial)",
+   "n_rows": 11,
+   "rows": [
+    [
+     "Campaña y N",
+     "Corridas",
+     "Corridas con ≥ 20 req/s (máximo, req/s)",
+     "Corridas con P95 < 2 s (cargas cuya media cumple)",
+     "Cargas cuya media alcanza 20 req/s"
+    ],
+    [
+     "N4, N = 20",
+     "60",
+     "0 (máx. 16,55)",
+     "30 de 60 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N8, N = 10",
+     "60",
+     "0 (máx. 11,87)",
+     "30 de 60 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N8, N = 30",
+     "60",
+     "0 (máx. 9,04)",
+     "30 de 60 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N8b, N = 20",
+     "60",
+     "0 (máx. 16,80)",
+     "30 de 60 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N11 tramo A, N = 10",
+     "6",
+     "0 (máx. 11,73)",
+     "3 de 6 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N11 tramo A, N = 20",
+     "6",
+     "0 (máx. 9,30)",
+     "3 de 6 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N11 tramo A, N = 30",
+     "5",
+     "0 (máx. 8,24)",
+     "3 de 5 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N11 tramo B, N = 10",
+     "53",
+     "18 (máx. 21,99)",
+     "35 de 53 (cargas: 1, 5, 10 y 25)",
+     "5 y 25"
+    ],
+    [
+     "N11 tramo B, N = 20",
+     "54",
+     "0 (máx. 17,64)",
+     "27 de 54 (cargas: 1, 5 y 10)",
+     "—"
+    ],
+    [
+     "N11 tramo B, N = 30",
+     "55",
+     "0 (máx. 15,61)",
+     "27 de 55 (cargas: 1, 5 y 10)",
+     "—"
+    ]
+   ]
+  },
+  {
+   "idx": 26,
+   "caption_prev": "Tabla 25. Pruebas de carga exploratorias en un equipo local (antecedente)",
+   "n_rows": 5,
+   "rows": [
+    [
+     "Escenario",
+     "Latencia P95",
+     "Throughput",
+     "Errores"
+    ],
+    [
+     "Cuatro procesos de servicio, 25 usuarios",
+     "1,10 s (Locust); 1,12 s (JMeter)",
+     "39 a 42 req/s (10 a 100 usuarios)",
+     "0 %"
+    ],
+    [
+     "Un proceso de servicio, 25 usuarios",
+     "2,2 s (Locust); 2,3 s (JMeter)",
+     "14,5 a 17,6 req/s",
+     "0 %"
+    ],
+    [
+     "50 usuarios",
+     "2,1 a 2,4 s",
+     "No reportado por separado",
+     "No reportado por separado"
+    ],
+    [
+     "100 usuarios",
+     "4,0 a 4,5 s",
+     "No reportado por separado",
+     "No reportado por separado"
+    ]
+   ]
+  },
+  {
+   "idx": 27,
+   "caption_prev": "Tabla 26. Estructura del análisis estadístico del OE4",
+   "n_rows": 13,
+   "rows": [
+    [
+     "Elemento del análisis",
+     "Planificación (diseño oficial)",
+     "Resultado experimental (campaña N4; no oficial)",
+     "Resultado oficial y estado"
+    ],
+    [
+     "Descripción de los datos",
+     "T_conv y latencia por petición; throughput por lote; percentiles P50 a P99",
+     "60 corridas HTTP (6 cargas × 10 corridas), sin errores ni timeouts; T_conv HTTP, P50, media, P95 y throughput por corrida; T_conv y k_stop en proceso (3 000 ciclos). Campaña N8: 120 corridas HTTP adicionales (N = 10 y N = 30; 6 cargas × 10 corridas), sin errores ni timeouts. N8b: 60 corridas (N = 20); N11: 180 planificadas, 179 válidas (tres N; 6 cargas × 10), sin errores ni timeouts.",
+     "Pendiente de ejecución oficial. Implementado"
+    ],
+    [
+     "Unidad experimental",
+     "Perfil (T_conv y latencia); lote (throughput)",
+     "Corrida (decisión de las campañas experimentales, aún no incorporada al protocolo oficial).",
+     "No aplica. Propuesta técnica pendiente de confirmación"
+    ],
+    [
+     "Tamaño de muestra",
+     "18 condiciones × al menos 5 lotes",
+     "10 corridas por carga (1, 5, 10, 25, 50 y 100 usuarios), con N = 20. N8: 10 corridas por carga y por tamaño de enjambre (N = 10 y N = 30), en otra sesión. N11: 10 réplicas por carga y tamaño; análisis principal en el tramo B (162 corridas; 8 a 10 por celda).",
+     "No aplica. Diseño oficial"
+    ],
+    [
+     "Distribución o normalidad",
+     "Por condición",
+     "No se evaluó por condición; se aplicaron pruebas no paramétricas y una permutación.",
+     "Pendiente de ejecución oficial. Planificado"
+    ],
+    [
+     "Prueba estadística",
+     "Candidatas: Kruskal-Wallis con Holm (throughput entre condiciones); Friedman con Holm (T_conv según N); correlación de Spearman entre carga y latencia. El plan de análisis prevé además Shapiro-Wilk y t o Wilcoxon de la latencia frente a 2,0 s, con el estadístico de latencia aún por definir",
+     "Kruskal-Wallis sobre los 6 grupos; ANOVA de una vía con permutación; Spearman entre carga y P95; Welch sobre el logaritmo entre cargas consecutivas con Holm (m = 5). N8: Welch sobre el logaritmo por corrida para N = 30 frente a N = 10 en cada carga, con Holm (m = 6 por métrica); ANOVA tipo II carga × N como referencia. N11: Welch sobre el logaritmo para los tres contrastes de N dentro del tramo B (Holm con m = 18 por métrica); modelo log(y) ~ N × carga + tramo como referencia; N8b frente a N4 (Holm con m = 12).",
+     "Pendiente de ejecución oficial. Por fijar en el diseño final"
+    ],
+    [
+     "Hipótesis estadística (H0 y H1)",
+     "Por definir (hipótesis estadística aún no formulada)",
+     "No formulada: pendiente de definición metodológica.",
+     "No aplica. Depende de la unidad estadística"
+    ],
+    [
+     "Nivel de significancia (α)",
+     "0,05",
+     "0,05 (referencia).",
+     "No aplica. Fijado en el plan de análisis (§5.8)"
+    ],
+    [
+     "Estadístico",
+     "Según la prueba que se fije",
+     "Kruskal-Wallis: H = 57,4 (T_conv, P50, media y P95) y H = 43,3 (throughput). Spearman carga-P95: ρ = 0,986.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "p-valor",
+     "Según la prueba que se fije",
+     "p = 4,2 × 10⁻¹¹ (latencia y T_conv) y 3,2 × 10⁻⁸ (throughput); Spearman p = 6 × 10⁻⁴⁷. Entre cargas consecutivas, el P95 y el T_conv aumentaron en todos los pasos; el throughput solo cambió de 1 a 5 usuarios (p de Holm = 4 × 10⁻²⁰) y no entre 25 y 50 (p de Holm = 0,073).",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Tamaño del efecto",
+     "Según la prueba que se fije",
+     "η² ≈ 1,00 (latencia y T_conv) y 0,99 (throughput); el P95 y el T_conv aumentaron 3,95 veces de 1 a 5 usuarios y entre 2,0 y 2,5 veces en cada paso siguiente.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Intervalo de confianza",
+     "Cuando corresponda",
+     "Los IC95 por carga constan en el registro de la campaña; la desviación estándar del P95 fue de unos 3 % de la media a 1 usuario y de unos 6 % a 100.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Decisión e interpretación",
+     "Sobre H0 y H1 una vez definidas",
+     "La carga tuvo un efecto significativo: el servicio se satura desde 5 usuarios (15 a 16 req/s), el P95 supera 2 s entre 10 y 25 usuarios (10 de 10 corridas por debajo a 10 usuarios y 0 de 10 a 25) y el throughput no alcanzó 20 req/s en ninguna de las 60 corridas. N8: un enjambre de 30 partículas fue más lento (P95 ×1,21 a ×1,37) y de menor capacidad (throughput ×0,69 a ×0,77) que uno de 10 en todas las cargas (p de Holm ≤ 5 × 10⁻¹¹); ninguna de las 180 corridas de N4 y N8 alcanzó 20 req/s. N11 (tramo B): N = 10 < N = 20 ≲ N = 30 en latencia; 18 corridas de N = 10 alcanzan ≥ 20 req/s; el contraste N8–N8b es compatible con un cambio de régimen del equipo (≈ ×1,6) cuya causa no se aisló.",
+     "Pendiente de ejecución oficial. No aplica"
+    ]
+   ]
+  },
+  {
+   "idx": 28,
+   "caption_prev": "Tabla 27. Precisión de la adaptación con la especificación v3 provisional y estado de la usabilidad (campaña N5; no oficial)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Indicador",
+     "Valor"
+    ],
+    [
+     "F1_adapt medio (K = 10 réplicas; especificación v3 provisional)",
+     "0,8156"
+    ],
+    [
+     "IC95 % de las réplicas (t, 9 grados de libertad)",
+     "0,8111 a 0,8201 (desviación estándar de 0,0063; mínimo de 0,8060 y máximo de 0,8222)"
+    ],
+    [
+     "Medias por perfil (n = 100)",
+     "media 0,8156; mediana 0,8062; desviación estándar 0,142; mínimo 0,40; máximo 1,00"
+    ],
+    [
+     "Casos evaluados",
+     "1 000 (100 perfiles × 10 réplicas)"
+    ],
+    [
+     "F1 por arquetipo",
+     "Balanced-Multimodal 0,878; Visual-Dominant 0,819; Explanatory-Conceptual 0,804; Logical-Syntactic 0,762"
+    ],
+    [
+     "Puntuación SUS",
+     "Sin datos: 0 evaluadores reales"
+    ]
+   ]
+  },
+  {
+   "idx": 29,
+   "caption_prev": "Tabla 28. Precisión, recall y F1 por modalidad con la especificación v3 provisional (campaña N5; no oficial)",
+   "n_rows": 5,
+   "rows": [
+    [
+     "Modalidad",
+     "Precisión",
+     "Recall",
+     "F1",
+     "Errores principales"
+    ],
+    [
+     "Código",
+     "1,00",
+     "0,89",
+     "0,94",
+     "112 falsos negativos"
+    ],
+    [
+     "Diagrama",
+     "1,00",
+     "0,83",
+     "0,91",
+     "167 falsos negativos"
+    ],
+    [
+     "Texto",
+     "0,61",
+     "0,88",
+     "0,72",
+     "277 falsos positivos"
+    ],
+    [
+     "Audio",
+     "0,38",
+     "0,78",
+     "0,51",
+     "323 falsos positivos"
+    ]
+   ]
+  },
+  {
+   "idx": 30,
+   "caption_prev": "Tabla 29. Correlación de Spearman entre la aptitud 𝓕 del mejor global y el F1 por caso, por arquetipo (campaña N5; diagnóstico; no oficial)",
+   "n_rows": 6,
+   "rows": [
+    [
+     "Arquetipo",
+     "Spearman ρ (𝓕 frente a F1)",
+     "p"
+    ],
+    [
+     "Visual-Dominant",
+     "−0,04",
+     "0,514"
+    ],
+    [
+     "Logical-Syntactic",
+     "−0,21",
+     "9,3 × 10⁻⁴"
+    ],
+    [
+     "Explanatory-Conceptual",
+     "0,29",
+     "2,9 × 10⁻⁶"
+    ],
+    [
+     "Balanced-Multimodal",
+     "−0,23",
+     "2,9 × 10⁻⁴"
+    ],
+    [
+     "Global (1 000 casos)",
+     "0,083",
+     "8,6 × 10⁻³"
+    ]
+   ]
+  },
+  {
+   "idx": 31,
+   "caption_prev": "Tabla 30. Indicadores de concordancia con la especificación v2 (resultado histórico)",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Indicador",
+     "Valor",
+     "Criterio",
+     "Interpretación"
+    ],
+    [
+     "F1_adapt medio por réplica",
+     "0,6407048; IC95 % [0,637105; 0,644304]",
+     "Límite inferior del IC95 ≥ 0,85",
+     "No alcanzado bajo v2"
+    ],
+    [
+     "Mediana de las 100 medias por perfil",
+     "0,505 (Q1 0,4775; Q3 0,9679; mínimo 0,40; máximo 1,00)",
+     "Descriptivo",
+     "Distribución asimétrica"
+    ],
+    [
+     "Shapiro-Wilk sobre las medias por perfil",
+     "W = 0,7951; p = 1,75 × 10⁻¹⁰",
+     "α = 0,05",
+     "Se rechaza la normalidad"
+    ],
+    [
+     "Wilcoxon unilateral (H1: μ > 0,85)",
+     "p ≈ 1,00",
+     "p < 0,05 y media > 0,85",
+     "Prueba no superada"
+    ],
+    [
+     "F1 por arquetipo",
+     "Balanced-Multimodal 0,998; Logical-Syntactic 0,537; Visual-Dominant 0,534; Explanatory-Conceptual 0,494",
+     "Descriptivo",
+     "Asimetría entre arquetipos"
+    ],
+    [
+     "F1 por modalidad",
+     "Código 0,701; diagrama 0,711; texto 0,770; audio 0,563",
+     "Descriptivo",
+     "Menor concordancia en audio"
+    ]
+   ]
+  },
+  {
+   "idx": 32,
+   "caption_prev": "Tabla 31. Estructura del análisis estadístico del OE5",
+   "n_rows": 14,
+   "rows": [
+    [
+     "Elemento del análisis",
+     "Planificación (diseño oficial)",
+     "Resultado experimental (campaña N5; no oficial)",
+     "Resultado oficial y estado"
+    ],
+    [
+     "Descripción de los datos",
+     "F1 por caso (K = 10 réplicas × 100 perfiles); puntaje SUS por evaluador; juicios del panel sobre el gold",
+     "F1_adapt con la especificación v3 provisional: 100 perfiles × 10 réplicas = 1 000 casos. SUS: 0 respuestas. Panel del gold: 0 juicios.",
+     "Pendiente de ejecución oficial. F1 implementado; 0 respuestas SUS y 0 juicios del panel"
+    ],
+    [
+     "Unidad experimental",
+     "Perfil (media de sus K réplicas) para el F1; evaluador para el SUS",
+     "Perfil (media de sus 10 réplicas) para el F1; réplica para el intervalo; evaluador para el SUS.",
+     "No aplica. Aprobada para el F1; para el SUS, la prevista en el plan de análisis (§5.8)"
+    ],
+    [
+     "Tamaño de muestra",
+     "100 perfiles × K = 10; al menos 10 evaluadores",
+     "100 perfiles × K = 10 réplicas (1 000 casos); 0 evaluadores.",
+     "No aplica. Aprobado"
+    ],
+    [
+     "Distribución o normalidad",
+     "Shapiro-Wilk sobre las 100 medias por perfil y sobre los puntajes SUS",
+     "No ejecutada: el contraste inferencial queda sujeto a la aprobación de la regla v3.",
+     "Pendiente de ejecución oficial. Prevista en el plan de análisis (§5.8)"
+    ],
+    [
+     "Prueba estadística",
+     "t de Student para una muestra o Wilcoxon, unilateral, contra 0,85 (F1); contra 75 (SUS)",
+     "F1: media por perfil e intervalo t de las réplicas; el contraste unilateral frente a 0,85 no se ejecutó. SUS: Shapiro-Wilk con t o Wilcoxon, implementado y probado con vectores de prueba, sin datos reales.",
+     "Pendiente de ejecución oficial. Aprobada para el F1; para el SUS, contraste con 75 según el OE5"
+    ],
+    [
+     "Hipótesis estadística (H0 y H1)",
+     "F1: H0: μ ≤ 0,85; H1: μ > 0,85. SUS: hipótesis pendiente de definición metodológica",
+     "F1: H0: μ ≤ 0,85; H1: μ > 0,85 (contraste no ejecutado). SUS: sin hipótesis definida.",
+     "No aplica. F1: criterio aprobado; SUS: hipótesis pendiente de definición"
+    ],
+    [
+     "Validación del gold por el panel",
+     "AC1 de Gwet > 0,70 y acuerdo crudo ≥ 85 % sobre 4 × n juicios",
+     "Panel no aplicado (0 evaluadores): no hay AC1 ni acuerdo crudo.",
+     "Pendiente de ejecución oficial. Componentes aprobados; versión formal del protocolo pendiente"
+    ],
+    [
+     "Nivel de significancia (α)",
+     "0,05",
+     "0,05 (referencia).",
+     "No aplica. Fijado en el plan de análisis (§5.8)"
+    ],
+    [
+     "Estadístico",
+     "Según la prueba que se fije",
+     "F1_adapt medio de las 10 réplicas = 0,8156 (DE de las réplicas 0,0063; mínimo 0,8060 y máximo 0,8222). Medias por perfil (n = 100): media 0,8156; mediana 0,8062; DE 0,142. SUS: sin dato.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "p-valor",
+     "Según la prueba que se fije",
+     "No calculado para el F1 (contraste sujeto a aprobación). SUS: sin dato.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Tamaño del efecto",
+     "Según la prueba que se fije",
+     "No calculado.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Intervalo de confianza",
+     "IC95 t con 9 grados de libertad sobre los F1 por réplica; para el SUS, cuando corresponda",
+     "IC95 de las réplicas (t, 9 gl) para el F1: 0,8111 a 0,8201. SUS: sin dato.",
+     "Pendiente de ejecución oficial. No aplica"
+    ],
+    [
+     "Decisión e interpretación",
+     "Sobre H0 y H1 una vez definidas",
+     "El F1_adapt provisional (0,8156) es inferior a 0,85, pues el límite superior del IC95 no la alcanza; el SUS no es evaluable con 0 evaluadores.",
+     "Pendiente de ejecución oficial. No aplica"
+    ]
+   ]
+  },
+  {
+   "idx": 33,
+   "caption_prev": "Tabla 32. Síntesis de la comparación con el estado del arte por objetivo específico",
+   "n_rows": 6,
+   "rows": [
+    [
+     "OE",
+     "Estudios de referencia",
+     "Valores publicados (texto completo o resumen, según el Anexo 7)",
+     "Resultado de esta investigación (no oficial)",
+     "Comparabilidad"
+    ],
+    [
+     "OE1",
+     "El Fazazi et al. (2021); Viswanathan et al. (2022); Mohamedhen et al. (2024); López-Goyez et al. (2026)",
+     "El Fazazi: diseño sin evaluación empírica; Viswanathan: diseño y simulación (trazas entre agentes); Mohamedhen: exactitud de 93,33 % (100 estudiantes, 10 cursos); López-Goyez: percepción de 150 estudiantes (medias de 3,74 a 3,92), sin grupo de control",
+     "RF/REL cumplidos; RF03 90,5 %; RNF04 14,98 req/s; ρ = −0,69 (n = 14)",
+     "Contextual; ninguno mide el cumplimiento de requisitos de eficiencia del sistema completo"
+    ],
+    [
+     "OE2",
+     "Dean y Barroso (2013); Little (1961); Martins et al. (2021); Machado et al. (2021); de Marcos et al. (2008)",
+     "Sin cifras comparables de latencia o throughput; de Marcos: resultado cualitativo",
+     "P95 ×5,05 a ×21,7 (N2) y ×3,9 a ×14,7 (N9b) y throughput ×0,058 a ×0,213 frente a decision_table; frente a bruteforce, P95 indistinguible y throughput ×1,13 a ×1,51",
+     "Metodológica y de diseño; el comparador es propio del estudio"
+    ],
+    [
+     "OE3",
+     "Kennedy y Eberhart (1997); Clerc y Kennedy (2002); Shami et al. (2022); Subiyantoro et al. (2021); Li et al. (2023); Zheng et al. (2025); Hao et al. (2025); S. Zhang et al. (2025)",
+     "Subiyantoro: similitud de secuencias de 87,5 %, 75 % y 87,5 %; Li: valor objetivo +12,3 % frente a ACO y 115 frente a 200 iteraciones (simulación); Hao y S. Zhang: ablaciones en funciones de prueba; los demás, sin cifras comparables",
+     "Despacho concurrente −37 % de T_conv; difusión de g_best +13 ms sin mejora; cognitivo con k_stop = 1",
+     "Comparable con reservas en diseño; no en cifras"
+    ],
+    [
+     "OE4",
+     "Dean y Barroso (2013); Little (1961); Abdullah y Alzain (2026); Srinivas et al. (2026); Ukenova et al. (2026); Dinh et al. (2025)",
+     "Solo latencias de inferencia o de componentes: 10,5 y 9,5 ms (inferencia); 0,90 s y ≈ 11 051 ejecuciones/s (simulación); síntesis de voz de 25,51 ms (VITS) y medianas de 0,4 a 1,8 s en la nube; ninguno mide P95 y throughput de un sistema multiagente educativo completo por HTTP",
+     "N11 (tramo B): N = 10 < N = 20 ≲ N = 30 en latencia; ≥ 20 req/s solo en 18 corridas de N = 10 (máx. 21,99); P95 < 2 s hasta 10 usuarios (hasta 25 con N = 10)",
+     "No comparable; se usan las metas del estudio como referencia"
+    ],
+    [
+     "OE5",
+     "Orfanou et al. (2015); Derisma (2020); Bangor et al. (2008); Koca y Özcan (2025); Isal et al. (2021); Wu et al. (2025); Vaccaro et al. (2025); Liu (2026); Zhang y Zhou (2014)",
+     "SUS medio de 76,27 (769 estudiantes), de 72,1 y 70 (162 usuarios), de 63,85 y de 85,75; MAGMA-Edu: calidad de generación (57,01 a 92,31; preprint); Vaccaro: preferencia; Liu: F1 de 79,5 % en otra tarea",
+     "F1_adapt v3 de 0,8156 (< 0,85; provisional); SUS sin datos",
+     "Contextual; métricas, poblaciones y tareas distintas"
+    ]
+   ]
+  },
+  {
+   "idx": 34,
+   "caption_prev": "Tabla 33. Componentes de la brecha y evidencia experimental disponible (campañas N1 a N11; no oficial)",
+   "n_rows": 6,
+   "rows": [
+    [
+     "Componente de la brecha",
+     "Evidencia disponible",
+     "Estado"
+    ],
+    [
+     "Selección conjunta de modalidades con criterios multiobjetivo explícitos",
+     "La función de aptitud con cuatro términos (similitud, coherencia, redundancia y costo) se ejecutó sin errores en 9 500 ciclos (N1), 240 corridas (N3) y 60 corridas (N4); 419 corridas HTTP en la caracterización de la carga (N4, N8, N8b y N11)",
+     "Atendida por la arquitectura (experimental, no oficial)"
+    ],
+    [
+     "Evaluación reproducible",
+     "Semillas por corrida, hashes y sumas de verificación; 20 de 20 pares idénticos con la misma semilla (N1); reproducción independiente de las cifras de N1, N2, N3, N5, N8b, N9b y N11 con resultados coincidentes",
+     "Atendida (experimental, no oficial)"
+    ],
+    [
+     "Evaluación frente al óptimo",
+     "Brecha respecto del óptimo exhaustivo de 0,0118 en la configuración de referencia y hasta 0,0428 en la peor condición (N3); tiempo por ciclo frente a la búsqueda exhaustiva (N2); comparación HTTP con la búsqueda exhaustiva en N9b, sin incorporar la calidad de la solución",
+     "Atendida parcialmente (experimental, no oficial)"
+    ],
+    [
+     "Evaluación frente a una referencia validada por expertos",
+     "F1_adapt de 0,8156 frente a un gold por arquetipo que el panel no ha validado; 0 evaluadores y 0 respuestas SUS",
+     "No atendida (resultado provisional)"
+    ],
+    [
+     "Confirmación de que el vacío existe",
+     "Búsqueda estructurada y acotada en OpenAlex (42 cadenas; una sola base; un solo revisor; 56 artículos empíricos leídos a texto completo con lectura dirigida): no halló publicaciones comparables; no es una revisión sistemática",
+     "Provisional (cobertura limitada)"
+    ]
+   ]
+  },
+  {
+   "idx": 35,
+   "caption_prev": "Tabla 34. Instrumentos y registros del estudio y su estado",
+   "n_rows": 9,
+   "rows": [
+    [
+     "ID",
+     "Instrumento",
+     "Archivo o fuente real",
+     "Campaña",
+     "Estado"
+    ],
+    [
+     "I-01",
+     "Tabla de requisito → indicador → umbral → estado (informe OE1)",
+     "backend/experiments/oe_n1_2026-10-05/oe1_report/oe1_report.md",
+     "N1",
+     "Aplicado; experimental / no oficial"
+    ],
+    [
+     "I-02",
+     "Registro automatizado de observaciones por petición y de corridas HTTP",
+     "raw_observations.csv, statistical_input.csv, runs.csv, provenance.json, environment.json (carpetas oe_n1 a oe_n4)",
+     "N1–N4",
+     "Aplicado; experimental / no oficial"
+    ],
+    [
+     "I-03",
+     "Campaña HTTP de carga (generador Locust) con plan, manifiesto y sumas SHA-256",
+     "backend/adaptation_swarm/oe/http_campaign.py; carpetas campaign/ de N2 y N4",
+     "N2, N4",
+     "Aplicado; experimental / no oficial"
+    ],
+    [
+     "I-04",
+     "Cálculo del F1_adapt con la regla v3 (script y resumen)",
+     "oe_n5_2026-10-06/run_f1_v3_provisional.py; f1_v3_summary.json",
+     "N5",
+     "Aplicado; provisional"
+    ],
+    [
+     "I-05",
+     "Cuestionario SUS de 10 ítems (versión en español, sin validar)",
+     "oe_n5_2026-10-06/instrumento/SUS_INSTRUMENT_ES.md",
+     "—",
+     "Instrumento diseñado, pendiente de aplicación"
+    ],
+    [
+     "I-06",
+     "Plantilla de respuestas SUS y ficha de evaluación del experto (vacías)",
+     "instrumento/sus_respuestas_PLANTILLA_VACIA.csv; ficha_evaluacion_experto_PLANTILLA_VACIA.csv",
+     "—",
+     "Instrumento diseñado, pendiente de aplicación"
+    ],
+    [
+     "I-07",
+     "Plantilla de consentimiento informado (sin validar)",
+     "instrumento/CONSENT_TEMPLATE.md",
+     "—",
+     "Instrumento diseñado, pendiente de validación y aplicación"
+    ],
+    [
+     "I-08",
+     "Guion de tareas v1 y protocolo de evaluación OE5",
+     "instrumento/TASK_SCRIPT_v1.md; instrumento/PROTOCOLO_OE5.md",
+     "—",
+     "Instrumento diseñado, pendiente de aplicación"
+    ]
+   ]
+  },
+  {
+   "idx": 36,
+   "caption_prev": "Tabla 35. Ítems del cuestionario SUS en español (instrumento sin aplicar) [I-05]",
+   "n_rows": 11,
+   "rows": [
+    [
+     "N.º",
+     "Ítem"
+    ],
+    [
+     "1",
+     "Creo que me gustaría utilizar este sistema con frecuencia."
+    ],
+    [
+     "2",
+     "Encontré el sistema innecesariamente complejo."
+    ],
+    [
+     "3",
+     "Pensé que el sistema era fácil de usar."
+    ],
+    [
+     "4",
+     "Creo que necesitaría el apoyo de un técnico para poder utilizar este sistema."
+    ],
+    [
+     "5",
+     "Encontré que las diversas funciones del sistema estaban bien integradas."
+    ],
+    [
+     "6",
+     "Pensé que había demasiada inconsistencia en este sistema."
+    ],
+    [
+     "7",
+     "Imagino que la mayoría de las personas aprenderían a utilizar este sistema muy rápidamente."
+    ],
+    [
+     "8",
+     "Encontré el sistema muy incómodo de utilizar."
+    ],
+    [
+     "9",
+     "Me sentí muy seguro/a utilizando el sistema."
+    ],
+    [
+     "10",
+     "Necesité aprender muchas cosas antes de poder empezar a utilizar el sistema."
+    ]
+   ]
+  },
+  {
+   "idx": 37,
+   "caption_prev": "Tabla 36. Trazabilidad de las evidencias del Anexo 2",
+   "n_rows": 32,
+   "rows": [
+    [
+     "Evidencia",
+     "OE",
+     "Camp.",
+     "Elemento",
+     "Qué demuestra",
+     "Estado"
+    ],
+    [
+     "E-OE1-01",
+     "OE1",
+     "N1",
+     "Tabla 37",
+     "Estado MET/NOT_MET/NOT_MEASURED de RF01–RF06, REL-C, REL-D y RNF01–RNF05. Archivo: oe_​n1_​2026-10-05/​oe1_​report/​oe1_​report.md (SHA-256: 531594908b29).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE1-02",
+     "OE1",
+     "N1",
+     "Figura 10",
+     "Ejecución de 300/300 ciclos por lote y condición, con tiempos y req/s. Archivo: oe_​n1_​2026-10-05/​oe3_​run.log (SHA-256: f9256c125d08).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE1-03",
+     "OE1",
+     "N1",
+     "Figura 11",
+     "Correlaciones de Spearman por condición (n = 14) y aclaraciones del propio registro (RF03, RNF01, RNF03, RNF04). Archivo: oe_​n1_​2026-10-05/​oe1_​report/​oe1_​report.md (SHA-256: 531594908b29); oe_​n1_​2026-10-05/​RESULTADO_​OE1.md (SHA-256: 939aaac3af00).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE2-01",
+     "OE2",
+     "N2",
+     "Figura 12",
+     "Comando, sistemas comparados, persistencia, reinicio por corrida, orden, semillas y hardware. Archivo: oe_​n2_​2026-10-05/​RESULTADO_​OE2.md (SHA-256: 02176fd87682).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE2-02",
+     "OE2",
+     "N2",
+     "Figura 13",
+     "Corridas HTTP intercaladas de swarm y decision_table con la misma semilla por índice de corrida. Archivo: oe_​n2_​2026-10-05/​campaign.log (SHA-256: a3ac6ea7e5ef).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE2-03",
+     "OE2",
+     "N2",
+     "Figura 14",
+     "80/80 corridas completadas; clase de entorno y estado no oficial. Archivo: oe_​n2_​2026-10-05/​campaign.log (SHA-256: a3ac6ea7e5ef).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE2-04",
+     "OE2",
+     "N2",
+     "Tabla 38",
+     "Latencia (P50, media, P95) y throughput por sistema y carga; 0 errores y 0 timeouts. Archivo: oe_​n2_​2026-10-05/​tabla_​por_​carga.csv (SHA-256: db887cd03cdf).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE2-05",
+     "OE2",
+     "N2",
+     "Figura 15",
+     "Gráfico generado por el proyecto: P95 y throughput por usuarios concurrentes. Archivo: oe_​n2_​2026-10-05/​oe2_​latencia_​throughput.png (SHA-256: c8a4c6cb7b84).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE2-06",
+     "OE2",
+     "N2",
+     "Figura 16",
+     "Contraste de Welch sobre log por corrida, razón geométrica, IC95, p ajustado por Holm y prueba de Mann-Whitney complementaria. Archivo: oe_​n2_​2026-10-05/​campaign/​analysis.json (SHA-256: a763e26bf59e).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE3-01",
+     "OE3",
+     "N3",
+     "Tabla 39",
+     "Roles (heurística de AG1, réplicas), protocolo (despacho, difusión de g_best) y mecanismo (PSO, cognitivo, social). Archivo: oe_​n3_​2026-10-06/​RESULTADO_​OE3.md (SHA-256: 15e228062f78).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE3-02",
+     "OE3",
+     "N3",
+     "Figura 17",
+     "N = 20, w = 0,729, c1 = c2 = 1,494, k_max = 15, ε = 0,001. Archivo: adaptation_​swarm/​pso/​params.py (SHA-256: 8f37a14ea2be).",
+     "Documentación técnica (sin resultado)"
+    ],
+    [
+     "E-OE3-03",
+     "OE3",
+     "N3",
+     "Figura 18",
+     "Corridas condición × lote con los códigos de factor (dispatch, bc, h, mecanismo, réplicas, N). Archivo: oe_​n3_​2026-10-06/​run.log (SHA-256: 7aa74e117d35).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE3-04",
+     "OE3",
+     "N3",
+     "Tabla 40",
+     "T_conv, k_stop, brecha, función de aptitud y mensajes por condición. Archivo: oe_​n3_​2026-10-06/​tabla_​por_​configuracion.csv (SHA-256: f2eac1470ac2).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE3-05",
+     "OE3",
+     "N3",
+     "Figura 19",
+     "Términos principales e interacciones: p por permutación y η² parcial para T_conv. Archivo: oe_​n3_​2026-10-06/​anova_​oe3.md (SHA-256: 45b80010bcb8).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE3-06",
+     "OE3",
+     "N3",
+     "Figura 20",
+     "Gráfico generado por el proyecto con los efectos marginales de cada nivel. Archivo: oe_​n3_​2026-10-06/​oe3_​efectos_​marginales.png (SHA-256: 71bfae2ad2e9).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-01",
+     "OE4",
+     "N4",
+     "Figura 21",
+     "Swarm con N = 20, cargas 1, 5, 10, 25, 50 y 100, 10 corridas por carga, política reuse. Archivo: oe_​n4_​2026-10-06/​RESULTADO_​OE4.md (SHA-256: 2edf12a9dc37).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-02",
+     "OE4",
+     "N4",
+     "Figura 22",
+     "Corridas HTTP por nivel de carga con P95, throughput y tasa de error. Archivo: oe_​n4_​2026-10-06/​campaign.log (SHA-256: f790d16ff57a).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-03",
+     "OE4",
+     "N4",
+     "Figura 23",
+     "Gráfico generado por el proyecto: P95 por nivel de carga. Archivo: oe_​n4_​2026-10-06/​oe4_​usuarios_​vs_​p95.png (SHA-256: b106fa1d859c).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-04",
+     "OE4",
+     "N4",
+     "Figura 24",
+     "Gráfico generado por el proyecto: throughput por nivel de carga. Archivo: oe_​n4_​2026-10-06/​oe4_​usuarios_​vs_​throughput.png (SHA-256: 1174486617b8).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-05",
+     "OE4",
+     "N4",
+     "Figura 25",
+     "Gráfico generado por el proyecto: T_conv por nivel de carga. Archivo: oe_​n4_​2026-10-06/​oe4_​usuarios_​vs_​tconv.png (SHA-256: 4cfc82c3b9d7).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-06",
+     "OE4",
+     "N4",
+     "Figura 26",
+     "Kruskal–Wallis, ANOVA con permutación, Spearman y contrastes de Welch con Holm entre cargas consecutivas. Archivo: oe_​n4_​2026-10-06/​RESULTADO_​OE4.md (SHA-256: 2edf12a9dc37).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE4-07",
+     "OE4",
+     "N4",
+     "Figura 27",
+     "Repetición completa de la campaña tras corregir un error de análisis; los datos del intento fallido no se usan. Archivo: oe_​n4_​2026-10-06/​failed_​attempt1_​zerodiv/​README.txt (SHA-256: ab09d392321f).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-OE5-01",
+     "OE5",
+     "N5",
+     "Figura 28",
+     "Regla gold-v3-multimodal + incl-rel20, K = 10, biblioteca lib-v10, plan PROVISIONAL (official=False). Archivo: oe_​n5_​2026-10-06/​run_​f1_​v3_​provisional.py (SHA-256: 1fefd338e21a).",
+     "Provisional / no oficial"
+    ],
+    [
+     "E-OE5-02",
+     "OE5",
+     "N5",
+     "Figura 29",
+     "F1_adapt = 0,8156 (IC95 0,8111–0,8201); estado PROVISIONAL. Archivo: oe_​n5_​2026-10-06/​f1_​v3_​summary.json (SHA-256: 68d107ee4a73).",
+     "Provisional / no oficial"
+    ],
+    [
+     "E-OE5-03",
+     "OE5",
+     "N5",
+     "Tabla 41",
+     "Matriz de confusión uno-contra-resto por modalidad (1 000 casos). Archivo: oe_​n5_​2026-10-06/​f1_​v3_​summary.json (SHA-256: 68d107ee4a73).",
+     "Provisional / no oficial"
+    ],
+    [
+     "E-OE5-04",
+     "OE5",
+     "N5",
+     "Figura 30",
+     "SUS y panel: protocolo listo, NO aplicado; 0 evaluadores reales. Archivo: oe_​n5_​2026-10-06/​instrumento/​PROTOCOLO_​OE5.md (SHA-256: ea0ef88e21b3).",
+     "Pendiente de ejecución"
+    ],
+    [
+     "E-TR-01",
+     "Transv.",
+     "N1–N7",
+     "Figura 31",
+     "Commit, hardware (i7-12700K, 20 vCPU, 31,75 GiB), versiones, hash del dataset y clase de entorno. Archivo: oe_​n1_​2026-10-05/​oe3_​run/​environment.json (SHA-256: c1a08050b35d).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-TR-02",
+     "Transv.",
+     "—",
+     "Figura 32",
+     "Flujo perfil → AG0 → Redis Streams → AG1–AG4 → PSO → paquete multimodal → PostgreSQL; módulos por subpaquete. Archivo: adaptation_​swarm/​README.md (SHA-256: 8dabcbc2c6f1); listado del directorio.",
+     "Documentación técnica (sin resultado)"
+    ],
+    [
+     "E-TR-03",
+     "Transv.",
+     "N6",
+     "Figura 33",
+     "Consolidación de resultados y estados por objetivo, con la advertencia de que las ejecuciones no son oficiales. Archivo: oe_​n6_​2026-10-06/​MATRIZ_​CUMPLIMIENTO.md (SHA-256: edb73c6671e6).",
+     "Experimental / no oficial"
+    ],
+    [
+     "E-TR-04",
+     "Transv.",
+     "N2, N7",
+     "Figura 34",
+     "Integridad de los archivos de resultados referenciados por la tesis. Archivo: oe_​n2_​2026-10-05/​SHA256SUMS (SHA-256: 4a84bf0e834d); oe_​n7_​2026-10-06/​SHA256SUMS (SHA-256: 75154359c4b1).",
+     "Documentación técnica (sin resultado)"
+    ],
+    [
+     "E-TR-05",
+     "Transv.",
+     "N7",
+     "Figura 35",
+     "Resultado de la suite tests/adaptation_swarm y declaración de los fallos preexistentes. Archivo: oe_​n7_​2026-10-06/​RESUMEN_​FINAL_​ESTUDIO.md (SHA-256: d42b3bfaf5c0).",
+     "Documentación técnica (sin resultado)"
+    ]
+   ]
+  },
+  {
+   "idx": 38,
+   "caption_prev": "Tabla 37. Estado de cada requisito en la campaña N1 (transcripción) [E-OE1-01]",
+   "n_rows": 14,
+   "rows": [
+    [
+     "Requisito",
+     "Dimensión",
+     "Indicador",
+     "Umbral",
+     "Valor",
+     "Estado"
+    ],
+    [
+     "RF01",
+     "funcionalidad",
+     "proporción de peticiones cuyo perfil es aceptado y validado",
+     "= 100 %",
+     "1",
+     "MET"
+    ],
+    [
+     "RF02",
+     "funcionalidad",
+     "proporción de ciclos con W normalizada (Σ = 1)",
+     "= 100 %",
+     "1",
+     "MET"
+    ],
+    [
+     "RF03",
+     "funcionalidad",
+     "proporción de ciclos con peticiones en vuelo solapadas (inflight_overlap)",
+     "= 100 %",
+     "0.9053",
+     "NOT_MET"
+    ],
+    [
+     "RF04",
+     "funcionalidad",
+     "proporción de ciclos con iteraciones registradas = k_stop + 1",
+     "= 100 %",
+     "1",
+     "MET"
+    ],
+    [
+     "RF05",
+     "funcionalidad",
+     "proporción de peticiones con paquete válido y cadena de hashes íntegra",
+     "= 100 %",
+     "1",
+     "MET"
+    ],
+    [
+     "RF06",
+     "funcionalidad",
+     "proporción de ciclos persistidos completos (ciclo, iteraciones, mensajes, paquete)",
+     "= 100 %",
+     "1",
+     "MET"
+    ],
+    [
+     "REL-C",
+     "confiabilidad",
+     "tasa de ciclos completados",
+     "≥ 99%",
+     "1",
+     "MET"
+    ],
+    [
+     "REL-D",
+     "confiabilidad",
+     "proporción de pares idénticos (S, 𝓕, k_stop, motivo)",
+     "= 100 %",
+     "1",
+     "MET"
+    ],
+    [
+     "RNF01",
+     "eficiencia",
+     "P95 de la latencia por petición (EN PROCESO, sin HTTP)",
+     "< 2000 ms",
+     "1319",
+     "MET"
+    ],
+    [
+     "RNF02",
+     "eficiencia",
+     "máx. k_stop y proporción de paradas por ε",
+     "k_stop ≤ 15 ∧ CR ≥ 98%",
+     "8",
+     "MET"
+    ],
+    [
+     "RNF04",
+     "eficiencia",
+     "mediana del throughput por lote y tasa de error",
+     "≥ 20 req/s ∧ error < 1%",
+     "14.98",
+     "NOT_MET"
+    ],
+    [
+     "RNF03",
+     "calidad",
+     "F1_adapt oficial (regla v3, K = 10)",
+     "≥ 0.85",
+     "0.6407",
+     "NOT_MET"
+    ],
+    [
+     "RNF05",
+     "calidad",
+     "media SUS y contraste contra 75",
+     "media > 75 ∧ p < 0.05 ∧ n ≥ 10",
+     "—",
+     "NOT_MEASURED — sin SUS con n ≥ 10 (panel humano pendiente)"
+    ]
+   ]
+  },
+  {
+   "idx": 39,
+   "caption_prev": "Tabla 38. Resumen por sistema y carga de la campaña N2 [E-OE2-04]",
+   "n_rows": 9,
+   "rows": [
+    [
+     "system",
+     "users",
+     "n_runs",
+     "p50_ms",
+     "mean_ms",
+     "p95_ms",
+     "throughput_rps",
+     "errors_total",
+     "timeouts_total"
+    ],
+    [
+     "decision_table",
+     "1",
+     "10",
+     "13.3",
+     "14.7",
+     "23.9",
+     "67.39",
+     "0",
+     "0"
+    ],
+    [
+     "swarm",
+     "1",
+     "10",
+     "90.7",
+     "93.2",
+     "120.0",
+     "10.71",
+     "0",
+     "0"
+    ],
+    [
+     "decision_table",
+     "5",
+     "10",
+     "18.5",
+     "19.3",
+     "24.6",
+     "257.05",
+     "0",
+     "0"
+    ],
+    [
+     "swarm",
+     "5",
+     "10",
+     "284.7",
+     "298.4",
+     "436.7",
+     "16.76",
+     "0",
+     "0"
+    ],
+    [
+     "decision_table",
+     "10",
+     "10",
+     "33.2",
+     "35.1",
+     "42.5",
+     "283.23",
+     "0",
+     "0"
+    ],
+    [
+     "swarm",
+     "10",
+     "10",
+     "577.9",
+     "606.7",
+     "921.9",
+     "16.5",
+     "0",
+     "0"
+    ],
+    [
+     "decision_table",
+     "25",
+     "10",
+     "85.8",
+     "94.0",
+     "181.0",
+     "267.94",
+     "0",
+     "0"
+    ],
+    [
+     "swarm",
+     "25",
+     "10",
+     "1401.4",
+     "1523.5",
+     "2316.4",
+     "16.45",
+     "0",
+     "0"
+    ]
+   ]
+  },
+  {
+   "idx": 40,
+   "caption_prev": "Tabla 39. Factores y niveles del diseño factorial de la campaña N3 (transcripción) [E-OE3-01]",
+   "n_rows": 6,
+   "rows": [
+    [
+     "Dimensión de OE3",
+     "Factor (real en la arquitectura)",
+     "Niveles"
+    ],
+    [
+     "Roles de los agentes",
+     "heuristic_seed (rol de AG1 en el arranque)",
+     "con / sin"
+    ],
+    [
+     "",
+     "replicas (consumidores por agente)",
+     "1 / 2"
+    ],
+    [
+     "Protocolo de comunicación",
+     "dispatch",
+     "batch / sequential"
+    ],
+    [
+     "",
+     "broadcast_gbest",
+     "con / sin"
+    ],
+    [
+     "Mecanismo de enjambre",
+     "mechanism",
+     "pso / cognitive / social"
+    ]
+   ]
+  },
+  {
+   "idx": 41,
+   "caption_prev": "Tabla 40. Resultados por configuración (primeras filas) [E-OE3-04]",
+   "n_rows": 8,
+   "rows": [
+    [
+     "condition",
+     "n_runs",
+     "t_conv_ms",
+     "t_conv_sd",
+     "k_stop",
+     "gap",
+     "F",
+     "n_messages"
+    ],
+    [
+     "swarm|batch|bc0|h0|cognitive|r1|N20|c1",
+     "5",
+     "44.42",
+     "2.18",
+     "1.0",
+     "0.04283",
+     "0.4503",
+     "46.1"
+    ],
+    [
+     "swarm|batch|bc0|h0|cognitive|r2|N20|c1",
+     "5",
+     "43.87",
+     "1.9",
+     "1.0",
+     "0.04283",
+     "0.4503",
+     "46.1"
+    ],
+    [
+     "swarm|batch|bc0|h0|pso|r1|N20|c1",
+     "5",
+     "57.97",
+     "2.51",
+     "2.402",
+     "0.01686",
+     "0.4763",
+     "48.4"
+    ],
+    [
+     "swarm|batch|bc0|h0|pso|r2|N20|c1",
+     "5",
+     "57.58",
+     "2.15",
+     "2.402",
+     "0.01686",
+     "0.4763",
+     "48.4"
+    ],
+    [
+     "swarm|batch|bc0|h0|social|r1|N20|c1",
+     "5",
+     "57.38",
+     "1.84",
+     "2.334",
+     "0.01758",
+     "0.4756",
+     "48.4"
+    ],
+    [
+     "swarm|batch|bc0|h0|social|r2|N20|c1",
+     "5",
+     "56.72",
+     "2.56",
+     "2.334",
+     "0.01758",
+     "0.4756",
+     "48.4"
+    ],
+    [
+     "swarm|batch|bc0|h1|cognitive|r1|N20|c1",
+     "5",
+     "43.7",
+     "1.32",
+     "1.0",
+     "0.02121",
+     "0.4719",
+     "45.6"
+    ]
+   ]
+  },
+  {
+   "idx": 42,
+   "caption_prev": "Tabla 41. Precisión, recall y F1 por modalidad [E-OE5-03]",
+   "n_rows": 5,
+   "rows": [
+    [
+     "Modalidad",
+     "Precisión",
+     "Recall",
+     "F1",
+     "VP",
+     "FP",
+     "FN",
+     "VN"
+    ],
+    [
+     "Código",
+     "1.0000",
+     "0.8880",
+     "0.9407",
+     "888",
+     "0",
+     "112",
+     "0"
+    ],
+    [
+     "Diagrama",
+     "1.0000",
+     "0.8330",
+     "0.9089",
+     "833",
+     "0",
+     "167",
+     "0"
+    ],
+    [
+     "Texto",
+     "0.6131",
+     "0.8780",
+     "0.7220",
+     "439",
+     "277",
+     "61",
+     "223"
+    ],
+    [
+     "Audio",
+     "0.3752",
+     "0.7760",
+     "0.5059",
+     "194",
+     "323",
+     "56",
+     "427"
+    ]
+   ]
+  },
+  {
+   "idx": 43,
+   "caption_prev": "Tabla 42. Entorno tecnológico y herramientas del desarrollo y la evaluación",
+   "n_rows": 10,
+   "rows": [
+    [
+     "Componente",
+     "Tecnología o dato registrado",
+     "Fuente"
+    ],
+    [
+     "Lenguaje y plataforma",
+     "CPython 3.12.10; Windows 11 (10.0.26300)",
+     "environment.json (E-TR-01)"
+    ],
+    [
+     "Cálculo numérico",
+     "numpy 2.5.3; scipy 1.18.1",
+     "environment.json (E-TR-01)"
+    ],
+    [
+     "Agentes y orquestación",
+     "AG0–AG4; AG0 con LangGraph",
+     "adaptation_swarm/README.md (E-TR-02)"
+    ],
+    [
+     "Bus de mensajes",
+     "Redis Streams (imagen redis:7-alpine en docker-compose.yml)",
+     "README.md; docker-compose.yml"
+    ],
+    [
+     "Persistencia",
+     "PostgreSQL (imagen postgres:16-alpine en docker-compose.yml)",
+     "docker-compose.yml"
+    ],
+    [
+     "Generación de carga HTTP",
+     "Locust (campañas N2 y N4)",
+     "RESULTADO_OE2.md; RESULTADO_OE4.md"
+    ],
+    [
+     "Control de versiones",
+     "Git; rama feat/adaptation-swarm-poc; 878 commits en el repositorio; commit base de N1–N6: cec0e06",
+     "environment.json (E-TR-01); repositorio del proyecto"
+    ],
+    [
+     "Pruebas automatizadas",
+     "pytest; 72 archivos en tests/adaptation_swarm; resultado de la suite en la campaña N7",
+     "E-TR-05"
+    ],
+    [
+     "Hardware de las campañas",
+     "Intel Core i7-12700K, 20 vCPU, 31,75 GiB (no es el hardware objetivo de 8 vCPU y 32 GB)",
+     "environment.json (E-TR-01)"
+    ]
+   ]
+  },
+  {
+   "idx": 44,
+   "caption_prev": "Tabla 43. Fases de la metodología DSRM y evidencia asociada",
+   "n_rows": 7,
+   "rows": [
+    [
+     "Fase DSRM",
+     "Actividad en el proyecto",
+     "Evidencia"
+    ],
+    [
+     "1. Identificación del problema",
+     "Delimitación del problema de adaptación multimodal",
+     "Capítulos 1 y 2 del informe"
+    ],
+    [
+     "2. Objetivos de la solución",
+     "Requisitos RF01–RF06 y RNF01–RNF05",
+     "Tabla 3; E-OE1-01"
+    ],
+    [
+     "3. Diseño y desarrollo",
+     "Paquete adaptation_swarm: agentes, PSO, función de aptitud, bus y persistencia",
+     "E-TR-02; E-OE3-02"
+    ],
+    [
+     "4. Demostración",
+     "Ejecución de la arquitectura sobre la batería de 100 perfiles sintéticos",
+     "E-OE2-02; E-OE3-03; E-OE4-02"
+    ],
+    [
+     "5. Evaluación",
+     "Campañas experimentales N1–N6 (no oficiales); pruebas automatizadas",
+     "Anexo 2; E-TR-03; E-TR-05"
+    ],
+    [
+     "6. Comunicación",
+     "Informe de tesis",
+     "Este documento"
+    ]
+   ]
+  },
+  {
+   "idx": 45,
+   "caption_prev": "Tabla 44. Matriz de comparación con el estado del arte",
+   "n_rows": 92,
+   "rows": [
+    [
+     "N.º",
+     "Referencia",
+     "Problema, método y muestra",
+     "Resultados publicados (según el nivel de lectura indicado)",
+     "OE, comparabilidad, tipo de fuente y nivel de lectura"
+    ],
+    [
+     "1",
+     "Kennedy y Eberhart (1997). A discrete binary version of the particle swarm algorithm.",
+     "Extender PSO a variables binarias. PSO binario. Muestra: Funciones de prueba.",
+     "Sin cifras en el resumen",
+     "OE3. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "2",
+     "Lewis (2018). The System Usability Scale: Past, Present, and Future.",
+     "Revisión del SUS. Revisión narrativa. Muestra: no indicada.",
+     "Sin cifras en el resumen",
+     "OE5. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "3",
+     "Dean y Barroso (2013). The tail at scale.",
+     "Variabilidad de latencia en servicios web a gran escala. Técnicas de tolerancia a la latencia de cola. Muestra: no indicada.",
+     "Sin cifras en el resumen",
+     "OE2/OE4. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "4",
+     "Machado et al. (2021). Metaheuristic-based adaptive curriculum sequencing approaches: a systematic review and mapping of the literature.",
+     "Secuenciación curricular adaptativa con metaheurísticas. Revisión sistemática y mapeo. Muestra: Estudios de la revisión.",
+     "Resumen no disponible en OpenAlex (solo metadatos Crossref)",
+     "OE2/OE3. Contextual, no directamente comparable. Revisión: marco de referencia, no antecedente empírico (Solo metadatos (Crossref); sin resumen)"
+    ],
+    [
+     "5",
+     "Shami et al. (2022). Particle Swarm Optimization: A Comprehensive Survey.",
+     "Revisión de PSO y variantes. Revisión (PSO binario, topologías de vecindad, híbridos). Muestra: no indicada.",
+     "Sin cifras en el resumen",
+     "OE3. Metodológica (no comparativa). Revisión: marco de referencia, no antecedente empírico (Resumen verificado (OpenAlex))"
+    ],
+    [
+     "6",
+     "Subiyantoro et al. (2021). Learning Path Recommendation using Hybrid Particle Swarm Optimization.",
+     "Ruta de aprendizaje por clase cognitiva (Bloom revisado). PSO híbrido (BPSO+DPSO), función Connection Weight. Muestra: Tres clases cognitivas.",
+     "Similitud entre secuencias de partículas de 87,5 % (CL), 75 % (CM) y 87,5 % (CH); promedio 83,3 % (p. 1 y 6)",
+     "OE3/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "7",
+     "Zhang y Zhou (2014). A Review on Multi-Label Learning Algorithms.",
+     "Revisión de aprendizaje multietiqueta y sus métricas. Revisión. Muestra: no indicada.",
+     "Sin cifras en el resumen",
+     "OE5. Metodológica (no comparativa). Revisión: marco de referencia, no antecedente empírico (Resumen verificado (OpenAlex))"
+    ],
+    [
+     "8",
+     "Lakens (2013). Calculating and reporting effect sizes to facilitate cumulative science: a practical primer for t-tests and ANOVAs.",
+     "Cálculo y reporte de tamaños de efecto. Guía práctica (t, ANOVA, diseños intra/entre). Muestra: no indicada.",
+     "Sin cifras en el resumen",
+     "OE1-OE5. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "9",
+     "Orfanou et al. (2015). Perceived usability evaluation of learning management systems: Empirical evaluation of the System Usability Scale.",
+     "Usabilidad percibida de LMS con SUS. 11 estudios con SUS. Muestra: 769 estudiantes; LMS eClass y Moodle.",
+     "SUS medio = 76,27; SUS robusto incluso con muestras pequeñas",
+     "OE5. Comparable con reservas (Resumen, OpenAlex)"
+    ],
+    [
+     "10",
+     "Derisma (2020). The Usability Analysis Online Learning Site for Supporting Computer programming Course Using System Usability Scale (SUS) in a University.",
+     "Usabilidad de un sitio para aprender programación. SUS. Muestra: 162 encuestados (81 familiarizados, 81 no).",
+     "SUS 72,1 (familiarizados) y 70 (no familiarizados)",
+     "OE5. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "11",
+     "Little (1961). A proof for the queuing formula: L = λW.",
+     "Relación entre cola, tasa de llegada y tiempo en el sistema. Teoría de colas (L = lambda W). Muestra: no indicada.",
+     "Resumen no disponible",
+     "OE4. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "12",
+     "Benjamini y Hochberg (1995). Controlling the False Discovery Rate: A Practical and Powerful Approach to Multiple Testing.",
+     "Control de la tasa de falsos descubrimientos. FDR (Benjamini–Hochberg). Muestra: no indicada.",
+     "Resumen no disponible",
+     "OE2/OE3. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "13",
+     "Welch (1947). The generalization of 'Student's' problem when several different population variances are involved.",
+     "Comparación de dos medias con varianzas desiguales. Prueba t de Welch. Muestra: no indicada.",
+     "Resumen no disponible",
+     "OE2. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "14",
+     "Kruskal y Wallis (1952). Use of Ranks in One-Criterion Variance Analysis.",
+     "Comparación de k grupos por rangos. Kruskal–Wallis. Muestra: no indicada.",
+     "Resumen no disponible",
+     "OE4. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "15",
+     "Mann y Whitney (1947). On a Test of Whether one of Two Random Variables is Stochastically Larger than the Other.",
+     "Comparación de dos muestras por rangos. Mann–Whitney. Muestra: no indicada.",
+     "Resumen no disponible",
+     "OE2. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "16",
+     "Efron (1979). Bootstrap Methods: Another Look at the Jackknife.",
+     "Métodos de remuestreo. Bootstrap. Muestra: no indicada.",
+     "Resumen no disponible",
+     "OE1-OE5. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "17",
+     "Mayer y Moreno (2003). Nine Ways to Reduce Cognitive Load in Multimedia Learning.",
+     "Teoría cognitiva del aprendizaje multimedia. Marco teórico + resumen de experimentos. Muestra: no indicada.",
+     "Sin cifras en el resumen",
+     "OE5. Contextual, no directamente comparable (Resumen, OpenAlex)"
+    ],
+    [
+     "18",
+     "Naseer et al. (2024). Integrating deep learning techniques for personalized learning pathways in higher education.",
+     "Rutas de aprendizaje personalizadas con aprendizaje profundo. Experimento controlado. Muestra: 300 estudiantes (150 control y 150 experimental), 4 cursos.",
+     "Mejora del 25 % en notas, puntajes y participación; t = −3,506; p = 0,00045 (§4.1.1, Fig. 4)",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "19",
+     "Al-Ahmad et al. (2022). Swarm intelligence-based model for improving prediction performance of low-expectation teams in educational software engineering projects.",
+     "Predicción de equipos de bajo desempeño en proyectos de ingeniería de software. PSO para seleccionar características de un clasificador KNN. Muestra: base SETAP.",
+     "Exactitud de 68,9 % (fase 1) y 91,8 % (fases 4 y 5) (Tabla 8, Fig. 4)",
+     "OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "20",
+     "Chu et al. (2011). PC2PSO: personalized e-course composition based on Particle Swarm Optimization.",
+     "Composición personalizada de e-cursos. PSO (PC2PSO). Muestra: no indicada.",
+     "Resumen no disponible en OpenAlex",
+     "OE3. Comparable con reservas (Solo metadatos (Crossref); sin resumen)"
+    ],
+    [
+     "21",
+     "de Marcos et al. (2008). Swarm intelligence in e-learning.",
+     "Secuenciación de objetos de aprendizaje como CSP. Agente PSO con metadatos y competencias. Muestra: no indicada.",
+     "Cualitativo: el agente resuelve el problema y maneja razonablemente la explosión combinatoria",
+     "OE3. Comparable con reservas (Resumen, OpenAlex)"
+    ],
+    [
+     "22",
+     "El Fazazi et al. (2021). Design of an Adaptive e-Learning System based on Multi-Agent Approach and Reinforcement Learning.",
+     "Sistema e-learning adaptativo multiagente. Q-learning; estilo Felder–Silverman. Propuesta de diseño con simulación del proceso e implementación de ejemplo; sin evaluación empírica.",
+     "Sin resultados cuantitativos: el artículo propone un diseño (conclusión, p. 7)",
+     "OE1/OE3. Diseño sin evaluación empírica; no cuenta como antecedente empírico. Texto completo, lectura dirigida"
+    ],
+    [
+     "23",
+     "López-Goyez et al. (2026). An Adaptive Multi-Agent Architecture with Reinforcement Learning and Generative AI for Intelligent Tutoring Systems: A Moodle-Based Case Study.",
+     "Arquitectura multiagente adaptativa con RL e IA generativa en Moodle. Meta-agente RL, LLM, n8n, Django. Muestra: Caso real y simulado; cuestionario a estudiantes.",
+     "Percepción de 150 estudiantes: medias de 3,74 a 3,92 por dimensión, sin diferencias por subgrupo (H = 4,88; p = 0,181); caso simulado frente a una línea base heurística; sin grupo de control con estudiantes (p. 21–23)",
+     "OE1/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "24",
+     "Martins et al. (2021). A comparative analysis of metaheuristics applied to adaptive curriculum sequencing.",
+     "Comparación de metaheurísticas en secuenciación curricular adaptativa. Comparación de metaheurísticas. Muestra: no indicada.",
+     "Resumen no disponible en las bases abiertas; texto completo no consultado",
+     "OE3. Comparable con reservas. Solo metadatos (Crossref)"
+    ],
+    [
+     "25",
+     "Vaccaro et al. (2025). Multi-Agentic LLMs for Personalizing STEM Texts.",
+     "Personalización de textos STEM con agentes LLM. Dos agentes GPT-4 (Profiler, Rewrite) con paso de mensajes. Muestra: n = 23 (ECA piloto).",
+     "Sin cifras; los resultados \"sugieren\" que los estudiantes prefieren textos alineados con su perfil",
+     "OE1/OE3. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "26",
+     "Lhafra y Abdoun (2023). Integration of evolutionary algorithm in an agent-oriented approach for an adaptive e-learning.",
+     "Enfoque agente-orientado con algoritmo genético. Algoritmo genético con estrategias de inmigración. Muestra: Experimento real con alumnos de primaria.",
+     "Alta tasa de éxito y compromiso (sin cifra en el resumen)",
+     "OE3. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "27",
+     "Li et al. (2023). Online Personalized Learning Path Recommendation Based on Saltatory Evolution Ant Colony Optimization Algorithm.",
+     "Recomendación de rutas con ACO de evolución saltatoria. SEACO comparado con ACO, PSO y DMO. Muestra: simulación con 338 estudiantes de la Open University.",
+     "Valor objetivo medio 12,3 % mayor que el del ACO; 115 frente a 200 iteraciones; Wilcoxon p < 0,05 (p. 16)",
+     "OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "28",
+     "Viswanathan et al. (2022). Enhancement of online education system by using a multi-agent approach.",
+     "Mejora de la educación en línea con enfoque multiagente. Diseño y simulación con JADE; validación con casos de estudio y trazas de conversación entre agentes (Sniffer).",
+     "Sin métricas de desempeño ni estudio con usuarios (p. 9)",
+     "OE1. Diseño y simulación sin resultados cuantitativos; no cuenta como antecedente empírico. Texto completo, lectura dirigida"
+    ],
+    [
+     "29",
+     "Mohamedhen et al. (2024). Towards multi-agent system for learning object recommendation.",
+     "Recomendación de objetos de aprendizaje con SMA. Cuatro agentes; CNN y MLP. Muestra: 100 estudiantes y 10 cursos.",
+     "CNN: exactitud y recall de 93,33 %, precisión de 91,86 % y F1 de 90 % (Tabla 6); el compromiso no se midió",
+     "OE1. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "30",
+     "Imamah et al. (2024). Enhancing students performance through dynamic personalized learning path using ant colony and item response theory (ACOIRT).",
+     "Ruta personalizada con ACO + TRI. ACO-IRT. Muestra: 80 estudiantes (40+40).",
+     "Según el resumen: mejora de puntajes de 60,8 % a 127,8 % del grupo ACOIRT frente al grupo ACOPLP; p = 0,002",
+     "OE5. Contextual, no directamente comparable. Solo resumen (OpenAlex); texto completo no consultado (acceso del editor con verificación CAPTCHA)"
+    ],
+    [
+     "31",
+     "Zhang et al. (2025). EduPlanner: LLM-Based Multiagent Systems for Customized and Intelligent Instructional Design.",
+     "Diseño instruccional con SMA basado en LLM. Evaluador, optimizador, analista; árbol de habilidades. Muestra: Lecciones de matemáticas.",
+     "Sin cifras en el fragmento del resumen",
+     "OE1/OE3. Contextual, no directamente comparable (Texto completo leído en parte)"
+    ],
+    [
+     "32",
+     "Huang et al. (2025). SP-TeachLLM: An LLM-Driven Framework for Personalized and Adaptive Programming Education.",
+     "Tutoría de programación con LLM. Arquitectura multimódulo. Muestra: estudiantes simulados por LLM (sin estudiantes humanos).",
+     "Resultados favorables frente a enfoques convencionales con estudiantes simulados (p. 9 y 13)",
+     "OE1/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "33",
+     "Clerc y Kennedy (2002). The particle swarm - explosion, stability, and convergence in a multidimensional complex space.",
+     "Estabilidad y convergencia de PSO. Análisis algebraico y analítico; coeficientes generalizados. Muestra: Funciones de prueba.",
+     "Sin cifras en el resumen",
+     "OE3. Metodológica (no comparativa) (Resumen, OpenAlex)"
+    ],
+    [
+     "34",
+     "Gad (2022). Particle Swarm Optimization Algorithm and Its Applications: A Systematic Review.",
+     "Revisión sistemática de PSO. Revisión. Muestra: Literatura 2017–2019.",
+     "Sin cifras en el resumen",
+     "OE3. Metodológica (no comparativa). Revisión: marco de referencia, no antecedente empírico (Resumen verificado (OpenAlex))"
+    ],
+    [
+     "35",
+     "Tang et al. (2021). A Review on Representative Swarm Intelligence Algorithms for Solving Optimization Problems: Applications and Trends.",
+     "Revisión de algoritmos de enjambre. Revisión de 127 trabajos. Muestra: 127 referencias.",
+     "127 referencias revisadas",
+     "OE3. Metodológica (no comparativa). Revisión: marco de referencia, no antecedente empírico (Resumen verificado (OpenAlex))"
+    ],
+    [
+     "36",
+     "Ginns (2005). Meta-analysis of the modality effect.",
+     "Meta-análisis del efecto de modalidad. Meta-análisis. Muestra: no indicada.",
+     "Resumen no disponible en OpenAlex",
+     "OE5. Contextual, no directamente comparable (Solo metadatos (Crossref); sin resumen)"
+    ],
+    [
+     "37",
+     "Wang et al. (2023). When adaptive learning is effective learning: comparison of an adaptive learning system to teacher-led instruction.",
+     "Aprendizaje adaptativo frente a enseñanza dirigida. Dos ECA; Squirrel AI. Muestra: octavo grado, dos provincias.",
+     "Mayores ganancias con el sistema adaptativo (sin cifra en el resumen)",
+     "OE5. Contextual, no directamente comparable. Solo resumen (OpenAlex); texto completo no consultado (acceso cerrado)"
+    ],
+    [
+     "38",
+     "Deng y Yuan (2026). Research on an intelligent tutoring system based on automatic construction of multimodal knowledge graphs and retrieval-augmented generation.",
+     "STI con grafos de conocimiento multimodales y RAG. FFmpeg, Whisper, OCR, RAG. Muestra: no indicada.",
+     "Sin cifras en el fragmento del resumen",
+     "OE1/OE4. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "39",
+     "Contrino et al. (2024). Using an adaptive learning tool to improve student performance and satisfaction in online and face-to-face education for a more personalized approach.",
+     "Herramienta de aprendizaje adaptativo (CogBooks) en un curso de estadística de un programa de negocios, en línea y presencial. Tres semestres con grupo control.",
+     "Mejora significativa de la nota final con la herramienta (Fig. 6); las tasas de aprobación y abandono citadas en la introducción son de otros estudios",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "40",
+     "Sarsa et al. (2022). Automatic Generation of Programming Exercises and Code Explanations Using Large Language Models.",
+     "Generación de ejercicios y explicaciones de código con LLM. OpenAI Codex. Muestra: no indicada.",
+     "La mayoría del contenido generado es novedoso y sensato (sin cifra en el resumen)",
+     "OE1. Contextual, no directamente comparable. Resumen (OpenAlex); texto completo no consultado"
+    ],
+    [
+     "41",
+     "Bangor et al. (2008). An Empirical Evaluation of the System Usability Scale.",
+     "Evaluación empírica del SUS. Casi 10 años de datos SUS. Muestra: Numerosos productos.",
+     "El resumen describe qué constituye un SUS aceptable y la escala de adjetivos (cifras no incluidas en el resumen)",
+     "OE5. Comparable con reservas (Resumen, OpenAlex)"
+    ],
+    [
+     "42",
+     "Du Plooy et al. (2024). Personalized adaptive learning in higher education: A scoping review of key characteristics and impact on academic performance and engagement.",
+     "Aprendizaje adaptativo personalizado en educación superior. Revisión de alcance (metodología JBI). Muestra: 69 estudios (2012–2024).",
+     "41 estudios (59 %) informan mejora del rendimiento y 25 (36 %) aumento del compromiso; LearnSmart y Moodle, plataformas más usadas",
+     "OE5. Revisión: marco de referencia, no antecedente empírico. Texto completo (Europe PMC), lectura dirigida"
+    ],
+    [
+     "43",
+     "Yeganeh et al. (2025). STREAM: A Semantic Transformation and Real-Time Educational Adaptation Multimodal Framework in Personalized Virtual Classrooms.",
+     "Marco STREAM de adaptación multimodal en tiempo real. Pipeline ASR+NLP; regeneración en formatos alternativos. Muestra: Piloto de un video de 5 minutos.",
+     "Piloto de viabilidad con un único video de 5 minutos (sin cifras de desempeño en el resumen)",
+     "OE5. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "44",
+     "Diwan et al. (2023). AI-based learning content generation and learning pathway augmentation to increase learner engagement.",
+     "Generación de contenido y rutas con IA para engagement. Fragmentos narrativos con GPT-2. Muestra: no indicada.",
+     "Según el resumen: evaluación con ROUGE frente a baselines y evaluación humana (sin cifras en el resumen)",
+     "OE1. Contextual, no directamente comparable. Solo resumen (OpenAlex); texto completo no consultado (acceso del editor con verificación CAPTCHA)"
+    ],
+    [
+     "45",
+     "Rastegarmoghadam y Ziarati (2017). Improved modeling of intelligent tutoring systems using ant colony optimization.",
+     "STI con ACO. ACO; parámetros dinámicos. Muestra: no indicada.",
+     "Mejora respecto a STI previos (sin cifra en el resumen)",
+     "OE3. Contextual, no directamente comparable (Resumen verificado (OpenAlex))"
+    ],
+    [
+     "46",
+     "Zhao et al. (2024). Learning path planning methods based on learning path variability and ant colony optimization.",
+     "Planeación de rutas con ACO y variabilidad. DTW + K-means + ACO. Muestra: no indicada.",
+     "Según el resumen: pérdida mínima de 0,1; exactitud de hasta 0,9; clasificación de 96,6 %; finalización de objetivos estable en 90 % (≈ 20 % más que el método basado en GA)",
+     "OE3. Contextual, no directamente comparable. Solo resumen (OpenAlex); texto completo no consultado (acceso del editor con verificación CAPTCHA)"
+    ],
+    [
+     "47",
+     "Yılmazer y Özel (2024). Diverse but Relevant Recommendations with Continuous Ant Colony Optimization.",
+     "Recomendación diversa con ACO continuo. AcoRec. Muestra: MovieLens, Pinterest, Netflix.",
+     "Supera a modelos de referencia (sin cifra en el resumen)",
+     "OE3. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "48",
+     "Dwivedi et al. (2018). Learning path recommendation based on modified variable length genetic algorithm.",
+     "Recomendación de rutas con GA de longitud variable. GA modificado. Muestra: no indicada.",
+     "Resumen no disponible en OpenAlex",
+     "OE3. Comparable con reservas (Solo metadatos (Crossref); sin resumen)"
+    ],
+    [
+     "49",
+     "Wu et al. (2025). MAGMA-Edu: Multi-agent generative multimodal framework for text-diagram educational question generation.",
+     "Generación multimodal texto–diagrama de preguntas educativas. SMA autorreflexivo con ciclo generación–verificación–reflexión. Muestra: No indicada en el resumen.",
+     "Texto: 57,01 a 92,31 frente a GPT-4o (+35,3 pp); ITC: 13,20 a 85,24 (+72 pp); máximos entre backbones: texto 96,20, ITC 99,12",
+     "OE5. Contextual, no directamente comparable. Preprint (arXiv), sin revisión por pares; solo contexto (Resumen verificado (WebFetch arXiv))"
+    ],
+    [
+     "50",
+     "Zheng et al. (2025). A multigranularity learning path recommendation framework based on knowledge graph and improved ant colony optimization algorithm for e-learning.",
+     "Recomendación de rutas de aprendizaje con granularidad múltiple. Marco MGLPR y ACO mejorado (IACO). Muestra: 30 conjuntos de datos simulados y un estudio empírico.",
+     "IACO con desempeño y robustez superiores a los competidores; el método supera a los enfoques tradicionales autoorganizados en el estudio empírico (sin cifras en el resumen)",
+     "OE3. Contextual, no directamente comparable. Solo resumen (OpenAlex); texto completo no consultado (acceso cerrado)"
+    ],
+    [
+     "51",
+     "Yu et al. (2024). From MOOC to MAIC: Reshaping online teaching and learning through LLM-driven agents.",
+     "Educación en línea con sistemas multiagente basados en LLM (MAIC). Muestra: más de 100 000 registros de aprendizaje de más de 500 estudiantes (preliminar).",
+     "Observaciones y análisis iniciales; sin cifras de desempeño en el resumen",
+     "OE1. Contextual, no directamente comparable. Preprint (arXiv), sin revisión por pares; solo contexto (Resumen, arXiv)"
+    ],
+    [
+     "52",
+     "Peng et al. (2022). A Hybrid Particle Swarm Optimizer for Curriculum Sequencing Problem.",
+     "Secuenciación curricular (NP-difícil) en e-learning. PSO híbrido (cruce competitivo-genético y mutación polinomial adaptativa). Muestra: Funciones de prueba y un modelo de secuenciación curricular.",
+     "Según el resumen: satisfacción de los objetivos 20, 14 y 5 puntos porcentuales mayor que la de los algoritmos comparados",
+     "OE3. Comparable con reservas. Solo resumen (OpenAlex); texto completo no consultado (acceso del editor con verificación de Cloudflare)"
+    ],
+    [
+     "53",
+     "Sheng et al. (2023). Adaptive Curriculum Sequencing and Education Management System via Group-Theoretic Particle Swarm Optimization.",
+     "Secuenciación curricular adaptativa. PSO con teoría de grupos simétricos (GT-PSO). Muestra: Escenarios reales (según el resumen).",
+     "GT-PSO supera a la mayoría de los métodos en escenarios reales (sin cifras en el resumen)",
+     "OE3. Comparable con reservas (Texto completo, lectura dirigida)"
+    ],
+    [
+     "54",
+     "Srinivas et al. (2026). Lumina: An Intelligent Multi-Agent Adaptive Learning Management System with Bayesian Knowledge Tracing, Deep Knowledge Tracing, and Reinforcement Learning for Personalized Education.",
+     "LMS adaptativo multiagente con trazabilidad de señales. Seis agentes coordinados por MCP; BKT, DKT, RL, RAG. Muestra: 10 000 escenarios sintéticos; 480 registros (xAPI-Edu-Data).",
+     "Benchmark de analítica en 0,90 s, 0 fallos y ≈ 11 051 inferencias/s; Random Forest sobre xAPI-Edu-Data: exactitud 0,800 y macro-F1 0,804",
+     "OE2/OE4. Contextual, no directamente comparable (Texto completo, lectura dirigida; licencia abierta no verificada, no cuenta para el mínimo)"
+    ],
+    [
+     "55",
+     "Abdullah y Alzain (2026). Enhanced Explainable Multi-Agent Generative Artificial Intelligence Framework for Personalized Education.",
+     "Marco multiagente de IA generativa explicable y eficiente. LITE-Trust con algoritmo ELRA y orquestación selectiva de agentes. Muestra: EdNet y OULAD.",
+     "Latencia 10,5/9,5 ms, memoria 80,5/81,3 MB, 1,92 M parámetros; fidelidad 95,0 %/94,6 %; calidad de explicación 94,1 %/93,4 %; interpretabilidad 92,6 %/92,1 % (dos conjuntos)",
+     "OE2/OE4. Contextual, no directamente comparable; latencia de inferencia del modelo, no de una petición HTTP. Texto completo, lectura dirigida; Tabla XI, p. 18"
+    ],
+    [
+     "56",
+     "Tan et al. (2026). CalcTutor: Multi-Agent LLM Grading of Handwritten Mathematics with RAG-Grounded Feedback for Adaptive Learning Support.",
+     "Evaluación y retroalimentación de matemáticas manuscritas con agentes LLM. Calificador multiagente LLM con RAG. Muestra: 1 055 soluciones manuscritas; piloto en aula.",
+     "Exactitud ponderada de acuerdo 0,931 y F1 0,934 sobre 1 055 soluciones",
+     "OE1/OE5. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "57",
+     "Kozhakhmet et al. (2026). A hybrid swarm intelligence framework for adaptive learning path recommendation.",
+     "Rutas de aprendizaje con restricciones de prerrequisitos. PSO + ACO + ABC híbrido. Muestra: 8 783 estudiantes (6 968 707 registros).",
+     "+20,69 % de aptitud media de ruta frente a Ridge (p < 0,001, dz = 3,48); GRU +11,88 % sobre la línea base",
+     "OE3. Contextual, no directamente comparable (Texto completo, lectura dirigida)"
+    ],
+    [
+     "58",
+     "Al Faia y Alomar (2025). Evaluating learning success, engagement, and usability of Moalemy: An Arabic rule-based chatbot.",
+     "Chatbot árabe con personalización frente a estático; diseño 2 × 3 intrasujeto con 34 participantes.",
+     "p. 29-30: el método adaptativo mejora la usabilidad en 3,61 % y la efectividad en 5 %, 6 % y 2 % por dificultad",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "59",
+     "Alnuhait et al. (2024). Web application performance assessment: A study of responsiveness, throughput, and scalability.",
+     "Pruebas de carga con Apache JMeter en dos sitios web (RSMD y E-GOV).",
+     "p. 10: solo 15 % de las sesiones sin errores; degradación al aumentar la carga",
+     "OE4. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "60",
+     "Amin et al. (2023). Enhancing algorithm selection through comprehensive performance evaluation: Statistical analysis of stochastic algorithms.",
+     "Comparación estadística de algoritmos estocásticos en funciones clásicas y CEC-C06 2019 con pruebas por pares.",
+     "p. 18 y 26: diferencias significativas solo en funciones concretas (p. ej., TF14, TF18, TF19)",
+     "OE2/OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "61",
+     "Arshad et al. (2023). Comprehensive readability assessment of scientific learning resources.",
+     "Conjunto de 42 850 recursos de informática y 25 clasificadores de legibilidad.",
+     "p. 14-15: exactitud 0,83 (LGBM) y 0,82 (RF, Extra Trees)",
+     "OE1/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "62",
+     "Balanyà Rebollo y De Oliveira (2023). Teachers’ evaluation of the usability of a self-assessment tool for mobile learning integration in the classroom.",
+     "SUS en 228 docentes sobre una herramienta de autoevaluación.",
+     "p. 6-7 y 16: SUS medio 70,65; ~43 % promotores",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "63",
+     "Chen y Hsu (2022). Do flipped learning and adaptive instruction improve student learning outcome? A case study of a computer programming course in Taiwan.",
+     "Cuasiexperimento con 52 estudiantes de programación: aula invertida + instrucción adaptativa.",
+     "p. 7: mejora global 4,42 a 4,72 (t = 3,75; p < 0,001)",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "64",
+     "Cheng et al. (2026). Large language models for UML class diagram modeling: A preliminary empirical evaluation.",
+     "Evaluación de LLM en 30 ejercicios de diagramas UML de clases; métrica ponderada en PlantUML.",
+     "p. 19-20: el mejor modelo alcanza 44,01 % de base; la cadena iterativa llega a 38,98 % (+4,24)",
+     "OE2/OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "65",
+     "Cioca y Cioca (2025). ROboMC: A portable multimodal system for eHealth training and scalable AI-assisted education.",
+     "Sistema multimodal ROboMC de voz y texto con GPT-3.5; SUS con 35 participantes y latencias.",
+     "p. 12 y 15: SUS medio de 80 con N = 35; latencias aceptables",
+     "OE4/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "66",
+     "Dinh et al. (2025). Benchmarking the responsiveness of open-source text-to-speech systems.",
+     "Benchmark de 13 modelos TTS de código abierto con entradas de palabra a oración.",
+     "p. 29: servicios en la nube con mediana de 0,4-1,8 s y colas mayores de 2,0 s",
+     "OE4. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "67",
+     "Du et al. (2022). A novel multi-agent simulation based particle swarm optimization algorithm.",
+     "Algoritmo PSO multinivel con competencia acoplado a simulación multiagente; comparaciones frente a PSO estándar y variantes en benchmarks y en un caso de derrame de petróleo (Tabla 7).",
+     "p. 18: la solución de MAS-CoPSO usa 74,2 % del tiempo del esquema SDS y recupera ~1,2 veces más petróleo",
+     "OE2/OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "68",
+     "Feng (2026). A multi-agent reinforcement learning framework for educational resource management optimisation.",
+     "MARL para recursos educativos con dos conjuntos públicos (Junyi Academy y otro conjunto de evaluaciones).",
+     "p. 12: dominio de 0,826 (+21,1 % frente a CF y +14,3 % frente a DRL de un agente); equidad 0,859",
+     "OE2/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "69",
+     "Haindl y Weinberger (2024). Students’ experiences of using ChatGPT in an undergraduate programming course.",
+     "Encuesta en un curso de Java con 18-22 estudiantes que usan ChatGPT.",
+     "p. 9-10: valoración positiva general; resultados mixtos en tareas de implementación",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "70",
+     "Hao et al. (2025). Q-learning-based multi-strategy topology particle swarm optimization algorithm.",
+     "MSTPSO con topología conmutada por Q-learning evaluado en CEC2017 (29-30 funciones) y ablación.",
+     "p. 18: primero en 14 de 20 funciones híbridas/composición; mejora en unimodales; ablación por componente",
+     "OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "71",
+     "Isal et al. (2021). Development and evaluation of a mobile-learning application based on the Felder-Silverman learning styles model.",
+     "Aplicación móvil adaptativa (Felder-Silverman) con 10 participantes.",
+     "p. 15-16: SUS de 85,75 y 100 % de éxito en 8 tareas",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "72",
+     "Karim et al. (2021). Hovering swarm particle swarm optimization.",
+     "HSPSO (enjambre principal y enjambre estacionario) en CEC2014 y 5 problemas de ingeniería.",
+     "p. 27-28: mejora de precisión frente a BPSO, mayor en funciones de composición",
+     "OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "73",
+     "Koca y Özcan (2025). Usability in learning management systems: A mixed-method analysis.",
+     "SUS con 109 docentes y 9 entrevistas sobre un LMS.",
+     "p. 4-5: SUS = 63,85; sin diferencia por formación (t = 0,411; p = 0,682)",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "74",
+     "Ledmi et al. (2024). Optimizing task scheduling in cloud computing using discrete tuna swarm optimization.",
+     "DTSO-TS para asignación de tareas en la nube simulado en CloudSim (10 a 10 000 tareas).",
+     "p. 9: mayor throughput en 10, 50, 100 y 1 000 tareas (5,99 tareas/s con 1 000)",
+     "OE2/OE4. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "75",
+     "Liu (2026). Semantic association and cognitive-level adaptation of multimodal teaching resources using knowledge forest and transformer models.",
+     "Transformer con bosque de conocimiento para asociación multimodal; 28 642 textos, 15 368 imágenes, 3 216 audios, 1 842 videos.",
+     "p. 21-22: F1 de 61,2 % a 79,5 % al incorporar niveles cognitivos; respuesta < 3 s con carga cognitiva de 4,2",
+     "OE1/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "76",
+     "Ma et al. (2023). A personalized learning path recommendation method incorporating multi-algorithm.",
+     "Modelo colaborativo de reglas de asociación y enjambre para rutas de aprendizaje; 584 puntos de conocimiento.",
+     "p. 12-13 (Figura 2): la precisión alcanza su valor máximo con soporte 0,4-0,6 y confianza 0,8-1",
+     "OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "77",
+     "Nand et al. (2024). Preference-based stepping ahead firefly algorithm for solving real-world uncapacitated examination timetabling problem.",
+     "Algoritmo de luciérnagas adelantado para calendarización de exámenes universitarios (7 conjuntos; 403 exámenes y 18 835 estudiantes en el conjunto USP).",
+     "p. 4 y 9: siete conjuntos de prueba, entre ellos uno institucional (403 exámenes; 18 835 estudiantes)",
+     "OE2/OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "78",
+     "Okindo et al. (2024). Dynamic optimization in 5G network slices: A comparative study of whale optimization, particle swarm optimization, and genetic algorithm.",
+     "WOA, PSO y GA para cortes de red 5G en banco de pruebas (simulación MATLAB + OAI).",
+     "p. 13: GA +23,2 % de throughput y jitter -93,7 %; PSO reduce la latencia hasta 85,4 %",
+     "OE2/OE4. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "79",
+     "Pabón M. et al. (2025). NAIA: A robust artificial intelligence framework for multi-role virtual academic assistance.",
+     "Asistente académico multirrol con LLM, visión y voz; evaluación con 30 participantes.",
+     "p. 27-28 y 35: 93,3 % mejora la efectividad; 93,3 % facilidad de uso",
+     "OE4/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "80",
+     "Ren et al. (2022). A deep learning framework for multimodal course recommendation based on LSTM+attention.",
+     "LSTM+atención para recomendación de cursos multimodal (video, audio, texto); 80/10/10 %.",
+     "p. 11-12: AUC de 79,89 %; hit rate hasta 3,21 %",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "81",
+     "Seo et al. (2025). Large language models as evaluators in education: Verification of feedback consistency and accuracy.",
+     "Verificación de LLM como evaluadores de retroalimentación educativa con conjuntos MCTest y anotadores humanos.",
+     "p. 18-26: baja concordancia entre evaluadores humanos se asocia a menor fiabilidad del LLM",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "82",
+     "Shapyro y Sotnyk (2026). A method of semantic search for educational content based on multi-agent technologies.",
+     "Búsqueda semántica con agentes sobre contenido educativo; pruebas con 50 agentes y paralelismo.",
+     "p. 8: memoria de 101-110 MB y CPU 40-49 % con 50 agentes; 439-965 MB y 49-57 % en máximo paralelismo",
+     "OE4. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "83",
+     "Sharif y Uckelmann (2024). Multi-modal LA in personalized education using deep reinforcement learning based approach.",
+     "Marco KNIGHT (DQN + datos multimodales de Moodle, AR/VR) con estudio de caso.",
+     "p. 10-13: convergencia del DQN; analítica multimodal por estudiante",
+     "OE1/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "84",
+     "Sulaiman et al. (2024). A particle swarm and smell agent-based hybrid algorithm for enhanced optimization.",
+     "PSO-SAO híbrido evaluado en 37 funciones de prueba frente a PSO y SAO.",
+     "p. 12: PSO-SAO mejor en 71 % de las 37 funciones (SAO 62 %, PSO 41 %); p. 10: mejor ranking en 28 de 37 (76 %)",
+     "OE2/OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "85",
+     "Tebourbi et al. (2025). BPMN-based design of multi-agent systems: Personalized language learning workflow automation with RAG-enhanced knowledge access.",
+     "Sistema BPMN + MAS + RAG para lenguaje de bajos recursos; evaluación de 200 consultas y piloto n = 14.",
+     "p. 23-25: fidelidad 0,82, relevancia 0,85; facilidad de uso 85,8 %",
+     "OE1/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "86",
+     "Ukenova et al. (2026). Multimodal AI in education: An avatar-based intelligent learning system for the Kazakh language.",
+     "Sistema multimodal con avatar para kazajo; comparación de VITS y Tacotron.",
+     "p. 11: latencia de 25,51 ms (VITS) frente a 242,31 ms (Tacotron)",
+     "OE4. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "87",
+     "S. Zhang et al. (2025). Exemplar learning and memory retrieval-based particle swarm optimization algorithm with engineering applications.",
+     "EMPSO (aprendizaje por ejemplares y memoria) frente a 6 algoritmos en CEC2017/CEC2022 con ablación.",
+     "p. 21: sin la estrategia de alto nivel el error crece en varios órdenes de magnitud; p. 16 Tabla 2",
+     "OE3. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "88",
+     "Zhao et al. (2022). Game-based learning: Enhancing student experience, knowledge gain, and usability in higher education programming courses.",
+     "Estudio a gran escala con juegos serios en programación (más de 100 estudiantes, 3 universidades).",
+     "p. 11: piloto con más de 100 estudiantes de tres universidades durante un semestre; p. 10: opiniones medias (p. ej., 3 en el juego de bucles)",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "89",
+     "Žerovnik (2024). Technology-enhanced feedback system usability in the context of self-regulation promotion.",
+     "SUS y TAM con 3 412 docentes de primaria y secundaria.",
+     "p. 7: 106 docentes (fase 1) y 3 412 (fase 2, ~13 % de los docentes de Eslovenia)",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "90",
+     "Troussas et al. (2023). Enhancing personalized educational content recommendation through cosine similarity-based knowledge graphs and contextual signals.",
+     "Recomendación de contenido con grafos de conocimiento, similitud coseno y señales contextuales. Dos grupos de 50 estudiantes de un curso de programación en Java; el comparador usa solo señales contextuales.",
+     "Mayor adecuación percibida al nivel de conocimiento (t ≈ 7,37; p < 0,05) y al estilo de aprendizaje (8,88 frente a 5,16) (p. 11)",
+     "OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ],
+    [
+     "91",
+     "Smaili et al. (2023). Towards an adaptive learning model using optimal learning paths to prevent MOOC dropout.",
+     "Modelo de aprendizaje adaptativo con rutas óptimas para prevenir el abandono en MOOC. Datos de OULAD.",
+     "Matriz de confusión con OULAD (2 577 de 3 424 en riesgo); recall de 75 % (p. 11)",
+     "OE3/OE5. Contextual, no directamente comparable. Texto completo, lectura dirigida"
+    ]
+   ]
+  },
+  {
+   "idx": 46,
+   "caption_prev": "Tabla 45. Trazabilidad de las tablas y figuras de resultados",
+   "n_rows": 12,
+   "rows": [
+    [
+     "Elemento",
+     "Archivos de salida",
+     "Script o comando",
+     "SHA-256 (12)",
+     "Estado"
+    ],
+    [
+     "Tabla 6",
+     "oe1_verify/oe1_verify.json",
+     "scripts/oe1_verify.py",
+     "19838773179d",
+     "Experimental, no oficial"
+    ],
+    [
+     "Tablas 8 a 10 y Figura 1",
+     "oe2_reanalysis/oe2_contrastes.csv; oe2_reanalysis/oe2_latencia_throughput.png",
+     "scripts/oe2_reanalysis.py",
+     "56f3972a2872",
+     "Experimental, no oficial"
+    ],
+    [
+     "Tabla 14 y Figura 3",
+     "oe3_reanalysis/oe3_anova.csv; oe3_reanalysis/oe3_efectos_marginales.png",
+     "scripts/oe3_reanalysis.py",
+     "d23cdbeaaa3d",
+     "Experimental, no oficial"
+    ],
+    [
+     "Tablas 18 y 19 y Figura 4",
+     "oe4_nvar/oe4_nvar_descriptivos.csv; oe4_nvar/oe4_nvar_contrastes.csv; oe4_nvar/oe4_nvar_carga_N.png",
+     "scripts/oe4_nvar_analysis.py",
+     "7aff40aee9cf",
+     "Experimental, no oficial"
+    ],
+    [
+     "Tabla 29 y Figura 6",
+     "oe5_f1_repro/alineacion_aptitud_f1.json; oe5_f1_repro/f1_v3_independent.json; oe5_f1_repro/oe5_f1_arquetipo_modalidad.png",
+     "scripts/alineacion_aptitud_f1.py; scripts/reproduce_f1_v3_independent.py; scripts/oe5_figura_f1.py",
+     "38015a672466",
+     "Experimental, no oficial"
+    ],
+    [
+     "Anexo 7 y Tabla 32",
+     "ESTADO_DEL_ARTE_MATRIZ.csv; ESTADO_DEL_ARTE_CONCILIACION.md",
+     "scripts/build_state_of_art_matrix.py; scripts/build_conciliacion.py",
+     "d176f7782751",
+     "Verificada (Crossref, OpenAlex)"
+    ],
+    [
+     "Tabla 18 (datos crudos)",
+     "campaign/runs.csv",
+     "python -m adaptation_swarm.oe.http_campaign oe4 --particles 10,30 --start-margin 20",
+     "d0f26516d959",
+     "Experimental, no oficial"
+    ],
+    [
+     "Tabla 11 y Figura 2",
+     "d27_verificacion/n9b_swarm_vs_sistemas_independiente.csv; oe2_aux/oe2_aux_latencia_throughput.png",
+     "scripts/verif_d27.py; scripts/oe2_aux_analysis.py",
+     "37e4a4da43ad",
+     "Experimental, no oficial"
+    ],
+    [
+     "Tablas 20, 21 a 24 y Figura 5",
+     "d27_verificacion/n8_n8b_descriptivos_independientes.csv; d27_verificacion/n11_descriptivos_independientes.csv; d27_verificacion/n11_contrastes_tramoB_independientes.csv; d27_verificacion/verificacion_independiente.json; d27_verificacion/umbrales_resumen_por_campania_N.csv; oe4_n11/oe4_n11_carga_N.png",
+     "scripts/verif_d27.py; scripts/oe4_n11_analysis.py",
+     "5986c772d7b9",
+     "Experimental, no oficial"
+    ],
+    [
+     "Verificación independiente (D2.7)",
+     "d27_verificacion/verificacion_independiente.json; d27_verificacion/SHA256SUMS",
+     "scripts/verif_d27.py (Python 3.13; scipy 1.18.1, statsmodels 0.15.0, pandas 3.0.6)",
+     "9b67ea14cbda",
+     "Experimental, no oficial"
+    ],
+    [
+     "Datos crudos N8b, N9b y N11",
+     "../oe_n10_2026-10-14_n20/campaign/runs.csv; ../oe_n9b_2026-10-14/campaign_final/runs.csv; ../oe_n11_2026-10-14_3N/campaign/runs.csv",
+     "python -m adaptation_swarm.oe.http_campaign oe4|oe2 ... --start-margin 20 [--resume]",
+     "94aa75503c60",
+     "Experimental, no oficial"
+    ]
+   ]
+  }
+ ]
+}

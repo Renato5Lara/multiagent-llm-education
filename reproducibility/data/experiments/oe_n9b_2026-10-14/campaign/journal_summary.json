@@ -1,0 +1,15 @@
+{
+ "campaign_id": "n9b-oe2-aux",
+ "entries_total": 160,
+ "failed_run_ids": [
+  "n9b-oe2-aux-bruteforce|u5|N20-r08"
+ ],
+ "final_state_counts": {
+  "completed": 159,
+  "failed": 1,
+  "interrupted": 0,
+  "invalid": 0
+ },
+ "journal": "experiments\\oe_n9b_2026-10-14\\campaign.journal\\runs.journal.jsonl",
+ "runs_with_final_state": 160
+}
