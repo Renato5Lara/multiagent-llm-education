@@ -37,9 +37,10 @@ STATIC = {  # nº de tabla -> (objetivo, métrica, campaña, evidencia, script, 
     38: ("OE2", "resumen por sistema y carga de N2 (anexo)", "N2", E + "oe_n2_2026-10-05/campaign/runs.csv", "scripts/reproduce_results.py (pandas)", ""),
     40: ("OE3", "resultados por configuración (primeras filas)", "N3", E + "oe_n3_2026-10-06/runs_oe3.csv", "reproduce_results.py (pandas)", "el informe solo reproduce las primeras filas"),
     41: ("OE5", "matriz de confusión por modalidad", "N5", E + "oe_n5_2026-10-06/f1_v3_provisional/replica_*.json", "oe_n8_2026-10-13/scripts/reproduce_f1_v3_independent.py", ""),
+    37: ("OE1", "valores y estados MET/NOT_MET de los requisitos (RF01–RF05, REL-C, RNF01–RNF04)", "N1", E + "oe_n1_2026-10-05/{oe3_run,oe4_run}/raw_observations.csv y batches.json", "scripts/reproduce_results.py (tabla_37_estados)", "RF06, REL-D y RNF05 no se recalculan (sondas sin registro; SUS sin datos); RF02–RF05 usan banderas por ciclo del arnés"),
 }
 PEND = [  # tablas sin cifras recalculadas en esta entrega
-    ("Tablas 5 y 37", "OE1", "estados MET/NOT_MET de requisitos", "N1", E + "oe_n1_2026-10-05/oe1_report/", "oe_n8_2026-10-13/scripts/oe1_verify.py", "PARCIAL", "archivos e integridad publicados; los estados categóricos no se recalculan"),
+    ("Tabla 5", "OE1", "estados de los requisitos con texto libre (repite la Tabla 37)", "N1", E + "oe_n1_2026-10-05/oe1_report/", "scripts/reproduce_results.py (tabla_37_estados)", "PARCIAL", "los estados y valores de la Tabla 37 se recalculan; el texto libre de la Tabla 5 no se compara oración por oración"),
     ("Tablas 32 y 44", "transversal", "síntesis del estado del arte", "—", E + "oe_n8_2026-10-13/ESTADO_DEL_ARTE_MATRIZ.csv", "build_state_of_art_matrix.py", "PARCIAL", "es síntesis bibliográfica; solo la verificación de metadatos (Crossref/OpenAlex) sería computacional y requiere red"),
     ("Tabla 35", "OE5", "SUS y panel de expertos", "—", "—", "—", "NO_REPRODUCIBLE", "no existen datos reales (0 evaluadores); no se simulan"),
     ("Tablas 39 y 42-43", "transversal", "factores del diseño N3, entorno, fases DSRM", "—", "—", "—", "NO_APLICA", "transcripción o descripción sin cálculo"),

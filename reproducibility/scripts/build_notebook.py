@@ -14,7 +14,7 @@ cells.append(md("""# Verificación reproducible de las cifras de la tesis
 **Informe contrastado:** `D2.9.7-CIERRE-BRECHAS-CORRECCION-CUADROS.docx` (versión editorial de cierre de brechas; no es la fuente de los datos).
 
 ## Qué hace este notebook
-Descarga el paquete de evidencia, comprueba la **integridad** de sus archivos (SHA-256), **valida** los datos, **recalcula** las corridas desde los registros por petición, **regenera** los resultados derivados con los scripts del proyecto (sin modificarlos) y **compara** 1 017 comprobaciones numéricas con los valores publicados en el informe.
+Descarga el paquete de evidencia, comprueba la **integridad** de sus archivos (SHA-256), **valida** los datos, **recalcula** las corridas desde los registros por petición, **regenera** los resultados derivados con los scripts del proyecto (sin modificarlos) y **compara** más de mil comprobaciones numéricas (el recuento exacto está en `auditoria/CONTEO_CIFRAS.md`) con los valores publicados en el informe.
 
 ## Alcance y límites
 - Campañas con datos aquí: **N1, N2, N3, N4, N5, N8, N8b** (directorio `oe_n10`), **N9b** y **N11** (el OE3 añade las réplicas exploratorias N3-R y N3-S en su notebook propio). Cubre las Tablas 6, 8–11, 13, 14, 17–24, 27–29, 40 y 41. Las Tablas 15/30 (K10 histórico) y 25 (antecedente) se contrastan con sus resultados derivados publicados. **No** se recalculan los estados categóricos de las Tablas 5/37 ni la síntesis bibliográfica de las Tablas 32/44 (síntesis bibliográfica) ni lo que requiere evaluadores humanos (ver sección H).
