@@ -1,0 +1,107 @@
+{
+ "manifiesto": {
+  "entradas": 214,
+  "coinciden": 214,
+  "difieren": [],
+  "faltan": []
+ },
+ "sha256sums_de_campana": [
+  {
+   "archivo": "data/experiments/oe_n10_2026-10-14_n20/SHA256SUMS",
+   "entradas": 131,
+   "coinciden": 9,
+   "difieren": [],
+   "no_publicado": 121,
+   "sanitizado": 1
+  },
+  {
+   "archivo": "data/experiments/oe_n11_2026-10-14_3N/SHA256SUMS",
+   "entradas": 374,
+   "coinciden": 8,
+   "difieren": [],
+   "no_publicado": 363,
+   "sanitizado": 3
+  },
+  {
+   "archivo": "data/experiments/oe_n1_2026-10-05/SHA256SUMS",
+   "entradas": 11,
+   "coinciden": 5,
+   "difieren": [],
+   "no_publicado": 6,
+   "sanitizado": 0
+  },
+  {
+   "archivo": "data/experiments/oe_n2_2026-10-05/SHA256SUMS",
+   "entradas": 10,
+   "coinciden": 7,
+   "difieren": [],
+   "no_publicado": 2,
+   "sanitizado": 1
+  },
+  {
+   "archivo": "data/experiments/oe_n3_2026-10-06/SHA256SUMS",
+   "entradas": 10,
+   "coinciden": 7,
+   "difieren": [],
+   "no_publicado": 3,
+   "sanitizado": 0
+  },
+  {
+   "archivo": "data/experiments/oe_n4_2026-10-06/SHA256SUMS",
+   "entradas": 13,
+   "coinciden": 10,
+   "difieren": [],
+   "no_publicado": 2,
+   "sanitizado": 1
+  },
+  {
+   "archivo": "data/experiments/oe_n5_2026-10-06/SHA256SUMS",
+   "entradas": 13,
+   "coinciden": 13,
+   "difieren": [],
+   "no_publicado": 0,
+   "sanitizado": 0
+  },
+  {
+   "archivo": "data/experiments/oe_n6_2026-10-06/SHA256SUMS",
+   "entradas": 5,
+   "coinciden": 5,
+   "difieren": [],
+   "no_publicado": 0,
+   "sanitizado": 0
+  },
+  {
+   "archivo": "data/experiments/oe_n7_2026-10-06/SHA256SUMS",
+   "entradas": 3,
+   "coinciden": 3,
+   "difieren": [],
+   "no_publicado": 0,
+   "sanitizado": 0
+  },
+  {
+   "archivo": "data/experiments/oe_n8_2026-10-13/d27_verificacion/SHA256SUMS",
+   "entradas": 10,
+   "coinciden": 10,
+   "difieren": [],
+   "no_publicado": 0,
+   "sanitizado": 0
+  },
+  {
+   "archivo": "data/experiments/oe_n8_2026-10-13/SHA256SUMS",
+   "entradas": 337,
+   "coinciden": 66,
+   "difieren": [],
+   "no_publicado": 270,
+   "sanitizado": 1
+  },
+  {
+   "archivo": "data/experiments/oe_n9b_2026-10-14/SHA256SUMS",
+   "entradas": 344,
+   "coinciden": 13,
+   "difieren": [],
+   "no_publicado": 325,
+   "sanitizado": 6
+  }
+ ],
+ "estado": "OK"
+}

@@ -1,0 +1,11 @@
+archivo,sha256_publicado,sha256_recalculado,estado
+oe_n8_2026-10-13/oe2_reanalysis/oe2_contrastes.csv,56f3972a28727c0a,56f3972a28727c0a,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_reanalysis/oe2_descriptivos.csv,b774a6571873c7b7,b774a6571873c7b7,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe3_reanalysis/oe3_anova.csv,d23cdbeaaa3dde93,d23cdbeaaa3dde93,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe3_reanalysis/oe3_marginales.csv,cdfc349e82b45c3f,cdfc349e82b45c3f,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe3_reanalysis/oe3_medias_por_condicion.csv,fd81b4e13b7e2c24,fd81b4e13b7e2c24,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe4_nvar/oe4_nvar_contrastes.csv,9f37f9503c47772a,9f37f9503c47772a,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe4_nvar/oe4_nvar_descriptivos.csv,7aff40aee9cf1226,7aff40aee9cf1226,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe4_nvar/oe4_nvar_anova.csv,5310ddd973e9ce72,5310ddd973e9ce72,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_aux/oe2_aux_contrastes.csv,49cd49475304b613,49cd49475304b613,COINCIDE_BYTE_A_BYTE
+oe_n8_2026-10-13/oe2_aux/oe2_aux_descriptivos.csv,9bc978aea41fb4ef,9bc978aea41fb4ef,COINCIDE_BYTE_A_BYTE

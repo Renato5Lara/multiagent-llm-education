@@ -1,0 +1,128 @@
+{
+ "regla_de_inclusion": "Una corrida entra al análisis solo si status == 'ok' (corrida con ventana estacionaria analizable). Las demás se informan, no se borran.",
+ "campanas": {
+  "N2": {
+   "filas": 80,
+   "filas_planificadas": 80,
+   "hallazgos": [],
+   "filas_ok": 80,
+   "exclusiones": [],
+   "nulos_en_corridas_no_ok_son_faltantes_no_ceros": null,
+   "official_valores": [
+    "False"
+   ],
+   "errores_totales": 0,
+   "timeouts_totales": 0,
+   "semillas_distintas": 10,
+   "sistemas": [
+    "decision_table",
+    "swarm"
+   ],
+   "celdas_sin_division_por_cero": true
+  },
+  "N4": {
+   "filas": 60,
+   "filas_planificadas": 60,
+   "hallazgos": [],
+   "filas_ok": 60,
+   "exclusiones": [],
+   "nulos_en_corridas_no_ok_son_faltantes_no_ceros": null,
+   "official_valores": [
+    "False"
+   ],
+   "errores_totales": 0,
+   "timeouts_totales": 0,
+   "semillas_distintas": 10,
+   "sistemas": [
+    "swarm"
+   ],
+   "celdas_sin_division_por_cero": true
+  },
+  "N8": {
+   "filas": 120,
+   "filas_planificadas": 120,
+   "hallazgos": [],
+   "filas_ok": 120,
+   "exclusiones": [],
+   "nulos_en_corridas_no_ok_son_faltantes_no_ceros": null,
+   "official_valores": [
+    "False"
+   ],
+   "errores_totales": 0,
+   "timeouts_totales": 0,
+   "semillas_distintas": 10,
+   "sistemas": [
+    "swarm"
+   ],
+   "celdas_sin_division_por_cero": true
+  },
+  "N8b": {
+   "filas": 60,
+   "filas_planificadas": 60,
+   "hallazgos": [],
+   "filas_ok": 60,
+   "exclusiones": [],
+   "nulos_en_corridas_no_ok_son_faltantes_no_ceros": null,
+   "official_valores": [
+    "False"
+   ],
+   "errores_totales": 0,
+   "timeouts_totales": 0,
+   "semillas_distintas": 10,
+   "sistemas": [
+    "swarm"
+   ],
+   "celdas_sin_division_por_cero": true
+  },
+  "N9b": {
+   "filas": 160,
+   "filas_planificadas": 160,
+   "hallazgos": [],
+   "filas_ok": 160,
+   "exclusiones": [],
+   "nulos_en_corridas_no_ok_son_faltantes_no_ceros": null,
+   "official_valores": [
+    "False"
+   ],
+   "errores_totales": 0,
+   "timeouts_totales": 0,
+   "semillas_distintas": 10,
+   "sistemas": [
+    "bruteforce",
+    "decision_table",
+    "rules",
+    "swarm"
+   ],
+   "celdas_sin_division_por_cero": true
+  },
+  "N11": {
+   "filas": 180,
+   "filas_planificadas": 180,
+   "hallazgos": [],
+   "filas_ok": 179,
+   "exclusiones": [
+    {
+     "run_id": "n11-oe4-3n-swarm|u100|N10-r01",
+     "status": "no_requests",
+     "regla": "Una corrida entra al análisis solo si status == 'ok' (corrida con ventana estacionaria analizable). Las demás se informan, no se borran."
+    }
+   ],
+   "nulos_en_corridas_no_ok_son_faltantes_no_ceros": true,
+   "official_valores": [
+    "False"
+   ],
+   "errores_totales": 0,
+   "timeouts_totales": 0,
+   "semillas_distintas": 10,
+   "sistemas": [
+    "swarm"
+   ],
+   "celdas_sin_division_por_cero": true
+  }
+ },
+ "estado": "OK",
+ "limitaciones": [
+  "No se imponen rangos plausibles: no hay umbrales de validez definidos para ellos en el protocolo.",
+  "Los datos son resúmenes por corrida del arnés; los registros por petición (Locust) no se publican por tamaño (hashes en manifest.json de cada campaña)."
+ ]
+}

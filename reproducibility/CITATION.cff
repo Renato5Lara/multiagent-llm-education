@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "Si usa este material, cite la tesis y esta versión del repositorio. La licencia está pendiente (ver LICENSE-DATA.md)."
+title: "Paquete de evidencia reproducible de la tesis: Validación de una arquitectura multiagente basada en inteligencia de enjambre para la adaptación multimodal en Programación"
+type: dataset
+authors:
+  - family-names: Lara
+    given-names: Renato
+repository-code: "https://github.com/Renato5Lara/multiagent-llm-education"
+abstract: "Datos de campañas experimentales no oficiales N1-N11, scripts de verificación y notebook para recalcular cifras del informe D2.9.7."
