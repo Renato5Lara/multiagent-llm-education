@@ -40,7 +40,9 @@
 Original D2.9.7 `a6bb2934de7fd512…` intacto; copia corregida `1bd0894c9586e433…`. Cambian 5 párrafos y solo las cifras autorizadas (Tabla 13). Comparación automática de las 267 páginas exportadas con Word: el texto difiere solo en las páginas 105, 109 y 111 y la maquetación (posición de los bloques) es idéntica en todas. **Inspección visual: solo las páginas 105, 109 y 111;** el resto del documento no se leyó página a página. «Nuevo» es D2.9.3 (byte a byte) y no sustituye a D2.9.7.
 
 ## 5. Commits y ejecuciones
-Ver `ESTADO_NOTEBOOKS_COLAB.csv` y `outputs/registro_ejecucion/COLAB_EJECUCION_OE1_OE5.md`. Los cambios de esta fase (T37, M11–M14, sensibilidad de N3-S) cambian `reproduce_results.py` y `oe3_sesion.py`, por lo que **los notebooks deben volver a ejecutarse en Colab sobre el commit que los contenga**; hasta que conste esa ejecución en el registro, no se afirma que lo estén.
+- Commit de código y datos de esta fase: `d986b75bc722759ad6c25a77be722133dbb3625c`. Los commits posteriores (`42dd0b9` y el que incorpora este texto) solo cambian documentación en `auditoria/` y `outputs/registro_ejecucion/`.
+- **Colab:** los cinco notebooks por objetivo y el transversal se ejecutaron sobre `d986b75` y terminaron sin error (transcripción manual de capturas de pantalla; ver `COLAB_EJECUCION_OE1_OE5.md`, cuarta ronda). Entre `acaa19c` y `d986b75` cambiaron `reproduce_results.py` y `oe3_sesion.py`, por eso se repitieron. Una primera lectura automática del texto de la página dio un falso positivo en OE4 (la ejecución había sido bloqueada por el límite de sesiones de Colab); se repitió y se confirmó por captura.
+- **Pruebas locales:** 45 pruebas pasan (venv del proyecto, sobre el árbol previo a `d986b75`, con los cambios ya incluidos); los commits posteriores no tocan código.
 
 ## 6. Pendientes priorizados
 **Bloqueos técnicos:** `batches.json` y sondas de N1 (RF06, REL-D, RNF04); revisión oración por oración de ≈ 1 440 afirmaciones en prosa (trabajo manual extenso); acceso a las fuentes de las Tablas 32/44.
