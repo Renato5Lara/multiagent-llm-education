@@ -474,7 +474,7 @@ def test_registro_de_afirmaciones_prioritarias_es_consistente():
     with open(ROOT / "auditoria" / "REGISTRO_AFIRMACIONES_PRIORITARIAS.csv", encoding="utf-8", newline="") as fh:
         filas = list(csv.DictReader(fh))
     ids = [f["id"] for f in filas]
-    assert len(ids) == len(set(ids)) and len(ids) >= 59                        # identificadores estables y sin duplicados
+    assert len(ids) == len(set(ids)) and len(ids) >= 75                        # identificadores estables y sin duplicados
     validos = {"COINCIDE_EXACTAMENTE", "COINCIDE_CON_REDONDEO", "DISCREPANCIA", "NO_REPRODUCIBLE", "PENDIENTE_DE_REVISION", "NO_APLICA"}
     assert all(f["estado"] in validos for f in filas)
     assert all(f["fuente_y_metodo"].strip() and f["texto_minimo"].strip() for f in filas)
@@ -482,3 +482,13 @@ def test_registro_de_afirmaciones_prioritarias_es_consistente():
     with open(ROOT / "auditoria" / "EFECTO_DESPACHO_MENCIONES.csv", encoding="utf-8", newline="") as fh:
         m = list(csv.DictReader(fh))
     assert len(m) == 10 and all("N3-R" in r["efecto_por_campana"] and "N3-S" in r["efecto_por_campana"] for r in m)
+
+
+def test_medias_aritmeticas_frente_a_geometricas_explican_la_diferencia_de_la_seccion_6_5_5():
+    r = run("oe3_medias_aritmeticas_vs_geometricas.py")
+    assert r.returncode == 0, r.stderr[-800:]
+    d = json.loads((ROOT / "outputs" / "oe3_medias.json").read_text(encoding="utf-8"))
+    assert d["medias_del_reanalisis_son_aritmeticas"] is True
+    assert d["niveles"] == 11 and d["niveles_que_superan_1_3_pct"] == 10 and 3.7 < d["maximo_dif_rel_sin_redondear_pct"] < 3.9
+    desp = {r_["nivel"]: r_["dif_rel_sin_redondear_pct"] for r_ in d["despacho"]}
+    assert abs(desp["despacho por lotes"] - 1.388) < 0.01 and abs(desp["despacho secuencial"] - 0.587) < 0.01

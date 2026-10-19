@@ -37,5 +37,14 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 ## C8 — «PSO y social fueron equivalentes» (A47)
 **Propuesta:** como C3: «similares (no se ejecutó una prueba de equivalencia)».
 
+## C9 — §6.5.5, «Sus medias difieren de las de la Tabla 13 en menos de 1,3 %… una diferencia cuyo origen no se identificó» (A59, D4)
+**Hallazgo:** el origen sí es identificable: las medias del reanálisis (ANOVA tipo II y de rangos) son **medias aritméticas** de T_conv y la Tabla 13 informa **medias geométricas**. La diferencia relativa va del 0,6 % al 3,8 % (despacho: 1,4 % y 0,6 %; difusión, heurística, réplicas y mecanismo: 2,9–3,8 %), de modo que «menos de 1,3 %» no se cumple para 10 de los 11 niveles.
+**Propuesta:** «Las medias del reanálisis son medias aritméticas de T_conv y las de la Tabla 13 son medias geométricas; difieren entre el 0,6 % y el 3,8 % según el nivel (despacho por lotes 57,5 frente a 56,8 ms; secuencial 91,2 frente a 90,6 ms), diferencia esperable porque los tiempos son positivos y asimétricos; no afecta a ninguna conclusión.»
+**Evidencia:** `outputs/tables/oe3_medias_aritmeticas_vs_geometricas.csv`, `scripts/oe3_medias_aritmeticas_vs_geometricas.py`.
+
+## C10 — §6.7, «a cambio de una pérdida pequeña de aptitud» (A51, D5)
+**Hallazgo:** la brecha respecto del óptimo es 0,0118–0,0428 en N3 (idéntica en N3-S; 0,0117–0,0431 en N3-R), es decir ≈ 2,4 % de la aptitud óptima media en la configuración de referencia y ≈ 8,7 % en la peor condición. La tesis no define un umbral para llamar «pequeña» a una brecha, y la brecha (N3, en proceso, 1 usuario) y el throughput (N9b, HTTP) proceden de campañas distintas.
+**Propuesta:** «Frente a la búsqueda exhaustiva, la propuesta alcanzó entre 1,13 y 1,51 veces su throughput en la campaña HTTP N9b; en la campaña en proceso N3 su brecha respecto del óptimo fue de 0,012 a 0,043 (≈ 2 % a 9 % de la aptitud óptima media). Estas dos magnitudes proceden de campañas distintas y no permiten afirmar una relación de compromiso ni que la pérdida sea pequeña según un criterio definido.»
+
 ## Hipótesis propuesta para el OE3 (pendiente de aprobación; no preregistrada)
 «Las configuraciones con despacho por lotes, sin difusión de g_best y con heurística de arranque reducen T_conv sin empeorar la brecha frente a sus alternativas.» No se usó en ningún análisis ni aparece en la tesis.
