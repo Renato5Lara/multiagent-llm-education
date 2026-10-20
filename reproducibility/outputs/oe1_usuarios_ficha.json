@@ -18,7 +18,7 @@
   },
   "spearman": {
     "rho": -0.608352058115994,
-    "p": 0.02097426022135171,
+    "p": 0.020974260221351713,
     "definicion": "correlación de Pearson de los rangos (rangos medios en empates); p bilateral"
   },
   "kendall_tau_b": {
