@@ -1,18 +1,18 @@
-seccion,parrafos_de_prosa,leidos_en_fase_16,con_alguna_comprobacion_con_datos,con_cifras_sin_comprobar,pct_leido,pct_con_comprobacion
-"Preliminares (resumen, abstract, índices)",22,8,5,1,36,23
-1 Introducción,6,6,1,2,100,17
-2 Planteamiento del problema,23,23,0,11,100,0
-3 Marco teórico,54,0,1,31,0,2
-4 Hipótesis y variables,20,20,2,13,100,10
-5 Marco metodológico,37,37,2,27,100,5
-6 Resultados: introducción del capítulo,4,4,0,4,100,0
-6.1 OE1,13,13,4,6,100,31
-6.2 OE2,13,13,5,2,100,38
-6.3 OE3,14,14,9,3,100,64
-6.4 OE4,22,22,17,3,100,77
-6.5 OE5,14,14,5,8,100,36
-6.6 Cierre de brechas,3,3,0,2,100,0
-6.7 Discusión y cierre de brechas,38,38,21,8,100,55
-7 Conclusiones,6,6,6,0,100,100
-8 Recomendaciones,6,6,4,1,100,67
-TOTAL (capítulos 1 a 8),295,227,82,122,77,28
+seccion,parrafos_de_prosa,leidos_y_evaluados,comprobados_con_datos,contrastados_con_fuente_externa,interpretacion_examinada,pendientes,pct_leido,pct_con_datos,pct_pendiente
+"Preliminares (resumen, abstract, índices)",22,8,5,0,0,15,36,23,68
+1 Introducción,6,6,1,2,0,0,100,17,0
+2 Planteamiento del problema,23,23,0,3,0,8,100,0,35
+3 Marco teórico,54,54,1,18,0,14,100,2,26
+4 Hipótesis y variables,20,20,2,0,0,13,100,10,65
+5 Marco metodológico,37,37,2,0,0,27,100,5,73
+6 Resultados: introducción del capítulo,4,4,0,1,0,3,100,0,75
+6.1 OE1,13,13,4,2,5,4,100,31,31
+6.2 OE2,13,13,5,1,5,1,100,38,8
+6.3 OE3,14,14,9,2,4,1,100,64,7
+6.4 OE4,22,22,17,1,4,2,100,77,9
+6.5 OE5,14,14,5,1,4,7,100,36,50
+6.6 Cierre de brechas,3,3,0,0,3,2,100,0,67
+6.7 Discusión y cierre de brechas,38,38,21,2,38,7,100,55,18
+7 Conclusiones,6,6,6,0,6,0,100,100,0
+8 Recomendaciones,6,6,4,1,6,1,100,67,17
+TOTAL (capítulos 1 a 8),295,281,82,34,75,105,95,28,36

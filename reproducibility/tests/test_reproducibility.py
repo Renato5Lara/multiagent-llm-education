@@ -474,7 +474,7 @@ def test_registro_de_afirmaciones_prioritarias_es_consistente():
     with open(ROOT / "auditoria" / "REGISTRO_AFIRMACIONES_PRIORITARIAS.csv", encoding="utf-8", newline="") as fh:
         filas = list(csv.DictReader(fh))
     ids = [f["id"] for f in filas]
-    assert len(ids) == len(set(ids)) and len(ids) >= 142                        # identificadores estables y sin duplicados
+    assert len(ids) == len(set(ids)) and len(ids) >= 151                        # identificadores estables y sin duplicados
     validos = {"COINCIDE_EXACTAMENTE", "COINCIDE_CON_REDONDEO", "DISCREPANCIA", "NO_REPRODUCIBLE", "PENDIENTE_DE_REVISION", "NO_APLICA"}
     assert all(f["estado"] in validos for f in filas)
     assert all(f["fuente_y_metodo"].strip() and f["texto_minimo"].strip() for f in filas)
@@ -615,17 +615,20 @@ def test_cobertura_de_la_prosa_es_coherente():
     assert total[0].startswith("TOTAL")
     assert sum(int(r[1]) for r in s[:-1]) == int(total[1]) and sum(int(r[2]) for r in s[:-1]) == int(total[2])
     assert all(int(r[2]) <= int(r[1]) and int(r[3]) <= int(r[1]) for r in s)
-    assert next(r for r in s if r[0].startswith("3 Marco te"))[2] == "0"                  # el capítulo 3 no se leyó: no se afirma lo contrario
+    m3 = next(r for r in s if r[0].startswith("3 Marco te"))
+    assert m3[2] == m3[1] and len(m3) == 10                                              # el capítulo 3 se leyó completo en la fase 17
+    assert all(int(r[4]) <= int(r[1]) and int(r[6]) <= int(r[1]) for r in s)
 
 
 def test_hashes_de_los_documentos_de_tesis():
     with open(ROOT / "auditoria" / "HASHES_DOCUMENTOS.csv", encoding="utf-8", newline="") as fh:
         h = list(csv.DictReader(fh))
-    assert len(h) == 5 and h[0]["sha256"].startswith("a6bb2934de7fd512") and h[0]["estado"] == "INTACTO"
+    assert len(h) == 6 and h[0]["sha256"].startswith("a6bb2934de7fd512") and h[0]["estado"] == "INTACTO"
     est = {r["documento"].split()[-1]: r for r in h}
     assert est["V2"]["estado"] == "SUPERADA" and est["V2"]["paginas_con_word"] == "268"
-    assert est["V3"]["estado"].startswith("VIGENTE") and est["V3"]["paginas_con_word"] == "267"
-    assert len({r["sha256"] for r in h}) == 5
+    assert est["V3"]["estado"] == "INTACTA" and est["V3"]["paginas_con_word"] == "267"
+    assert est["V4"]["estado"].startswith("VIGENTE") and est["V4"]["paginas_con_word"] == "267"
+    assert len({r["sha256"] for r in h}) == 6
 
 
 def test_matriz_de_coherencia_es_en():
@@ -634,3 +637,25 @@ def test_matriz_de_coherencia_es_en():
     assert len(m) == 16 and len(m[0]) == 7
     n3r = next(r for r in m if r["tema"].startswith("N3-R"))
     assert all(v == "NO" for k, v in n3r.items() if k not in ("tema", "observacion"))      # N3-R y N3-S no figuran en ningún bloque (C4, C5)
+
+
+def test_auditoria_holm_dos_implementaciones_coinciden():
+    with open(ROOT / "auditoria" / "HOLM_AUDITORIA.csv", encoding="utf-8", newline="") as fh:
+        h = list(csv.DictReader(fh))
+    assert len(h) == 84
+    assert all(r["A_igual_a_B"] == "SI" for r in h if r["estado"] != "INFORMATIVO" and r["p_recalculado_metodo_B"])
+    assert sum(r["estado"] == "DIFIERE" for r in h) == 2 and all(r["ubicacion"] != "Tabla 14" for r in h if r["estado"] == "DIFIERE")
+
+
+def test_fuentes_texto_completo_estados_permitidos():
+    with open(ROOT / "auditoria" / "FUENTES_TEXTO_COMPLETO.csv", encoding="utf-8", newline="") as fh:
+        f = list(csv.DictReader(fh))
+    assert sum(r["estado"].startswith("ENCONTRADA") for r in f) >= 100
+    assert sum("SALVEDAD" in r["estado"] for r in f) >= 4
+
+
+def test_registro_cambios_v4():
+    with open(ROOT / "auditoria" / "REGISTRO_CAMBIOS_REVISION_FACTUAL_V4.csv", encoding="utf-8", newline="") as fh:
+        c = list(csv.DictReader(fh))
+    assert [r["id_cambio"] for r in c] == [f"R{i}" for i in range(32, 42)]
+    assert all(r["texto_original_exacto"] != r["texto_corregido_exacto"] and r["evidencia"] for r in c)

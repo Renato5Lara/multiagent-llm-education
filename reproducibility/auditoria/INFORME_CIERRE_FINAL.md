@@ -150,3 +150,12 @@ Detalle en [`INFORME_FASE16.md`](INFORME_FASE16.md). **La auditoría sigue abier
 **17.4 Hallazgos nuevos:** H1 (cotas de Holm; factual, corregida), H2 (CPU y memoria; factual, corregida), H3 y H4 (interpretativos), H5 (Anexo 7 sin referencia), H6 (cifras de terceros), H7 (gold idéntico para dos arquetipos), H8 (documento interno desactualizado).
 **17.5 Pruebas y notebooks:** ningún notebook consume los archivos nuevos; no se repitió Colab; las seis ejecuciones históricas siguen sin hash verificable.
 **17.6 Decisiones pendientes:** C1, C2, C4, C5, C10, C11 (parte metodológica), C22–C24, C27–C30, la hipótesis del OE3, τb en la Tabla 6 y los archivos residuales de OE3.
+
+## 18. Fase 17: discrepancias estadísticas, fuentes y cobertura pendiente
+Detalle en [`INFORME_FASE17.md`](INFORME_FASE17.md). **La auditoría sigue abierta.**
+**18.1 Discrepancia numérica restante (P4-06):** identificada y resuelta en V3: las cotas «p de Holm ≤ 7 × 10⁻⁹» (P95) y «≤ 5 × 10⁻¹¹» (throughput) de N8 eran incorrectas; las correctas son 2,1 × 10⁻⁷ y 1,5 × 10⁻¹⁰ (a 25 usuarios).
+**18.2 Auditoría de los valores p de Holm:** 84 comprobaciones con dos implementaciones independientes; 81 coinciden, 2 difieren (las cotas originales) y 1 es informativa.
+**18.3 Fuentes:** las cifras de las 44 filas de «texto completo» del Anexo 7 se contrastaron con el texto completo abierto: 105 halladas, 4 con salvedad (corregidas en V4), 1 no hallada, 1 inaccesible.
+**18.4 Copia V4:** 267 páginas; 10 sustituciones sobre cifras atribuidas a fuentes; V3 se conserva; ninguna copia es definitiva.
+**18.5 Cobertura:** 295 párrafos de prosa; 281 leídos y evaluados (el capítulo 3, completo); 82 comprobados con datos; 34 contrastados con fuentes externas; 75 con la interpretación examinada; 105 pendientes. Registro: 151 afirmaciones.
+**18.6 Notebooks y pruebas:** ningún archivo que ejecuten los notebooks cambió; no se repitió Colab.

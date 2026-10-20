@@ -24,7 +24,7 @@ SECCIONES = [
     ("6.4 OE4", 636, 775), ("6.5 OE5", 776, 855), ("6.6 Cierre de brechas", 856, 867), ("6.7 Discusión y cierre de brechas", 868, 907),
     ("7 Conclusiones", 908, 921), ("8 Recomendaciones", 922, 934),
 ]
-LEIDOS = {"1 Introducción", "2 Planteamiento del problema", "4 Hipótesis y variables", "5 Marco metodológico", "6 Resultados: introducción del capítulo",
+LEIDOS = {"1 Introducción", "2 Planteamiento del problema", "3 Marco teórico", "4 Hipótesis y variables", "5 Marco metodológico", "6 Resultados: introducción del capítulo",
           "6.1 OE1", "6.2 OE2", "6.3 OE3", "6.4 OE4", "6.5 OE5", "6.6 Cierre de brechas", "6.7 Discusión y cierre de brechas", "7 Conclusiones", "8 Recomendaciones"}
 LEIDOS_PRELIM = {55, 56, 57, 58, 63, 64, 65, 66}          # resumen y abstract
 # comprobaciones de verificacion_prosa_cap6.py (id) → líneas de los párrafos donde figuran las cifras
@@ -65,34 +65,55 @@ def main(texto):
         if k in p:
             for ln in lns:
                 comp[ln].append(f"{k}" + ("" if p[k]["estado"] == "COINCIDE" else "(DIFIERE)"))
+    # (3) fuentes externas contrastadas: apellidos+año de las referencias con cifras halladas en texto completo o resumen (fase 17)
+    ext = set()
+    try:
+        fu = list(csv.DictReader(open(ROOT / "auditoria/FUENTES_TEXTO_COMPLETO.csv", encoding="utf-8")))
+        va = list(csv.DictReader(open(ROOT / "auditoria/ANEXO7_VERIFICACION.csv", encoding="utf-8")))
+        ok_ids = {x["id_referencia"] for x in fu if x["estado"].startswith("ENCONTRADA")} | {x["id_referencia"] for x in va if x["veredicto"].startswith("VERIFICADA")}
+        mat = {r["id"]: r["referencia"] for r in csv.DictReader(open(ROOT / "auditoria/MATRIZ_VERIFICACION_BIBLIOGRAFICA.csv", encoding="utf-8"))}
+        for i in ok_ids:
+            m = re.match(r"^(.+?)\s\((\d{4})", mat[i])
+            if m:
+                ext.add((re.split(r",| &", m.group(1))[0].strip().lower(), m.group(2)))
+    except FileNotFoundError:
+        pass
+    INTERP = ("Interpretación experimental", "Discusión de los resultados", "Contraste con los antecedentes", "Comparación con el estado del arte", "Alcance de la interpretación")
     filas, resumen = [], []
     for nombre, a, b in SECCIONES:
-        n = leidos = chk = num = 0
+        n = leidos = chk = num = ext_n = int_n = pen_n = 0
         for ln in range(a, b + 1):
             if not es_prosa(L[ln - 1]):
                 continue
             leido = nombre in LEIDOS or (nombre.startswith("Preliminares") and ln in LEIDOS_PRELIM)
             tiene_num = bool(re.search(r"\d", re.sub(r"\([^()]*\d{4}[a-z]?[^()]*\)|\b(19|20)\d\d\b|\bOE\d\b|\bRF\d+|\bRNF\d+|\bN\d+b?\b|\bB\d\.\d\b|\bTabla \d+|\bFigura \d+", " ", L[ln - 1])))
             ok = bool(comp[ln])
+            txt = L[ln - 1].lower()
+            externa = tiene_num and any(a in txt and y in txt for a, y in ext)
+            interp = any(L[ln - 1].startswith(k) for k in INTERP) or nombre in ("6.6 Cierre de brechas", "6.7 Discusión y cierre de brechas", "7 Conclusiones", "8 Recomendaciones")
             n += 1
             leidos += leido
             chk += ok
             num += (tiene_num and not ok)
-            filas.append([nombre, ln, "SI" if leido else "NO", "SI" if ok else "NO", ", ".join(sorted(set(comp[ln]))[:8]), "SI" if (tiene_num and not ok) else "NO", L[ln - 1][:40].replace("\n", " ")])
-        resumen.append([nombre, n, leidos, chk, num])
+            ext_n += externa
+            int_n += (interp and leido)
+            pend = (not leido) or (tiene_num and not ok and not externa)
+            pen_n += pend
+            filas.append([nombre, ln, "SI" if leido else "NO", "SI" if ok else "NO", "SI" if externa else "NO", "SI" if (interp and leido) else "NO", "SI" if pend else "NO", ", ".join(sorted(set(comp[ln]))[:8]), L[ln - 1][:40].replace("\n", " ")])
+        resumen.append([nombre, n, leidos, chk, ext_n, int_n, pen_n])
     with open(ROOT / "auditoria/COBERTURA_PROSA_POR_PARRAFO.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\r\n")
-        w.writerow(["seccion", "linea_del_texto_plano", "leido_en_fase_16", "comprobado_con_datos", "comprobaciones", "numerico_sin_comprobar", "inicio_del_parrafo"])
+        w.writerow(["seccion", "linea_del_texto_plano", "leido_y_evaluado", "comprobado_con_datos", "contrastado_con_fuente_externa", "interpretacion_examinada", "pendiente", "comprobaciones", "inicio_del_parrafo"])
         w.writerows(filas)
     with open(ROOT / "auditoria/COBERTURA_PROSA_POR_SECCION.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\r\n")
-        w.writerow(["seccion", "parrafos_de_prosa", "leidos_en_fase_16", "con_alguna_comprobacion_con_datos", "con_cifras_sin_comprobar", "pct_leido", "pct_con_comprobacion"])
-        tot = [0, 0, 0, 0]
+        w.writerow(["seccion", "parrafos_de_prosa", "leidos_y_evaluados", "comprobados_con_datos", "contrastados_con_fuente_externa", "interpretacion_examinada", "pendientes", "pct_leido", "pct_con_datos", "pct_pendiente"])
+        tot = [0] * 6
         for r in resumen:
-            w.writerow(r + [f"{100 * r[2] / r[1]:.0f}" if r[1] else "", f"{100 * r[3] / r[1]:.0f}" if r[1] else ""])
-            for i in range(4):
+            w.writerow(r + [f"{100 * r[2] / r[1]:.0f}" if r[1] else "", f"{100 * r[3] / r[1]:.0f}" if r[1] else "", f"{100 * r[6] / r[1]:.0f}" if r[1] else ""])
+            for i in range(6):
                 tot[i] += r[i + 1]
-        w.writerow(["TOTAL (capítulos 1 a 8)"] + tot + [f"{100 * tot[1] / tot[0]:.0f}", f"{100 * tot[2] / tot[0]:.0f}"])
+        w.writerow(["TOTAL (preliminares y capítulos 1 a 8)"] + tot + [f"{100 * tot[1] / tot[0]:.0f}", f"{100 * tot[2] / tot[0]:.0f}", f"{100 * tot[5] / tot[0]:.0f}"])
     print(*resumen, sep="\n")
     print("TOTAL", tot)
 

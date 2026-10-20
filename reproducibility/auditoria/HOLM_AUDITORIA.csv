@@ -1,0 +1,85 @@
+ubicacion,contraste,p_publicado,p_recalculado_metodo_A,p_recalculado_metodo_B,A_igual_a_B,familia_y_metodo,estado,observacion
+Tabla 9,"N2, P95, 1 usuarios","4,1 × 10⁻¹²",4.143e-12,4.143e-12,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, P95, 5 usuarios","1,1 × 10⁻²⁶",1.053e-26,1.053e-26,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, P95, 10 usuarios","1,7 × 10⁻²¹",1.733e-21,1.733e-21,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, P95, 25 usuarios","8,2 × 10⁻²⁹",8.169e-29,8.169e-29,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, Throughput, 1 usuarios","1,2 × 10⁻²⁷",1.241e-27,1.241e-27,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, Throughput, 5 usuarios","4,0 × 10⁻²⁷",4.038e-27,4.038e-27,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, Throughput, 10 usuarios","8,1 × 10⁻²⁹",8.099e-29,8.099e-29,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 9,"N2, Throughput, 25 usuarios","3,0 × 10⁻¹⁷",2.953e-17,2.953e-17,SI,Holm m = 8 (Welch sobre log),COINCIDE,
+Tabla 10,"N2, P95, 1 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, P95, 5 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, P95, 10 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, P95, 25 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, Throughput, 1 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, Throughput, 5 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, Throughput, 10 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 10,"N2, Throughput, 25 usuarios (Mann-Whitney asintótico)","1,5 × 10⁻³",1.461e-03,1.461e-03,SI,Holm m = 8,COINCIDE,con empates totales entre grupos el p de Mann-Whitney es el mismo en los 8 contrastes
+Tabla 11,"N9b, decision_table, P95, 1 usuarios","1,7 × 10⁻¹⁸",1.741e-18,1.741e-18,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, P95, 5 usuarios","1,1 × 10⁻¹⁴",1.069e-14,1.069e-14,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, P95, 10 usuarios","1,9 × 10⁻¹⁵",1.920e-15,1.920e-15,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, P95, 25 usuarios","3,2 × 10⁻¹⁵",3.235e-15,3.235e-15,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, throughput, 1 usuarios","8,4 × 10⁻²⁹",8.388e-29,8.388e-29,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, throughput, 5 usuarios","2,8 × 10⁻¹⁴",2.771e-14,2.771e-14,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, throughput, 10 usuarios","1,5 × 10⁻¹⁴",1.461e-14,1.461e-14,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, decision_table, throughput, 25 usuarios","6,8 × 10⁻¹⁵",6.753e-15,6.753e-15,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, P95, 1 usuarios","4,2 × 10⁻¹⁵",4.197e-15,4.197e-15,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, P95, 5 usuarios","1,8 × 10⁻¹¹",1.825e-11,1.825e-11,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, P95, 10 usuarios","2,4 × 10⁻¹⁴",2.415e-14,2.415e-14,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, P95, 25 usuarios","4,6 × 10⁻¹⁵",4.645e-15,4.645e-15,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, throughput, 1 usuarios","2,3 × 10⁻²¹",2.302e-21,2.302e-21,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, throughput, 5 usuarios","3,2 × 10⁻¹¹",3.162e-11,3.162e-11,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, throughput, 10 usuarios","2,9 × 10⁻¹⁴",2.886e-14,2.886e-14,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, rules, throughput, 25 usuarios","9,8 × 10⁻¹⁵",9.790e-15,9.790e-15,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, P95, 1 usuarios","1,000",1.000e+00,1.000e+00,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, P95, 5 usuarios","0,265",2.650e-01,2.650e-01,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, P95, 10 usuarios","1,000",1.000e+00,1.000e+00,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, P95, 25 usuarios","1,000",1.000e+00,1.000e+00,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, throughput, 1 usuarios","0,283",2.826e-01,2.826e-01,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, throughput, 5 usuarios","0,019",1.917e-02,1.917e-02,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, throughput, 10 usuarios","0,019",1.917e-02,1.917e-02,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 11,"N9b, bruteforce, throughput, 25 usuarios","0,032",3.163e-02,3.163e-02,SI,Holm m = 8 por comparador,COINCIDE,
+Tabla 14,"N3, Despacho, p de Holm (T_conv)","1,1 × 10⁻¹⁸⁴",1.099e-184,1.099e-184,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Despacho, p de Holm (brecha)","1,000",1.000e+00,1.000e+00,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Difusión de g_best, p de Holm (T_conv)","2,6 × 10⁻⁹⁹",2.571e-99,2.571e-99,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Difusión de g_best, p de Holm (brecha)","1,000",1.000e+00,1.000e+00,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Mecanismo, p de Holm (T_conv)","5,7 × 10⁻⁹⁷",5.734e-97,5.734e-97,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Mecanismo, p de Holm (brecha)","4,2 × 10⁻¹⁷¹",4.203e-171,4.203e-171,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Heurística de arranque, p de Holm (T_conv)","3,6 × 10⁻³²",3.602e-32,3.602e-32,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Heurística de arranque, p de Holm (brecha)","1,0 × 10⁻¹³³",9.962e-134,9.962e-134,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Réplicas de consumidores, p de Holm (T_conv)","0,058",5.803e-02,5.803e-02,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+Tabla 14,"N3, Réplicas de consumidores, p de Holm (brecha)","1,000",1.000e+00,1.000e+00,SI,Holm m = 15 (ANOVA tipo II paramétrico; no son los p por permutación del texto),COINCIDE,"la tabla informa p paramétricos; los p por permutación (999) tienen un piso de 0,001"
+§6.3.3,"N3, réplicas sobre T_conv: p de Holm paramétrico","0,058",5.803e-02,5.803e-02,SI,Holm m = 15,COINCIDE,
+§6.3.3,"N3, réplicas sobre T_conv: p de Holm del ANOVA sobre rangos","0,049",4.916e-02,4.916e-02,SI,Holm m = 15 (ANOVA sobre rangos; una sola implementación),COINCIDE,
+Tabla 19,"N8, N = 30 / N = 10, 1 usuarios: mayor p de Holm","6,9 × 10⁻⁹",6.919e-09,6.919e-09,SI,Holm m = 6 por métrica,COINCIDE,
+Tabla 19,"N8, N = 30 / N = 10, 5 usuarios: mayor p de Holm","1,5 × 10⁻¹⁰",1.482e-10,1.482e-10,SI,Holm m = 6 por métrica,COINCIDE,
+Tabla 19,"N8, N = 30 / N = 10, 10 usuarios: mayor p de Holm","1,8 × 10⁻¹³",1.791e-13,1.791e-13,SI,Holm m = 6 por métrica,COINCIDE,
+Tabla 19,"N8, N = 30 / N = 10, 25 usuarios: mayor p de Holm","2,1 × 10⁻⁷",2.089e-07,2.089e-07,SI,Holm m = 6 por métrica,COINCIDE,
+Tabla 19,"N8, N = 30 / N = 10, 50 usuarios: mayor p de Holm","4,4 × 10⁻¹⁵",4.365e-15,4.365e-15,SI,Holm m = 6 por métrica,COINCIDE,
+Tabla 19,"N8, N = 30 / N = 10, 100 usuarios: mayor p de Holm","2,3 × 10⁻¹⁷",2.286e-17,2.286e-17,SI,Holm m = 6 por métrica,COINCIDE,
+§6.4.3 (original),N8: cota publicada para el P95 («≤ 7 × 10⁻⁹ en todas las cargas»),"7,0 × 10⁻⁹",2.089e-07,2.089e-07,SI,Holm m = 6,DIFIERE,la cota es un máximo: debe ser ≥ al mayor p de Holm del P95
+§6.4.3 (original),N8: cota publicada para el throughput («≤ 5 × 10⁻¹¹»),"5,0 × 10⁻¹¹",1.537e-10,1.537e-10,SI,Holm m = 6,DIFIERE,idem
+§6.4.3 (V3),"N8: cota corregida del P95 («≤ 2,1 × 10⁻⁷»)","2,1 × 10⁻⁷",2.089e-07,2.089e-07,SI,Holm m = 6,COINCIDE,
+§6.4.3 (V3),"N8: cota corregida del throughput («≤ 1,5 × 10⁻¹⁰»)","1,5 × 10⁻¹⁰",1.537e-10,1.537e-10,SI,Holm m = 6,COINCIDE,
+§6.4.3,diagnóstico del origen de «≤ 7 × 10⁻⁹»,—,6.919e-09,6.919e-09,SI,—,INFORMATIVO,"el valor 6,9 × 10⁻⁹ es el p de Holm del P95 con 1 usuario y el máximo si se omite la celda de 25 usuarios; para el throughput («5 × 10⁻¹¹») no coincide ninguna combinación de celdas con Holm"
+§6.4.3,N8b frente a N4: menor p de Holm (P95 y throughput; m = 12),"0,15",1.538e-01,1.538e-01,SI,Holm m = 12,COINCIDE,
+Tabla 26,"N4: throughput de 1 a 5 usuarios (p de Holm, m = 5)",4 × 10⁻²⁰,4.264e-20,4.264e-20,SI,Holm m = 5,COINCIDE,
+Tabla 26,"N4: throughput de 25 a 50 usuarios (p de Holm, m = 5)","0,073",7.329e-02,7.329e-02,SI,Holm m = 5,COINCIDE,
+Tabla 22,"N11 tramo B, N = 20 / N = 10, 1 usuarios: mayor p de Holm","1,3 × 10⁻⁴",1.308e-04,1.308e-04,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 20 / N = 10, 5 usuarios: mayor p de Holm","3,8 × 10⁻⁶",3.803e-06,3.803e-06,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 20 / N = 10, 10 usuarios: mayor p de Holm","0,369",3.693e-01,3.693e-01,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 20 / N = 10, 25 usuarios: mayor p de Holm","0,035",3.499e-02,3.499e-02,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 20 / N = 10, 50 usuarios: mayor p de Holm","1,2 × 10⁻⁷",1.195e-07,1.195e-07,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 20 / N = 10, 100 usuarios: mayor p de Holm","4,5 × 10⁻⁵",4.516e-05,4.516e-05,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 10, 1 usuarios: mayor p de Holm","1,0 × 10⁻⁶",1.038e-06,1.038e-06,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 10, 5 usuarios: mayor p de Holm","1,6 × 10⁻⁸",1.602e-08,1.602e-08,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 10, 10 usuarios: mayor p de Holm","0,035",3.499e-02,3.499e-02,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 10, 25 usuarios: mayor p de Holm","5,6 × 10⁻⁸",5.588e-08,5.588e-08,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 10, 50 usuarios: mayor p de Holm","1,2 × 10⁻⁶",1.171e-06,1.171e-06,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 10, 100 usuarios: mayor p de Holm","0,012",1.165e-02,1.165e-02,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 20, 1 usuarios: mayor p de Holm","0,369",3.693e-01,3.693e-01,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 20, 5 usuarios: mayor p de Holm","3,3 × 10⁻³",3.252e-03,3.252e-03,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 20, 10 usuarios: mayor p de Holm","0,013",1.258e-02,1.258e-02,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 20, 25 usuarios: mayor p de Holm","1,000",1.000e+00,1.000e+00,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 20, 50 usuarios: mayor p de Holm","1,000",1.000e+00,1.000e+00,SI,Holm m = 18 por métrica,COINCIDE,
+Tabla 22,"N11 tramo B, N = 30 / N = 20, 100 usuarios: mayor p de Holm","1,000",1.000e+00,1.000e+00,SI,Holm m = 18 por métrica,COINCIDE,

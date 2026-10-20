@@ -1,0 +1,260 @@
+{
+ "B002": {
+  "3,61": {
+   "estado": "ENCONTRADA_CON_SALVEDAD",
+   "ubicacion": "discusión, RQ3 (usabilidad)",
+   "fragmento": "la fuente informa 3,61 % más de usabilidad con el método adaptativo, pero la prueba de Wilcoxon no halló diferencia significativa (efecto pequeño)",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "5 %, 6 % y 2 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "discusión, RQ4 (dificultad de la tarea)",
+   "fragmento": "5 % más en tareas fáciles, 6 % en medias y 2 % en difíciles",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B003": {
+  "68,9": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "Tabla 8 (fase 1), PSO-1NN",
+   "fragmento": "exactitud 68,91 %",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "91,8": {
+   "estado": "ENCONTRADA_CON_SALVEDAD",
+   "ubicacion": "Tabla 4, PSO-1NN",
+   "fragmento": "la tabla da 91,89 %: la tesis trunca (91,8) en lugar de redondear (91,9)",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B005": {
+  "TF14, TF18, TF19": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "análisis estadístico con funciones compuestas",
+   "fragmento": "diferencias significativas en TF14 y, frente a FDO y LPB, en TF18; TF19 también señalado",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B013": {
+  "44,01": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "hallazgos de RQ1",
+   "fragmento": "mejor modelo con 44,01 %",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "38,98 y 4,24": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "hallazgos de RQ2",
+   "fragmento": "cadena completa con 38,98 % (+4,24 puntos sobre la base)",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B016": {
+  "N = 35": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "método y Figura 4",
+   "fragmento": "35 participantes",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "SUS medio de 80": {
+   "estado": "ENCONTRADA_CON_SALVEDAD",
+   "ubicacion": "resultados",
+   "fragmento": "la fuente informa un puntaje SUS promedio «80–100» (nivel excelente), no una media de 80",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B025": {
+  "0,4–1,8 s y colas > 2,0 s": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "discusión",
+   "fragmento": "respuesta mediana de 0,4 a 1,8 s y colas que superan 2,0 s",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B040": {
+  "14 de 20": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "CEC2017, funciones híbridas y de composición",
+   "fragmento": "primero en 14 de 20 funciones",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B059": {
+  "12,3 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "§6.3, Figura 5 (todos los datos)",
+   "fragmento": "valor objetivo medio 0,769, un 12,3 % mayor que el ACO",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "115 frente a 200 iteraciones": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "§6.3, Figura 5",
+   "fragmento": "iteración 115 del SEACO = valor del ACO en la 200",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "338 estudiantes; Wilcoxon p < 0,05": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "§6.1 y §6.3",
+   "fragmento": "338 estudiantes de la Open University; p de Wilcoxon por debajo de 5 %",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B062": {
+  "150 estudiantes": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "§3.1",
+   "fragmento": "150 estudiantes con consentimiento",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "H = 4,88; p = 0,181": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "§4, Kruskal-Wallis por grupo de edad (usabilidad)",
+   "fragmento": "H = 4,88; p = 0,181",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "medias de 3,74 a 3,92": {
+   "estado": "NO_ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "",
+   "fragmento": "las medias globales son 3,77, 3,82 y 3,90; 3,74 y 3,92 no aparecen en el texto extraído (pueden estar en tablas no recuperadas)",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "sin grupo de control con estudiantes": {
+   "estado": "NO_CONTRASTABLE",
+   "ubicacion": "",
+   "fragmento": "el texto no menciona grupo de control; la ausencia de una mención no es una afirmación de la fuente",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B063": {
+  "soporte 0,4–0,6 y confianza 0,8–1": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "§ experimentos de parámetros",
+   "fragmento": "precisión máxima con minsupport 0,4–0,6 y minconfidence 0,8–1",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B075": {
+  "93,3 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resumen y resultados",
+   "fragmento": "93,3 % indica que mejora la efectividad de sus tareas y 93,3 % la encuentra fácil de usar",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B082": {
+  "79,89 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resumen",
+   "fragmento": "AUC de 79,89 %",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  },
+  "3,21 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resultados",
+   "fragmento": "hit rate de 3,21 % para uno de cuatro valores de K",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B093": {
+  "71 %, 62 %, 41 % y 76 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resumen y conclusiones",
+   "fragmento": "PSO-SAO 71 % de las 37 funciones (SAO 62 %, PSO 41 %); en otra parte 76 %",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B097": {
+  "0,82; 0,85; 85,8 %": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resumen y Tabla 6",
+   "fragmento": "fidelidad 0,82, relevancia 0,85; 85,8 % de facilidad de interacción",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B098": {
+  "7,37; 8,88; 5,16": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resultados, preguntas Q3 y Q4",
+   "fragmento": "t = 7,37 (p < 0,05); medias 8,88 frente a 5,16",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B106": {
+  "161 cursos, 51 instituciones, 15 países, 67,7 % de aprobación": {
+   "estado": "ENCONTRADA_EN_RESUMEN_DEL_REPOSITORIO",
+   "ubicacion": "resumen (repositorio Durham)",
+   "fragmento": "161 cursos CS1 en 15 países y 51 instituciones; tasa media de aprobación 67,7 %; el 32,3 % de fracaso de la tesis es 100 − 67,7",
+   "via": "navegador, repositorio de la universidad (2026-10-19)"
+  }
+ },
+ "B009": {
+  "28 % a 33 %": {
+   "estado": "TEXTO_COMPLETO_NO_ACCESIBLE_AUTOMATICAMENTE",
+   "ubicacion": "",
+   "fragmento": "artículo de acceso libre en ACM, pero el PDF no se puede extraer desde el navegador automatizado ni por HTTP directo",
+   "via": "navegador (2026-10-19)"
+  }
+ },
+ "B012": {
+  "4,42 a 4,72; t = 3,75": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "Tabla 2 (p. 7)",
+   "fragmento": "media previa 4,42, posterior 4,72, t = 3,75",
+   "via": "texto completo (PDF descargado) revisado a mano (2026-10-19)"
+  },
+  "p < 0,001": {
+   "estado": "ENCONTRADA_CON_SALVEDAD",
+   "ubicacion": "Tabla 2 y texto",
+   "fragmento": "la tabla informa p = 0,000 y el texto «p < 0,05»; «p < 0,001» es una lectura de 0,000",
+   "via": "texto completo (PDF descargado) revisado a mano (2026-10-19)"
+  }
+ },
+ "B019": {
+  "(afirmación cualitativa)": {
+   "estado": "SIN_CIFRAS_QUE_CONTRASTAR",
+   "ubicacion": "",
+   "fragmento": "afirmación cualitativa (mejora significativa de la nota; tasas de otras fuentes); las cifras que el contador automático detectó son números de página",
+   "via": "lectura de la fila del Anexo 7 (no se contrastó con la fuente)"
+  }
+ },
+ "B031": {
+  "(afirmación cualitativa)": {
+   "estado": "SIN_CIFRAS_QUE_CONTRASTAR",
+   "ubicacion": "",
+   "fragmento": "propone un diseño sin resultados cuantitativos; las cifras que el contador automático detectó son números de página",
+   "via": "lectura de la fila del Anexo 7 (no se contrastó con la fuente)"
+  }
+ },
+ "B111": {
+  "(afirmación cualitativa)": {
+   "estado": "SIN_CIFRAS_QUE_CONTRASTAR",
+   "ubicacion": "",
+   "fragmento": "piloto de viabilidad sin cifras de desempeño; las cifras que el contador automático detectó son números de página",
+   "via": "lectura de la fila del Anexo 7 (no se contrastó con la fuente)"
+  }
+ },
+ "B084": {
+  "(afirmación cualitativa)": {
+   "estado": "SIN_CIFRAS_QUE_CONTRASTAR",
+   "ubicacion": "",
+   "fragmento": "asociación cualitativa entre acuerdo de evaluadores y fiabilidad del LLM; las cifras que el contador automático detectó son números de página",
+   "via": "lectura de la fila del Anexo 7 (no se contrastó con la fuente)"
+  }
+ },
+ "B116": {
+  "error aumenta varios órdenes de magnitud": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "estudio de ablación (Tabla 6)",
+   "fragmento": "sin la estrategia de alto nivel los errores medios aumentan varios órdenes de magnitud",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ },
+ "B095": {
+  "0,931; 0,934; 1 055": {
+   "estado": "ENCONTRADA_EN_TEXTO_COMPLETO",
+   "ubicacion": "resumen y evaluación",
+   "fragmento": "exactitud ponderada de acuerdo 0,931 y F1 0,934 sobre 1 055 soluciones manuscritas",
+   "via": "navegador, HTML del editor (2026-10-19)"
+  }
+ }
+}

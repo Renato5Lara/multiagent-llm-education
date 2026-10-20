@@ -212,10 +212,12 @@ def anexo7(L, refs):
             ref = cand[0] if len(cand) == 1 else (next((r for r in cand if len(r["toks"] & tk) == len(r["toks"])), cand[0] if cand else None))
         nivel = c[4]
         decl = re.sub(r"\(p\.? ?\d+[^)]*\)|\(tabla[^)]*\)|\(figura[^)]*\)|p\.? ?\d+|IC\s?95|OE\d", " ", c[3], flags=re.I)
-        nums = [x for x in re.findall(r"\d+(?:[.,]\d+)?", decl)]
+        nums = [x.replace(" ", "") for x in re.findall(r"\d{1,3}(?: \d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?", decl)]
         ab = (ref["abstract"] if ref else "").replace(",", ".")
         enc = [x for x in nums if re.search(r"(?<![0-9.])" + re.escape(x.replace(",", ".")) + r"(?![0-9])", ab)]
-        solo_res = bool(re.search(r"resumen|metadatos", nivel, re.I)) and not re.search(r"texto completo", nivel, re.I)
+        mn = re.search(r"((?:Texto completo|Resumen|Solo metadatos|Solo resumen)[^|]*)$", nivel)
+        tail = mn.group(1) if mn else nivel
+        solo_res = not tail.lower().startswith("texto completo")        # «Solo resumen…; texto completo no consultado» es nivel de resumen
         if not nums:
             v = "SIN_CIFRAS_QUE_CONTRASTAR"
         elif not ref:
@@ -226,7 +228,7 @@ def anexo7(L, refs):
             v = "VERIFICADA_EN_EL_RESUMEN" if len(enc) == len(nums) else ("PARCIAL_EN_EL_RESUMEN" if enc else "NO_ENCONTRADA_EN_EL_RESUMEN")
         else:
             v = "TEXTO_COMPLETO_DECLARADO: " + ("todas las cifras también están en el resumen" if len(enc) == len(nums) else "no contrastable con el resumen (se requiere el texto completo)")
-        filas.append([c[0], ref["id"] if ref else "", c[1][:90], "texto completo" if re.search(r"texto completo", nivel, re.I) else ("solo resumen/metadatos" if solo_res else nivel[-40:]), ", ".join(nums), ", ".join(enc), ", ".join(x for x in nums if x not in enc), v])
+        filas.append([c[0], ref["id"] if ref else "", c[1][:90], "solo resumen/metadatos" if solo_res else "texto completo", ", ".join(nums), ", ".join(enc), ", ".join(x for x in nums if x not in enc), v])
     with open(ROOT / "auditoria/ANEXO7_VERIFICACION.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\r\n")
         w.writerow(["n_fila_tabla_44", "id_referencia", "referencia_de_la_fila", "nivel_de_lectura_declarado", "cifras_declaradas", "encontradas_en_el_resumen", "no_encontradas", "veredicto"])
