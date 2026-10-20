@@ -128,6 +128,9 @@ def matriz(destino):
             else:
                 cat, cons = "PRUEBAS_NO_SELECCIONADAS_POR_LOS_NOTEBOOKS", "NO"
                 verif = "funciones tocadas: " + (", ".join(sorted(fs)) or "(solo finales de línea)") + "; ninguna coincide con el filtro -k de los notebooks"
+        elif rel.startswith("outputs/") or rel.startswith("verificacion_oe3_"):
+            cat, cons = "SALIDA_DERIVADA_REGENERADA_POR_LOS_SCRIPTS", "NO"
+            verif = "salida que escriben los scripts de los notebooks en cada ejecución (no es una entrada); se vuelve a generar en el clon de Colab"
         elif rel.startswith(ENTRADAS):
             cat, cons, afectados, reej = "DATOS_O_ENTRADA_O_NOTEBOOK", "SI", "verificar", "SI"
             verif = "cambia una entrada de los notebooks"

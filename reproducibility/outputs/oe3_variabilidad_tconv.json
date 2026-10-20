@@ -1,0 +1,120 @@
+{
+ "N3": {
+  "corridas": 240,
+  "condiciones": 48,
+  "corridas_por_condicion": [
+   5
+  ],
+  "observaciones_completadas": 24000,
+  "A_sd_entre_corridas_por_condicion_ms": {
+   "media": 2.646,
+   "mediana": 2.534,
+   "min": 1.322,
+   "max": 5.782
+  },
+  "A_sd_agrupada_entre_corridas_ms": 2.804,
+  "A_cv_por_condicion_pct": {
+   "media": 3.608,
+   "mediana": 3.473,
+   "min": 1.895,
+   "max": 6.827
+  },
+  "A_condiciones_con_sd_entre_1_y_3_ms": 35,
+  "B_sd_entre_peticiones_agrupada_dentro_de_corrida_ms": 12.17,
+  "B_sd_entre_peticiones_por_condicion_ms": {
+   "media": 11.932,
+   "mediana": 11.681,
+   "min": 5.708,
+   "max": 19.454
+  },
+  "t_conv_media_de_las_corridas_ms": {
+   "media": 74.357,
+   "mediana": 75.826,
+   "min": 41.515,
+   "max": 116.537
+  }
+ },
+ "N3-R": {
+  "corridas": 240,
+  "condiciones": 48,
+  "corridas_por_condicion": [
+   5
+  ],
+  "observaciones_completadas": 24000,
+  "A_sd_entre_corridas_por_condicion_ms": {
+   "media": 1.199,
+   "mediana": 1.005,
+   "min": 0.132,
+   "max": 3.451
+  },
+  "A_sd_agrupada_entre_corridas_ms": 1.367,
+  "A_cv_por_condicion_pct": {
+   "media": 1.918,
+   "mediana": 1.947,
+   "min": 0.188,
+   "max": 5.329
+  },
+  "A_condiciones_con_sd_entre_1_y_3_ms": 23,
+  "B_sd_entre_peticiones_agrupada_dentro_de_corrida_ms": 9.05,
+  "B_sd_entre_peticiones_por_condicion_ms": {
+   "media": 8.714,
+   "mediana": 8.735,
+   "min": 4.027,
+   "max": 13.127
+  },
+  "t_conv_media_de_las_corridas_ms": {
+   "media": 62.05,
+   "mediana": 62.709,
+   "min": 37.513,
+   "max": 90.107
+  }
+ },
+ "N3-S": {
+  "corridas": 240,
+  "condiciones": 48,
+  "corridas_por_condicion": [
+   5
+  ],
+  "observaciones_completadas": 24000,
+  "A_sd_entre_corridas_por_condicion_ms": {
+   "media": 1.053,
+   "mediana": 0.957,
+   "min": 0.225,
+   "max": 2.16
+  },
+  "A_sd_agrupada_entre_corridas_ms": 1.134,
+  "A_cv_por_condicion_pct": {
+   "media": 1.697,
+   "mediana": 1.636,
+   "min": 0.481,
+   "max": 3.388
+  },
+  "A_condiciones_con_sd_entre_1_y_3_ms": 22,
+  "B_sd_entre_peticiones_agrupada_dentro_de_corrida_ms": 8.73,
+  "B_sd_entre_peticiones_por_condicion_ms": {
+   "media": 8.393,
+   "mediana": 8.731,
+   "min": 3.534,
+   "max": 11.979
+  },
+  "t_conv_media_de_las_corridas_ms": {
+   "media": 61.979,
+   "mediana": 62.534,
+   "min": 37.39,
+   "max": 89.641
+  }
+ },
+ "C_entre_campanas": {
+  "sd_entre_las_3_campanas_por_condicion_ms": {
+   "media": 7.132,
+   "mediana": 7.094,
+   "min": 2.848,
+   "max": 12.544
+  },
+  "diferencia_relativa_media_N3R_vs_N3_pct": -15.79,
+  "diferencia_relativa_media_N3S_vs_N3_pct": -15.91,
+  "nota": "la variación entre campañas es un efecto de sesión (ver oe3_sesion.json); no se suma a A ni a B"
+ },
+ "frase_de_la_tesis": "el tiempo en proceso tiene muy poca varianza entre corridas (desviación estándar de unos 2 ms)",
+ "lectura": "A (entre las 5 corridas de una condición) es la fuente a la que se refiere «entre corridas»; en N3 su media es 2.646 ms (mediana 2.534), en N3-R 1.199 ms y en N3-S 1.053 ms."
+}

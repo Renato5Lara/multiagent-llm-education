@@ -58,3 +58,12 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 
 ## Hipótesis propuesta para el OE3 (pendiente de aprobación; no preregistrada)
 «Las configuraciones con despacho por lotes, sin difusión de g_best y con heurística de arranque reducen T_conv sin empeorar la brecha frente a sus alternativas.» No se usó en ningún análisis ni aparece en la tesis.
+
+## Fase 15 — nuevas propuestas (ver `MATRIZ_EVIDENCIA_CONCLUSIONES.csv`)
+**C13 (A, aplicada en V2).** Resumen y abstract: «cumplió los requerimientos funcionales y de confiabilidad» incluye RF07 y RF08, que la Tabla 5 declara «no evaluados como requisito», y RF06 y REL-D, que solo constan en el informe del arnés. Redacción: «cumplió RF01 a RF05 y REL-C… (RF06 y REL-D según el informe del arnés…; RF07 y RF08 no se evaluaron como requisitos)». Evidencia: A02, A76, A112, A113.
+**C14 (A, aplicada en V2).** «solo con N = 10 en un régimen del equipo» → añadir «(8 de 9 corridas)»: la cifra está en §7.1 y la hipótesis general (A109).
+**C15 (A, aplicada en V2).** §7.1 OE1: «se cumplieron RF01, RF02, RF04 a RF06, REL-C, REL-D y RNF02» mezcla seis requisitos recalculados con dos que solo constan en el informe del arnés; además RNF02 exige una tasa de convergencia sin regla de agregación (A112).
+**C16–C21 (A, aplicadas en V2).** «triviales» → «simples»; «capacidad casi fija» → «dentro de cada sesión»; «señala» → «es compatible con»; «validada previamente» → «validada técnicamente de antemano»; «unos 2 ms» → 2,6 ms de promedio (1,3–5,8 ms) en N3; «sin CPU» → «sin CPU del sistema». Ver el registro de cambios V2 para el texto exacto y la evidencia.
+**C22 (C, no aplicada).** OE5: el objetivo exige evaluación de expertos y docentes (no hubo ninguna) y contraste del SUS; solo existe el F1 v3 automático y provisional. «Se cumple de forma parcial y provisional» sugiere que se cumplió la mitad; propuesta: «El OE5 no se cumple: solo se midió provisionalmente el F1 (0,8156) con un gold sin validar» (A120). Decisión del autor o asesor.
+**C23 (C, no aplicada).** OE2: el objetivo literal compara con «sistemas convencionales»; la evidencia es un solo comparador operativo (`decision_table`) y dos contrastes auxiliares (A115, A123). Propuesta: «frente a un comparador convencional operativo definido por el estudio».
+**C24 (C, no aplicada).** OE3: la conclusión no menciona que N3-R y N3-S son ≈ 16 % más rápidas que N3 con las mismas condiciones (N3-S/N3 = 0,8406; IC95 % 0,820–0,862; A124). Relacionada con C4 y C5.

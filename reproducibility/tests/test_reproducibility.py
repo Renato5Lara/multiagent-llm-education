@@ -527,3 +527,49 @@ def test_los_scripts_de_los_notebooks_no_leen_la_carpeta_de_auditoria():
         codigo = (ROOT / "scripts" / f"{s}.py").read_text(encoding="utf-8")
         for patron in ('/ "auditoria"', "/ 'auditoria'", 'Path("auditoria', "Path('auditoria"):
             assert patron not in codigo, (s, patron)
+
+
+def test_cambios_v2_de_la_copia_de_revision_son_exactos_y_estan_justificados():
+    with open(ROOT / "auditoria" / "REGISTRO_CAMBIOS_REVISION_FACTUAL_V2.csv", encoding="utf-8", newline="") as fh:
+        filas = list(csv.DictReader(fh))
+    assert len(filas) == 13 and [f["id_cambio"] for f in filas] == [f"R{i}" for i in range(13, 26)]
+    for f in filas:
+        assert f["texto_original_exacto"] != f["texto_corregido_exacto"] and f["evidencia"].strip()
+    assert {f["propuesta"] for f in filas} == {f"C{i}" for i in range(13, 22)}       # solo correcciones factuales (clase A)
+    clas = (ROOT / "auditoria" / "CLASIFICACION_CORRECCIONES.md").read_text(encoding="utf-8")
+    for c in ("C1", "C2", "C4", "C5", "C10", "C22", "C23", "C24"):
+        assert f"| {c} |" in clas
+    assert all("no aplicada" in l for l in clas.splitlines() if l.startswith(("| C22 |", "| C23 |", "| C24 |")))
+
+
+def test_matriz_de_evidencia_de_las_conclusiones():
+    import re
+    with open(ROOT / "auditoria" / "REGISTRO_AFIRMACIONES_PRIORITARIAS.csv", encoding="utf-8", newline="") as fh:
+        ids = {r["id"] for r in csv.DictReader(fh)}
+    with open(ROOT / "auditoria" / "MATRIZ_EVIDENCIA_CONCLUSIONES.csv", encoding="utf-8", newline="") as fh:
+        m = list(csv.DictReader(fh))
+    assert {r["objetivo"] for r in m} == {"GENERAL", "OE1", "OE2", "OE3", "OE4", "OE5", "RESUMEN"}
+    assert len({r["id"] for r in m}) == len(m) >= 40
+    for r in m:
+        assert r["respaldo"] in {"RESPALDADA", "PARCIAL", "NO_RESPALDADA", "NO_VERIFICABLE"}
+        assert r["tipo"] in {"OBSERVADO", "META", "HIPOTESIS", "INTERPRETACION", "ALCANCE"}
+        assert set(re.findall(r"A\d+", r["registro"])) <= ids, r["id"]            # toda referencia existe en el registro
+        if r["respaldo"] == "NO_RESPALDADA":
+            assert r["clase_correccion"] == "C" and r["excede_la_evidencia"] == "SI"       # solo el autor decide los verbos de las conclusiones
+
+
+def test_las_salidas_versionadas_coinciden_con_lo_que_genera_el_codigo():
+    """Antes de la fase 15 el informe de OE1 conservaba RNF03/RNF04 como no reproducibles y el de OE5 la Tabla 27 por perfil sin recalcular."""
+    import json
+    oe1 = {c["id"]: c for c in json.loads((ROOT / "outputs" / "verification_report_oe1.json").read_text(encoding="utf-8"))["comprobaciones"]}
+    assert oe1["T37-RNF04-estado"]["estado"] == "COINCIDE" and "T37-RNF04" not in oe1
+    oe5 = {c["id"] for c in json.loads((ROOT / "outputs" / "verification_report_oe5.json").read_text(encoding="utf-8"))["comprobaciones"]}
+    assert "T27-perfil-media" in oe5 and "T27-perfil" not in oe5
+
+
+def test_variabilidad_de_t_conv_separa_las_tres_fuentes():
+    import json
+    v = json.loads((ROOT / "outputs" / "oe3_variabilidad_tconv.json").read_text(encoding="utf-8"))
+    assert 2.5 < v["N3"]["A_sd_entre_corridas_por_condicion_ms"]["media"] < 2.8          # «unos 2 ms» no describe N3
+    assert v["N3-R"]["A_sd_entre_corridas_por_condicion_ms"]["media"] < 1.5
+    assert v["C_entre_campanas"]["sd_entre_las_3_campanas_por_condicion_ms"]["media"] > v["N3"]["A_sd_entre_corridas_por_condicion_ms"]["media"]

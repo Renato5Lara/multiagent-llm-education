@@ -63,3 +63,8 @@ Los notebooks apuntan a la **rama**, no a un commit: abrirlos hoy carga la rama 
 
 ## 6. Conclusión
 Con lo disponible **se puede vincular cada resultado con el código y los datos de `c68a746` con certeza alta** (árboles de Git idénticos, salidas byte a byte iguales, pruebas iguales) **y la ejecución en Colab de ese commit con certeza parcial** (transcripción, no verificable de forma independiente). El CSV estaba desactualizado por un fallo de registro, no porque los notebooks o sus datos hubieran cambiado.
+
+## 7. Adenda de la fase 15
+- **Salidas versionadas desfasadas.** Las comparaciones de la sección 1 usan salidas regeneradas en clones limpios, por lo que siguen siendo válidas. Pero los archivos de `outputs/` **versionados** para OE1 (desde `d986b75`) y OE5 (desde `2fb5c04`) no coincidían con lo que genera el código vigente; se regeneraron y se commitearon. No son entradas de los notebooks.
+- **Archivos residuales.** `verificacion_oe3_20261019_071001/` y su ZIP llevan ahora un `LEEME_RESIDUAL.md`: exportación local previa a N3-S, no leída por ningún notebook ni script, no vigente. No se han borrado ni se ha tocado el historial.
+- **Enlaces.** No se ha creado ninguna etiqueta ni se ha cambiado ninguna referencia pública; la alternativa local sigue siendo la verificada.
