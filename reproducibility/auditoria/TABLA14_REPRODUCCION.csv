@@ -1,0 +1,11 @@
+termino,A_g_l_residuales,A_eta2_parcial_tipo_III,A_p_permutacion_sin_corregir,A_p_F_sin_corregir,B_g_l_residuales,B_eta2_parcial_tipo_II,B_p_F_sin_corregir,B_p_Holm_m15,publicado_T14_eta2,publicado_T14_p_Holm,T14_coincide_con_B,publicado_T13_T16_eta2,publicado_T13_T16_p_permutacion,T13_T16_coinciden_con_A
+Despacho,192,0.9800,0.001,4.734e-165,219,0.9791,7.329e-186,1.099e-184,0.979,1.1e-184,SI,0.98,0.001,SI
+Difusión de g_best,192,0.8790,0.001,5.573e-90,219,0.8740,1.837e-100,2.571e-99,0.874,2.6e-99,SI,0.879,0.001,SI
+Mecanismo,192,0.8760,0.001,9.214e-88,219,0.8709,4.411e-98,5.734e-97,0.871,5.7e-97,SI,0.876,0.001,SI
+Heurística de arranque,192,0.4949,0.001,2.695e-30,219,0.4834,3.002e-33,3.602e-32,0.483,3.6e-32,SI,0.495,0.001,SI
+Réplicas de consumidores,192,0.0328,0.015,1.146e-02,219,0.0314,8.291e-03,5.803e-02,0.031,0.058,SI,0.033,0.015,SI
+Despacho × Difusión de g_best,192,0.2796,0.001,2.291e-15,219,0.2704,1.049e-16,1.154e-15,0.27,1.2e-15,SI,,,
+Despacho × Mecanismo,192,0.2699,0.001,7.661e-14,219,0.2609,4.198e-15,4.198e-14,0.261,4.2e-14,SI,,,
+Heurística de arranque × Mecanismo,192,0.2234,0.001,2.864e-11,219,0.2155,2.861e-12,2.575e-11,0.216,2.6e-11,SI,,,
+Difusión de g_best × Mecanismo,192,0.0619,0.003,2.166e-03,219,0.0593,1.242e-03,9.936e-03,0.059,0.0099,SI,,,
+"(resumen) interacciones con p por permutación < 0,05",,4,0.001 a 0.003,,,,,,,,,,"«entre 0,001 y 0,003» (Tabla 16)",SI

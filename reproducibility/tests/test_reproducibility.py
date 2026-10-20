@@ -474,7 +474,7 @@ def test_registro_de_afirmaciones_prioritarias_es_consistente():
     with open(ROOT / "auditoria" / "REGISTRO_AFIRMACIONES_PRIORITARIAS.csv", encoding="utf-8", newline="") as fh:
         filas = list(csv.DictReader(fh))
     ids = [f["id"] for f in filas]
-    assert len(ids) == len(set(ids)) and len(ids) >= 151                        # identificadores estables y sin duplicados
+    assert len(ids) == len(set(ids)) and len(ids) >= 156                        # identificadores estables y sin duplicados
     validos = {"COINCIDE_EXACTAMENTE", "COINCIDE_CON_REDONDEO", "DISCREPANCIA", "NO_REPRODUCIBLE", "PENDIENTE_DE_REVISION", "NO_APLICA"}
     assert all(f["estado"] in validos for f in filas)
     assert all(f["fuente_y_metodo"].strip() and f["texto_minimo"].strip() for f in filas)
@@ -623,12 +623,13 @@ def test_cobertura_de_la_prosa_es_coherente():
 def test_hashes_de_los_documentos_de_tesis():
     with open(ROOT / "auditoria" / "HASHES_DOCUMENTOS.csv", encoding="utf-8", newline="") as fh:
         h = list(csv.DictReader(fh))
-    assert len(h) == 6 and h[0]["sha256"].startswith("a6bb2934de7fd512") and h[0]["estado"] == "INTACTO"
+    assert len(h) == 7 and h[0]["sha256"].startswith("a6bb2934de7fd512") and h[0]["estado"] == "INTACTO"
     est = {r["documento"].split()[-1]: r for r in h}
     assert est["V2"]["estado"] == "SUPERADA" and est["V2"]["paginas_con_word"] == "268"
     assert est["V3"]["estado"] == "INTACTA" and est["V3"]["paginas_con_word"] == "267"
-    assert est["V4"]["estado"].startswith("VIGENTE") and est["V4"]["paginas_con_word"] == "267"
-    assert len({r["sha256"] for r in h}) == 6
+    assert est["V4"]["estado"] == "INTACTA" and est["V4"]["paginas_con_word"] == "267"
+    assert est["V5"]["estado"].startswith("VIGENTE") and est["V5"]["paginas_con_word"] == "267"
+    assert len({r["sha256"] for r in h}) == 7
 
 
 def test_matriz_de_coherencia_es_en():
@@ -659,3 +660,34 @@ def test_registro_cambios_v4():
         c = list(csv.DictReader(fh))
     assert [r["id_cambio"] for r in c] == [f"R{i}" for i in range(32, 42)]
     assert all(r["texto_original_exacto"] != r["texto_corregido_exacto"] and r["evidencia"] for r in c)
+
+
+def test_tabla14_y_tablas_13_16_se_reproducen_con_dos_analisis_distintos():
+    with open(ROOT / "auditoria" / "TABLA14_REPRODUCCION.csv", encoding="utf-8", newline="") as fh:
+        t = list(csv.DictReader(fh))
+    filas = [r for r in t if not r["termino"].startswith("(resumen)")]
+    assert len(filas) == 9 and all(r["T14_coincide_con_B"] == "SI" for r in filas)
+    assert all(r["T13_T16_coinciden_con_A"] == "SI" for r in filas if r["T13_T16_coinciden_con_A"])
+    assert {r["A_g_l_residuales"] for r in filas} == {"192"} and {r["B_g_l_residuales"] for r in filas} == {"219"}      # son modelos distintos
+    assert t[-1]["T13_T16_coinciden_con_A"] == "SI"
+
+
+def test_revision_de_parrafos_fase_18():
+    with open(ROOT / "auditoria" / "REVISION_PARRAFOS_FASE18.csv", encoding="utf-8", newline="") as fh:
+        r = list(csv.DictReader(fh))
+    assert len(r) == 105 and len({x["linea_del_texto_plano"] for x in r}) == 105
+    permitidos = {"VERIFICADO_CON_DATOS", "COHERENTE_CON_EL_PROYECTO", "CONTRASTADO_CON_FUENTE_EXTERNA", "METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO",
+                  "TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES", "AFIRMACION_PROSPECTIVA_O_NORMATIVA", "INTERPRETACION_EXAMINADA_CON_OBSERVACION", "HALLAZGO"}
+    assert {x["estado_de_la_revision"] for x in r} <= permitidos
+    assert all(x["metodo_y_evidencia"] for x in r)
+    assert not [x for x in r if x["estado_de_la_revision"] == "HALLAZGO" and not x["hallazgo"]]                       # todo hallazgo tiene identificador
+
+
+def test_registro_de_cambios_v5_y_fuentes_pendientes():
+    with open(ROOT / "auditoria" / "REGISTRO_CAMBIOS_REVISION_FACTUAL_V5.csv", encoding="utf-8", newline="") as fh:
+        c = list(csv.DictReader(fh))
+    assert [x["id_cambio"] for x in c] == [f"R{i}" for i in range(42, 48)]
+    assert all(x["texto_original_exacto"] != x["texto_corregido_exacto"] and x["evidencia"] for x in c)
+    with open(ROOT / "auditoria" / "FUENTES_PENDIENTES_FASE18.csv", encoding="utf-8", newline="") as fh:
+        f = list(csv.DictReader(fh))
+    assert len(f) == 5 and all(x["la_fuente_existe"] and x["la_fuente_respalda_la_afirmacion"] for x in f)

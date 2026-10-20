@@ -18,12 +18,17 @@ D16,«cumplió los requerimientos funcionales y de confiabilidad» (RF07 y RF08 
 D17,"cotas del p de Holm de N8 («≤ 7 × 10⁻⁹», «≤ 5 × 10⁻¹¹») frente a la Tabla 19",A125,"Tabla 19 reproducida: máx. 2,09 × 10⁻⁷ (P95) y 1,54 × 10⁻¹⁰ (throughput)",factual,RESUELTA en la copia V3 (R26–R28),C25,—
 D18,"«no un defecto de implementación, pues el F1 se reproduce exactamente»",A126,"la reproducción del F1 verifica la métrica, no la aptitud ni el optimizador",interpretativo,ABIERTA,C27,autor
 D19,correspondencia B3.2 ↔ selección conjunta multiobjetivo (§6.7),A127,B3.2 trata de protocolos asíncronos,interpretativo,ABIERTA,C28,autor
-D20,Benjamini y Hochberg (1995) y Efron (1979) en el Anexo 7 sin referencia,A129,"auditoria_bibliografica.py; gold/f1.py incluye bootstrap_ci (IC95 % del F1); el texto usa Holm, no FDR",documental,ABIERTA,C29 (actualizada),autor
+D20,Benjamini y Hochberg (1995) y Efron (1979) en el Anexo 7 sin referencia,A129,código: gold/f1.py y analysis/comparison.py aplican bootstrap percentil; ningún análisis usa FDR; f1_v3_summary.json: IC t de Student,documental,"ABIERTA (diagnóstico: referencia ausente para Efron, método aplicado y no descrito; Benjamini–Hochberg, entrada sin uso)",C29 (actualizada),autor
 D21,cifras de fuentes de terceros sin contrastar con el texto completo,"A131, A140, A142",45 filas del Anexo 7 y cifras de §1,bibliográfica,ABIERTA,C30,autor
 D22,«no se reportan CPU y memoria» (§4.4),A128,§6.4.3 reporta memoria libre y CPU del equipo,factual,RESUELTA en la copia V3 (R29),C26,—
 D23,Clinton-Lisell y Litzinger (2024): «26 % de los estudios» y «instrucción multimodal para todos»,A143,texto completo (Europe PMC) y resumen,factual (cifra atribuida a una fuente),"RESUELTA en la copia V4 (R32, R33); la lectura «evidencia contraria» queda abierta",C31,autor (solo la lectura)
 D24,"Al Faia y Alomar (2025): 3,61 % sin la salvedad de que no fue significativo",A144,texto completo del editor,factual,"RESUELTA en la copia V4 (R34, R35)",C32,—
 D25,"Cioca y Cioca (2025), Al-Ahmad et al. (2022) y Chen y Hsu (2022): cifras atribuidas con imprecisión","A145, A146, A147",texto completo del editor,factual,RESUELTA en la copia V4 (R36–R41),"C33, C34, C35",—
-D26,Tabla 14: p paramétricos frente a p por permutación,A151,HOLM_AUDITORIA.csv,rotulado,ABIERTA,C36,autor
-D27,"López-Goyez (rango 3,74–3,92) y Bennedsen y Caspersen (28–33 %) sin contrastar","A140, A142",PDF o tablas no extraíbles,bibliográfica,ABIERTA,C37,autor
+D26,Tabla 14: p paramétricos frente a p por permutación,A151,TABLA14_REPRODUCCION.csv: dos análisis distintos; los dos se reproducen,rotulado,DIAGNOSTICADA; propuesta de rotulado en DIAGNOSTICO_TABLA14.md; no aplicada,C36,autor
+D27,"López-Goyez (rango 3,74–3,92) y Bennedsen y Caspersen (28–33 %)","A140, A142","texto completo del editor (MDPI; ACM, acceso libre): ambas cifras existen, pero la atribución es imprecisa",bibliográfica,RESUELTA en cuanto a la atribución (R42 a R46 de la copia V5); la formulación de la motivación del capítulo 1 sigue abierta (C44),"C37, C44",autor
 D28,"«c1 = c2 = 1,494 corresponden a la formulación con coeficiente de constricción»",A150,"cálculo: 1,4962",metodológica,ABIERTA,C38,autor
+D29,"§5.1, §6 y §6.4: «8 vCPU y 7,5 GiB» (pilotos) frente al i7-12700K de 20 vCPU (campañas)",A154,RESULTADO_OE2.md; RESULTADO_OBJETIVO_GENERAL.md,redacción,ABIERTA,C39,autor
+D30,«Tabla 14» como remisión de 13 ms y 11 mensajes (§6.7 B2.2),A153,Tablas 13 y 14,remisión,propuesta aplicada a la copia V5 (R47),C40,—
+D31,carta al jurado: «evaluación de usuarios expertos» sin ejecutar,—,0 evaluadores,redacción,ABIERTA,C41,autor
+D32,«1 080 artefactos» y «270 diagramas con su representación SVG»,A132,carpeta lib-v10,redacción,ABIERTA,C42,autor
+D33,"Bennedsen y Caspersen: motivación («persistentes», «cifra estable») frente a la conclusión de la fuente (disminuyó; no alarmante)",A140,"lectura del artículo (ACM, acceso libre)",interpretativa,ABIERTA,C44,autor

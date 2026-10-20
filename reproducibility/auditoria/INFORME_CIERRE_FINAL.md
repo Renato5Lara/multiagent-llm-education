@@ -159,3 +159,11 @@ Detalle en [`INFORME_FASE17.md`](INFORME_FASE17.md). **La auditoría sigue abier
 **18.4 Copia V4:** 267 páginas; 10 sustituciones sobre cifras atribuidas a fuentes; V3 se conserva; ninguna copia es definitiva.
 **18.5 Cobertura:** 295 párrafos de prosa; 281 leídos y evaluados (el capítulo 3, completo); 82 comprobados con datos; 34 contrastados con fuentes externas; 75 con la interpretación examinada; 105 pendientes. Registro: 151 afirmaciones.
 **18.6 Notebooks y pruebas:** ningún archivo que ejecuten los notebooks cambió; no se repitió Colab.
+
+## 19. Fase 18: resolución metodológica, verificación pendiente y control de V4
+Detalle en [`INFORME_FASE18.md`](INFORME_FASE18.md). **La auditoría sigue abierta.**
+**19.1 Tabla 14:** dos análisis distintos (permutación sin corregir con modelo completo, para las Tablas 13 y 16; F paramétrica con Holm sobre 15 términos y modelo reducido, para la Tabla 14); todos los valores se reproducen; hallazgo de rotulado (C36). Ver `DIAGNOSTICO_TABLA14.md`.
+**19.2 Fuentes:** López-Goyez (el 3,74–3,92 es de subgrupos de género; por dimensión, 3,77 a 3,90) y Bennedsen y Caspersen (33 % en 2006/07 y 28 % en 2018; la tasa disminuyó) contrastados con el texto completo; Benjamini–Hochberg no se aplica; Efron corresponde a un bootstrap aplicado en el código y no descrito en el texto.
+**19.3 Cobertura:** los 105 párrafos pendientes se revisaron uno a uno (`REVISION_PARRAFOS_FASE18.csv`): 295 leídos; 114 con datos; 38 con fuente externa; 9 siguen pendientes. «Coherente con el proyecto» no equivale a «recalculado».
+**19.4 Documentos:** V4 validada (hash, sustituciones, 267 páginas, campos estables, 44 páginas distintas del original revisadas); V5 (V4 más R42–R47) generada, 267 páginas y sin reflujo; ninguna es definitiva.
+**19.5 Decisiones pendientes:** las del apartado 7 de `INFORME_FASE18.md`.

@@ -82,3 +82,15 @@ Texto sugerido (resultados exploratorios, no oficiales, no mezclados con N3): «
 **C37 (B, pendiente).** López-Goyez et al. (2026): H = 4,88 y p = 0,181 verificados; el rango de medias 3,74–3,92 no (A142). Bennedsen y Caspersen (2019): «28 % a 33 %» no verificado (PDF no extraíble) (A140).
 **C38 (B/C, no aplicada).** §5.3.3 y §3.3: «w = 0,729 y c1 = c2 = 1,494 corresponden a la formulación con coeficiente de constricción de Clerc y Kennedy (2002)». Con φ = 4,1 la fórmula da 0,7298 y 1,4962; 1,494 es una aproximación muy citada. Alternativa: «valores habituales de la formulación con coeficiente de constricción» (A150).
 **C29 (actualizada).** Benjamini y Hochberg (1995) no se usa en el texto ni en el código: retirarlo del Anexo 7. Efron (1979): el código incluye un IC95 % por bootstrap percentil para el F1_adapt (`gold/f1.py`), probablemente el del F1 v1 histórico (0,8031; IC95 % 0,711–0,877), cuyo método el texto no indica: indicar el método y añadir la referencia, o retirarla (A129).
+
+## Fase 18 — nuevas propuestas (ver `INFORME_FASE18.md`)
+
+**C36 — Tabla 14 y p del OE3.** Rotular la Tabla 14 como ANOVA tipo II con p de la prueba F y Holm sobre 15 términos (y advertir que los residuos no son normales), y las Tablas 13 y 16 como p por permutación sin corregir. Alternativas (rotular solo; añadir el p por permutación corregido; dejar solo los η²) en `DIAGNOSTICO_TABLA14.md`. Recomendada: rotular solo.
+
+**C44 — Bennedsen y Caspersen (2019), motivación del capítulo 1.** La fuente informa 33 % (2006/07) y 28 % (2018), concluye que la tasa disminuyó y que no es alarmante. Alternativas: (a) conservar «tasas de fracaso en torno al 30 %» con la atribución corregida (R45, R46) y suprimir «persistentes»/«estable»; (b) añadir una frase honesta («los propios autores la consideran moderada frente a otras disciplinas») y apoyar la motivación en la carga docente y en la multimodalidad, no en el fracaso; (c) sustituir la fuente por otra que respalde «persistentes». Consecuencia: la justificación del estudio no puede apoyarse en que el fracaso sea alarmante.
+
+**C29 — Efron y Benjamini–Hochberg.** Retirar Benjamini–Hochberg del Anexo 7. Efron: citar y describir el bootstrap percentil donde se informe un IC bootstrap (F1 histórico v1; diferencias pareadas), o retirarlo.
+
+**C39 — hardware de los pilotos.** Distinguir en §5.1, §6 y §6.4 los pilotos históricos con Locust y JMeter (8 hilos, 7,5 GiB; sin datos en el paquete) de las campañas N1 a N11 (i7-12700K, 20 vCPU, 31,75 GiB).
+
+**C41, C42.** Carta al jurado: «evaluación prevista de usuarios expertos». §5: «1 080 archivos (810 artefactos y 270 SVG)».

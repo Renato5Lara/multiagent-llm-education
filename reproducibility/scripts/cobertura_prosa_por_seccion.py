@@ -78,6 +78,12 @@ def main(texto):
                 ext.add((re.split(r",| &", m.group(1))[0].strip().lower(), m.group(2)))
     except FileNotFoundError:
         pass
+    rev = {}
+    try:
+        for r in csv.DictReader(open(ROOT / "auditoria/REVISION_PARRAFOS_FASE18.csv", encoding="utf-8")):
+            rev[int(r["linea_del_texto_plano"])] = r["estado_de_la_revision"]
+    except FileNotFoundError:
+        pass
     INTERP = ("Interpretación experimental", "Discusión de los resultados", "Contraste con los antecedentes", "Comparación con el estado del arte", "Alcance de la interpretación")
     filas, resumen = [], []
     for nombre, a, b in SECCIONES:
@@ -91,6 +97,12 @@ def main(texto):
             txt = L[ln - 1].lower()
             externa = tiene_num and any(a in txt and y in txt for a, y in ext)
             interp = any(L[ln - 1].startswith(k) for k in INTERP) or nombre in ("6.6 Cierre de brechas", "6.7 Discusión y cierre de brechas", "7 Conclusiones", "8 Recomendaciones")
+            er = rev.get(ln, "")
+            if er:                                   # fase 18: revisión párrafo a párrafo (REVISION_PARRAFOS_FASE18.csv); «leído» no equivale a «verificado»
+                leido = True
+                ok = ok or er == "VERIFICADO_CON_DATOS"
+                externa = externa or er == "CONTRASTADO_CON_FUENTE_EXTERNA"
+                interp = interp or er == "INTERPRETACION_EXAMINADA_CON_OBSERVACION"
             n += 1
             leidos += leido
             chk += ok
@@ -98,12 +110,14 @@ def main(texto):
             ext_n += externa
             int_n += (interp and leido)
             pend = (not leido) or (tiene_num and not ok and not externa)
+            if er:
+                pend = er in ("METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO", "HALLAZGO")
             pen_n += pend
-            filas.append([nombre, ln, "SI" if leido else "NO", "SI" if ok else "NO", "SI" if externa else "NO", "SI" if (interp and leido) else "NO", "SI" if pend else "NO", ", ".join(sorted(set(comp[ln]))[:8]), L[ln - 1][:40].replace("\n", " ")])
+            filas.append([nombre, ln, "SI" if leido else "NO", "SI" if ok else "NO", "SI" if externa else "NO", "SI" if (interp and leido) else "NO", "SI" if pend else "NO", er, ", ".join(sorted(set(comp[ln]))[:8]), L[ln - 1][:40].replace("\n", " ")])
         resumen.append([nombre, n, leidos, chk, ext_n, int_n, pen_n])
     with open(ROOT / "auditoria/COBERTURA_PROSA_POR_PARRAFO.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\r\n")
-        w.writerow(["seccion", "linea_del_texto_plano", "leido_y_evaluado", "comprobado_con_datos", "contrastado_con_fuente_externa", "interpretacion_examinada", "pendiente", "comprobaciones", "inicio_del_parrafo"])
+        w.writerow(["seccion", "linea_del_texto_plano", "leido_y_evaluado", "comprobado_con_datos", "contrastado_con_fuente_externa", "interpretacion_examinada", "pendiente", "revision_fase_18", "comprobaciones", "inicio_del_parrafo"])
         w.writerows(filas)
     with open(ROOT / "auditoria/COBERTURA_PROSA_POR_SECCION.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, lineterminator="\r\n")

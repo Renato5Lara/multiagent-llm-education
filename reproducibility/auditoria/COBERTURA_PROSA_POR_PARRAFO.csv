@@ -1,296 +1,296 @@
-seccion,linea_del_texto_plano,leido_y_evaluado,comprobado_con_datos,contrastado_con_fuente_externa,interpretacion_examinada,pendiente,comprobaciones,inicio_del_parrafo
-"Preliminares (resumen, abstract, índices)",3,NO,NO,NO,NO,SI,,PROGRAMA DE ESTUDIO DE INGENIERÍA DE COM
-"Preliminares (resumen, abstract, índices)",7,NO,NO,NO,NO,SI,,Validación de una arquitectura multiagen
-"Preliminares (resumen, abstract, índices)",23,NO,NO,NO,NO,SI,,PROGRAMA DE ESTUDIO DE INGENIERÍA DE COM
-"Preliminares (resumen, abstract, índices)",27,NO,NO,NO,NO,SI,,Validación de una arquitectura multiagen
-"Preliminares (resumen, abstract, índices)",42,NO,NO,NO,NO,SI,,"A mi madre, por su amor incondicional, p"
-"Preliminares (resumen, abstract, índices)",49,NO,NO,NO,NO,SI,,Expreso mi más sincero agradecimiento al
-"Preliminares (resumen, abstract, índices)",50,NO,NO,NO,NO,SI,,Agradezco también a la Universidad Priva
-"Preliminares (resumen, abstract, índices)",51,NO,NO,NO,NO,SI,,"De manera especial, agradezco a mis padr"
-"Preliminares (resumen, abstract, índices)",52,NO,NO,NO,NO,SI,,"Finalmente, agradezco a los docentes del"
-"Preliminares (resumen, abstract, índices)",55,SI,NO,NO,NO,NO,,La investigación tuvo como objetivo dete
-"Preliminares (resumen, abstract, índices)",56,SI,SI,NO,NO,NO,"A12, A97",Se siguió el enfoque Design Science Rese
-"Preliminares (resumen, abstract, índices)",57,SI,SI,NO,NO,NO,"A01, A02, A03, A04, A05, A07, A08, A09",La arquitectura cumplió los requerimient
-"Preliminares (resumen, abstract, índices)",58,SI,SI,NO,NO,NO,"A12, A93",Los objetivos tercero y cuarto se demost
-"Preliminares (resumen, abstract, índices)",60,NO,NO,NO,NO,SI,,Palabras clave: arquitectura multiagente
-"Preliminares (resumen, abstract, índices)",63,SI,NO,NO,NO,NO,,The objective of this research was to de
-"Preliminares (resumen, abstract, índices)",64,SI,NO,NO,NO,SI,,The study followed the Design Science Re
-"Preliminares (resumen, abstract, índices)",65,SI,SI,NO,NO,NO,"A76, A77, A78, A79",The architecture met the functional and 
-"Preliminares (resumen, abstract, índices)",66,SI,SI,NO,NO,NO,A94,The third and fourth specific objectives
-"Preliminares (resumen, abstract, índices)",68,NO,NO,NO,NO,SI,,Keywords: multi-agent architecture; swar
-"Preliminares (resumen, abstract, índices)",73,NO,NO,NO,NO,SI,,De acuerdo con el cumplimiento de las di
-"Preliminares (resumen, abstract, índices)",74,NO,NO,NO,NO,SI,,Desarrollada con el fin de obtener el tí
-"Preliminares (resumen, abstract, índices)",75,NO,NO,NO,NO,SI,,"A ustedes miembros del jurado, mostramos"
-1 Introducción,177,SI,NO,SI,NO,NO,,"En la educación superior, las plataforma"
-1 Introducción,178,SI,NO,NO,NO,NO,,"Para abordar este desafío, la literatura"
-1 Introducción,181,SI,NO,NO,NO,NO,,Esta investigación tiene como propósito 
-1 Introducción,182,SI,NO,NO,NO,NO,,La justificación del estudio se sustenta
-1 Introducción,183,SI,NO,SI,NO,NO,,La relevancia del estudio se refuerza co
-1 Introducción,185,SI,SI,NO,NO,NO,A12,El presente informe de tesis se estructu
-2 Planteamiento del problema,192,SI,NO,NO,NO,NO,,¿Cuál es el efecto de una arquitectura d
-2 Planteamiento del problema,194,SI,NO,NO,NO,SI,,PE1: ¿Cuál es la relación entre el cumpl
-2 Planteamiento del problema,195,SI,NO,NO,NO,SI,,"PE2: ¿Cómo difiere el desempeño técnico,"
-2 Planteamiento del problema,196,SI,NO,NO,NO,SI,,PE3: ¿Cuál es el efecto de la configurac
-2 Planteamiento del problema,197,SI,NO,NO,NO,SI,,PE4: ¿Cuál es el desempeño computacional
-2 Planteamiento del problema,198,SI,NO,NO,NO,SI,,PE5: ¿Cuál es el nivel de precisión de l
-2 Planteamiento del problema,200,SI,NO,NO,NO,NO,,El problema central que aborda esta inve
-2 Planteamiento del problema,201,SI,NO,SI,NO,NO,,"En programación introductoria, el contex"
-2 Planteamiento del problema,202,SI,NO,SI,NO,NO,,En la literatura revisada mediante una b
-2 Planteamiento del problema,203,SI,NO,NO,NO,NO,,Ante este panorama se propone validar un
-2 Planteamiento del problema,206,SI,NO,NO,NO,NO,,Determinar el efecto de una arquitectura
-2 Planteamiento del problema,208,SI,NO,NO,NO,NO,,OE1: Determinar la relación entre el cum
-2 Planteamiento del problema,209,SI,NO,NO,NO,NO,,OE2: Comparar estadísticamente el desemp
-2 Planteamiento del problema,210,SI,NO,NO,NO,NO,,OE3: Determinar el efecto de la configur
-2 Planteamiento del problema,211,SI,NO,NO,NO,NO,,OE4: Medir y comparar el desempeño compu
-2 Planteamiento del problema,212,SI,NO,NO,NO,SI,,OE5: Determinar el nivel de precisión de
-2 Planteamiento del problema,214,SI,NO,SI,NO,NO,,Esta investigación es importante porque 
-2 Planteamiento del problema,216,SI,NO,NO,NO,NO,,Esta investigación se justifica de maner
-2 Planteamiento del problema,217,SI,NO,NO,NO,NO,,"Desde una perspectiva operativa, el estu"
-2 Planteamiento del problema,218,SI,NO,NO,NO,NO,,Dado que la arquitectura se apoya en pri
-2 Planteamiento del problema,220,SI,NO,NO,NO,NO,,El estudio se enfoca en un ámbito instit
-2 Planteamiento del problema,221,SI,NO,NO,NO,SI,,El estudio se desarrolla como prueba de 
-2 Planteamiento del problema,222,SI,NO,NO,NO,SI,,"El estudio no evalúa el aprendizaje, el "
-3 Marco teórico,228,SI,NO,SI,NO,NO,,"Imamah et al. (2024), en un artículo pub"
-3 Marco teórico,229,SI,NO,NO,NO,NO,,"El Fazazi et al. (2021), en un artículo "
-3 Marco teórico,230,SI,NO,SI,NO,NO,,"Li et al. (2023), en un artículo publica"
-3 Marco teórico,231,SI,NO,NO,NO,SI,,"Zheng et al. (2025), en un artículo publ"
-3 Marco teórico,232,SI,NO,NO,NO,NO,,"Contrino et al. (2024), en un artículo p"
-3 Marco teórico,233,SI,NO,SI,NO,NO,,"Naseer et al. (2024), en un artículo pub"
-3 Marco teórico,234,SI,NO,SI,NO,NO,,"Troussas et al. (2023), en un artículo p"
-3 Marco teórico,235,SI,NO,NO,NO,SI,,"Du Plooy et al. (2024), en un artículo p"
-3 Marco teórico,236,SI,NO,SI,NO,NO,,"Gamage et al. (2022), en un artículo pub"
-3 Marco teórico,237,SI,NO,SI,NO,NO,,"López-Goyez et al. (2026), en un artícul"
-3 Marco teórico,238,SI,NO,NO,NO,SI,,"De Marcos et al. (2008), en una investig"
-3 Marco teórico,239,SI,NO,NO,NO,SI,,"Chu et al. (2011), en una investigación "
-3 Marco teórico,240,SI,NO,NO,NO,SI,,"Martins et al. (2021), en un artículo pu"
-3 Marco teórico,241,SI,NO,SI,NO,NO,,"Zhang et al. (2025), en una investigació"
-3 Marco teórico,242,SI,NO,NO,NO,SI,,"Vaccaro et al. (2025), en una investigac"
-3 Marco teórico,243,SI,NO,NO,NO,NO,,"Sarsa et al. (2022), en una investigació"
-3 Marco teórico,244,SI,NO,NO,NO,SI,,"Clinton-Lisell y Litzinger (2024), en un"
-3 Marco teórico,245,SI,NO,NO,NO,NO,,Antecedentes empíricos recientes leídos 
-3 Marco teórico,246,SI,NO,SI,NO,NO,,Inteligencia de enjambre en problemas ed
-3 Marco teórico,247,SI,NO,SI,NO,NO,,Mecanismos del PSO y comparación de algo
-3 Marco teórico,248,SI,NO,SI,NO,NO,,Sistemas multiagente educativos (OE1 y O
-3 Marco teórico,249,SI,NO,SI,NO,NO,,Adaptación multimodal y precisión de la 
-3 Marco teórico,250,SI,NO,SI,NO,NO,,Usabilidad técnica con SUS (OE5). Los va
-3 Marco teórico,251,SI,NO,SI,NO,NO,,Rendimiento computacional (OE4). Las med
-3 Marco teórico,252,SI,NO,NO,NO,SI,,"En síntesis, los antecedentes revisados "
-3 Marco teórico,253,SI,NO,SI,NO,NO,,La búsqueda bibliográfica se realizó ent
-3 Marco teórico,254,SI,SI,SI,NO,NO,A130,Nivel de lectura de las fuentes. Las ref
-3 Marco teórico,257,SI,NO,SI,NO,NO,,La integración de arquitecturas multiage
-3 Marco teórico,258,SI,NO,SI,NO,NO,,El surgimiento de los modelos de lenguaj
-3 Marco teórico,259,SI,NO,SI,NO,NO,,En el ámbito de la inteligencia de enjam
-3 Marco teórico,260,SI,NO,NO,NO,NO,,Otro algoritmo representativo de la inte
-3 Marco teórico,262,SI,NO,NO,NO,NO,,"En esta investigación, la adaptación mul"
-3 Marco teórico,263,SI,NO,NO,NO,NO,,La Teoría de la Carga Cognitiva de Swell
-3 Marco teórico,264,SI,NO,NO,NO,NO,,"En complemento, la Teoría Cognitiva del "
-3 Marco teórico,265,SI,NO,NO,NO,SI,,Conviene distinguir la presentación mult
-3 Marco teórico,267,SI,NO,NO,NO,NO,,El enfoque Design Science Research conci
-3 Marco teórico,268,SI,NO,NO,NO,SI,,"Para los sistemas adaptativos, Paramythi"
-3 Marco teórico,270,SI,NO,NO,NO,NO,,Arquitectura multiagente (MAS): Sistema 
-3 Marco teórico,271,SI,NO,NO,NO,NO,,Inteligencia de enjambre (Swarm Intellig
-3 Marco teórico,272,SI,NO,NO,NO,NO,,Optimización por Colonia de Hormigas (AC
-3 Marco teórico,273,SI,NO,NO,NO,NO,,Optimización por Enjambre de Partículas 
-3 Marco teórico,274,SI,NO,NO,NO,NO,,Contenido educativo multimodal: Material
-3 Marco teórico,275,SI,NO,NO,NO,NO,,Aprendizaje adaptativo: Enfoque pedagógi
-3 Marco teórico,276,SI,NO,NO,NO,NO,,Ruta de aprendizaje (Learning Path): Sec
-3 Marco teórico,277,SI,NO,NO,NO,NO,,Plataforma virtual de aprendizaje / LMS 
-3 Marco teórico,278,SI,NO,NO,NO,NO,,Grafo de conocimiento: Estructura de rep
-3 Marco teórico,279,SI,NO,NO,NO,NO,,Feromona artificial: Valor numérico util
-3 Marco teórico,280,SI,NO,NO,NO,SI,,F1_adapt: Métrica de concordancia de la 
-3 Marco teórico,281,SI,NO,NO,NO,SI,,Gold standard: Conjunto de modalidades e
-3 Marco teórico,282,SI,NO,NO,NO,NO,,"Brecha de optimalidad (ΔF): Diferencia, "
-3 Marco teórico,283,SI,NO,NO,NO,SI,,Referencia de optimalidad: Procedimiento
-3 Marco teórico,284,SI,NO,NO,NO,NO,,Sistema convencional operativo (decision
-3 Marco teórico,285,SI,NO,NO,NO,SI,,System Usability Scale (SUS): Cuestionar
-3 Marco teórico,286,SI,NO,NO,NO,NO,,Design Science Research (DSR): Paradigma
-4 Hipótesis y variables,287,SI,NO,NO,NO,SI,,Nivel de Madurez Tecnológica (TRL): Esca
-4 Hipótesis y variables,290,SI,NO,NO,NO,SI,,Los supuestos básicos del estudio son lo
-4 Hipótesis y variables,292,SI,NO,NO,NO,SI,,H1: La arquitectura multiagente basada e
-4 Hipótesis y variables,293,SI,NO,NO,NO,SI,,Los criterios con que se contrasta cada 
-4 Hipótesis y variables,294,SI,SI,NO,NO,NO,A12,Las metas de desempeño y la hipótesis ge
-4 Hipótesis y variables,295,SI,NO,NO,NO,SI,,Correspondencia de H1 con los objetivos:
-4 Hipótesis y variables,297,SI,NO,NO,NO,NO,,Para cada objetivo específico se fija un
-4 Hipótesis y variables,298,SI,NO,NO,NO,SI,,Meta 1 (↔ OE1): Especificación formal de
-4 Hipótesis y variables,299,SI,NO,NO,NO,SI,,Meta 2 (↔ OE2): Demostración formal del 
-4 Hipótesis y variables,300,SI,NO,NO,NO,SI,,Meta 3 (↔ OE3): Modelo arquitectónico de
-4 Hipótesis y variables,301,SI,NO,NO,NO,SI,,Meta 4 (↔ OE4): Convergencia T_conv ≤ 15
-4 Hipótesis y variables,302,SI,NO,NO,NO,SI,,"Meta 5 (↔ OE5): Precisión F1_adapt ≥ 0,8"
-4 Hipótesis y variables,303,SI,NO,NO,NO,SI,,El límite de 15 iteraciones de la Meta 4
-4 Hipótesis y variables,304,SI,NO,NO,NO,SI,,Las Metas 2 y 3 se refieren a un benchma
-4 Hipótesis y variables,306,SI,NO,NO,NO,NO,,Variable independiente: arquitectura mul
-4 Hipótesis y variables,307,SI,SI,NO,NO,NO,A128,Variable dependiente: adaptación de cont
-4 Hipótesis y variables,308,SI,NO,NO,NO,NO,,"Con los objetivos definitivos, las varia"
-4 Hipótesis y variables,309,SI,NO,NO,NO,SI,,"Para el OE1, la funcionalidad se operaci"
-4 Hipótesis y variables,328,SI,NO,NO,NO,NO,,"La Tabla 2 integra el problema, los obje"
-4 Hipótesis y variables,330,SI,NO,NO,NO,NO,,Título de la investigación: Validación d
-5 Marco metodológico,343,SI,NO,NO,NO,NO,,"La investigación es de tipo tecnológico,"
-5 Marco metodológico,345,SI,NO,NO,NO,SI,,La escala de niveles de madurez tecnológ
-5 Marco metodológico,347,SI,NO,NO,NO,SI,,El método empleado es Design Science Res
-5 Marco metodológico,349,SI,NO,NO,NO,SI,,El artefacto es un servicio de software 
-5 Marco metodológico,350,SI,NO,NO,NO,SI,,La especificación comprende seis requisi
-5 Marco metodológico,368,SI,NO,NO,NO,SI,,El artefacto evaluado está compuesto por
-5 Marco metodológico,369,SI,NO,NO,NO,SI,,La comunicación entre agentes es asíncro
-5 Marco metodológico,371,SI,NO,NO,NO,SI,,Cada partícula del enjambre representa u
-5 Marco metodológico,372,SI,NO,NO,NO,SI,,La función de aptitud es F(S) = α·Simil(
-5 Marco metodológico,373,SI,NO,NO,NO,SI,,Regla de inclusión y referencia gold de 
-5 Marco metodológico,375,SI,NO,NO,NO,SI,,El gold standard de la especificación v3
-5 Marco metodológico,377,SI,SI,NO,NO,NO,A101,El estudio sigue un diseño de prueba de 
-5 Marco metodológico,378,SI,NO,NO,NO,SI,,Cada corrida oficial se rige por una esp
-5 Marco metodológico,379,SI,NO,NO,NO,SI,,La corrida oficial con la especificación
-5 Marco metodológico,381,SI,NO,NO,NO,NO,,La evaluación se organiza por objetivo e
-5 Marco metodológico,390,SI,NO,NO,NO,SI,,Los experimentos de los objetivos primer
-5 Marco metodológico,391,SI,NO,NO,NO,SI,,La búsqueda exhaustiva enumera las 3⁸ = 
-5 Marco metodológico,392,SI,NO,NO,NO,NO,,No se emplean como líneas base experimen
-5 Marco metodológico,393,SI,NO,NO,NO,SI,,El sistema convencional utilizado en la 
-5 Marco metodológico,395,SI,NO,NO,NO,SI,,La unidad experimental es el perfil sint
-5 Marco metodológico,396,SI,NO,NO,NO,SI,,La batería de perfiles (versión profiles
-5 Marco metodológico,397,SI,NO,NO,NO,SI,,En las corridas K = 10 y en la línea bas
-5 Marco metodológico,399,SI,NO,NO,NO,NO,,Las técnicas de recolección son: (a) el 
-5 Marco metodológico,401,SI,NO,NO,NO,SI,,El procedimiento oficial sigue este orde
-5 Marco metodológico,403,SI,NO,NO,NO,SI,,Para cada caso se calcula el F1 multimod
-5 Marco metodológico,404,SI,NO,NO,NO,SI,,"Para el contraste inferencial, la unidad"
-5 Marco metodológico,405,SI,NO,NO,NO,SI,,La tasa de convergencia se define como e
-5 Marco metodológico,406,SI,NO,NO,NO,NO,,El sobrecosto de comunicación entre agen
-5 Marco metodológico,407,SI,NO,NO,NO,SI,,Para la línea base empírica se calculará
-5 Marco metodológico,408,SI,NO,NO,NO,NO,,"Para los objetivos primero a cuarto, el "
-5 Marco metodológico,409,SI,NO,NO,NO,SI,,Decisiones de análisis adoptadas en las 
-5 Marco metodológico,411,SI,NO,NO,NO,SI,,El formulario de validación del gold tie
-5 Marco metodológico,412,SI,NO,NO,NO,SI,,El cuestionario System Usability Scale t
-5 Marco metodológico,413,SI,NO,NO,NO,NO,,Los registros automatizados del enjambre
-5 Marco metodológico,414,SI,NO,NO,NO,NO,,"Aplicación de criterios de calidad, vali"
-5 Marco metodológico,415,SI,SI,NO,NO,NO,"A100, A104",La validez del estudio se resguarda medi
-5 Marco metodológico,416,SI,NO,NO,NO,SI,,Como amenaza a la validez se registra un
-6 Resultados: introducción del capítulo,419,SI,NO,NO,NO,SI,,En este capítulo se presentan los result
-6 Resultados: introducción del capítulo,420,SI,NO,NO,NO,SI,,Campañas experimentales N1 a N6. Entre e
-6 Resultados: introducción del capítulo,421,SI,NO,NO,NO,SI,,"En consecuencia, los resultados de las c"
-6 Resultados: introducción del capítulo,422,SI,NO,SI,NO,NO,,"Campañas N8, N8b, N9b y N11 (13 a 15 de "
-6.1 OE1,425,SI,NO,NO,NO,NO,,El primer objetivo específico busca dete
-6.1 OE1,427,SI,NO,NO,NO,NO,,Determinar la relación entre el cumplimi
-6.1 OE1,429,SI,SI,NO,NO,NO,"P1-01, P1-02",Resultados experimentales (no oficiales)
-6.1 OE1,448,SI,SI,NO,SI,NO,"A43, A60, A61, A62, P1-03, P1-04, P1-05, P1-07",Interpretación experimental (no oficial)
-6.1 OE1,449,SI,NO,NO,NO,SI,,Relación entre cumplimiento y desempeño.
-6.1 OE1,450,SI,SI,NO,NO,NO,"P1-02, P1-06",Análisis complementario. Los numeradores
-6.1 OE1,451,SI,SI,NO,NO,NO,"P1-08, P1-09, P1-13, P1-14, P1-15",Medición HTTP de RNF01 y RNF04 (campañas
-6.1 OE1,461,SI,NO,NO,SI,SI,,Alcance de la interpretación. La interpr
-6.1 OE1,463,SI,NO,NO,NO,NO,,La Tabla 7 presenta la estructura del an
-6.1 OE1,479,SI,NO,NO,NO,SI,,Análisis estadístico experimental (no of
-6.1 OE1,481,SI,NO,NO,SI,SI,,Discusión de los resultados experimental
-6.1 OE1,482,SI,NO,SI,SI,NO,,Contraste con los antecedentes (experime
-6.1 OE1,483,SI,NO,SI,SI,NO,,Comparación con el estado del arte (OE1)
-6.2 OE2,486,SI,NO,NO,NO,NO,,El segundo objetivo específico busca com
-6.2 OE2,488,SI,NO,NO,NO,NO,,Comparar estadísticamente el desempeño t
-6.2 OE2,490,SI,SI,NO,NO,NO,P2-01,Resultados experimentales (no oficiales)
-6.2 OE2,513,SI,SI,NO,NO,NO,P2-03,Diferencias absolutas y tamaño del efect
-6.2 OE2,527,SI,NO,NO,NO,SI,,Tiempo de convergencia y tiempo operacio
-6.2 OE2,529,SI,SI,NO,SI,NO,"A115, A65, A66, A67, A68",Interpretación experimental (no oficial)
-6.2 OE2,530,SI,NO,NO,SI,NO,,Alcance de la interpretación. Para una i
-6.2 OE2,531,SI,SI,NO,NO,NO,"P2-02, P2-04, P2-05, P2-06, P2-07, P2-08",Réplica N9b y contrastes auxiliares (cam
-6.2 OE2,550,SI,NO,NO,NO,NO,,La Tabla 12 presenta la estructura del a
-6.2 OE2,566,SI,SI,NO,NO,NO,P2-09,Análisis estadístico experimental (no of
-6.2 OE2,568,SI,NO,NO,SI,NO,,Discusión de los resultados experimental
-6.2 OE2,569,SI,NO,SI,SI,NO,,Contraste con los antecedentes (experime
-6.2 OE2,570,SI,NO,NO,SI,NO,,Comparación con el estado del arte (OE2)
-6.3 OE3,573,SI,NO,NO,NO,SI,,El tercer objetivo específico busca dete
-6.3 OE3,575,SI,NO,NO,NO,NO,,Determinar el efecto de la configuración
-6.3 OE3,577,SI,SI,NO,NO,NO,P3-01,Resultados experimentales (no oficiales)
-6.3 OE3,586,SI,SI,NO,NO,NO,"A59, P3-03, P3-04",Análisis de varianza. Además del ANOVA c
-6.3 OE3,601,SI,SI,NO,NO,NO,"A39, A40, A41, A42, A43",Cautela sobre el mecanismo cognitivo. Co
-6.3 OE3,602,SI,SI,NO,NO,NO,"A43, A44, A45, A46",Configuraciones destacadas. La configura
-6.3 OE3,603,SI,SI,NO,NO,NO,A43,"Como resultado histórico, y no como resu"
-6.3 OE3,612,SI,SI,NO,SI,NO,"A43, A47",Interpretación experimental (no oficial)
-6.3 OE3,613,SI,SI,NO,NO,NO,A43,Antecedente histórico y alcance de la in
-6.3 OE3,615,SI,NO,NO,NO,NO,,La Tabla 16 presenta la estructura del a
-6.3 OE3,631,SI,SI,NO,NO,NO,A107,Análisis estadístico experimental (no of
-6.3 OE3,633,SI,SI,NO,SI,NO,"A106, P3-02, P3-05",Discusión de los resultados experimental
-6.3 OE3,634,SI,NO,SI,SI,NO,,Contraste con los antecedentes (experime
-6.3 OE3,635,SI,NO,SI,SI,NO,,Comparación con el estado del arte (OE3)
-6.4 OE4,638,SI,NO,NO,NO,SI,,El cuarto objetivo específico busca medi
-6.4 OE4,640,SI,NO,NO,NO,NO,,Medir y comparar el desempeño computacio
-6.4 OE4,642,SI,SI,NO,NO,NO,P4-01,Resultados experimentales (no oficiales)
-6.4 OE4,652,SI,SI,NO,NO,NO,"P4-02, P4-03",Estabilidad y capacidad. El throughput f
-6.4 OE4,653,SI,SI,NO,NO,NO,P4-04,Campaña N8: tamaño del enjambre (N = 10 
-6.4 OE4,663,SI,SI,NO,NO,NO,"A125, P4-05, P4-06(DIFIERE), P4-06b, P4-07, P4-08, P4-09, P4-10","Con un enjambre de 30 partículas, el P95"
-6.4 OE4,675,SI,SI,NO,NO,NO,"P4-11, P4-12",Campaña N8b: réplica de N = 20. Se repit
-6.4 OE4,685,SI,SI,NO,NO,NO,P4-13,Anomalía entre campañas en N = 20. El co
-6.4 OE4,686,SI,SI,NO,NO,NO,A66,Interpretación con la ley de Little. En 
-6.4 OE4,687,SI,SI,NO,NO,NO,"P4-14, P4-15",Campaña N11: los tres tamaños en una mis
-6.4 OE4,688,SI,SI,NO,NO,NO,"P4-16, P4-17, P4-18, P4-19",Resultados de N11 en el tramo B. La Tabl
-6.4 OE4,721,SI,SI,NO,NO,NO,"A30, P4-20, P4-21, P4-22, P4-23, P4-24",Cambio de régimen del equipo dentro de N
-6.4 OE4,728,SI,SI,NO,NO,NO,"P1-09, P1-10, P1-11, P1-12, P1-13, P1-14, P1-15",RNF01 y RNF04 según N11 y las demás camp
-6.4 OE4,742,SI,NO,NO,NO,SI,,"Como antecedente exploratorio, y no como"
-6.4 OE4,751,SI,SI,NO,SI,NO,"A58, A69, A70, A71",Interpretación experimental (no oficial)
-6.4 OE4,752,SI,SI,NO,NO,NO,A30,Antecedente exploratorio y alcance de la
-6.4 OE4,754,SI,NO,NO,NO,NO,,La Tabla 26 presenta la estructura del a
-6.4 OE4,770,SI,SI,NO,NO,NO,"P4-25, P4-26, P4-27, P4-28",Análisis estadístico experimental (no of
-6.4 OE4,771,SI,SI,NO,NO,NO,"P4-29P, P4-29T, P4-29t","Análisis estadístico de N8b, N8 y N11 (n"
-6.4 OE4,773,SI,SI,NO,SI,NO,"A116, A117",Discusión de los resultados experimental
-6.4 OE4,774,SI,SI,NO,SI,NO,A66,Contraste con los antecedentes (experime
-6.4 OE4,775,SI,NO,SI,SI,NO,,Comparación con el estado del arte (OE4)
-6.5 OE5,778,SI,NO,NO,NO,SI,,El quinto objetivo específico busca dete
-6.5 OE5,780,SI,NO,NO,NO,SI,,Determinar el nivel de precisión de la a
-6.5 OE5,782,SI,NO,NO,NO,SI,,Resultados experimentales y provisionale
-6.5 OE5,801,SI,SI,NO,NO,NO,"A99, P5-02",Reproducibilidad e incertidumbre. El F1_
-6.5 OE5,802,SI,SI,NO,NO,NO,"A126, P5-04",Diagnóstico de alineación entre la aptit
-6.5 OE5,811,SI,SI,NO,NO,NO,P5-01,No existen respuestas del panel de exper
-6.5 OE5,822,SI,SI,NO,SI,NO,"A73, A75, P5-03",Interpretación experimental y provisiona
-6.5 OE5,823,SI,NO,NO,NO,SI,,Antecedente histórico y alcance de la in
-6.5 OE5,825,SI,NO,NO,NO,NO,,La Tabla 31 presenta la estructura del a
-6.5 OE5,842,SI,NO,NO,NO,SI,,Análisis estadístico experimental (no of
-6.5 OE5,844,SI,SI,NO,SI,NO,A102,Discusión de los resultados experimental
-6.5 OE5,845,SI,NO,NO,SI,SI,,Contraste con los antecedentes (experime
-6.5 OE5,846,SI,NO,SI,SI,NO,,Comparación con el estado del arte (OE5)
-6.5 OE5,847,SI,NO,NO,NO,SI,,Síntesis de la comparación con el estado
-6.6 Cierre de brechas,857,SI,NO,NO,SI,SI,,Cierre de brechas (provisional). La brec
-6.6 Cierre de brechas,866,SI,NO,NO,SI,NO,,Con la evidencia disponible no se declar
-6.6 Cierre de brechas,867,SI,NO,NO,SI,SI,,Estado de las brechas con la evidencia d
-6.7 Discusión y cierre de brechas,869,SI,NO,NO,SI,SI,,Alcance y criterio. Este apartado contra
-6.7 Discusión y cierre de brechas,870,SI,NO,NO,SI,NO,,Criterio de estado. Para cada brecha se 
-6.7 Discusión y cierre de brechas,871,SI,SI,NO,SI,NO,A58,Síntesis de los resultados. En las condi
-6.7 Discusión y cierre de brechas,872,SI,SI,NO,SI,NO,A12,Hipótesis general. La hipótesis general 
-6.7 Discusión y cierre de brechas,873,SI,NO,NO,SI,NO,,Brechas asociadas al OE1 (requisitos y d
-6.7 Discusión y cierre de brechas,874,SI,SI,NO,SI,NO,"A82, A83",B1.1 Marcos estandarizados de evaluación
-6.7 Discusión y cierre de brechas,875,SI,NO,NO,SI,SI,,B1.2 Desconexión entre métricas de softw
-6.7 Discusión y cierre de brechas,876,SI,SI,NO,SI,NO,"A83, A84",B1.3 Degradación de la confiabilidad ant
-6.7 Discusión y cierre de brechas,877,SI,SI,NO,SI,NO,"A31, A52, A53",B1.4 Trazabilidad entre la heurística de
-6.7 Discusión y cierre de brechas,878,SI,SI,NO,SI,NO,A17,Relación con la discusión del OE1. Las b
-6.7 Discusión y cierre de brechas,879,SI,NO,NO,SI,NO,,Brechas asociadas al OE2 (comparación co
-6.7 Discusión y cierre de brechas,880,SI,SI,NO,SI,NO,A85,B2.1 Líneas base obsoletas o triviales (
-6.7 Discusión y cierre de brechas,881,SI,SI,NO,SI,NO,"A50, A51",Compromiso entre eficiencia y optimalida
-6.7 Discusión y cierre de brechas,882,SI,SI,NO,SI,NO,"A05, A57",B2.2 Invisibilización del sobrecosto de 
-6.7 Discusión y cierre de brechas,883,SI,SI,NO,SI,NO,"A11, A54",B2.3 Comparativas bajo alta concurrencia
-6.7 Discusión y cierre de brechas,884,SI,SI,NO,SI,NO,A86,B2.4 Estandarización del tiempo de conve
-6.7 Discusión y cierre de brechas,885,SI,NO,NO,SI,NO,,"Brechas asociadas al OE3 (roles, protoco"
-6.7 Discusión y cierre de brechas,886,SI,NO,NO,SI,SI,,B3.1 Asignación dinámica de roles (abier
-6.7 Discusión y cierre de brechas,887,SI,SI,NO,SI,NO,"A05, A56, A57",B3.2 Protocolos de comunicación asíncron
-6.7 Discusión y cierre de brechas,888,SI,SI,SI,SI,NO,A88,B3.3 Rigidez de los mecanismos de actual
-6.7 Discusión y cierre de brechas,889,SI,NO,NO,SI,NO,,B3.4 Topologías de comunicación restring
-6.7 Discusión y cierre de brechas,890,SI,SI,NO,SI,NO,A95,Relación con la discusión del OE3. El OE
-6.7 Discusión y cierre de brechas,891,SI,NO,NO,SI,NO,,Brechas asociadas al OE4 (desempeño bajo
-6.7 Discusión y cierre de brechas,892,SI,NO,NO,SI,NO,,B4.1 Cargas no lineales o en ráfaga (abi
-6.7 Discusión y cierre de brechas,893,SI,NO,NO,SI,SI,,B4.2 Simulación bajo restricciones de re
-6.7 Discusión y cierre de brechas,894,SI,SI,NO,SI,NO,A89,B4.3 Resiliencia ante fallos de agentes 
-6.7 Discusión y cierre de brechas,895,SI,SI,NO,SI,NO,A30,B4.4 Análisis de sensibilidad multidimen
-6.7 Discusión y cierre de brechas,896,SI,SI,NO,SI,NO,"A11, A96",Relación con la discusión del OE4. El OE
-6.7 Discusión y cierre de brechas,897,SI,NO,NO,SI,NO,,Brechas asociadas al OE5 (precisión y us
-6.7 Discusión y cierre de brechas,898,SI,NO,NO,SI,SI,,B5.1 Instrumentos de usabilidad calibrad
-6.7 Discusión y cierre de brechas,899,SI,NO,SI,SI,NO,,B5.2 Perspectiva del experto docente (ab
-6.7 Discusión y cierre de brechas,900,SI,SI,NO,SI,NO,A91,B5.3 Disonancia entre precisión algorítm
-6.7 Discusión y cierre de brechas,901,SI,NO,NO,SI,SI,,B5.4 Validación contextual de la precisi
-6.7 Discusión y cierre de brechas,902,SI,SI,NO,SI,NO,"A12, A120",Relación con la discusión del OE5. Las c
-6.7 Discusión y cierre de brechas,904,SI,NO,NO,SI,NO,,Balance del cierre. Ninguna de las veint
-6.7 Discusión y cierre de brechas,905,SI,SI,NO,SI,NO,A127,Correspondencia con la brecha general. L
-6.7 Discusión y cierre de brechas,906,SI,SI,NO,SI,NO,A108,Amenazas a la validez. En la validez int
-6.7 Discusión y cierre de brechas,907,SI,NO,NO,SI,SI,,Evidencia necesaria para avanzar en el c
-7 Conclusiones,911,SI,SI,NO,SI,NO,"A10, A12, A37",El objetivo general se cumple de forma p
-7 Conclusiones,913,SI,SI,NO,SI,NO,"A112, A13, A15, A16, A17",El OE1 se cumple de forma parcial. En la
-7 Conclusiones,915,SI,SI,NO,SI,NO,"A115, A123, A18, A19, A20",El OE2 se cumple de forma parcial. Frent
-7 Conclusiones,917,SI,SI,NO,SI,NO,"A21, A22, A23, A24, A25, A26",El OE3 queda demostrado experimentalment
-7 Conclusiones,919,SI,SI,NO,SI,NO,"A109, A110, A111, A27, A28, A29, A30",El OE4 queda demostrado experimentalment
-7 Conclusiones,921,SI,SI,NO,SI,NO,"A120, A31, A32",El OE5 se cumple de forma parcial y prov
-8 Recomendaciones,925,SI,SI,NO,SI,NO,A43,"Recomendación provisional, basada en res"
-8 Recomendaciones,927,SI,NO,NO,SI,NO,,"Recomendación provisional, basada en res"
-8 Recomendaciones,929,SI,SI,NO,SI,NO,"A33, A43","Recomendación provisional, basada en res"
-8 Recomendaciones,931,SI,SI,NO,SI,NO,"A30, A34","Recomendación provisional, basada en res"
-8 Recomendaciones,933,SI,NO,NO,SI,SI,,"Recomendación provisional, basada en res"
-8 Recomendaciones,934,SI,SI,SI,SI,NO,"A30, A36",Tareas experimentales pendientes (no con
+seccion,linea_del_texto_plano,leido_y_evaluado,comprobado_con_datos,contrastado_con_fuente_externa,interpretacion_examinada,pendiente,revision_fase_18,comprobaciones,inicio_del_parrafo
+"Preliminares (resumen, abstract, índices)",3,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,PROGRAMA DE ESTUDIO DE INGENIERÍA DE COM
+"Preliminares (resumen, abstract, índices)",7,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,Validación de una arquitectura multiagen
+"Preliminares (resumen, abstract, índices)",23,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,PROGRAMA DE ESTUDIO DE INGENIERÍA DE COM
+"Preliminares (resumen, abstract, índices)",27,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,Validación de una arquitectura multiagen
+"Preliminares (resumen, abstract, índices)",42,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,"A mi madre, por su amor incondicional, p"
+"Preliminares (resumen, abstract, índices)",49,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,Expreso mi más sincero agradecimiento al
+"Preliminares (resumen, abstract, índices)",50,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,Agradezco también a la Universidad Priva
+"Preliminares (resumen, abstract, índices)",51,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,"De manera especial, agradezco a mis padr"
+"Preliminares (resumen, abstract, índices)",52,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,"Finalmente, agradezco a los docentes del"
+"Preliminares (resumen, abstract, índices)",55,SI,NO,NO,NO,NO,,,La investigación tuvo como objetivo dete
+"Preliminares (resumen, abstract, índices)",56,SI,SI,NO,NO,NO,,"A12, A97",Se siguió el enfoque Design Science Rese
+"Preliminares (resumen, abstract, índices)",57,SI,SI,NO,NO,NO,,"A01, A02, A03, A04, A05, A07, A08, A09",La arquitectura cumplió los requerimient
+"Preliminares (resumen, abstract, índices)",58,SI,SI,NO,NO,NO,,"A12, A93",Los objetivos tercero y cuarto se demost
+"Preliminares (resumen, abstract, índices)",60,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Palabras clave: arquitectura multiagente
+"Preliminares (resumen, abstract, índices)",63,SI,NO,NO,NO,NO,,,The objective of this research was to de
+"Preliminares (resumen, abstract, índices)",64,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,The study followed the Design Science Re
+"Preliminares (resumen, abstract, índices)",65,SI,SI,NO,NO,NO,,"A76, A77, A78, A79",The architecture met the functional and 
+"Preliminares (resumen, abstract, índices)",66,SI,SI,NO,NO,NO,,A94,The third and fourth specific objectives
+"Preliminares (resumen, abstract, índices)",68,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Keywords: multi-agent architecture; swar
+"Preliminares (resumen, abstract, índices)",73,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,De acuerdo con el cumplimiento de las di
+"Preliminares (resumen, abstract, índices)",74,SI,NO,NO,NO,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,Desarrollada con el fin de obtener el tí
+"Preliminares (resumen, abstract, índices)",75,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,"A ustedes miembros del jurado, mostramos"
+1 Introducción,177,SI,NO,SI,NO,NO,,,"En la educación superior, las plataforma"
+1 Introducción,178,SI,NO,NO,NO,NO,,,"Para abordar este desafío, la literatura"
+1 Introducción,181,SI,NO,NO,NO,NO,,,Esta investigación tiene como propósito 
+1 Introducción,182,SI,NO,NO,NO,NO,,,La justificación del estudio se sustenta
+1 Introducción,183,SI,NO,SI,NO,NO,,,La relevancia del estudio se refuerza co
+1 Introducción,185,SI,SI,NO,NO,NO,,A12,El presente informe de tesis se estructu
+2 Planteamiento del problema,192,SI,NO,NO,NO,NO,,,¿Cuál es el efecto de una arquitectura d
+2 Planteamiento del problema,194,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,PE1: ¿Cuál es la relación entre el cumpl
+2 Planteamiento del problema,195,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,"PE2: ¿Cómo difiere el desempeño técnico,"
+2 Planteamiento del problema,196,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,PE3: ¿Cuál es el efecto de la configurac
+2 Planteamiento del problema,197,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,PE4: ¿Cuál es el desempeño computacional
+2 Planteamiento del problema,198,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,PE5: ¿Cuál es el nivel de precisión de l
+2 Planteamiento del problema,200,SI,NO,NO,NO,NO,,,El problema central que aborda esta inve
+2 Planteamiento del problema,201,SI,NO,SI,NO,NO,,,"En programación introductoria, el contex"
+2 Planteamiento del problema,202,SI,NO,SI,NO,NO,,,En la literatura revisada mediante una b
+2 Planteamiento del problema,203,SI,NO,NO,NO,NO,,,Ante este panorama se propone validar un
+2 Planteamiento del problema,206,SI,NO,NO,NO,NO,,,Determinar el efecto de una arquitectura
+2 Planteamiento del problema,208,SI,NO,NO,NO,NO,,,OE1: Determinar la relación entre el cum
+2 Planteamiento del problema,209,SI,NO,NO,NO,NO,,,OE2: Comparar estadísticamente el desemp
+2 Planteamiento del problema,210,SI,NO,NO,NO,NO,,,OE3: Determinar el efecto de la configur
+2 Planteamiento del problema,211,SI,NO,NO,NO,NO,,,OE4: Medir y comparar el desempeño compu
+2 Planteamiento del problema,212,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,OE5: Determinar el nivel de precisión de
+2 Planteamiento del problema,214,SI,NO,SI,NO,NO,,,Esta investigación es importante porque 
+2 Planteamiento del problema,216,SI,NO,NO,NO,NO,,,Esta investigación se justifica de maner
+2 Planteamiento del problema,217,SI,NO,NO,NO,NO,,,"Desde una perspectiva operativa, el estu"
+2 Planteamiento del problema,218,SI,NO,NO,NO,NO,,,Dado que la arquitectura se apoya en pri
+2 Planteamiento del problema,220,SI,NO,NO,NO,NO,,,El estudio se enfoca en un ámbito instit
+2 Planteamiento del problema,221,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,El estudio se desarrolla como prueba de 
+2 Planteamiento del problema,222,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,"El estudio no evalúa el aprendizaje, el "
+3 Marco teórico,228,SI,NO,SI,NO,NO,,,"Imamah et al. (2024), en un artículo pub"
+3 Marco teórico,229,SI,NO,NO,NO,NO,,,"El Fazazi et al. (2021), en un artículo "
+3 Marco teórico,230,SI,NO,SI,NO,NO,,,"Li et al. (2023), en un artículo publica"
+3 Marco teórico,231,SI,NO,SI,NO,NO,CONTRASTADO_CON_FUENTE_EXTERNA,,"Zheng et al. (2025), en un artículo publ"
+3 Marco teórico,232,SI,NO,NO,NO,NO,,,"Contrino et al. (2024), en un artículo p"
+3 Marco teórico,233,SI,NO,SI,NO,NO,,,"Naseer et al. (2024), en un artículo pub"
+3 Marco teórico,234,SI,NO,SI,NO,NO,,,"Troussas et al. (2023), en un artículo p"
+3 Marco teórico,235,SI,NO,SI,NO,NO,CONTRASTADO_CON_FUENTE_EXTERNA,,"Du Plooy et al. (2024), en un artículo p"
+3 Marco teórico,236,SI,NO,SI,NO,NO,,,"Gamage et al. (2022), en un artículo pub"
+3 Marco teórico,237,SI,NO,SI,NO,NO,,,"López-Goyez et al. (2026), en un artícul"
+3 Marco teórico,238,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,"De Marcos et al. (2008), en una investig"
+3 Marco teórico,239,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,"Chu et al. (2011), en una investigación "
+3 Marco teórico,240,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,"Martins et al. (2021), en un artículo pu"
+3 Marco teórico,241,SI,NO,SI,NO,NO,,,"Zhang et al. (2025), en una investigació"
+3 Marco teórico,242,SI,NO,SI,NO,NO,CONTRASTADO_CON_FUENTE_EXTERNA,,"Vaccaro et al. (2025), en una investigac"
+3 Marco teórico,243,SI,NO,NO,NO,NO,,,"Sarsa et al. (2022), en una investigació"
+3 Marco teórico,244,SI,NO,SI,NO,NO,CONTRASTADO_CON_FUENTE_EXTERNA,,"Clinton-Lisell y Litzinger (2024), en un"
+3 Marco teórico,245,SI,NO,NO,NO,NO,,,Antecedentes empíricos recientes leídos 
+3 Marco teórico,246,SI,NO,SI,NO,NO,,,Inteligencia de enjambre en problemas ed
+3 Marco teórico,247,SI,NO,SI,NO,NO,,,Mecanismos del PSO y comparación de algo
+3 Marco teórico,248,SI,NO,SI,NO,NO,,,Sistemas multiagente educativos (OE1 y O
+3 Marco teórico,249,SI,NO,SI,NO,NO,,,Adaptación multimodal y precisión de la 
+3 Marco teórico,250,SI,NO,SI,NO,NO,,,Usabilidad técnica con SUS (OE5). Los va
+3 Marco teórico,251,SI,NO,SI,NO,NO,,,Rendimiento computacional (OE4). Las med
+3 Marco teórico,252,SI,NO,NO,SI,NO,INTERPRETACION_EXAMINADA_CON_OBSERVACION,,"En síntesis, los antecedentes revisados "
+3 Marco teórico,253,SI,NO,SI,NO,NO,,,La búsqueda bibliográfica se realizó ent
+3 Marco teórico,254,SI,SI,SI,NO,NO,,A130,Nivel de lectura de las fuentes. Las ref
+3 Marco teórico,257,SI,NO,SI,NO,NO,,,La integración de arquitecturas multiage
+3 Marco teórico,258,SI,NO,SI,NO,NO,,,El surgimiento de los modelos de lenguaj
+3 Marco teórico,259,SI,NO,SI,NO,NO,,,En el ámbito de la inteligencia de enjam
+3 Marco teórico,260,SI,NO,NO,NO,NO,,,Otro algoritmo representativo de la inte
+3 Marco teórico,262,SI,NO,NO,NO,NO,,,"En esta investigación, la adaptación mul"
+3 Marco teórico,263,SI,NO,NO,NO,NO,,,La Teoría de la Carga Cognitiva de Swell
+3 Marco teórico,264,SI,NO,NO,NO,NO,,,"En complemento, la Teoría Cognitiva del "
+3 Marco teórico,265,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,Conviene distinguir la presentación mult
+3 Marco teórico,267,SI,NO,NO,NO,NO,,,El enfoque Design Science Research conci
+3 Marco teórico,268,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,"Para los sistemas adaptativos, Paramythi"
+3 Marco teórico,270,SI,NO,NO,NO,NO,,,Arquitectura multiagente (MAS): Sistema 
+3 Marco teórico,271,SI,NO,NO,NO,NO,,,Inteligencia de enjambre (Swarm Intellig
+3 Marco teórico,272,SI,NO,NO,NO,NO,,,Optimización por Colonia de Hormigas (AC
+3 Marco teórico,273,SI,NO,NO,NO,NO,,,Optimización por Enjambre de Partículas 
+3 Marco teórico,274,SI,NO,NO,NO,NO,,,Contenido educativo multimodal: Material
+3 Marco teórico,275,SI,NO,NO,NO,NO,,,Aprendizaje adaptativo: Enfoque pedagógi
+3 Marco teórico,276,SI,NO,NO,NO,NO,,,Ruta de aprendizaje (Learning Path): Sec
+3 Marco teórico,277,SI,NO,NO,NO,NO,,,Plataforma virtual de aprendizaje / LMS 
+3 Marco teórico,278,SI,NO,NO,NO,NO,,,Grafo de conocimiento: Estructura de rep
+3 Marco teórico,279,SI,NO,NO,NO,NO,,,Feromona artificial: Valor numérico util
+3 Marco teórico,280,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,F1_adapt: Métrica de concordancia de la 
+3 Marco teórico,281,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Gold standard: Conjunto de modalidades e
+3 Marco teórico,282,SI,NO,NO,NO,NO,,,"Brecha de optimalidad (ΔF): Diferencia, "
+3 Marco teórico,283,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Referencia de optimalidad: Procedimiento
+3 Marco teórico,284,SI,NO,NO,NO,NO,,,Sistema convencional operativo (decision
+3 Marco teórico,285,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,System Usability Scale (SUS): Cuestionar
+3 Marco teórico,286,SI,NO,NO,NO,NO,,,Design Science Research (DSR): Paradigma
+4 Hipótesis y variables,287,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,Nivel de Madurez Tecnológica (TRL): Esca
+4 Hipótesis y variables,290,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Los supuestos básicos del estudio son lo
+4 Hipótesis y variables,292,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,H1: La arquitectura multiagente basada e
+4 Hipótesis y variables,293,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Los criterios con que se contrasta cada 
+4 Hipótesis y variables,294,SI,SI,NO,NO,NO,,A12,Las metas de desempeño y la hipótesis ge
+4 Hipótesis y variables,295,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Correspondencia de H1 con los objetivos:
+4 Hipótesis y variables,297,SI,NO,NO,NO,NO,,,Para cada objetivo específico se fija un
+4 Hipótesis y variables,298,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Meta 1 (↔ OE1): Especificación formal de
+4 Hipótesis y variables,299,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Meta 2 (↔ OE2): Demostración formal del 
+4 Hipótesis y variables,300,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Meta 3 (↔ OE3): Modelo arquitectónico de
+4 Hipótesis y variables,301,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Meta 4 (↔ OE4): Convergencia T_conv ≤ 15
+4 Hipótesis y variables,302,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,"Meta 5 (↔ OE5): Precisión F1_adapt ≥ 0,8"
+4 Hipótesis y variables,303,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,El límite de 15 iteraciones de la Meta 4
+4 Hipótesis y variables,304,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Las Metas 2 y 3 se refieren a un benchma
+4 Hipótesis y variables,306,SI,NO,NO,NO,NO,,,Variable independiente: arquitectura mul
+4 Hipótesis y variables,307,SI,SI,NO,NO,NO,,A128,Variable dependiente: adaptación de cont
+4 Hipótesis y variables,308,SI,NO,NO,NO,NO,,,"Con los objetivos definitivos, las varia"
+4 Hipótesis y variables,309,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,"Para el OE1, la funcionalidad se operaci"
+4 Hipótesis y variables,328,SI,NO,NO,NO,NO,,,"La Tabla 2 integra el problema, los obje"
+4 Hipótesis y variables,330,SI,NO,NO,NO,NO,,,Título de la investigación: Validación d
+5 Marco metodológico,343,SI,NO,NO,NO,NO,,,"La investigación es de tipo tecnológico,"
+5 Marco metodológico,345,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La escala de niveles de madurez tecnológ
+5 Marco metodológico,347,SI,NO,NO,NO,SI,METADATOS_VERIFICADOS_SIN_CONTRASTE_DE_CONTENIDO,,El método empleado es Design Science Res
+5 Marco metodológico,349,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,El artefacto es un servicio de software 
+5 Marco metodológico,350,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La especificación comprende seis requisi
+5 Marco metodológico,368,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,El artefacto evaluado está compuesto por
+5 Marco metodológico,369,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La comunicación entre agentes es asíncro
+5 Marco metodológico,371,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Cada partícula del enjambre representa u
+5 Marco metodológico,372,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La función de aptitud es F(S) = α·Simil(
+5 Marco metodológico,373,SI,NO,NO,NO,NO,TEXTO_FORMAL_SIN_AFIRMACIONES_VERIFICABLES,,Regla de inclusión y referencia gold de 
+5 Marco metodológico,375,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,El gold standard de la especificación v3
+5 Marco metodológico,377,SI,SI,NO,NO,NO,,A101,El estudio sigue un diseño de prueba de 
+5 Marco metodológico,378,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Cada corrida oficial se rige por una esp
+5 Marco metodológico,379,SI,NO,NO,NO,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,La corrida oficial con la especificación
+5 Marco metodológico,381,SI,NO,NO,NO,NO,,,La evaluación se organiza por objetivo e
+5 Marco metodológico,390,SI,NO,NO,NO,SI,HALLAZGO,,Los experimentos de los objetivos primer
+5 Marco metodológico,391,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La búsqueda exhaustiva enumera las 3⁸ = 
+5 Marco metodológico,392,SI,NO,NO,NO,NO,,,No se emplean como líneas base experimen
+5 Marco metodológico,393,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,El sistema convencional utilizado en la 
+5 Marco metodológico,395,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La unidad experimental es el perfil sint
+5 Marco metodológico,396,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,La batería de perfiles (versión profiles
+5 Marco metodológico,397,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,En las corridas K = 10 y en la línea bas
+5 Marco metodológico,399,SI,NO,NO,NO,NO,,,Las técnicas de recolección son: (a) el 
+5 Marco metodológico,401,SI,NO,NO,NO,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,El procedimiento oficial sigue este orde
+5 Marco metodológico,403,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Para cada caso se calcula el F1 multimod
+5 Marco metodológico,404,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,"Para el contraste inferencial, la unidad"
+5 Marco metodológico,405,SI,NO,NO,NO,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,La tasa de convergencia se define como e
+5 Marco metodológico,406,SI,NO,NO,NO,NO,,,El sobrecosto de comunicación entre agen
+5 Marco metodológico,407,SI,NO,NO,NO,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,Para la línea base empírica se calculará
+5 Marco metodológico,408,SI,NO,NO,NO,NO,,,"Para los objetivos primero a cuarto, el "
+5 Marco metodológico,409,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Decisiones de análisis adoptadas en las 
+5 Marco metodológico,411,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,El formulario de validación del gold tie
+5 Marco metodológico,412,SI,NO,NO,NO,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,El cuestionario System Usability Scale t
+5 Marco metodológico,413,SI,NO,NO,NO,NO,,,Los registros automatizados del enjambre
+5 Marco metodológico,414,SI,NO,NO,NO,NO,,,"Aplicación de criterios de calidad, vali"
+5 Marco metodológico,415,SI,SI,NO,NO,NO,,"A100, A104",La validez del estudio se resguarda medi
+5 Marco metodológico,416,SI,NO,NO,SI,NO,INTERPRETACION_EXAMINADA_CON_OBSERVACION,,Como amenaza a la validez se registra un
+6 Resultados: introducción del capítulo,419,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,En este capítulo se presentan los result
+6 Resultados: introducción del capítulo,420,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Campañas experimentales N1 a N6. Entre e
+6 Resultados: introducción del capítulo,421,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,"En consecuencia, los resultados de las c"
+6 Resultados: introducción del capítulo,422,SI,NO,SI,NO,NO,,,"Campañas N8, N8b, N9b y N11 (13 a 15 de "
+6.1 OE1,425,SI,NO,NO,NO,NO,,,El primer objetivo específico busca dete
+6.1 OE1,427,SI,NO,NO,NO,NO,,,Determinar la relación entre el cumplimi
+6.1 OE1,429,SI,SI,NO,NO,NO,,"P1-01, P1-02",Resultados experimentales (no oficiales)
+6.1 OE1,448,SI,SI,NO,SI,NO,,"A43, A60, A61, A62, P1-03, P1-04, P1-05, P1-07",Interpretación experimental (no oficial)
+6.1 OE1,449,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Relación entre cumplimiento y desempeño.
+6.1 OE1,450,SI,SI,NO,NO,NO,,"P1-02, P1-06",Análisis complementario. Los numeradores
+6.1 OE1,451,SI,SI,NO,NO,NO,,"P1-08, P1-09, P1-13, P1-14, P1-15",Medición HTTP de RNF01 y RNF04 (campañas
+6.1 OE1,461,SI,SI,NO,SI,NO,VERIFICADO_CON_DATOS,,Alcance de la interpretación. La interpr
+6.1 OE1,463,SI,NO,NO,NO,NO,,,La Tabla 7 presenta la estructura del an
+6.1 OE1,479,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Análisis estadístico experimental (no of
+6.1 OE1,481,SI,NO,NO,SI,NO,INTERPRETACION_EXAMINADA_CON_OBSERVACION,,Discusión de los resultados experimental
+6.1 OE1,482,SI,NO,SI,SI,NO,,,Contraste con los antecedentes (experime
+6.1 OE1,483,SI,NO,SI,SI,NO,,,Comparación con el estado del arte (OE1)
+6.2 OE2,486,SI,NO,NO,NO,NO,,,El segundo objetivo específico busca com
+6.2 OE2,488,SI,NO,NO,NO,NO,,,Comparar estadísticamente el desempeño t
+6.2 OE2,490,SI,SI,NO,NO,NO,,P2-01,Resultados experimentales (no oficiales)
+6.2 OE2,513,SI,SI,NO,NO,NO,,P2-03,Diferencias absolutas y tamaño del efect
+6.2 OE2,527,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Tiempo de convergencia y tiempo operacio
+6.2 OE2,529,SI,SI,NO,SI,NO,,"A115, A65, A66, A67, A68",Interpretación experimental (no oficial)
+6.2 OE2,530,SI,NO,NO,SI,NO,,,Alcance de la interpretación. Para una i
+6.2 OE2,531,SI,SI,NO,NO,NO,,"P2-02, P2-04, P2-05, P2-06, P2-07, P2-08",Réplica N9b y contrastes auxiliares (cam
+6.2 OE2,550,SI,NO,NO,NO,NO,,,La Tabla 12 presenta la estructura del a
+6.2 OE2,566,SI,SI,NO,NO,NO,,P2-09,Análisis estadístico experimental (no of
+6.2 OE2,568,SI,NO,NO,SI,NO,,,Discusión de los resultados experimental
+6.2 OE2,569,SI,NO,SI,SI,NO,,,Contraste con los antecedentes (experime
+6.2 OE2,570,SI,NO,NO,SI,NO,,,Comparación con el estado del arte (OE2)
+6.3 OE3,573,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,El tercer objetivo específico busca dete
+6.3 OE3,575,SI,NO,NO,NO,NO,,,Determinar el efecto de la configuración
+6.3 OE3,577,SI,SI,NO,NO,NO,,P3-01,Resultados experimentales (no oficiales)
+6.3 OE3,586,SI,SI,NO,NO,NO,,"A59, P3-03, P3-04",Análisis de varianza. Además del ANOVA c
+6.3 OE3,601,SI,SI,NO,NO,NO,,"A39, A40, A41, A42, A43",Cautela sobre el mecanismo cognitivo. Co
+6.3 OE3,602,SI,SI,NO,NO,NO,,"A43, A44, A45, A46",Configuraciones destacadas. La configura
+6.3 OE3,603,SI,SI,NO,NO,NO,,A43,"Como resultado histórico, y no como resu"
+6.3 OE3,612,SI,SI,NO,SI,NO,,"A43, A47",Interpretación experimental (no oficial)
+6.3 OE3,613,SI,SI,NO,NO,NO,,A43,Antecedente histórico y alcance de la in
+6.3 OE3,615,SI,NO,NO,NO,NO,,,La Tabla 16 presenta la estructura del a
+6.3 OE3,631,SI,SI,NO,NO,NO,,A107,Análisis estadístico experimental (no of
+6.3 OE3,633,SI,SI,NO,SI,NO,,"A106, P3-02, P3-05",Discusión de los resultados experimental
+6.3 OE3,634,SI,NO,SI,SI,NO,,,Contraste con los antecedentes (experime
+6.3 OE3,635,SI,NO,SI,SI,NO,,,Comparación con el estado del arte (OE3)
+6.4 OE4,638,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,El cuarto objetivo específico busca medi
+6.4 OE4,640,SI,NO,NO,NO,NO,,,Medir y comparar el desempeño computacio
+6.4 OE4,642,SI,SI,NO,NO,NO,,P4-01,Resultados experimentales (no oficiales)
+6.4 OE4,652,SI,SI,NO,NO,NO,,"P4-02, P4-03",Estabilidad y capacidad. El throughput f
+6.4 OE4,653,SI,SI,NO,NO,NO,,P4-04,Campaña N8: tamaño del enjambre (N = 10 
+6.4 OE4,663,SI,SI,NO,NO,NO,,"A125, P4-05, P4-06(DIFIERE), P4-06b, P4-07, P4-08, P4-09, P4-10","Con un enjambre de 30 partículas, el P95"
+6.4 OE4,675,SI,SI,NO,NO,NO,,"P4-11, P4-12",Campaña N8b: réplica de N = 20. Se repit
+6.4 OE4,685,SI,SI,NO,NO,NO,,P4-13,Anomalía entre campañas en N = 20. El co
+6.4 OE4,686,SI,SI,NO,NO,NO,,A66,Interpretación con la ley de Little. En 
+6.4 OE4,687,SI,SI,NO,NO,NO,,"P4-14, P4-15",Campaña N11: los tres tamaños en una mis
+6.4 OE4,688,SI,SI,NO,NO,NO,,"P4-16, P4-17, P4-18, P4-19",Resultados de N11 en el tramo B. La Tabl
+6.4 OE4,721,SI,SI,NO,NO,NO,,"A30, P4-20, P4-21, P4-22, P4-23, P4-24",Cambio de régimen del equipo dentro de N
+6.4 OE4,728,SI,SI,NO,NO,NO,,"P1-09, P1-10, P1-11, P1-12, P1-13, P1-14, P1-15",RNF01 y RNF04 según N11 y las demás camp
+6.4 OE4,742,SI,NO,NO,NO,SI,HALLAZGO,,"Como antecedente exploratorio, y no como"
+6.4 OE4,751,SI,SI,NO,SI,NO,,"A58, A69, A70, A71",Interpretación experimental (no oficial)
+6.4 OE4,752,SI,SI,NO,NO,NO,,A30,Antecedente exploratorio y alcance de la
+6.4 OE4,754,SI,NO,NO,NO,NO,,,La Tabla 26 presenta la estructura del a
+6.4 OE4,770,SI,SI,NO,NO,NO,,"P4-25, P4-26, P4-27, P4-28",Análisis estadístico experimental (no of
+6.4 OE4,771,SI,SI,NO,NO,NO,,"P4-29P, P4-29T, P4-29t","Análisis estadístico de N8b, N8 y N11 (n"
+6.4 OE4,773,SI,SI,NO,SI,NO,,"A116, A117",Discusión de los resultados experimental
+6.4 OE4,774,SI,SI,NO,SI,NO,,A66,Contraste con los antecedentes (experime
+6.4 OE4,775,SI,NO,SI,SI,NO,,,Comparación con el estado del arte (OE4)
+6.5 OE5,778,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,El quinto objetivo específico busca dete
+6.5 OE5,780,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Determinar el nivel de precisión de la a
+6.5 OE5,782,SI,SI,NO,NO,NO,VERIFICADO_CON_DATOS,,Resultados experimentales y provisionale
+6.5 OE5,801,SI,SI,NO,NO,NO,,"A99, P5-02",Reproducibilidad e incertidumbre. El F1_
+6.5 OE5,802,SI,SI,NO,NO,NO,,"A126, P5-04",Diagnóstico de alineación entre la aptit
+6.5 OE5,811,SI,SI,NO,NO,NO,,P5-01,No existen respuestas del panel de exper
+6.5 OE5,822,SI,SI,NO,SI,NO,,"A73, A75, P5-03",Interpretación experimental y provisiona
+6.5 OE5,823,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Antecedente histórico y alcance de la in
+6.5 OE5,825,SI,NO,NO,NO,NO,,,La Tabla 31 presenta la estructura del a
+6.5 OE5,842,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Análisis estadístico experimental (no of
+6.5 OE5,844,SI,SI,NO,SI,NO,,A102,Discusión de los resultados experimental
+6.5 OE5,845,SI,NO,NO,SI,NO,INTERPRETACION_EXAMINADA_CON_OBSERVACION,,Contraste con los antecedentes (experime
+6.5 OE5,846,SI,NO,SI,SI,NO,,,Comparación con el estado del arte (OE5)
+6.5 OE5,847,SI,NO,NO,NO,NO,COHERENTE_CON_EL_PROYECTO,,Síntesis de la comparación con el estado
+6.6 Cierre de brechas,857,SI,NO,NO,SI,NO,INTERPRETACION_EXAMINADA_CON_OBSERVACION,,Cierre de brechas (provisional). La brec
+6.6 Cierre de brechas,866,SI,NO,NO,SI,NO,,,Con la evidencia disponible no se declar
+6.6 Cierre de brechas,867,SI,SI,NO,SI,NO,VERIFICADO_CON_DATOS,,Estado de las brechas con la evidencia d
+6.7 Discusión y cierre de brechas,869,SI,NO,NO,SI,NO,INTERPRETACION_EXAMINADA_CON_OBSERVACION,,Alcance y criterio. Este apartado contra
+6.7 Discusión y cierre de brechas,870,SI,NO,NO,SI,NO,,,Criterio de estado. Para cada brecha se 
+6.7 Discusión y cierre de brechas,871,SI,SI,NO,SI,NO,,A58,Síntesis de los resultados. En las condi
+6.7 Discusión y cierre de brechas,872,SI,SI,NO,SI,NO,,A12,Hipótesis general. La hipótesis general 
+6.7 Discusión y cierre de brechas,873,SI,NO,NO,SI,NO,,,Brechas asociadas al OE1 (requisitos y d
+6.7 Discusión y cierre de brechas,874,SI,SI,NO,SI,NO,,"A82, A83",B1.1 Marcos estandarizados de evaluación
+6.7 Discusión y cierre de brechas,875,SI,SI,NO,SI,NO,VERIFICADO_CON_DATOS,,B1.2 Desconexión entre métricas de softw
+6.7 Discusión y cierre de brechas,876,SI,SI,NO,SI,NO,,"A83, A84",B1.3 Degradación de la confiabilidad ant
+6.7 Discusión y cierre de brechas,877,SI,SI,NO,SI,NO,,"A31, A52, A53",B1.4 Trazabilidad entre la heurística de
+6.7 Discusión y cierre de brechas,878,SI,SI,NO,SI,NO,,A17,Relación con la discusión del OE1. Las b
+6.7 Discusión y cierre de brechas,879,SI,NO,NO,SI,NO,,,Brechas asociadas al OE2 (comparación co
+6.7 Discusión y cierre de brechas,880,SI,SI,NO,SI,NO,,A85,B2.1 Líneas base obsoletas o triviales (
+6.7 Discusión y cierre de brechas,881,SI,SI,NO,SI,NO,,"A50, A51",Compromiso entre eficiencia y optimalida
+6.7 Discusión y cierre de brechas,882,SI,SI,NO,SI,NO,,"A05, A153, A57",B2.2 Invisibilización del sobrecosto de 
+6.7 Discusión y cierre de brechas,883,SI,SI,NO,SI,NO,,"A11, A54",B2.3 Comparativas bajo alta concurrencia
+6.7 Discusión y cierre de brechas,884,SI,SI,NO,SI,NO,,A86,B2.4 Estandarización del tiempo de conve
+6.7 Discusión y cierre de brechas,885,SI,NO,NO,SI,NO,,,"Brechas asociadas al OE3 (roles, protoco"
+6.7 Discusión y cierre de brechas,886,SI,SI,NO,SI,NO,VERIFICADO_CON_DATOS,,B3.1 Asignación dinámica de roles (abier
+6.7 Discusión y cierre de brechas,887,SI,SI,NO,SI,NO,,"A05, A56, A57",B3.2 Protocolos de comunicación asíncron
+6.7 Discusión y cierre de brechas,888,SI,SI,SI,SI,NO,,A88,B3.3 Rigidez de los mecanismos de actual
+6.7 Discusión y cierre de brechas,889,SI,NO,NO,SI,NO,,,B3.4 Topologías de comunicación restring
+6.7 Discusión y cierre de brechas,890,SI,SI,NO,SI,NO,,A95,Relación con la discusión del OE3. El OE
+6.7 Discusión y cierre de brechas,891,SI,NO,NO,SI,NO,,,Brechas asociadas al OE4 (desempeño bajo
+6.7 Discusión y cierre de brechas,892,SI,NO,NO,SI,NO,,,B4.1 Cargas no lineales o en ráfaga (abi
+6.7 Discusión y cierre de brechas,893,SI,NO,NO,SI,NO,COHERENTE_CON_EL_PROYECTO,,B4.2 Simulación bajo restricciones de re
+6.7 Discusión y cierre de brechas,894,SI,SI,NO,SI,NO,,A89,B4.3 Resiliencia ante fallos de agentes 
+6.7 Discusión y cierre de brechas,895,SI,SI,NO,SI,NO,,A30,B4.4 Análisis de sensibilidad multidimen
+6.7 Discusión y cierre de brechas,896,SI,SI,NO,SI,NO,,"A11, A96",Relación con la discusión del OE4. El OE
+6.7 Discusión y cierre de brechas,897,SI,NO,NO,SI,NO,,,Brechas asociadas al OE5 (precisión y us
+6.7 Discusión y cierre de brechas,898,SI,NO,NO,SI,NO,AFIRMACION_PROSPECTIVA_O_NORMATIVA,,B5.1 Instrumentos de usabilidad calibrad
+6.7 Discusión y cierre de brechas,899,SI,NO,SI,SI,NO,,,B5.2 Perspectiva del experto docente (ab
+6.7 Discusión y cierre de brechas,900,SI,SI,NO,SI,NO,,A91,B5.3 Disonancia entre precisión algorítm
+6.7 Discusión y cierre de brechas,901,SI,SI,NO,SI,NO,VERIFICADO_CON_DATOS,,B5.4 Validación contextual de la precisi
+6.7 Discusión y cierre de brechas,902,SI,SI,NO,SI,NO,,"A12, A120",Relación con la discusión del OE5. Las c
+6.7 Discusión y cierre de brechas,904,SI,NO,NO,SI,NO,,,Balance del cierre. Ninguna de las veint
+6.7 Discusión y cierre de brechas,905,SI,SI,NO,SI,NO,,A127,Correspondencia con la brecha general. L
+6.7 Discusión y cierre de brechas,906,SI,SI,NO,SI,NO,,A108,Amenazas a la validez. En la validez int
+6.7 Discusión y cierre de brechas,907,SI,NO,NO,SI,NO,COHERENTE_CON_EL_PROYECTO,,Evidencia necesaria para avanzar en el c
+7 Conclusiones,911,SI,SI,NO,SI,NO,,"A10, A12, A37",El objetivo general se cumple de forma p
+7 Conclusiones,913,SI,SI,NO,SI,NO,,"A112, A13, A15, A16, A17",El OE1 se cumple de forma parcial. En la
+7 Conclusiones,915,SI,SI,NO,SI,NO,,"A115, A123, A18, A19, A20",El OE2 se cumple de forma parcial. Frent
+7 Conclusiones,917,SI,SI,NO,SI,NO,,"A21, A22, A23, A24, A25, A26",El OE3 queda demostrado experimentalment
+7 Conclusiones,919,SI,SI,NO,SI,NO,,"A109, A110, A111, A27, A28, A29, A30",El OE4 queda demostrado experimentalment
+7 Conclusiones,921,SI,SI,NO,SI,NO,,"A120, A31, A32",El OE5 se cumple de forma parcial y prov
+8 Recomendaciones,925,SI,SI,NO,SI,NO,,A43,"Recomendación provisional, basada en res"
+8 Recomendaciones,927,SI,NO,NO,SI,NO,,,"Recomendación provisional, basada en res"
+8 Recomendaciones,929,SI,SI,NO,SI,NO,,"A33, A43","Recomendación provisional, basada en res"
+8 Recomendaciones,931,SI,SI,NO,SI,NO,,"A30, A34","Recomendación provisional, basada en res"
+8 Recomendaciones,933,SI,SI,NO,SI,NO,VERIFICADO_CON_DATOS,,"Recomendación provisional, basada en res"
+8 Recomendaciones,934,SI,SI,SI,SI,NO,,"A30, A36",Tareas experimentales pendientes (no con
