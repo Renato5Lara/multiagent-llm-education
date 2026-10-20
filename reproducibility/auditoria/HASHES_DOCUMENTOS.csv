@@ -1,0 +1,6 @@
+documento,sha256,paginas_con_word,estado,nota
+original D2.9.7 (canónico),a6bb2934de7fd5123ca18229cfc02acf17a555aaa87f509706fd98ab3c396edf,267,INTACTO,canónico: no se modifica
+copia corregida de la Tabla 13,1bd0894c9586e4330b2f5d61851cf33eb8c6a5242187906f4564752ac4ae13c3,267,INTACTA,base de la copia de revisión (fase 12)
+copia de revisión factual V1,050a0c111ee61f9fdf57b886934a0631531913a838bcd16393f898ee69c6a6ae,267,INTACTA,12 sustituciones (R1–R12); no se modifica
+copia de revisión factual V2,c6716c4ca9bb599da1bd339c1afedfbb3b196d3cc9fae386b7982e038b979bad,268,SUPERADA,13 sustituciones más (R13–R25); índice desactualizado (se actualiza al volver a calcular los campos) y una página casi vacía (p. 141); sustituida por V3
+copia de revisión factual V3,2949d91a79e86c12fc591a98fa0b8cab8ab8876f69fdc885b3712c509f00a509,267,VIGENTE (no definitiva),V2 más R26–R31; 267 páginas; el índice no cambia al actualizar campos

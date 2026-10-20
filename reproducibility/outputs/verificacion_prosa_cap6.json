@@ -1,0 +1,1444 @@
+[
+ {
+  "id": "P1-01",
+  "seccion": "6.1.3 Presentación (OE1)",
+  "afirmacion": "14 condiciones experimentales (7 del OE3 + 8 del OE4, una compartida)",
+  "esperado": 14,
+  "observado": 14,
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-02",
+  "seccion": "6.1.3 Presentación (OE1)",
+  "afirmacion": "9 500 ciclos en proceso: 6 300 (OE3) + 3 200 (OE4)",
+  "esperado": [
+   6300,
+   3200,
+   9500
+  ],
+  "observado": [
+   6300,
+   3200,
+   9500
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-03",
+  "seccion": "6.1.3 Interpretación",
+  "afirmacion": "8 700 observaciones con 1 a 25 usuarios",
+  "esperado": 8700,
+  "observado": 8700,
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-04",
+  "seccion": "6.1.3 Interpretación",
+  "afirmacion": "6 300 = 72 % del agregado",
+  "esperado": 72,
+  "observado": 72,
+  "tolerancia": 0.5,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-05",
+  "seccion": "6.1.3 Interpretación",
+  "afirmacion": "800 observaciones del OE4 con 1 usuario; 82 % del agregado con 1 usuario",
+  "esperado": [
+   800,
+   82
+  ],
+  "observado": [
+   800,
+   82
+  ],
+  "tolerancia": 0.5,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-06",
+  "seccion": "6.1.3 Análisis complementario",
+  "afirmacion": "T_conv mediano por ciclo: 68,6 ms con despacho concurrente y 101,5 ms con secuencial (ciclos del OE3)",
+  "esperado": [
+   68.6,
+   101.5
+  ],
+  "observado": [
+   68.56,
+   101.5
+  ],
+  "tolerancia": 0.05,
+  "estado": "COINCIDE",
+  "nota": "68,6 ms es la mediana de los 9 500 ciclos de OE3 y OE4 con despacho concurrente (solo OE3: 59.2 ms); 101,5 ms, la de los 900 ciclos secuenciales"
+ },
+ {
+  "id": "P1-07",
+  "seccion": "6.1.3 Interpretación",
+  "afirmacion": "k_stop máximo de 8 sin llegar a k_max (tasa de convergencia: todos los ciclos paran por épsilon)",
+  "esperado": [
+   8,
+   6,
+   1.0
+  ],
+  "observado": [
+   8,
+   6,
+   1.0
+  ],
+  "tolerancia": 0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-08",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "419 corridas válidas, 0 errores y 0 timeouts",
+  "esperado": [
+   419,
+   0,
+   0
+  ],
+  "observado": [
+   419,
+   0,
+   0
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-09",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "18 corridas con ≥ 20 req/s, todas N = 10 del tramo B de N11 (máx. 21,99); 0 de las otras 401",
+  "esperado": [
+   18,
+   true,
+   21.99,
+   401
+  ],
+  "observado": [
+   18,
+   true,
+   21.99,
+   401
+  ],
+  "tolerancia": 0.005,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-10",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "por carga con N = 10 del tramo B: 0 de 9 (1), 5 de 9 (5), 5 de 9 (10), 5 de 9 (25), 1 de 9 (50), 2 de 8 (100)",
+  "esperado": [
+   [
+    0,
+    9
+   ],
+   [
+    5,
+    9
+   ],
+   [
+    5,
+    9
+   ],
+   [
+    5,
+    9
+   ],
+   [
+    1,
+    9
+   ],
+   [
+    2,
+    8
+   ]
+  ],
+  "observado": [
+   [
+    0,
+    9
+   ],
+   [
+    5,
+    9
+   ],
+   [
+    5,
+    9
+   ],
+   [
+    5,
+    9
+   ],
+   [
+    1,
+    9
+   ],
+   [
+    2,
+    8
+   ]
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-11",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "medias de celda de 20,1 req/s con 5 usuarios y 20,05 con 25; 12,6 a 19,4 en las demás cargas",
+  "esperado": [
+   20.1,
+   20.05,
+   12.6,
+   19.4
+  ],
+  "observado": [
+   20.1,
+   20.05,
+   12.58,
+   19.41
+  ],
+  "tolerancia": 0.06,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-12",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "ninguna corrida de N = 20 (máx. 17,6), N = 30 (15,6), tramo A (11,7), N4+N8+N8b (16,8) alcanzó 20 req/s",
+  "esperado": [
+   17.6,
+   15.6,
+   11.7,
+   16.8
+  ],
+  "observado": [
+   17.64,
+   15.61,
+   11.73,
+   16.8
+  ],
+  "tolerancia": 0.06,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-13",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "RNF01 (P95 < 2 s): todas las corridas con 1, 5 y 10 usuarios de las cuatro campañas",
+  "esperado": true,
+  "observado": true,
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": "máximo con 10 usuarios: 1954 ms"
+ },
+ {
+  "id": "P1-14",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "con 25 usuarios solo 8 de 9 con N = 10 del tramo B (media de celda 1 890 ms) y ninguna otra; 2 616 ms (N = 20) y 2 598 ms (N = 30)",
+  "esperado": [
+   8,
+   9,
+   1890,
+   2616,
+   2598,
+   0
+  ],
+  "observado": [
+   8,
+   9,
+   1890.0,
+   2616.0,
+   2598.0,
+   0
+  ],
+  "tolerancia": 0.5,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P1-15",
+  "seccion": "6.1.3 Medición HTTP",
+  "afirmacion": "con 50 y 100 usuarios, en ninguna corrida",
+  "esperado": 0,
+  "observado": 0,
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-01",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "N2: 80 corridas, 10 por sistema y carga, 0 errores y 0 timeouts",
+  "esperado": [
+   80,
+   10,
+   0,
+   0
+  ],
+  "observado": [
+   80,
+   10,
+   0,
+   0
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-02",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "N9b: 160 corridas válidas con la propuesta, decision_table, rules y bruteforce, 0 errores y 0 timeouts",
+  "esperado": [
+   160,
+   4,
+   0,
+   0
+  ],
+  "observado": [
+   160,
+   4,
+   0,
+   0
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-03",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "con 25 usuarios, P95 2 135 ms mayor y throughput 251 req/s menor que decision_table",
+  "esperado": [
+   2135,
+   -251
+  ],
+  "observado": [
+   2135.0,
+   -251.5
+  ],
+  "tolerancia": 0.6,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-04",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "razón N9b/N2 del enjambre de 0,95 a 1,06; ninguna diferencia significativa tras Holm (m = 16)",
+  "esperado": [
+   0.95,
+   1.06,
+   0
+  ],
+  "observado": [
+   0.9459,
+   1.056,
+   0
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-05",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "decision_table: P95 de 1,15 a 1,55 veces y throughput de 0,66 a 0,76 veces el de N2; 7 de 8 diferencias significativas",
+  "esperado": [
+   1.15,
+   1.55,
+   0.66,
+   0.76,
+   7
+  ],
+  "observado": [
+   1.152,
+   1.547,
+   0.6587,
+   0.757,
+   7
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-06",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "tiempo de decisión: 1 036 ms (enjambre) frente a 366 ms (bruteforce) con 25 usuarios; 60,1 frente a 86,2 ms con 1 usuario",
+  "esperado": [
+   1036,
+   366,
+   60.1,
+   86.2
+  ],
+  "observado": [
+   1036.0,
+   366.1,
+   60.13,
+   86.16
+  ],
+  "tolerancia": 0.6,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-07",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "frente a bruteforce: P95 de 0,76 a 1,05 sin diferencias significativas; throughput 1,13 a 1,51 veces",
+  "esperado": [
+   0.76,
+   1.05,
+   0,
+   1.13,
+   1.51
+  ],
+  "observado": [
+   0.7587,
+   1.051,
+   0,
+   1.132,
+   1.513
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P2-08",
+  "seccion": "6.2.3 Presentación (OE2)",
+  "afirmacion": "throughput significativo con Holm con 5, 10 y 25 usuarios (p de Holm 0,019 a 0,032) y no con 1 usuario (p = 0,28)",
+  "esperado": [
+   3,
+   0.28
+  ],
+  "observado": [
+   3,
+   0.2826
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": "p de Holm (5, 10, 25): [0.019, 0.019, 0.032]; con 1 usuario el p sin ajustar es 0.071 y el de Holm 0.28"
+ },
+ {
+  "id": "P2-09",
+  "seccion": "6.2.5 Análisis estadístico",
+  "afirmacion": "Mann-Whitney p = 1,8 × 10⁻⁴ en las ocho comparaciones y δ de Cliff de ±1",
+  "esperado": [
+   0.00018,
+   1.0
+  ],
+  "observado": [
+   0.0001827,
+   1.0
+  ],
+  "tolerancia": 5e-05,
+  "estado": "COINCIDE",
+  "nota": "p de Mann-Whitney (asintótico de scipy) entre 1.83e-04 y 1.83e-04; |δ| mínimo 1.00"
+ },
+ {
+  "id": "P3-01",
+  "seccion": "6.3.3 Presentación (OE3)",
+  "afirmacion": "240 corridas, 24 000 ciclos, 48 condiciones, 5 lotes por condición",
+  "esperado": [
+   240,
+   24000,
+   48,
+   5
+  ],
+  "observado": [
+   240,
+   24000,
+   48,
+   5
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P3-02",
+  "seccion": "6.3.6 Discusión",
+  "afirmacion": "la brecha respecto del óptimo y la función de aptitud son la misma señal (gap = F_opt − F)",
+  "esperado": 0.0,
+  "observado": 1.544e-16,
+  "tolerancia": 1e-09,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P3-03",
+  "seccion": "6.3.3 Análisis de varianza",
+  "afirmacion": "ANOVA tipo II con efectos principales e interacciones de dos factores: R² ≥ 0,977 y 219 grados de libertad residuales",
+  "esperado": [
+   0.977,
+   219
+  ],
+  "observado": [
+   0.9767,
+   219
+  ],
+  "tolerancia": 0.0005,
+  "estado": "COINCIDE",
+  "nota": "R² por respuesta (T_conv en logaritmo): t_conv_ms 0.9843, k_stop 0.9767, gap_vs_optimum 0.9833, n_messages 0.9879, F 0.9833"
+ },
+ {
+  "id": "P3-04",
+  "seccion": "6.3.3 Análisis de varianza",
+  "afirmacion": "Holm sobre 15 términos por respuesta (5 principales + 10 interacciones de dos factores)",
+  "esperado": 15,
+  "observado": 15,
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P3-05",
+  "seccion": "6.3.6 Discusión",
+  "afirmacion": "valores p por permutación con piso en 0,001 (999 permutaciones)",
+  "esperado": 0.001,
+  "observado": 0.001,
+  "tolerancia": 1e-12,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-01",
+  "seccion": "6.4.3 Presentación (OE4) — N4",
+  "afirmacion": "N4: 60 corridas, 10 por carga, 0 errores y 0 timeouts",
+  "esperado": [
+   60,
+   10,
+   0,
+   0
+  ],
+  "observado": [
+   60,
+   10,
+   0,
+   0
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-02",
+  "seccion": "6.4.3 Presentación (OE4) — N4",
+  "afirmacion": "throughput de 10,6 req/s con 1 usuario y de 15,3 a 15,9 req/s desde 5; P95 de 121 a 10 114 ms; T_conv HTTP de 66 a 4 035 ms",
+  "esperado": [
+   10.6,
+   15.3,
+   15.9,
+   121,
+   10114,
+   66,
+   4035
+  ],
+  "observado": [
+   10.64,
+   15.29,
+   15.93,
+   120.6,
+   10110.0,
+   66.0,
+   4035.0
+  ],
+  "tolerancia": 0.6,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-03",
+  "seccion": "6.4.3 Presentación (OE4) — N4",
+  "afirmacion": "ninguna de las 60 corridas alcanzó 20 req/s; P95 < 2 000 ms en las 10 corridas con 10 usuarios y > 2 000 ms en las 10 con 25",
+  "esperado": [
+   0,
+   10,
+   10
+  ],
+  "observado": [
+   0,
+   10,
+   10
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-04",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "N8: 120 corridas, 0 errores y 0 timeouts",
+  "esperado": [
+   120,
+   0,
+   0
+  ],
+  "observado": [
+   120,
+   0,
+   0
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-05",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "N = 30 frente a N = 10: P95 ×1,21–1,37, throughput ×0,69–0,77, T_conv HTTP ×1,29–1,42",
+  "esperado": [
+   1.21,
+   1.37,
+   0.69,
+   0.77,
+   1.29,
+   1.42
+  ],
+  "observado": [
+   1.206,
+   1.373,
+   0.6908,
+   0.77,
+   1.288,
+   1.42
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-06",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "p de Holm ≤ 7 × 10⁻⁹ en el P95 y ≤ 5 × 10⁻¹¹ en el throughput en todas las cargas",
+  "esperado": [
+   7e-09,
+   5e-11
+  ],
+  "observado": [
+   2.089e-07,
+   1.537e-10
+  ],
+  "tolerancia": 0,
+  "estado": "DIFIERE",
+  "nota": "DISCREPANCIA con la Tabla 19 del mismo apartado: el mayor p de Holm del P95 es 2.1e-07 (25 usuarios) y el del throughput 1.5e-10; la columna «mayor p de Holm» de la Tabla 19 (6,9 × 10⁻⁹ … 2,1 × 10⁻⁷) se reproduce exactamente"
+ },
+ {
+  "id": "P4-06b",
+  "seccion": "6.4.3 Tabla 19",
+  "afirmacion": "Tabla 19, columna «mayor p de Holm (m = 6 por métrica)»",
+  "esperado": [
+   6.9e-09,
+   1.5e-10,
+   1.8e-13,
+   2.1e-07,
+   4.4e-15,
+   2.3e-17
+  ],
+  "observado": [
+   6.919e-09,
+   1.482e-10,
+   1.791e-13,
+   2.089e-07,
+   4.365e-15,
+   2.286e-17
+  ],
+  "tolerancia": [
+   4.1399999999999997e-10,
+   9e-12,
+   1.0799999999999999e-14,
+   1.26e-08,
+   2.6399999999999995e-16,
+   1.38e-18
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-07",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "ρ de Spearman carga–P95 = 0,986 en cada N; Kruskal-Wallis p = 4,2 × 10⁻¹¹ en cada N",
+  "esperado": [
+   0.986,
+   0.986,
+   4.2e-11,
+   4.2e-11
+  ],
+  "observado": [
+   0.9862,
+   0.9862,
+   4.228e-11,
+   4.228e-11
+  ],
+  "tolerancia": [
+   0.0006,
+   0.0006,
+   5e-12,
+   5e-12
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-08",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "meseta de throughput: 10,9 a 11,3 req/s con N = 10 y 7,7 a 8,1 con N = 30",
+  "esperado": [
+   10.9,
+   11.3,
+   7.7,
+   8.1
+  ],
+  "observado": [
+   10.88,
+   11.26,
+   7.677,
+   8.079
+  ],
+  "tolerancia": 0.06,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-09",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "ninguna de las 180 corridas de N4 y N8 alcanzó 20 req/s (máximo de celda 15,9)",
+  "esperado": [
+   0,
+   15.9
+  ],
+  "observado": [
+   0,
+   15.93
+  ],
+  "tolerancia": 0.06,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-10",
+  "seccion": "6.4.3 — N8",
+  "afirmacion": "P95 < 2 000 ms en las 30 corridas con 1, 5 y 10 usuarios de cada N (a 10 usuarios, 1 364 ms con N = 10 y 1 873 ms con N = 30); P95 más alto de celda 17,9 s",
+  "esperado": [
+   60,
+   1364,
+   1873,
+   17.9
+  ],
+  "observado": [
+   60,
+   1364.0,
+   1873.0,
+   17.94
+  ],
+  "tolerancia": [
+   0,
+   0.5,
+   0.5,
+   0.06
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-11",
+  "seccion": "6.4.3 — N8b",
+  "afirmacion": "N8b: 60 corridas válidas, 0 errores, 0 timeouts",
+  "esperado": [
+   60,
+   0,
+   0
+  ],
+  "observado": [
+   60,
+   0,
+   0
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-12",
+  "seccion": "6.4.3 — N8b",
+  "afirmacion": "N8b frente a N4: razones de 0,98 a 1,00 en P95 y de 0,99 a 1,03 en throughput; menor p de Holm = 0,15 (m = 12)",
+  "esperado": [
+   0.98,
+   1.0,
+   0.99,
+   1.03,
+   0.15
+  ],
+  "observado": [
+   0.9772,
+   0.9975,
+   0.9937,
+   1.029,
+   0.1538
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-13",
+  "seccion": "6.4.3 — N8b",
+  "afirmacion": "N8b frente a N8: N = 20/N = 10 P95 ×0,69–0,73, throughput ×1,35–1,43; N = 30/N = 20 P95 ×1,76–1,93, throughput ×0,49–0,57",
+  "esperado": [
+   0.69,
+   0.73,
+   1.35,
+   1.43,
+   1.76,
+   1.93,
+   0.49,
+   0.57
+  ],
+  "observado": [
+   0.6851,
+   0.7305,
+   1.345,
+   1.433,
+   1.76,
+   1.931,
+   0.4858,
+   0.5725
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-14",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "N11: 179 válidas; tramo A (ejecuciones 1–17) 17 corridas: 6, 6 y 5 para N = 10, 20, 30; tramo B 162: 53, 54 y 55",
+  "esperado": [
+   179,
+   6,
+   6,
+   5,
+   53,
+   54,
+   55
+  ],
+  "observado": [
+   179,
+   6,
+   6,
+   5,
+   53,
+   54,
+   55
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-15",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "tramo B balanceado en N: 8 a 10 corridas por celda",
+  "esperado": [
+   8,
+   10
+  ],
+  "observado": [
+   8,
+   10
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-16",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "N = 20 frente a N = 10: P95 ×1,15–1,36, throughput ×0,75–0,86, T_conv ×1,16–1,30; significativo en 5 de 6 cargas por métrica",
+  "esperado": [
+   1.15,
+   1.36,
+   0.75,
+   0.86,
+   1.16,
+   1.3,
+   5,
+   5,
+   5
+  ],
+  "observado": [
+   1.146,
+   1.363,
+   0.7471,
+   0.8577,
+   1.158,
+   1.301,
+   5,
+   5,
+   5
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-17",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "N = 30 frente a N = 10: P95 ×1,22–1,38, throughput ×0,68–0,79, T_conv ×1,27–1,42; significativo en las 6 cargas",
+  "esperado": [
+   1.22,
+   1.38,
+   0.68,
+   0.79,
+   1.27,
+   1.42,
+   6,
+   6,
+   6
+  ],
+  "observado": [
+   1.216,
+   1.375,
+   0.6816,
+   0.7883,
+   1.268,
+   1.425,
+   6,
+   6,
+   6
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-18",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "N = 30 frente a N = 20: P95 ×0,99–1,12 (2 de 6), throughput ×0,87–0,93 (4 de 6), T_conv ×1,03–1,12 (3 de 6)",
+  "esperado": [
+   0.99,
+   1.12,
+   0.87,
+   0.93,
+   1.03,
+   1.12,
+   2,
+   4,
+   3
+  ],
+  "observado": [
+   0.9879,
+   1.116,
+   0.8705,
+   0.9265,
+   1.026,
+   1.116,
+   2,
+   4,
+   3
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-19",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "deriva con el orden de ejecución en el tramo B: ρ de Spearman −0,09 (P95), 0,13 (throughput), −0,12 (T_conv); no significativos",
+  "esperado": [
+   -0.09,
+   0.13,
+   -0.12
+  ],
+  "observado": [
+   -0.08943,
+   0.133,
+   -0.1203
+  ],
+  "tolerancia": 0.01,
+  "estado": "COINCIDE",
+  "nota": "p: 0.26, 0.09, 0.13"
+ },
+ {
+  "id": "P4-20",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "cambio de régimen B/A (OLS log(y) ~ carga + N + tramo): P95 ×0,61, T_conv ×0,60, throughput ×1,62",
+  "esperado": [
+   0.61,
+   0.6,
+   1.62
+  ],
+  "observado": [
+   0.6149,
+   0.5989,
+   1.62
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-21",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "razón B/A por tamaño: P95 0,62; 0,62; 0,61 y throughput 1,61; 1,62; 1,63",
+  "esperado": [
+   0.62,
+   0.62,
+   0.61,
+   1.61,
+   1.62,
+   1.63
+  ],
+  "observado": [
+   0.6175,
+   0.62,
+   0.6085,
+   1.613,
+   1.624,
+   1.627
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-22",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "N8 frente a N11-A (N = 10 y N = 30): P95 1,07 y 1,06; throughput 0,93; frente a N11-B: P95 1,73 y 1,74; throughput 0,58 y 0,57",
+  "esperado": [
+   1.07,
+   1.06,
+   0.93,
+   1.73,
+   1.74,
+   0.58,
+   0.57
+  ],
+  "observado": [
+   1.069,
+   1.059,
+   0.9323,
+   1.732,
+   1.744,
+   0.5782,
+   0.571
+  ],
+  "tolerancia": 0.015,
+  "estado": "COINCIDE",
+  "nota": "el texto dice «0,93 en throughput» para N8/N11-A sin distinguir N; se compara con N = 10"
+ },
+ {
+  "id": "P4-23",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "N8b frente a N11-B (N = 20): P95 0,98 y throughput 1,02; frente a N11-A: 0,61 y 1,65",
+  "esperado": [
+   0.98,
+   1.02,
+   0.61,
+   1.65
+  ],
+  "observado": [
+   0.9842,
+   1.016,
+   0.6102,
+   1.65
+  ],
+  "tolerancia": 0.015,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-24",
+  "seccion": "6.4.3 — N11",
+  "afirmacion": "tramo A: memoria libre 7,2 a 10,0 GiB, media 9,2, CPU media 29 %",
+  "esperado": [
+   7.2,
+   10.0,
+   9.2,
+   29
+  ],
+  "observado": [
+   7.22,
+   9.97,
+   9.153,
+   28.89
+  ],
+  "tolerancia": [
+   0.06,
+   0.06,
+   0.06,
+   0.5
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-25",
+  "seccion": "6.4.5 Análisis estadístico (OE4)",
+  "afirmacion": "Kruskal-Wallis de la carga en N4: H = 57,4 y p = 4,2 × 10⁻¹¹ (T_conv, P95); H = 43,3 y p = 3,2 × 10⁻⁸ (throughput)",
+  "esperado": [
+   57.4,
+   4.2e-11,
+   43.3,
+   3.2e-08
+  ],
+  "observado": [
+   57.38,
+   4.228e-11,
+   43.31,
+   3.202e-08
+  ],
+  "tolerancia": [
+   0.06,
+   5e-12,
+   0.06,
+   5e-09
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-26",
+  "seccion": "6.4.5 Análisis estadístico (OE4)",
+  "afirmacion": "ρ de Spearman carga–P95 en N4 = 0,986",
+  "esperado": 0.986,
+  "observado": 0.9862,
+  "tolerancia": 0.0006,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-27",
+  "seccion": "6.4.5 Análisis estadístico (OE4)",
+  "afirmacion": "pasos consecutivos: P95 ×3,95 de 1 a 5 usuarios y ×2,0–2,5 en los siguientes; throughput ×1,5 de 1 a 5 y sin diferencia entre 5 y 100",
+  "esperado": [
+   3.95,
+   2.0,
+   2.5,
+   1.5
+  ],
+  "observado": [
+   3.952,
+   2.028,
+   2.528,
+   1.497
+  ],
+  "tolerancia": 0.06,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-28",
+  "seccion": "6.4.5 Análisis estadístico (OE4)",
+  "afirmacion": "throughput sin diferencia detectable entre 5 y 100 usuarios (Holm m = 5 sobre pasos consecutivos)",
+  "esperado": 0,
+  "observado": 0,
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P4-29P",
+  "seccion": "6.4.5 N11",
+  "afirmacion": "η² parcial de N sobre P95 = 0.63; tramo entre 0,71 y 0,78; interacción N × carga no significativa",
+  "esperado": [
+   0.63,
+   true
+  ],
+  "observado": [
+   0.6282,
+   true
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": "η² parcial del tramo 0.707; p de la interacción 0.059"
+ },
+ {
+  "id": "P4-29t",
+  "seccion": "6.4.5 N11",
+  "afirmacion": "η² parcial de N sobre throughput = 0.74; tramo entre 0,71 y 0,78; interacción N × carga no significativa",
+  "esperado": [
+   0.74,
+   true
+  ],
+  "observado": [
+   0.7353,
+   true
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": "η² parcial del tramo 0.754; p de la interacción 0.292"
+ },
+ {
+  "id": "P4-29T",
+  "seccion": "6.4.5 N11",
+  "afirmacion": "η² parcial de N sobre T_conv = 0.71; tramo entre 0,71 y 0,78; interacción N × carga no significativa",
+  "esperado": [
+   0.71,
+   true
+  ],
+  "observado": [
+   0.7067,
+   true
+  ],
+  "tolerancia": 0.006,
+  "estado": "COINCIDE",
+  "nota": "η² parcial del tramo 0.777; p de la interacción 0.233"
+ },
+ {
+  "id": "P5-01",
+  "seccion": "6.5.3 Resultados históricos",
+  "afirmacion": "F1 v2 histórico K = 10: media 0,6407048, SD 0,0050, IC95 % [0,637105; 0,644304]",
+  "esperado": [
+   0.6407,
+   0.005,
+   0.6371,
+   0.6443
+  ],
+  "observado": [
+   0.6407,
+   0.005032,
+   0.6371,
+   0.6443
+  ],
+  "tolerancia": [
+   5e-08,
+   5e-05,
+   5e-07,
+   5e-07
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P5-02",
+  "seccion": "6.5.3 Presentación (OE5)",
+  "afirmacion": "SD entre réplicas 0,0063; SD por perfil 0,142; IC95 % aproximado por perfil 0,816 ± 0,028; intervalo de réplicas 0,8111 a 0,8201",
+  "esperado": [
+   0.0063,
+   0.142,
+   0.816,
+   0.028,
+   0.8111,
+   0.8201
+  ],
+  "observado": [
+   0.006265,
+   0.1416,
+   0.8156,
+   0.02776,
+   0.8111,
+   0.8201
+  ],
+  "tolerancia": [
+   5e-05,
+   0.0005,
+   0.0005,
+   0.0005,
+   5e-05,
+   5e-05
+  ],
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "P5-03",
+  "seccion": "6.5.4 Interpretación",
+  "afirmacion": "los errores provienen sobre todo de incluir audio y texto no esperados (FP) y de omitir código o diagrama (FN)",
+  "esperado": true,
+  "observado": true,
+  "tolerancia": 0,
+  "estado": "COINCIDE",
+  "nota": "FP audio+texto = 600; FN código+diagrama = 279; FN audio+texto = 117; errores totales = 996; las dos fuentes suman el 88 %"
+ },
+ {
+  "id": "P5-04",
+  "seccion": "6.5.3 Diagnóstico de alineación",
+  "afirmacion": "ρ = 0,083; p = 0,009; n = 1 000; negativa en tres de los cuatro arquetipos",
+  "esperado": [
+   0.083,
+   0.009,
+   1000,
+   3
+  ],
+  "observado": [
+   0.08307,
+   0.008583,
+   1000,
+   3
+  ],
+  "tolerancia": [
+   0.0005,
+   0.0005,
+   0,
+   0
+  ],
+  "estado": "COINCIDE",
+  "nota": "solo 2 de las 3 correlaciones negativas son significativas (p < 0,05): Visual-Dominant p = 0.51"
+ },
+ {
+  "id": "M-01",
+  "seccion": "5 Marco metodológico",
+  "afirmacion": "100 perfiles: 4 arquetipos al 25 %, 5 dificultades al 20 %, 4 × 5 × 5 (cinco perfiles por celda)",
+  "esperado": [
+   100,
+   25,
+   25,
+   20,
+   20,
+   5,
+   20
+  ],
+  "observado": [
+   100,
+   25,
+   25,
+   20,
+   20,
+   5,
+   20
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "M-02",
+  "seccion": "5 Marco metodológico",
+  "afirmacion": "se utilizan 30 de los 32 conceptos del currículo",
+  "esperado": [
+   30,
+   32
+  ],
+  "observado": [
+   30,
+   32
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "M-03",
+  "seccion": "5 Marco metodológico",
+  "afirmacion": "lib-v10: 90 variantes Python, 90 C++, 270 diagramas Mermaid con su SVG, 90 textos y 270 audios = 1 080 archivos",
+  "esperado": [
+   90,
+   90,
+   270,
+   270,
+   90,
+   270,
+   1080
+  ],
+  "observado": [
+   90,
+   90,
+   270,
+   270,
+   90,
+   270,
+   1080
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": "1 080 solo suma si el SVG de cada diagrama se cuenta como un archivo aparte (810 sin los SVG)"
+ },
+ {
+  "id": "M-04",
+  "seccion": "5 Marco metodológico",
+  "afirmacion": "PSO: N = 20, w = 0,729, c1 = c2 = 1,494, ε = 0,001, k_max = 15",
+  "esperado": [
+   20,
+   0.729,
+   1.494,
+   1.494,
+   0.001,
+   15
+  ],
+  "observado": [
+   20.0,
+   0.729,
+   1.494,
+   1.494,
+   0.001,
+   15.0
+  ],
+  "tolerancia": 1e-12,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "M-05",
+  "seccion": "5 Marco metodológico",
+  "afirmacion": "función de aptitud con α = 0,40, β = 0,30, γ = 0,15 y δ = 0,15",
+  "esperado": [
+   0.4,
+   0.3,
+   0.15,
+   0.15
+  ],
+  "observado": [
+   0.4,
+   0.3,
+   0.15,
+   0.15
+  ],
+  "tolerancia": 1e-12,
+  "estado": "COINCIDE",
+  "nota": ""
+ },
+ {
+  "id": "M-06",
+  "seccion": "5 Marco metodológico",
+  "afirmacion": "gold v3: Visual {diagrama, código}; Logical {código, diagrama}; Explanatory {texto, diagrama, código}; Balanced las cuatro",
+  "esperado": [
+   2,
+   2,
+   3,
+   "ALL_MODALITIES"
+  ],
+  "observado": [
+   2,
+   2,
+   3,
+   "ALL_MODALITIES"
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": "Visual-Dominant y Logical-Syntactic tienen el MISMO conjunto esperado {code, diagram}: la métrica no distingue esos dos arquetipos"
+ },
+ {
+  "id": "M-07",
+  "seccion": "5.10 Instrumentos",
+  "afirmacion": "AC1 de Gwet certificado frente a R 4.4.1 + irrCAC 1.4 en 16 casos",
+  "esperado": [
+   "CERTIFICADO",
+   "1.4",
+   16,
+   "R version 4.4.1 (2024-06-14)"
+  ],
+  "observado": [
+   "CERTIFICADO",
+   "1.4",
+   16,
+   "R version 4.4.1 (2024-06-14)"
+  ],
+  "tolerancia": 0.0,
+  "estado": "COINCIDE",
+  "nota": "registro interno del proyecto (px8_certification_2026-09-27.json); certifica solo la implementación de AC1, no el panel; PANEL_PROTOCOL_ARQUETIPOS.md aún dice «PENDIENTE» (documento interno desactualizado)"
+ }
+]
