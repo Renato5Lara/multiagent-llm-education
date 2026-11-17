@@ -1,0 +1,7 @@
+﻿id,descripcion,esperado,obtenido,dif,tolerancia,estado,cifra_en_tesis,fuente
+OE5-01,F1_adapt medio (valor oficial),0.8044238095238094,0.8044238095238094,0.0,1e-09,COINCIDE,"0,8044",JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE5-02,IC95 t: límite inferior,0.7785,0.7785259899512857,2.5989951285776414e-05,5e-05,COINCIDE_REDONDEO,"0,7785",JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE5-03,IC95 t: límite superior,0.8303,0.8303216290963331,2.1629096333075637e-05,5e-05,COINCIDE_REDONDEO,"0,8303",JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE5-04,Perfiles,100,100,0.0,0.0,COINCIDE,100 perfiles,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE5-05,Ciclos válidos,1000,1000,0.0,0.0,COINCIDE,1 000,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE5-06,"RNF03 cumplido (umbral 0,85)",False,False,0.0,0.0,COINCIDE,,JSON oficial sellado de 04_ANALISIS_ESTADISTICO

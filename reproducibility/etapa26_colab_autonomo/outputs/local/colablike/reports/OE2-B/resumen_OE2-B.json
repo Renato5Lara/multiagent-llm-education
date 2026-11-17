@@ -1,0 +1,133 @@
+{
+ "objetivo": "OE2-B",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.3.5",
+  "scipy": "1.16.3",
+  "pandas": "2.2.3",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE2-B resultados_oe2b.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 6.18e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 1327,
+   "numericas": 1164,
+   "con_diferencia": 73,
+   "dif_abs_max": 6.184563972055912e-11,
+   "dif_rel_max": 2.4750023281168787e-14,
+   "peor": "('/resultados/por_carga/100/p95_ms/ic95_t_log/hi', 11481.62523489935, 11481.625234899411)",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE2-B resumen_por_carga.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 6.18e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 60,
+   "numericas": 60,
+   "con_diferencia": 24,
+   "dif_abs_max": 6.184563972055912e-11,
+   "dif_rel_max": 6.702214333755038e-15,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE2-B exploratorio_oe2b.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 1.36e-19 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 125,
+   "numericas": 120,
+   "con_diferencia": 18,
+   "dif_abs_max": 1.3552527156068805e-19,
+   "dif_rel_max": 3.010448683413287e-15,
+   "peor": "('/contrastes_sin_zoom/thr_ge_20_10/p_t', 0.000171415058679284, 0.00017141505867928413)",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE2-B estratos_por_carga.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 72,
+   "numericas": 60,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "Serie de la Figura 2 reproducida frente a la serie dibujada desde el resultado oficial local",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 6.18e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 108,
+   "numericas": 72,
+   "con_diferencia": 36,
+   "dif_abs_max": 6.184563972055912e-11,
+   "dif_rel_max": 6.702214333755038e-15,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE2B-01",
+   "descripcion": "Corridas válidas",
+   "esperado": 120,
+   "obtenido": 120,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "120 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2B-02",
+   "descripcion": "Registros no válidos reemplazados",
+   "esperado": 16,
+   "obtenido": 16,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2B-03",
+   "descripcion": "Corridas con interferencia ambiental",
+   "esperado": 120,
+   "obtenido": 120,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2B-04",
+   "descripcion": "Intentos totales (todos conservados)",
+   "esperado": 180,
+   "obtenido": 180,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "180 intentos",
+   "fuente": "recuento de líneas del registro original (la tesis cita el total)"
+  }
+ ],
+ "extra": {
+  "veredicto": "DENTRO_DE_TOLERANCIA",
+  "conteo": {
+   "EXACTA": 1,
+   "DENTRO_DE_TOLERANCIA": 4
+  },
+  "paquetes": [
+   "oe2b_colab_paquete",
+   "oe2b_http_p1",
+   "oe2b_http_p2"
+  ]
+ }
+}

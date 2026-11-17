@@ -1,0 +1,204 @@
+{
+ "version": 1,
+ "commit_datos": "3c8953a58909c48929093ef1524eb7d0ad317378",
+ "repositorio": "https://github.com/Renato5Lara/multiagent-llm-education",
+ "nota": "Los paquetes ya estaban publicados en este commit (inmutable); esta etapa no los duplica. Verificación: descarga HTTP sin credenciales y SHA-256 igual al local (auditoría 2026-11-16).",
+ "paquetes": [
+  {
+   "nombre": "oe1_http_p1",
+   "objetivo": "OE1",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe1_http_p1.zip",
+   "tamano_bytes": 7231736,
+   "sha256": "27e84f86c40430878f2238a22b4fe22b08cfbb2d6eb3b9044f6e4012dd0f8eeb",
+   "archivos_en_zip": 373,
+   "registros": {
+    "intentos_jsonl": 125,
+    "registros_runs_jsonl": 120,
+    "archivos_raw_http": 240,
+    "peticiones_http_filas": 225968
+   },
+   "descripcion": "Registro por petición HTTP de las 120 corridas válidas de OE1, runs/intentos, script de análisis y resultado local",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe2a_colab_paquete",
+   "objetivo": "OE2-A",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2a_colab_paquete.zip",
+   "tamano_bytes": 408415,
+   "sha256": "2ae5a013b7b617b4e5073e854fdc6cefbc6d039254f105da76ce3957d40bb223",
+   "archivos_en_zip": 11,
+   "registros": {
+    "filas_raw_observations": 5000
+   },
+   "descripcion": "Observaciones por ciclo (5 000), monitor, compuertas, script y resultado local de OE2-A",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe2b_colab_paquete",
+   "objetivo": "OE2-B",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_colab_paquete.zip",
+   "tamano_bytes": 596239,
+   "sha256": "af7ce8508a484e859c402c8c3b8e3fcb6e0d05c2da8ae8862fb36f9a582c2447",
+   "archivos_en_zip": 23,
+   "registros": {
+    "intentos_jsonl": 180,
+    "registros_runs_jsonl": 136
+   },
+   "descripcion": "Indicadores por corrida, planes, monitor, registros Locust (anonimizados), scripts y resultado local de OE2-B",
+   "anonimizacion": "seis archivos anonimizados (HOST001/USER); originales intactos en local; residual: ruta de carpetas de curso sin usuario en intentos.jsonl",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe2b_http_p1",
+   "objetivo": "OE2-B",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_http_p1.zip",
+   "tamano_bytes": 7604816,
+   "sha256": "b3f67b47efe321e7bec3ab50dae660fa1f6b9d31d273a3b061fc2c1f3f488e3c",
+   "archivos_en_zip": 124,
+   "registros": {
+    "intentos_jsonl": 180,
+    "registros_runs_jsonl": 136,
+    "archivos_raw_http": 59,
+    "peticiones_http_filas": 148561
+   },
+   "descripcion": "Registro por petición HTTP de OE2-B, parte 1 de 2, y recomputo_http.py",
+   "anonimizacion": "intentos.jsonl anonimizado; residual: ruta de carpetas de curso sin usuario",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe2b_http_p2",
+   "objetivo": "OE2-B",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_http_p2.zip",
+   "tamano_bytes": 4159947,
+   "sha256": "7642676a1f9bf77ed19e93df3b33f53fe4f21c4f9841a1b624e59c8d2caab9fd",
+   "archivos_en_zip": 159,
+   "registros": {
+    "archivos_raw_http": 79,
+    "peticiones_http_filas": 80533
+   },
+   "descripcion": "Registro por petición HTTP de OE2-B, parte 2 de 2",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe3_colab_paquete_v2",
+   "objetivo": "OE3",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe3_colab_paquete_v2.zip",
+   "tamano_bytes": 1455878,
+   "sha256": "8044d6635bd3681f437112842b8abc2cf9a4004e035642dc79ecb311e101f029",
+   "archivos_en_zip": 9,
+   "registros": {
+    "filas_raw_observations": 19200
+   },
+   "descripcion": "Observaciones por ciclo (19 200), lotes, entorno, monitor, script y resultado local de OE3 (versión 2)",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe4_colab_paquete",
+   "objetivo": "OE4",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe4_colab_paquete.zip",
+   "tamano_bytes": 633365,
+   "sha256": "952af04cad980bdbdf7064b0b03c57c359b7c1abb5a629d67de8c4441c8ad9e6",
+   "archivos_en_zip": 17,
+   "registros": {
+    "intentos_jsonl": 220,
+    "registros_runs_jsonl": 216
+   },
+   "descripcion": "Indicadores por corrida (216), intentos (220), planes, monitor, scripts y resultado local de OE4",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe4_http_p1",
+   "objetivo": "OE4",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe4_http_p1.zip",
+   "tamano_bytes": 7541357,
+   "sha256": "0a9c1b19a16aeaad7297808055809480746ef050ad106da628bade57864f9fda",
+   "archivos_en_zip": 133,
+   "registros": {
+    "intentos_jsonl": 220,
+    "registros_runs_jsonl": 216,
+    "archivos_raw_http": 64,
+    "peticiones_http_filas": 147177
+   },
+   "descripcion": "Registro por petición HTTP de OE4, parte 1 de 4, y recomputo_http.py",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe4_http_p2",
+   "objetivo": "OE4",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe4_http_p2.zip",
+   "tamano_bytes": 7652602,
+   "sha256": "81daba0090e1ea2df0a4abb263b70078dc69fadf007f4c6a2101b2caaec56c1b",
+   "archivos_en_zip": 136,
+   "registros": {
+    "archivos_raw_http": 68,
+    "peticiones_http_filas": 152040
+   },
+   "descripcion": "Registro por petición HTTP de OE4, parte 2 de 4",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe4_http_p3",
+   "objetivo": "OE4",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe4_http_p3.zip",
+   "tamano_bytes": 7620652,
+   "sha256": "eaac9cc762dd2ed7f6e3bbef39fbeccb9cccaef66a93bcbbf722c16bb91ebc57",
+   "archivos_en_zip": 128,
+   "registros": {
+    "archivos_raw_http": 64,
+    "peticiones_http_filas": 151394
+   },
+   "descripcion": "Registro por petición HTTP de OE4, parte 3 de 4",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe4_http_p4",
+   "objetivo": "OE4",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe4_http_p4.zip",
+   "tamano_bytes": 2007919,
+   "sha256": "1fcfafb6a7109b60749d3179bf2e8ecc8407f3caaa4fb8414c5e6ec72060d7cb",
+   "archivos_en_zip": 43,
+   "registros": {
+    "archivos_raw_http": 21,
+    "peticiones_http_filas": 39692
+   },
+   "descripcion": "Registro por petición HTTP de OE4, parte 4 de 4",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  },
+  {
+   "nombre": "oe5_colab_paquete",
+   "objetivo": "OE5",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe5_colab_paquete.zip",
+   "tamano_bytes": 86891,
+   "sha256": "5825a80a59b03a5ea5669f7c2521c5147ef48f60b4d90fd009931bccd41e5163",
+   "archivos_en_zip": 20,
+   "registros": {
+    "perfiles": 100,
+    "replicas_json": 10
+   },
+   "descripcion": "Ciclos con vector de selección (10 réplicas), 100 perfiles, referencia gold sellada, scripts y resultado local de OE5",
+   "anonimizacion": "sin datos personales detectados",
+   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+  }
+ ]
+}

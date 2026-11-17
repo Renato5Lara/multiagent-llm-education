@@ -1,0 +1,456 @@
+{
+ "version": 1,
+ "nota": "Cifras de la tesis (versión CIERRE_FINAL) contrastadas con los JSON oficiales sellados. Son referencia de comparación; ningún notebook las usa para generar resultados.",
+ "metas_de_diseno": {
+  "p95_ms": 2000,
+  "thr_rps": 20,
+  "f1_ref": 0.85,
+  "banda_efecto": 0.05,
+  "nota": "Metas de diseño y umbral de decisión (RNF03 0,85; 2 000 ms; 20 req/s; efecto 5 %), no resultados."
+ },
+ "comprobaciones": [
+  {
+   "id": "OE1-01",
+   "oe": "OE1",
+   "descripcion": "Corridas válidas",
+   "tipo": "json",
+   "archivo": "resultados_oe1.json",
+   "ruta": "n_validas",
+   "esperado": 120,
+   "tol": 0.0,
+   "texto_tesis": "120 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE1-02",
+   "oe": "OE1",
+   "descripcion": "Corridas con interferencia ambiental",
+   "tipo": "json",
+   "archivo": "resultados_oe1.json",
+   "ruta": "interferidas",
+   "esperado": 120,
+   "tol": 0.0,
+   "texto_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": false
+  },
+  {
+   "id": "OE1-03",
+   "oe": "OE1",
+   "descripcion": "Configuración de referencia: puntaje de cumplimiento S",
+   "tipo": "csv",
+   "archivo": "celdas.csv",
+   "filtro": {
+    "cond": "bat-on-F0"
+   },
+   "columna": "S",
+   "esperado": 1.0,
+   "tol": 0.0005,
+   "texto_tesis": "S vale 1,000",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE1-04",
+   "oe": "OE1",
+   "descripcion": "Configuración de referencia: P95 (media geométrica, ms)",
+   "tipo": "csv",
+   "archivo": "celdas.csv",
+   "filtro": {
+    "cond": "bat-on-F0"
+   },
+   "columna": "p95_geo",
+   "esperado": 571.0,
+   "tol": 0.5,
+   "texto_tesis": "571",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE1-05",
+   "oe": "OE1",
+   "descripcion": "Configuración de referencia: throughput (req/s)",
+   "tipo": "csv",
+   "archivo": "celdas.csv",
+   "filtro": {
+    "cond": "bat-on-F0"
+   },
+   "columna": "throughput_rps",
+   "esperado": 33.9,
+   "tol": 0.05,
+   "texto_tesis": "33,9",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE1-06",
+   "oe": "OE1",
+   "descripcion": "Configuración de referencia: F1_adapt",
+   "tipo": "csv",
+   "archivo": "celdas.csv",
+   "filtro": {
+    "cond": "bat-on-F0"
+   },
+   "columna": "f1",
+   "esperado": 0.8,
+   "tol": 0.005,
+   "texto_tesis": "0,80",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2A-01",
+   "oe": "OE2-A",
+   "descripcion": "Ciclos válidos",
+   "tipo": "json",
+   "archivo": "resultados_oe2a.json",
+   "ruta": "verificaciones/ciclos_validos",
+   "esperado": 5000,
+   "tol": 0.0,
+   "texto_tesis": "5 000 ciclos",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2A-02",
+   "oe": "OE2-A",
+   "descripcion": "Reintentos usados",
+   "tipo": "json",
+   "archivo": "resultados_oe2a.json",
+   "ruta": "verificaciones/reintentos_usados",
+   "esperado": 0,
+   "tol": 0.0,
+   "texto_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": false
+  },
+  {
+   "id": "OE2A-03",
+   "oe": "OE2-A",
+   "descripcion": "Convergencia: media geométrica (ms)",
+   "tipo": "json",
+   "archivo": "resultados_oe2a.json",
+   "ruta": "tconv_I02/media_geometrica_ms",
+   "esperado": 67.14,
+   "tol": 0.005,
+   "texto_tesis": "67,14 ms",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2A-04",
+   "oe": "OE2-A",
+   "descripcion": "Convergencia: límite inferior IC95 t (ms)",
+   "tipo": "json",
+   "archivo": "resultados_oe2a.json",
+   "ruta": "tconv_I02/ic95_t_ms/0",
+   "esperado": 65.71,
+   "tol": 0.005,
+   "texto_tesis": "65,71",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2A-05",
+   "oe": "OE2-A",
+   "descripcion": "Convergencia: límite superior IC95 t (ms)",
+   "tipo": "json",
+   "archivo": "resultados_oe2a.json",
+   "ruta": "tconv_I02/ic95_t_ms/1",
+   "esperado": 68.59,
+   "tol": 0.005,
+   "texto_tesis": "68,59",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2A-06",
+   "oe": "OE2-A",
+   "descripcion": "Ciclos con interferencia fuerte (de 5 000)",
+   "tipo": "json",
+   "archivo": "resultados_oe2a.json",
+   "ruta": "entorno/ciclos_con_interferencia_fuerte",
+   "esperado": 2770,
+   "tol": 0.0,
+   "texto_tesis": "2 770 de 5 000",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2B-01",
+   "oe": "OE2-B",
+   "descripcion": "Corridas válidas",
+   "tipo": "json",
+   "archivo": "resultados_oe2b.json",
+   "ruta": "n_corridas_validas",
+   "esperado": 120,
+   "tol": 0.0,
+   "texto_tesis": "120 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE2B-02",
+   "oe": "OE2-B",
+   "descripcion": "Registros no válidos reemplazados",
+   "tipo": "json",
+   "archivo": "resultados_oe2b.json",
+   "ruta": "n_no_validas",
+   "esperado": 16,
+   "tol": 0.0,
+   "texto_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": false
+  },
+  {
+   "id": "OE2B-03",
+   "oe": "OE2-B",
+   "descripcion": "Corridas con interferencia ambiental",
+   "tipo": "json",
+   "archivo": "resultados_oe2b.json",
+   "ruta": "interferidas",
+   "esperado": 120,
+   "tol": 0.0,
+   "texto_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": false
+  },
+  {
+   "id": "OE2B-04",
+   "oe": "OE2-B",
+   "descripcion": "Intentos totales (todos conservados)",
+   "tipo": "jsonl_count",
+   "archivo": "intentos.jsonl",
+   "esperado": 180,
+   "tol": 0.0,
+   "texto_tesis": "180 intentos",
+   "fuente": "recuento de líneas del registro original (la tesis cita el total)",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE3-01",
+   "oe": "OE3",
+   "descripcion": "Observaciones (ciclos válidos)",
+   "tipo": "json",
+   "archivo": "resultados_oe3.json",
+   "ruta": "verificaciones/observaciones",
+   "esperado": 19200,
+   "tol": 0.0,
+   "texto_tesis": "19 200",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE3-02",
+   "oe": "OE3",
+   "descripcion": "Condiciones factoriales",
+   "tipo": "json",
+   "archivo": "resultados_oe3.json",
+   "ruta": "verificaciones/condiciones",
+   "esperado": 48,
+   "tol": 0.0,
+   "texto_tesis": "48 condiciones",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE3-03",
+   "oe": "OE3",
+   "descripcion": "Perfiles",
+   "tipo": "json",
+   "archivo": "resultados_oe3.json",
+   "ruta": "verificaciones/perfiles",
+   "esperado": 40,
+   "tol": 0.0,
+   "texto_tesis": "40 perfiles",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE3-04",
+   "oe": "OE3",
+   "descripcion": "Bloques aleatorizados",
+   "tipo": "json",
+   "archivo": "resultados_oe3.json",
+   "ruta": "verificaciones/bloques",
+   "esperado": 10,
+   "tol": 0.0,
+   "texto_tesis": "10 bloques",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE4-01",
+   "oe": "OE4",
+   "descripcion": "Registros",
+   "tipo": "json",
+   "archivo": "resultados_oe4.json",
+   "ruta": "n_registros",
+   "esperado": 216,
+   "tol": 0.0,
+   "texto_tesis": "216",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE4-02",
+   "oe": "OE4",
+   "descripcion": "Corridas válidas",
+   "tipo": "json",
+   "archivo": "resultados_oe4.json",
+   "ruta": "n_validas",
+   "esperado": 216,
+   "tol": 0.0,
+   "texto_tesis": "216 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE4-03",
+   "oe": "OE4",
+   "descripcion": "Celdas con 6 bloques",
+   "tipo": "json",
+   "archivo": "resultados_oe4.json",
+   "ruta": "celdas_con_6_bloques",
+   "esperado": 36,
+   "tol": 0.0,
+   "texto_tesis": "36 celdas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE4-04",
+   "oe": "OE4",
+   "descripcion": "Corridas con interferencia ambiental",
+   "tipo": "json",
+   "archivo": "resultados_oe4.json",
+   "ruta": "interferidas",
+   "esperado": 216,
+   "tol": 0.0,
+   "texto_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": false
+  },
+  {
+   "id": "OE4-05",
+   "oe": "OE4",
+   "descripcion": "Intentos totales (todos conservados)",
+   "tipo": "jsonl_count",
+   "archivo": "intentos.jsonl",
+   "esperado": 220,
+   "tol": 0.0,
+   "texto_tesis": "220 intentos",
+   "fuente": "recuento de líneas del registro original (la tesis cita el total)",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE5-01",
+   "oe": "OE5",
+   "descripcion": "F1_adapt medio (valor oficial)",
+   "tipo": "json",
+   "archivo": "resultados_oe5.json",
+   "ruta": "principal/media",
+   "esperado": 0.8044238095238094,
+   "tol": 1e-09,
+   "texto_tesis": "0,8044",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE5-02",
+   "oe": "OE5",
+   "descripcion": "IC95 t: límite inferior",
+   "tipo": "json",
+   "archivo": "resultados_oe5.json",
+   "ruta": "principal/ic95_t/0",
+   "esperado": 0.7785,
+   "tol": 5e-05,
+   "texto_tesis": "0,7785",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE5-03",
+   "oe": "OE5",
+   "descripcion": "IC95 t: límite superior",
+   "tipo": "json",
+   "archivo": "resultados_oe5.json",
+   "ruta": "principal/ic95_t/1",
+   "esperado": 0.8303,
+   "tol": 5e-05,
+   "texto_tesis": "0,8303",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE5-04",
+   "oe": "OE5",
+   "descripcion": "Perfiles",
+   "tipo": "json",
+   "archivo": "resultados_oe5.json",
+   "ruta": "principal/n",
+   "esperado": 100,
+   "tol": 0.0,
+   "texto_tesis": "100 perfiles",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE5-05",
+   "oe": "OE5",
+   "descripcion": "Ciclos válidos",
+   "tipo": "json",
+   "archivo": "resultados_oe5.json",
+   "ruta": "checks/ciclos_validos",
+   "esperado": 1000,
+   "tol": 0.0,
+   "texto_tesis": "1 000",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": true
+  },
+  {
+   "id": "OE5-06",
+   "oe": "OE5",
+   "descripcion": "RNF03 cumplido (umbral 0,85)",
+   "tipo": "json",
+   "archivo": "resultados_oe5.json",
+   "ruta": "principal/RNF03_cumplido",
+   "esperado": false,
+   "tol": 0.0,
+   "texto_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO",
+   "verificado_en_tesis": false
+  }
+ ],
+ "figuras_tesis": {
+  "fig_oe1": {
+   "figura": "Figura 1",
+   "pagina_indice": 82,
+   "sha256_png_tesis": "97e3b8376b032bf4dca71fd25e71e8dff3a04d423b05e00083f4f6398b9917d2"
+  },
+  "fig_oe2": {
+   "figura": "Figura 2",
+   "pagina_indice": 89,
+   "sha256_png_tesis": "b4304598e9adcbebf797a0bff8e35236ced98eee4cae2532e3ef8cb79d49ff08"
+  },
+  "fig_oe3": {
+   "figura": "Figura 3",
+   "pagina_indice": 96,
+   "sha256_png_tesis": "3c8a35cf94e9814f4529e1d88443001fd80d00461f84305bd15ea6858399b4b8"
+  },
+  "fig_oe4": {
+   "figura": "Figura 4",
+   "pagina_indice": 103,
+   "sha256_png_tesis": "0e0ee2c48c5132cbbc004b56556d36706a6b3190b5c49227e945b585189b69d0"
+  },
+  "fig_oe5": {
+   "figura": "Figura 5",
+   "pagina_indice": 109,
+   "sha256_png_tesis": "e24f3db0fd67304ebd32161856f2ec2c64888dea2387ce525d95f919fcd5f62c"
+  }
+ },
+ "entradas_de_figuras_oficiales": {
+  "f1_por_perfil_csv_sha256_oficial": "2c33264b812dbbc7a257696bb19f64a2e5c866f1768a80fbad7cefb900953f69"
+ }
+}

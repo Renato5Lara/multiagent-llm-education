@@ -1,0 +1,3 @@
+# El contenido de manifests/ y outputs/ esta fijado por hash/serie: Git NO debe convertir finales de linea.
+manifests/** -text
+outputs/** -text

@@ -1,0 +1,6 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE1 resultados_oe1.json,DENTRO_DE_TOLERANCIA,diferencia maxima 2.78e-16 (<= 1e-09 o relativa <= 1e-09),947,818,6,2.7755575615628914e-16,1.714645846480153e-14,"('/estabilidad/p95/sonda_p', 0.29924991562784775, 0.2992499156278475)",0
+OE1 celdas.csv,EXACTA,sin diferencia numerica,216,204,0,0.0,0.0,,0
+OE1 corridas_indicadores.csv,EXACTA,sin diferencia numerica,7560,5520,0,0.0,0.0,,0
+OE1 efectos.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 7.79e-11 (<= 1e-09 o relativa <= 1e-09),910,370,152,7.789680012137978e-11,5.460115539035405e-11,,0
+Serie de la Figura 1 reproducida frente a la serie dibujada desde el resultado oficial local,EXACTA,sin diferencia numerica,42,21,0,0.0,0.0,,0

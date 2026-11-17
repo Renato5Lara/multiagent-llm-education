@@ -1,0 +1,115 @@
+{
+ "objetivo": "OE5",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.3.5",
+  "scipy": "1.16.3",
+  "pandas": "2.2.3",
+  "matplotlib": "3.11.2",
+  "cpu": 20
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE5 resultados_oe5.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 1.01e-12 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 86,
+   "numericas": 77,
+   "con_diferencia": 8,
+   "dif_abs_max": 1.014521799902468e-12,
+   "dif_rel_max": 6.608958674981363e-09,
+   "peor": "('/principal/ic95_t/0', 0.7785259899523003, 0.7785259899512857)",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE5 enmienda 1",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 1.01e-12 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 30,
+   "numericas": 27,
+   "con_diferencia": 8,
+   "dif_abs_max": 1.014521799902468e-12,
+   "dif_rel_max": 1.303131575563648e-12,
+   "peor": "('/intervalos_media_95/t_99gl/0', 0.7785259899523004, 0.7785259899512859)",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE5-01",
+   "descripcion": "F1_adapt medio (valor oficial)",
+   "esperado": 0.8044238095238094,
+   "obtenido": 0.8044238095238094,
+   "dif": 0.0,
+   "tolerancia": 1e-09,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "0,8044",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE5-02",
+   "descripcion": "IC95 t: límite inferior",
+   "esperado": 0.7785,
+   "obtenido": 0.7785259899523003,
+   "dif": 2.5989952300298214e-05,
+   "tolerancia": 5e-05,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "0,7785",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE5-03",
+   "descripcion": "IC95 t: límite superior",
+   "esperado": 0.8303,
+   "obtenido": 0.8303216290953186,
+   "dif": 2.1629095318553837e-05,
+   "tolerancia": 5e-05,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "0,8303",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE5-04",
+   "descripcion": "Perfiles",
+   "esperado": 100,
+   "obtenido": 100,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "100 perfiles",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE5-05",
+   "descripcion": "Ciclos válidos",
+   "esperado": 1000,
+   "obtenido": 1000,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "1 000",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE5-06",
+   "descripcion": "RNF03 cumplido (umbral 0,85)",
+   "esperado": false,
+   "obtenido": false,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  }
+ ],
+ "extra": {
+  "veredicto": "DENTRO_DE_TOLERANCIA",
+  "conteo": {
+   "DENTRO_DE_TOLERANCIA": 2
+  },
+  "paquetes": [
+   "oe5_colab_paquete"
+  ]
+ }
+}

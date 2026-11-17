@@ -1,0 +1,153 @@
+{
+ "objetivo": "OE1",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.3.5",
+  "scipy": "1.16.3",
+  "pandas": "2.2.3",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE1 resultados_oe1.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 2.78e-16 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 947,
+   "numericas": 818,
+   "con_diferencia": 6,
+   "dif_abs_max": 2.7755575615628914e-16,
+   "dif_rel_max": 1.714645846480153e-14,
+   "peor": "('/estabilidad/p95/sonda_p', 0.29924991562784775, 0.2992499156278475)",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE1 celdas.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 216,
+   "numericas": 204,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE1 corridas_indicadores.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 7560,
+   "numericas": 5520,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE1 efectos.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 7.79e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 910,
+   "numericas": 370,
+   "con_diferencia": 152,
+   "dif_abs_max": 7.789680012137978e-11,
+   "dif_rel_max": 5.460115539035405e-11,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "Serie de la Figura 1 reproducida frente a la serie dibujada desde el resultado oficial local",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 42,
+   "numericas": 21,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE1-01",
+   "descripcion": "Corridas válidas",
+   "esperado": 120.0,
+   "obtenido": 120.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "120 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE1-02",
+   "descripcion": "Corridas con interferencia ambiental",
+   "esperado": 120.0,
+   "obtenido": 120.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE1-03",
+   "descripcion": "Configuración de referencia: puntaje de cumplimiento S",
+   "esperado": 1.0,
+   "obtenido": 0.9999617737003058,
+   "dif": 3.822629969418845e-05,
+   "tolerancia": 0.0005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "S vale 1,000",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis"
+  },
+  {
+   "id": "OE1-04",
+   "descripcion": "Configuración de referencia: P95 (media geométrica, ms)",
+   "esperado": 571.0,
+   "obtenido": 570.9133694363893,
+   "dif": 0.08663056361069721,
+   "tolerancia": 0.5,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "571",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis"
+  },
+  {
+   "id": "OE1-05",
+   "descripcion": "Configuración de referencia: throughput (req/s)",
+   "esperado": 33.9,
+   "obtenido": 33.936089924206144,
+   "dif": 0.036089924206144985,
+   "tolerancia": 0.05,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "33,9",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis"
+  },
+  {
+   "id": "OE1-06",
+   "descripcion": "Configuración de referencia: F1_adapt",
+   "esperado": 0.8,
+   "obtenido": 0.8005176105447166,
+   "dif": 0.0005176105447165513,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "0,80",
+   "fuente": "celdas.csv oficial; cifra redondeada como en la tesis"
+  }
+ ],
+ "extra": {
+  "veredicto": "DENTRO_DE_TOLERANCIA",
+  "conteo": {
+   "EXACTA": 3,
+   "DENTRO_DE_TOLERANCIA": 2
+  },
+  "paquetes": [
+   "oe1_http_p1"
+  ]
+ }
+}

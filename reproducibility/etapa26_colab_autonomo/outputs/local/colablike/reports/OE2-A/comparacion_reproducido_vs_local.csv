@@ -1,0 +1,2 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE2-A resultados_oe2a.json,DENTRO_DE_TOLERANCIA,diferencia maxima 5.97e-11 (<= 1e-09 o relativa <= 1e-09),245,228,24,5.972822236799402e-11,7.0667944103572926e-09,"('/latencia_en_proceso/ic95_t_media_geometrica_ms/1', 80.34586192757568, 80.34586192763541)",0

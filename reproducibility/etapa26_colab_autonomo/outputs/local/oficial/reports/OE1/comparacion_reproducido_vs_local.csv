@@ -1,0 +1,6 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE1 resultados_oe1.json,EXACTA,sin diferencia numerica,947,818,0,0.0,0.0,,0
+OE1 celdas.csv,EXACTA,sin diferencia numerica,216,204,0,0.0,0.0,,0
+OE1 corridas_indicadores.csv,EXACTA,sin diferencia numerica,7560,5520,0,0.0,0.0,,0
+OE1 efectos.csv,EXACTA,sin diferencia numerica,910,370,0,0.0,0.0,,0
+Serie de la Figura 1 reproducida frente a la serie dibujada desde el resultado oficial local,EXACTA,sin diferencia numerica,42,21,0,0.0,0.0,,0

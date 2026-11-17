@@ -1,0 +1,6 @@
+﻿id,descripcion,esperado,obtenido,dif,tolerancia,estado,cifra_en_tesis,fuente
+OE4-01,Registros,216,216,0.0,0.0,COINCIDE,216,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE4-02,Corridas válidas,216,216,0.0,0.0,COINCIDE,216 corridas,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE4-03,Celdas con 6 bloques,36,36,0.0,0.0,COINCIDE,36 celdas,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE4-04,Corridas con interferencia ambiental,216,216,0.0,0.0,COINCIDE,,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE4-05,Intentos totales (todos conservados),220,220,0.0,0.0,COINCIDE,220 intentos,recuento de líneas del registro original (la tesis cita el total)

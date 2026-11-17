@@ -1,0 +1,5 @@
+﻿id,descripcion,esperado,obtenido,dif,tolerancia,estado,cifra_en_tesis,fuente
+OE3-01,Observaciones (ciclos válidos),19200,19200,0.0,0.0,COINCIDE,19 200,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE3-02,Condiciones factoriales,48,48,0.0,0.0,COINCIDE,48 condiciones,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE3-03,Perfiles,40,40,0.0,0.0,COINCIDE,40 perfiles,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE3-04,Bloques aleatorizados,10,10,0.0,0.0,COINCIDE,10 bloques,JSON oficial sellado de 04_ANALISIS_ESTADISTICO

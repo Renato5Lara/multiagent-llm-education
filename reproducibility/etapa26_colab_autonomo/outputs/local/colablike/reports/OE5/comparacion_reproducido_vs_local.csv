@@ -1,0 +1,3 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE5 resultados_oe5.json,DENTRO_DE_TOLERANCIA,diferencia maxima 1.01e-12 (<= 1e-09 o relativa <= 1e-09),86,77,8,1.014521799902468e-12,6.608958674981363e-09,"('/principal/ic95_t/0', 0.7785259899523003, 0.7785259899512857)",0
+OE5 enmienda 1,DENTRO_DE_TOLERANCIA,diferencia maxima 1.01e-12 (<= 1e-09 o relativa <= 1e-09),30,27,8,1.014521799902468e-12,1.303131575563648e-12,"('/intervalos_media_95/t_99gl/0', 0.7785259899523004, 0.7785259899512859)",0

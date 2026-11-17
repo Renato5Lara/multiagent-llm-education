@@ -1,0 +1,104 @@
+{
+ "objetivo": "OE2-A",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.3.5",
+  "scipy": "1.16.3",
+  "pandas": "2.2.3",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE2-A resultados_oe2a.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 5.97e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 245,
+   "numericas": 228,
+   "con_diferencia": 24,
+   "dif_abs_max": 5.972822236799402e-11,
+   "dif_rel_max": 7.0667944103572926e-09,
+   "peor": "('/latencia_en_proceso/ic95_t_media_geometrica_ms/1', 80.34586192757568, 80.34586192763541)",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE2A-01",
+   "descripcion": "Ciclos válidos",
+   "esperado": 5000.0,
+   "obtenido": 5000.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "5 000 ciclos",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-02",
+   "descripcion": "Reintentos usados",
+   "esperado": 0.0,
+   "obtenido": 0.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-03",
+   "descripcion": "Convergencia: media geométrica (ms)",
+   "esperado": 67.14,
+   "obtenido": 67.13634500544114,
+   "dif": 0.0036549945588575383,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "67,14 ms",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-04",
+   "descripcion": "Convergencia: límite inferior IC95 t (ms)",
+   "esperado": 65.71,
+   "obtenido": 65.71446508272649,
+   "dif": 0.004465082726497371,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "65,71",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-05",
+   "descripcion": "Convergencia: límite superior IC95 t (ms)",
+   "esperado": 68.59,
+   "obtenido": 68.58899049114217,
+   "dif": 0.0010095088578339073,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "68,59",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-06",
+   "descripcion": "Ciclos con interferencia fuerte (de 5 000)",
+   "esperado": 2770.0,
+   "obtenido": 2770.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "2 770 de 5 000",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  }
+ ],
+ "extra": {
+  "veredicto": "DENTRO_DE_TOLERANCIA",
+  "conteo": {
+   "DENTRO_DE_TOLERANCIA": 1
+  },
+  "paquetes": [
+   "oe2a_colab_paquete"
+  ]
+ }
+}

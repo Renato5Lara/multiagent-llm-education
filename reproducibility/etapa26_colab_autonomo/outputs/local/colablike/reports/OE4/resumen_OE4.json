@@ -1,0 +1,182 @@
+{
+ "objetivo": "OE4",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.3.5",
+  "scipy": "1.16.3",
+  "pandas": "2.2.3",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE4 resultados_oe4.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 3.82e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 1802,
+   "numericas": 1543,
+   "con_diferencia": 83,
+   "dif_abs_max": 3.8198777474462986e-11,
+   "dif_rel_max": 1.1288176430873805e-11,
+   "peor": "('/anova/tconv/terminos/2/F', 8930.324520285205, 8930.324520285243)",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 celdas.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 7.11e-15 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 648,
+   "numericas": 576,
+   "con_diferencia": 2,
+   "dif_abs_max": 7.105427357601002e-15,
+   "dif_rel_max": 1.9355732625653682e-16,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 contrastes.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 6.71e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 4050,
+   "numericas": 2952,
+   "con_diferencia": 433,
+   "dif_abs_max": 6.713207767461427e-11,
+   "dif_rel_max": 7.311764271718265e-13,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 anova_p95.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 8.75e-12 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 40,
+   "numericas": 32,
+   "con_diferencia": 23,
+   "dif_abs_max": 8.753886504564434e-12,
+   "dif_rel_max": 8.124216581635855e-13,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 anova_thr.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 6.37e-12 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 40,
+   "numericas": 32,
+   "con_diferencia": 24,
+   "dif_abs_max": 6.366462912410498e-12,
+   "dif_rel_max": 3.657182521616544e-13,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 anova_tconv.csv",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 3.82e-11 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 40,
+   "numericas": 32,
+   "con_diferencia": 21,
+   "dif_abs_max": 3.8198777474462986e-11,
+   "dif_rel_max": 7.093301024136908e-13,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 exploratorio_interferencia_oe4.json",
+   "categoria": "DENTRO_DE_TOLERANCIA",
+   "explicacion": "diferencia maxima 1.67e-16 (<= 1e-09 o relativa <= 1e-09)",
+   "hojas": 35,
+   "numericas": 34,
+   "con_diferencia": 6,
+   "dif_abs_max": 1.6653345369377348e-16,
+   "dif_rel_max": 1.542375543887036e-15,
+   "peor": "('/maxs|log_P95/p', 0.4591673326382336, 0.4591673326382338)",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "Serie de la Figura 4 reproducida frente a la serie dibujada desde el resultado oficial local",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 648,
+   "numericas": 216,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE4-01",
+   "descripcion": "Registros",
+   "esperado": 216,
+   "obtenido": 216,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "216",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-02",
+   "descripcion": "Corridas válidas",
+   "esperado": 216,
+   "obtenido": 216,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "216 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-03",
+   "descripcion": "Celdas con 6 bloques",
+   "esperado": 36,
+   "obtenido": 36,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "36 celdas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-04",
+   "descripcion": "Corridas con interferencia ambiental",
+   "esperado": 216,
+   "obtenido": 216,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-05",
+   "descripcion": "Intentos totales (todos conservados)",
+   "esperado": 220,
+   "obtenido": 220,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "220 intentos",
+   "fuente": "recuento de líneas del registro original (la tesis cita el total)"
+  }
+ ],
+ "extra": {
+  "veredicto": "DENTRO_DE_TOLERANCIA",
+  "conteo": {
+   "EXACTA": 1,
+   "DENTRO_DE_TOLERANCIA": 7
+  },
+  "paquetes": [
+   "oe4_colab_paquete",
+   "oe4_http_p1",
+   "oe4_http_p2",
+   "oe4_http_p3",
+   "oe4_http_p4"
+  ]
+ }
+}

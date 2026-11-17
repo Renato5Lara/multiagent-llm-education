@@ -1,0 +1,94 @@
+{
+ "objetivo": "OE3",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.5.5",
+  "scipy": "1.18.1",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE3 resultados_oe3.json",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 1573,
+   "numericas": 1227,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "Serie de la Figura 3 reproducida frente a la serie dibujada desde el resultado oficial local",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 42,
+   "numericas": 28,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE3-01",
+   "descripcion": "Observaciones (ciclos válidos)",
+   "esperado": 19200,
+   "obtenido": 19200,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "19 200",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE3-02",
+   "descripcion": "Condiciones factoriales",
+   "esperado": 48,
+   "obtenido": 48,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "48 condiciones",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE3-03",
+   "descripcion": "Perfiles",
+   "esperado": 40,
+   "obtenido": 40,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "40 perfiles",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE3-04",
+   "descripcion": "Bloques aleatorizados",
+   "esperado": 10,
+   "obtenido": 10,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "10 bloques",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  }
+ ],
+ "extra": {
+  "veredicto": "EXACTA",
+  "conteo": {
+   "EXACTA": 2
+  },
+  "paquetes": [
+   "oe3_colab_paquete_v2"
+  ]
+ }
+}

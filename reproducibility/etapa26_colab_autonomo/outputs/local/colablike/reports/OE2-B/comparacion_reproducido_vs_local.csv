@@ -1,0 +1,6 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE2-B resultados_oe2b.json,DENTRO_DE_TOLERANCIA,diferencia maxima 6.18e-11 (<= 1e-09 o relativa <= 1e-09),1327,1164,73,6.184563972055912e-11,2.4750023281168787e-14,"('/resultados/por_carga/100/p95_ms/ic95_t_log/hi', 11481.62523489935, 11481.625234899411)",0
+OE2-B resumen_por_carga.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 6.18e-11 (<= 1e-09 o relativa <= 1e-09),60,60,24,6.184563972055912e-11,6.702214333755038e-15,,0
+OE2-B exploratorio_oe2b.json,DENTRO_DE_TOLERANCIA,diferencia maxima 1.36e-19 (<= 1e-09 o relativa <= 1e-09),125,120,18,1.3552527156068805e-19,3.010448683413287e-15,"('/contrastes_sin_zoom/thr_ge_20_10/p_t', 0.000171415058679284, 0.00017141505867928413)",0
+OE2-B estratos_por_carga.csv,EXACTA,sin diferencia numerica,72,60,0,0.0,0.0,,0
+Serie de la Figura 2 reproducida frente a la serie dibujada desde el resultado oficial local,DENTRO_DE_TOLERANCIA,diferencia maxima 6.18e-11 (<= 1e-09 o relativa <= 1e-09),108,72,36,6.184563972055912e-11,6.702214333755038e-15,,0

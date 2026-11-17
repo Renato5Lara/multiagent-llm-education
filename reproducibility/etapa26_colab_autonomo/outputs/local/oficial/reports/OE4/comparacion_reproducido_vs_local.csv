@@ -1,0 +1,9 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE4 resultados_oe4.json,EXACTA,sin diferencia numerica,1802,1543,0,0.0,0.0,,0
+OE4 celdas.csv,EXACTA,sin diferencia numerica,648,576,0,0.0,0.0,,0
+OE4 contrastes.csv,EXACTA,sin diferencia numerica,4050,2952,0,0.0,0.0,,0
+OE4 anova_p95.csv,EXACTA,sin diferencia numerica,40,32,0,0.0,0.0,,0
+OE4 anova_thr.csv,EXACTA,sin diferencia numerica,40,32,0,0.0,0.0,,0
+OE4 anova_tconv.csv,EXACTA,sin diferencia numerica,40,32,0,0.0,0.0,,0
+OE4 exploratorio_interferencia_oe4.json,EXACTA,sin diferencia numerica,35,34,0,0.0,0.0,,0
+Serie de la Figura 4 reproducida frente a la serie dibujada desde el resultado oficial local,EXACTA,sin diferencia numerica,648,216,0,0.0,0.0,,0

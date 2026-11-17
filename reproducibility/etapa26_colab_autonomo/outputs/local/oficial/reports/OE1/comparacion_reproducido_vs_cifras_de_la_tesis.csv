@@ -1,0 +1,7 @@
+﻿id,descripcion,esperado,obtenido,dif,tolerancia,estado,cifra_en_tesis,fuente
+OE1-01,Corridas válidas,120.0,120.0,0.0,0.0,COINCIDE,120 corridas,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE1-02,Corridas con interferencia ambiental,120.0,120.0,0.0,0.0,COINCIDE,,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE1-03,Configuración de referencia: puntaje de cumplimiento S,1.0,0.9999617737003058,3.822629969418845e-05,0.0005,COINCIDE_REDONDEO,"S vale 1,000",celdas.csv oficial; cifra redondeada como en la tesis
+OE1-04,"Configuración de referencia: P95 (media geométrica, ms)",571.0,570.9133694363893,0.08663056361069721,0.5,COINCIDE_REDONDEO,571,celdas.csv oficial; cifra redondeada como en la tesis
+OE1-05,Configuración de referencia: throughput (req/s),33.9,33.936089924206144,0.036089924206144985,0.05,COINCIDE_REDONDEO,"33,9",celdas.csv oficial; cifra redondeada como en la tesis
+OE1-06,Configuración de referencia: F1_adapt,0.8,0.8005176105447166,0.0005176105447165513,0.005,COINCIDE_REDONDEO,"0,80",celdas.csv oficial; cifra redondeada como en la tesis

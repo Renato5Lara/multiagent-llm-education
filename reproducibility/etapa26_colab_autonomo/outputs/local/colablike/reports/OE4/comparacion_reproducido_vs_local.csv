@@ -1,0 +1,9 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE4 resultados_oe4.json,DENTRO_DE_TOLERANCIA,diferencia maxima 3.82e-11 (<= 1e-09 o relativa <= 1e-09),1802,1543,83,3.8198777474462986e-11,1.1288176430873805e-11,"('/anova/tconv/terminos/2/F', 8930.324520285205, 8930.324520285243)",0
+OE4 celdas.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 7.11e-15 (<= 1e-09 o relativa <= 1e-09),648,576,2,7.105427357601002e-15,1.9355732625653682e-16,,0
+OE4 contrastes.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 6.71e-11 (<= 1e-09 o relativa <= 1e-09),4050,2952,433,6.713207767461427e-11,7.311764271718265e-13,,0
+OE4 anova_p95.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 8.75e-12 (<= 1e-09 o relativa <= 1e-09),40,32,23,8.753886504564434e-12,8.124216581635855e-13,,0
+OE4 anova_thr.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 6.37e-12 (<= 1e-09 o relativa <= 1e-09),40,32,24,6.366462912410498e-12,3.657182521616544e-13,,0
+OE4 anova_tconv.csv,DENTRO_DE_TOLERANCIA,diferencia maxima 3.82e-11 (<= 1e-09 o relativa <= 1e-09),40,32,21,3.8198777474462986e-11,7.093301024136908e-13,,0
+OE4 exploratorio_interferencia_oe4.json,DENTRO_DE_TOLERANCIA,diferencia maxima 1.67e-16 (<= 1e-09 o relativa <= 1e-09),35,34,6,1.6653345369377348e-16,1.542375543887036e-15,"('/maxs|log_P95/p', 0.4591673326382336, 0.4591673326382338)",0
+Serie de la Figura 4 reproducida frente a la serie dibujada desde el resultado oficial local,EXACTA,sin diferencia numerica,648,216,0,0.0,0.0,,0

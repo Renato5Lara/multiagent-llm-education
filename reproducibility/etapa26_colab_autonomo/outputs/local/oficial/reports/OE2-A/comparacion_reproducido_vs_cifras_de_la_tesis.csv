@@ -1,0 +1,7 @@
+﻿id,descripcion,esperado,obtenido,dif,tolerancia,estado,cifra_en_tesis,fuente
+OE2A-01,Ciclos válidos,5000.0,5000.0,0.0,0.0,COINCIDE,5 000 ciclos,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2A-02,Reintentos usados,0.0,0.0,0.0,0.0,COINCIDE,,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2A-03,Convergencia: media geométrica (ms),67.14,67.13634500544114,0.0036549945588575383,0.005,COINCIDE_REDONDEO,"67,14 ms",JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2A-04,Convergencia: límite inferior IC95 t (ms),65.71,65.7144650826714,0.004465082671401888,0.005,COINCIDE_REDONDEO,"65,71",JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2A-05,Convergencia: límite superior IC95 t (ms),68.59,68.58899049119968,0.0010095088003225783,0.005,COINCIDE_REDONDEO,"68,59",JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2A-06,Ciclos con interferencia fuerte (de 5 000),2770.0,2770.0,0.0,0.0,COINCIDE,2 770 de 5 000,JSON oficial sellado de 04_ANALISIS_ESTADISTICO

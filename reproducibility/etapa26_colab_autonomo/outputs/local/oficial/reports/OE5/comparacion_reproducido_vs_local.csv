@@ -1,0 +1,3 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE5 resultados_oe5.json,EXACTA,sin diferencia numerica,86,77,0,0.0,0.0,,0
+OE5 enmienda 1,EXACTA,sin diferencia numerica,30,27,0,0.0,0.0,,0

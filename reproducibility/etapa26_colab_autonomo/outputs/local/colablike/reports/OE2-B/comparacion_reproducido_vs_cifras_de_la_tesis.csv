@@ -1,0 +1,5 @@
+﻿id,descripcion,esperado,obtenido,dif,tolerancia,estado,cifra_en_tesis,fuente
+OE2B-01,Corridas válidas,120,120,0.0,0.0,COINCIDE,120 corridas,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2B-02,Registros no válidos reemplazados,16,16,0.0,0.0,COINCIDE,,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2B-03,Corridas con interferencia ambiental,120,120,0.0,0.0,COINCIDE,,JSON oficial sellado de 04_ANALISIS_ESTADISTICO
+OE2B-04,Intentos totales (todos conservados),180,180,0.0,0.0,COINCIDE,180 intentos,recuento de líneas del registro original (la tesis cita el total)

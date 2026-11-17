@@ -1,0 +1,6 @@
+﻿comparacion,categoria,explicacion,hojas,numericas,con_diferencia,dif_abs_max,dif_rel_max,peor,fuera_de_tolerancia
+OE2-B resultados_oe2b.json,EXACTA,sin diferencia numerica,1327,1164,0,0.0,0.0,,0
+OE2-B resumen_por_carga.csv,EXACTA,sin diferencia numerica,60,60,0,0.0,0.0,,0
+OE2-B exploratorio_oe2b.json,EXACTA,sin diferencia numerica,125,120,0,0.0,0.0,,0
+OE2-B estratos_por_carga.csv,EXACTA,sin diferencia numerica,72,60,0,0.0,0.0,,0
+Serie de la Figura 2 reproducida frente a la serie dibujada desde el resultado oficial local,EXACTA,sin diferencia numerica,108,72,0,0.0,0.0,,0

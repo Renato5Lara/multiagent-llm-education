@@ -1,0 +1,181 @@
+{
+ "objetivo": "OE4",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.5.5",
+  "scipy": "1.18.1",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE4 resultados_oe4.json",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 1802,
+   "numericas": 1543,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 celdas.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 648,
+   "numericas": 576,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 contrastes.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 4050,
+   "numericas": 2952,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 anova_p95.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 40,
+   "numericas": 32,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 anova_thr.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 40,
+   "numericas": 32,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 anova_tconv.csv",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 40,
+   "numericas": 32,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "OE4 exploratorio_interferencia_oe4.json",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 35,
+   "numericas": 34,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  },
+  {
+   "comparacion": "Serie de la Figura 4 reproducida frente a la serie dibujada desde el resultado oficial local",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 648,
+   "numericas": 216,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE4-01",
+   "descripcion": "Registros",
+   "esperado": 216,
+   "obtenido": 216,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "216",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-02",
+   "descripcion": "Corridas válidas",
+   "esperado": 216,
+   "obtenido": 216,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "216 corridas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-03",
+   "descripcion": "Celdas con 6 bloques",
+   "esperado": 36,
+   "obtenido": 36,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "36 celdas",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-04",
+   "descripcion": "Corridas con interferencia ambiental",
+   "esperado": 216,
+   "obtenido": 216,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE4-05",
+   "descripcion": "Intentos totales (todos conservados)",
+   "esperado": 220,
+   "obtenido": 220,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "220 intentos",
+   "fuente": "recuento de líneas del registro original (la tesis cita el total)"
+  }
+ ],
+ "extra": {
+  "veredicto": "EXACTA",
+  "conteo": {
+   "EXACTA": 8
+  },
+  "paquetes": [
+   "oe4_colab_paquete",
+   "oe4_http_p1",
+   "oe4_http_p2",
+   "oe4_http_p3",
+   "oe4_http_p4"
+  ]
+ }
+}

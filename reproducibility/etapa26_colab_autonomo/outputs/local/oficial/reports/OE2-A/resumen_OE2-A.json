@@ -1,0 +1,104 @@
+{
+ "objetivo": "OE2-A",
+ "entorno": {
+  "python": "3.13.5",
+  "plataforma": "Windows-11-10.0.26300-SP0",
+  "numpy": "2.5.5",
+  "scipy": "1.18.1",
+  "pandas": "3.1.1",
+  "matplotlib": "3.11.2",
+  "cpu": 20,
+  "statsmodels": "0.15.0"
+ },
+ "comparaciones": [
+  {
+   "comparacion": "OE2-A resultados_oe2a.json",
+   "categoria": "EXACTA",
+   "explicacion": "sin diferencia numerica",
+   "hojas": 245,
+   "numericas": 228,
+   "con_diferencia": 0,
+   "dif_abs_max": 0.0,
+   "dif_rel_max": 0.0,
+   "peor": "",
+   "fuera_de_tolerancia": 0
+  }
+ ],
+ "cifras_oficiales": [
+  {
+   "id": "OE2A-01",
+   "descripcion": "Ciclos válidos",
+   "esperado": 5000.0,
+   "obtenido": 5000.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "5 000 ciclos",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-02",
+   "descripcion": "Reintentos usados",
+   "esperado": 0.0,
+   "obtenido": 0.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-03",
+   "descripcion": "Convergencia: media geométrica (ms)",
+   "esperado": 67.14,
+   "obtenido": 67.13634500544114,
+   "dif": 0.0036549945588575383,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "67,14 ms",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-04",
+   "descripcion": "Convergencia: límite inferior IC95 t (ms)",
+   "esperado": 65.71,
+   "obtenido": 65.7144650826714,
+   "dif": 0.004465082671401888,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "65,71",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-05",
+   "descripcion": "Convergencia: límite superior IC95 t (ms)",
+   "esperado": 68.59,
+   "obtenido": 68.58899049119968,
+   "dif": 0.0010095088003225783,
+   "tolerancia": 0.005,
+   "estado": "COINCIDE_REDONDEO",
+   "cifra_en_tesis": "68,59",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  },
+  {
+   "id": "OE2A-06",
+   "descripcion": "Ciclos con interferencia fuerte (de 5 000)",
+   "esperado": 2770.0,
+   "obtenido": 2770.0,
+   "dif": 0.0,
+   "tolerancia": 0.0,
+   "estado": "COINCIDE",
+   "cifra_en_tesis": "2 770 de 5 000",
+   "fuente": "JSON oficial sellado de 04_ANALISIS_ESTADISTICO"
+  }
+ ],
+ "extra": {
+  "veredicto": "EXACTA",
+  "conteo": {
+   "EXACTA": 1
+  },
+  "paquetes": [
+   "oe2a_colab_paquete"
+  ]
+ }
+}
