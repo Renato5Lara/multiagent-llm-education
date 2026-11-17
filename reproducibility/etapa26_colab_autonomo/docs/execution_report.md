@@ -38,7 +38,7 @@ Ver `docs/figure_traceability.md`: PNG regenerados desde las salidas oficiales c
 
 ## Lo que NO se comprobó
 
-- Ejecución en Google Colab real de los notebooks nuevos (ni su clonado de la etiqueta inmutable `repro-etapa26-v1` desde un Colab).
+- Ejecución en Google Colab real de los notebooks nuevos (ni su clonado de la etiqueta inmutable `repro-etapa26-v2` desde un Colab).
 - Que el PDF de la tesis tenga las figuras en las páginas del índice (se usó el índice del DOCX).
 - Que los ids de Drive de las ejecuciones previas sigan accesibles con su contenido (solo se consultaron metadatos en la etapa anterior).
 

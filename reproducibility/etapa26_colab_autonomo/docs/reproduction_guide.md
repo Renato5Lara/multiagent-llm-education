@@ -5,7 +5,7 @@ No necesita ningún archivo privado ni preguntar por datos: todo está en este r
 ## 1. Dónde está todo
 
 - Repositorio: <https://github.com/Renato5Lara/multiagent-llm-education>
-- Código y notebooks: `reproducibility/etapa26_colab_autonomo/` (etiqueta inmutable `repro-etapa26-v1`).
+- Código y notebooks: `reproducibility/etapa26_colab_autonomo/` (etiqueta inmutable `repro-etapa26-v2`).
 - Datos: 12 paquetes ZIP en `reproducibility/etapa23_oe1_oe5/paquetes/`, fijados al commit `3c8953a58909c48929093ef1524eb7d0ad317378`. Lista con URL, tamaño, SHA-256 y registros: `manifests/data_manifest.json`.
 
 ## 2. Cómo ejecutar un notebook

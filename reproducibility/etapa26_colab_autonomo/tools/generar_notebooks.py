@@ -15,7 +15,7 @@ BASE = os.path.dirname(AQUI)
 ORIGEN = os.path.join(os.path.dirname(BASE), 'etapa23_oe1_oe5', 'notebooks')
 DESTINO = os.path.join(BASE, 'notebooks')
 REPO_URL = 'https://github.com/Renato5Lara/multiagent-llm-education.git'
-REPO_REF = 'repro-etapa26-v1'
+REPO_REF = 'repro-etapa26-v2'
 
 
 def src(nb, i):
@@ -46,7 +46,8 @@ if os.environ.get('REPRO_LOCAL_REPO'):   # solo para pruebas locales antes de pu
 else:
     REPO_DIR = 'repo_repro'
     if not os.path.isdir(REPO_DIR):
-        subprocess.run(['git', 'clone', '--quiet', '--depth', '1', '--branch', REPO_REF, REPO_URL, REPO_DIR], check=True)
+        subprocess.run(['git', 'clone', '--quiet', '--depth', '1', '--branch', REPO_REF, '--filter=blob:none', '--sparse', REPO_URL, REPO_DIR], check=True)
+        subprocess.run(['git', '-C', REPO_DIR, 'sparse-checkout', 'set', 'reproducibility/etapa26_colab_autonomo'], check=True)   # solo el codigo de esta etapa
 sys.path.insert(0, os.path.join(REPO_DIR, 'reproducibility', 'etapa26_colab_autonomo', 'src'))
 import repro
 from repro import sh
