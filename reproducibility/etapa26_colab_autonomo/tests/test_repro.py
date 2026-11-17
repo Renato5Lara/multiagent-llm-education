@@ -101,5 +101,22 @@ class Manifiestos(unittest.TestCase):
         self.assertAlmostEqual(oe5['esperado'], 0.8044238095238094, places=15)
 
 
+class ScriptsSellados(unittest.TestCase):
+    def test_copias_legibles_identicas_a_las_de_los_paquetes(self):
+        base = os.path.join(AQUI, '..', 'analisis_sellado'); paq = os.path.join(AQUI, '..', '..', 'etapa23_oe1_oe5', 'paquetes')
+        if not os.path.isdir(paq):
+            self.skipTest('paquetes no disponibles')
+        import hashlib
+        n = 0
+        for z in sorted(os.listdir(paq)):
+            with zipfile.ZipFile(os.path.join(paq, z)) as f:
+                for i in f.infolist():
+                    if i.filename.endswith('.py'):
+                        b = f.read(i)
+                        self.assertEqual(hashlib.sha256(b).hexdigest(), hashlib.sha256(open(os.path.join(base, os.path.basename(i.filename)), 'rb').read()).hexdigest(), i.filename)
+                        n += 1
+        self.assertGreaterEqual(n, 12)
+
+
 if __name__ == '__main__':
     unittest.main()

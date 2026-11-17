@@ -20,6 +20,7 @@ Estos notebooks sustituyen, sin borrarlos, a los 11 de `../etapa23_oe1_oe5/` y `
 ```
 manifests/data_manifest.json     paquete -> URL fijada al commit, tamaño, SHA-256, registros, anonimización
 manifests/valores_oficiales.json 31 cifras de la tesis con su ruta en el resultado oficial; metas de diseño; hash de las 5 figuras de la tesis
+analisis_sellado/                copia legible (hash verificado) de los scripts de análisis que viajan dentro de los paquetes
 src/repro/                       data_loading, runner, validation, official, figures, tables (código legible)
 notebooks/                       los seis notebooks (generados por tools/generar_notebooks.py)
 tools/                           generar_notebooks.py, ejecutar_local.py (ejecución local limpia)
