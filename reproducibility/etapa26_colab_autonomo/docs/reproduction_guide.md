@@ -5,8 +5,8 @@ No necesita ningún archivo privado ni preguntar por datos: todo está en este r
 ## 1. Dónde está todo
 
 - Repositorio: <https://github.com/Renato5Lara/multiagent-llm-education>
-- Código y notebooks: `reproducibility/etapa26_colab_autonomo/` (etiqueta inmutable `repro-etapa26-v2`).
-- Datos: 12 paquetes ZIP en `reproducibility/etapa23_oe1_oe5/paquetes/`, fijados al commit `3c8953a58909c48929093ef1524eb7d0ad317378`. Lista con URL, tamaño, SHA-256 y registros: `manifests/data_manifest.json`.
+- Código y notebooks: `reproducibility/etapa26_colab_autonomo/` (etiqueta inmutable `repro-etapa26-v3`).
+- Datos: 12 paquetes ZIP. Diez en `reproducibility/etapa23_oe1_oe5/paquetes/`, fijados al commit `3c8953a58909c48929093ef1524eb7d0ad317378`; los dos de OE2-B en `reproducibility/etapa26_colab_autonomo/paquetes_v3/`, fijados al commit `5622bf50d7a757446fd76c19fe78938831a4c7fa`. Lista con URL, tamaño, SHA-256 y registros: `manifests/data_manifest.json`.
 
 ## 2. Cómo ejecutar un notebook
 
@@ -22,7 +22,7 @@ Si falta un paquete o su hash no coincide, el notebook **se detiene** e imprime 
 | OE | Notebook | Paquetes | Gráficos | Tablas | Resultado oficial contra el que se compara | Limitaciones que deben tenerse en cuenta |
 |---|---|---|---|---|---|---|
 | OE1 | `OE1_reproduccion_autonoma` | `oe1_http_p1` | `fig_oe1` (Figura 1) | `celdas`, `efectos`, `corridas_indicadores` | 120 corridas válidas; referencia S = 1,000, P95 = 571 ms, 33,9 req/s; I-13 y correlaciones intrabloque | 120 de 120 corridas con interferencia; la confiabilidad cae con la pérdida de mensajes; RNF03 no se cumple (F1_adapt 0,8044 < 0,85) |
-| OE2-A | `OE2A_reproduccion_autonoma` | `oe2a_colab_paquete` | complementaria (no está en la tesis) | `medias_por_perfil` | 5 000 ciclos; 67,14 ms [65,71; 68,59]; 2 770 ciclos con interferencia fuerte | un solo flujo (no mide capacidad); campaña OE2A-02 no ejecutada (cuatro fallos de la compuerta de inicio) |
+| OE2-A | `OE2A_reproduccion_autonoma` | `oe2a_colab_paquete` | complementaria (no está en la tesis) | `medias_por_perfil` | 5 000 ciclos; 67,14 ms [65,71; 68,59]; 2 770 ciclos con interferencia fuerte (de los 2 230 restantes, 302 sin cobertura del monitor) | un solo flujo (no mide capacidad); 302 ciclos sin cobertura del monitor (`limitaciones_conocidas.md`); campaña OE2A-02 no ejecutada (cuatro fallos de la compuerta de inicio) |
 | OE2-B | `OE2B_reproduccion_autonoma` | `oe2b_colab_paquete`, `oe2b_http_p1`, `p2` | `fig_oe2` (Figura 2) | `resumen_por_carga`, `estratos_por_carga` | 120 válidas; 16 no válidas; 180 intentos conservados | depende de la carga y la interferencia; no todos los niveles cumplen a la vez las metas |
 | OE3 | `OE3_reproduccion_autonoma` | `oe3_colab_paquete_v2` | `fig_oe3` (Figura 3) | `contrastes_efectos_principales` | 19 200 ciclos; 48 condiciones; 40 perfiles; 10 bloques | p de Wilcoxon de «social frente a PSO» depende de la versión de scipy (5,1e-4); la v1 está descartada |
 | OE4 | `OE4_reproduccion_autonoma` | `oe4_colab_paquete`, `oe4_http_p1`…`p4` | `fig_oe4` (Figura 4) | `celdas`, `contrastes`, `anova_*` | 36 celdas; 216 válidas de 220 intentos | 216 de 216 con interferencia; análisis por bloques |

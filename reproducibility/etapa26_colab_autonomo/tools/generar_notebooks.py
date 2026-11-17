@@ -15,7 +15,7 @@ BASE = os.path.dirname(AQUI)
 ORIGEN = os.path.join(os.path.dirname(BASE), 'etapa23_oe1_oe5', 'notebooks')
 DESTINO = os.path.join(BASE, 'notebooks')
 REPO_URL = 'https://github.com/Renato5Lara/multiagent-llm-education.git'
-REPO_REF = 'repro-etapa26-v2'
+REPO_REF = 'repro-etapa26-v3'
 
 
 def src(nb, i):
@@ -187,7 +187,7 @@ SPECS = {
                comp=[('OE2-A resultados_oe2a.json', 'oe2a/salida_colab/resultados_oe2a.json', 'oe2a/esperado_resultados_oe2a_local.json')],
                tablas={'medias_por_perfil': 'oe2a/salida_colab/medias_por_perfil.csv'},
                figura=dict(fn='fig_oe2a_complementaria', clave=None, titulo='figura complementaria OE2-A', entrada="'oe2a/campana_01/raw_observations.csv', RUTAS['resultados_oe2a.json']", ref=None, pre=''),
-               lim='5 000 ciclos en un solo flujo (no mide capacidad); 2 770 ciclos con interferencia fuerte; la campana OE2A-02 (replica controlada) no se ejecuto por cuatro fallos de la compuerta de inicio.'),
+               lim='5 000 ciclos en un solo flujo (no mide capacidad); 2 770 ciclos con interferencia fuerte; la campana OE2A-02 (replica controlada) no se ejecuto por cuatro fallos de la compuerta de inicio. De los 2 230 ciclos sin interferencia fuerte, 302 no tienen cobertura del monitor (31 segundos sin muestra): no se puede afirmar que estuvieran libres de interferencia ni que corrieran en reposo.'),
  'OE2-B': dict(nota='**Alcance de este cuaderno.** Solo el componente B del OE2 (por HTTP, 120 corridas válidas). El componente A está en `OE2A_reproduccion_autonoma.ipynb`.', titulo='OE2-B: reproducción autónoma en Google Colab (latencia, throughput y convergencia por HTTP)', origen='OE2', paquetes=['oe2b_colab_paquete', 'oe2b_http_p1', 'oe2b_http_p2'], dest='.', sm=True,
                celdas=['md7', 8, 9, 10, 'md11', 12, 'md13', 14, 'md15', 16, 'md17', 18, 'md19', 20, 'md21', 22, 23, 'md24', 25],
                rutas={'resultados_oe2b.json': 'oe2b/salida_colab/preregistrado/resultados_oe2b.json', 'intentos.jsonl': 'oe2b/campana_01/intentos.jsonl'},

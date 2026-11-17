@@ -40,13 +40,17 @@ Hallazgo corregido en esta ejecución: la primera etiqueta (`repro-etapa26-v1`) 
 
 Sigue **pendiente** la ejecución en Google Colab real (Linux, con las versiones de ese día); lo único que puede diferir respecto de lo anterior son las versiones de las librerías, que los notebooks registran y clasifican.
 
+## Etiqueta v3 (segunda anonimización de OE2-B)
+
+Las ejecuciones anteriores se hicieron con la etiqueta v2 (histórica). La v3 solo cambia los dos paquetes de OE2-B (campo `error` de cinco líneas) y la etiqueta que cargan los notebooks. Antes de publicarla, el notebook de OE2-B con los paquetes anonimizados produjo resultados **byte a byte idénticos** a los de los paquetes anteriores (`resultados_oe2b.json`, `resumen_por_carga.csv`, `exploratorio_oe2b.json`, `recomputo_oe2b.csv`). Los resultados de la ejecución por la ruta pública de la v3 se documentan en el informe de la carpeta de auditoría.
+
 ## Pruebas unitarias
 
 `python -m unittest discover -s tests`: 12 pruebas, todas superadas (clasificación de diferencias, detención ante hash incorrecto o ruta insegura, manifiestos con URL fijada a un commit, ausencia de datos personales en los manifiestos).
 
 ## Lo que NO se comprobó
 
-- Ejecución en Google Colab real de los notebooks nuevos (ni su clonado de la etiqueta inmutable `repro-etapa26-v2` desde un Colab).
+- Ejecución en Google Colab real de los notebooks nuevos (ni su clonado de la etiqueta inmutable desde un Colab).
 - Que el PDF de la tesis tenga las figuras en las páginas del índice (se usó el índice del DOCX).
 - Que los ids de Drive de las ejecuciones previas sigan accesibles con su contenido (solo se consultaron metadatos en la etapa anterior).
 

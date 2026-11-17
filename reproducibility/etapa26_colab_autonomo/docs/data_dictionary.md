@@ -8,12 +8,14 @@ Describe los archivos que consumen los notebooks. Las columnas listadas se leyer
 |---|---|---|---|
 | `oe1_http_p1` | OE1 | `http/oe1/campana_01/` (`runs.jsonl`, `intentos.jsonl`, `raw_http/*`), `analisis_oe1.py`, `gold_sellado.json`, monitor y `esperado_local/`; `http/recomputo_http.py` | 120 corridas válidas; 125 intentos; 240 archivos de peticiones; 225 968 filas de peticiones |
 | `oe2a_colab_paquete` | OE2-A | `oe2a/campana_01/raw_observations.csv`, `lotes_tiempo_pared.json`, `plan.json`, compuertas, monitor, `analisis_oe2a.py`, `esperado_resultados_oe2a_local.json` | 5 000 ciclos |
-| `oe2b_colab_paquete` | OE2-B | `oe2b/campana_01/` (`runs.jsonl`, `intentos.jsonl`, `plan*.json`, `locust_logs/`), monitores, `analisis_oe2b.py`, `analisis_exploratorio_oe2b.py`, `esperado_local/` | 136 registros (120 válidos + 16 no válidos); 180 intentos |
-| `oe2b_http_p1`, `p2` | OE2-B | `http/oe2b/campana_01/raw_http/*` (peticiones por corrida) y `recomputo_http.py` | 148 561 + 80 533 filas |
+| `oe2b_colab_paquete` (v3: `paquetes_v3/`) | OE2-B | `oe2b/campana_01/` (`runs.jsonl`, `intentos.jsonl`, `plan*.json`, `locust_logs/`), monitores, `analisis_oe2b.py`, `analisis_exploratorio_oe2b.py`, `esperado_local/` | 136 registros (120 válidos + 16 no válidos); 180 intentos |
+| `oe2b_http_p1` (v3: `paquetes_v3/`), `p2` | OE2-B | `http/oe2b/campana_01/raw_http/*` (peticiones por corrida) y `recomputo_http.py` | 148 561 + 80 533 filas |
 | `oe3_colab_paquete_v2` | OE3 | `campana_01/raw_observations.csv`, `batches.json`, `environment.json`, `provenance.json`, monitor, `analisis_oe3.py`, `esperado_resultados_oe3_local.json` | 19 200 ciclos |
 | `oe4_colab_paquete` | OE4 | `oe4/campana_01/` (`runs.jsonl`, `intentos.jsonl`, `plan.json`), `monitor.csv`, `analisis_oe4.py`, `exploratorio_interferencia_oe4.py`, `esperado_local/` | 216 corridas válidas; 220 intentos |
 | `oe4_http_p1`…`p4` | OE4 | `http/oe4/campana_01/raw_http/*` y `recomputo_http.py` | 147 177 + 152 040 + 151 394 + 39 692 filas |
 | `oe5_colab_paquete` | OE5 | `campana_01/replica_00..09.json`, `profiles-oe5-2026-11-10.jsonl`, `gold_sellado.json`, `analisis_oe5.py`, `analisis_oe5_enmienda1.py`, `esperado_*_local.json` | 100 perfiles × 10 réplicas = 1 000 ciclos |
+
+Los paquetes `oe2b_colab_paquete` y `oe2b_http_p1` de la etiqueta v3 están en `paquetes_v3/` (segunda anonimización: solo cambia el campo `error` de cinco líneas de `intentos.jsonl`); las versiones anteriores siguen en `etapa23_oe1_oe5/paquetes/` sin modificar.
 
 La versión 1 de OE3 (`oe3_colab_paquete_v1_descartado_por_contrastes_degenerados.zip`) está **descartada** y no se publica ni se usa.
 

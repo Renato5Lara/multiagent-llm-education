@@ -1,8 +1,8 @@
 {
- "version": 1,
+ "version": 2,
  "commit_datos": "3c8953a58909c48929093ef1524eb7d0ad317378",
  "repositorio": "https://github.com/Renato5Lara/multiagent-llm-education",
- "nota": "Los paquetes ya estaban publicados en este commit (inmutable); esta etapa no los duplica. Verificación: descarga HTTP sin credenciales y SHA-256 igual al local (auditoría 2026-11-16).",
+ "nota": "Diez paquetes siguen en el commit commit_datos (3c8953a…); los dos de OE2-B (versión 3, segunda anonimización) están en commit_datos_v3 (paquetes_v3/). Las versiones anteriores de esos dos paquetes se conservan sin modificar en el historial y en etapa23_oe1_oe5/paquetes/, pero ningún notebook las usa. Verificación: descarga HTTP sin credenciales y SHA-256.",
  "paquetes": [
   {
    "nombre": "oe1_http_p1",
@@ -40,25 +40,32 @@
   {
    "nombre": "oe2b_colab_paquete",
    "objetivo": "OE2-B",
-   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_colab_paquete.zip",
-   "tamano_bytes": 596239,
-   "sha256": "af7ce8508a484e859c402c8c3b8e3fcb6e0d05c2da8ae8862fb36f9a582c2447",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/5622bf50d7a757446fd76c19fe78938831a4c7fa/reproducibility/etapa26_colab_autonomo/paquetes_v3/oe2b_colab_paquete.zip",
+   "tamano_bytes": 596494,
+   "sha256": "4f69aab06fcc642aec57559d7d72f12af0862a35bab8c00d53a6dcdc7f1cab2d",
    "archivos_en_zip": 23,
    "registros": {
     "intentos_jsonl": 180,
     "registros_runs_jsonl": 136
    },
    "descripcion": "Indicadores por corrida, planes, monitor, registros Locust (anonimizados), scripts y resultado local de OE2-B",
-   "anonimizacion": "seis archivos anonimizados (HOST001/USER); originales intactos en local; residual: ruta de carpetas de curso sin usuario en intentos.jsonl",
-   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
-   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+   "anonimizacion": "seis archivos anonimizados (HOST001/USER) y, en la segunda pasada (v3), rutas locales del campo error de cinco intentos sustituidas por <RUTA_LOCAL_ANONIMIZADA>; originales intactos en local; sin residuales",
+   "commit_publicacion": "5622bf50d7a757446fd76c19fe78938831a4c7fa",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia",
+   "sustituye_a": {
+    "version": "v1/v2 (historica, sin modificar)",
+    "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_colab_paquete.zip",
+    "sha256": "af7ce8508a484e859c402c8c3b8e3fcb6e0d05c2da8ae8862fb36f9a582c2447",
+    "tamano_bytes": 596239
+   },
+   "version_paquete": "v3 (segunda anonimización)"
   },
   {
    "nombre": "oe2b_http_p1",
    "objetivo": "OE2-B",
-   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_http_p1.zip",
-   "tamano_bytes": 7604816,
-   "sha256": "b3f67b47efe321e7bec3ab50dae660fa1f6b9d31d273a3b061fc2c1f3f488e3c",
+   "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/5622bf50d7a757446fd76c19fe78938831a4c7fa/reproducibility/etapa26_colab_autonomo/paquetes_v3/oe2b_http_p1.zip",
+   "tamano_bytes": 7604852,
+   "sha256": "c8ee2a7f63cb6cb17cb6e90156c034ff185b8bfcb613909a15826fb4ecfdc534",
    "archivos_en_zip": 124,
    "registros": {
     "intentos_jsonl": 180,
@@ -67,9 +74,16 @@
     "peticiones_http_filas": 148561
    },
    "descripcion": "Registro por petición HTTP de OE2-B, parte 1 de 2, y recomputo_http.py",
-   "anonimizacion": "intentos.jsonl anonimizado; residual: ruta de carpetas de curso sin usuario",
-   "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
-   "rama": "repro/etapa23-oe1-oe5-colab-limpia"
+   "anonimizacion": "seis archivos anonimizados (HOST001/USER) y, en la segunda pasada (v3), rutas locales del campo error de cinco intentos sustituidas por <RUTA_LOCAL_ANONIMIZADA>; originales intactos en local; sin residuales",
+   "commit_publicacion": "5622bf50d7a757446fd76c19fe78938831a4c7fa",
+   "rama": "repro/etapa23-oe1-oe5-colab-limpia",
+   "sustituye_a": {
+    "version": "v1/v2 (historica, sin modificar)",
+    "url": "https://raw.githubusercontent.com/Renato5Lara/multiagent-llm-education/3c8953a58909c48929093ef1524eb7d0ad317378/reproducibility/etapa23_oe1_oe5/paquetes/oe2b_http_p1.zip",
+    "sha256": "b3f67b47efe321e7bec3ab50dae660fa1f6b9d31d273a3b061fc2c1f3f488e3c",
+    "tamano_bytes": 7604816
+   },
+   "version_paquete": "v3 (segunda anonimización)"
   },
   {
    "nombre": "oe2b_http_p2",
@@ -200,5 +214,6 @@
    "commit_publicacion": "3c8953a58909c48929093ef1524eb7d0ad317378",
    "rama": "repro/etapa23-oe1-oe5-colab-limpia"
   }
- ]
+ ],
+ "commit_datos_v3": "5622bf50d7a757446fd76c19fe78938831a4c7fa"
 }

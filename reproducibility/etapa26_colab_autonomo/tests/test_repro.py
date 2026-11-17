@@ -82,10 +82,32 @@ class Manifiestos(unittest.TestCase):
         self.assertEqual(len(m['paquetes']), 12)
         for p in m['paquetes']:
             self.assertRegex(p['sha256'], r'^[0-9a-f]{64}$')
-            self.assertIn(m['commit_datos'], p['url'])           # URL fijada a un commit, no a una rama
+            self.assertIn(p['commit_publicacion'], p['url'])      # URL fijada a un commit, no a una rama
+            self.assertIn(p['commit_publicacion'], (m['commit_datos'], m['commit_datos_v3']))
             self.assertTrue(p['url'].startswith('https://raw.githubusercontent.com/'))
             self.assertGreater(p['tamano_bytes'], 0)
         self.assertEqual(len({p['nombre'] for p in m['paquetes']}), 12)
+
+    def test_paquetes_de_oe2b_son_los_de_la_version_3(self):
+        m = json.load(open(MAN, encoding='utf-8'))
+        for n in ('oe2b_colab_paquete', 'oe2b_http_p1'):
+            p = next(x for x in m['paquetes'] if x['nombre'] == n)
+            self.assertIn('/paquetes_v3/', p['url'])
+            self.assertEqual(p['commit_publicacion'], m['commit_datos_v3'])
+            self.assertNotEqual(p['sha256'], p['sustituye_a']['sha256'])
+            f = os.path.join(AQUI, '..', 'paquetes_v3', n + '.zip')
+            self.assertEqual(data_loading.sha256_file(f), p['sha256'])       # el manifiesto coincide con el archivo del repositorio
+        for p in m['paquetes']:
+            if p['nombre'] not in ('oe2b_colab_paquete', 'oe2b_http_p1'):
+                self.assertIn(m['commit_datos'], p['url'])
+
+    def test_notebooks_apuntan_solo_a_la_etiqueta_v3(self):
+        nbdir = os.path.join(AQUI, '..', 'notebooks')
+        for f in sorted(os.listdir(nbdir)):
+            t = open(os.path.join(nbdir, f), encoding='utf-8').read()
+            self.assertIn("REPO_REF = 'repro-etapa26-v3'", t, f)
+            self.assertNotIn('etapa26-v2', t, f)
+            self.assertNotIn('etapa26-v1', t, f)
 
     def test_sin_datos_personales_en_manifiestos(self):
         for f in (MAN, VAL):
