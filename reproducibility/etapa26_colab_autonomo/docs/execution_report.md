@@ -32,6 +32,14 @@ Las comparaciones de «exacta» y «dentro de tolerancia» se hacen contra el re
 
 Ver `docs/figure_traceability.md`: PNG regenerados desde las salidas oficiales con matplotlib 3.10.3 idénticos bit a bit a los de la tesis (5 de 5); series de los notebooks idénticas o dentro de 1e-9 en las dos ejecuciones.
 
+## Ejecución por la ruta pública (etiqueta `repro-etapa26-v2`)
+
+Después de publicar la rama y la etiqueta se ejecutaron los seis notebooks **descargados de GitHub** (`raw.githubusercontent.com/.../repro-etapa26-v2/...`) en directorios vacíos, **sin** `REPRO_LOCAL_REPO`: el propio notebook clonó la etiqueta (clonado parcial de `reproducibility/etapa26_colab_autonomo`), descargó los paquetes y ejecutó todo. Resultado: **12 de 12 ejecuciones sin errores** (6 notebooks × versiones oficiales y versiones tipo Colab), con los mismos veredictos de la tabla anterior (oficiales: todas exactas; tipo Colab: dentro de tolerancia salvo OE3, explicada por versión) y todas las pruebas automáticas superadas.
+
+Hallazgo corregido en esta ejecución: la primera etiqueta (`repro-etapa26-v1`) clonaba el repositorio completo (9 000 archivos) y fallaba en Windows por la longitud de ruta; se sustituyó por el clonado parcial y la etiqueta `repro-etapa26-v2`. La v1 se conserva sin modificar y no debe usarse.
+
+Sigue **pendiente** la ejecución en Google Colab real (Linux, con las versiones de ese día); lo único que puede diferir respecto de lo anterior son las versiones de las librerías, que los notebooks registran y clasifican.
+
 ## Pruebas unitarias
 
 `python -m unittest discover -s tests`: 12 pruebas, todas superadas (clasificación de diferencias, detención ante hash incorrecto o ruta insegura, manifiestos con URL fijada a un commit, ausencia de datos personales en los manifiestos).
