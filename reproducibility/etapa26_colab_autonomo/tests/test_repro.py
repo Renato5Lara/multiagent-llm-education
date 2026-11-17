@@ -112,7 +112,7 @@ class Manifiestos(unittest.TestCase):
     def test_sin_datos_personales_en_manifiestos(self):
         for f in (MAN, VAL):
             t = open(f, encoding='utf-8').read()
-            self.assertIsNone(re.search(r'C:\\\\Users|/Users/|\bLara\b', t))
+            self.assertIsNone(re.search(r'C:\\Users|/Users/|AppData', t))
 
     def test_valores_oficiales(self):
         v = json.load(open(VAL, encoding='utf-8'))
