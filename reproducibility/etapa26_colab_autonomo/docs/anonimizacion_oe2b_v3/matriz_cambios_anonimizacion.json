@@ -1,0 +1,50 @@
+{
+ "cambios": 10,
+ "verificacion": [
+  [
+   "oe2b_colab_paquete.zip",
+   "oe2b/campana_01/intentos.jsonl",
+   180,
+   175,
+   5,
+   5502,
+   "todos los campos de las 180 líneas comparados con json; solo difiere `error` en las líneas indicadas",
+   23,
+   4,
+   "ANONIMIZACION.md, anonimizacion_oe2b.json, hashes_paquete_oe2b.txt, intentos.jsonl"
+  ],
+  [
+   "oe2b_http_p1.zip",
+   "http/oe2b/campana_01/intentos.jsonl",
+   180,
+   175,
+   5,
+   5502,
+   "todos los campos de las 180 líneas comparados con json; solo difiere `error` en las líneas indicadas",
+   124,
+   3,
+   "anonimizacion_oe2b.json, hashes_paquete_http_oe2b.txt, intentos.jsonl"
+  ]
+ ],
+ "metadatos": 5,
+ "hashes": [
+  [
+   "oe2b_colab_paquete.zip",
+   "af7ce8508a484e859c402c8c3b8e3fcb6e0d05c2da8ae8862fb36f9a582c2447",
+   596239,
+   "4f69aab06fcc642aec57559d7d72f12af0862a35bab8c00d53a6dcdc7f1cab2d",
+   596494,
+   "ef1c3b2e2a02e86678ae1fa05900169d8c57f5b668dd7824d9aeab69fe9e9db8",
+   "c6702ed80aa53142436c0835c3bfeb0c21697d71f0e3e0859cfb17d1257571ea"
+  ],
+  [
+   "oe2b_http_p1.zip",
+   "b3f67b47efe321e7bec3ab50dae660fa1f6b9d31d273a3b061fc2c1f3f488e3c",
+   7604816,
+   "c8ee2a7f63cb6cb17cb6e90156c034ff185b8bfcb613909a15826fb4ecfdc534",
+   7604852,
+   "ef1c3b2e2a02e86678ae1fa05900169d8c57f5b668dd7824d9aeab69fe9e9db8",
+   "c6702ed80aa53142436c0835c3bfeb0c21697d71f0e3e0859cfb17d1257571ea"
+  ]
+ ]
+}

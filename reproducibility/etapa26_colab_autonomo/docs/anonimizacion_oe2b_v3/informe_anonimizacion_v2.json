@@ -1,0 +1,24 @@
+{
+ "oe2b_colab_paquete.zip": {
+  "sha256_publicado": "af7ce8508a484e859c402c8c3b8e3fcb6e0d05c2da8ae8862fb36f9a582c2447",
+  "sha256_candidato": "4f69aab06fcc642aec57559d7d72f12af0862a35bab8c00d53a6dcdc7f1cab2d",
+  "bytes_candidato": 596494,
+  "sustituciones": 10,
+  "intentos_afectados": 5,
+  "sha256_intentos_publicado": "ef1c3b2e2a02e86678ae1fa05900169d8c57f5b668dd7824d9aeab69fe9e9db8",
+  "sha256_intentos_candidato": "c6702ed80aa53142436c0835c3bfeb0c21697d71f0e3e0859cfb17d1257571ea",
+  "lineas_de_hashes_actualizadas": 3,
+  "residual_tras_sustituir": {}
+ },
+ "oe2b_http_p1.zip": {
+  "sha256_publicado": "b3f67b47efe321e7bec3ab50dae660fa1f6b9d31d273a3b061fc2c1f3f488e3c",
+  "sha256_candidato": "c8ee2a7f63cb6cb17cb6e90156c034ff185b8bfcb613909a15826fb4ecfdc534",
+  "bytes_candidato": 7604852,
+  "sustituciones": 10,
+  "intentos_afectados": 5,
+  "sha256_intentos_publicado": "ef1c3b2e2a02e86678ae1fa05900169d8c57f5b668dd7824d9aeab69fe9e9db8",
+  "sha256_intentos_candidato": "c6702ed80aa53142436c0835c3bfeb0c21697d71f0e3e0859cfb17d1257571ea",
+  "lineas_de_hashes_actualizadas": 2,
+  "residual_tras_sustituir": {}
+ }
+}
