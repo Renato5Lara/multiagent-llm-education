@@ -2,6 +2,8 @@
 
 Seis notebooks que, desde un Colab limpio y con «Ejecutar todo», descargan los datos públicos de este repositorio (commit fijado), verifican su SHA-256, ejecutan el análisis estadístico sellado, comparan con las cifras de la tesis, generan tablas y las figuras de resultados y terminan con pruebas automáticas. **No hay que subir ni buscar ningún archivo.**
 
+> **Use la etiqueta `repro-etapa26-v2`.** La `repro-etapa26-v1` está descartada (falla en Windows); ver `docs/ETIQUETAS.md`.
+
 Se reproduce el **análisis**; no se repiten las campañas, no se modifican datos originales, scripts ni umbrales, y ninguna campaña pasa a ser controlada. Los tiempos medidos son los del equipo local con la interferencia registrada.
 
 | Objetivo | Notebook (abrir en Colab) | Paquetes que descarga | Figura de la tesis que genera | Tablas |

@@ -1,3 +1,5 @@
+> **SUPERADO.** Los cuadernos de esta carpeta piden subir los ZIP a mano (`files.upload()`). Para reproducir los resultados sin subir ni buscar archivos use `../etapa26_colab_autonomo/` (etiqueta `repro-etapa26-v2`). Estos cuadernos y paquetes se conservan como antecedente; los paquetes siguen siendo los datos que descargan los cuadernos nuevos.
+
 # Comprobación reproducible de los resultados de los objetivos específicos OE1 a OE5
 
 Esta carpeta contiene los cinco cuadernos de Google Colab y los paquetes de datos con los que se vuelve a ejecutar, desde los datos de entrada de cada campaña, el análisis estadístico de los cinco objetivos específicos y se compara con el resultado calculado en el equipo local. Cada cuaderno incluye la descripción del objetivo, los datos de entrada, la verificación de archivos contra sus hashes, las dependencias, la ejecución del análisis, la reconstrucción de los indicadores, la comparación con el resultado oficial, las diferencias numéricas y una celda final que calcula la conclusión de reproducibilidad.
